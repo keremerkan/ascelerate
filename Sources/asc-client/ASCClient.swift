@@ -6,6 +6,11 @@ struct ASCClient: AsyncParsableCommand {
     commandName: "asc-client",
     abstract: "A command-line tool for the App Store Connect API.",
     version: "0.1.0",
-    subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self]
+    subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self, InstallCompletionsCommand.self]
   )
+
+  func run() async throws {
+    print("asc-client \(Self.configuration.version)")
+    print(Self.helpMessage())
+  }
 }

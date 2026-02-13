@@ -7,9 +7,36 @@ A command-line tool for the [App Store Connect API](https://developer.apple.com/
 ## Requirements
 
 - macOS 13+
-- Swift 6.0+
+- Swift 6.0+ (only for building from source)
 
 ## Installation
+
+### Homebrew
+
+```bash
+brew tap keremerkan/tap
+brew install asc-client
+```
+
+The tap provides a pre-built binary for Apple Silicon Macs, so installation is instant.
+
+### Download the binary
+
+Download the latest release from [GitHub Releases](https://github.com/keremerkan/asc-client/releases):
+
+```bash
+curl -L https://github.com/keremerkan/asc-client/releases/latest/download/asc-client-macos-arm64.tar.gz -o asc-client.tar.gz
+tar xzf asc-client.tar.gz
+mv asc-client /usr/local/bin/
+```
+
+Since the binary is not signed or notarized, macOS will quarantine it on first download. Remove the quarantine attribute:
+
+```bash
+xattr -d com.apple.quarantine /usr/local/bin/asc-client
+```
+
+> **Note:** Pre-built binaries are provided for Apple Silicon (arm64) only. Intel Mac users should build from source.
 
 ### Build from source
 
@@ -21,30 +48,17 @@ strip .build/release/asc-client
 cp .build/release/asc-client /usr/local/bin/
 ```
 
-> **Note:** The release build takes a few minutes due to ~2500 generated API files. `strip` removes debug symbols, reducing the binary from ~175 MB to ~59 MB.
+> **Note:** The release build takes a few minutes because the [asc-swift](https://github.com/aaronsky/asc-swift) dependency includes ~2500 generated source files covering the entire App Store Connect API surface. `strip` removes debug symbols, reducing the binary from ~175 MB to ~59 MB.
 
 ### Shell completions
 
-Enable tab completion for subcommands, options, and flags:
+Set up tab completion for subcommands, options, and flags (supports zsh and bash):
 
-**zsh** (default on macOS):
 ```bash
-mkdir -p ~/.zfunc
-asc-client --generate-completion-script zsh > ~/.zfunc/_asc-client
+asc-client install-shell-completions
 ```
 
-Add this to your `~/.zshrc` if not already present:
-```bash
-fpath=(~/.zfunc $fpath)
-autoload -Uz compinit && compinit
-```
-
-**bash**:
-```bash
-asc-client --generate-completion-script bash > /usr/local/etc/bash_completion.d/asc-client
-```
-
-Restart your shell or open a new tab to activate.
+This detects your shell and configures everything automatically. Restart your shell or open a new tab to activate.
 
 ## Setup
 

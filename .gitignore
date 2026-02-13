@@ -1,10 +1,19 @@
+# General
 .DS_Store
+
+# Development
 /.build
 /Packages
-/.claude
 *.xcodeproj
 xcuserdata/
 DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
+
+# Claude Code
+/.claude
+.claude/
+**/CLAUDE.md
+!/CLAUDE.md
+

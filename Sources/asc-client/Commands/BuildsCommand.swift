@@ -7,7 +7,7 @@ struct BuildsCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "builds",
     abstract: "Manage builds.",
-    subcommands: [List.self, Archive.self, Upload.self, Validate.self]
+    subcommands: [List.self, AwaitProcessing.self, Archive.self, Upload.self, Validate.self]
   )
 
   struct List: AsyncParsableCommand {
@@ -48,6 +48,55 @@ struct BuildsCommand: AsyncParsableCommand {
       Table.print(
         headers: ["Version", "State", "Uploaded"],
         rows: allBuilds.map { [$0.0, $0.1, $0.2] }
+      )
+
+      print()
+      print("Note: Recently uploaded builds may take a few minutes to appear.")
+    }
+  }
+
+  struct AwaitProcessing: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "await-processing",
+      abstract: "Wait for a build to finish processing."
+    )
+
+    @Argument(help: "The app's bundle identifier.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Build version number to wait for (e.g. 903). If omitted, waits for the latest build.")
+    var buildVersion: String?
+
+    @Option(name: .long, help: "Polling interval in seconds (default: 30).")
+    var interval: Int = 30
+
+    @Option(name: .long, help: "Timeout in minutes (default: 30).")
+    var timeout: Int = 30
+
+    func run() async throws {
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+
+      let effectiveVersion = buildVersion ?? lastUploadedBuildVersion
+      let label: String
+      if let v = effectiveVersion {
+        label = "build \(v)"
+        if buildVersion == nil {
+          print("Using build version \(v) from previous upload step.")
+        }
+      } else {
+        label = "latest build"
+      }
+      print("Waiting for \(label) to finish processing...")
+      print("  Polling every \(interval)s, timeout \(timeout)m")
+      print()
+
+      _ = try await awaitBuildProcessing(
+        appID: app.id,
+        buildVersion: effectiveVersion,
+        client: client,
+        interval: interval,
+        timeout: timeout
       )
     }
   }
@@ -245,9 +294,11 @@ struct BuildsCommand: AsyncParsableCommand {
       }
 
       let expandedPath: String
+      var uploadedBuildNumber: String?
       if latest {
         let archive = try findLatestArchive(bundleID: bundleID)
         expandedPath = archive.path
+        uploadedBuildNumber = archive.buildNumber
         print("Found archive: \((archive.path as NSString).lastPathComponent)")
         print("  Bundle ID:  \(archive.bundleID)")
         print("  Version:    \(archive.version) (\(archive.buildNumber))")
@@ -256,6 +307,10 @@ struct BuildsCommand: AsyncParsableCommand {
         guard confirm("Upload this archive? [y/N] ") else { return }
       } else {
         expandedPath = try resolveFilePath(file, prompt: "Path to .ipa, .pkg, or .xcarchive file: ")
+        // Try to extract build number from .xcarchive
+        if expandedPath.hasSuffix(".xcarchive") {
+          uploadedBuildNumber = buildNumberFromArchive(expandedPath)
+        }
       }
 
       let config = try Config.load()
@@ -286,6 +341,10 @@ struct BuildsCommand: AsyncParsableCommand {
 
       if process.terminationStatus != 0 {
         throw ExitCode(process.terminationStatus)
+      }
+
+      if let buildNumber = uploadedBuildNumber {
+        lastUploadedBuildVersion = buildNumber
       }
     }
   }
@@ -563,4 +622,15 @@ private func resolveUploadable(_ path: String) throws -> (String, String?) {
   fflush(stdout)
 
   return (ipaPath, tempDir)
+}
+
+/// Extracts CFBundleVersion from an .xcarchive's Info.plist, or nil if unavailable.
+private func buildNumberFromArchive(_ archivePath: String) -> String? {
+  let plistPath = (archivePath as NSString).appendingPathComponent("Info.plist")
+  guard let data = FileManager.default.contents(atPath: plistPath),
+        let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+        let appProps = plist["ApplicationProperties"] as? [String: Any],
+        let buildNumber = appProps["CFBundleVersion"] as? String
+  else { return nil }
+  return buildNumber
 }

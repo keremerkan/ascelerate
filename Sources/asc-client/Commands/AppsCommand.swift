@@ -316,6 +316,39 @@ struct AppsCommand: AsyncParsableCommand {
 
       let versionString = appVersion.attributes?.versionString ?? "unknown"
 
+      // If a build was just uploaded in this workflow, wait for it to appear and process
+      if let pendingBuild = lastUploadedBuildVersion {
+        print("Waiting for uploaded build \(pendingBuild) to become available...")
+        print()
+        let awaitedBuild = try await awaitBuildProcessing(
+          appID: app.id,
+          buildVersion: pendingBuild,
+          client: client
+        )
+        let uploaded = awaitedBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
+        print()
+        print("Version: \(versionString)")
+        print("Build:   \(pendingBuild)  VALID  \(uploaded)")
+        print()
+
+        guard confirm("Attach this build? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+
+        try await client.send(
+          Resources.v1.appStoreVersions.id(appVersion.id).relationships.build.patch(
+            AppStoreVersionBuildLinkageRequest(
+              data: .init(id: awaitedBuild.id)
+            )
+          )
+        )
+
+        print()
+        print("Attached build \(pendingBuild) (uploaded \(uploaded)) to version \(versionString).")
+        return
+      }
+
       let buildsResponse = try await client.send(
         Resources.v1.builds.get(
           filterPreReleaseVersionVersion: [versionString],
@@ -329,13 +362,32 @@ struct AppsCommand: AsyncParsableCommand {
         throw ValidationError("No builds found for version \(versionString). Upload a build first via Xcode or Transporter.")
       }
 
-      let buildNumber = build.attributes?.version ?? "unknown"
-      let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
-      let state = build.attributes?.processingState.map { "\($0)" } ?? "—"
+      var latestBuild = build
+      let buildNumber = latestBuild.attributes?.version ?? "unknown"
+      let state = latestBuild.attributes?.processingState
+      let uploaded = latestBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
 
       print("Version: \(versionString)")
-      print("Build:   \(buildNumber)  \(state)  \(uploaded)")
+      print("Build:   \(buildNumber)  \(state.map { "\($0)" } ?? "—")  \(uploaded)")
       print()
+
+      if state == .processing {
+        if confirm("Build \(buildNumber) is still processing. Wait for it to finish? [y/N] ") {
+          print()
+          latestBuild = try await awaitBuildProcessing(
+            appID: app.id,
+            buildVersion: buildNumber,
+            client: client
+          )
+          print()
+        } else {
+          print("Cancelled.")
+          return
+        }
+      } else if state == .failed || state == .invalid {
+        print("Build \(buildNumber) has state \(state.map { "\($0)" } ?? "—") and cannot be attached.")
+        throw ExitCode.failure
+      }
 
       guard confirm("Attach this build? [y/N] ") else {
         print("Cancelled.")
@@ -863,6 +915,66 @@ func findVersion(appID: String, versionString: String?, client: AppStoreConnectC
     throw AppLookupError.noVersions
   }
   return version
+}
+
+/// Polls until a build finishes processing. Returns the final build.
+/// Throws on timeout or if the build ends in a non-valid state.
+func awaitBuildProcessing(
+  appID: String,
+  buildVersion: String?,
+  client: AppStoreConnectClient,
+  interval: Int = 30,
+  timeout: Int = 30
+) async throws -> Build {
+  let deadline = Date().addingTimeInterval(Double(timeout * 60))
+  var waitingElapsed = 0
+  var waitingStarted = false
+
+  while Date() < deadline {
+    let request = Resources.v1.builds.get(
+      filterVersion: buildVersion.map { [$0] },
+      filterApp: [appID],
+      sort: [.minusUploadedDate],
+      limit: 1
+    )
+    let response = try await client.send(request)
+
+    if let build = response.data.first,
+       let state = build.attributes?.processingState {
+      let version = build.attributes?.version ?? "?"
+
+      // End the "not found" line if we were waiting
+      if waitingStarted {
+        print()
+        waitingStarted = false
+      }
+
+      switch state {
+      case .valid:
+        print("Build \(version) is ready (VALID).")
+        return build
+      case .failed, .invalid:
+        print("Build \(version) processing ended with state: \(state)")
+        throw ExitCode.failure
+      case .processing:
+        print("Build \(version): still processing...")
+      }
+    } else {
+      waitingElapsed += interval
+      if !waitingStarted {
+        print("Build not found yet", terminator: "")
+        waitingStarted = true
+      }
+      print("...\(waitingElapsed)s", terminator: "")
+      fflush(stdout)
+    }
+
+    try await Task.sleep(nanoseconds: UInt64(interval) * 1_000_000_000)
+  }
+
+  if waitingStarted { print() }
+  print("\nTimed out after \(timeout) minutes.")
+  throw ExitCode.failure
 }
 
 /// Fetches builds for the app matching the given version, prompts the user to pick one, and attaches it.

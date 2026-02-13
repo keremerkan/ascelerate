@@ -267,6 +267,10 @@ asc-client builds validate MyApp.ipa
 
 # Upload a build to App Store Connect
 asc-client builds upload MyApp.ipa
+
+# Wait for a build to finish processing
+asc-client builds await-processing <bundle-id>
+asc-client builds await-processing <bundle-id> --build-version 903
 ```
 
 The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it automatically exports to `.ipa` before uploading.
@@ -294,6 +298,9 @@ apps create-version com.example.MyApp 2.1.0
 builds archive --scheme MyApp
 builds validate --latest --bundle-id com.example.MyApp
 builds upload --latest --bundle-id com.example.MyApp
+
+# Wait for the build to finish processing
+builds await-processing com.example.MyApp
 
 # Update localizations and attach the build
 apps update-localizations com.example.MyApp --file localizations.json

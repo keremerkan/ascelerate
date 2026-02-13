@@ -3,6 +3,10 @@ import Foundation
 /// When true, all interactive confirmation prompts are automatically accepted.
 nonisolated(unsafe) var autoConfirm = false
 
+/// Set by `builds upload` after a successful upload so subsequent workflow steps
+/// (e.g. `await-processing`, `attach-latest-build`) can wait for this specific build.
+nonisolated(unsafe) var lastUploadedBuildVersion: String?
+
 /// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
 func confirm(_ prompt: String) -> Bool {
   print(prompt, terminator: "")

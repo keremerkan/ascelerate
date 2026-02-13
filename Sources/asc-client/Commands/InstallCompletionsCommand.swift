@@ -3,7 +3,7 @@ import Foundation
 
 struct InstallCompletionsCommand: ParsableCommand {
   static let configuration = CommandConfiguration(
-    commandName: "install-shell-completions",
+    commandName: "install-completions",
     abstract: "Install shell completions for asc-client."
   )
 
@@ -38,8 +38,11 @@ struct InstallCompletionsCommand: ParsableCommand {
       print("\(zfuncDir.path)/ already exists.")
     }
 
-    // 2. Write completion script
-    let completionScript = ASCClient.completionScript(for: .zsh)
+    // 2. Write completion script (with patched help completions and alphabetical sorting)
+    var completionScript = patchZshHelpCompletions(ASCClient.completionScript(for: .zsh))
+    // Remove -V flag so zsh sorts subcommands alphabetically (reliable across environments)
+    completionScript = completionScript.replacingOccurrences(
+      of: "_describe -V subcommand subcommands", with: "_describe subcommand subcommands")
     let completionFile = zfuncDir.appendingPathComponent("_asc-client")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
@@ -90,8 +93,8 @@ struct InstallCompletionsCommand: ParsableCommand {
       print("\(completionsDir.path)/ already exists.")
     }
 
-    // 2. Write completion script
-    let completionScript = ASCClient.completionScript(for: .bash)
+    // 2. Write completion script (with patched help completions)
+    let completionScript = patchBashHelpCompletions(ASCClient.completionScript(for: .bash))
     let completionFile = completionsDir.appendingPathComponent("asc-client.bash")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
@@ -118,6 +121,78 @@ struct InstallCompletionsCommand: ParsableCommand {
       sourceLine: "[ -f ~/.bashrc_local ] && source ~/.bashrc_local",
       fm: fm
     )
+  }
+
+  /// Patches the zsh completion script so `asc-client help <tab>` lists subcommands.
+  private func patchZshHelpCompletions(_ script: String) -> String {
+    let entries = ASCClient.configuration.subcommands
+      .map { sub in
+        let name = sub._commandName
+        let abstract = sub.configuration.abstract
+        return "            '\(name):\(abstract)'"
+      }
+      .joined(separator: "\n")
+
+    let broken = """
+      _asc-client_help() {
+          local -i ret=1
+          local -ar arg_specs=(
+              '*:subcommands:'
+              '--version[Show the version.]'
+          )
+          _arguments -w -s -S : "${arg_specs[@]}" && ret=0
+
+          return "${ret}"
+      }
+      """
+
+    let fixed = """
+      _asc-client_help() {
+          local -i ret=1
+          local -ar arg_specs=(
+              '--version[Show the version.]'
+          )
+          _arguments -w -s -S : "${arg_specs[@]}" && ret=0
+          local -ar subcommands=(
+      \(entries)
+          )
+          _describe -V subcommand subcommands && ret=0
+
+          return "${ret}"
+      }
+      """
+
+    return script.replacingOccurrences(of: broken, with: fixed)
+  }
+
+  /// Patches the bash completion script so `asc-client help <tab>` lists subcommands.
+  private func patchBashHelpCompletions(_ script: String) -> String {
+    let subcommands = ASCClient.configuration.subcommands
+      .map { $0._commandName }
+      .joined(separator: " ")
+
+    let broken = """
+      _asc-client_help() {
+          repeating_flags=()
+          non_repeating_flags=(--version)
+          repeating_options=()
+          non_repeating_options=()
+          __asc-client_offer_flags_options -1
+      }
+      """
+
+    let fixed = """
+      _asc-client_help() {
+          repeating_flags=()
+          non_repeating_flags=(--version)
+          repeating_options=()
+          non_repeating_options=()
+          __asc-client_offer_flags_options -1
+          COMPREPLY+=($(compgen -W '\(subcommands)' -- "${cur}"))
+      }
+      """
+
+    return script.replacingOccurrences(of: broken, with: fixed)
   }
 
   private func ensureSourceLine(rcFile: URL, sourceLine: String, fm: FileManager) throws {

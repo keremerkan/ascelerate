@@ -55,7 +55,7 @@ cp .build/release/asc-client /usr/local/bin/
 Set up tab completion for subcommands, options, and flags (supports zsh and bash):
 
 ```bash
-asc-client install-shell-completions
+asc-client install-completions
 ```
 
 This detects your shell and configures everything automatically. Restart your shell or open a new tab to activate.
@@ -94,6 +94,24 @@ asc-client apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 
 # Check review submission status
 asc-client apps review-status <bundle-id>
+
+# Submit for review
+asc-client apps submit-for-review <bundle-id>
+asc-client apps submit-for-review <bundle-id> --version 2.1.0
+```
+
+### Build Management
+
+```bash
+# Interactively select and attach a build to a version
+asc-client apps attach-build <bundle-id>
+asc-client apps attach-build <bundle-id> --version 2.1.0
+
+# Attach the most recent build automatically
+asc-client apps attach-latest-build <bundle-id>
+
+# Remove the attached build from a version
+asc-client apps detach-build <bundle-id>
 ```
 
 ### Localizations
@@ -238,9 +256,62 @@ Without `--folder`, the command shows a read-only status report. Sets where all 
 ```bash
 # List all builds
 asc-client builds list
-
-# Filter by app
 asc-client builds list --bundle-id <bundle-id>
+
+# Archive an Xcode project
+asc-client builds archive
+asc-client builds archive --scheme MyApp --output ./archives
+
+# Validate a build before uploading
+asc-client builds validate MyApp.ipa
+
+# Upload a build to App Store Connect
+asc-client builds upload MyApp.ipa
+```
+
+The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it automatically exports to `.ipa` before uploading.
+
+### Workflows
+
+Chain multiple commands into a single automated run with a workflow file:
+
+```bash
+asc-client run-workflow release.txt
+asc-client run-workflow release.txt --yes   # skip all prompts (CI/CD)
+```
+
+A workflow file is a plain text file with one command per line (without the `asc-client` prefix). Lines starting with `#` are comments, blank lines are ignored.
+
+**Example** -- `release.txt` for submitting version 2.1.0 of a sample app:
+
+```
+# Release workflow for MyApp v2.1.0
+
+# Create the new version on App Store Connect
+apps create-version com.example.MyApp 2.1.0
+
+# Build, validate, and upload
+builds archive --scheme MyApp
+builds validate --latest --bundle-id com.example.MyApp
+builds upload --latest --bundle-id com.example.MyApp
+
+# Update localizations and attach the build
+apps update-localizations com.example.MyApp --file localizations.json
+apps attach-latest-build com.example.MyApp
+
+# Submit for review
+apps submit-for-review com.example.MyApp
+```
+
+Without `--yes`, the workflow asks for confirmation before starting, and individual commands still prompt where they normally would (e.g., before submitting for review). With `--yes`, all prompts are skipped for fully unattended execution.
+
+### Automation
+
+Most commands that prompt for confirmation support `--yes` / `-y` to skip prompts, making them suitable for CI/CD pipelines and scripts:
+
+```bash
+asc-client apps attach-latest-build <bundle-id> --yes
+asc-client apps submit-for-review <bundle-id> --yes
 ```
 
 ## Acknowledgments

@@ -1,11 +1,48 @@
 import Foundation
 
-func expandPath(_ path: String) -> String {
-  if path.hasPrefix("~/") {
-    return FileManager.default.homeDirectoryForCurrentUser
-      .appendingPathComponent(String(path.dropFirst(2))).path
+/// When true, all interactive confirmation prompts are automatically accepted.
+nonisolated(unsafe) var autoConfirm = false
+
+/// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
+func confirm(_ prompt: String) -> Bool {
+  print(prompt, terminator: "")
+  if autoConfirm {
+    print("y (auto)")
+    return true
   }
-  return path
+  guard let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+    answer == "y" || answer == "yes"
+  else {
+    return false
+  }
+  return true
+}
+
+/// Cleans up a path from interactive input (e.g. drag-drop into Terminal).
+/// Strips surrounding quotes and removes backslash escapes.
+func sanitizePath(_ path: String) -> String {
+  var result = path.trimmingCharacters(in: .whitespacesAndNewlines)
+
+  // Strip surrounding quotes
+  if (result.hasPrefix("'") && result.hasSuffix("'"))
+    || (result.hasPrefix("\"") && result.hasSuffix("\""))
+  {
+    result = String(result.dropFirst().dropLast())
+  }
+
+  // Remove backslash escapes (e.g. "\ " -> " ", "\~" -> "~")
+  result = result.replacingOccurrences(of: "\\", with: "")
+
+  return result
+}
+
+func expandPath(_ path: String) -> String {
+  let cleaned = sanitizePath(path)
+  if cleaned.hasPrefix("~/") {
+    return FileManager.default.homeDirectoryForCurrentUser
+      .appendingPathComponent(String(cleaned.dropFirst(2))).path
+  }
+  return cleaned
 }
 
 func formatDate(_ date: Date) -> String {
@@ -26,6 +63,12 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
     let exists = fm.fileExists(atPath: expandPath(current), isDirectory: &isDir)
 
     if !exists { return current }
+
+    if autoConfirm {
+      let kind = isDir.boolValue ? "Folder" : "File"
+      print("\(kind) '\(current)' already exists. Overwriting. (auto)")
+      return current
+    }
 
     let kind = isDir.boolValue ? "Folder" : "File"
     print("\(kind) '\(current)' already exists. Press Enter to overwrite or type a new name:")

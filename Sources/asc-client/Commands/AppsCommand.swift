@@ -7,7 +7,13 @@ struct AppsCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "apps",
     abstract: "Manage apps.",
-    subcommands: [List.self, Info.self, Versions.self, Localizations.self, ReviewStatus.self, CreateVersion.self, SelectBuild.self, SubmitForReview.self, UpdateLocalization.self, UpdateLocalizations.self, ExportLocalizations.self, UploadMedia.self, DownloadMedia.self, VerifyMedia.self]
+    subcommands: [List.self, Info.self, Versions.self],
+    groupedSubcommands: [
+      CommandGroup(name: "Version", subcommands: [CreateVersion.self, AttachBuild.self, AttachLatestBuild.self, DetachBuild.self]),
+      CommandGroup(name: "Localization", subcommands: [Localizations.self, ExportLocalizations.self, UpdateLocalization.self, UpdateLocalizations.self]),
+      CommandGroup(name: "Media", subcommands: [DownloadMedia.self, UploadMedia.self, VerifyMedia.self]),
+      CommandGroup(name: "Review", subcommands: [ReviewStatus.self, SubmitForReview.self]),
+    ]
   )
 
   struct List: AsyncParsableCommand {
@@ -254,10 +260,10 @@ struct AppsCommand: AsyncParsableCommand {
     }
   }
 
-  struct SelectBuild: AsyncParsableCommand {
+  struct AttachBuild: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-      commandName: "select-build",
-      abstract: "Attach a build to an App Store version."
+      commandName: "attach-build",
+      abstract: "Interactively select and attach a build to an App Store version."
     )
 
     @Argument(help: "The bundle identifier of the app.")
@@ -266,7 +272,11 @@ struct AppsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
     var version: String?
 
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
     func run() async throws {
+      if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
@@ -275,11 +285,130 @@ struct AppsCommand: AsyncParsableCommand {
       print("Version: \(versionString)")
       print()
 
-      let build = try await selectBuild(appID: app.id, versionID: appVersion.id, client: client)
+      let build = try await selectBuild(appID: app.id, versionID: appVersion.id, versionString: versionString, client: client)
       let buildNumber = build.attributes?.version ?? "unknown"
       let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
       print()
       print("Attached build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
+    }
+  }
+
+  struct AttachLatestBuild: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "attach-latest-build",
+      abstract: "Attach the most recent build to an App Store version."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+    var version: String?
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+
+      let versionString = appVersion.attributes?.versionString ?? "unknown"
+
+      let buildsResponse = try await client.send(
+        Resources.v1.builds.get(
+          filterPreReleaseVersionVersion: [versionString],
+          filterApp: [app.id],
+          sort: [.minusUploadedDate],
+          limit: 1
+        )
+      )
+
+      guard let build = buildsResponse.data.first else {
+        throw ValidationError("No builds found for version \(versionString). Upload a build first via Xcode or Transporter.")
+      }
+
+      let buildNumber = build.attributes?.version ?? "unknown"
+      let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
+      let state = build.attributes?.processingState.map { "\($0)" } ?? "—"
+
+      print("Version: \(versionString)")
+      print("Build:   \(buildNumber)  \(state)  \(uploaded)")
+      print()
+
+      guard confirm("Attach this build? [y/N] ") else {
+        print("Cancelled.")
+        return
+      }
+
+      try await client.send(
+        Resources.v1.appStoreVersions.id(appVersion.id).relationships.build.patch(
+          AppStoreVersionBuildLinkageRequest(
+            data: .init(id: build.id)
+          )
+        )
+      )
+
+      print()
+      print("Attached build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
+    }
+  }
+
+  struct DetachBuild: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "detach-build",
+      abstract: "Remove the attached build from an App Store version."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+    var version: String?
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+
+      let versionString = appVersion.attributes?.versionString ?? "unknown"
+
+      // Check if a build is attached
+      guard let existingBuild: Build = try? await client.send(
+        Resources.v1.appStoreVersions.id(appVersion.id).build.get()
+      ).data, existingBuild.attributes?.version != nil else {
+        print("No build attached to version \(versionString).")
+        return
+      }
+
+      let buildNumber = existingBuild.attributes?.version ?? "unknown"
+      let uploaded = existingBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
+
+      print("Version: \(versionString)")
+      print("Build:   \(buildNumber) (uploaded \(uploaded))")
+      print()
+
+      guard confirm("Detach this build from version \(versionString)? [y/N] ") else {
+        print("Cancelled.")
+        return
+      }
+
+      // The API uses PATCH with {"data": null} to detach a build.
+      // The typed AppStoreVersionBuildLinkageRequest requires non-null data,
+      // so we construct the request manually using Request<Void>.
+      let request = Request<Void>.patch(
+        "/v1/appStoreVersions/\(appVersion.id)/relationships/build",
+        body: NullRelationship()
+      )
+      try await client.send(request)
+
+      print()
+      print("Detached build \(buildNumber) from version \(versionString).")
     }
   }
 
@@ -298,7 +427,11 @@ struct AppsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Platform: ios, macos, tvos, visionos (default: ios).")
     var platform: String = "ios"
 
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
     func run() async throws {
+      if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
@@ -330,9 +463,7 @@ struct AppsCommand: AsyncParsableCommand {
         print("State:    \(versionState)")
         print("Platform: \(platformValue)")
         print()
-        print("Submit this version for App Review? [y/N] ", terminator: "")
-        guard let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-              answer == "y" || answer == "yes" else {
+        guard confirm("Submit this version for App Review? [y/N] ") else {
           print("Cancelled.")
           return
         }
@@ -344,14 +475,12 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         print("No build attached to this version. Select a build first:")
         print()
-        let selected = try await selectBuild(appID: app.id, versionID: appVersion.id, client: client)
+        let selected = try await selectBuild(appID: app.id, versionID: appVersion.id, versionString: versionString, client: client)
         let buildNumber = selected.attributes?.version ?? "unknown"
         print()
         print("Build \(buildNumber) attached. Continuing with submission...")
         print()
-        print("Submit this version for App Review? [y/N] ", terminator: "")
-        guard let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-              answer == "y" || answer == "yes" else {
+        guard confirm("Submit this version for App Review? [y/N] ") else {
           print("Cancelled.")
           return
         }
@@ -501,7 +630,11 @@ struct AppsCommand: AsyncParsableCommand {
     @Flag(name: .long, help: "Show full API response for each locale update.")
     var verbose = false
 
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
     func run() async throws {
+      if yes { autoConfirm = true }
       // Get file path from argument or prompt
       let filePath: String
       if let f = file {
@@ -557,9 +690,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
       }
 
-      print("Send updates for \(localeUpdates.count) locale(s)? [y/N] ", terminator: "")
-      guard let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-            answer == "y" || answer == "yes" else {
+      guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
         print("Cancelled.")
         return
       }
@@ -684,6 +815,15 @@ struct LocaleFields: Codable {
   var supportURL: String?
 }
 
+/// Encodes as `{"data": null}` for clearing a to-one relationship.
+private struct NullRelationship: Encodable, Sendable {
+  enum CodingKeys: String, CodingKey { case data }
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encodeNil(forKey: .data)
+  }
+}
+
 private func describeDecodingError(_ error: DecodingError) -> String {
   switch error {
   case .typeMismatch(let type, let context):
@@ -725,12 +865,13 @@ func findVersion(appID: String, versionString: String?, client: AppStoreConnectC
   return version
 }
 
-/// Fetches recent builds for the app, prompts the user to pick one, and attaches it to the version.
+/// Fetches builds for the app matching the given version, prompts the user to pick one, and attaches it.
 /// Returns the selected build.
 @discardableResult
-private func selectBuild(appID: String, versionID: String, client: AppStoreConnectClient) async throws -> Build {
+private func selectBuild(appID: String, versionID: String, versionString: String?, client: AppStoreConnectClient) async throws -> Build {
   let buildsResponse = try await client.send(
     Resources.v1.builds.get(
+      filterPreReleaseVersionVersion: versionString.map { [$0] },
       filterApp: [appID],
       sort: [.minusUploadedDate],
       limit: 10
@@ -739,10 +880,13 @@ private func selectBuild(appID: String, versionID: String, client: AppStoreConne
 
   let builds = buildsResponse.data
   guard !builds.isEmpty else {
+    if let v = versionString {
+      throw ValidationError("No builds found for version \(v). Upload a build first via Xcode or Transporter.")
+    }
     throw ValidationError("No builds found for this app. Upload a build first via Xcode or Transporter.")
   }
 
-  print("Recent builds:")
+  print("Builds for version \(versionString ?? "all"):")
   for (i, build) in builds.enumerated() {
     let number = build.attributes?.version ?? "—"
     let state = build.attributes?.processingState.map { "\($0)" } ?? "—"
@@ -750,14 +894,21 @@ private func selectBuild(appID: String, versionID: String, client: AppStoreConne
     print("  [\(i + 1)] \(number)  \(state)  \(uploaded)")
   }
   print()
-  print("Select a build (1-\(builds.count)): ", terminator: "")
-  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        let choice = Int(input),
-        choice >= 1, choice <= builds.count else {
-    throw ValidationError("Invalid selection.")
-  }
 
-  let selected = builds[choice - 1]
+  let selected: Build
+  if autoConfirm {
+    selected = builds[0]
+    let number = selected.attributes?.version ?? "—"
+    print("Auto-selected build \(number) (most recent).")
+  } else {
+    print("Select a build (1-\(builds.count)): ", terminator: "")
+    guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+          let choice = Int(input),
+          choice >= 1, choice <= builds.count else {
+      throw ValidationError("Invalid selection.")
+    }
+    selected = builds[choice - 1]
+  }
 
   // Attach the build to the version
   try await client.send(

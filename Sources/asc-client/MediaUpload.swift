@@ -278,7 +278,11 @@ extension AppsCommand {
     @Flag(name: .long, help: "Delete existing media in matching sets before uploading.")
     var replace = false
 
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
     func run() async throws {
+      if yes { autoConfirm = true }
       // Get folder path
       let folderPath: String
       if let f = folder {
@@ -339,12 +343,8 @@ extension AppsCommand {
       print()
 
       let localeCount = plan.locales.count
-      print(
-        "Upload \(plan.totalScreenshots) screenshot\(plan.totalScreenshots == 1 ? "" : "s") and \(plan.totalPreviews) preview\(plan.totalPreviews == 1 ? "" : "s") for \(localeCount) locale\(localeCount == 1 ? "" : "s")? [y/N] ",
-        terminator: "")
-      guard
-        let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-        answer == "y" || answer == "yes"
+      guard confirm(
+        "Upload \(plan.totalScreenshots) screenshot\(plan.totalScreenshots == 1 ? "" : "s") and \(plan.totalPreviews) preview\(plan.totalPreviews == 1 ? "" : "s") for \(localeCount) locale\(localeCount == 1 ? "" : "s")? [y/N] ")
       else {
         print("Cancelled.")
         return
@@ -805,7 +805,11 @@ extension AppsCommand {
     @Option(name: .long, help: "Path to the media folder for retrying stuck uploads.")
     var folder: String?
 
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
     func run() async throws {
+      if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(
@@ -871,11 +875,7 @@ extension AppsCommand {
       }
 
       print()
-      print("Retry \(matchedRetries.count) stuck item\(matchedRetries.count == 1 ? "" : "s")? [y/N] ", terminator: "")
-      guard
-        let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-        answer == "y" || answer == "yes"
-      else {
+      guard confirm("Retry \(matchedRetries.count) stuck item\(matchedRetries.count == 1 ? "" : "s")? [y/N] ") else {
         print("Cancelled.")
         return
       }

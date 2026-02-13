@@ -1,8 +1,8 @@
 # asc-client
 
-A command-line tool for the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi), built with Swift.
+A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).
 
-> **Note:** This is an early prototype focused on app version workflows -- creating versions, managing localizations, uploading screenshots, and submitting for review. More API coverage is planned but not yet implemented.
+> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, and review submission. More API coverage is planned.
 
 ## Requirements
 
@@ -119,11 +119,11 @@ asc-client apps detach-build <bundle-id>
 ```bash
 # View localizations (latest version by default)
 asc-client apps localizations <bundle-id>
-asc-client apps localizations <bundle-id> --version 1.2.0 --locale en-US
+asc-client apps localizations <bundle-id> --version 2.1.0 --locale en-US
 
 # Export localizations to JSON
 asc-client apps export-localizations <bundle-id>
-asc-client apps export-localizations <bundle-id> --version 1.2.0 --output my-localizations.json
+asc-client apps export-localizations <bundle-id> --version 2.1.0 --output my-localizations.json
 
 # Update a single locale
 asc-client apps update-localization <bundle-id> --whats-new "Bug fixes" --locale en-US

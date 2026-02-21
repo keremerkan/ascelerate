@@ -187,6 +187,43 @@ struct AppsCommand: AsyncParsableCommand {
         headers: ["Platform", "State", "Submitted"],
         rows: rows
       )
+
+      // Show details for active submissions with issues
+      for submission in response.data {
+        guard let state = submission.attributes?.state,
+              state == .unresolvedIssues || state == .inReview || state == .waitingForReview
+        else { continue }
+
+        print()
+        print("--- Submission \(submission.id) (\(state)) ---")
+
+        // Fetch items for this submission
+        let itemsResponse = try await client.send(
+          Resources.v1.reviewSubmissions.id(submission.id).items.get()
+        )
+
+        if !itemsResponse.data.isEmpty {
+          print()
+          for item in itemsResponse.data {
+            let itemState = item.attributes?.state.map { "\($0)" } ?? "—"
+            print("  Item: \(item.id)  State: \(itemState)")
+          }
+        }
+
+        // Try to get the version's review detail (notes from reviewer)
+        if let versionRef = submission.relationships?.appStoreVersionForReview?.data {
+          let reviewDetail = try? await client.send(
+            Resources.v1.appStoreVersions.id(versionRef.id).appStoreReviewDetail.get()
+          )
+          if let notes = reviewDetail?.data.attributes?.notes, !notes.isEmpty {
+            print()
+            print("  Review notes:")
+            for line in notes.components(separatedBy: .newlines) {
+              print("    \(line)")
+            }
+          }
+        }
+      }
     }
   }
 
@@ -214,6 +251,21 @@ struct AppsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
+
+      // Check if version already exists
+      let existingVersions = try await client.send(
+        Resources.v1.apps.id(app.id).appStoreVersions.get(
+          filterVersionString: [versionString]
+        )
+      )
+      if let existing = existingVersions.data.first(where: { $0.attributes?.versionString == versionString }) {
+        let state = existing.attributes?.appVersionState
+        if state == .prepareForSubmission {
+          print("Version \(versionString) already exists (PREPARE_FOR_SUBMISSION). Continuing.")
+          return
+        }
+        throw ValidationError("Version \(versionString) already exists (state: \(state.map { "\($0)" } ?? "unknown")).")
+      }
 
       let platformValue: Platform = switch platform.lowercased() {
       case "ios": .iOS
@@ -539,34 +591,64 @@ struct AppsCommand: AsyncParsableCommand {
       }
       print()
 
-      // Step 1: Create a review submission
-      let createSubmission = Resources.v1.reviewSubmissions.post(
-        ReviewSubmissionCreateRequest(
-          data: .init(
-            attributes: .init(platform: platformValue),
-            relationships: .init(
-              app: .init(data: .init(id: app.id))
-            )
-          )
+      // Check for existing active review submissions
+      let existingSubmissions = try await client.send(
+        Resources.v1.apps.id(app.id).reviewSubmissions.get(
+          filterState: [.readyForReview, .waitingForReview, .inReview, .unresolvedIssues]
         )
       )
-      let submission = try await client.send(createSubmission)
-      let submissionID = submission.data.id
-      print("Created review submission (\(submissionID))")
 
-      // Step 2: Add the app store version as a review item
-      let createItem = Resources.v1.reviewSubmissionItems.post(
-        ReviewSubmissionItemCreateRequest(
-          data: .init(
-            relationships: .init(
-              reviewSubmission: .init(data: .init(id: submissionID)),
-              appStoreVersion: .init(data: .init(id: appVersion.id))
+      let submissionID: String
+      if let active = existingSubmissions.data.first {
+        let activeState = active.attributes?.state
+
+        switch activeState {
+        case .waitingForReview, .inReview:
+          print("Version is already submitted for review (state: \(activeState.map { "\($0)" } ?? "—")).")
+          return
+        case .readyForReview:
+          print("Found existing review submission (state: readyForReview). Resubmitting...")
+          submissionID = active.id
+        case .unresolvedIssues:
+          print("Found existing review submission with unresolved issues from a previous review.")
+          guard confirm("Resubmit for review? [y/N] ") else {
+            print("Cancelled.")
+            return
+          }
+          submissionID = active.id
+        default:
+          submissionID = active.id
+        }
+      } else {
+        // Step 1: Create a review submission
+        let createSubmission = Resources.v1.reviewSubmissions.post(
+          ReviewSubmissionCreateRequest(
+            data: .init(
+              attributes: .init(platform: platformValue),
+              relationships: .init(
+                app: .init(data: .init(id: app.id))
+              )
             )
           )
         )
-      )
-      _ = try await client.send(createItem)
-      print("Added version \(versionString) to submission")
+        let submission = try await client.send(createSubmission)
+        submissionID = submission.data.id
+        print("Created review submission (\(submissionID))")
+
+        // Step 2: Add the app store version as a review item
+        let createItem = Resources.v1.reviewSubmissionItems.post(
+          ReviewSubmissionItemCreateRequest(
+            data: .init(
+              relationships: .init(
+                reviewSubmission: .init(data: .init(id: submissionID)),
+                appStoreVersion: .init(data: .init(id: appVersion.id))
+              )
+            )
+          )
+        )
+        _ = try await client.send(createItem)
+        print("Added version \(versionString) to submission")
+      }
 
       // Step 3: Submit for review
       let submitRequest = Resources.v1.reviewSubmissions.id(submissionID).patch(

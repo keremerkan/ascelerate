@@ -1456,7 +1456,7 @@ struct AppsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Secondary category ID.")
     var secondaryCategory: String?
 
-    @Flag(name: .long, help: "List available category IDs.")
+    @Flag(name: .long, help: "List available category IDs (iOS categories).")
     var listCategories = false
 
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1495,7 +1495,11 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      let app = try await findApp(bundleID: bundleID!, client: client)
+      guard let bundleID else {
+        throw ValidationError("Please provide a <bundle-id>.")
+      }
+
+      let app = try await findApp(bundleID: bundleID, client: client)
 
       let response = try await client.send(
         Resources.v1.apps.id(app.id).appInfos.get(
@@ -1521,7 +1525,7 @@ struct AppsCommand: AsyncParsableCommand {
           relationships.secondaryCategory = .init(data: .init(id: cat))
         }
 
-        let appName = app.attributes?.name ?? bundleID!
+        let appName = app.attributes?.name ?? bundleID
         print("App: \(appName)")
         print()
         if let cat = primaryCategory {
@@ -1550,7 +1554,7 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       // View mode
-      let appName = app.attributes?.name ?? bundleID!
+      let appName = app.attributes?.name ?? bundleID
       let attrs = appInfo.attributes
       let state = attrs?.state.map { "\($0)" } ?? "—"
       let ageRating = attrs?.appStoreAgeRating.map { "\($0)" } ?? "—"
@@ -1566,8 +1570,7 @@ struct AppsCommand: AsyncParsableCommand {
       // Filter localizations to only those belonging to the selected AppInfo
       let locIDs = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
       let localizations = response.included?.compactMap { item -> AppInfoLocalization? in
-        if case .appInfoLocalization(let loc) = item,
-           locIDs.isEmpty || locIDs.contains(loc.id) {
+        if case .appInfoLocalization(let loc) = item, locIDs.contains(loc.id) {
           return loc
         }
         return nil
@@ -1633,8 +1636,6 @@ struct AppsCommand: AsyncParsableCommand {
       let availabilityID = response.data.id
 
       // Paginate through all territory availabilities via the v2 sub-resource
-      var available: [String] = []
-      var notAvailable: [String] = []
       var territoryMap: [(code: String, id: String, isAvailable: Bool)] = []
 
       for try await page in client.pages(
@@ -1644,14 +1645,9 @@ struct AppsCommand: AsyncParsableCommand {
         )
       ) {
         for ta in page.data {
-          let code = ta.relationships?.territory?.data?.id ?? ta.id
+          guard let code = ta.relationships?.territory?.data?.id else { continue }
           let isAvail = ta.attributes?.isAvailable ?? false
           territoryMap.append((code, ta.id, isAvail))
-          if isAvail {
-            available.append(code)
-          } else {
-            notAvailable.append(code)
-          }
         }
       }
 
@@ -1717,24 +1713,36 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
 
+        var failed: [String] = []
         for change in changes {
-          _ = try await client.send(
-            Resources.v1.territoryAvailabilities.id(change.id).patch(
-              TerritoryAvailabilityUpdateRequest(
-                data: .init(id: change.id, attributes: .init(isAvailable: change.newValue))
+          do {
+            _ = try await client.send(
+              Resources.v1.territoryAvailabilities.id(change.id).patch(
+                TerritoryAvailabilityUpdateRequest(
+                  data: .init(id: change.id, attributes: .init(isAvailable: change.newValue))
+                )
               )
             )
-          )
+          } catch {
+            failed.append(change.code)
+            print("  Failed to update \(change.code): \(error.localizedDescription)")
+          }
         }
 
         print()
-        print("Updated \(changes.count) territory availability\(changes.count == 1 ? "" : " entries").")
+        let succeeded = changes.count - failed.count
+        if succeeded > 0 {
+          print("Updated \(succeeded) territory availability\(succeeded == 1 ? "" : " entries").")
+        }
+        if !failed.isEmpty {
+          print("Failed: \(failed.joined(separator: ", "))")
+        }
         return
       }
 
       // View mode
-      available.sort()
-      notAvailable.sort()
+      let available = territoryMap.filter(\.isAvailable).map(\.code).sorted()
+      let notAvailable = territoryMap.filter { !$0.isAvailable }.map(\.code).sorted()
 
       print("App:                          \(appName)")
       print("Available in new territories: \(availableInNew == true ? "Yes" : availableInNew == false ? "No" : "—")")
@@ -1858,28 +1866,28 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       // View mode
-      let response = try await client.send(
-        Resources.v1.appEncryptionDeclarations.get(filterApp: [app.id])
-      )
-
       print("App: \(appName)")
       print()
 
-      if response.data.isEmpty {
-        print("No encryption declarations found.")
-        return
+      var rows: [[String]] = []
+      for try await page in client.pages(
+        Resources.v1.appEncryptionDeclarations.get(filterApp: [app.id])
+      ) {
+        for decl in page.data {
+          let attrs = decl.attributes
+          let state = attrs?.appEncryptionDeclarationState.map { "\($0)" } ?? "—"
+          let platform = attrs?.platform.map { "\($0)" } ?? "—"
+          let proprietary = attrs?.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—"
+          let thirdParty = attrs?.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—"
+          let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
+          let created = attrs?.createdDate.map { formatDate($0) } ?? "—"
+          rows.append([state, platform, proprietary, thirdParty, exempt, created])
+        }
       }
 
-      var rows: [[String]] = []
-      for decl in response.data {
-        let attrs = decl.attributes
-        let state = attrs?.appEncryptionDeclarationState.map { "\($0)" } ?? "—"
-        let platform = attrs?.platform.map { "\($0)" } ?? "—"
-        let proprietary = attrs?.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—"
-        let thirdParty = attrs?.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—"
-        let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
-        let created = attrs?.createdDate.map { formatDate($0) } ?? "—"
-        rows.append([state, platform, proprietary, thirdParty, exempt, created])
+      if rows.isEmpty {
+        print("No encryption declarations found.")
+        return
       }
 
       Table.print(
@@ -1919,10 +1927,21 @@ struct AppsCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
 
-      // Try to get existing EULA (returns null when none exists)
-      let existing: EndUserLicenseAgreement? = try? await client.send(
-        Resources.v1.apps.id(app.id).endUserLicenseAgreement.get()
-      ).data
+      // Try to get existing EULA (API returns 404 or null data when none exists)
+      let existing: EndUserLicenseAgreement?
+      do {
+        existing = try await client.send(
+          Resources.v1.apps.id(app.id).endUserLicenseAgreement.get()
+        ).data
+      } catch let error as ResponseError {
+        if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
+          existing = nil
+        } else {
+          throw error
+        }
+      } catch is DecodingError {
+        existing = nil
+      }
 
       if delete {
         guard let eula = existing else {
@@ -1985,16 +2004,16 @@ struct AppsCommand: AsyncParsableCommand {
           print("Updated EULA.")
         } else {
           // Create new — need all territory IDs
-          guard confirm("Create custom EULA? [y/N] ") else {
-            print("Cancelled.")
-            return
-          }
-
           var allTerritoryIDs: [String] = []
           for try await page in client.pages(Resources.v1.territories.get(limit: 200)) {
             for territory in page.data {
               allTerritoryIDs.append(territory.id)
             }
+          }
+
+          guard confirm("Create custom EULA for all \(allTerritoryIDs.count) territories? [y/N] ") else {
+            print("Cancelled.")
+            return
           }
 
           _ = try await client.send(

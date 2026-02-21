@@ -13,6 +13,7 @@ struct AppsCommand: AsyncParsableCommand {
       CommandGroup(name: "Localization", subcommands: [Localizations.self, ExportLocalizations.self, UpdateLocalization.self, UpdateLocalizations.self]),
       CommandGroup(name: "Media", subcommands: [DownloadMedia.self, UploadMedia.self, VerifyMedia.self]),
       CommandGroup(name: "Review", subcommands: [ReviewStatus.self, SubmitForReview.self]),
+      CommandGroup(name: "Configuration", subcommands: [AppInfoCommand.self, Availability.self, Encryption.self, EULACommand.self]),
     ]
   )
 
@@ -1435,6 +1436,600 @@ struct AppsCommand: AsyncParsableCommand {
 
       let versionString = version.attributes?.versionString ?? "unknown"
       print("Exported \(result.count) locale(s) for version \(versionString) to \(outputPath)")
+    }
+  }
+
+  // MARK: - Configuration Commands
+
+  struct AppInfoCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "app-info",
+      abstract: "View or update app info and categories."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String?
+
+    @Option(name: .long, help: "Primary category ID (e.g. UTILITIES, GAMES_ACTION).")
+    var primaryCategory: String?
+
+    @Option(name: .long, help: "Secondary category ID.")
+    var secondaryCategory: String?
+
+    @Flag(name: .long, help: "List available category IDs.")
+    var listCategories = false
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func validate() throws {
+      if !listCategories && bundleID == nil {
+        throw ValidationError("Please provide a <bundle-id>, or use --list-categories.")
+      }
+    }
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+
+      if listCategories {
+        let response = try await client.send(
+          Resources.v1.appCategories.get(
+            filterPlatforms: [.iOS],
+            isExistsParent: false,
+            limit: 200,
+            include: [.subcategories],
+            limitSubcategories: 50
+          )
+        )
+
+        print("Categories (iOS):")
+        for cat in response.data.sorted(by: { $0.id < $1.id }) {
+          print("  \(cat.id)")
+          if let subs = cat.relationships?.subcategories?.data, !subs.isEmpty {
+            for sub in subs.sorted(by: { $0.id < $1.id }) {
+              print("    \(sub.id)")
+            }
+          }
+        }
+        return
+      }
+
+      let app = try await findApp(bundleID: bundleID!, client: client)
+
+      let response = try await client.send(
+        Resources.v1.apps.id(app.id).appInfos.get(
+          include: [.primaryCategory, .secondaryCategory, .appInfoLocalizations],
+          limitAppInfoLocalizations: 50
+        )
+      )
+
+      // Pick the most relevant AppInfo (prefer non-replaced)
+      guard let appInfo = response.data.first(where: { $0.attributes?.state != .replacedWithNewInfo })
+              ?? response.data.first else {
+        throw ValidationError("No app info found.")
+      }
+
+      if primaryCategory != nil || secondaryCategory != nil {
+        // Update mode
+        typealias Rels = AppInfoUpdateRequest.Data.Relationships
+        var relationships = Rels()
+        if let cat = primaryCategory {
+          relationships.primaryCategory = .init(data: .init(id: cat))
+        }
+        if let cat = secondaryCategory {
+          relationships.secondaryCategory = .init(data: .init(id: cat))
+        }
+
+        let appName = app.attributes?.name ?? bundleID!
+        print("App: \(appName)")
+        print()
+        if let cat = primaryCategory {
+          print("  Primary Category:   \(cat)")
+        }
+        if let cat = secondaryCategory {
+          print("  Secondary Category: \(cat)")
+        }
+        print()
+
+        guard confirm("Update categories? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+
+        _ = try await client.send(
+          Resources.v1.appInfos.id(appInfo.id).patch(
+            AppInfoUpdateRequest(
+              data: .init(id: appInfo.id, relationships: relationships)
+            )
+          )
+        )
+        print()
+        print("Updated app info.")
+        return
+      }
+
+      // View mode
+      let appName = app.attributes?.name ?? bundleID!
+      let attrs = appInfo.attributes
+      let state = attrs?.state.map { "\($0)" } ?? "—"
+      let ageRating = attrs?.appStoreAgeRating.map { "\($0)" } ?? "—"
+      let primaryCatID = appInfo.relationships?.primaryCategory?.data?.id ?? "—"
+      let secondaryCatID = appInfo.relationships?.secondaryCategory?.data?.id ?? "—"
+
+      print("App:                \(appName)")
+      print("State:              \(state)")
+      print("Age Rating:         \(ageRating)")
+      print("Primary Category:   \(primaryCatID)")
+      print("Secondary Category: \(secondaryCatID)")
+
+      // Filter localizations to only those belonging to the selected AppInfo
+      let locIDs = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
+      let localizations = response.included?.compactMap { item -> AppInfoLocalization? in
+        if case .appInfoLocalization(let loc) = item,
+           locIDs.isEmpty || locIDs.contains(loc.id) {
+          return loc
+        }
+        return nil
+      } ?? []
+
+      if !localizations.isEmpty {
+        print()
+        print("Localizations:")
+        for loc in localizations {
+          let locAttrs = loc.attributes
+          let locale = locAttrs?.locale ?? "—"
+          let name = locAttrs?.name ?? "—"
+          let subtitle = locAttrs?.subtitle
+          var line = "  [\(locale)] \(name)"
+          if let sub = subtitle, !sub.isEmpty {
+            line += " — \(sub)"
+          }
+          print(line)
+          if let url = locAttrs?.privacyPolicyURL, !url.isEmpty {
+            print("    Privacy Policy URL:  \(url)")
+          }
+          if let url = locAttrs?.privacyChoicesURL, !url.isEmpty {
+            print("    Privacy Choices URL: \(url)")
+          }
+        }
+      }
+    }
+  }
+
+  struct Availability: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "availability",
+      abstract: "View or update territory availability."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Comma-separated territory codes to make available (e.g. CHN,RUS).")
+    var add: String?
+
+    @Option(name: .long, help: "Comma-separated territory codes to make unavailable (e.g. CHN,RUS).")
+    var remove: String?
+
+    @Flag(name: .long, help: "Show full country names.")
+    var verbose = false
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appName = app.attributes?.name ?? bundleID
+
+      // Get availability info (without includes — territory limit is only 50)
+      let response = try await client.send(
+        Resources.v1.apps.id(app.id).appAvailabilityV2.get()
+      )
+
+      let availableInNew = response.data.attributes?.isAvailableInNewTerritories
+      let availabilityID = response.data.id
+
+      // Paginate through all territory availabilities via the v2 sub-resource
+      var available: [String] = []
+      var notAvailable: [String] = []
+      var territoryMap: [(code: String, id: String, isAvailable: Bool)] = []
+
+      for try await page in client.pages(
+        Resources.v2.appAvailabilities.id(availabilityID).territoryAvailabilities.get(
+          limit: 50,
+          include: [.territory]
+        )
+      ) {
+        for ta in page.data {
+          let code = ta.relationships?.territory?.data?.id ?? ta.id
+          let isAvail = ta.attributes?.isAvailable ?? false
+          territoryMap.append((code, ta.id, isAvail))
+          if isAvail {
+            available.append(code)
+          } else {
+            notAvailable.append(code)
+          }
+        }
+      }
+
+      // Edit mode
+      if add != nil || remove != nil {
+        let addCodes = Set(add?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
+        let removeCodes = Set(remove?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
+
+        let allCodes = Set(territoryMap.map(\.code))
+        let invalidCodes = addCodes.union(removeCodes).subtracting(allCodes)
+        if !invalidCodes.isEmpty {
+          throw ValidationError("Unknown territory codes: \(invalidCodes.sorted().joined(separator: ", "))")
+        }
+
+        let overlap = addCodes.intersection(removeCodes)
+        if !overlap.isEmpty {
+          throw ValidationError("Territory codes in both --add and --remove: \(overlap.sorted().joined(separator: ", "))")
+        }
+
+        var changes: [(code: String, id: String, newValue: Bool)] = []
+        for t in territoryMap {
+          if addCodes.contains(t.code) && !t.isAvailable {
+            changes.append((t.code, t.id, true))
+          } else if removeCodes.contains(t.code) && t.isAvailable {
+            changes.append((t.code, t.id, false))
+          }
+        }
+
+        // Report codes already in the requested state
+        let alreadyAvailable = addCodes.filter { code in territoryMap.first { $0.code == code }?.isAvailable == true }
+        let alreadyUnavailable = removeCodes.filter { code in territoryMap.first { $0.code == code }?.isAvailable == false }
+        let en = Locale(identifier: "en")
+
+        if !alreadyAvailable.isEmpty {
+          for code in alreadyAvailable.sorted() {
+            let name = en.localizedString(forRegionCode: code) ?? code
+            print("  Already available: \(code)  \(name)")
+          }
+        }
+        if !alreadyUnavailable.isEmpty {
+          for code in alreadyUnavailable.sorted() {
+            let name = en.localizedString(forRegionCode: code) ?? code
+            print("  Already unavailable: \(code)  \(name)")
+          }
+        }
+
+        if changes.isEmpty {
+          print("No changes needed.")
+          return
+        }
+
+        print("App: \(appName)")
+        print()
+        for change in changes.sorted(by: { $0.code < $1.code }) {
+          let name = en.localizedString(forRegionCode: change.code) ?? change.code
+          let action = change.newValue ? "  Add:    " : "  Remove: "
+          print("\(action)\(change.code)  \(name)")
+        }
+        print()
+
+        guard confirm("Apply \(changes.count) change\(changes.count == 1 ? "" : "s")? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+
+        for change in changes {
+          _ = try await client.send(
+            Resources.v1.territoryAvailabilities.id(change.id).patch(
+              TerritoryAvailabilityUpdateRequest(
+                data: .init(id: change.id, attributes: .init(isAvailable: change.newValue))
+              )
+            )
+          )
+        }
+
+        print()
+        print("Updated \(changes.count) territory availability\(changes.count == 1 ? "" : " entries").")
+        return
+      }
+
+      // View mode
+      available.sort()
+      notAvailable.sort()
+
+      print("App:                          \(appName)")
+      print("Available in new territories: \(availableInNew == true ? "Yes" : availableInNew == false ? "No" : "—")")
+      print()
+
+      if !available.isEmpty {
+        print("Available (\(available.count)):")
+        printTerritories(available)
+      }
+
+      if !notAvailable.isEmpty {
+        if !available.isEmpty { print() }
+        print("Not Available (\(notAvailable.count)):")
+        printTerritories(notAvailable)
+      }
+
+      if available.isEmpty && notAvailable.isEmpty {
+        print("No territory availability data found.")
+      }
+    }
+
+    private func printTerritories(_ codes: [String]) {
+      if verbose {
+        let en = Locale(identifier: "en")
+        for code in codes {
+          let name = en.localizedString(forRegionCode: code) ?? code
+          print("  \(code)  \(name)")
+        }
+      } else {
+        for i in stride(from: 0, to: codes.count, by: 10) {
+          let end = min(i + 10, codes.count)
+          let row = codes[i..<end].joined(separator: "  ")
+          print("  \(row)")
+        }
+      }
+    }
+  }
+
+  struct Encryption: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "encryption",
+      abstract: "View or create encryption declarations."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Flag(name: .long, help: "Create a new encryption declaration.")
+    var create = false
+
+    @Option(name: .customLong("description"), help: "Description of encryption use (required with --create).")
+    var appDescription: String?
+
+    @Flag(name: .long, inversion: .prefixedNo, help: "App uses proprietary cryptography.")
+    var proprietaryCrypto: Bool = false
+
+    @Flag(name: .long, inversion: .prefixedNo, help: "App uses third-party cryptography.")
+    var thirdPartyCrypto: Bool = false
+
+    @Flag(name: .long, inversion: .prefixedNo, help: "App is available on the French store.")
+    var availableOnFrenchStore: Bool = true
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func validate() throws {
+      if create && appDescription == nil {
+        throw ValidationError("--description is required when using --create.")
+      }
+    }
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appName = app.attributes?.name ?? bundleID
+
+      if create {
+        let desc = appDescription!
+
+        print("App: \(appName)")
+        print()
+        print("New encryption declaration:")
+        print("  Description:            \(desc)")
+        print("  Proprietary Crypto:     \(proprietaryCrypto ? "Yes" : "No")")
+        print("  Third-Party Crypto:     \(thirdPartyCrypto ? "Yes" : "No")")
+        print("  French Store Available: \(availableOnFrenchStore ? "Yes" : "No")")
+        print()
+
+        guard confirm("Create encryption declaration? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+
+        let response = try await client.send(
+          Resources.v1.appEncryptionDeclarations.post(
+            AppEncryptionDeclarationCreateRequest(
+              data: .init(
+                attributes: .init(
+                  appDescription: desc,
+                  containsProprietaryCryptography: proprietaryCrypto,
+                  containsThirdPartyCryptography: thirdPartyCrypto,
+                  isAvailableOnFrenchStore: availableOnFrenchStore
+                ),
+                relationships: .init(
+                  app: .init(data: .init(id: app.id))
+                )
+              )
+            )
+          )
+        )
+
+        let attrs = response.data.attributes
+        let state = attrs?.appEncryptionDeclarationState.map { "\($0)" } ?? "—"
+        let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
+        print()
+        print("Created encryption declaration.")
+        print("  State:  \(state)")
+        print("  Exempt: \(exempt)")
+        return
+      }
+
+      // View mode
+      let response = try await client.send(
+        Resources.v1.appEncryptionDeclarations.get(filterApp: [app.id])
+      )
+
+      print("App: \(appName)")
+      print()
+
+      if response.data.isEmpty {
+        print("No encryption declarations found.")
+        return
+      }
+
+      var rows: [[String]] = []
+      for decl in response.data {
+        let attrs = decl.attributes
+        let state = attrs?.appEncryptionDeclarationState.map { "\($0)" } ?? "—"
+        let platform = attrs?.platform.map { "\($0)" } ?? "—"
+        let proprietary = attrs?.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—"
+        let thirdParty = attrs?.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—"
+        let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
+        let created = attrs?.createdDate.map { formatDate($0) } ?? "—"
+        rows.append([state, platform, proprietary, thirdParty, exempt, created])
+      }
+
+      Table.print(
+        headers: ["State", "Platform", "Proprietary", "Third-Party", "Exempt", "Created"],
+        rows: rows
+      )
+    }
+  }
+
+  struct EULACommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "eula",
+      abstract: "View or manage custom EULA."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Path to a text file with EULA content.")
+    var file: String?
+
+    @Flag(name: .long, help: "Remove the custom EULA.")
+    var delete = false
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func validate() throws {
+      if file != nil && delete {
+        throw ValidationError("Cannot use --file and --delete together.")
+      }
+    }
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appName = app.attributes?.name ?? bundleID
+
+      // Try to get existing EULA (returns null when none exists)
+      let existing: EndUserLicenseAgreement? = try? await client.send(
+        Resources.v1.apps.id(app.id).endUserLicenseAgreement.get()
+      ).data
+
+      if delete {
+        guard let eula = existing else {
+          print("No custom EULA to delete. The standard Apple EULA applies.")
+          return
+        }
+
+        let textLen = eula.attributes?.agreementText?.count ?? 0
+        print("App:  \(appName)")
+        print("EULA: Custom (\(textLen) characters)")
+        print()
+
+        guard confirm("Delete custom EULA? This will revert to the standard Apple EULA. [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+
+        try await client.send(
+          Resources.v1.endUserLicenseAgreements.id(eula.id).delete
+        )
+        print()
+        print("Deleted custom EULA.")
+        return
+      }
+
+      if let filePath = file {
+        // Create or update EULA from file
+        let expandedPath = expandPath(filePath)
+        guard FileManager.default.fileExists(atPath: expandedPath) else {
+          throw ValidationError("File not found at '\(expandedPath)'.")
+        }
+
+        let text = try String(contentsOfFile: expandedPath, encoding: .utf8)
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+          throw ValidationError("EULA file is empty.")
+        }
+
+        print("App:  \(appName)")
+        print("EULA: \(text.count) characters from \((expandedPath as NSString).lastPathComponent)")
+        print()
+        let preview = String(text.prefix(200))
+        print("  \(preview)\(text.count > 200 ? "..." : "")")
+        print()
+
+        if let eula = existing {
+          // Update existing
+          guard confirm("Update existing EULA? [y/N] ") else {
+            print("Cancelled.")
+            return
+          }
+
+          _ = try await client.send(
+            Resources.v1.endUserLicenseAgreements.id(eula.id).patch(
+              EndUserLicenseAgreementUpdateRequest(
+                data: .init(id: eula.id, attributes: .init(agreementText: text))
+              )
+            )
+          )
+          print()
+          print("Updated EULA.")
+        } else {
+          // Create new — need all territory IDs
+          guard confirm("Create custom EULA? [y/N] ") else {
+            print("Cancelled.")
+            return
+          }
+
+          var allTerritoryIDs: [String] = []
+          for try await page in client.pages(Resources.v1.territories.get(limit: 200)) {
+            for territory in page.data {
+              allTerritoryIDs.append(territory.id)
+            }
+          }
+
+          _ = try await client.send(
+            Resources.v1.endUserLicenseAgreements.post(
+              EndUserLicenseAgreementCreateRequest(
+                data: .init(
+                  attributes: .init(agreementText: text),
+                  relationships: .init(
+                    app: .init(data: .init(id: app.id)),
+                    territories: .init(data: allTerritoryIDs.map { .init(id: $0) })
+                  )
+                )
+              )
+            )
+          )
+          print()
+          print("Created EULA for \(allTerritoryIDs.count) territories.")
+        }
+        return
+      }
+
+      // View mode
+      print("App:  \(appName)")
+
+      guard let eula = existing,
+            let text = eula.attributes?.agreementText,
+            !text.isEmpty else {
+        print("EULA: No custom EULA. The standard Apple EULA applies.")
+        return
+      }
+
+      print("EULA: Custom (\(text.count) characters)")
+      print()
+      let preview = String(text.prefix(500))
+      print("  \(preview)\(text.count > 500 ? "\n  [truncated]" : "")")
     }
   }
 }

@@ -303,6 +303,58 @@ asc-client apps verify-media <bundle-id> --folder media/
 
 Without `--folder`, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With `--folder`, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.
 
+### App Info & Categories
+
+```bash
+# View app info, categories, and per-locale metadata
+asc-client apps app-info <bundle-id>
+
+# List all available category IDs (no bundle ID needed)
+asc-client apps app-info --list-categories
+
+# Update primary and/or secondary category
+asc-client apps app-info <bundle-id> --primary-category UTILITIES
+asc-client apps app-info <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
+```
+
+### Territory Availability
+
+```bash
+# View which territories the app is available in
+asc-client apps availability <bundle-id>
+
+# Show full country names
+asc-client apps availability <bundle-id> --verbose
+
+# Make territories available or unavailable
+asc-client apps availability <bundle-id> --add CHN,RUS
+asc-client apps availability <bundle-id> --remove CHN
+```
+
+### Encryption Declarations
+
+```bash
+# View existing encryption declarations
+asc-client apps encryption <bundle-id>
+
+# Create a new encryption declaration
+asc-client apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
+asc-client apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
+```
+
+### EULA
+
+```bash
+# View the current EULA (or see that the standard Apple EULA applies)
+asc-client apps eula <bundle-id>
+
+# Set a custom EULA from a text file
+asc-client apps eula <bundle-id> --file eula.txt
+
+# Remove the custom EULA (reverts to standard Apple EULA)
+asc-client apps eula <bundle-id> --delete
+```
+
 ### Builds
 
 ```bash

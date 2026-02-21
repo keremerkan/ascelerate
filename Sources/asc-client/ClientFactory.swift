@@ -3,6 +3,9 @@ import Foundation
 
 enum ClientFactory {
   static func makeClient() throws -> AppStoreConnectClient {
+    if !autoConfirm {
+      checkCompletionsVersion()
+    }
     let config = try Config.load()
     let keyPath = expandPath(config.privateKeyPath)
 

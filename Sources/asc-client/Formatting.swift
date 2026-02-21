@@ -94,6 +94,42 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
   }
 }
 
+/// Checks whether the installed shell completion script matches the current version.
+/// Shows a one-time note if completions are outdated. No-op if completions were never installed.
+func checkCompletionsVersion() {
+  struct Once { nonisolated(unsafe) static var checked = false }
+  guard !Once.checked else { return }
+  Once.checked = true
+
+  guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return }
+  let home = FileManager.default.homeDirectoryForCurrentUser
+
+  let completionPath: String
+  if shell.hasSuffix("/zsh") {
+    completionPath = home.appendingPathComponent(".zfunc/_asc-client").path
+  } else if shell.hasSuffix("/bash") {
+    completionPath = home.appendingPathComponent(".bash_completions/asc-client.bash").path
+  } else {
+    return
+  }
+
+  guard FileManager.default.fileExists(atPath: completionPath),
+    let data = FileManager.default.contents(atPath: completionPath),
+    let contents = String(data: data, encoding: .utf8)
+  else { return }
+
+  let firstLine = contents.prefix(while: { $0 != "\n" })
+  let currentVersion = ASCClient.configuration.version
+
+  if firstLine.hasPrefix("# asc-client v") {
+    let stampedVersion = String(firstLine.dropFirst("# asc-client v".count))
+    if stampedVersion == currentVersion { return }
+    print("\nNOTE: Shell completions are outdated (v\(stampedVersion) → v\(currentVersion)). Run 'asc-client install-completions' to update.\n")
+  } else {
+    print("\nNOTE: Shell completions may be outdated. Run 'asc-client install-completions' to update.\n")
+  }
+}
+
 enum Table {
   static func print(headers: [String], rows: [[String]]) {
     guard !rows.isEmpty else {

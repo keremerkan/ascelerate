@@ -11,6 +11,7 @@ struct ASCClient: AsyncParsableCommand {
 
   func run() async throws {
     print("asc-client \(Self.configuration.version)")
+    checkCompletionsVersion()
     print(Self.helpMessage())
   }
 }

@@ -43,6 +43,8 @@ struct InstallCompletionsCommand: ParsableCommand {
     // Remove -V flag so zsh sorts subcommands alphabetically (reliable across environments)
     completionScript = completionScript.replacingOccurrences(
       of: "_describe -V subcommand subcommands", with: "_describe subcommand subcommands")
+    // Stamp version so we can detect outdated completions after upgrades
+    completionScript = "# asc-client v\(ASCClient.configuration.version)\n" + completionScript
     let completionFile = zfuncDir.appendingPathComponent("_asc-client")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
@@ -94,7 +96,9 @@ struct InstallCompletionsCommand: ParsableCommand {
     }
 
     // 2. Write completion script (with patched help completions)
-    let completionScript = patchBashHelpCompletions(ASCClient.completionScript(for: .bash))
+    var completionScript = patchBashHelpCompletions(ASCClient.completionScript(for: .bash))
+    // Stamp version so we can detect outdated completions after upgrades
+    completionScript = "# asc-client v\(ASCClient.configuration.version)\n" + completionScript
     let completionFile = completionsDir.appendingPathComponent("asc-client.bash")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")

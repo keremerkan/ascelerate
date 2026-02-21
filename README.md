@@ -2,7 +2,7 @@
 
 A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).
 
-> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, and review submission. More API coverage is planned.
+> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, and read-only views of in-app purchases and subscriptions. More API coverage is planned.
 
 ## Requirements
 
@@ -378,6 +378,38 @@ asc-client builds await-processing <bundle-id> --build-version 903
 ```
 
 The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it automatically exports to `.ipa` before uploading.
+
+### In-App Purchases
+
+```bash
+# List all in-app purchases
+asc-client iap list <bundle-id>
+
+# Filter by type or state
+asc-client iap list <bundle-id> --type consumable
+asc-client iap list <bundle-id> --state approved
+
+# Show details and localizations for a specific IAP
+asc-client iap info <bundle-id> <product-id>
+
+# List promoted purchases (IAPs and subscriptions)
+asc-client iap promoted <bundle-id>
+```
+
+Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. States: `APPROVED`, `MISSING_METADATA`, `READY_TO_SUBMIT`, `WAITING_FOR_REVIEW`, `IN_REVIEW`, etc.
+
+### Subscriptions
+
+```bash
+# List subscription groups with their subscriptions
+asc-client sub groups <bundle-id>
+
+# Flat list of all subscriptions across groups
+asc-client sub list <bundle-id>
+
+# Show details and localizations for a specific subscription
+asc-client sub info <bundle-id> <product-id>
+```
 
 ### Workflows
 

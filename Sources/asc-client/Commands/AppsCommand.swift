@@ -9,7 +9,7 @@ struct AppsCommand: AsyncParsableCommand {
     abstract: "Manage apps.",
     subcommands: [List.self, Info.self, Versions.self],
     groupedSubcommands: [
-      CommandGroup(name: "Version", subcommands: [CreateVersion.self, AttachBuild.self, AttachLatestBuild.self, DetachBuild.self]),
+      CommandGroup(name: "Version", subcommands: [CreateVersion.self, AttachBuild.self, AttachLatestBuild.self, DetachBuild.self, PhasedRelease.self, AgeRating.self, RoutingCoverage.self]),
       CommandGroup(name: "Localization", subcommands: [Localizations.self, ExportLocalizations.self, UpdateLocalization.self, UpdateLocalizations.self]),
       CommandGroup(name: "Media", subcommands: [DownloadMedia.self, UploadMedia.self, VerifyMedia.self]),
       CommandGroup(name: "Review", subcommands: [ReviewStatus.self, SubmitForReview.self]),
@@ -516,6 +516,505 @@ struct AppsCommand: AsyncParsableCommand {
     }
   }
 
+  struct PhasedRelease: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "phased-release",
+      abstract: "View or manage phased release for an App Store version."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+    var version: String?
+
+    @Flag(name: .long, help: "Enable phased release (starts inactive, activates when version goes live).")
+    var enable = false
+
+    @Flag(name: .long, help: "Pause an active phased release.")
+    var pause = false
+
+    @Flag(name: .long, help: "Resume a paused phased release.")
+    var resume = false
+
+    @Flag(name: .long, help: "Complete immediately — release to all users.")
+    var complete = false
+
+    @Flag(name: .long, help: "Remove phased release entirely.")
+    var disable = false
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func validate() throws {
+      let flags = [enable, pause, resume, complete, disable].filter { $0 }
+      if flags.count > 1 {
+        throw ValidationError("Only one action flag can be used at a time (--enable, --pause, --resume, --complete, --disable).")
+      }
+    }
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+
+      let versionString = appVersion.attributes?.versionString ?? "unknown"
+      let appName = app.attributes?.name ?? bundleID
+
+      if enable {
+        let request = Resources.v1.appStoreVersionPhasedReleases.post(
+          AppStoreVersionPhasedReleaseCreateRequest(
+            data: .init(
+              attributes: .init(phasedReleaseState: .inactive),
+              relationships: .init(
+                appStoreVersion: .init(data: .init(id: appVersion.id))
+              )
+            )
+          )
+        )
+        let response = try await client.send(request)
+        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
+        print("Enabled phased release for version \(versionString).")
+        print("  State: \(state)")
+        return
+      }
+
+      // All other actions require an existing phased release
+      let existing: AppStoreVersionPhasedRelease? = try? await client.send(
+        Resources.v1.appStoreVersions.id(appVersion.id).appStoreVersionPhasedRelease.get()
+      ).data
+
+      if pause {
+        guard let pr = existing else {
+          throw ValidationError("No phased release configured for version \(versionString). Use --enable first.")
+        }
+        let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
+          AppStoreVersionPhasedReleaseUpdateRequest(
+            data: .init(id: pr.id, attributes: .init(phasedReleaseState: .paused))
+          )
+        )
+        let response = try await client.send(request)
+        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
+        print("Paused phased release for version \(versionString).")
+        print("  State: \(state)")
+        return
+      }
+
+      if resume {
+        guard let pr = existing else {
+          throw ValidationError("No phased release configured for version \(versionString). Use --enable first.")
+        }
+        let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
+          AppStoreVersionPhasedReleaseUpdateRequest(
+            data: .init(id: pr.id, attributes: .init(phasedReleaseState: .active))
+          )
+        )
+        let response = try await client.send(request)
+        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
+        print("Resumed phased release for version \(versionString).")
+        print("  State: \(state)")
+        return
+      }
+
+      if complete {
+        guard let pr = existing else {
+          throw ValidationError("No phased release configured for version \(versionString). Use --enable first.")
+        }
+        guard confirm("Complete phased release for version \(versionString)? This will release to all users immediately. [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+        let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
+          AppStoreVersionPhasedReleaseUpdateRequest(
+            data: .init(id: pr.id, attributes: .init(phasedReleaseState: .complete))
+          )
+        )
+        let response = try await client.send(request)
+        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
+        print("Completed phased release for version \(versionString) — released to all users.")
+        print("  State: \(state)")
+        return
+      }
+
+      if disable {
+        guard let pr = existing else {
+          print("No phased release configured for version \(versionString).")
+          return
+        }
+        guard confirm("Remove phased release for version \(versionString)? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+        try await client.send(
+          Resources.v1.appStoreVersionPhasedReleases.id(pr.id).delete
+        )
+        print("Removed phased release for version \(versionString).")
+        return
+      }
+
+      // No flag — show current status
+      guard let pr = existing else {
+        print("App:            \(appName)")
+        print("Version:        \(versionString)")
+        print("Phased Release: Not configured")
+        return
+      }
+
+      let attrs = pr.attributes
+      let state = attrs?.phasedReleaseState.map { "\($0)" } ?? "—"
+      let startDate = attrs?.startDate.map { formatDate($0) } ?? "—"
+      let day = attrs?.currentDayNumber.map { "\($0)" } ?? "—"
+      let pauseDuration = attrs?.totalPauseDuration ?? 0
+
+      print("App:            \(appName)")
+      print("Version:        \(versionString)")
+      print("Phased Release: \(state)")
+      print("  Start date:   \(startDate)")
+      print("  Day:          \(day) of 7")
+      print("  Paused:       \(pauseDuration) day\(pauseDuration == 1 ? "" : "s")")
+    }
+  }
+
+  struct AgeRating: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "age-rating",
+      abstract: "View or update age rating declaration for an App Store version."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+    var version: String?
+
+    @Option(name: .long, help: "Path to a JSON file with age rating fields to update.")
+    var file: String?
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+
+      let versionString = appVersion.attributes?.versionString ?? "unknown"
+      let appName = app.attributes?.name ?? bundleID
+
+      let response = try await client.send(
+        Resources.v1.appStoreVersions.id(appVersion.id).ageRatingDeclaration.get()
+      )
+      let declaration = response.data
+      let attrs = declaration.attributes
+
+      if let filePath = file {
+        // Update mode
+        let expandedPath = expandPath(filePath)
+        guard FileManager.default.fileExists(atPath: expandedPath) else {
+          throw ValidationError("File not found at '\(expandedPath)'.")
+        }
+
+        let data = try Data(contentsOf: URL(fileURLWithPath: expandedPath))
+        let fields: AgeRatingFields
+        do {
+          fields = try JSONDecoder().decode(AgeRatingFields.self, from: data)
+        } catch let error as DecodingError {
+          throw ValidationError("Invalid JSON: \(describeDecodingError(error))")
+        }
+
+        print("App:     \(appName)")
+        print("Version: \(versionString)")
+        print()
+        print("Age rating updates:")
+        var changeCount = 0
+        if let v = fields.alcoholTobaccoOrDrugUseOrReferences { print("  Alcohol, Tobacco, or Drug Use: \(v)"); changeCount += 1 }
+        if let v = fields.contests { print("  Contests: \(v)"); changeCount += 1 }
+        if let v = fields.gamblingSimulated { print("  Gambling (simulated): \(v)"); changeCount += 1 }
+        if let v = fields.gunsOrOtherWeapons { print("  Guns or Other Weapons: \(v)"); changeCount += 1 }
+        if let v = fields.horrorOrFearThemes { print("  Horror or Fear Themes: \(v)"); changeCount += 1 }
+        if let v = fields.matureOrSuggestiveThemes { print("  Mature or Suggestive Themes: \(v)"); changeCount += 1 }
+        if let v = fields.profanityOrCrudeHumor { print("  Profanity or Crude Humor: \(v)"); changeCount += 1 }
+        if let v = fields.sexualContentOrNudity { print("  Sexual Content or Nudity: \(v)"); changeCount += 1 }
+        if let v = fields.sexualContentGraphicAndNudity { print("  Sexual Content (graphic): \(v)"); changeCount += 1 }
+        if let v = fields.violenceCartoonOrFantasy { print("  Violence (cartoon/fantasy): \(v)"); changeCount += 1 }
+        if let v = fields.violenceRealistic { print("  Violence (realistic): \(v)"); changeCount += 1 }
+        if let v = fields.violenceRealisticProlongedGraphicOrSadistic { print("  Violence (graphic/sadistic): \(v)"); changeCount += 1 }
+        if let v = fields.medicalOrTreatmentInformation { print("  Medical Information: \(v)"); changeCount += 1 }
+        if let v = fields.isAdvertising { print("  Advertising: \(v)"); changeCount += 1 }
+        if let v = fields.isGambling { print("  Gambling: \(v)"); changeCount += 1 }
+        if let v = fields.isUnrestrictedWebAccess { print("  Unrestricted Web Access: \(v)"); changeCount += 1 }
+        if let v = fields.isUserGeneratedContent { print("  User-Generated Content: \(v)"); changeCount += 1 }
+        if let v = fields.isMessagingAndChat { print("  Messaging and Chat: \(v)"); changeCount += 1 }
+        if let v = fields.isLootBox { print("  Loot Box: \(v)"); changeCount += 1 }
+        if let v = fields.isHealthOrWellnessTopics { print("  Health/Wellness Topics: \(v)"); changeCount += 1 }
+        if let v = fields.isParentalControls { print("  Parental Controls: \(v)"); changeCount += 1 }
+        if let v = fields.isAgeAssurance { print("  Age Assurance: \(v)"); changeCount += 1 }
+        if let v = fields.kidsAgeBand { print("  Kids Age Band: \(v)"); changeCount += 1 }
+        if let v = fields.ageRatingOverride { print("  Age Rating Override: \(v)"); changeCount += 1 }
+
+        if changeCount == 0 {
+          throw ValidationError("JSON file contains no age rating fields.")
+        }
+
+        print()
+        guard confirm("Update \(changeCount) age rating field\(changeCount == 1 ? "" : "s")? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+
+        func parseIntensity<T: RawRepresentable>(_ value: String?, type: T.Type) -> T? where T.RawValue == String {
+          guard let v = value else { return nil }
+          return T(rawValue: v)
+        }
+
+        typealias Attrs = AgeRatingDeclarationUpdateRequest.Data.Attributes
+        let updateRequest = Resources.v1.ageRatingDeclarations.id(declaration.id).patch(
+          AgeRatingDeclarationUpdateRequest(
+            data: .init(
+              id: declaration.id,
+              attributes: .init(
+                isAdvertising: fields.isAdvertising,
+                alcoholTobaccoOrDrugUseOrReferences: parseIntensity(fields.alcoholTobaccoOrDrugUseOrReferences, type: Attrs.AlcoholTobaccoOrDrugUseOrReferences.self),
+                contests: parseIntensity(fields.contests, type: Attrs.Contests.self),
+                isGambling: fields.isGambling,
+                gamblingSimulated: parseIntensity(fields.gamblingSimulated, type: Attrs.GamblingSimulated.self),
+                gunsOrOtherWeapons: parseIntensity(fields.gunsOrOtherWeapons, type: Attrs.GunsOrOtherWeapons.self),
+                isHealthOrWellnessTopics: fields.isHealthOrWellnessTopics,
+                kidsAgeBand: parseIntensity(fields.kidsAgeBand, type: KidsAgeBand.self),
+                isLootBox: fields.isLootBox,
+                medicalOrTreatmentInformation: parseIntensity(fields.medicalOrTreatmentInformation, type: Attrs.MedicalOrTreatmentInformation.self),
+                isMessagingAndChat: fields.isMessagingAndChat,
+                isParentalControls: fields.isParentalControls,
+                profanityOrCrudeHumor: parseIntensity(fields.profanityOrCrudeHumor, type: Attrs.ProfanityOrCrudeHumor.self),
+                isAgeAssurance: fields.isAgeAssurance,
+                sexualContentGraphicAndNudity: parseIntensity(fields.sexualContentGraphicAndNudity, type: Attrs.SexualContentGraphicAndNudity.self),
+                sexualContentOrNudity: parseIntensity(fields.sexualContentOrNudity, type: Attrs.SexualContentOrNudity.self),
+                horrorOrFearThemes: parseIntensity(fields.horrorOrFearThemes, type: Attrs.HorrorOrFearThemes.self),
+                matureOrSuggestiveThemes: parseIntensity(fields.matureOrSuggestiveThemes, type: Attrs.MatureOrSuggestiveThemes.self),
+                isUnrestrictedWebAccess: fields.isUnrestrictedWebAccess,
+                isUserGeneratedContent: fields.isUserGeneratedContent,
+                violenceCartoonOrFantasy: parseIntensity(fields.violenceCartoonOrFantasy, type: Attrs.ViolenceCartoonOrFantasy.self),
+                violenceRealisticProlongedGraphicOrSadistic: parseIntensity(fields.violenceRealisticProlongedGraphicOrSadistic, type: Attrs.ViolenceRealisticProlongedGraphicOrSadistic.self),
+                violenceRealistic: parseIntensity(fields.violenceRealistic, type: Attrs.ViolenceRealistic.self),
+                ageRatingOverride: parseIntensity(fields.ageRatingOverride, type: Attrs.AgeRatingOverride.self)
+              )
+            )
+          )
+        )
+
+        _ = try await client.send(updateRequest)
+        print()
+        print("Updated age rating declaration for version \(versionString).")
+        return
+      }
+
+      // View mode
+      print("App:     \(appName)")
+      print("Version: \(versionString)")
+      print()
+      print("Age Rating Declaration:")
+
+      func intensityLabel(_ raw: String?) -> String {
+        switch raw {
+        case "NONE": return "None"
+        case "INFREQUENT_OR_MILD": return "Infrequent or Mild"
+        case "FREQUENT_OR_INTENSE": return "Frequent or Intense"
+        case "INFREQUENT": return "Infrequent"
+        case "FREQUENT": return "Frequent"
+        default: return raw ?? "—"
+        }
+      }
+
+      func boolLabel(_ value: Bool?) -> String {
+        guard let v = value else { return "—" }
+        return v ? "Yes" : "No"
+      }
+
+      // Intensity-based ratings
+      let intensityRows: [(String, String)] = [
+        ("Alcohol, Tobacco, or Drug Use", intensityLabel(attrs?.alcoholTobaccoOrDrugUseOrReferences?.rawValue)),
+        ("Contests", intensityLabel(attrs?.contests?.rawValue)),
+        ("Gambling (simulated)", intensityLabel(attrs?.gamblingSimulated?.rawValue)),
+        ("Guns or Other Weapons", intensityLabel(attrs?.gunsOrOtherWeapons?.rawValue)),
+        ("Horror or Fear Themes", intensityLabel(attrs?.horrorOrFearThemes?.rawValue)),
+        ("Mature or Suggestive Themes", intensityLabel(attrs?.matureOrSuggestiveThemes?.rawValue)),
+        ("Profanity or Crude Humor", intensityLabel(attrs?.profanityOrCrudeHumor?.rawValue)),
+        ("Sexual Content or Nudity", intensityLabel(attrs?.sexualContentOrNudity?.rawValue)),
+        ("Sexual Content (graphic)", intensityLabel(attrs?.sexualContentGraphicAndNudity?.rawValue)),
+        ("Violence (cartoon/fantasy)", intensityLabel(attrs?.violenceCartoonOrFantasy?.rawValue)),
+        ("Violence (realistic)", intensityLabel(attrs?.violenceRealistic?.rawValue)),
+        ("Violence (graphic/sadistic)", intensityLabel(attrs?.violenceRealisticProlongedGraphicOrSadistic?.rawValue)),
+        ("Medical Information", intensityLabel(attrs?.medicalOrTreatmentInformation?.rawValue)),
+      ]
+
+      // Boolean ratings
+      let boolRows: [(String, String)] = [
+        ("Advertising", boolLabel(attrs?.isAdvertising)),
+        ("Gambling", boolLabel(attrs?.isGambling)),
+        ("Unrestricted Web Access", boolLabel(attrs?.isUnrestrictedWebAccess)),
+        ("User-Generated Content", boolLabel(attrs?.isUserGeneratedContent)),
+        ("Messaging and Chat", boolLabel(attrs?.isMessagingAndChat)),
+        ("Loot Box", boolLabel(attrs?.isLootBox)),
+        ("Health/Wellness Topics", boolLabel(attrs?.isHealthOrWellnessTopics)),
+        ("Parental Controls", boolLabel(attrs?.isParentalControls)),
+        ("Age Assurance", boolLabel(attrs?.isAgeAssurance)),
+      ]
+
+      // Other
+      let kidsAgeBand = attrs?.kidsAgeBand?.rawValue
+        .replacingOccurrences(of: "_", with: " ")
+        .capitalized ?? "—"
+      let ageOverride = attrs?.ageRatingOverride?.rawValue
+        .replacingOccurrences(of: "_", with: " ")
+        .capitalized ?? "—"
+
+      let maxLabel = max(
+        intensityRows.max(by: { $0.0.count < $1.0.count })?.0.count ?? 0,
+        boolRows.max(by: { $0.0.count < $1.0.count })?.0.count ?? 0,
+        "Kids Age Band".count,
+        "Age Rating Override".count
+      )
+
+      for (label, value) in intensityRows {
+        print("  \(label.padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(value)")
+      }
+      for (label, value) in boolRows {
+        print("  \(label.padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(value)")
+      }
+      print("  \("Kids Age Band".padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(kidsAgeBand)")
+      print("  \("Age Rating Override".padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(ageOverride)")
+    }
+  }
+
+  struct RoutingCoverage: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "routing-coverage",
+      abstract: "View or upload routing app coverage (.geojson)."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+    var version: String?
+
+    @Option(name: .long, help: "Path to a .geojson file to upload.")
+    var file: String?
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+
+      let versionString = appVersion.attributes?.versionString ?? "unknown"
+      let appName = app.attributes?.name ?? bundleID
+
+      guard let filePath = file else {
+        // View mode
+        let existing: RoutingAppCoverage? = try? await client.send(
+          Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get()
+        ).data
+
+        guard let coverage = existing else {
+          print("App:              \(appName)")
+          print("Version:          \(versionString)")
+          print("Routing Coverage: Not configured")
+          return
+        }
+
+        let attrs = coverage.attributes
+        let fileName = attrs?.fileName ?? "—"
+        let state = attrs?.assetDeliveryState?.state.map { "\($0)" } ?? "—"
+        let fileSize = attrs?.fileSize.map { "\(formatBytes($0))" } ?? "—"
+
+        print("App:              \(appName)")
+        print("Version:          \(versionString)")
+        print("Routing Coverage: \(fileName)")
+        print("  Status:         \(state)")
+        print("  Size:           \(fileSize)")
+        return
+      }
+
+      // Upload mode
+      let expandedPath = expandPath(filePath)
+      let fm = FileManager.default
+
+      guard fm.fileExists(atPath: expandedPath) else {
+        throw ValidationError("File not found at '\(expandedPath)'.")
+      }
+
+      let fileAttrs = try fm.attributesOfItem(atPath: expandedPath)
+      let fileSize = (fileAttrs[.size] as? Int) ?? 0
+      let fileName = (expandedPath as NSString).lastPathComponent
+
+      // Check for existing coverage
+      let existing: RoutingAppCoverage? = try? await client.send(
+        Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get()
+      ).data
+
+      if let existingCoverage = existing {
+        let existingName = existingCoverage.attributes?.fileName ?? "unknown"
+        print("Existing routing coverage: \(existingName)")
+        guard confirm("Replace existing routing coverage with '\(fileName)'? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+        try await client.send(
+          Resources.v1.routingAppCoverages.id(existingCoverage.id).delete
+        )
+        print("Deleted existing coverage.")
+        print()
+      }
+
+      print("Uploading \(fileName) (\(formatBytes(fileSize)))...")
+      fflush(stdout)
+
+      // Reserve
+      let reserveResponse = try await client.send(
+        Resources.v1.routingAppCoverages.post(
+          RoutingAppCoverageCreateRequest(
+            data: .init(
+              attributes: .init(fileSize: fileSize, fileName: fileName),
+              relationships: .init(
+                appStoreVersion: .init(data: .init(id: appVersion.id))
+              )
+            )
+          )
+        )
+      )
+
+      let coverageID = reserveResponse.data.id
+      guard let operations = reserveResponse.data.attributes?.uploadOperations,
+            !operations.isEmpty else {
+        throw MediaUploadError.noUploadOperations
+      }
+
+      // Upload chunks
+      try await uploadChunks(filePath: expandedPath, operations: operations)
+
+      // Commit
+      let checksum = try md5Hex(filePath: expandedPath)
+      _ = try await client.send(
+        Resources.v1.routingAppCoverages.id(coverageID).patch(
+          RoutingAppCoverageUpdateRequest(
+            data: .init(
+              id: coverageID,
+              attributes: .init(sourceFileChecksum: checksum, isUploaded: true)
+            )
+          )
+        )
+      )
+
+      print("Uploaded routing coverage '\(fileName)' for version \(versionString).")
+    }
+  }
+
   struct SubmitForReview: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "submit-for-review",
@@ -938,6 +1437,38 @@ struct AppsCommand: AsyncParsableCommand {
       print("Exported \(result.count) locale(s) for version \(versionString) to \(outputPath)")
     }
   }
+}
+
+struct AgeRatingFields: Codable {
+  // Intensity-based (NONE, INFREQUENT_OR_MILD, FREQUENT_OR_INTENSE)
+  var alcoholTobaccoOrDrugUseOrReferences: String?
+  var contests: String?
+  var gamblingSimulated: String?
+  var gunsOrOtherWeapons: String?
+  var horrorOrFearThemes: String?
+  var matureOrSuggestiveThemes: String?
+  var profanityOrCrudeHumor: String?
+  var sexualContentOrNudity: String?
+  var sexualContentGraphicAndNudity: String?
+  var violenceCartoonOrFantasy: String?
+  var violenceRealistic: String?
+  var violenceRealisticProlongedGraphicOrSadistic: String?
+  var medicalOrTreatmentInformation: String?
+
+  // Boolean
+  var isAdvertising: Bool?
+  var isGambling: Bool?
+  var isUnrestrictedWebAccess: Bool?
+  var isUserGeneratedContent: Bool?
+  var isMessagingAndChat: Bool?
+  var isLootBox: Bool?
+  var isHealthOrWellnessTopics: Bool?
+  var isParentalControls: Bool?
+  var isAgeAssurance: Bool?
+
+  // Other
+  var kidsAgeBand: String?
+  var ageRatingOverride: String?
 }
 
 struct LocaleFields: Codable {

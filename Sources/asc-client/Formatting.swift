@@ -49,6 +49,14 @@ func expandPath(_ path: String) -> String {
   return cleaned
 }
 
+func formatBytes(_ bytes: Int) -> String {
+  if bytes < 1024 { return "\(bytes) bytes" }
+  let kb = Double(bytes) / 1024
+  if kb < 1024 { return String(format: "%.1f KB", kb) }
+  let mb = kb / 1024
+  return String(format: "%.1f MB", mb)
+}
+
 func formatDate(_ date: Date) -> String {
   let formatter = DateFormatter()
   formatter.dateStyle = .medium

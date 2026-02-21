@@ -114,6 +114,58 @@ asc-client apps attach-latest-build <bundle-id>
 asc-client apps detach-build <bundle-id>
 ```
 
+### Phased Release
+
+```bash
+# View phased release status
+asc-client apps phased-release <bundle-id>
+
+# Enable phased release (starts inactive, activates when version goes live)
+asc-client apps phased-release <bundle-id> --enable
+
+# Pause, resume, or complete a phased release
+asc-client apps phased-release <bundle-id> --pause
+asc-client apps phased-release <bundle-id> --resume
+asc-client apps phased-release <bundle-id> --complete
+
+# Remove phased release entirely
+asc-client apps phased-release <bundle-id> --disable
+```
+
+### Age Rating
+
+```bash
+# View age rating declaration for the latest version
+asc-client apps age-rating <bundle-id>
+asc-client apps age-rating <bundle-id> --version 2.1.0
+
+# Update age ratings from a JSON file
+asc-client apps age-rating <bundle-id> --file age-rating.json
+```
+
+The JSON file uses the same field names as the API. Only fields present in the file are updated:
+
+```json
+{
+  "isAdvertising": false,
+  "isUserGeneratedContent": true,
+  "violenceCartoonOrFantasy": "INFREQUENT_OR_MILD",
+  "alcoholTobaccoOrDrugUseOrReferences": "NONE"
+}
+```
+
+Intensity fields accept: `NONE`, `INFREQUENT_OR_MILD`, `FREQUENT_OR_INTENSE`. Boolean fields accept `true`/`false`.
+
+### Routing App Coverage
+
+```bash
+# View current routing coverage status
+asc-client apps routing-coverage <bundle-id>
+
+# Upload a .geojson file
+asc-client apps routing-coverage <bundle-id> --file coverage.geojson
+```
+
 ### Localizations
 
 ```bash

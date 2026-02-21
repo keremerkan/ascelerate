@@ -1,0 +1,13 @@
+{
+  "en-US": {
+    "description": "My app description.\n\nSecond paragraph.",
+    "whatsNew": "- Bug fixes\n- New dark mode",
+    "keywords": "productivity,tools,utility",
+    "promotionalText": "Try our new features!",
+    "marketingURL": "https://example.com",
+    "supportURL": "https://example.com/support"
+  },
+  "de-DE": {
+    "whatsNew": "- Fehlerbehebungen\n- Neuer Dunkelmodus"
+  }
+}

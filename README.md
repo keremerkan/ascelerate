@@ -246,9 +246,18 @@ media/
 
 #### Display types
 
+App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and **`APP_IPAD_PRO_3GEN_129`** screenshots for iPad apps. All other display types are optional.
+
 | Folder name | Device | Screenshots | Previews |
 |---|---|---|---|
-| `APP_IPHONE_67` | iPhone 6.7" (iPhone 16 Pro Max, 15 Pro Max, 14 Pro Max) | Yes | Yes |
+| `APP_IPHONE_67` | iPhone 6.7" (iPhone 16 Pro Max, 15 Pro Max, 14 Pro Max) | **Required** | Yes |
+| `APP_IPAD_PRO_3GEN_129` | iPad Pro 12.9" (3rd gen+) | **Required** | Yes |
+
+<details>
+<summary>All optional display types</summary>
+
+| Folder name | Device | Screenshots | Previews |
+|---|---|---|---|
 | `APP_IPHONE_61` | iPhone 6.1" (iPhone 16 Pro, 15 Pro, 14 Pro) | Yes | Yes |
 | `APP_IPHONE_65` | iPhone 6.5" (iPhone 11 Pro Max, XS Max) | Yes | Yes |
 | `APP_IPHONE_58` | iPhone 5.8" (iPhone 11 Pro, X, XS) | Yes | Yes |
@@ -256,7 +265,6 @@ media/
 | `APP_IPHONE_47` | iPhone 4.7" (iPhone SE 3rd gen, 8, 7, 6s) | Yes | Yes |
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1st gen, 5s, 5c) | Yes | Yes |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s and earlier) | Yes | Yes |
-| `APP_IPAD_PRO_3GEN_129` | iPad Pro 12.9" (3rd gen+) | Yes | Yes |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Yes | Yes |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1st/2nd gen) | Yes | Yes |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3rd gen, iPad Pro 10.5") | Yes | Yes |
@@ -281,6 +289,8 @@ media/
 | `IMESSAGE_APP_IPAD_PRO_129` | iMessage iPad Pro 12.9" (1st/2nd gen) | Yes | No |
 | `IMESSAGE_APP_IPAD_105` | iMessage iPad 10.5" | Yes | No |
 | `IMESSAGE_APP_IPAD_97` | iMessage iPad 9.7" | Yes | No |
+
+</details>
 
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
 >

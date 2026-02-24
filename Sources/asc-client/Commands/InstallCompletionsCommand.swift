@@ -43,8 +43,10 @@ struct InstallCompletionsCommand: ParsableCommand {
     // Remove -V flag so zsh sorts subcommands alphabetically (reliable across environments)
     completionScript = completionScript.replacingOccurrences(
       of: "_describe -V subcommand subcommands", with: "_describe subcommand subcommands")
-    // Stamp version so we can detect outdated completions after upgrades
-    completionScript = "# asc-client v\(ASCClient.configuration.version)\n" + completionScript
+    // Stamp version after the #compdef line (must remain first line for zsh to recognize)
+    completionScript = completionScript.replacingOccurrences(
+      of: "#compdef asc-client\n",
+      with: "#compdef asc-client\n# asc-client v\(ASCClient.appVersion)\n")
     let completionFile = zfuncDir.appendingPathComponent("_asc-client")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
@@ -98,7 +100,7 @@ struct InstallCompletionsCommand: ParsableCommand {
     // 2. Write completion script (with patched help completions)
     var completionScript = patchBashHelpCompletions(ASCClient.completionScript(for: .bash))
     // Stamp version so we can detect outdated completions after upgrades
-    completionScript = "# asc-client v\(ASCClient.configuration.version)\n" + completionScript
+    completionScript = "# asc-client v\(ASCClient.appVersion)\n" + completionScript
     let completionFile = completionsDir.appendingPathComponent("asc-client.bash")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
@@ -142,7 +144,6 @@ struct InstallCompletionsCommand: ParsableCommand {
           local -i ret=1
           local -ar arg_specs=(
               '*:subcommands:'
-              '--version[Show the version.]'
           )
           _arguments -w -s -S : "${arg_specs[@]}" && ret=0
 
@@ -154,7 +155,6 @@ struct InstallCompletionsCommand: ParsableCommand {
       _asc-client_help() {
           local -i ret=1
           local -ar arg_specs=(
-              '--version[Show the version.]'
           )
           _arguments -w -s -S : "${arg_specs[@]}" && ret=0
           local -ar subcommands=(
@@ -177,21 +177,12 @@ struct InstallCompletionsCommand: ParsableCommand {
 
     let broken = """
       _asc-client_help() {
-          repeating_flags=()
-          non_repeating_flags=(--version)
-          repeating_options=()
-          non_repeating_options=()
-          __asc-client_offer_flags_options -1
+          :
       }
       """
 
     let fixed = """
       _asc-client_help() {
-          repeating_flags=()
-          non_repeating_flags=(--version)
-          repeating_options=()
-          non_repeating_options=()
-          __asc-client_offer_flags_options -1
           COMPREPLY+=($(compgen -W '\(subcommands)' -- "${cur}"))
       }
       """

@@ -118,11 +118,15 @@ func checkCompletionsVersion() {
     let contents = String(data: data, encoding: .utf8)
   else { return }
 
-  let firstLine = contents.prefix(while: { $0 != "\n" })
-  let currentVersion = ASCClient.configuration.version
+  let currentVersion = ASCClient.appVersion
+  let prefix = "# asc-client v"
 
-  if firstLine.hasPrefix("# asc-client v") {
-    let stampedVersion = String(firstLine.dropFirst("# asc-client v".count))
+  // Version stamp may be on line 1 (bash) or line 2 (zsh, after #compdef)
+  if let range = contents.range(of: prefix),
+    contents[contents.startIndex..<range.lowerBound].filter({ $0 == "\n" }).count <= 1
+  {
+    let afterPrefix = contents[range.upperBound...]
+    let stampedVersion = String(afterPrefix.prefix(while: { $0 != "\n" }))
     if stampedVersion == currentVersion { return }
     print("\nNOTE: Shell completions are outdated (v\(stampedVersion) → v\(currentVersion)). Run 'asc-client install-completions' to update.\n")
   } else {

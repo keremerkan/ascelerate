@@ -94,10 +94,17 @@ asc-client apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 
 # Check review submission status
 asc-client apps review-status <bundle-id>
+asc-client apps review-status <bundle-id> --version 2.1.0
 
 # Submit for review
 asc-client apps submit-for-review <bundle-id>
 asc-client apps submit-for-review <bundle-id> --version 2.1.0
+
+# Resolve rejected review items (after fixing issues and replying in Resolution Center)
+asc-client apps resolve-issues <bundle-id>
+
+# Cancel an active review submission
+asc-client apps cancel-submission <bundle-id>
 ```
 
 ### Build Management
@@ -368,9 +375,10 @@ asc-client apps eula <bundle-id> --delete
 ### Builds
 
 ```bash
-# List all builds
+# List all builds (shows app version and build number)
 asc-client builds list
 asc-client builds list --bundle-id <bundle-id>
+asc-client builds list --bundle-id <bundle-id> --version 2.1.0
 
 # Archive an Xcode project
 asc-client builds archive
@@ -421,6 +429,20 @@ asc-client sub list <bundle-id>
 asc-client sub info <bundle-id> <product-id>
 ```
 
+### Rate Limit
+
+Check your current API usage against the rolling hourly quota:
+
+```bash
+asc-client rate-limit
+```
+
+```
+Hourly limit: 3600 requests (rolling window)
+Used:         57
+Remaining:    3543 (98%)
+```
+
 ### Workflows
 
 Chain multiple commands into a single automated run with a workflow file:
@@ -428,9 +450,10 @@ Chain multiple commands into a single automated run with a workflow file:
 ```bash
 asc-client run-workflow release.txt
 asc-client run-workflow release.txt --yes   # skip all prompts (CI/CD)
+asc-client run-workflow                     # interactively select from .workflow/.txt files
 ```
 
-A workflow file is a plain text file with one command per line (without the `asc-client` prefix). Lines starting with `#` are comments, blank lines are ignored.
+A workflow file is a plain text file with one command per line (without the `asc-client` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported.
 
 **Example** -- `release.txt` for submitting version 2.1.0 of a sample app:
 

@@ -7,7 +7,7 @@ struct ASCClient: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "asc-client",
     abstract: "A command-line tool for the App Store Connect API.",
-    version: "0.3.0",
+    version: "0.3.1",
     subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self, IAPCommand.self, SubCommand.self, RunWorkflowCommand.self, InstallCompletionsCommand.self, RateLimitCommand.self]
   )
 

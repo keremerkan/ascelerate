@@ -12,7 +12,7 @@ struct AppsCommand: AsyncParsableCommand {
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, AttachBuild.self, AttachLatestBuild.self, DetachBuild.self, PhasedRelease.self, AgeRating.self, RoutingCoverage.self]),
       CommandGroup(name: "Localization", subcommands: [Localizations.self, ExportLocalizations.self, UpdateLocalization.self, UpdateLocalizations.self]),
       CommandGroup(name: "Media", subcommands: [DownloadMedia.self, UploadMedia.self, VerifyMedia.self]),
-      CommandGroup(name: "Review", subcommands: [ReviewStatus.self, SubmitForReview.self]),
+      CommandGroup(name: "Review", subcommands: [ReviewStatus.self, SubmitForReview.self, ResolveIssues.self, CancelSubmission.self]),
       CommandGroup(name: "Configuration", subcommands: [AppInfoCommand.self, Availability.self, Encryption.self, EULACommand.self]),
     ]
   )
@@ -238,7 +238,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         print()
-        print("--- Submission (\(state))\(versionInfo) ---")
+        print("--- Submission \(submission.id) (\(state))\(versionInfo) ---")
 
         // Show items from included data
         let itemRefs = submission.relationships?.items?.data ?? []
@@ -1195,6 +1195,177 @@ struct AppsCommand: AsyncParsableCommand {
       print()
       print("Submitted for review.")
       print("  State: \(state)")
+    }
+  }
+
+  struct ResolveIssues: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "resolve-issues",
+      abstract: "Mark rejected review items as resolved."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+
+      // Find submission with unresolved issues
+      let response = try await client.send(
+        Resources.v1.apps.id(app.id).reviewSubmissions.get(
+          filterState: [.unresolvedIssues],
+          fieldsAppStoreVersions: [.versionString, .appVersionState],
+          include: [.appStoreVersionForReview, .items]
+        )
+      )
+
+      guard let submission = response.data.first else {
+        print("No submissions with unresolved issues found.")
+        return
+      }
+
+      // Get version info from included data
+      var versionString = "unknown"
+      if let included = response.included {
+        for item in included {
+          if case .appStoreVersion(let v) = item,
+             v.id == submission.relationships?.appStoreVersionForReview?.data?.id {
+            versionString = v.attributes?.versionString ?? "unknown"
+          }
+        }
+      }
+
+      // Get rejected items from included data
+      let itemRefs = submission.relationships?.items?.data ?? []
+      var rejectedItems: [ReviewSubmissionItem] = []
+      if let included = response.included {
+        for ref in itemRefs {
+          for item in included {
+            if case .reviewSubmissionItem(let i) = item,
+               i.id == ref.id,
+               i.attributes?.state == .rejected {
+              rejectedItems.append(i)
+            }
+          }
+        }
+      }
+
+      print("Submission: \(submission.id)")
+      print("Version:    \(versionString)")
+      print("State:      unresolvedIssues")
+      print("Items:      \(rejectedItems.count) rejected")
+
+      if rejectedItems.isEmpty {
+        print()
+        print("No rejected items to resolve.")
+        return
+      }
+
+      print()
+      print("WARNING: Before resolving, make sure you have:")
+      print("  1. Read the rejection notes in App Store Connect Resolution Center")
+      print("  2. Fixed the issues in your app or metadata")
+      print("  3. Replied to the reviewer in the Resolution Center")
+      print()
+      print("Resolving without addressing the feedback will likely result in another rejection.")
+      print()
+      guard confirm("Mark \(rejectedItems.count) rejected item(s) as resolved? [y/N] ") else {
+        print("Cancelled.")
+        return
+      }
+
+      for item in rejectedItems {
+        _ = try await client.send(
+          Resources.v1.reviewSubmissionItems.id(item.id).patch(
+            ReviewSubmissionItemUpdateRequest(
+              data: .init(
+                id: item.id,
+                attributes: .init(isResolved: true)
+              )
+            )
+          )
+        )
+      }
+
+      print()
+      print("Resolved \(rejectedItems.count) item(s).")
+      print("Run 'asc-client apps submit-for-review \(bundleID)' to resubmit.")
+    }
+  }
+
+  struct CancelSubmission: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "cancel-submission",
+      abstract: "Cancel an active review submission."
+    )
+
+    @Argument(help: "The bundle identifier of the app.")
+    var bundleID: String
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+
+      // Find active submissions
+      let response = try await client.send(
+        Resources.v1.apps.id(app.id).reviewSubmissions.get(
+          filterState: [.readyForReview, .waitingForReview, .inReview, .unresolvedIssues],
+          fieldsAppStoreVersions: [.versionString],
+          include: [.appStoreVersionForReview]
+        )
+      )
+
+      guard let submission = response.data.first else {
+        print("No active review submissions found.")
+        return
+      }
+
+      let state = submission.attributes?.state.map { "\($0)" } ?? "unknown"
+
+      // Get version info from included data
+      var versionString = "unknown"
+      if let included = response.included {
+        for item in included {
+          if case .appStoreVersion(let v) = item,
+             v.id == submission.relationships?.appStoreVersionForReview?.data?.id {
+            versionString = v.attributes?.versionString ?? "unknown"
+          }
+        }
+      }
+
+      print("Submission: \(submission.id)")
+      print("Version:    \(versionString)")
+      print("State:      \(state)")
+      print()
+      guard confirm("Cancel this review submission? [y/N] ") else {
+        print("Cancelled.")
+        return
+      }
+
+      let result = try await client.send(
+        Resources.v1.reviewSubmissions.id(submission.id).patch(
+          ReviewSubmissionUpdateRequest(
+            data: .init(
+              id: submission.id,
+              attributes: .init(isCanceled: true)
+            )
+          )
+        )
+      )
+
+      let newState = result.data.attributes?.state.map { "\($0)" } ?? "unknown"
+      print()
+      print("Submission cancelled.")
+      print("  State: \(newState)")
     }
   }
 

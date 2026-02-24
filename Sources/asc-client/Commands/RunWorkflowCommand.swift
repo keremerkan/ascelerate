@@ -10,14 +10,20 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     abstract: "Run a sequence of asc-client commands from a workflow file."
   )
 
-  @Argument(help: "Path to the workflow file.")
-  var file: String
+  @Argument(help: "Path to the workflow file. If omitted, lists workflow files in the current directory.")
+  var file: String?
 
   @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
   var yes = false
 
   func run() async throws {
-    let path = expandPath(file)
+    let resolvedFile: String
+    if let file {
+      resolvedFile = file
+    } else {
+      resolvedFile = try selectWorkflowFile()
+    }
+    let path = expandPath(resolvedFile)
 
     // Resolve to absolute path for reliable cycle detection
     let resolvedPath: String
@@ -89,6 +95,49 @@ struct RunWorkflowCommand: AsyncParsableCommand {
 
     print("Workflow complete. All \(steps.count) \(steps.count == 1 ? "step" : "steps") succeeded.")
   }
+}
+
+/// Lists workflow files (.workflow, .txt) in the current directory and prompts the user to select one.
+private func selectWorkflowFile() throws -> String {
+  let cwd = FileManager.default.currentDirectoryPath
+  let extensions = [".workflow", ".txt"]
+  let files = (try? FileManager.default.contentsOfDirectory(atPath: cwd))?
+    .filter { name in extensions.contains(where: { name.hasSuffix($0) }) }
+    .sorted() ?? []
+
+  if files.isEmpty {
+    print("No .workflow or .txt files found in the current directory.")
+    print("Enter file path: ", terminator: "")
+    guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !input.isEmpty else {
+      throw ValidationError("No file provided.")
+    }
+    return input
+  }
+
+  print("Workflow files:")
+  for (i, file) in files.enumerated() {
+    print("  \(i + 1). \(file)")
+  }
+  print("  \(files.count + 1). Enter path manually")
+  print()
+  print("Select (1-\(files.count + 1)): ", terminator: "")
+  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+        let choice = Int(input),
+        choice >= 1, choice <= files.count + 1 else {
+    throw ValidationError("Invalid selection.")
+  }
+
+  if choice == files.count + 1 {
+    print("Enter file path: ", terminator: "")
+    guard let path = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !path.isEmpty else {
+      throw ValidationError("No file provided.")
+    }
+    return path
+  }
+
+  return files[choice - 1]
 }
 
 /// Splits a command string into arguments, respecting single and double quotes.

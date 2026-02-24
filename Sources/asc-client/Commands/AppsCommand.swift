@@ -162,12 +162,18 @@ struct AppsCommand: AsyncParsableCommand {
     @Argument(help: "The bundle identifier of the app.")
     var bundleID: String
 
+    @Option(name: .long, help: "Filter by version string (e.g. 14.3).")
+    var version: String?
+
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let response = try await client.send(
-        Resources.v1.apps.id(app.id).reviewSubmissions.get()
+        Resources.v1.apps.id(app.id).reviewSubmissions.get(
+          fieldsAppStoreVersions: [.versionString, .appVersionState],
+          include: [.appStoreVersionForReview, .items]
+        )
       )
 
       if response.data.isEmpty {
@@ -175,54 +181,79 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
+      // Index included items for lookup
+      var includedVersions: [String: AppStoreVersion] = [:]
+      var includedItems: [String: ReviewSubmissionItem] = [:]
+      for item in response.included ?? [] {
+        switch item {
+        case .appStoreVersion(let v): includedVersions[v.id] = v
+        case .reviewSubmissionItem(let i): includedItems[i.id] = i
+        default: break
+        }
+      }
+
+      // Resolve version string for each submission and filter if requested
+      func versionString(for submission: ReviewSubmission) -> String {
+        guard let versionRef = submission.relationships?.appStoreVersionForReview?.data,
+              let v = includedVersions[versionRef.id] else { return "—" }
+        return v.attributes?.versionString ?? "—"
+      }
+
+      let submissions = version != nil
+        ? response.data.filter { versionString(for: $0) == version }
+        : response.data
+
+      if submissions.isEmpty {
+        print("No review submissions found for version \(version!).")
+        return
+      }
+
       var rows: [[String]] = []
-      for submission in response.data {
+      for submission in submissions {
         let attrs = submission.attributes
         let platform = attrs?.platform.map { "\($0)" } ?? "—"
         let state = attrs?.state.map { "\($0)" } ?? "—"
         let submitted = attrs?.submittedDate.map { formatDate($0) } ?? "—"
-        rows.append([platform, state, submitted])
+        rows.append([platform, versionString(for: submission), state, submitted])
       }
 
       Table.print(
-        headers: ["Platform", "State", "Submitted"],
+        headers: ["Platform", "Version", "State", "Submitted"],
         rows: rows
       )
 
       // Show details for active submissions with issues
-      for submission in response.data {
+      for submission in submissions {
         guard let state = submission.attributes?.state,
               state == .unresolvedIssues || state == .inReview || state == .waitingForReview
         else { continue }
 
+        // Get version info
+        var versionInfo = ""
+        if let versionRef = submission.relationships?.appStoreVersionForReview?.data,
+           let v = includedVersions[versionRef.id] {
+          let vs = v.attributes?.versionString ?? "?"
+          let vState = v.attributes?.appVersionState.map { "\($0)" } ?? "?"
+          versionInfo = " — v\(vs) (\(vState))"
+        }
+
         print()
-        print("--- Submission \(submission.id) (\(state)) ---")
+        print("--- Submission (\(state))\(versionInfo) ---")
 
-        // Fetch items for this submission
-        let itemsResponse = try await client.send(
-          Resources.v1.reviewSubmissions.id(submission.id).items.get()
-        )
-
-        if !itemsResponse.data.isEmpty {
-          print()
-          for item in itemsResponse.data {
-            let itemState = item.attributes?.state.map { "\($0)" } ?? "—"
-            print("  Item: \(item.id)  State: \(itemState)")
+        // Show items from included data
+        let itemRefs = submission.relationships?.items?.data ?? []
+        if !itemRefs.isEmpty {
+          for ref in itemRefs {
+            if let item = includedItems[ref.id] {
+              let itemState = item.attributes?.state.map { "\($0)" } ?? "—"
+              print("  Item: \(itemState)")
+            }
           }
         }
 
-        // Try to get the version's review detail (notes from reviewer)
-        if let versionRef = submission.relationships?.appStoreVersionForReview?.data {
-          let reviewDetail = try? await client.send(
-            Resources.v1.appStoreVersions.id(versionRef.id).appStoreReviewDetail.get()
-          )
-          if let notes = reviewDetail?.data.attributes?.notes, !notes.isEmpty {
-            print()
-            print("  Review notes:")
-            for line in notes.components(separatedBy: .newlines) {
-              print("    \(line)")
-            }
-          }
+        if state == .unresolvedIssues {
+          print()
+          print("  View rejection notes in App Store Connect Resolution Center.")
         }
       }
     }

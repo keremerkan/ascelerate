@@ -18,6 +18,9 @@ struct BuildsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Filter by bundle identifier.")
     var bundleID: String?
 
+    @Option(name: .long, help: "Filter by app version (e.g. 14.3).")
+    var version: String?
+
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
@@ -27,27 +30,45 @@ struct BuildsCommand: AsyncParsableCommand {
         filterApp = [app.id]
       }
 
-      var allBuilds: [(String, String, String)] = []
+      var allBuilds: [[String]] = []
 
       let request = Resources.v1.builds.get(
+        filterPreReleaseVersionVersion: version.map { [$0] },
         filterApp: filterApp,
-        sort: [.minusUploadedDate]
+        sort: [.minusUploadedDate],
+        include: [.preReleaseVersion]
       )
 
       for try await page in client.pages(request) {
+        // Index included pre-release versions
+        var prereleaseVersions: [String: PrereleaseVersion] = [:]
+        for item in page.included ?? [] {
+          if case .prereleaseVersion(let v) = item {
+            prereleaseVersions[v.id] = v
+          }
+        }
+
         for build in page.data {
-          let version = build.attributes?.version ?? "—"
+          let buildNumber = build.attributes?.version ?? "—"
           let state = build.attributes?.processingState
             .map { "\($0)" } ?? "—"
           let uploaded = build.attributes?.uploadedDate
             .map { formatDate($0) } ?? "—"
-          allBuilds.append((version, state, uploaded))
+
+          // Look up app version from included pre-release version
+          var appVersion = "—"
+          if let ref = build.relationships?.preReleaseVersion?.data,
+             let v = prereleaseVersions[ref.id] {
+            appVersion = v.attributes?.version ?? "—"
+          }
+
+          allBuilds.append([appVersion, buildNumber, state, uploaded])
         }
       }
 
       Table.print(
-        headers: ["Version", "State", "Uploaded"],
-        rows: allBuilds.map { [$0.0, $0.1, $0.2] }
+        headers: ["Version", "Build", "State", "Uploaded"],
+        rows: allBuilds
       )
 
       print()

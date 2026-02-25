@@ -4,12 +4,12 @@ import Foundation
 
 @main
 struct ASCClient: AsyncParsableCommand {
-  static let appVersion = "0.3.2"
+  static let appVersion = "0.3.3"
 
   static let configuration = CommandConfiguration(
     commandName: "asc-client",
     abstract: "A command-line tool for the App Store Connect API.",
-    subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self, IAPCommand.self, SubCommand.self, RunWorkflowCommand.self, InstallCompletionsCommand.self, RateLimitCommand.self]
+    subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self, IAPCommand.self, SubCommand.self, RunWorkflowCommand.self, InstallCompletionsCommand.self, RateLimitCommand.self, VersionCommand.self]
   )
 
   func run() async throws {
@@ -19,6 +19,13 @@ struct ASCClient: AsyncParsableCommand {
   }
 
   static func main() async {
+    // Catch --version before ArgumentParser rejects it as unknown flag
+    let args = Array(CommandLine.arguments.dropFirst())
+    if args == ["--version"] || args == ["-v"] {
+      print(appVersion)
+      return
+    }
+
     do {
       var command = try parseAsRoot()
       if var asyncCommand = command as? AsyncParsableCommand {
@@ -32,6 +39,17 @@ struct ASCClient: AsyncParsableCommand {
         exit(withError: ExitCode.failure)
       }
       exit(withError: error)
+    }
+  }
+
+  struct VersionCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "version",
+      abstract: "Print the version number."
+    )
+
+    func run() {
+      print(ASCClient.appVersion)
     }
   }
 

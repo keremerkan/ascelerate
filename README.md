@@ -490,6 +490,14 @@ asc-client apps attach-latest-build <bundle-id> --yes
 asc-client apps submit-for-review <bundle-id> --yes
 ```
 
+### Version
+
+```bash
+asc-client version     # Prints version number
+asc-client --version   # Same as above
+asc-client -v          # Same as above
+```
+
 ## Acknowledgments
 
 Built on top of [asc-swift](https://github.com/aaronsky/asc-swift) by Aaron Sky.

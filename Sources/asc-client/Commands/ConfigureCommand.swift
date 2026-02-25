@@ -16,9 +16,9 @@ struct ConfigureCommand: ParsableCommand {
     print("https://appstoreconnect.apple.com/access/integrations/api")
     print()
 
-    let keyId = prompt("Key ID: ")
-    let issuerId = prompt("Issuer ID: ")
-    let sourceKeyPath = prompt("Private key (.p8) path: ")
+    let keyId = promptText("Key ID: ")
+    let issuerId = promptText("Issuer ID: ")
+    let sourceKeyPath = promptText("Private key (.p8) path: ")
 
     let fm = FileManager.default
 
@@ -62,15 +62,5 @@ struct ConfigureCommand: ParsableCommand {
     print("Private key copied to \(destinationURL.path)")
     print("Config saved to \(Config.configFile.path)")
     print("Permissions set to owner-only access.")
-  }
-
-  private func prompt(_ message: String) -> String {
-    print(message, terminator: "")
-    guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-          !line.isEmpty else {
-      print("Value cannot be empty. Try again.")
-      return prompt(message)
-    }
-    return line
   }
 }

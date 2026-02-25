@@ -4,17 +4,18 @@ import Foundation
 
 @main
 struct ASCClient: AsyncParsableCommand {
-  static let appVersion = "0.3.3"
+  static let appVersion = "0.4.0"
 
   static let configuration = CommandConfiguration(
     commandName: "asc-client",
     abstract: "A command-line tool for the App Store Connect API.",
-    subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self, IAPCommand.self, SubCommand.self, RunWorkflowCommand.self, InstallCompletionsCommand.self, RateLimitCommand.self, VersionCommand.self]
+    subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self, IAPCommand.self, SubCommand.self, DevicesCommand.self, CertsCommand.self, BundleIDsCommand.self, ProfilesCommand.self, RunWorkflowCommand.self, InstallCompletionsCommand.self, RateLimitCommand.self, VersionCommand.self]
   )
 
   func run() async throws {
     print("asc-client \(Self.appVersion)")
-    checkCompletionsVersion()
+    let prompted = checkCompletionsVersion(interactive: true)
+    if prompted { print() }
     print(Self.helpMessage())
   }
 

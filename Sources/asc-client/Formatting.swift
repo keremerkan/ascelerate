@@ -8,6 +8,18 @@ nonisolated(unsafe) var autoConfirm = false
 nonisolated(unsafe) var lastUploadedBuildVersion: String?
 
 /// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
+/// Prompts for non-empty text input; retries on empty.
+func promptText(_ message: String) -> String {
+  print(message, terminator: "")
+  guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+        !line.isEmpty else {
+    print("Value cannot be empty. Try again.")
+    return promptText(message)
+  }
+  return line
+}
+
+/// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
 func confirm(_ prompt: String) -> Bool {
   print(prompt, terminator: "")
   if autoConfirm {
@@ -95,13 +107,16 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
 }
 
 /// Checks whether the installed shell completion script matches the current version.
-/// Shows a one-time note if completions are outdated. No-op if completions were never installed.
-func checkCompletionsVersion() {
+/// When `interactive` is true (bare invocation), offers to run install-completions automatically.
+/// Otherwise shows a one-time warning. No-op if completions were never installed.
+/// Returns true if the user was prompted (interactive mode only).
+@discardableResult
+func checkCompletionsVersion(interactive: Bool = false) -> Bool {
   struct Once { nonisolated(unsafe) static var checked = false }
-  guard !Once.checked else { return }
+  guard !Once.checked else { return false }
   Once.checked = true
 
-  guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return }
+  guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return false }
   let home = FileManager.default.homeDirectoryForCurrentUser
 
   let completionPath: String
@@ -110,27 +125,50 @@ func checkCompletionsVersion() {
   } else if shell.hasSuffix("/bash") {
     completionPath = home.appendingPathComponent(".bash_completions/asc-client.bash").path
   } else {
-    return
+    return false
   }
 
   guard FileManager.default.fileExists(atPath: completionPath),
     let data = FileManager.default.contents(atPath: completionPath),
     let contents = String(data: data, encoding: .utf8)
-  else { return }
+  else { return false }
 
   let currentVersion = ASCClient.appVersion
   let prefix = "# asc-client v"
 
   // Version stamp may be on line 1 (bash) or line 2 (zsh, after #compdef)
+  var isOutdated = false
+  var detail = ""
   if let range = contents.range(of: prefix),
     contents[contents.startIndex..<range.lowerBound].filter({ $0 == "\n" }).count <= 1
   {
     let afterPrefix = contents[range.upperBound...]
     let stampedVersion = String(afterPrefix.prefix(while: { $0 != "\n" }))
-    if stampedVersion == currentVersion { return }
-    print("\nNOTE: Shell completions are outdated (v\(stampedVersion) → v\(currentVersion)). Run 'asc-client install-completions' to update.\n")
+    if stampedVersion == currentVersion { return false }
+    isOutdated = true
+    detail = " (v\(stampedVersion) → v\(currentVersion))"
   } else {
-    print("\nNOTE: Shell completions may be outdated. Run 'asc-client install-completions' to update.\n")
+    isOutdated = true
+  }
+
+  guard isOutdated else { return false }
+
+  if interactive {
+    print("Shell completions are outdated\(detail). Update now? [Y/n] ", terminator: "")
+    fflush(stdout)
+    let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+    if answer.isEmpty || answer == "y" || answer == "yes" {
+      do {
+        let command = try InstallCompletionsCommand.parseAsRoot([]) as! InstallCompletionsCommand
+        try command.run()
+      } catch {
+        print("Failed to update completions: \(error)")
+      }
+    }
+    return true
+  } else {
+    print("\nNOTE: Shell completions are outdated\(detail). Run 'asc-client install-completions' to update.\n")
+    return false
   }
 }
 

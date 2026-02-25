@@ -2,7 +2,7 @@
 
 A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).
 
-> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, and read-only views of in-app purchases and subscriptions. More API coverage is planned.
+> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and read-only views of in-app purchases and subscriptions. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
 
 ## Requirements
 
@@ -372,6 +372,122 @@ asc-client apps eula <bundle-id> --file eula.txt
 asc-client apps eula <bundle-id> --delete
 ```
 
+### Devices
+
+```bash
+# List registered devices
+asc-client devices list
+asc-client devices list --platform IOS --status ENABLED
+
+# Show device details (interactive picker if name/UDID omitted)
+asc-client devices info
+asc-client devices info "My iPhone"
+
+# Register a new device (interactive prompts if options omitted)
+asc-client devices register
+asc-client devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
+
+# Update a device (interactive picker and update prompts if omitted)
+asc-client devices update
+asc-client devices update "My iPhone" --name "Work iPhone"
+asc-client devices update "My iPhone" --status DISABLED
+```
+
+### Certificates
+
+```bash
+# List signing certificates
+asc-client certs list
+asc-client certs list --type DISTRIBUTION
+
+# Show certificate details (interactive picker if omitted)
+asc-client certs info
+asc-client certs info "Apple Distribution: Example Inc"
+
+# Create a certificate (interactive type picker if --type omitted)
+# Auto-generates RSA key pair and CSR, imports into login keychain
+asc-client certs create
+asc-client certs create --type DISTRIBUTION
+asc-client certs create --type DEVELOPMENT --csr my-request.pem
+
+# Revoke a certificate (interactive picker if omitted)
+asc-client certs revoke
+asc-client certs revoke ABC123DEF456
+```
+
+### Bundle Identifiers
+
+```bash
+# List bundle identifiers
+asc-client bundle-ids list
+asc-client bundle-ids list --platform IOS
+
+# Show details and capabilities (interactive picker if omitted)
+asc-client bundle-ids info
+asc-client bundle-ids info com.example.MyApp
+
+# Register a new bundle ID (interactive prompts if options omitted)
+asc-client bundle-ids register
+asc-client bundle-ids register --name "My App" --identifier com.example.MyApp --platform IOS
+
+# Rename a bundle ID (identifier itself is immutable)
+asc-client bundle-ids update
+asc-client bundle-ids update com.example.MyApp --name "My Renamed App"
+
+# Delete a bundle ID (interactive picker if omitted)
+asc-client bundle-ids delete
+asc-client bundle-ids delete com.example.MyApp
+
+# Enable a capability (interactive pickers if omitted)
+# Shows only capabilities not already enabled
+asc-client bundle-ids enable-capability
+asc-client bundle-ids enable-capability com.example.MyApp --type PUSH_NOTIFICATIONS
+
+# Disable a capability (picks from currently enabled capabilities)
+asc-client bundle-ids disable-capability
+asc-client bundle-ids disable-capability com.example.MyApp
+```
+
+After enabling or disabling a capability, if provisioning profiles exist for that bundle ID, the command offers to regenerate them (required for changes to take effect).
+
+> **Note:** Some capabilities (e.g. App Groups, iCloud, Associated Domains) require additional configuration in the [Apple Developer portal](https://developer.apple.com/account/resources) after enabling.
+
+### Provisioning Profiles
+
+```bash
+# List provisioning profiles
+asc-client profiles list
+asc-client profiles list --type IOS_APP_STORE --state ACTIVE
+
+# Show profile details (interactive picker if omitted)
+asc-client profiles info
+asc-client profiles info "My App Store Profile"
+
+# Download a profile (interactive picker if omitted)
+asc-client profiles download
+asc-client profiles download "My App Store Profile" --output ./profiles/
+
+# Create a profile (fully interactive if options omitted)
+# Prompts for name, type, bundle ID, certificates, and devices
+asc-client profiles create
+asc-client profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.example.MyApp --certificates all
+
+# --certificates all uses all certs of the matching family (distribution, development, or Developer ID)
+# You can also specify serial numbers: --certificates ABC123,DEF456
+
+# Delete a profile (interactive picker if omitted)
+asc-client profiles delete
+asc-client profiles delete "My App Store Profile"
+
+# Reissue profiles (delete + recreate with latest certs of matching family)
+asc-client profiles reissue                         # Interactive: pick from all profiles (shows status)
+asc-client profiles reissue "My Profile"            # Reissue a specific profile by name
+asc-client profiles reissue --all-invalid           # Reissue all invalid profiles
+asc-client profiles reissue --all                   # Reissue all profiles regardless of state
+asc-client profiles reissue --all --all-devices     # Reissue all, using all enabled devices for dev/adhoc
+asc-client profiles reissue --all --to-certs ABC123,DEF456  # Use specific certificates instead of auto-detect
+```
+
 ### Builds
 
 ```bash
@@ -483,7 +599,7 @@ Without `--yes`, the workflow asks for confirmation before starting, and individ
 
 ### Automation
 
-Most commands that prompt for confirmation support `--yes` / `-y` to skip prompts, making them suitable for CI/CD pipelines and scripts:
+Most commands that prompt for confirmation support `--yes` / `-y` to skip prompts, making them suitable for CI/CD pipelines and scripts. When using `--yes` with provisioning commands, all required arguments must be provided explicitly (interactive mode is disabled):
 
 ```bash
 asc-client apps attach-latest-build <bundle-id> --yes

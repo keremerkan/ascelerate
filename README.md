@@ -76,6 +76,28 @@ This will prompt for your **Key ID**, **Issuer ID**, and the path to your `.p8` 
 
 ## Usage
 
+### Aliases
+
+Instead of typing full bundle IDs every time, you can create short aliases:
+
+```bash
+# Add an alias (interactive app picker)
+asc-client alias add myapp
+
+# Now use the alias anywhere you'd use a bundle ID
+asc-client apps info myapp
+asc-client apps versions myapp
+asc-client apps localizations view myapp
+
+# List all aliases
+asc-client alias list
+
+# Remove an alias
+asc-client alias remove myapp
+```
+
+Aliases are stored in `~/.asc-client/aliases.json`. Any argument that doesn't contain a dot is looked up as an alias — real bundle IDs (which always contain dots) work unchanged.
+
 ### Apps
 
 ```bash
@@ -93,32 +115,32 @@ asc-client apps create-version <bundle-id> <version-string>
 asc-client apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
 
 # Check review submission status
-asc-client apps review-status <bundle-id>
-asc-client apps review-status <bundle-id> --version 2.1.0
+asc-client apps review status <bundle-id>
+asc-client apps review status <bundle-id> --version 2.1.0
 
 # Submit for review
-asc-client apps submit-for-review <bundle-id>
-asc-client apps submit-for-review <bundle-id> --version 2.1.0
+asc-client apps review submit <bundle-id>
+asc-client apps review submit <bundle-id> --version 2.1.0
 
 # Resolve rejected review items (after fixing issues and replying in Resolution Center)
-asc-client apps resolve-issues <bundle-id>
+asc-client apps review resolve-issues <bundle-id>
 
 # Cancel an active review submission
-asc-client apps cancel-submission <bundle-id>
+asc-client apps review cancel-submission <bundle-id>
 ```
 
 ### Build Management
 
 ```bash
 # Interactively select and attach a build to a version
-asc-client apps attach-build <bundle-id>
-asc-client apps attach-build <bundle-id> --version 2.1.0
+asc-client apps build attach <bundle-id>
+asc-client apps build attach <bundle-id> --version 2.1.0
 
 # Attach the most recent build automatically
-asc-client apps attach-latest-build <bundle-id>
+asc-client apps build attach-latest <bundle-id>
 
 # Remove the attached build from a version
-asc-client apps detach-build <bundle-id>
+asc-client apps build detach <bundle-id>
 ```
 
 ### Phased Release
@@ -177,18 +199,18 @@ asc-client apps routing-coverage <bundle-id> --file coverage.geojson
 
 ```bash
 # View localizations (latest version by default)
-asc-client apps localizations <bundle-id>
-asc-client apps localizations <bundle-id> --version 2.1.0 --locale en-US
+asc-client apps localizations view <bundle-id>
+asc-client apps localizations view <bundle-id> --version 2.1.0 --locale en-US
 
 # Export localizations to JSON
-asc-client apps export-localizations <bundle-id>
-asc-client apps export-localizations <bundle-id> --version 2.1.0 --output my-localizations.json
+asc-client apps localizations export <bundle-id>
+asc-client apps localizations export <bundle-id> --version 2.1.0 --output my-localizations.json
 
 # Update a single locale
-asc-client apps update-localization <bundle-id> --whats-new "Bug fixes" --locale en-US
+asc-client apps localizations update <bundle-id> --whats-new "Bug fixes" --locale en-US
 
 # Bulk update from JSON file
-asc-client apps update-localizations <bundle-id> --file localizations.json
+asc-client apps localizations import <bundle-id> --file localizations.json
 ```
 
 The JSON format for export and bulk update:
@@ -215,17 +237,17 @@ Only fields present in the JSON are updated -- omitted fields are left unchanged
 
 ```bash
 # Download all screenshots and preview videos
-asc-client apps download-media <bundle-id>
-asc-client apps download-media <bundle-id> --folder my-media/ --version 2.1.0
+asc-client apps media download <bundle-id>
+asc-client apps media download <bundle-id> --folder my-media/ --version 2.1.0
 
 # Upload screenshots and preview videos from a folder
-asc-client apps upload-media <bundle-id> --folder media/
+asc-client apps media upload <bundle-id> --folder media/
 
 # Upload to a specific version
-asc-client apps upload-media <bundle-id> --folder media/ --version 2.1.0
+asc-client apps media upload <bundle-id> --folder media/ --version 2.1.0
 
 # Replace existing media in matching sets before uploading
-asc-client apps upload-media <bundle-id> --folder media/ --replace
+asc-client apps media upload <bundle-id> --folder media/ --replace
 ```
 
 Organize your media folder with locale and display type subfolders:
@@ -301,21 +323,21 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
 >
-> `download-media` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
+> `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
 
 #### Verify and retry stuck media
 
-Sometimes screenshots or previews get stuck in "processing" after upload. Use `verify-media` to check the status of all media at once and optionally retry stuck items:
+Sometimes screenshots or previews get stuck in "processing" after upload. Use `media verify` to check the status of all media at once and optionally retry stuck items:
 
 ```bash
 # Check status of all screenshots and previews
-asc-client apps verify-media <bundle-id>
+asc-client apps media verify <bundle-id>
 
 # Check a specific version
-asc-client apps verify-media <bundle-id> --version 2.1.0
+asc-client apps media verify <bundle-id> --version 2.1.0
 
 # Retry stuck items using local files from the media folder
-asc-client apps verify-media <bundle-id> --folder media/
+asc-client apps media verify <bundle-id> --folder media/
 ```
 
 Without `--folder`, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With `--folder`, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.
@@ -324,14 +346,25 @@ Without `--folder`, the command shows a read-only status report. Sets where all 
 
 ```bash
 # View app info, categories, and per-locale metadata
-asc-client apps app-info <bundle-id>
+asc-client apps app-info view <bundle-id>
 
 # List all available category IDs (no bundle ID needed)
-asc-client apps app-info --list-categories
+asc-client apps app-info view --list-categories
 
-# Update primary and/or secondary category
-asc-client apps app-info <bundle-id> --primary-category UTILITIES
-asc-client apps app-info <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
+# Update localization fields for a single locale
+asc-client apps app-info update <bundle-id> --name "My App" --subtitle "Best app ever"
+asc-client apps app-info update <bundle-id> --locale de-DE --name "Meine App"
+
+# Update categories (can combine with localization flags)
+asc-client apps app-info update <bundle-id> --primary-category UTILITIES
+asc-client apps app-info update <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
+
+# Export all app info localizations to JSON
+asc-client apps app-info export <bundle-id>
+asc-client apps app-info export <bundle-id> --output app-infos.json
+
+# Bulk update localizations from a JSON file
+asc-client apps app-info import <bundle-id> --file app-infos.json
 ```
 
 ### Territory Availability
@@ -588,11 +621,11 @@ builds upload --latest --bundle-id com.example.MyApp
 builds await-processing com.example.MyApp
 
 # Update localizations and attach the build
-apps update-localizations com.example.MyApp --file localizations.json
-apps attach-latest-build com.example.MyApp
+apps localizations import com.example.MyApp --file localizations.json
+apps build attach-latest com.example.MyApp
 
 # Submit for review
-apps submit-for-review com.example.MyApp
+apps review submit com.example.MyApp
 ```
 
 Without `--yes`, the workflow asks for confirmation before starting, and individual commands still prompt where they normally would (e.g., before submitting for review). With `--yes`, all prompts are skipped for fully unattended execution.
@@ -602,8 +635,8 @@ Without `--yes`, the workflow asks for confirmation before starting, and individ
 Most commands that prompt for confirmation support `--yes` / `-y` to skip prompts, making them suitable for CI/CD pipelines and scripts. When using `--yes` with provisioning commands, all required arguments must be provided explicitly (interactive mode is disabled):
 
 ```bash
-asc-client apps attach-latest-build <bundle-id> --yes
-asc-client apps submit-for-review <bundle-id> --yes
+asc-client apps build attach-latest <bundle-id> --yes
+asc-client apps review submit <bundle-id> --yes
 ```
 
 ### Version

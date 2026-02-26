@@ -12,8 +12,8 @@ builds upload --latest --bundle-id com.example.MyApp
 builds await-processing com.example.MyApp
 
 # Update localizations and attach the build
-apps update-localizations com.example.MyApp --file localizations.json
-apps attach-latest-build com.example.MyApp
+apps localizations import com.example.MyApp --file localizations.json
+apps build attach-latest com.example.MyApp
 
 # Submit for review
-apps submit-for-review com.example.MyApp
+apps review submit com.example.MyApp

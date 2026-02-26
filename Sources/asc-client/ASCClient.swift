@@ -4,12 +4,18 @@ import Foundation
 
 @main
 struct ASCClient: AsyncParsableCommand {
-  static let appVersion = "0.4.0"
+  static let appVersion = "0.5.0"
 
   static let configuration = CommandConfiguration(
     commandName: "asc-client",
     abstract: "A command-line tool for the App Store Connect API.",
-    subcommands: [ConfigureCommand.self, AppsCommand.self, BuildsCommand.self, IAPCommand.self, SubCommand.self, DevicesCommand.self, CertsCommand.self, BundleIDsCommand.self, ProfilesCommand.self, RunWorkflowCommand.self, InstallCompletionsCommand.self, RateLimitCommand.self, VersionCommand.self]
+    subcommands: [AppsCommand.self, BuildsCommand.self],
+    groupedSubcommands: [
+      CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
+      CommandGroup(name: "Provisioning", subcommands: [BundleIDsCommand.self, CertsCommand.self, DevicesCommand.self, ProfilesCommand.self]),
+      CommandGroup(name: "Utilities", subcommands: [AliasCommand.self, RunWorkflowCommand.self, RateLimitCommand.self, VersionCommand.self]),
+      CommandGroup(name: "Setup", subcommands: [ConfigureCommand.self, InstallCompletionsCommand.self]),
+    ]
   )
 
   func run() async throws {

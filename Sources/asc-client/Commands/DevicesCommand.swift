@@ -27,27 +27,8 @@ struct DevicesCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let filterPlatform: [Resources.V1.Devices.FilterPlatform]?
-      if let platform {
-        guard let val = Resources.V1.Devices.FilterPlatform(rawValue: platform.uppercased()) else {
-          let valid = Resources.V1.Devices.FilterPlatform.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid platform '\(platform)'. Valid values: \(valid)")
-        }
-        filterPlatform = [val]
-      } else {
-        filterPlatform = nil
-      }
-
-      let filterStatus: [Resources.V1.Devices.FilterStatus]?
-      if let status {
-        guard let val = Resources.V1.Devices.FilterStatus(rawValue: status.uppercased()) else {
-          let valid = Resources.V1.Devices.FilterStatus.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid status '\(status)'. Valid values: \(valid)")
-        }
-        filterStatus = [val]
-      } else {
-        filterStatus = nil
-      }
+      let filterPlatform: [Resources.V1.Devices.FilterPlatform]? = try parseFilter(platform, name: "platform")
+      let filterStatus: [Resources.V1.Devices.FilterStatus]? = try parseFilter(status, name: "status")
 
       var rows: [[String]] = []
       let request = Resources.v1.devices.get(
@@ -333,21 +314,17 @@ func promptDevice(client: AppStoreConnectClient) async throws -> Device {
   }
   allDevices.sort { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
 
-  print("Devices:")
-  for (i, device) in allDevices.enumerated() {
-    let name = device.attributes?.name ?? "—"
-    let udid = device.attributes?.udid ?? "—"
-    let status = device.attributes?.status.map { "\($0)" } ?? "—"
-    print("  [\(i + 1)] \(name) (\(udid)) — \(status)")
-  }
-  print()
-  print("Select device (1-\(allDevices.count)): ", terminator: "")
-  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        let choice = Int(input),
-        choice >= 1, choice <= allDevices.count else {
-    throw ValidationError("Invalid selection.")
-  }
-  return allDevices[choice - 1]
+  return try promptSelection(
+    "Devices",
+    items: allDevices,
+    display: { device in
+      let name = device.attributes?.name ?? "—"
+      let udid = device.attributes?.udid ?? "—"
+      let status = device.attributes?.status.map { "\($0)" } ?? "—"
+      return "\(name) (\(udid)) — \(status)"
+    },
+    prompt: "Select device"
+  )
 }
 
 /// Looks up a device by UDID first, then falls back to name.

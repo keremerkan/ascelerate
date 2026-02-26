@@ -35,16 +35,7 @@ struct CertsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let filterType: [Resources.V1.Certificates.FilterCertificateType]?
-      if let type {
-        guard let val = Resources.V1.Certificates.FilterCertificateType(rawValue: type.uppercased()) else {
-          let valid = Resources.V1.Certificates.FilterCertificateType.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid type '\(type)'. Valid values: \(valid)")
-        }
-        filterType = [val]
-      } else {
-        filterType = nil
-      }
+      let filterType: [Resources.V1.Certificates.FilterCertificateType]? = try parseFilter(type, name: "type")
 
       var rows: [[String]] = []
       let request = Resources.v1.certificates.get(
@@ -140,19 +131,12 @@ struct CertsCommand: AsyncParsableCommand {
     ]
 
     private func promptCertType() throws -> CertificateType {
-      let types = Self.creatableTypes
-      print("Certificate types:")
-      for (i, ct) in types.enumerated() {
-        print("  [\(i + 1)] \(ct.rawValue)")
-      }
-      print()
-      print("Select certificate type (1-\(types.count)): ", terminator: "")
-      guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-            let choice = Int(input),
-            choice >= 1, choice <= types.count else {
-        throw ValidationError("Invalid selection.")
-      }
-      return types[choice - 1]
+      return try promptSelection(
+        "Certificate types",
+        items: Self.creatableTypes,
+        display: { $0.rawValue },
+        prompt: "Select certificate type"
+      )
     }
 
     func run() async throws {
@@ -392,22 +376,18 @@ func promptCertificate(client: AppStoreConnectClient) async throws -> AppStoreAP
   }
   allCerts.sort { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
 
-  print("Certificates:")
-  for (i, cert) in allCerts.enumerated() {
-    let name = cert.attributes?.displayName ?? "—"
-    let serial = cert.attributes?.serialNumber ?? "—"
-    let type = cert.attributes?.certificateType.map { "\($0)" } ?? "—"
-    let expires = cert.attributes?.expirationDate.map { formatDate($0) } ?? "—"
-    print("  [\(i + 1)] \(name) (\(serial)) — \(type), expires \(expires)")
-  }
-  print()
-  print("Select certificate (1-\(allCerts.count)): ", terminator: "")
-  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        let choice = Int(input),
-        choice >= 1, choice <= allCerts.count else {
-    throw ValidationError("Invalid selection.")
-  }
-  return allCerts[choice - 1]
+  return try promptSelection(
+    "Certificates",
+    items: allCerts,
+    display: { cert in
+      let name = cert.attributes?.displayName ?? "—"
+      let serial = cert.attributes?.serialNumber ?? "—"
+      let type = cert.attributes?.certificateType.map { "\($0)" } ?? "—"
+      let expires = cert.attributes?.expirationDate.map { formatDate($0) } ?? "—"
+      return "\(name) (\(serial)) — \(type), expires \(expires)"
+    },
+    prompt: "Select certificate"
+  )
 }
 
 /// Looks up a certificate by serial number first, then falls back to display name.

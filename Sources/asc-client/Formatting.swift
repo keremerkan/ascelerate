@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 
 /// When true, all interactive confirmation prompts are automatically accepted.
@@ -170,6 +171,88 @@ func checkCompletionsVersion(interactive: Bool = false) -> Bool {
     print("\nNOTE: Shell completions are outdated\(detail). Run 'asc-client install-completions' to update.\n")
     return false
   }
+}
+
+/// Prints a numbered list and reads a single selection.
+func promptSelection<T>(
+  _ title: String,
+  items: [T],
+  display: (T) -> String,
+  prompt: String? = nil
+) throws -> T {
+  guard !items.isEmpty else {
+    throw ValidationError("No items to select from.")
+  }
+  print("\(title):")
+  for (i, item) in items.enumerated() {
+    print("  [\(i + 1)] \(display(item))")
+  }
+  print()
+  let label = prompt ?? "Select"
+  print("\(label) (1-\(items.count)): ", terminator: "")
+  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+        let choice = Int(input),
+        choice >= 1, choice <= items.count else {
+    throw ValidationError("Invalid selection.")
+  }
+  return items[choice - 1]
+}
+
+/// Prints a numbered list and reads one or more selections (comma-separated or 'all').
+/// When `defaultAll` is true, empty input selects all items.
+func promptMultiSelection<T>(
+  _ title: String,
+  items: [T],
+  display: (T) -> String,
+  prompt: String? = nil,
+  defaultAll: Bool = false
+) throws -> [T] {
+  guard !items.isEmpty else {
+    throw ValidationError("No items to select from.")
+  }
+  print("\(title):")
+  for (i, item) in items.enumerated() {
+    print("  [\(i + 1)] \(display(item))")
+  }
+  print()
+  let label = prompt ?? "Select"
+  let defaultHint = defaultAll ? " [all]" : ""
+  print("\(label) (comma-separated numbers, or 'all')\(defaultHint): ", terminator: "")
+  let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+  if input.isEmpty && defaultAll {
+    return items
+  }
+  guard !input.isEmpty else {
+    throw ValidationError("No selection made.")
+  }
+  if input.lowercased() == "all" {
+    return items
+  }
+
+  let parts = input.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+  var selected: [T] = []
+  for part in parts {
+    guard let num = Int(part), num >= 1, num <= items.count else {
+      throw ValidationError("Invalid selection '\(part)'. Enter numbers between 1 and \(items.count).")
+    }
+    selected.append(items[num - 1])
+  }
+  return selected
+}
+
+/// Parses and validates a filter value against a CaseIterable enum.
+/// Returns nil when input is nil, or a single-element array on success.
+func parseFilter<T: RawRepresentable & CaseIterable>(
+  _ value: String?,
+  name: String
+) throws -> [T]? where T.RawValue == String {
+  guard let value else { return nil }
+  guard let val = T(rawValue: value.uppercased()) else {
+    let valid = T.allCases.map(\.rawValue).joined(separator: ", ")
+    throw ValidationError("Invalid \(name) '\(value)'. Valid values: \(valid)")
+  }
+  return [val]
 }
 
 enum Table {

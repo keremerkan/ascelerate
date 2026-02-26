@@ -24,16 +24,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let filterPlatform: [Resources.V1.BundleIDs.FilterPlatform]?
-      if let platform {
-        guard let val = Resources.V1.BundleIDs.FilterPlatform(rawValue: platform.uppercased()) else {
-          let valid = Resources.V1.BundleIDs.FilterPlatform.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid platform '\(platform)'. Valid values: \(valid)")
-        }
-        filterPlatform = [val]
-      } else {
-        filterPlatform = nil
-      }
+      let filterPlatform: [Resources.V1.BundleIDs.FilterPlatform]? = try parseFilter(platform, name: "platform")
 
       var rows: [[String]] = []
       let request = Resources.v1.bundleIDs.get(
@@ -310,21 +301,16 @@ struct BundleIDsCommand: AsyncParsableCommand {
         throw ValidationError("All capabilities are already enabled on this bundle identifier.")
       }
 
-      print("Available capability types:")
-      for (i, ct) in available.enumerated() {
-        print("  [\(i + 1)] \(ct.rawValue)")
-      }
       print()
       print("NOTE: Some capabilities (e.g. App Groups, iCloud, Associated Domains)")
       print("require additional configuration in the Apple Developer portal after enabling.")
-      print()
-      print("Select capability type (1-\(available.count)): ", terminator: "")
-      guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-            let choice = Int(input),
-            choice >= 1, choice <= available.count else {
-        throw ValidationError("Invalid selection.")
-      }
-      return available[choice - 1]
+
+      return try promptSelection(
+        "Available capability types",
+        items: available,
+        display: { $0.rawValue },
+        prompt: "Select capability type"
+      )
     }
 
     func run() async throws {
@@ -428,19 +414,12 @@ struct BundleIDsCommand: AsyncParsableCommand {
         throw ValidationError("No capabilities enabled on this bundle identifier.")
       }
 
-      print("Enabled capabilities:")
-      for (i, cap) in caps.enumerated() {
-        let capType = cap.attributes?.capabilityType.map { "\($0)" } ?? "—"
-        print("  [\(i + 1)] \(capType)")
-      }
-      print()
-      print("Select capability to disable (1-\(caps.count)): ", terminator: "")
-      guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-            let choice = Int(input),
-            choice >= 1, choice <= caps.count else {
-        throw ValidationError("Invalid selection.")
-      }
-      return caps[choice - 1]
+      return try promptSelection(
+        "Enabled capabilities",
+        items: caps,
+        display: { $0.attributes?.capabilityType.map { "\($0)" } ?? "—" },
+        prompt: "Select capability to disable"
+      )
     }
 
     func run() async throws {
@@ -630,38 +609,27 @@ func promptBundleID(client: AppStoreConnectClient) async throws -> BundleID {
   }
   allBundleIDs.sort { ($0.attributes?.identifier ?? "") < ($1.attributes?.identifier ?? "") }
 
-  print("Bundle identifiers:")
-  for (i, bid) in allBundleIDs.enumerated() {
-    let identifier = bid.attributes?.identifier ?? "—"
-    let name = bid.attributes?.name ?? "—"
-    let platform = bid.attributes?.platform.map { "\($0)" } ?? "—"
-    print("  [\(i + 1)] \(identifier) (\(name), \(platform))")
-  }
-  print()
-  print("Select bundle identifier (1-\(allBundleIDs.count)): ", terminator: "")
-  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        let choice = Int(input),
-        choice >= 1, choice <= allBundleIDs.count else {
-    throw ValidationError("Invalid selection.")
-  }
-  return allBundleIDs[choice - 1]
+  return try promptSelection(
+    "Bundle identifiers",
+    items: allBundleIDs,
+    display: { bid in
+      let identifier = bid.attributes?.identifier ?? "—"
+      let name = bid.attributes?.name ?? "—"
+      let platform = bid.attributes?.platform.map { "\($0)" } ?? "—"
+      return "\(identifier) (\(name), \(platform))"
+    },
+    prompt: "Select bundle identifier"
+  )
 }
 
 /// Prompts the user to select a platform from a numbered list.
 func promptPlatform() throws -> BundleIDPlatform {
-  let platforms = BundleIDPlatform.allCases
-  print("Platforms:")
-  for (i, p) in platforms.enumerated() {
-    print("  [\(i + 1)] \(p.rawValue)")
-  }
-  print()
-  print("Select platform (1-\(platforms.count)): ", terminator: "")
-  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        let choice = Int(input),
-        choice >= 1, choice <= platforms.count else {
-    throw ValidationError("Invalid selection.")
-  }
-  return platforms[choice - 1]
+  return try promptSelection(
+    "Platforms",
+    items: Array(BundleIDPlatform.allCases),
+    display: { $0.rawValue },
+    prompt: "Select platform"
+  )
 }
 
 /// Looks up a bundle ID by identifier. Guards against prefix matching.

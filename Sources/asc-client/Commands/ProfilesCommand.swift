@@ -33,27 +33,8 @@ struct ProfilesCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let filterType: [Resources.V1.Profiles.FilterProfileType]?
-      if let type {
-        guard let val = Resources.V1.Profiles.FilterProfileType(rawValue: type.uppercased()) else {
-          let valid = Resources.V1.Profiles.FilterProfileType.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid type '\(type)'. Valid values: \(valid)")
-        }
-        filterType = [val]
-      } else {
-        filterType = nil
-      }
-
-      let filterState: [Resources.V1.Profiles.FilterProfileState]?
-      if let state {
-        guard let val = Resources.V1.Profiles.FilterProfileState(rawValue: state.uppercased()) else {
-          let valid = Resources.V1.Profiles.FilterProfileState.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid state '\(state)'. Valid values: \(valid)")
-        }
-        filterState = [val]
-      } else {
-        filterState = nil
-      }
+      let filterType: [Resources.V1.Profiles.FilterProfileType]? = try parseFilter(type, name: "type")
+      let filterState: [Resources.V1.Profiles.FilterProfileState]? = try parseFilter(state, name: "state")
 
       var rows: [[String]] = []
       let request = Resources.v1.profiles.get(
@@ -248,19 +229,12 @@ struct ProfilesCommand: AsyncParsableCommand {
     // MARK: - Interactive prompts
 
     private func promptProfileType() throws -> ProfileCreateRequest.Data.Attributes.ProfileType {
-      let allTypes = ProfileCreateRequest.Data.Attributes.ProfileType.allCases
-      print("Profile types:")
-      for (i, pt) in allTypes.enumerated() {
-        print("  [\(i + 1)] \(pt.rawValue)")
-      }
-      print()
-      print("Select profile type (1-\(allTypes.count)): ", terminator: "")
-      guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-            let choice = Int(input),
-            choice >= 1, choice <= allTypes.count else {
-        throw ValidationError("Invalid selection.")
-      }
-      return allTypes[choice - 1]
+      return try promptSelection(
+        "Profile types",
+        items: Array(ProfileCreateRequest.Data.Attributes.ProfileType.allCases),
+        display: { $0.rawValue },
+        prompt: "Select profile type"
+      )
     }
 
     private func promptCertificates(profileType: ProfileCreateRequest.Data.Attributes.ProfileType, client: AppStoreConnectClient) async throws -> [String] {
@@ -271,7 +245,6 @@ struct ProfilesCommand: AsyncParsableCommand {
         allCerts.append(contentsOf: page.data)
       }
 
-      // Filter to matching cert family
       let filtered = allCerts.filter { cert in
         guard let ct = cert.attributes?.certificateType else { return false }
         return certFamily(ct) == neededFamily
@@ -283,31 +256,16 @@ struct ProfilesCommand: AsyncParsableCommand {
         throw ValidationError("No \(neededFamily.lowercased()) certificates found. Create one first with 'certs create'.")
       }
 
-      print("\(neededFamily) certificates:")
-      for (i, cert) in filtered.enumerated() {
-        let expires = cert.attributes?.expirationDate.map { formatDate($0) } ?? "—"
-        print("  [\(i + 1)] \(certLabel(cert)) — expires \(expires)")
-      }
-      print()
-      print("Select certificates (comma-separated numbers, or 'all'): ", terminator: "")
-      guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-            !input.isEmpty else {
-        throw ValidationError("No certificates selected.")
-      }
-
-      if input.lowercased() == "all" {
-        return filtered.map(\.id)
-      }
-
-      let parts = input.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-      var selected: [String] = []
-      for part in parts {
-        guard let num = Int(part), num >= 1, num <= filtered.count else {
-          throw ValidationError("Invalid selection '\(part)'. Enter numbers between 1 and \(filtered.count).")
-        }
-        selected.append(filtered[num - 1].id)
-      }
-      return selected
+      let selected = try promptMultiSelection(
+        "\(neededFamily) certificates",
+        items: filtered,
+        display: { cert in
+          let expires = cert.attributes?.expirationDate.map { formatDate($0) } ?? "—"
+          return "\(certLabel(cert)) — expires \(expires)"
+        },
+        prompt: "Select certificates"
+      )
+      return selected.map(\.id)
     }
 
     private func promptDevices(client: AppStoreConnectClient) async throws -> [String] {
@@ -319,30 +277,21 @@ struct ProfilesCommand: AsyncParsableCommand {
         throw ValidationError("No enabled devices found. Register one first with 'devices register'.")
       }
 
-      print("Enabled devices:")
-      for (i, device) in allDevices.enumerated() {
-        let name = device.attributes?.name ?? "—"
-        let udid = device.attributes?.udid ?? "—"
-        print("  [\(i + 1)] \(name) (\(udid))")
-      }
-      print()
-      print("Select devices (comma-separated numbers, or 'all') [all]: ", terminator: "")
-      let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-      if input.isEmpty || input.lowercased() == "all" {
+      let selected = try promptMultiSelection(
+        "Enabled devices",
+        items: allDevices,
+        display: { device in
+          let name = device.attributes?.name ?? "—"
+          let udid = device.attributes?.udid ?? "—"
+          return "\(name) (\(udid))"
+        },
+        prompt: "Select devices",
+        defaultAll: true
+      )
+      if selected.count == allDevices.count {
         print("Using all \(allDevices.count) enabled device(s).")
-        return allDevices.map(\.id)
       }
-
-      let parts = input.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-      var selected: [String] = []
-      for part in parts {
-        guard let num = Int(part), num >= 1, num <= allDevices.count else {
-          throw ValidationError("Invalid selection '\(part)'. Enter numbers between 1 and \(allDevices.count).")
-        }
-        selected.append(allDevices[num - 1].id)
-      }
-      return selected
+      return selected.map(\.id)
     }
 
     // MARK: - Run
@@ -855,21 +804,17 @@ func promptProfile(client: AppStoreConnectClient) async throws -> Profile {
   }
   allProfiles.sort { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
 
-  print("Provisioning profiles:")
-  for (i, profile) in allProfiles.enumerated() {
-    let name = profile.attributes?.name ?? "—"
-    let type = profile.attributes?.profileType.map { "\($0)" } ?? "—"
-    let state = profile.attributes?.profileState.map { "\($0)" } ?? "—"
-    print("  [\(i + 1)] \(name) (\(type), \(state))")
-  }
-  print()
-  print("Select profile (1-\(allProfiles.count)): ", terminator: "")
-  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        let choice = Int(input),
-        choice >= 1, choice <= allProfiles.count else {
-    throw ValidationError("Invalid selection.")
-  }
-  return allProfiles[choice - 1]
+  return try promptSelection(
+    "Provisioning profiles",
+    items: allProfiles,
+    display: { profile in
+      let name = profile.attributes?.name ?? "—"
+      let type = profile.attributes?.profileType.map { "\($0)" } ?? "—"
+      let state = profile.attributes?.profileState.map { "\($0)" } ?? "—"
+      return "\(name) (\(type), \(state))"
+    },
+    prompt: "Select profile"
+  )
 }
 
 /// Looks up a profile by name. Fetches profile content for download.

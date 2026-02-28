@@ -11,6 +11,9 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 
+# Blog
+/blog
+
 # Claude Code
 /.claude
 .claude/

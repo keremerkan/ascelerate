@@ -1431,30 +1431,34 @@ struct AppsCommand: AsyncParsableCommand {
 
           // Version localizations
           if let loc = versionLocs.first(where: { $0.attributes?.locale == locale }) {
-            var issues: [String] = []
+            var missing: [String] = []
+            var invalid: [String] = []
             let desc = loc.attributes?.description ?? ""
             if desc.isEmpty {
-              issues.append("\(formatFieldName("description")) missing")
+              missing.append(formatFieldName("description"))
             } else if desc.count < 10 {
-              issues.append("\(formatFieldName("description")) too short (<10 chars)")
+              invalid.append("\(formatFieldName("description")) too short (<10 chars)")
             } else if desc.count > 4000 {
-              issues.append("\(formatFieldName("description")) too long (>4000 chars)")
+              invalid.append("\(formatFieldName("description")) too long (>4000 chars)")
             }
             let whatsNew = loc.attributes?.whatsNew ?? ""
             if whatsNew.isEmpty {
-              issues.append("\(formatFieldName("whatsNew")) missing")
+              missing.append(formatFieldName("whatsNew"))
             } else if whatsNew.count < 7 {
-              issues.append("\(formatFieldName("whatsNew")) too short (<7 chars)")
+              invalid.append("\(formatFieldName("whatsNew")) too short (<7 chars)")
             } else if whatsNew.count > 4000 {
-              issues.append("\(formatFieldName("whatsNew")) too long (>4000 chars)")
+              invalid.append("\(formatFieldName("whatsNew")) too long (>4000 chars)")
             }
             if loc.attributes?.keywords == nil || loc.attributes?.keywords?.isEmpty == true {
-              issues.append("\(formatFieldName("keywords")) missing")
+              missing.append(formatFieldName("keywords"))
             }
-            if issues.isEmpty {
+            if missing.isEmpty && invalid.isEmpty {
               rows.append(["  Localizations", green("✓") + " All fields filled"])
             } else {
-              rows.append(["  Localizations", red("✗") + " \(issues.joined(separator: ", "))"])
+              var parts: [String] = []
+              if !missing.isEmpty { parts.append("Missing: \(missing.joined(separator: ", "))") }
+              if !invalid.isEmpty { parts.append(invalid.joined(separator: ", ")) }
+              rows.append(["  Localizations", red("✗") + " \(parts.joined(separator: "; "))"])
               failCount += 1
             }
           }

@@ -158,7 +158,7 @@ en-US (English (United States))
 
 de-DE (German (Germany))
   App info                           ✗ Missing: Privacy Policy URL
-  Localizations                      ✗ What's New missing
+  Localizations                      ✗ Missing: What's New
   Screenshots                        ✗ No screenshots
 ──────────────────────────────────────────────────────────────────
 Result: 5 passed, 3 failed

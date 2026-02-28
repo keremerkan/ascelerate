@@ -30,27 +30,8 @@ struct IAPCommand: AsyncParsableCommand {
 
       typealias Params = Resources.V1.Apps.WithID.InAppPurchasesV2
 
-      let filterType: [Params.FilterInAppPurchaseType]?
-      if let type {
-        guard let val = Params.FilterInAppPurchaseType(rawValue: type.uppercased()) else {
-          let valid = Params.FilterInAppPurchaseType.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid type '\(type)'. Valid values: \(valid)")
-        }
-        filterType = [val]
-      } else {
-        filterType = nil
-      }
-
-      let filterState: [Params.FilterState]?
-      if let state {
-        guard let val = Params.FilterState(rawValue: state.uppercased()) else {
-          let valid = Params.FilterState.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid state '\(state)'. Valid values: \(valid)")
-        }
-        filterState = [val]
-      } else {
-        filterState = nil
-      }
+      let filterType: [Params.FilterInAppPurchaseType]? = try parseFilter(type, name: "type")
+      let filterState: [Params.FilterState]? = try parseFilter(state, name: "state")
 
       var rows: [[String]] = []
       let request = Resources.v1.apps.id(app.id).inAppPurchasesV2.get(
@@ -65,8 +46,8 @@ struct IAPCommand: AsyncParsableCommand {
           rows.append([
             attrs?.name ?? "—",
             attrs?.productID ?? "—",
-            attrs?.inAppPurchaseType.map { "\($0)" } ?? "—",
-            attrs?.state.map { "\($0)" } ?? "—",
+            attrs?.inAppPurchaseType.map { formatState($0) } ?? "—",
+            attrs?.state.map { formatState($0) } ?? "—",
             attrs?.isFamilySharable == true ? "Yes" : "No",
           ])
         }
@@ -112,8 +93,8 @@ struct IAPCommand: AsyncParsableCommand {
       let attrs = iap.attributes
       print("Name:             \(attrs?.name ?? "—")")
       print("Product ID:       \(attrs?.productID ?? "—")")
-      print("Type:             \(attrs?.inAppPurchaseType.map { "\($0)" } ?? "—")")
-      print("State:            \(attrs?.state.map { "\($0)" } ?? "—")")
+      print("Type:             \(attrs?.inAppPurchaseType.map { formatState($0) } ?? "—")")
+      print("State:            \(attrs?.state.map { formatState($0) } ?? "—")")
       print("Family Shareable: \(attrs?.isFamilySharable == true ? "Yes" : "No")")
       print("Content Hosting:  \(attrs?.isContentHosting == true ? "Yes" : "No")")
       print("Review Note:      \(attrs?.reviewNote ?? "—")")
@@ -137,7 +118,7 @@ struct IAPCommand: AsyncParsableCommand {
           let locale = loc.attributes?.locale ?? "?"
           let name = loc.attributes?.name ?? "—"
           let desc = loc.attributes?.description ?? "—"
-          print("  [\(locale)] \(name) — \(desc)")
+          print("  [\(localeName(locale))] \(name) — \(desc)")
         }
       }
     }
@@ -171,19 +152,19 @@ struct IAPCommand: AsyncParsableCommand {
           case .inAppPurchaseV2(let iap):
             iapInfo[iap.id] = (
               iap.attributes?.name ?? "—",
-              iap.attributes?.inAppPurchaseType.map { "\($0)" } ?? "—"
+              iap.attributes?.inAppPurchaseType.map { formatState($0) } ?? "—"
             )
           case .subscription(let sub):
             subInfo[sub.id] = (
               sub.attributes?.name ?? "—",
-              sub.attributes?.subscriptionPeriod.map { "\($0)" } ?? "—"
+              sub.attributes?.subscriptionPeriod.map { formatState($0) } ?? "—"
             )
           }
         }
 
         for promo in page.data {
           let attrs = promo.attributes
-          let promoState = attrs?.state.map { "\($0)" } ?? "—"
+          let promoState = attrs?.state.map { formatState($0) } ?? "—"
           let visible = attrs?.isVisibleForAllUsers == true ? "Yes" : "No"
           let enabled = attrs?.isEnabled == true ? "Yes" : "No"
 

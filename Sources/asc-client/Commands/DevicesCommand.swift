@@ -44,9 +44,9 @@ struct DevicesCommand: AsyncParsableCommand {
           rows.append([
             attrs?.name ?? "—",
             attrs?.udid ?? "—",
-            attrs?.platform.map { "\($0)" } ?? "—",
-            attrs?.deviceClass.map { "\($0)" } ?? "—",
-            attrs?.status.map { "\($0)" } ?? "—",
+            attrs?.platform.map { formatState($0) } ?? "—",
+            attrs?.deviceClass.map { formatState($0) } ?? "—",
+            attrs?.status.map { formatState($0) } ?? "—",
             attrs?.model ?? "—",
             attrs?.addedDate.map { formatDate($0) } ?? "—",
           ])
@@ -85,9 +85,9 @@ struct DevicesCommand: AsyncParsableCommand {
       let attrs = device.attributes
       print("Name:     \(attrs?.name ?? "—")")
       print("UDID:     \(attrs?.udid ?? "—")")
-      print("Platform: \(attrs?.platform.map { "\($0)" } ?? "—")")
-      print("Class:    \(attrs?.deviceClass.map { "\($0)" } ?? "—")")
-      print("Status:   \(attrs?.status.map { "\($0)" } ?? "—")")
+      print("Platform: \(attrs?.platform.map { formatState($0) } ?? "—")")
+      print("Class:    \(attrs?.deviceClass.map { formatState($0) } ?? "—")")
+      print("Status:   \(attrs?.status.map { formatState($0) } ?? "—")")
       print("Model:    \(attrs?.model ?? "—")")
       print("Added:    \(attrs?.addedDate.map { formatDate($0) } ?? "—")")
     }
@@ -126,11 +126,7 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let platformValue: BundleIDPlatform
       if let platform {
-        guard let pv = BundleIDPlatform(rawValue: platform.uppercased()) else {
-          let valid = BundleIDPlatform.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid platform '\(platform)'. Valid values: \(valid)")
-        }
-        platformValue = pv
+        platformValue = try parseEnum(platform, name: "platform")
       } else {
         platformValue = try promptPlatform()
       }
@@ -142,7 +138,7 @@ struct DevicesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Register this device? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
@@ -160,9 +156,9 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print("Registered device '\(attrs?.name ?? deviceName)'.")
+      print(green("Registered") + " device '\(attrs?.name ?? deviceName)'.")
       print("  UDID:   \(attrs?.udid ?? deviceUDID)")
-      print("  Status: \(attrs?.status.map { "\($0)" } ?? "—")")
+      print("  Status: \(attrs?.status.map { formatState($0) } ?? "—")")
     }
   }
 
@@ -256,18 +252,14 @@ struct DevicesCommand: AsyncParsableCommand {
         // Flags provided explicitly
         newName = name
         if let status {
-          guard let val = DeviceUpdateRequest.Data.Attributes.Status(rawValue: status.uppercased()) else {
-            let valid = DeviceUpdateRequest.Data.Attributes.Status.allCases.map(\.rawValue).joined(separator: ", ")
-            throw ValidationError("Invalid status '\(status)'. Valid values: \(valid)")
-          }
-          statusValue = val
+          statusValue = try parseEnum(status, name: "status")
         } else {
           statusValue = nil
         }
       } else {
         // Interactive: ask what to update
         let currentName = device.attributes?.name ?? "—"
-        let currentStatus = device.attributes?.status.map { "\($0)" } ?? "—"
+        let currentStatus = device.attributes?.status.map { formatState($0) } ?? "—"
         let updates = try promptUpdates(currentName: currentName, currentStatus: currentStatus)
         newName = updates.newName
         statusValue = updates.newStatus
@@ -276,11 +268,11 @@ struct DevicesCommand: AsyncParsableCommand {
       let currentName = device.attributes?.name ?? "—"
       print("Device: \(currentName) (\(device.attributes?.udid ?? "—"))")
       if let newName { print("  Name:   \(currentName) → \(newName)") }
-      if let statusValue { print("  Status: \(device.attributes?.status.map { "\($0)" } ?? "—") → \(statusValue)") }
+      if let statusValue { print("  Status: \(device.attributes?.status.map { formatState($0) } ?? "—") → \(statusValue)") }
       print()
 
       guard confirm("Update this device? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
@@ -298,31 +290,22 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print("Updated device '\(attrs?.name ?? currentName)'.")
+      print(green("Updated") + " device '\(attrs?.name ?? currentName)'.")
     }
   }
 }
 
 /// Prompts the user to select a device from a numbered list.
 func promptDevice(client: AppStoreConnectClient) async throws -> Device {
-  var allDevices: [Device] = []
-  for try await page in client.pages(Resources.v1.devices.get(limit: 200)) {
-    allDevices.append(contentsOf: page.data)
-  }
-  guard !allDevices.isEmpty else {
-    throw ValidationError("No devices found in your account.")
-  }
-  allDevices.sort { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
-
+  let devices = try await fetchAll(
+    client.pages(Resources.v1.devices.get(limit: 200)),
+    data: \.data,
+    emptyMessage: "No devices found in your account.",
+    sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
+  )
   return try promptSelection(
-    "Devices",
-    items: allDevices,
-    display: { device in
-      let name = device.attributes?.name ?? "—"
-      let udid = device.attributes?.udid ?? "—"
-      let status = device.attributes?.status.map { "\($0)" } ?? "—"
-      return "\(name) (\(udid)) — \(status)"
-    },
+    "Devices", items: devices,
+    display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.udid ?? "—")) — \($0.attributes?.status.map { formatState($0) } ?? "—")" },
     prompt: "Select device"
   )
 }

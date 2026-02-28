@@ -60,7 +60,7 @@ struct AliasCommand: AsyncParsableCommand {
       aliases[name] = selected.bundleID
       try Aliases.save(aliases)
 
-      print("Alias '\(name)' → \(selected.bundleID)")
+      print(green("Alias") + " '\(name)' → \(selected.bundleID)")
     }
   }
 
@@ -106,7 +106,7 @@ struct AliasCommand: AsyncParsableCommand {
 
       aliases.removeValue(forKey: name)
       try Aliases.save(aliases)
-      print("Removed alias '\(name)'.")
+      print(green("Removed") + " alias '\(name)'.")
     }
   }
 

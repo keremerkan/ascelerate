@@ -325,7 +325,7 @@ extension AppsCommand {
         let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
 
         let versionString = appVersion.attributes?.versionString ?? "unknown"
-        let versionState = appVersion.attributes?.appVersionState.map { "\($0)" } ?? "unknown"
+        let versionState = appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
 
         // Print confirmation summary
         print("App:     \(app.attributes?.name ?? bundleID)")
@@ -335,7 +335,8 @@ extension AppsCommand {
         print()
 
         for localeMedia in plan.locales {
-          print("[\(localeMedia.locale)]")
+          print()
+          print("[\(localeName(localeMedia.locale))]")
           for dt in localeMedia.displayTypes {
             var parts: [String] = []
             if !dt.screenshots.isEmpty {
@@ -354,7 +355,7 @@ extension AppsCommand {
         guard confirm(
           "Upload \(plan.totalScreenshots) screenshot\(plan.totalScreenshots == 1 ? "" : "s") and \(plan.totalPreviews) preview\(plan.totalPreviews == 1 ? "" : "s") for \(localeCount) locale\(localeCount == 1 ? "" : "s")? [y/N] ")
         else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         print()
@@ -376,11 +377,12 @@ extension AppsCommand {
 
         for localeMedia in plan.locales {
           guard let localization = locByLocale[localeMedia.locale] else {
-            print("[\(localeMedia.locale)] Skipped — locale not found on this version.")
+            print("[\(localeName(localeMedia.locale))] Skipped — locale not found on this version.")
             continue
           }
 
-          print("[\(localeMedia.locale)]")
+          print()
+          print("[\(localeName(localeMedia.locale))]")
 
           // Fetch existing screenshot sets for this localization
           let screenshotSetsResponse = try await client.send(
@@ -642,7 +644,7 @@ extension AppsCommand {
           appID: app.id, versionString: version, client: client)
 
         let versionString = appVersion.attributes?.versionString ?? "unknown"
-        let versionState = appVersion.attributes?.appVersionState.map { "\($0)" } ?? "unknown"
+        let versionState = appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Version: \(versionString)")
         print("State:   \(versionState)")
@@ -683,7 +685,7 @@ extension AppsCommand {
             let setFolder = "\(outputFolder)/\(locale)/\(displayType.rawValue)"
             try fm.createDirectory(atPath: setFolder, withIntermediateDirectories: true)
 
-            print("[\(locale)] \(displayType.rawValue):")
+            print("[\(localeName(locale))] \(displayType.rawValue):")
 
             for (i, screenshot) in screenshotsResponse.data.enumerated() {
               let originalName = screenshot.attributes?.fileName ?? "\(screenshot.id).png"
@@ -745,7 +747,7 @@ extension AppsCommand {
             let setFolder = "\(outputFolder)/\(locale)/\(folderName)"
             try fm.createDirectory(atPath: setFolder, withIntermediateDirectories: true)
 
-            print("[\(locale)] \(folderName):")
+            print("[\(localeName(locale))] \(folderName):")
 
             for (i, preview) in previewsResponse.data.enumerated() {
               let originalName = preview.attributes?.fileName ?? "\(preview.id).mp4"
@@ -886,7 +888,7 @@ extension AppsCommand {
 
         print()
         guard confirm("Retry \(matchedRetries.count) stuck item\(matchedRetries.count == 1 ? "" : "s")? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         print()
@@ -895,7 +897,7 @@ extension AppsCommand {
         var failureCount = 0
 
         for (item, localPath) in matchedRetries {
-          print("[\(item.locale)] \(item.displayTypeName) #\(item.position): ", terminator: "")
+          print("[\(localeName(item.locale))] \(item.displayTypeName) #\(item.position): ", terminator: "")
           fflush(stdout)
 
           do {
@@ -1107,7 +1109,7 @@ private func fetchAllMediaStatus(
       for (i, screenshot) in screenshotsResponse.data.enumerated() {
         let name = screenshot.attributes?.fileName ?? "unknown"
         let assetState = screenshot.attributes?.assetDeliveryState?.state
-        let stateStr = assetState.map { "\($0)" } ?? "unknown"
+        let stateStr = assetState.map { formatState($0) } ?? "unknown"
         let complete = assetState == .complete
 
         items.append(MediaItemStatus(
@@ -1144,7 +1146,7 @@ private func fetchAllMediaStatus(
       for (i, preview) in previewsResponse.data.enumerated() {
         let name = preview.attributes?.fileName ?? "unknown"
         let assetState = preview.attributes?.assetDeliveryState?.state
-        let stateStr = assetState.map { "\($0)" } ?? "unknown"
+        let stateStr = assetState.map { formatState($0) } ?? "unknown"
         let complete = assetState == .complete
 
         items.append(MediaItemStatus(
@@ -1199,9 +1201,9 @@ private func printMediaStatus(_ items: [MediaItemStatus]) -> (total: Int, stuck:
     stuck += setStuck
 
     if setStuck == 0 {
-      print("[\(key.locale)] \(key.displayTypeName): \(setItems.count)/\(setItems.count) complete")
+      print("[\(localeName(key.locale))] \(key.displayTypeName): \(setItems.count)/\(setItems.count) complete")
     } else {
-      print("[\(key.locale)] \(key.displayTypeName):")
+      print("[\(localeName(key.locale))] \(key.displayTypeName):")
       for item in setItems {
         let marker = item.isComplete ? "complete" : item.state
         print("  #\(item.position)  \(item.fileName)    \(marker)")

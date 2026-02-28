@@ -67,8 +67,8 @@ struct SubCommand: AsyncParsableCommand {
               return [
                 attrs?.name ?? "—",
                 attrs?.productID ?? "—",
-                attrs?.subscriptionPeriod.map { "\($0)" } ?? "—",
-                attrs?.state.map { "\($0)" } ?? "—",
+                attrs?.subscriptionPeriod.map { formatState($0) } ?? "—",
+                attrs?.state.map { formatState($0) } ?? "—",
                 attrs?.groupLevel.map { "\($0)" } ?? "—",
                 attrs?.isFamilySharable == true ? "Yes" : "No",
               ]
@@ -101,8 +101,8 @@ struct SubCommand: AsyncParsableCommand {
             group.name,
             attrs?.name ?? "—",
             attrs?.productID ?? "—",
-            attrs?.subscriptionPeriod.map { "\($0)" } ?? "—",
-            attrs?.state.map { "\($0)" } ?? "—",
+            attrs?.subscriptionPeriod.map { formatState($0) } ?? "—",
+            attrs?.state.map { formatState($0) } ?? "—",
             attrs?.groupLevel.map { "\($0)" } ?? "—",
           ])
         }
@@ -163,8 +163,8 @@ struct SubCommand: AsyncParsableCommand {
       print("Name:             \(attrs?.name ?? "—")")
       print("Product ID:       \(attrs?.productID ?? "—")")
       print("Group:            \(foundGroupName ?? "—")")
-      print("Period:           \(attrs?.subscriptionPeriod.map { "\($0)" } ?? "—")")
-      print("State:            \(attrs?.state.map { "\($0)" } ?? "—")")
+      print("Period:           \(attrs?.subscriptionPeriod.map { formatState($0) } ?? "—")")
+      print("State:            \(attrs?.state.map { formatState($0) } ?? "—")")
       print("Group Level:      \(attrs?.groupLevel.map { "\($0)" } ?? "—")")
       print("Family Shareable: \(attrs?.isFamilySharable == true ? "Yes" : "No")")
       print("Review Note:      \(attrs?.reviewNote ?? "—")")
@@ -188,7 +188,7 @@ struct SubCommand: AsyncParsableCommand {
           let locale = loc.attributes?.locale ?? "?"
           let name = loc.attributes?.name ?? "—"
           let desc = loc.attributes?.description ?? "—"
-          print("  [\(locale)] \(name) — \(desc)")
+          print("  [\(localeName(locale))] \(name) — \(desc)")
         }
       }
     }

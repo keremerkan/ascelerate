@@ -39,7 +39,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
           rows.append([
             attrs?.identifier ?? "—",
             attrs?.name ?? "—",
-            attrs?.platform.map { "\($0)" } ?? "—",
+            attrs?.platform.map { formatState($0) } ?? "—",
             attrs?.seedID ?? "—",
           ])
         }
@@ -77,7 +77,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       let attrs = bundleID.attributes
       print("Identifier: \(attrs?.identifier ?? "—")")
       print("Name:       \(attrs?.name ?? "—")")
-      print("Platform:   \(attrs?.platform.map { "\($0)" } ?? "—")")
+      print("Platform:   \(attrs?.platform.map { formatState($0) } ?? "—")")
       print("Seed ID:    \(attrs?.seedID ?? "—")")
 
       // Fetch capabilities
@@ -89,7 +89,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         print()
         print("Capabilities:")
         for cap in capsResponse.data {
-          let capType = cap.attributes?.capabilityType.map { "\($0)" } ?? "—"
+          let capType = cap.attributes?.capabilityType.map { formatState($0) } ?? "—"
           print("  \(capType)")
         }
       }
@@ -129,11 +129,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let platformValue: BundleIDPlatform
       if let platform {
-        guard let pv = BundleIDPlatform(rawValue: platform.uppercased()) else {
-          let valid = BundleIDPlatform.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid platform '\(platform)'. Valid values: \(valid)")
-        }
-        platformValue = pv
+        platformValue = try parseEnum(platform, name: "platform")
       } else {
         platformValue = try promptPlatform()
       }
@@ -145,7 +141,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Register this bundle identifier? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
@@ -163,7 +159,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print("Registered bundle identifier '\(attrs?.identifier ?? bundleIDIdentifier)'.")
+      print(green("Registered") + " bundle identifier '\(attrs?.identifier ?? bundleIDIdentifier)'.")
       print("  Name:     \(attrs?.name ?? bundleIDName)")
       print("  Seed ID:  \(attrs?.seedID ?? "—")")
     }
@@ -200,19 +196,19 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print("Bundle identifier:")
       print("  Identifier: \(attrs?.identifier ?? "—")")
       print("  Name:       \(attrs?.name ?? "—")")
-      print("  Platform:   \(attrs?.platform.map { "\($0)" } ?? "—")")
+      print("  Platform:   \(attrs?.platform.map { formatState($0) } ?? "—")")
       print()
       print("WARNING: Deleting a bundle identifier cannot be undone.")
       print()
 
       guard confirm("Delete this bundle identifier? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
       _ = try await client.send(Resources.v1.bundleIDs.id(bundleID.id).delete)
       print()
-      print("Deleted bundle identifier '\(attrs?.identifier ?? identifier ?? "—")'.")
+      print(green("Deleted") + " bundle identifier '\(attrs?.identifier ?? identifier ?? "—")'.")
     }
   }
   struct Update: AsyncParsableCommand {
@@ -256,7 +252,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Update this bundle identifier? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
@@ -271,7 +267,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print("Updated bundle identifier '\(attrs?.identifier ?? bidIdentifier)'.")
+      print(green("Updated") + " bundle identifier '\(attrs?.identifier ?? bidIdentifier)'.")
       print("  Name: \(attrs?.name ?? newName)")
     }
   }
@@ -338,10 +334,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let capabilityType: CapabilityType
       if let type {
-        guard let ct = CapabilityType(rawValue: type.uppercased()) else {
-          let valid = CapabilityType.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid capability type '\(type)'. Valid values: \(valid)")
-        }
+        let ct: CapabilityType = try parseEnum(type, name: "capability type")
         if enabledTypes.contains(ct.rawValue) {
           print("\(ct.rawValue) is already enabled on this bundle identifier.")
           return
@@ -358,7 +351,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Enable this capability? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
@@ -375,7 +368,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print("Enabled \(attrs?.capabilityType.map { "\($0)" } ?? "\(capabilityType)") on '\(bidIdentifier)'.")
+      print(green("Enabled") + " \(attrs?.capabilityType.map { formatState($0) } ?? "\(capabilityType)") on '\(bidIdentifier)'.")
 
       if Self.requiresPortalConfiguration.contains(capabilityType) {
         print()
@@ -417,7 +410,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       return try promptSelection(
         "Enabled capabilities",
         items: caps,
-        display: { $0.attributes?.capabilityType.map { "\($0)" } ?? "—" },
+        display: { $0.attributes?.capabilityType.map { formatState($0) } ?? "—" },
         prompt: "Select capability to disable"
       )
     }
@@ -439,7 +432,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       }
 
       let capability = try await promptCapability(bundleID: bundleID, client: client)
-      let capType = capability.attributes?.capabilityType.map { "\($0)" } ?? "—"
+      let capType = capability.attributes?.capabilityType.map { formatState($0) } ?? "—"
       let bidIdentifier = bundleID.attributes?.identifier ?? identifier ?? bundleID.id
 
       print()
@@ -449,13 +442,13 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Disable this capability? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
       _ = try await client.send(Resources.v1.bundleIDCapabilities.id(capability.id).delete)
       print()
-      print("Disabled \(capType) on '\(bidIdentifier)'.")
+      print(green("Disabled") + " \(capType) on '\(bidIdentifier)'.")
 
       try await regenerateProfilesIfNeeded(bundleID: bundleID, client: client)
     }
@@ -515,7 +508,7 @@ private func regenerateProfilesIfNeeded(bundleID: BundleID, client: AppStoreConn
   print("Found \(matchingProfiles.count) profile(s) for \(bidIdentifier):")
   for profile in matchingProfiles {
     let name = profile.attributes?.name ?? "—"
-    let type = profile.attributes?.profileType.map { "\($0)" } ?? "—"
+    let type = profile.attributes?.profileType.map { formatState($0) } ?? "—"
     print("  \(name) (\(type))")
   }
   print()
@@ -600,24 +593,15 @@ private func regenerateProfilesIfNeeded(bundleID: BundleID, client: AppStoreConn
 
 /// Prompts the user to select a bundle identifier from a numbered list.
 func promptBundleID(client: AppStoreConnectClient) async throws -> BundleID {
-  var allBundleIDs: [BundleID] = []
-  for try await page in client.pages(Resources.v1.bundleIDs.get(limit: 200)) {
-    allBundleIDs.append(contentsOf: page.data)
-  }
-  guard !allBundleIDs.isEmpty else {
-    throw ValidationError("No bundle identifiers found in your account.")
-  }
-  allBundleIDs.sort { ($0.attributes?.identifier ?? "") < ($1.attributes?.identifier ?? "") }
-
+  let bundleIDs = try await fetchAll(
+    client.pages(Resources.v1.bundleIDs.get(limit: 200)),
+    data: \.data,
+    emptyMessage: "No bundle identifiers found in your account.",
+    sort: { ($0.attributes?.identifier ?? "") < ($1.attributes?.identifier ?? "") }
+  )
   return try promptSelection(
-    "Bundle identifiers",
-    items: allBundleIDs,
-    display: { bid in
-      let identifier = bid.attributes?.identifier ?? "—"
-      let name = bid.attributes?.name ?? "—"
-      let platform = bid.attributes?.platform.map { "\($0)" } ?? "—"
-      return "\(identifier) (\(name), \(platform))"
-    },
+    "Bundle identifiers", items: bundleIDs,
+    display: { "\($0.attributes?.identifier ?? "—") (\($0.attributes?.name ?? "—"), \($0.attributes?.platform.map { formatState($0) } ?? "—"))" },
     prompt: "Select bundle identifier"
   )
 }

@@ -49,9 +49,9 @@ struct CertsCommand: AsyncParsableCommand {
           let attrs = cert.attributes
           rows.append([
             attrs?.displayName ?? "—",
-            attrs?.certificateType.map { "\($0)" } ?? "—",
+            attrs?.certificateType.map { formatState($0) } ?? "—",
             attrs?.serialNumber ?? "—",
-            attrs?.platform.map { "\($0)" } ?? "—",
+            attrs?.platform.map { formatState($0) } ?? "—",
             attrs?.expirationDate.map { formatDate($0) } ?? "—",
             attrs?.isActivated == true ? "Yes" : "No",
           ])
@@ -90,9 +90,9 @@ struct CertsCommand: AsyncParsableCommand {
       let attrs = cert.attributes
       print("Display Name:  \(attrs?.displayName ?? "—")")
       print("Name:          \(attrs?.name ?? "—")")
-      print("Type:          \(attrs?.certificateType.map { "\($0)" } ?? "—")")
+      print("Type:          \(attrs?.certificateType.map { formatState($0) } ?? "—")")
       print("Serial Number: \(attrs?.serialNumber ?? "—")")
-      print("Platform:      \(attrs?.platform.map { "\($0)" } ?? "—")")
+      print("Platform:      \(attrs?.platform.map { formatState($0) } ?? "—")")
       print("Expires:       \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
       print("Active:        \(attrs?.isActivated == true ? "Yes" : "No")")
     }
@@ -150,11 +150,7 @@ struct CertsCommand: AsyncParsableCommand {
 
       let certType: CertificateType
       if let type {
-        guard let ct = CertificateType(rawValue: type.uppercased()) else {
-          let valid = CertificateType.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid type '\(type)'. Valid values: \(valid)")
-        }
-        certType = ct
+        certType = try parseEnum(type, name: "type")
       } else {
         certType = try promptCertType()
       }
@@ -196,7 +192,7 @@ struct CertsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Create this certificate? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
@@ -213,7 +209,7 @@ struct CertsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print("Created certificate.")
+      print(green("Created") + " certificate.")
       print("  Display Name:  \(attrs?.displayName ?? "—")")
       print("  Serial Number: \(attrs?.serialNumber ?? "—")")
       print("  Expires:       \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
@@ -347,45 +343,35 @@ struct CertsCommand: AsyncParsableCommand {
       let attrs = cert.attributes
       print("Certificate:")
       print("  Display Name:  \(attrs?.displayName ?? "—")")
-      print("  Type:          \(attrs?.certificateType.map { "\($0)" } ?? "—")")
+      print("  Type:          \(attrs?.certificateType.map { formatState($0) } ?? "—")")
       print("  Serial Number: \(attrs?.serialNumber ?? "—")")
       print()
       print("WARNING: Revoking a certificate cannot be undone.")
       print()
 
       guard confirm("Revoke this certificate? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
       _ = try await client.send(Resources.v1.certificates.id(cert.id).delete)
       print()
-      print("Revoked certificate '\(attrs?.displayName ?? serialNumber ?? "—")'.")
+      print(green("Revoked") + " certificate '\(attrs?.displayName ?? serialNumber ?? "—")'.")
     }
   }
 }
 
 /// Prompts the user to select a certificate from a numbered list.
 func promptCertificate(client: AppStoreConnectClient) async throws -> AppStoreAPI.Certificate {
-  var allCerts: [AppStoreAPI.Certificate] = []
-  for try await page in client.pages(Resources.v1.certificates.get(limit: 200)) {
-    allCerts.append(contentsOf: page.data)
-  }
-  guard !allCerts.isEmpty else {
-    throw ValidationError("No certificates found in your account.")
-  }
-  allCerts.sort { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
-
+  let certs = try await fetchAll(
+    client.pages(Resources.v1.certificates.get(limit: 200)),
+    data: \.data,
+    emptyMessage: "No certificates found in your account.",
+    sort: { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
+  )
   return try promptSelection(
-    "Certificates",
-    items: allCerts,
-    display: { cert in
-      let name = cert.attributes?.displayName ?? "—"
-      let serial = cert.attributes?.serialNumber ?? "—"
-      let type = cert.attributes?.certificateType.map { "\($0)" } ?? "—"
-      let expires = cert.attributes?.expirationDate.map { formatDate($0) } ?? "—"
-      return "\(name) (\(serial)) — \(type), expires \(expires)"
-    },
+    "Certificates", items: certs,
+    display: { "\($0.attributes?.displayName ?? "—") (\($0.attributes?.serialNumber ?? "—")) — \($0.attributes?.certificateType.map { formatState($0) } ?? "—"), expires \($0.attributes?.expirationDate.map { formatDate($0) } ?? "—")" },
     prompt: "Select certificate"
   )
 }

@@ -51,7 +51,7 @@ struct BuildsCommand: AsyncParsableCommand {
         for build in page.data {
           let buildNumber = build.attributes?.version ?? "—"
           let state = build.attributes?.processingState
-            .map { "\($0)" } ?? "—"
+            .map { formatState($0) } ?? "—"
           let uploaded = build.attributes?.uploadedDate
             .map { formatDate($0) } ?? "—"
 

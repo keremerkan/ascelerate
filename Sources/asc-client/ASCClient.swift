@@ -4,7 +4,7 @@ import Foundation
 
 @main
 struct ASCClient: AsyncParsableCommand {
-  static let appVersion = "0.5.0"
+  static let appVersion = "0.5.1"
 
   static let configuration = CommandConfiguration(
     commandName: "asc-client",
@@ -71,9 +71,10 @@ struct ASCClient: AsyncParsableCommand {
   }
 
   private static func formatResponseError(_ error: ResponseError) -> String {
+    let tag = stderrRed("Error:")
     switch error {
     case .rateLimitExceeded(_, let rate, _):
-      var msg = "Error: App Store Connect API rate limit exceeded (HTTP 429)."
+      var msg = "\(tag) App Store Connect API rate limit exceeded (HTTP 429)."
       if let rate {
         msg += "\n  Hourly limit: \(rate.limit) requests"
         msg += "\n  Remaining:    \(rate.remaining) requests"
@@ -82,7 +83,7 @@ struct ASCClient: AsyncParsableCommand {
       return msg
 
     case .requestFailure(let errorResponse, let statusCode, _):
-      var msg = "Error: App Store Connect API returned HTTP \(statusCode)."
+      var msg = "\(tag) App Store Connect API returned HTTP \(statusCode)."
       if let errors = errorResponse?.errors {
         for e in errors {
           msg += "\n  \(e.title): \(e.detail)"
@@ -98,26 +99,27 @@ struct ASCClient: AsyncParsableCommand {
       return msg
 
     case .dataAssertionFailed:
-      return "Error: Unexpected empty response from App Store Connect API."
+      return "\(tag) Unexpected empty response from App Store Connect API."
     }
   }
 
   private static func formatURLError(_ error: URLError) -> String {
+    let tag = stderrRed("Error:")
     switch error.code {
     case .notConnectedToInternet:
-      return "Error: No internet connection."
+      return "\(tag) No internet connection."
     case .timedOut:
-      return "Error: Request timed out. Check your connection and try again."
+      return "\(tag) Request timed out. Check your connection and try again."
     case .cannotFindHost, .dnsLookupFailed:
-      return "Error: Could not reach App Store Connect API (DNS lookup failed)."
+      return "\(tag) Could not reach App Store Connect API (DNS lookup failed)."
     case .cannotConnectToHost:
-      return "Error: Could not connect to App Store Connect API."
+      return "\(tag) Could not connect to App Store Connect API."
     case .networkConnectionLost:
-      return "Error: Network connection was lost during the request. Try again."
+      return "\(tag) Network connection was lost during the request. Try again."
     case .secureConnectionFailed:
-      return "Error: Secure connection failed. Check your network settings."
+      return "\(tag) Secure connection failed. Check your network settings."
     default:
-      return "Error: Network error — \(error.localizedDescription)"
+      return "\(tag) Network error — \(error.localizedDescription)"
     }
   }
 }

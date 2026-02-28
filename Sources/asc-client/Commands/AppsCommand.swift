@@ -57,7 +57,7 @@ struct AppsCommand: AsyncParsableCommand {
       print("Name:            \(attrs?.name ?? "—")")
       print("Bundle ID:       \(attrs?.bundleID ?? "—")")
       print("SKU:             \(attrs?.sku ?? "—")")
-      print("Primary Locale:  \(attrs?.primaryLocale ?? "—")")
+      print("Primary Locale:  \(attrs?.primaryLocale.map { localeName($0) } ?? "—")")
     }
   }
   
@@ -81,9 +81,9 @@ struct AppsCommand: AsyncParsableCommand {
       for version in response.data {
         let attrs = version.attributes
         let versionString = attrs?.versionString ?? "—"
-        let platform = attrs?.platform.map { "\($0)" } ?? "—"
-        let state = attrs?.appVersionState.map { "\($0)" } ?? "—"
-        let releaseType = attrs?.releaseType.map { "\($0)" } ?? "—"
+        let platform = attrs?.platform.map { formatState($0) } ?? "—"
+        let state = attrs?.appVersionState.map { formatState($0) } ?? "—"
+        let releaseType = attrs?.releaseType.map { formatState($0) } ?? "—"
         let created = attrs?.createdDate.map { formatDate($0) } ?? "—"
         rows.append([versionString, platform, state, releaseType, created])
       }
@@ -148,7 +148,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         for loc in response.data {
           let attrs = loc.attributes
-          let localeStr = attrs?.locale ?? "—"
+          let localeStr = attrs?.locale.map { localeName($0) } ?? "—"
           print("[\(localeStr)]")
           if let desc = attrs?.description, !desc.isEmpty {
             print("  Description:      \(desc.prefix(80))\(desc.count > 80 ? "..." : "")")
@@ -249,7 +249,7 @@ struct AppsCommand: AsyncParsableCommand {
         let response = try await client.send(request)
         let attrs = response.data.attributes
         let versionString = version.attributes?.versionString ?? "unknown"
-        print("Updated localization for version \(versionString) [\(attrs?.locale ?? "—")]")
+        print(green("Updated") + " localization for version \(versionString) [\(attrs?.locale.map { localeName($0) } ?? "—")]")
         
         if let d = attrs?.description, !d.isEmpty { print("  Description:      \(d.prefix(80))\(d.count > 80 ? "..." : "")") }
         if let w = attrs?.whatsNew, !w.isEmpty { print("  What's New:       \(w.prefix(80))\(w.count > 80 ? "..." : "")") }
@@ -349,14 +349,14 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         let versionString = version.attributes?.versionString ?? "unknown"
-        let versionState = version.attributes?.appVersionState.map { "\($0)" } ?? "unknown"
+        let versionState = version.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Version: \(versionString)")
         print("State:   \(versionState)")
         print()
         
         for (locale, fields) in effectiveUpdates.sorted(by: { $0.key < $1.key }) {
-          print("[\(locale)]")
+          print("[\(localeName(locale))]")
           if let d = fields.description { print("  Description:      \(d.prefix(80))\(d.count > 80 ? "..." : "")") }
           if let w = fields.whatsNew { print("  What's New:       \(w.prefix(80))\(w.count > 80 ? "..." : "")") }
           if let k = fields.keywords { print("  Keywords:         \(k.prefix(80))\(k.count > 80 ? "..." : "")") }
@@ -365,9 +365,9 @@ struct AppsCommand: AsyncParsableCommand {
           if let u = fields.supportURL { print("  Support URL:      \(u)") }
           print()
         }
-        
+
         guard confirm("Send updates for \(effectiveUpdates.count) locale(s)? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         print()
@@ -388,10 +388,10 @@ struct AppsCommand: AsyncParsableCommand {
         // Send updates
         for (locale, fields) in effectiveUpdates.sorted(by: { $0.key < $1.key }) {
           guard let localization = locByLocale[locale] else {
-            print("  [\(locale)] Skipped — locale not found on this version.")
+            print("  [\(localeName(locale))] Skipped — locale not found on this version.")
             continue
           }
-          
+
           let request = Resources.v1.appStoreVersionLocalizations.id(localization.id).patch(
             AppStoreVersionLocalizationUpdateRequest(
               data: .init(
@@ -409,12 +409,12 @@ struct AppsCommand: AsyncParsableCommand {
           )
           
           let response = try await client.send(request)
-          print("  [\(locale)] Updated.")
-          
+          print("  [\(localeName(locale))] Updated.")
+
           if verbose {
             let attrs = response.data.attributes
             print("    Response:")
-            print("      Locale:           \(attrs?.locale ?? "—")")
+            print("      Locale:           \(attrs?.locale.map { localeName($0) } ?? "—")")
             if let d = attrs?.description { print("      Description:      \(d.prefix(120))\(d.count > 120 ? "..." : "")") }
             if let w = attrs?.whatsNew { print("      What's New:       \(w.prefix(120))\(w.count > 120 ? "..." : "")") }
             if let k = attrs?.keywords { print("      Keywords:         \(k.prefix(120))\(k.count > 120 ? "..." : "")") }
@@ -478,7 +478,7 @@ struct AppsCommand: AsyncParsableCommand {
         try data.write(to: URL(fileURLWithPath: outputPath))
         
         let versionString = version.attributes?.versionString ?? "unknown"
-        print("Exported \(result.count) locale(s) for version \(versionString) to \(outputPath)")
+        print(green("Exported") + " \(result.count) locale(s) for version \(versionString) to \(outputPath)")
       }
     }
   }
@@ -520,7 +520,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("Version \(versionString) already exists (PREPARE_FOR_SUBMISSION). Continuing.")
           return
         }
-        throw ValidationError("Version \(versionString) already exists (state: \(state.map { "\($0)" } ?? "unknown")).")
+        throw ValidationError("Version \(versionString) already exists (state: \(state.map { formatState($0) } ?? "unknown")).")
       }
       
       let platformValue: Platform = switch platform.lowercased() {
@@ -561,10 +561,10 @@ struct AppsCommand: AsyncParsableCommand {
       
       let response = try await client.send(request)
       let attrs = response.data.attributes
-      print("Created version \(attrs?.versionString ?? versionString)")
-      print("  Platform:     \(attrs?.platform.map { "\($0)" } ?? "—")")
-      print("  State:        \(attrs?.appVersionState.map { "\($0)" } ?? "—")")
-      print("  Release Type: \(attrs?.releaseType.map { "\($0)" } ?? "—")")
+      print(green("Created") + " version \(attrs?.versionString ?? versionString)")
+      print("  Platform:     \(attrs?.platform.map { formatState($0) } ?? "—")")
+      print("  State:        \(attrs?.appVersionState.map { formatState($0) } ?? "—")")
+      print("  Release Type: \(attrs?.releaseType.map { formatState($0) } ?? "—")")
     }
   }
   
@@ -605,7 +605,7 @@ struct AppsCommand: AsyncParsableCommand {
         let buildNumber = build.attributes?.version ?? "unknown"
         let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
         print()
-        print("Attached build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
+        print(green("Attached") + " build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
       }
     }
     
@@ -650,7 +650,7 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           
           guard confirm("Attach this build? [y/N] ") else {
-            print("Cancelled.")
+            print(yellow("Cancelled."))
             return
           }
           
@@ -663,7 +663,7 @@ struct AppsCommand: AsyncParsableCommand {
           )
           
           print()
-          print("Attached build \(pendingBuild) (uploaded \(uploaded)) to version \(versionString).")
+          print(green("Attached") + " build \(pendingBuild) (uploaded \(uploaded)) to version \(versionString).")
           return
         }
         
@@ -686,7 +686,7 @@ struct AppsCommand: AsyncParsableCommand {
         let uploaded = latestBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
         
         print("Version: \(versionString)")
-        print("Build:   \(buildNumber)  \(state.map { "\($0)" } ?? "—")  \(uploaded)")
+        print("Build:   \(buildNumber)  \(state.map { formatState($0) } ?? "—")  \(uploaded)")
         print()
         
         if state == .processing {
@@ -699,16 +699,16 @@ struct AppsCommand: AsyncParsableCommand {
             )
             print()
           } else {
-            print("Cancelled.")
+            print(yellow("Cancelled."))
             return
           }
         } else if state == .failed || state == .invalid {
-          print("Build \(buildNumber) has state \(state.map { "\($0)" } ?? "—") and cannot be attached.")
+          print("Build \(buildNumber) has state \(state.map { formatState($0) } ?? "—") and cannot be attached.")
           throw ExitCode.failure
         }
         
         guard confirm("Attach this build? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -721,7 +721,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
         
         print()
-        print("Attached build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
+        print(green("Attached") + " build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
       }
     }
     
@@ -765,7 +765,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Detach this build from version \(versionString)? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -779,7 +779,7 @@ struct AppsCommand: AsyncParsableCommand {
         try await client.send(request)
         
         print()
-        print("Detached build \(buildNumber) from version \(versionString).")
+        print(green("Detached") + " build \(buildNumber) from version \(versionString).")
       }
     }
   }
@@ -842,8 +842,8 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         let response = try await client.send(request)
-        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
-        print("Enabled phased release for version \(versionString).")
+        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        print(green("Enabled") + " phased release for version \(versionString).")
         print("  State: \(state)")
         return
       }
@@ -863,8 +863,8 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         let response = try await client.send(request)
-        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
-        print("Paused phased release for version \(versionString).")
+        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        print(green("Paused") + " phased release for version \(versionString).")
         print("  State: \(state)")
         return
       }
@@ -879,8 +879,8 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         let response = try await client.send(request)
-        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
-        print("Resumed phased release for version \(versionString).")
+        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        print(green("Resumed") + " phased release for version \(versionString).")
         print("  State: \(state)")
         return
       }
@@ -890,7 +890,7 @@ struct AppsCommand: AsyncParsableCommand {
           throw ValidationError("No phased release configured for version \(versionString). Use --enable first.")
         }
         guard confirm("Complete phased release for version \(versionString)? This will release to all users immediately. [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
@@ -899,8 +899,8 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         let response = try await client.send(request)
-        let state = response.data.attributes?.phasedReleaseState.map { "\($0)" } ?? "—"
-        print("Completed phased release for version \(versionString) — released to all users.")
+        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        print(green("Completed") + " phased release for version \(versionString) — released to all users.")
         print("  State: \(state)")
         return
       }
@@ -911,13 +911,13 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         guard confirm("Remove phased release for version \(versionString)? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         try await client.send(
           Resources.v1.appStoreVersionPhasedReleases.id(pr.id).delete
         )
-        print("Removed phased release for version \(versionString).")
+        print(green("Removed") + " phased release for version \(versionString).")
         return
       }
       
@@ -930,7 +930,7 @@ struct AppsCommand: AsyncParsableCommand {
       }
       
       let attrs = pr.attributes
-      let state = attrs?.phasedReleaseState.map { "\($0)" } ?? "—"
+      let state = attrs?.phasedReleaseState.map { formatState($0) } ?? "—"
       let startDate = attrs?.startDate.map { formatDate($0) } ?? "—"
       let day = attrs?.currentDayNumber.map { "\($0)" } ?? "—"
       let pauseDuration = attrs?.totalPauseDuration ?? 0
@@ -1028,7 +1028,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         print()
         guard confirm("Update \(changeCount) age rating field\(changeCount == 1 ? "" : "s")? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -1074,7 +1074,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         _ = try await client.send(updateRequest)
         print()
-        print("Updated age rating declaration for version \(versionString).")
+        print(green("Updated") + " age rating declaration for version \(versionString).")
         return
       }
       
@@ -1198,7 +1198,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         let attrs = coverage.attributes
         let fileName = attrs?.fileName ?? "—"
-        let state = attrs?.assetDeliveryState?.state.map { "\($0)" } ?? "—"
+        let state = attrs?.assetDeliveryState?.state.map { formatState($0) } ?? "—"
         let fileSize = attrs?.fileSize.map { "\(formatBytes($0))" } ?? "—"
         
         print("App:              \(appName)")
@@ -1230,13 +1230,13 @@ struct AppsCommand: AsyncParsableCommand {
         let existingName = existingCoverage.attributes?.fileName ?? "unknown"
         print("Existing routing coverage: \(existingName)")
         guard confirm("Replace existing routing coverage with '\(fileName)'? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         try await client.send(
           Resources.v1.routingAppCoverages.id(existingCoverage.id).delete
         )
-        print("Deleted existing coverage.")
+        print(green("Deleted") + " existing coverage.")
         print()
       }
       
@@ -1279,7 +1279,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
       )
       
-      print("Uploaded routing coverage '\(fileName)' for version \(versionString).")
+      print(green("Uploaded") + " routing coverage '\(fileName)' for version \(versionString).")
     }
   }
   
@@ -1287,11 +1287,209 @@ struct AppsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "review",
       abstract: "Manage review submissions.",
-      subcommands: [Status.self, Submit.self, ResolveIssues.self, CancelSubmission.self]
+      subcommands: [Preflight.self, Status.self, Submit.self, ResolveIssues.self, CancelSubmission.self]
     )
     
+    // MARK: - Preflight
+
+    struct Preflight: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Run pre-submission checks for a version."
+      )
+
+      @Argument(help: "The bundle identifier of the app.")
+      var bundleID: String
+
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      var version: String?
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+
+        let versionString = appVersion.attributes?.versionString ?? "unknown"
+        let versionState = appVersion.attributes?.appVersionState
+        let stateStr = versionState.map { formatState($0) } ?? "unknown"
+        let appName = app.attributes?.name ?? bundleID
+
+        print("Preflight checks for \(appName) v\(versionString) (\(stateStr))")
+        print()
+
+        var rows: [[String]] = []
+        var failCount = 0
+
+        // 1. Version state
+        print("Checking version state...")
+        let editable = versionState.map { Localizations.editableStates.contains($0) } ?? false
+        if editable {
+          rows.append(["Version state", green("✓") + " \(stateStr)"])
+        } else {
+          rows.append(["Version state", red("✗") + " \(stateStr) (not editable)"])
+          failCount += 1
+        }
+
+        // 2. Build attached
+        print("Checking build...")
+        do {
+          let buildResponse = try await client.send(
+            Resources.v1.appStoreVersions.id(appVersion.id).build.get()
+          )
+          let buildNumber = buildResponse.data.attributes?.version ?? "unknown"
+          rows.append(["Build attached", green("✓") + " Build \(buildNumber)"])
+        } catch is DecodingError {
+          rows.append(["Build attached", red("✗") + " No build attached"])
+          failCount += 1
+        }
+
+        // 3. Fetch version localizations
+        print("Fetching localizations...")
+        let locsResponse = try await client.send(
+          Resources.v1.appStoreVersions.id(appVersion.id)
+            .appStoreVersionLocalizations.get()
+        )
+        let versionLocs = locsResponse.data.sorted {
+          ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
+        }
+
+        // 4. Fetch app-info localizations
+        print("Fetching app info...")
+        let appInfoResponse = try await client.send(
+          Resources.v1.apps.id(app.id).appInfos.get(
+            include: [.appInfoLocalizations],
+            limitAppInfoLocalizations: 50
+          )
+        )
+        var appInfoByLocale: [String: AppInfoLocalization] = [:]
+        if let appInfo = appInfoResponse.data.first(where: { $0.attributes?.state != .replacedWithNewInfo })
+            ?? appInfoResponse.data.first {
+          let locIDs = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
+          let infoLocs = appInfoResponse.included?.compactMap { item -> AppInfoLocalization? in
+            if case .appInfoLocalization(let loc) = item, locIDs.contains(loc.id) {
+              return loc
+            }
+            return nil
+          } ?? []
+          for loc in infoLocs {
+            if let locale = loc.attributes?.locale {
+              appInfoByLocale[locale] = loc
+            }
+          }
+        }
+
+        // 5. Fetch screenshots per locale
+        print("Fetching screenshots...")
+        var screenshotsByLocale: [String: (sets: Int, count: Int)] = [:]
+        for loc in versionLocs {
+          let locale = loc.attributes?.locale ?? "unknown"
+          let setsResponse = try await client.send(
+            Resources.v1.appStoreVersionLocalizations.id(loc.id)
+              .appScreenshotSets.get(limit: 50)
+          )
+          var totalSets = 0
+          var totalScreenshots = 0
+          for set in setsResponse.data {
+            let screenshotsResponse = try await client.send(
+              Resources.v1.appScreenshotSets.id(set.id).appScreenshots.get()
+            )
+            if !screenshotsResponse.data.isEmpty {
+              totalSets += 1
+              totalScreenshots += screenshotsResponse.data.count
+            }
+          }
+          screenshotsByLocale[locale] = (totalSets, totalScreenshots)
+        }
+
+        // 6. Build per-locale rows
+        let allLocales = Set(versionLocs.compactMap { $0.attributes?.locale })
+          .union(appInfoByLocale.keys)
+          .sorted()
+
+        for locale in allLocales {
+          rows.append(["", ""])
+          rows.append([localeName(locale), ""])
+
+          // App info
+          if let info = appInfoByLocale[locale] {
+            var missing: [String] = []
+            if info.attributes?.name == nil || info.attributes?.name?.isEmpty == true {
+              missing.append(formatFieldName("name"))
+            }
+            if info.attributes?.subtitle == nil || info.attributes?.subtitle?.isEmpty == true {
+              missing.append(formatFieldName("subtitle"))
+            }
+            if info.attributes?.privacyPolicyURL == nil || info.attributes?.privacyPolicyURL?.isEmpty == true {
+              missing.append(formatFieldName("privacyPolicyURL"))
+            }
+            if missing.isEmpty {
+              rows.append(["  App info", green("✓") + " All fields filled"])
+            } else {
+              rows.append(["  App info", red("✗") + " Missing: \(missing.joined(separator: ", "))"])
+              failCount += 1
+            }
+          }
+
+          // Version localizations
+          if let loc = versionLocs.first(where: { $0.attributes?.locale == locale }) {
+            var issues: [String] = []
+            let desc = loc.attributes?.description ?? ""
+            if desc.isEmpty {
+              issues.append("\(formatFieldName("description")) missing")
+            } else if desc.count < 10 {
+              issues.append("\(formatFieldName("description")) too short (<10 chars)")
+            } else if desc.count > 4000 {
+              issues.append("\(formatFieldName("description")) too long (>4000 chars)")
+            }
+            let whatsNew = loc.attributes?.whatsNew ?? ""
+            if whatsNew.isEmpty {
+              issues.append("\(formatFieldName("whatsNew")) missing")
+            } else if whatsNew.count < 7 {
+              issues.append("\(formatFieldName("whatsNew")) too short (<7 chars)")
+            } else if whatsNew.count > 4000 {
+              issues.append("\(formatFieldName("whatsNew")) too long (>4000 chars)")
+            }
+            if loc.attributes?.keywords == nil || loc.attributes?.keywords?.isEmpty == true {
+              issues.append("\(formatFieldName("keywords")) missing")
+            }
+            if issues.isEmpty {
+              rows.append(["  Localizations", green("✓") + " All fields filled"])
+            } else {
+              rows.append(["  Localizations", red("✗") + " \(issues.joined(separator: ", "))"])
+              failCount += 1
+            }
+          }
+
+          // Screenshots
+          if let ss = screenshotsByLocale[locale] {
+            if ss.count > 0 {
+              rows.append(["  Screenshots", green("✓") + " \(ss.sets) set\(ss.sets == 1 ? "" : "s"), \(ss.count) screenshot\(ss.count == 1 ? "" : "s")"])
+            } else {
+              rows.append(["  Screenshots", red("✗") + " No screenshots"])
+              failCount += 1
+            }
+          }
+        }
+
+        let passCount = rows.count(where: { $0[1].contains("✓") })
+        print()
+
+        Table.print(
+          headers: ["Check", "Status"],
+          rows: rows
+        )
+
+        print()
+        let resultText = "\(green("\(passCount) passed")), \(failCount > 0 ? red("\(failCount) failed") : "\(failCount) failed")"
+        print("Result: \(resultText)")
+
+        if failCount > 0 {
+          throw ExitCode.failure
+        }
+      }
+    }
+
     // MARK: - Status
-    
+
     struct Status: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "Show review submission status."
@@ -1349,41 +1547,41 @@ struct AppsCommand: AsyncParsableCommand {
         var rows: [[String]] = []
         for submission in submissions {
           let attrs = submission.attributes
-          let platform = attrs?.platform.map { "\($0)" } ?? "—"
-          let state = attrs?.state.map { "\($0)" } ?? "—"
+          let platform = attrs?.platform.map { formatState($0) } ?? "—"
+          let state = attrs?.state.map { formatState($0) } ?? "—"
           let submitted = attrs?.submittedDate.map { formatDate($0) } ?? "—"
           rows.append([platform, versionString(for: submission), state, submitted])
         }
-        
+
         Table.print(
           headers: ["Platform", "Version", "State", "Submitted"],
           rows: rows
         )
-        
+
         // Show details for active submissions with issues
         for submission in submissions {
           guard let state = submission.attributes?.state,
                 state == .unresolvedIssues || state == .inReview || state == .waitingForReview
           else { continue }
-          
+
           // Get version info
           var versionInfo = ""
           if let versionRef = submission.relationships?.appStoreVersionForReview?.data,
              let v = includedVersions[versionRef.id] {
             let vs = v.attributes?.versionString ?? "?"
-            let vState = v.attributes?.appVersionState.map { "\($0)" } ?? "?"
+            let vState = v.attributes?.appVersionState.map { formatState($0) } ?? "?"
             versionInfo = " — v\(vs) (\(vState))"
           }
-          
+
           print()
-          print("--- Submission \(submission.id) (\(state))\(versionInfo) ---")
-          
+          print("--- Submission \(submission.id) (\(formatState(state)))\(versionInfo) ---")
+
           // Show items from included data
           let itemRefs = submission.relationships?.items?.data ?? []
           if !itemRefs.isEmpty {
             for ref in itemRefs {
               if let item = includedItems[ref.id] {
-                let itemState = item.attributes?.state.map { "\($0)" } ?? "—"
+                let itemState = item.attributes?.state.map { formatState($0) } ?? "—"
                 print("  Item: \(itemState)")
               }
             }
@@ -1423,8 +1621,8 @@ struct AppsCommand: AsyncParsableCommand {
         let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
         
         let versionString = appVersion.attributes?.versionString ?? "unknown"
-        let versionState = appVersion.attributes?.appVersionState.map { "\($0)" } ?? "unknown"
-        
+        let versionState = appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
+
         let platformValue: Platform = switch platform.lowercased() {
           case "ios": .iOS
           case "macos": .macOS
@@ -1450,7 +1648,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("Platform: \(platformValue)")
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
-            print("Cancelled.")
+            print(yellow("Cancelled."))
             return
           }
         } else {
@@ -1467,7 +1665,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("Build \(buildNumber) attached. Continuing with submission...")
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
-            print("Cancelled.")
+            print(yellow("Cancelled."))
             return
           }
         }
@@ -1486,7 +1684,7 @@ struct AppsCommand: AsyncParsableCommand {
           
           switch activeState {
             case .waitingForReview, .inReview:
-              print("Version is already submitted for review (state: \(activeState.map { "\($0)" } ?? "—")).")
+              print("Version is already submitted for review (state: \(activeState.map { formatState($0) } ?? "—")).")
               return
             case .readyForReview:
               print("Found existing review submission (state: readyForReview). Resubmitting...")
@@ -1494,7 +1692,7 @@ struct AppsCommand: AsyncParsableCommand {
             case .unresolvedIssues:
               print("Found existing review submission with unresolved issues from a previous review.")
               guard confirm("Resubmit for review? [y/N] ") else {
-                print("Cancelled.")
+                print(yellow("Cancelled."))
                 return
               }
               submissionID = active.id
@@ -1542,13 +1740,13 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         let result = try await client.send(submitRequest)
-        let state = result.data.attributes?.state.map { "\($0)" } ?? "unknown"
+        let state = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
         print()
-        print("Submitted for review.")
+        print(green("Submitted for review."))
         print("  State: \(state)")
       }
     }
-    
+
     // MARK: - Resolve Issues
     
     struct ResolveIssues: AsyncParsableCommand {
@@ -1627,7 +1825,7 @@ struct AppsCommand: AsyncParsableCommand {
         print("Resolving without addressing the feedback will likely result in another rejection.")
         print()
         guard confirm("Mark \(rejectedItems.count) rejected item(s) as resolved? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -1645,7 +1843,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         print()
-        print("Resolved \(rejectedItems.count) item(s).")
+        print(green("Resolved") + " \(rejectedItems.count) item(s).")
         print("Run 'asc-client apps review submit \(bundleID)' to resubmit.")
       }
     }
@@ -1682,8 +1880,8 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        let state = submission.attributes?.state.map { "\($0)" } ?? "unknown"
-        
+        let state = submission.attributes?.state.map { formatState($0) } ?? "unknown"
+
         // Get version info from included data
         var versionString = "unknown"
         if let included = response.included {
@@ -1700,7 +1898,7 @@ struct AppsCommand: AsyncParsableCommand {
         print("State:      \(state)")
         print()
         guard confirm("Cancel this review submission? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -1715,9 +1913,9 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         
-        let newState = result.data.attributes?.state.map { "\($0)" } ?? "unknown"
+        let newState = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
         print()
-        print("Submission cancelled.")
+        print(green("Submission cancelled."))
         print("  State: \(newState)")
       }
     }
@@ -1747,7 +1945,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     static func checkEditable(_ appInfo: AppInfo) throws {
       guard let state = appInfo.attributes?.state, editableStates.contains(state) else {
-        let stateStr = appInfo.attributes?.state.map { "\($0)" } ?? "unknown"
+        let stateStr = appInfo.attributes?.state.map { formatState($0) } ?? "unknown"
         throw ValidationError("App info is in state '\(stateStr)' — updates are only allowed in PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW.")
       }
     }
@@ -1818,8 +2016,8 @@ struct AppsCommand: AsyncParsableCommand {
         
         let appName = app.attributes?.name ?? bundleID
         let attrs = appInfo.attributes
-        let state = attrs?.state.map { "\($0)" } ?? "—"
-        let ageRating = attrs?.appStoreAgeRating.map { "\($0)" } ?? "—"
+        let state = attrs?.state.map { formatState($0) } ?? "—"
+        let ageRating = attrs?.appStoreAgeRating.map { formatState($0) } ?? "—"
         let primaryCatID = appInfo.relationships?.primaryCategory?.data?.id ?? "—"
         let secondaryCatID = appInfo.relationships?.secondaryCategory?.data?.id ?? "—"
         
@@ -1846,7 +2044,8 @@ struct AppsCommand: AsyncParsableCommand {
             let locale = locAttrs?.locale ?? "—"
             let name = locAttrs?.name ?? "—"
             let subtitle = locAttrs?.subtitle
-            var line = "  [\(locale)] \(name)"
+            print()
+            var line = "  [\(localeName(locale))] \(name)"
             if let sub = subtitle, !sub.isEmpty {
               line += " — \(sub)"
             }
@@ -1913,11 +2112,11 @@ struct AppsCommand: AsyncParsableCommand {
         
         let appName = app.attributes?.name ?? bundleID
         print("App:   \(appName)")
-        print("State: \(appInfo.attributes?.state.map { "\($0)" } ?? "—")")
+        print("State: \(appInfo.attributes?.state.map { formatState($0) } ?? "—")")
         print()
         
         if hasLocalizationFields {
-          let localeDesc = locale ?? "primary"
+          let localeDesc = locale.map { localeName($0) } ?? "primary"
           print("Localization [\(localeDesc)]:")
           if let v = name { print("  Name:               \(v)") }
           if let v = subtitle { print("  Subtitle:           \(v)") }
@@ -1938,7 +2137,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Apply updates? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         print()
@@ -1972,7 +2171,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
           )
           let updatedLocale = response.data.attributes?.locale ?? locale ?? "primary"
-          print("Updated localization [\(updatedLocale)].")
+          print(green("Updated") + " localization [\(updatedLocale)].")
         }
         
         // Update categories
@@ -1992,7 +2191,7 @@ struct AppsCommand: AsyncParsableCommand {
               )
             )
           )
-          print("Updated categories.")
+          print(green("Updated") + " categories.")
         }
         
         print()
@@ -2062,13 +2261,13 @@ struct AppsCommand: AsyncParsableCommand {
         try AppInfoCommand.checkEditable(appInfo)
         
         let appName = app.attributes?.name ?? bundleID
-        let stateStr = appInfo.attributes?.state.map { "\($0)" } ?? "unknown"
+        let stateStr = appInfo.attributes?.state.map { formatState($0) } ?? "unknown"
         print("App:   \(appName)")
         print("State: \(stateStr)")
         print()
         
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
-          print("[\(locale)]")
+          print("[\(localeName(locale))]")
           if let v = fields.name { print("  Name:               \(v)") }
           if let v = fields.subtitle { print("  Subtitle:           \(v)") }
           if let v = fields.privacyPolicyURL { print("  Privacy Policy URL: \(v)") }
@@ -2077,7 +2276,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         print()
@@ -2098,10 +2297,10 @@ struct AppsCommand: AsyncParsableCommand {
         // Send updates
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
           guard let localization = locByLocale[locale] else {
-            print("  [\(locale)] Skipped — locale not found on this app.")
+            print("  [\(localeName(locale))] Skipped — locale not found on this app.")
             continue
           }
-          
+
           let response = try await client.send(
             Resources.v1.appInfoLocalizations.id(localization.id).patch(
               AppInfoLocalizationUpdateRequest(
@@ -2117,12 +2316,12 @@ struct AppsCommand: AsyncParsableCommand {
               )
             )
           )
-          print("  [\(locale)] Updated.")
-          
+          print("  [\(localeName(locale))] Updated.")
+
           if verbose {
             let attrs = response.data.attributes
             print("    Response:")
-            print("      Locale:             \(attrs?.locale ?? "—")")
+            print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
             if let v = attrs?.name { print("      Name:               \(v)") }
             if let v = attrs?.subtitle { print("      Subtitle:           \(v)") }
             if let v = attrs?.privacyPolicyURL { print("      Privacy Policy URL: \(v)") }
@@ -2179,7 +2378,7 @@ struct AppsCommand: AsyncParsableCommand {
           confirmOutputPath(output ?? "\(bundleID)-app-infos.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
         
-        print("Exported \(result.count) locale(s) to \(outputPath)")
+        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
       }
     }
   }
@@ -2293,7 +2492,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Apply \(changes.count) change\(changes.count == 1 ? "" : "s")? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -2316,7 +2515,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         let succeeded = changes.count - failed.count
         if succeeded > 0 {
-          print("Updated \(succeeded) territory availability\(succeeded == 1 ? "" : " entries").")
+          print(green("Updated") + " \(succeeded) territory availability\(succeeded == 1 ? "" : " entries").")
         }
         if !failed.isEmpty {
           print("Failed: \(failed.joined(separator: ", "))")
@@ -2417,7 +2616,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Create encryption declaration? [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -2440,10 +2639,10 @@ struct AppsCommand: AsyncParsableCommand {
         )
         
         let attrs = response.data.attributes
-        let state = attrs?.appEncryptionDeclarationState.map { "\($0)" } ?? "—"
+        let state = attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—"
         let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
         print()
-        print("Created encryption declaration.")
+        print(green("Created") + " encryption declaration.")
         print("  State:  \(state)")
         print("  Exempt: \(exempt)")
         return
@@ -2459,8 +2658,8 @@ struct AppsCommand: AsyncParsableCommand {
       ) {
         for decl in page.data {
           let attrs = decl.attributes
-          let state = attrs?.appEncryptionDeclarationState.map { "\($0)" } ?? "—"
-          let platform = attrs?.platform.map { "\($0)" } ?? "—"
+          let state = attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—"
+          let platform = attrs?.platform.map { formatState($0) } ?? "—"
           let proprietary = attrs?.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—"
           let thirdParty = attrs?.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—"
           let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
@@ -2539,7 +2738,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Delete custom EULA? This will revert to the standard Apple EULA. [y/N] ") else {
-          print("Cancelled.")
+          print(yellow("Cancelled."))
           return
         }
         
@@ -2547,7 +2746,7 @@ struct AppsCommand: AsyncParsableCommand {
           Resources.v1.endUserLicenseAgreements.id(eula.id).delete
         )
         print()
-        print("Deleted custom EULA.")
+        print(green("Deleted") + " custom EULA.")
         return
       }
       
@@ -2573,7 +2772,7 @@ struct AppsCommand: AsyncParsableCommand {
         if let eula = existing {
           // Update existing
           guard confirm("Update existing EULA? [y/N] ") else {
-            print("Cancelled.")
+            print(yellow("Cancelled."))
             return
           }
           
@@ -2585,7 +2784,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
           )
           print()
-          print("Updated EULA.")
+          print(green("Updated") + " EULA.")
         } else {
           // Create new — need all territory IDs
           var allTerritoryIDs: [String] = []
@@ -2596,7 +2795,7 @@ struct AppsCommand: AsyncParsableCommand {
           }
           
           guard confirm("Create custom EULA for all \(allTerritoryIDs.count) territories? [y/N] ") else {
-            print("Cancelled.")
+            print(yellow("Cancelled."))
             return
           }
           
@@ -2614,7 +2813,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
           )
           print()
-          print("Created EULA for \(allTerritoryIDs.count) territories.")
+          print(green("Created") + " EULA for \(allTerritoryIDs.count) territories.")
         }
         return
       }
@@ -2820,7 +3019,7 @@ private func selectBuild(appID: String, versionID: String, versionString: String
   print("Builds for version \(versionString ?? "all"):")
   for (i, build) in builds.enumerated() {
     let number = build.attributes?.version ?? "—"
-    let state = build.attributes?.processingState.map { "\($0)" } ?? "—"
+    let state = build.attributes?.processingState.map { formatState($0) } ?? "—"
     let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
     print("  [\(i + 1)] \(number)  \(state)  \(uploaded)")
   }

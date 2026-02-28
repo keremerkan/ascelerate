@@ -1,6 +1,17 @@
 import ArgumentParser
 import Foundation
 
+// MARK: - ANSI Colors
+
+private let isTerminal = isatty(STDOUT_FILENO) != 0
+private let isStderrTerminal = isatty(STDERR_FILENO) != 0
+
+func red(_ text: String) -> String { isTerminal ? "\u{1B}[31m\(text)\u{1B}[0m" : text }
+func green(_ text: String) -> String { isTerminal ? "\u{1B}[32m\(text)\u{1B}[0m" : text }
+func yellow(_ text: String) -> String { isTerminal ? "\u{1B}[38;5;208m\(text)\u{1B}[0m" : text }
+func bold(_ text: String) -> String { isTerminal ? "\u{1B}[1m\(text)\u{1B}[0m" : text }
+func stderrRed(_ text: String) -> String { isStderrTerminal ? "\u{1B}[31m\(text)\u{1B}[0m" : text }
+
 /// When true, all interactive confirmation prompts are automatically accepted.
 nonisolated(unsafe) var autoConfirm = false
 
@@ -60,6 +71,14 @@ func expandPath(_ path: String) -> String {
       .appendingPathComponent(String(cleaned.dropFirst(2))).path
   }
   return cleaned
+}
+
+/// Returns a locale code with its human-readable language name, e.g. "en-US (English (US))" or "tr (Turkish)".
+func localeName(_ code: String) -> String {
+  guard let name = Locale.current.localizedString(forIdentifier: code) else {
+    return code
+  }
+  return "\(code) (\(name))"
 }
 
 func formatBytes(_ bytes: Int) -> String {
@@ -241,18 +260,125 @@ func promptMultiSelection<T>(
   return selected
 }
 
-/// Parses and validates a filter value against a CaseIterable enum.
+/// Parses and validates a string value against a CaseIterable enum.
+/// Returns the matched enum case, or throws with a list of valid values.
+func parseEnum<T: RawRepresentable & CaseIterable>(
+  _ value: String,
+  name: String
+) throws -> T where T.RawValue == String {
+  guard let val = T(rawValue: value.uppercased()) else {
+    let valid = T.allCases.map(\.rawValue).joined(separator: ", ")
+    throw ValidationError("Invalid \(name) '\(value)'. Valid values: \(valid)")
+  }
+  return val
+}
+
+/// Parses and validates an optional filter value against a CaseIterable enum.
 /// Returns nil when input is nil, or a single-element array on success.
 func parseFilter<T: RawRepresentable & CaseIterable>(
   _ value: String?,
   name: String
 ) throws -> [T]? where T.RawValue == String {
   guard let value else { return nil }
-  guard let val = T(rawValue: value.uppercased()) else {
-    let valid = T.allCases.map(\.rawValue).joined(separator: ", ")
-    throw ValidationError("Invalid \(name) '\(value)'. Valid values: \(valid)")
+  return [try parseEnum(value, name: name)]
+}
+
+/// Collects all items from paginated API responses into a single sorted array.
+/// Throws if no items are found.
+func fetchAll<S: AsyncSequence, Item>(
+  _ pages: S,
+  data: (S.Element) -> [Item],
+  emptyMessage: String,
+  sort: ((Item, Item) -> Bool)? = nil
+) async throws -> [Item] {
+  var result: [Item] = []
+  for try await page in pages {
+    result.append(contentsOf: data(page))
   }
-  return [val]
+  guard !result.isEmpty else {
+    throw ValidationError(emptyMessage)
+  }
+  if let sort {
+    result.sort(by: sort)
+  }
+  return result
+}
+
+/// Converts a camelCase or SCREAMING_SNAKE_CASE field name to a human-readable title.
+/// Examples: "whatsNew" → "What's New", "privacyPolicyURL" → "Privacy Policy URL",
+///           "prepareForSubmission" → "Prepare for Submission", "READY_FOR_SALE" → "Ready for Sale"
+func formatFieldName(_ name: String) -> String {
+  // Known special cases
+  let overrides: [String: String] = [
+    "whatsNew": "What's New",
+    "privacyPolicyURL": "Privacy Policy URL",
+    "privacyChoicesURL": "Privacy Choices URL",
+    "marketingURL": "Marketing URL",
+    "supportURL": "Support URL",
+    "promotionalText": "Promotional Text",
+    "macOS": "macOS",
+    "iOS": "iOS",
+    "tvOS": "tvOS",
+    "visionOS": "visionOS",
+  ]
+  if let override = overrides[name] { return override }
+
+  // SCREAMING_SNAKE_CASE (e.g. "PREPARE_FOR_SUBMISSION", "APP_IPHONE_67")
+  if name.contains("_") {
+    return name.split(separator: "_")
+      .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+      .joined(separator: " ")
+  }
+
+  // camelCase → split on uppercase boundaries
+  var words: [String] = []
+  var current = ""
+  for char in name {
+    if char.isUppercase && !current.isEmpty {
+      // Check for consecutive uppercase (acronyms like "URL", "ID")
+      if current.last?.isUppercase == true {
+        current.append(char)
+      } else {
+        words.append(current)
+        current = String(char)
+      }
+    } else if char.isLowercase && current.count > 1 && current.allSatisfy(\.isUppercase) {
+      // End of acronym — split off the last uppercase as start of new word
+      let acronym = String(current.dropLast())
+      words.append(acronym)
+      current = String(current.last!) + String(char)
+    } else {
+      current.append(char)
+    }
+  }
+  if !current.isEmpty { words.append(current) }
+
+  return words.enumerated().map { i, word in
+    if word.allSatisfy(\.isUppercase) && word.count >= 2 { return word } // preserve acronyms
+    return i == 0 ? word.prefix(1).uppercased() + word.dropFirst() : word.prefix(1).uppercased() + word.dropFirst()
+  }.joined(separator: " ")
+}
+
+/// Formats any enum value printed via `"\($0)"` into a human-readable title.
+/// Works by converting the string representation to a readable form.
+func formatState<T>(_ value: T) -> String {
+  formatFieldName("\(value)")
+}
+
+/// Returns the visible length of a string, stripping ANSI escape sequences.
+private func visibleLength(_ str: String) -> Int {
+  str.replacingOccurrences(
+    of: "\u{1B}\\[[0-9;]*m",
+    with: "",
+    options: .regularExpression
+  ).count
+}
+
+/// Pads a string to a target visible width, accounting for ANSI escape sequences.
+private func padToVisible(_ str: String, width: Int) -> String {
+  let visible = visibleLength(str)
+  if visible >= width { return str }
+  return str + String(repeating: " ", count: width - visible)
 }
 
 enum Table {
@@ -267,7 +393,7 @@ enum Table {
 
     for row in rows {
       for (i, cell) in row.prefix(columnCount).enumerated() {
-        widths[i] = max(widths[i], cell.count)
+        widths[i] = max(widths[i], visibleLength(cell))
       }
     }
 
@@ -281,8 +407,12 @@ enum Table {
     Swift.print(separator)
 
     for row in rows {
+      if row.allSatisfy({ $0.isEmpty }) {
+        Swift.print()
+        continue
+      }
       let line = row.prefix(columnCount).enumerated().map { i, cell in
-        cell.padding(toLength: widths[i], withPad: " ", startingAt: 0)
+        padToVisible(cell, width: widths[i])
       }.joined(separator: "  ")
       Swift.print(line)
     }

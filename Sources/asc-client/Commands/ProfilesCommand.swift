@@ -65,9 +65,9 @@ struct ProfilesCommand: AsyncParsableCommand {
 
           rows.append([
             attrs?.name ?? "—",
-            attrs?.profileType.map { "\($0)" } ?? "—",
-            attrs?.profileState.map { "\($0)" } ?? "—",
-            attrs?.platform.map { "\($0)" } ?? "—",
+            attrs?.profileType.map { formatState($0) } ?? "—",
+            attrs?.profileState.map { formatState($0) } ?? "—",
+            attrs?.platform.map { formatState($0) } ?? "—",
             bundleIDIdentifier,
             attrs?.expirationDate.map { formatDate($0) } ?? "—",
           ])
@@ -105,9 +105,9 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       let attrs = profile.attributes
       print("Name:     \(attrs?.name ?? "—")")
-      print("Type:     \(attrs?.profileType.map { "\($0)" } ?? "—")")
-      print("State:    \(attrs?.profileState.map { "\($0)" } ?? "—")")
-      print("Platform: \(attrs?.platform.map { "\($0)" } ?? "—")")
+      print("Type:     \(attrs?.profileType.map { formatState($0) } ?? "—")")
+      print("State:    \(attrs?.profileState.map { formatState($0) } ?? "—")")
+      print("Platform: \(attrs?.platform.map { formatState($0) } ?? "—")")
       print("UUID:     \(attrs?.uuid ?? "—")")
       print("Created:  \(attrs?.createdDate.map { formatDate($0) } ?? "—")")
       print("Expires:  \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
@@ -134,7 +134,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         print("Certificates:")
         for cert in certsResponse.data {
           let certAttrs = cert.attributes
-          print("  \(certAttrs?.displayName ?? "—") (\(certAttrs?.serialNumber ?? "—")) — \(certAttrs?.certificateType.map { "\($0)" } ?? "—")")
+          print("  \(certAttrs?.displayName ?? "—") (\(certAttrs?.serialNumber ?? "—")) — \(certAttrs?.certificateType.map { formatState($0) } ?? "—")")
         }
       }
 
@@ -190,7 +190,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         confirmOutputPath(output ?? "\(defaultName).mobileprovision", isDirectory: false)
       )
       try profileData.write(to: URL(fileURLWithPath: outputPath))
-      print("Downloaded profile to \(outputPath)")
+      print(green("Downloaded") + " profile to \(outputPath)")
     }
   }
 
@@ -320,11 +320,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       // 2. Resolve type
       let profileType: ProfileCreateRequest.Data.Attributes.ProfileType
       if let type {
-        guard let pt = ProfileCreateRequest.Data.Attributes.ProfileType(rawValue: type.uppercased()) else {
-          let valid = ProfileCreateRequest.Data.Attributes.ProfileType.allCases.map(\.rawValue).joined(separator: ", ")
-          throw ValidationError("Invalid type '\(type)'. Valid values: \(valid)")
-        }
-        profileType = pt
+        profileType = try parseEnum(type, name: "type")
       } else {
         profileType = try promptProfileType()
       }
@@ -417,7 +413,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Create this profile? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
@@ -446,9 +442,9 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print("Created profile '\(attrs?.name ?? profileName)'.")
+      print(green("Created") + " profile '\(attrs?.name ?? profileName)'.")
       print("  UUID:    \(attrs?.uuid ?? "—")")
-      print("  State:   \(attrs?.profileState.map { "\($0)" } ?? "—")")
+      print("  State:   \(attrs?.profileState.map { formatState($0) } ?? "—")")
       print("  Expires: \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
 
       if let output, let content = attrs?.profileContent {
@@ -561,7 +557,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         print("Profiles:")
         for (i, profile) in sorted.enumerated() {
           let pName = profile.attributes?.name ?? "—"
-          let pType = profile.attributes?.profileType.map { "\($0)" } ?? "—"
+          let pType = profile.attributes?.profileType.map { formatState($0) } ?? "—"
           let pState = profile.attributes?.profileState?.rawValue ?? "—"
           let bidID = profile.relationships?.bundleID?.data?.id ?? ""
           let bidIdentifier = includedBundleIDs[bidID]?.attributes?.identifier ?? "—"
@@ -651,7 +647,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Reissue \(targets.count) profile(s)? This will delete and recreate each profile. [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
       print()
@@ -775,44 +771,35 @@ struct ProfilesCommand: AsyncParsableCommand {
       let attrs = profile.attributes
       print("Profile:")
       print("  Name:  \(attrs?.name ?? "—")")
-      print("  Type:  \(attrs?.profileType.map { "\($0)" } ?? "—")")
-      print("  State: \(attrs?.profileState.map { "\($0)" } ?? "—")")
+      print("  Type:  \(attrs?.profileType.map { formatState($0) } ?? "—")")
+      print("  State: \(attrs?.profileState.map { formatState($0) } ?? "—")")
       print()
       print("WARNING: Deleting a profile cannot be undone.")
       print()
 
       guard confirm("Delete this profile? [y/N] ") else {
-        print("Cancelled.")
+        print(yellow("Cancelled."))
         return
       }
 
       _ = try await client.send(Resources.v1.profiles.id(profile.id).delete)
       print()
-      print("Deleted profile '\(attrs?.name ?? name ?? "—")'.")
+      print(green("Deleted") + " profile '\(attrs?.name ?? name ?? "—")'.")
     }
   }
 }
 
 /// Prompts the user to select a provisioning profile from a numbered list.
 func promptProfile(client: AppStoreConnectClient) async throws -> Profile {
-  var allProfiles: [Profile] = []
-  for try await page in client.pages(Resources.v1.profiles.get(limit: 200)) {
-    allProfiles.append(contentsOf: page.data)
-  }
-  guard !allProfiles.isEmpty else {
-    throw ValidationError("No provisioning profiles found in your account.")
-  }
-  allProfiles.sort { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
-
+  let profiles = try await fetchAll(
+    client.pages(Resources.v1.profiles.get(limit: 200)),
+    data: \.data,
+    emptyMessage: "No provisioning profiles found in your account.",
+    sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
+  )
   return try promptSelection(
-    "Provisioning profiles",
-    items: allProfiles,
-    display: { profile in
-      let name = profile.attributes?.name ?? "—"
-      let type = profile.attributes?.profileType.map { "\($0)" } ?? "—"
-      let state = profile.attributes?.profileState.map { "\($0)" } ?? "—"
-      return "\(name) (\(type), \(state))"
-    },
+    "Provisioning profiles", items: profiles,
+    display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.profileType.map { formatState($0) } ?? "—"), \($0.attributes?.profileState.map { formatState($0) } ?? "—"))" },
     prompt: "Select profile"
   )
 }

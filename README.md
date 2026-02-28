@@ -114,6 +114,10 @@ asc-client apps versions <bundle-id>
 asc-client apps create-version <bundle-id> <version-string>
 asc-client apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
 
+# Run pre-submission checks (localizations, build, screenshots)
+asc-client apps review preflight <bundle-id>
+asc-client apps review preflight <bundle-id> --version 2.1.0
+
 # Check review submission status
 asc-client apps review status <bundle-id>
 asc-client apps review status <bundle-id> --version 2.1.0

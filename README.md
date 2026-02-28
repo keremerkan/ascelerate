@@ -114,10 +114,6 @@ asc-client apps versions <bundle-id>
 asc-client apps create-version <bundle-id> <version-string>
 asc-client apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
 
-# Run pre-submission checks (localizations, build, screenshots)
-asc-client apps review preflight <bundle-id>
-asc-client apps review preflight <bundle-id> --version 2.1.0
-
 # Check review submission status
 asc-client apps review status <bundle-id>
 asc-client apps review status <bundle-id> --version 2.1.0
@@ -132,6 +128,43 @@ asc-client apps review resolve-issues <bundle-id>
 # Cancel an active review submission
 asc-client apps review cancel-submission <bundle-id>
 ```
+
+#### Pre-submission preflight checks
+
+Before submitting for review, run `preflight` to verify that all required fields are filled in across every locale:
+
+```bash
+# Check the latest editable version
+asc-client apps review preflight <bundle-id>
+
+# Check a specific version
+asc-client apps review preflight <bundle-id> --version 2.1.0
+```
+
+The command checks version state, build attachment, and then goes through each locale to verify localization fields (description, what's new, keywords), app info fields (name, subtitle, privacy policy URL), and screenshots. Results are grouped by locale with colored pass/fail indicators:
+
+```
+Preflight checks for MyApp v2.1.0 (Prepare for Submission)
+
+Check                                Status
+──────────────────────────────────────────────────────────────────
+Version state                        ✓ Prepare for Submission
+Build attached                       ✓ Build 42
+
+en-US (English (United States))
+  App info                           ✓ All fields filled
+  Localizations                      ✓ All fields filled
+  Screenshots                        ✓ 2 sets, 10 screenshots
+
+de-DE (German (Germany))
+  App info                           ✗ Missing: Privacy Policy URL
+  Localizations                      ✗ What's New missing
+  Screenshots                        ✗ No screenshots
+──────────────────────────────────────────────────────────────────
+Result: 5 passed, 3 failed
+```
+
+Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files.
 
 ### Build Management
 

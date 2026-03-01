@@ -166,6 +166,7 @@ struct BuildsCommand: AsyncParsableCommand {
         "-scheme", schemeName,
         "-configuration", configuration ?? "Release",
         "-destination", destination ?? "generic/platform=iOS",
+        "-allowProvisioningUpdates",
       ]
 
       var archivePath: String?
@@ -618,6 +619,7 @@ private func resolveUploadable(_ path: String) throws -> (String, String?) {
     "-archivePath", path,
     "-exportPath", exportDir,
     "-exportOptionsPlist", plistPath,
+    "-allowProvisioningUpdates",
   ]
   process.standardOutput = FileHandle.nullDevice
   process.standardError = FileHandle.standardError

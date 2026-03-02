@@ -1921,16 +1921,20 @@ struct AppsCommand: AsyncParsableCommand {
       let response = try await client.send(
         Resources.v1.apps.id(appID).appInfos.get()
       )
-      let candidates = response.data.filter { $0.attributes?.state != .replacedWithNewInfo }
-      // Prefer editable AppInfo (prepareForSubmission/waitingForReview) over live one
+      return try pickActiveAppInfo(from: response.data)
+    }
+
+    /// Picks the most relevant AppInfo: prefers editable (prepareForSubmission/waitingForReview) over live, skips replaced.
+    static func pickActiveAppInfo(from appInfos: [AppInfo]) throws -> AppInfo {
+      let candidates = appInfos.filter { $0.attributes?.state != .replacedWithNewInfo }
       guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? .readyForDistribution) })
               ?? candidates.first
-              ?? response.data.first else {
+              ?? appInfos.first else {
         throw ValidationError("No app info found.")
       }
       return appInfo
     }
-    
+
     private static let editableStates: Set<AppInfo.Attributes.State> = [.prepareForSubmission, .waitingForReview]
     
     static func checkEditable(_ appInfo: AppInfo) throws {
@@ -1998,14 +2002,7 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         
-        // Pick the most relevant AppInfo (prefer editable over live)
-        let candidates = response.data.filter { $0.attributes?.state != .replacedWithNewInfo }
-        let editableStates: Set<AppInfo.Attributes.State> = [.prepareForSubmission, .waitingForReview]
-        guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? .readyForDistribution) })
-                ?? candidates.first
-                ?? response.data.first else {
-          throw ValidationError("No app info found.")
-        }
+        let appInfo = try AppInfoCommand.pickActiveAppInfo(from: response.data)
         
         let appName = app.attributes?.name ?? bundleID
         let attrs = appInfo.attributes

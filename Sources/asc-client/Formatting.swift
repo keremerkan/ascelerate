@@ -19,6 +19,52 @@ nonisolated(unsafe) var autoConfirm = false
 /// (e.g. `await-processing`, `attach-latest-build`) can wait for this specific build.
 nonisolated(unsafe) var lastUploadedBuildVersion: String?
 
+/// Resolves a file path from an optional argument. If nil, lists files matching the given
+/// extension in the current directory and lets the user pick one or type a path manually.
+func resolveFile(_ file: String?, extension ext: String, prompt: String) throws -> String {
+  if let f = file {
+    let path = expandPath(f)
+    guard FileManager.default.fileExists(atPath: path) else {
+      throw ValidationError("File not found at '\(path)'.")
+    }
+    return path
+  }
+
+  // List matching files in the current directory
+  let cwd = FileManager.default.currentDirectoryPath
+  let candidates = (try? FileManager.default.contentsOfDirectory(atPath: cwd))?
+    .filter { $0.hasSuffix(".\(ext)") }
+    .sorted() ?? []
+
+  if !candidates.isEmpty {
+    print("\(prompt):")
+    for (i, name) in candidates.enumerated() {
+      print("  [\(i + 1)] \(name)")
+    }
+    let manualOption = candidates.count + 1
+    print("  [\(manualOption)] Enter path manually")
+    print()
+    print("Select (1-\(manualOption)): ", terminator: "")
+
+    guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+          let choice = Int(input),
+          choice >= 1, choice <= manualOption else {
+      throw ValidationError("Invalid selection.")
+    }
+
+    if choice <= candidates.count {
+      return (cwd as NSString).appendingPathComponent(candidates[choice - 1])
+    }
+  }
+
+  // Manual path entry
+  let path = expandPath(promptText("Path to file: "))
+  guard FileManager.default.fileExists(atPath: path) else {
+    throw ValidationError("File not found at '\(path)'.")
+  }
+  return path
+}
+
 /// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
 /// Prompts for non-empty text input; retries on empty.
 func promptText(_ message: String) -> String {
@@ -320,6 +366,7 @@ func formatFieldName(_ name: String) -> String {
     "iOS": "iOS",
     "tvOS": "tvOS",
     "visionOS": "visionOS",
+    "CANCELED": "Cancelled",
   ]
   if let override = overrides[name] { return override }
 

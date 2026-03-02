@@ -282,25 +282,8 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        // Get file path from argument or prompt
-        let filePath: String
-        if let f = file {
-          filePath = f
-        } else {
-          print("Path to localizations JSON file: ", terminator: "")
-          guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-                !line.isEmpty else {
-            throw ValidationError("No file path provided.")
-          }
-          filePath = line
-        }
-        
-        let expandedPath = expandPath(filePath)
-        
-        guard FileManager.default.fileExists(atPath: expandedPath) else {
-          throw ValidationError("File not found at '\(expandedPath)'.")
-        }
-        
+        let expandedPath = try resolveFile(file, extension: "json", prompt: "Select localizations JSON file")
+
         // Parse JSON
         let data = try Data(contentsOf: URL(fileURLWithPath: expandedPath))
         let localeUpdates: [String: LocaleFields]
@@ -2225,26 +2208,8 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        
-        // Get file path from argument or prompt
-        let filePath: String
-        if let f = file {
-          filePath = f
-        } else {
-          print("Path to app info localizations JSON file: ", terminator: "")
-          guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-                !line.isEmpty else {
-            throw ValidationError("No file path provided.")
-          }
-          filePath = line
-        }
-        
-        let expandedPath = expandPath(filePath)
-        
-        guard FileManager.default.fileExists(atPath: expandedPath) else {
-          throw ValidationError("File not found at '\(expandedPath)'.")
-        }
-        
+        let expandedPath = try resolveFile(file, extension: "json", prompt: "Select app info localizations JSON file")
+
         // Parse JSON
         let data = try Data(contentsOf: URL(fileURLWithPath: expandedPath))
         let localeUpdates: [String: AppInfoLocaleFields]

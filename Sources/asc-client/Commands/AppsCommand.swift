@@ -1921,7 +1921,10 @@ struct AppsCommand: AsyncParsableCommand {
       let response = try await client.send(
         Resources.v1.apps.id(appID).appInfos.get()
       )
-      guard let appInfo = response.data.first(where: { $0.attributes?.state != .replacedWithNewInfo })
+      let candidates = response.data.filter { $0.attributes?.state != .replacedWithNewInfo }
+      // Prefer editable AppInfo (prepareForSubmission/waitingForReview) over live one
+      guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? .readyForDistribution) })
+              ?? candidates.first
               ?? response.data.first else {
         throw ValidationError("No app info found.")
       }
@@ -1995,8 +1998,11 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         
-        // Pick the most relevant AppInfo (prefer non-replaced)
-        guard let appInfo = response.data.first(where: { $0.attributes?.state != .replacedWithNewInfo })
+        // Pick the most relevant AppInfo (prefer editable over live)
+        let candidates = response.data.filter { $0.attributes?.state != .replacedWithNewInfo }
+        let editableStates: Set<AppInfo.Attributes.State> = [.prepareForSubmission, .waitingForReview]
+        guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? .readyForDistribution) })
+                ?? candidates.first
                 ?? response.data.first else {
           throw ValidationError("No app info found.")
         }
@@ -2889,7 +2895,32 @@ func findApp(bundleID: String, client: AppStoreConnectClient) async throws -> Ap
   return app
 }
 
-func findVersion(appID: String, versionString: String?, client: AppStoreConnectClient) async throws -> AppStoreVersion {
+func findVersion(appID: String, versionString: String?, platform: Platform? = nil, client: AppStoreConnectClient) async throws -> AppStoreVersion {
+  // When no specific version requested, prefer editable versions (prepareForSubmission/waitingForReview)
+  if versionString == nil {
+    let editableRequest = Resources.v1.apps.id(appID).appStoreVersions.get(
+      filterAppVersionState: [.prepareForSubmission, .waitingForReview]
+    )
+    let editableResponse = try await client.send(editableRequest)
+    var editable = editableResponse.data
+
+    // Filter by platform if specified
+    if let platform {
+      editable = editable.filter { $0.attributes?.platform == platform }
+    }
+
+    if editable.count == 1 {
+      return editable[0]
+    } else if editable.count > 1 {
+      return try promptSelection("Multiple editable versions found", items: editable) { v in
+        let p = v.attributes?.platform.map { formatState($0) } ?? "?"
+        let ver = v.attributes?.versionString ?? "?"
+        let state = v.attributes?.appVersionState.map { formatState($0) } ?? "?"
+        return "\(p) — \(ver) (\(state))"
+      }
+    }
+  }
+
   let request = Resources.v1.apps.id(appID).appStoreVersions.get(
     filterVersionString: versionString.map { [$0] },
     limit: 1

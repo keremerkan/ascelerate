@@ -235,7 +235,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 ### API calls
 - **`Certificate` type is ambiguous** — both `AppStoreAPI.Certificate` and `X509.Certificate` exist. In `CertsCommand.swift` (which imports both), use `AppStoreAPI.Certificate` explicitly for API response types.
 - **`filterBundleID` does prefix matching** — `com.foo.Bar` also matches `com.foo.BarPro`. Always use `findApp()` which filters for exact `bundleID` match from results.
-- **Null data in non-optional response fields** — Several GET sub-resource endpoints return `{"data": null}` when no related object exists (e.g. build on version, EULA on app), but generated response types have non-optional `data`. Catch `DecodingError` for these. For EULA, also catch `ResponseError` with 404 status. Never use bare `try?` — it swallows network/auth errors too.
+- **Null data in non-optional response fields** — Several GET sub-resource endpoints return `{"data": null}` when no related object exists (e.g. build on version, EULA on app), but generated response types have non-optional `data`. Catch `DecodingError` for these. For EULA, also catch `ResponseError` with 404 status.
 - Builds don't have `filterBundleID` — look up app first, then use `filterApp: [appID]`
 - **Encryption declarations use top-level endpoint** — `Resources.v1.apps.id(appID).appEncryptionDeclarations` returns 404 for some apps. Use `Resources.v1.appEncryptionDeclarations.get(filterApp: [appID])` instead.
 - **Territory availability limit is 50** — The v1 `include: [.territoryAvailabilities]` has a max limit of 50. Use the v2 sub-resource endpoint `Resources.v2.appAvailabilities.id(availabilityID).territoryAvailabilities.get(limit: 50, include: [.territory])` with `client.pages()` pagination.

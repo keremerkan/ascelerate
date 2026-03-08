@@ -371,7 +371,44 @@ struct AppsCommand: AsyncParsableCommand {
         // Send updates
         for (locale, fields) in effectiveUpdates.sorted(by: { $0.key < $1.key }) {
           guard let localization = locByLocale[locale] else {
-            print("  [\(localeName(locale))] Skipped — locale not found on this version.")
+            guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
+              print("  [\(localeName(locale))] Skipped.")
+              continue
+            }
+
+            let response = try await client.send(
+              Resources.v1.appStoreVersionLocalizations.post(
+                AppStoreVersionLocalizationCreateRequest(
+                  data: .init(
+                    attributes: .init(
+                      description: fields.description,
+                      locale: locale,
+                      keywords: fields.keywords,
+                      marketingURL: fields.marketingURL.flatMap { URL(string: $0) },
+                      promotionalText: fields.promotionalText,
+                      supportURL: fields.supportURL.flatMap { URL(string: $0) },
+                      whatsNew: fields.whatsNew
+                    ),
+                    relationships: .init(
+                      appStoreVersion: .init(data: .init(id: version.id))
+                    )
+                  )
+                )
+              )
+            )
+            print("  [\(localeName(locale))] \(green("Created."))")
+
+            if verbose {
+              let attrs = response.data.attributes
+              print("    Response:")
+              print("      Locale:           \(attrs?.locale.map { localeName($0) } ?? "—")")
+              if let d = attrs?.description { print("      Description:      \(d.prefix(120))\(d.count > 120 ? "..." : "")") }
+              if let w = attrs?.whatsNew { print("      What's New:       \(w.prefix(120))\(w.count > 120 ? "..." : "")") }
+              if let k = attrs?.keywords { print("      Keywords:         \(k.prefix(120))\(k.count > 120 ? "..." : "")") }
+              if let p = attrs?.promotionalText { print("      Promotional Text: \(p.prefix(120))\(p.count > 120 ? "..." : "")") }
+              if let u = attrs?.marketingURL { print("      Marketing URL:    \(u)") }
+              if let u = attrs?.supportURL { print("      Support URL:      \(u)") }
+            }
             continue
           }
 
@@ -390,7 +427,7 @@ struct AppsCommand: AsyncParsableCommand {
               )
             )
           )
-          
+
           let response = try await client.send(request)
           print("  [\(localeName(locale))] Updated.")
 
@@ -2269,7 +2306,45 @@ struct AppsCommand: AsyncParsableCommand {
         // Send updates
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
           guard let localization = locByLocale[locale] else {
-            print("  [\(localeName(locale))] Skipped — locale not found on this app.")
+            guard let name = fields.name else {
+              print("  [\(localeName(locale))] Skipped — locale not found in current localizations for the app and \"name\" is required to create it.")
+              continue
+            }
+
+            guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
+              print("  [\(localeName(locale))] Skipped.")
+              continue
+            }
+
+            let response = try await client.send(
+              Resources.v1.appInfoLocalizations.post(
+                AppInfoLocalizationCreateRequest(
+                  data: .init(
+                    attributes: .init(
+                      locale: locale,
+                      name: name,
+                      subtitle: fields.subtitle,
+                      privacyPolicyURL: fields.privacyPolicyURL,
+                      privacyChoicesURL: fields.privacyChoicesURL
+                    ),
+                    relationships: .init(
+                      appInfo: .init(data: .init(id: appInfo.id))
+                    )
+                  )
+                )
+              )
+            )
+            print("  [\(localeName(locale))] \(green("Created."))")
+
+            if verbose {
+              let attrs = response.data.attributes
+              print("    Response:")
+              print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
+              if let v = attrs?.name { print("      Name:               \(v)") }
+              if let v = attrs?.subtitle { print("      Subtitle:           \(v)") }
+              if let v = attrs?.privacyPolicyURL { print("      Privacy Policy URL: \(v)") }
+              if let v = attrs?.privacyChoicesURL { print("      Privacy Choices URL: \(v)") }
+            }
             continue
           }
 

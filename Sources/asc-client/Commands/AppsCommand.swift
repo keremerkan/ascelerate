@@ -11,7 +11,7 @@ struct AppsCommand: AsyncParsableCommand {
     groupedSubcommands: [
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, BuildCommand.self, PhasedRelease.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
-      CommandGroup(name: "Configuration", subcommands: [AgeRating.self, Availability.self, Encryption.self, EULACommand.self]),
+      CommandGroup(name: "Configuration", subcommands: [Availability.self, Encryption.self, EULACommand.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
     ]
   )
@@ -964,218 +964,6 @@ struct AppsCommand: AsyncParsableCommand {
     }
   }
   
-  struct AgeRating: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-      commandName: "age-rating",
-      abstract: "View or update age rating declaration for an App Store version."
-    )
-    
-    @Argument(help: "The bundle identifier of the app.")
-    var bundleID: String
-    
-    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
-    var version: String?
-    
-    @Option(name: .long, help: "Path to a JSON file with age rating fields to update.")
-    var file: String?
-    
-    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
-    var yes = false
-    
-    func run() async throws {
-      if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
-      let app = try await findApp(bundleID: bundleID, client: client)
-      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
-      
-      let versionString = appVersion.attributes?.versionString ?? "unknown"
-      let appName = app.attributes?.name ?? bundleID
-      
-      let response = try await client.send(
-        Resources.v1.appStoreVersions.id(appVersion.id).ageRatingDeclaration.get()
-      )
-      let declaration = response.data
-      let attrs = declaration.attributes
-      
-      if let filePath = file {
-        // Update mode
-        let expandedPath = expandPath(filePath)
-        guard FileManager.default.fileExists(atPath: expandedPath) else {
-          throw ValidationError("File not found at '\(expandedPath)'.")
-        }
-        
-        let data = try Data(contentsOf: URL(fileURLWithPath: expandedPath))
-        let fields: AgeRatingFields
-        do {
-          fields = try JSONDecoder().decode(AgeRatingFields.self, from: data)
-        } catch let error as DecodingError {
-          throw ValidationError("Invalid JSON: \(describeDecodingError(error))")
-        }
-        
-        print("App:     \(appName)")
-        print("Version: \(versionString)")
-        print()
-        print("Age rating updates:")
-        var changeCount = 0
-        if let v = fields.alcoholTobaccoOrDrugUseOrReferences { print("  Alcohol, Tobacco, or Drug Use: \(v)"); changeCount += 1 }
-        if let v = fields.contests { print("  Contests: \(v)"); changeCount += 1 }
-        if let v = fields.gamblingSimulated { print("  Gambling (simulated): \(v)"); changeCount += 1 }
-        if let v = fields.gunsOrOtherWeapons { print("  Guns or Other Weapons: \(v)"); changeCount += 1 }
-        if let v = fields.horrorOrFearThemes { print("  Horror or Fear Themes: \(v)"); changeCount += 1 }
-        if let v = fields.matureOrSuggestiveThemes { print("  Mature or Suggestive Themes: \(v)"); changeCount += 1 }
-        if let v = fields.profanityOrCrudeHumor { print("  Profanity or Crude Humor: \(v)"); changeCount += 1 }
-        if let v = fields.sexualContentOrNudity { print("  Sexual Content or Nudity: \(v)"); changeCount += 1 }
-        if let v = fields.sexualContentGraphicAndNudity { print("  Sexual Content (graphic): \(v)"); changeCount += 1 }
-        if let v = fields.violenceCartoonOrFantasy { print("  Violence (cartoon/fantasy): \(v)"); changeCount += 1 }
-        if let v = fields.violenceRealistic { print("  Violence (realistic): \(v)"); changeCount += 1 }
-        if let v = fields.violenceRealisticProlongedGraphicOrSadistic { print("  Violence (graphic/sadistic): \(v)"); changeCount += 1 }
-        if let v = fields.medicalOrTreatmentInformation { print("  Medical Information: \(v)"); changeCount += 1 }
-        if let v = fields.isAdvertising { print("  Advertising: \(v)"); changeCount += 1 }
-        if let v = fields.isGambling { print("  Gambling: \(v)"); changeCount += 1 }
-        if let v = fields.isUnrestrictedWebAccess { print("  Unrestricted Web Access: \(v)"); changeCount += 1 }
-        if let v = fields.isUserGeneratedContent { print("  User-Generated Content: \(v)"); changeCount += 1 }
-        if let v = fields.isMessagingAndChat { print("  Messaging and Chat: \(v)"); changeCount += 1 }
-        if let v = fields.isLootBox { print("  Loot Box: \(v)"); changeCount += 1 }
-        if let v = fields.isHealthOrWellnessTopics { print("  Health/Wellness Topics: \(v)"); changeCount += 1 }
-        if let v = fields.isParentalControls { print("  Parental Controls: \(v)"); changeCount += 1 }
-        if let v = fields.isAgeAssurance { print("  Age Assurance: \(v)"); changeCount += 1 }
-        if let v = fields.kidsAgeBand { print("  Kids Age Band: \(v)"); changeCount += 1 }
-        if let v = fields.ageRatingOverride { print("  Age Rating Override: \(v)"); changeCount += 1 }
-        
-        if changeCount == 0 {
-          throw ValidationError("JSON file contains no age rating fields.")
-        }
-        
-        print()
-        guard confirm("Update \(changeCount) age rating field\(changeCount == 1 ? "" : "s")? [y/N] ") else {
-          print(yellow("Cancelled."))
-          return
-        }
-        
-        func parseIntensity<T: RawRepresentable>(_ value: String?, type: T.Type) -> T? where T.RawValue == String {
-          guard let v = value else { return nil }
-          return T(rawValue: v)
-        }
-        
-        typealias Attrs = AgeRatingDeclarationUpdateRequest.Data.Attributes
-        let updateRequest = Resources.v1.ageRatingDeclarations.id(declaration.id).patch(
-          AgeRatingDeclarationUpdateRequest(
-            data: .init(
-              id: declaration.id,
-              attributes: .init(
-                isAdvertising: fields.isAdvertising,
-                alcoholTobaccoOrDrugUseOrReferences: parseIntensity(fields.alcoholTobaccoOrDrugUseOrReferences, type: Attrs.AlcoholTobaccoOrDrugUseOrReferences.self),
-                contests: parseIntensity(fields.contests, type: Attrs.Contests.self),
-                isGambling: fields.isGambling,
-                gamblingSimulated: parseIntensity(fields.gamblingSimulated, type: Attrs.GamblingSimulated.self),
-                gunsOrOtherWeapons: parseIntensity(fields.gunsOrOtherWeapons, type: Attrs.GunsOrOtherWeapons.self),
-                isHealthOrWellnessTopics: fields.isHealthOrWellnessTopics,
-                kidsAgeBand: parseIntensity(fields.kidsAgeBand, type: KidsAgeBand.self),
-                isLootBox: fields.isLootBox,
-                medicalOrTreatmentInformation: parseIntensity(fields.medicalOrTreatmentInformation, type: Attrs.MedicalOrTreatmentInformation.self),
-                isMessagingAndChat: fields.isMessagingAndChat,
-                isParentalControls: fields.isParentalControls,
-                profanityOrCrudeHumor: parseIntensity(fields.profanityOrCrudeHumor, type: Attrs.ProfanityOrCrudeHumor.self),
-                isAgeAssurance: fields.isAgeAssurance,
-                sexualContentGraphicAndNudity: parseIntensity(fields.sexualContentGraphicAndNudity, type: Attrs.SexualContentGraphicAndNudity.self),
-                sexualContentOrNudity: parseIntensity(fields.sexualContentOrNudity, type: Attrs.SexualContentOrNudity.self),
-                horrorOrFearThemes: parseIntensity(fields.horrorOrFearThemes, type: Attrs.HorrorOrFearThemes.self),
-                matureOrSuggestiveThemes: parseIntensity(fields.matureOrSuggestiveThemes, type: Attrs.MatureOrSuggestiveThemes.self),
-                isUnrestrictedWebAccess: fields.isUnrestrictedWebAccess,
-                isUserGeneratedContent: fields.isUserGeneratedContent,
-                violenceCartoonOrFantasy: parseIntensity(fields.violenceCartoonOrFantasy, type: Attrs.ViolenceCartoonOrFantasy.self),
-                violenceRealisticProlongedGraphicOrSadistic: parseIntensity(fields.violenceRealisticProlongedGraphicOrSadistic, type: Attrs.ViolenceRealisticProlongedGraphicOrSadistic.self),
-                violenceRealistic: parseIntensity(fields.violenceRealistic, type: Attrs.ViolenceRealistic.self),
-                ageRatingOverride: parseIntensity(fields.ageRatingOverride, type: Attrs.AgeRatingOverride.self)
-              )
-            )
-          )
-        )
-        
-        _ = try await client.send(updateRequest)
-        print()
-        print(green("Updated") + " age rating declaration for version \(versionString).")
-        return
-      }
-      
-      // View mode
-      print("App:     \(appName)")
-      print("Version: \(versionString)")
-      print()
-      print("Age Rating Declaration:")
-      
-      func intensityLabel(_ raw: String?) -> String {
-        switch raw {
-          case "NONE": return "None"
-          case "INFREQUENT_OR_MILD": return "Infrequent or Mild"
-          case "FREQUENT_OR_INTENSE": return "Frequent or Intense"
-          case "INFREQUENT": return "Infrequent"
-          case "FREQUENT": return "Frequent"
-          default: return raw ?? "—"
-        }
-      }
-      
-      func boolLabel(_ value: Bool?) -> String {
-        guard let v = value else { return "—" }
-        return v ? "Yes" : "No"
-      }
-      
-      // Intensity-based ratings
-      let intensityRows: [(String, String)] = [
-        ("Alcohol, Tobacco, or Drug Use", intensityLabel(attrs?.alcoholTobaccoOrDrugUseOrReferences?.rawValue)),
-        ("Contests", intensityLabel(attrs?.contests?.rawValue)),
-        ("Gambling (simulated)", intensityLabel(attrs?.gamblingSimulated?.rawValue)),
-        ("Guns or Other Weapons", intensityLabel(attrs?.gunsOrOtherWeapons?.rawValue)),
-        ("Horror or Fear Themes", intensityLabel(attrs?.horrorOrFearThemes?.rawValue)),
-        ("Mature or Suggestive Themes", intensityLabel(attrs?.matureOrSuggestiveThemes?.rawValue)),
-        ("Profanity or Crude Humor", intensityLabel(attrs?.profanityOrCrudeHumor?.rawValue)),
-        ("Sexual Content or Nudity", intensityLabel(attrs?.sexualContentOrNudity?.rawValue)),
-        ("Sexual Content (graphic)", intensityLabel(attrs?.sexualContentGraphicAndNudity?.rawValue)),
-        ("Violence (cartoon/fantasy)", intensityLabel(attrs?.violenceCartoonOrFantasy?.rawValue)),
-        ("Violence (realistic)", intensityLabel(attrs?.violenceRealistic?.rawValue)),
-        ("Violence (graphic/sadistic)", intensityLabel(attrs?.violenceRealisticProlongedGraphicOrSadistic?.rawValue)),
-        ("Medical Information", intensityLabel(attrs?.medicalOrTreatmentInformation?.rawValue)),
-      ]
-      
-      // Boolean ratings
-      let boolRows: [(String, String)] = [
-        ("Advertising", boolLabel(attrs?.isAdvertising)),
-        ("Gambling", boolLabel(attrs?.isGambling)),
-        ("Unrestricted Web Access", boolLabel(attrs?.isUnrestrictedWebAccess)),
-        ("User-Generated Content", boolLabel(attrs?.isUserGeneratedContent)),
-        ("Messaging and Chat", boolLabel(attrs?.isMessagingAndChat)),
-        ("Loot Box", boolLabel(attrs?.isLootBox)),
-        ("Health/Wellness Topics", boolLabel(attrs?.isHealthOrWellnessTopics)),
-        ("Parental Controls", boolLabel(attrs?.isParentalControls)),
-        ("Age Assurance", boolLabel(attrs?.isAgeAssurance)),
-      ]
-      
-      // Other
-      let kidsAgeBand = attrs?.kidsAgeBand?.rawValue
-        .replacingOccurrences(of: "_", with: " ")
-        .capitalized ?? "—"
-      let ageOverride = attrs?.ageRatingOverride?.rawValue
-        .replacingOccurrences(of: "_", with: " ")
-        .capitalized ?? "—"
-      
-      let maxLabel = max(
-        intensityRows.max(by: { $0.0.count < $1.0.count })?.0.count ?? 0,
-        boolRows.max(by: { $0.0.count < $1.0.count })?.0.count ?? 0,
-        "Kids Age Band".count,
-        "Age Rating Override".count
-      )
-      
-      for (label, value) in intensityRows {
-        print("  \(label.padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(value)")
-      }
-      for (label, value) in boolRows {
-        print("  \(label.padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(value)")
-      }
-      print("  \("Kids Age Band".padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(kidsAgeBand)")
-      print("  \("Age Rating Override".padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(ageOverride)")
-    }
-  }
-  
   struct RoutingCoverage: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "routing-coverage",
@@ -2037,7 +1825,7 @@ struct AppsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "app-info",
       abstract: "View and manage app info, categories, and localizations.",
-      subcommands: [View.self, Update.self, Import.self, Export.self]
+      subcommands: [View.self, Update.self, Import.self, Export.self, AgeRating.self]
     )
     
     static func findActiveAppInfo(appID: String, client: AppStoreConnectClient) async throws -> AppInfo {
@@ -2512,6 +2300,218 @@ struct AppsCommand: AsyncParsableCommand {
         try data.write(to: URL(fileURLWithPath: outputPath))
         
         print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+      }
+    }
+
+    struct AgeRating: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        commandName: "age-rating",
+        abstract: "View or update age rating declaration for an App Store version."
+      )
+    
+      @Argument(help: "The bundle identifier of the app.")
+      var bundleID: String
+    
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      var version: String?
+    
+      @Option(name: .long, help: "Path to a JSON file with age rating fields to update.")
+      var file: String?
+    
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+    
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+      
+        let versionString = appVersion.attributes?.versionString ?? "unknown"
+        let appName = app.attributes?.name ?? bundleID
+      
+        let response = try await client.send(
+          Resources.v1.appStoreVersions.id(appVersion.id).ageRatingDeclaration.get()
+        )
+        let declaration = response.data
+        let attrs = declaration.attributes
+      
+        if let filePath = file {
+          // Update mode
+          let expandedPath = expandPath(filePath)
+          guard FileManager.default.fileExists(atPath: expandedPath) else {
+            throw ValidationError("File not found at '\(expandedPath)'.")
+          }
+        
+          let data = try Data(contentsOf: URL(fileURLWithPath: expandedPath))
+          let fields: AgeRatingFields
+          do {
+            fields = try JSONDecoder().decode(AgeRatingFields.self, from: data)
+          } catch let error as DecodingError {
+            throw ValidationError("Invalid JSON: \(describeDecodingError(error))")
+          }
+        
+          print("App:     \(appName)")
+          print("Version: \(versionString)")
+          print()
+          print("Age rating updates:")
+          var changeCount = 0
+          if let v = fields.alcoholTobaccoOrDrugUseOrReferences { print("  Alcohol, Tobacco, or Drug Use: \(v)"); changeCount += 1 }
+          if let v = fields.contests { print("  Contests: \(v)"); changeCount += 1 }
+          if let v = fields.gamblingSimulated { print("  Gambling (simulated): \(v)"); changeCount += 1 }
+          if let v = fields.gunsOrOtherWeapons { print("  Guns or Other Weapons: \(v)"); changeCount += 1 }
+          if let v = fields.horrorOrFearThemes { print("  Horror or Fear Themes: \(v)"); changeCount += 1 }
+          if let v = fields.matureOrSuggestiveThemes { print("  Mature or Suggestive Themes: \(v)"); changeCount += 1 }
+          if let v = fields.profanityOrCrudeHumor { print("  Profanity or Crude Humor: \(v)"); changeCount += 1 }
+          if let v = fields.sexualContentOrNudity { print("  Sexual Content or Nudity: \(v)"); changeCount += 1 }
+          if let v = fields.sexualContentGraphicAndNudity { print("  Sexual Content (graphic): \(v)"); changeCount += 1 }
+          if let v = fields.violenceCartoonOrFantasy { print("  Violence (cartoon/fantasy): \(v)"); changeCount += 1 }
+          if let v = fields.violenceRealistic { print("  Violence (realistic): \(v)"); changeCount += 1 }
+          if let v = fields.violenceRealisticProlongedGraphicOrSadistic { print("  Violence (graphic/sadistic): \(v)"); changeCount += 1 }
+          if let v = fields.medicalOrTreatmentInformation { print("  Medical Information: \(v)"); changeCount += 1 }
+          if let v = fields.isAdvertising { print("  Advertising: \(v)"); changeCount += 1 }
+          if let v = fields.isGambling { print("  Gambling: \(v)"); changeCount += 1 }
+          if let v = fields.isUnrestrictedWebAccess { print("  Unrestricted Web Access: \(v)"); changeCount += 1 }
+          if let v = fields.isUserGeneratedContent { print("  User-Generated Content: \(v)"); changeCount += 1 }
+          if let v = fields.isMessagingAndChat { print("  Messaging and Chat: \(v)"); changeCount += 1 }
+          if let v = fields.isLootBox { print("  Loot Box: \(v)"); changeCount += 1 }
+          if let v = fields.isHealthOrWellnessTopics { print("  Health/Wellness Topics: \(v)"); changeCount += 1 }
+          if let v = fields.isParentalControls { print("  Parental Controls: \(v)"); changeCount += 1 }
+          if let v = fields.isAgeAssurance { print("  Age Assurance: \(v)"); changeCount += 1 }
+          if let v = fields.kidsAgeBand { print("  Kids Age Band: \(v)"); changeCount += 1 }
+          if let v = fields.ageRatingOverride { print("  Age Rating Override: \(v)"); changeCount += 1 }
+        
+          if changeCount == 0 {
+            throw ValidationError("JSON file contains no age rating fields.")
+          }
+        
+          print()
+          guard confirm("Update \(changeCount) age rating field\(changeCount == 1 ? "" : "s")? [y/N] ") else {
+            print(yellow("Cancelled."))
+            return
+          }
+        
+          func parseIntensity<T: RawRepresentable>(_ value: String?, type: T.Type) -> T? where T.RawValue == String {
+            guard let v = value else { return nil }
+            return T(rawValue: v)
+          }
+        
+          typealias Attrs = AgeRatingDeclarationUpdateRequest.Data.Attributes
+          let updateRequest = Resources.v1.ageRatingDeclarations.id(declaration.id).patch(
+            AgeRatingDeclarationUpdateRequest(
+              data: .init(
+                id: declaration.id,
+                attributes: .init(
+                  isAdvertising: fields.isAdvertising,
+                  alcoholTobaccoOrDrugUseOrReferences: parseIntensity(fields.alcoholTobaccoOrDrugUseOrReferences, type: Attrs.AlcoholTobaccoOrDrugUseOrReferences.self),
+                  contests: parseIntensity(fields.contests, type: Attrs.Contests.self),
+                  isGambling: fields.isGambling,
+                  gamblingSimulated: parseIntensity(fields.gamblingSimulated, type: Attrs.GamblingSimulated.self),
+                  gunsOrOtherWeapons: parseIntensity(fields.gunsOrOtherWeapons, type: Attrs.GunsOrOtherWeapons.self),
+                  isHealthOrWellnessTopics: fields.isHealthOrWellnessTopics,
+                  kidsAgeBand: parseIntensity(fields.kidsAgeBand, type: KidsAgeBand.self),
+                  isLootBox: fields.isLootBox,
+                  medicalOrTreatmentInformation: parseIntensity(fields.medicalOrTreatmentInformation, type: Attrs.MedicalOrTreatmentInformation.self),
+                  isMessagingAndChat: fields.isMessagingAndChat,
+                  isParentalControls: fields.isParentalControls,
+                  profanityOrCrudeHumor: parseIntensity(fields.profanityOrCrudeHumor, type: Attrs.ProfanityOrCrudeHumor.self),
+                  isAgeAssurance: fields.isAgeAssurance,
+                  sexualContentGraphicAndNudity: parseIntensity(fields.sexualContentGraphicAndNudity, type: Attrs.SexualContentGraphicAndNudity.self),
+                  sexualContentOrNudity: parseIntensity(fields.sexualContentOrNudity, type: Attrs.SexualContentOrNudity.self),
+                  horrorOrFearThemes: parseIntensity(fields.horrorOrFearThemes, type: Attrs.HorrorOrFearThemes.self),
+                  matureOrSuggestiveThemes: parseIntensity(fields.matureOrSuggestiveThemes, type: Attrs.MatureOrSuggestiveThemes.self),
+                  isUnrestrictedWebAccess: fields.isUnrestrictedWebAccess,
+                  isUserGeneratedContent: fields.isUserGeneratedContent,
+                  violenceCartoonOrFantasy: parseIntensity(fields.violenceCartoonOrFantasy, type: Attrs.ViolenceCartoonOrFantasy.self),
+                  violenceRealisticProlongedGraphicOrSadistic: parseIntensity(fields.violenceRealisticProlongedGraphicOrSadistic, type: Attrs.ViolenceRealisticProlongedGraphicOrSadistic.self),
+                  violenceRealistic: parseIntensity(fields.violenceRealistic, type: Attrs.ViolenceRealistic.self),
+                  ageRatingOverride: parseIntensity(fields.ageRatingOverride, type: Attrs.AgeRatingOverride.self)
+                )
+              )
+            )
+          )
+        
+          _ = try await client.send(updateRequest)
+          print()
+          print(green("Updated") + " age rating declaration for version \(versionString).")
+          return
+        }
+      
+        // View mode
+        print("App:     \(appName)")
+        print("Version: \(versionString)")
+        print()
+        print("Age Rating Declaration:")
+      
+        func intensityLabel(_ raw: String?) -> String {
+          switch raw {
+            case "NONE": return "None"
+            case "INFREQUENT_OR_MILD": return "Infrequent or Mild"
+            case "FREQUENT_OR_INTENSE": return "Frequent or Intense"
+            case "INFREQUENT": return "Infrequent"
+            case "FREQUENT": return "Frequent"
+            default: return raw ?? "—"
+          }
+        }
+      
+        func boolLabel(_ value: Bool?) -> String {
+          guard let v = value else { return "—" }
+          return v ? "Yes" : "No"
+        }
+      
+        // Intensity-based ratings
+        let intensityRows: [(String, String)] = [
+          ("Alcohol, Tobacco, or Drug Use", intensityLabel(attrs?.alcoholTobaccoOrDrugUseOrReferences?.rawValue)),
+          ("Contests", intensityLabel(attrs?.contests?.rawValue)),
+          ("Gambling (simulated)", intensityLabel(attrs?.gamblingSimulated?.rawValue)),
+          ("Guns or Other Weapons", intensityLabel(attrs?.gunsOrOtherWeapons?.rawValue)),
+          ("Horror or Fear Themes", intensityLabel(attrs?.horrorOrFearThemes?.rawValue)),
+          ("Mature or Suggestive Themes", intensityLabel(attrs?.matureOrSuggestiveThemes?.rawValue)),
+          ("Profanity or Crude Humor", intensityLabel(attrs?.profanityOrCrudeHumor?.rawValue)),
+          ("Sexual Content or Nudity", intensityLabel(attrs?.sexualContentOrNudity?.rawValue)),
+          ("Sexual Content (graphic)", intensityLabel(attrs?.sexualContentGraphicAndNudity?.rawValue)),
+          ("Violence (cartoon/fantasy)", intensityLabel(attrs?.violenceCartoonOrFantasy?.rawValue)),
+          ("Violence (realistic)", intensityLabel(attrs?.violenceRealistic?.rawValue)),
+          ("Violence (graphic/sadistic)", intensityLabel(attrs?.violenceRealisticProlongedGraphicOrSadistic?.rawValue)),
+          ("Medical Information", intensityLabel(attrs?.medicalOrTreatmentInformation?.rawValue)),
+        ]
+      
+        // Boolean ratings
+        let boolRows: [(String, String)] = [
+          ("Advertising", boolLabel(attrs?.isAdvertising)),
+          ("Gambling", boolLabel(attrs?.isGambling)),
+          ("Unrestricted Web Access", boolLabel(attrs?.isUnrestrictedWebAccess)),
+          ("User-Generated Content", boolLabel(attrs?.isUserGeneratedContent)),
+          ("Messaging and Chat", boolLabel(attrs?.isMessagingAndChat)),
+          ("Loot Box", boolLabel(attrs?.isLootBox)),
+          ("Health/Wellness Topics", boolLabel(attrs?.isHealthOrWellnessTopics)),
+          ("Parental Controls", boolLabel(attrs?.isParentalControls)),
+          ("Age Assurance", boolLabel(attrs?.isAgeAssurance)),
+        ]
+      
+        // Other
+        let kidsAgeBand = attrs?.kidsAgeBand?.rawValue
+          .replacingOccurrences(of: "_", with: " ")
+          .capitalized ?? "—"
+        let ageOverride = attrs?.ageRatingOverride?.rawValue
+          .replacingOccurrences(of: "_", with: " ")
+          .capitalized ?? "—"
+      
+        let maxLabel = max(
+          intensityRows.max(by: { $0.0.count < $1.0.count })?.0.count ?? 0,
+          boolRows.max(by: { $0.0.count < $1.0.count })?.0.count ?? 0,
+          "Kids Age Band".count,
+          "Age Rating Override".count
+        )
+      
+        for (label, value) in intensityRows {
+          print("  \(label.padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(value)")
+        }
+        for (label, value) in boolRows {
+          print("  \(label.padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(value)")
+        }
+        print("  \("Kids Age Band".padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(kidsAgeBand)")
+        print("  \("Age Rating Override".padding(toLength: maxLabel, withPad: " ", startingAt: 0))  \(ageOverride)")
       }
     }
   }

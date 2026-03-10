@@ -2,7 +2,7 @@
 
 A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).
 
-> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and read-only views of in-app purchases and subscriptions. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
+> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and full management of in-app purchases and subscriptions. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
 
 ## Requirements
 
@@ -202,11 +202,11 @@ asc-client apps phased-release <bundle-id> --disable
 
 ```bash
 # View age rating declaration for the latest version
-asc-client apps age-rating <bundle-id>
-asc-client apps age-rating <bundle-id> --version 2.1.0
+asc-client apps app-info age-rating <bundle-id>
+asc-client apps app-info age-rating <bundle-id> --version 2.1.0
 
 # Update age ratings from a JSON file
-asc-client apps age-rating <bundle-id> --file age-rating.json
+asc-client apps app-info age-rating <bundle-id> --file age-rating.json
 ```
 
 The JSON file uses the same field names as the API. Only fields present in the file are updated:
@@ -610,18 +610,24 @@ The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the cur
 ### In-App Purchases
 
 ```bash
-# List all in-app purchases
+# List and inspect
 asc-client iap list <bundle-id>
-
-# Filter by type or state
-asc-client iap list <bundle-id> --type consumable
-asc-client iap list <bundle-id> --state approved
-
-# Show details and localizations for a specific IAP
+asc-client iap list <bundle-id> --type consumable --state approved
 asc-client iap info <bundle-id> <product-id>
-
-# List promoted purchases (IAPs and subscriptions)
 asc-client iap promoted <bundle-id>
+
+# Create, update, and delete
+asc-client iap create <bundle-id> --name "100 Coins" --product-id <product-id> --type CONSUMABLE
+asc-client iap update <bundle-id> <product-id> --name "100 Gold Coins"
+asc-client iap delete <bundle-id> <product-id>
+
+# Submit for review
+asc-client iap submit <bundle-id> <product-id>
+
+# Manage localizations
+asc-client iap localizations view <bundle-id> <product-id>
+asc-client iap localizations export <bundle-id> <product-id>
+asc-client iap localizations import <bundle-id> <product-id> --file iap-de.json
 ```
 
 Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. States: `APPROVED`, `MISSING_METADATA`, `READY_TO_SUBMIT`, `WAITING_FOR_REVIEW`, `IN_REVIEW`, etc.
@@ -629,15 +635,38 @@ Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_
 ### Subscriptions
 
 ```bash
-# List subscription groups with their subscriptions
+# List and inspect
 asc-client sub groups <bundle-id>
-
-# Flat list of all subscriptions across groups
 asc-client sub list <bundle-id>
-
-# Show details and localizations for a specific subscription
 asc-client sub info <bundle-id> <product-id>
+
+# Create, update, and delete subscriptions
+asc-client sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH --group-id <group-id>
+asc-client sub update <bundle-id> <product-id> --name "Monthly Plan"
+asc-client sub delete <bundle-id> <product-id>
+
+# Manage subscription groups
+asc-client sub create-group <bundle-id> --name "Premium"
+asc-client sub update-group <bundle-id> --name "Premium Plus"
+asc-client sub delete-group <bundle-id>
+
+# Submit for review
+asc-client sub submit <bundle-id> <product-id>
+
+# Subscription localizations
+asc-client sub localizations view <bundle-id> <product-id>
+asc-client sub localizations export <bundle-id> <product-id>
+asc-client sub localizations import <bundle-id> <product-id> --file sub-de.json
+
+# Subscription group localizations
+asc-client sub group-localizations view <bundle-id>
+asc-client sub group-localizations export <bundle-id>
+asc-client sub group-localizations import <bundle-id> --file group-de.json
 ```
+
+When submitting an app version for review, `apps review submit` automatically detects IAPs and subscriptions that may have pending changes and offers to submit them alongside the app version.
+
+The localization import commands create missing locales automatically with confirmation, so you can add new languages without visiting App Store Connect.
 
 ### Rate Limit
 

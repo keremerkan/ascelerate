@@ -284,12 +284,9 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
 /// Otherwise shows a one-time warning. No-op if completions were never installed.
 /// Returns true if the user was prompted (interactive mode only).
 @discardableResult
-func checkCompletionsVersion(interactive: Bool = false) -> Bool {
-  struct Once { nonisolated(unsafe) static var checked = false }
-  guard !Once.checked else { return false }
-  Once.checked = true
-
-  guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return false }
+/// Returns a version detail string like " (v0.5.0 → v0.6.1)" if completions are outdated, nil if current.
+func completionsVersionDetail() -> String? {
+  guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return nil }
   let home = FileManager.default.homeDirectoryForCurrentUser
 
   let completionPath: String
@@ -298,51 +295,108 @@ func checkCompletionsVersion(interactive: Bool = false) -> Bool {
   } else if shell.hasSuffix("/bash") {
     completionPath = home.appendingPathComponent(".bash_completions/asc-client.bash").path
   } else {
-    return false
+    return nil
   }
 
   guard FileManager.default.fileExists(atPath: completionPath),
     let data = FileManager.default.contents(atPath: completionPath),
     let contents = String(data: data, encoding: .utf8)
-  else { return false }
+  else { return nil }
 
   let currentVersion = ASCClient.appVersion
   let prefix = "# asc-client v"
 
   // Version stamp may be on line 1 (bash) or line 2 (zsh, after #compdef)
-  var isOutdated = false
-  var detail = ""
   if let range = contents.range(of: prefix),
     contents[contents.startIndex..<range.lowerBound].filter({ $0 == "\n" }).count <= 1
   {
     let afterPrefix = contents[range.upperBound...]
     let stampedVersion = String(afterPrefix.prefix(while: { $0 != "\n" }))
-    if stampedVersion == currentVersion { return false }
-    isOutdated = true
-    detail = " (v\(stampedVersion) → v\(currentVersion))"
-  } else {
-    isOutdated = true
+    if stampedVersion == currentVersion { return nil }
+    return " (v\(stampedVersion) → v\(currentVersion))"
   }
+  return ""  // installed but no stamp — outdated
+}
 
-  guard isOutdated else { return false }
+/// Returns a version detail string like " (v0.5.0 → v0.6.1)" if skill is outdated, nil if current or not installed.
+func skillVersionDetail() -> String? {
+  let path = InstallSkillCommand.skillPath
+  guard FileManager.default.fileExists(atPath: path),
+        let data = FileManager.default.contents(atPath: path),
+        let contents = String(data: data, encoding: .utf8)
+  else { return nil }
 
-  if interactive {
-    print("Shell completions are outdated\(detail). Update now? [Y/n] ", terminator: "")
-    fflush(stdout)
-    let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
-    if answer.isEmpty || answer == "y" || answer == "yes" {
-      do {
-        let command = try InstallCompletionsCommand.parseAsRoot([]) as! InstallCompletionsCommand
-        try command.run()
-      } catch {
-        print("Failed to update completions: \(error)")
-      }
+  let prefix = "<!-- asc-client v"
+  guard let range = contents.range(of: prefix) else { return nil }
+  let afterPrefix = contents[range.upperBound...]
+  guard let endRange = afterPrefix.range(of: " -->") else { return nil }
+  let stampedVersion = String(afterPrefix[..<endRange.lowerBound])
+
+  let currentVersion = ASCClient.appVersion
+  if stampedVersion == currentVersion { return nil }
+  return " (v\(stampedVersion) → v\(currentVersion))"
+}
+
+/// Check for outdated completions and skill, print NOTE for non-interactive contexts.
+func checkForUpdates() {
+  struct Once { nonisolated(unsafe) static var checked = false }
+  guard !Once.checked else { return }
+  Once.checked = true
+
+  var notes: [String] = []
+  if let detail = completionsVersionDetail() {
+    notes.append("Shell completions are outdated\(detail). Run 'asc-client install-completions' to update.")
+  }
+  if let detail = skillVersionDetail() {
+    notes.append("Claude Code skill is outdated\(detail). Run 'asc-client install-skill' to update.")
+  }
+  if !notes.isEmpty {
+    print("NOTE: " + notes.joined(separator: "\n      ") + "\n")
+  }
+}
+
+/// Check for outdated completions and skill, interactively offer to update.
+func checkForUpdatesInteractively() async -> Bool {
+  struct Once { nonisolated(unsafe) static var checked = false }
+  guard !Once.checked else { return false }
+  Once.checked = true
+
+  let completions = completionsVersionDetail()
+  let skill = skillVersionDetail()
+
+  guard completions != nil || skill != nil else { return false }
+
+  // Build prompt
+  var items: [String] = []
+  if let detail = completions { items.append("shell completions\(detail)") }
+  if let detail = skill { items.append("Claude Code skill\(detail)") }
+
+  let label = items.joined(separator: " and ")
+  print("\(label.prefix(1).uppercased())\(label.dropFirst()) \(items.count == 1 ? "is" : "are") outdated. Update now? [Y/n] ", terminator: "")
+  fflush(stdout)
+
+  let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+  guard answer.isEmpty || answer == "y" || answer == "yes" else { return true }
+
+  if completions != nil {
+    do {
+      let command = try InstallCompletionsCommand.parseAsRoot([]) as! InstallCompletionsCommand
+      try command.run()
+    } catch {
+      print("Failed to update completions: \(error)")
     }
-    return true
-  } else {
-    print("\nNOTE: Shell completions are outdated\(detail). Run 'asc-client install-completions' to update.\n")
-    return false
   }
+
+  if skill != nil {
+    do {
+      let command = try InstallSkillCommand.parseAsRoot([]) as! InstallSkillCommand
+      try await command.run()
+    } catch {
+      print("Failed to update skill: \(error)")
+    }
+  }
+
+  return true
 }
 
 /// Prints a numbered list and reads a single selection.

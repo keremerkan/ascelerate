@@ -56,26 +56,3 @@ struct InstallSkillCommand: AsyncParsableCommand {
     return home.appendingPathComponent(".claude/skills/asc-client/SKILL.md").path
   }()
 }
-
-func checkSkillVersion() {
-  struct Once { nonisolated(unsafe) static var checked = false }
-  guard !Once.checked else { return }
-  Once.checked = true
-
-  let path = InstallSkillCommand.skillPath
-  guard FileManager.default.fileExists(atPath: path),
-        let data = FileManager.default.contents(atPath: path),
-        let contents = String(data: data, encoding: .utf8)
-  else { return }
-
-  let prefix = "<!-- asc-client v"
-  guard let range = contents.range(of: prefix) else { return }
-  let afterPrefix = contents[range.upperBound...]
-  guard let endRange = afterPrefix.range(of: " -->") else { return }
-  let stampedVersion = String(afterPrefix[..<endRange.lowerBound])
-
-  let currentVersion = ASCClient.appVersion
-  guard stampedVersion != currentVersion else { return }
-
-  print("NOTE: Claude Code skill is outdated (v\(stampedVersion) → v\(currentVersion)). Run 'asc-client install-skill' to update.\n")
-}

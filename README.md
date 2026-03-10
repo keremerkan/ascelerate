@@ -60,6 +60,26 @@ asc-client install-completions
 
 This detects your shell and configures everything automatically. Restart your shell or open a new tab to activate.
 
+### AI coding skill
+
+asc-client ships with a skill file that gives AI coding agents (Claude Code, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
+
+**Via the binary** (Claude Code only):
+
+```bash
+asc-client install-skill
+```
+
+The tool checks for outdated skills on each run and prompts you to update after upgrades.
+
+**Via npx** (any AI coding agent):
+
+```bash
+npx asc-client-skill
+```
+
+This presents an interactive menu to select your agent and installs the skill to the appropriate directory. The skill file is fetched from GitHub, so it's always up to date. Use `npx asc-client-skill --uninstall` to remove it.
+
 ## Setup
 
 ### 1. Create an API Key

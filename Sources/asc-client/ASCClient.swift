@@ -4,7 +4,7 @@ import Foundation
 
 @main
 struct ASCClient: AsyncParsableCommand {
-  static let appVersion = "0.6.0"
+  static let appVersion = "0.6.1"
 
   static let configuration = CommandConfiguration(
     commandName: "asc-client",
@@ -14,7 +14,7 @@ struct ASCClient: AsyncParsableCommand {
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
       CommandGroup(name: "Provisioning", subcommands: [BundleIDsCommand.self, CertsCommand.self, DevicesCommand.self, ProfilesCommand.self]),
       CommandGroup(name: "Utilities", subcommands: [AliasCommand.self, RunWorkflowCommand.self, RateLimitCommand.self, VersionCommand.self]),
-      CommandGroup(name: "Setup", subcommands: [ConfigureCommand.self, InstallCompletionsCommand.self]),
+      CommandGroup(name: "Setup", subcommands: [ConfigureCommand.self, InstallCompletionsCommand.self, InstallSkillCommand.self]),
     ]
   )
 

@@ -4,7 +4,7 @@ import Foundation
 
 @main
 struct ASCClient: AsyncParsableCommand {
-  static let appVersion = "0.5.5"
+  static let appVersion = "0.6.0"
 
   static let configuration = CommandConfiguration(
     commandName: "asc-client",

@@ -1754,6 +1754,92 @@ struct AppsCommand: AsyncParsableCommand {
           print("Added version \(versionString) to submission")
         }
         
+        // Offer to submit IAPs/subscriptions alongside the app version
+        let submittableIAPStates: Set<InAppPurchaseState> = [.readyToSubmit, .approved]
+        let submittableSubStates: Set<Subscription.Attributes.State> = [.readyToSubmit, .approved]
+
+        var fetchedIAPs: [InAppPurchaseV2] = []
+        let iapRequest = Resources.v1.apps.id(app.id).inAppPurchasesV2.get(limit: 200)
+        for try await page in client.pages(iapRequest) {
+          fetchedIAPs.append(contentsOf: page.data)
+        }
+
+        var fetchedSubs: [Subscription] = []
+        let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
+        for group in groups {
+          fetchedSubs.append(contentsOf: group.subscriptions)
+        }
+
+        let submittableIAPs = fetchedIAPs.filter {
+          $0.attributes?.state.flatMap { submittableIAPStates.contains($0) } ?? false
+        }
+        let skippedIAPs = fetchedIAPs.filter {
+          !($0.attributes?.state.flatMap { submittableIAPStates.contains($0) } ?? false)
+        }
+        let submittableSubs = fetchedSubs.filter {
+          $0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
+        }
+        let skippedSubs = fetchedSubs.filter {
+          !($0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false)
+        }
+
+        if !skippedIAPs.isEmpty || !skippedSubs.isEmpty {
+          print()
+          print("Skipping items not eligible for submission:")
+          for iap in skippedIAPs {
+            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
+          }
+          for sub in skippedSubs {
+            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
+          }
+        }
+
+        if !submittableIAPs.isEmpty || !submittableSubs.isEmpty {
+          print()
+          print(yellow("In-app purchases/subscriptions to submit:"))
+          for iap in submittableIAPs {
+            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
+          }
+          for sub in submittableSubs {
+            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
+          }
+          print()
+          print("Items with pending changes will be submitted for review.")
+          print("Items with no changes will be unaffected.")
+          print()
+
+          if confirm("Submit IAPs/subscriptions with the app version? [y/N] ") {
+            for iap in submittableIAPs {
+              _ = try await client.send(
+                Resources.v1.inAppPurchaseSubmissions.post(
+                  InAppPurchaseSubmissionCreateRequest(
+                    data: .init(
+                      relationships: .init(
+                        inAppPurchaseV2: .init(data: .init(id: iap.id))
+                      )
+                    )
+                  )
+                )
+              )
+              print("  \(green("Submitted")) IAP '\(iap.attributes?.name ?? "—")'")
+            }
+            for sub in submittableSubs {
+              _ = try await client.send(
+                Resources.v1.subscriptionSubmissions.post(
+                  SubscriptionSubmissionCreateRequest(
+                    data: .init(
+                      relationships: .init(
+                        subscription: .init(data: .init(id: sub.id))
+                      )
+                    )
+                  )
+                )
+              )
+              print("  \(green("Submitted")) subscription '\(sub.attributes?.name ?? "—")'")
+            }
+          }
+        }
+
         // Step 3: Submit for review
         let submitRequest = Resources.v1.reviewSubmissions.id(submissionID).patch(
           ReviewSubmissionUpdateRequest(

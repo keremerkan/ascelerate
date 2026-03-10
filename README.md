@@ -280,12 +280,20 @@ asc-client apps media download <bundle-id> --folder my-media/ --version 2.1.0
 # Upload screenshots and preview videos from a folder
 asc-client apps media upload <bundle-id> --folder media/
 
+# Upload from a zip file (e.g. exported from asc-screenshots)
+asc-client apps media upload <bundle-id> --folder screenshots.zip
+
 # Upload to a specific version
 asc-client apps media upload <bundle-id> --folder media/ --version 2.1.0
 
 # Replace existing media in matching sets before uploading
 asc-client apps media upload <bundle-id> --folder media/ --replace
+
+# Interactive mode: pick a folder or zip from the current directory
+asc-client apps media upload <bundle-id>
 ```
+
+When `--folder` is omitted, the command lists all subdirectories and `.zip` files in the current directory as a numbered picker. Zip files are extracted automatically before upload.
 
 Organize your media folder with locale and display type subfolders:
 
@@ -361,6 +369,22 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
 >
 > `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
+
+#### Using with asc-screenshots
+
+[asc-screenshots](https://github.com/keremerkan/asc-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style screenshot layouts with device bezels and exports them as a zip file in the exact folder structure asc-client expects:
+
+```
+en-US/APP_IPHONE_67/01_hero.png
+en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
+de-DE/APP_IPHONE_67/01_hero.png
+```
+
+Upload the exported zip directly:
+
+```bash
+asc-client apps media upload <bundle-id> --folder screenshots.zip --replace
+```
 
 #### Verify and retry stuck media
 

@@ -291,21 +291,7 @@ extension AppsCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        // Get folder path
-        let folderPath: String
-        if let f = folder {
-          folderPath = f
-        } else {
-          print("Path to media folder: ", terminator: "")
-          guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-            !line.isEmpty
-          else {
-            throw ValidationError("No folder path provided.")
-          }
-          folderPath = line
-        }
-
-        // Scan folder
+        let folderPath = try resolveFolder(folder, prompt: "Select media folder")
         let plan = try scanMediaFolder(at: folderPath)
 
         if plan.locales.isEmpty {

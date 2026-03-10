@@ -19,6 +19,113 @@ nonisolated(unsafe) var autoConfirm = false
 /// (e.g. `await-processing`, `attach-latest-build`) can wait for this specific build.
 nonisolated(unsafe) var lastUploadedBuildVersion: String?
 
+/// Resolves a folder path from an optional argument. If nil, lists subdirectories and zip
+/// files in the current directory and lets the user pick one or type a path manually.
+/// Zip files are extracted to a temporary directory automatically.
+func resolveFolder(_ folder: String?, prompt: String) throws -> String {
+  if let f = folder {
+    let path = expandPath(f)
+    if path.hasSuffix(".zip") {
+      guard FileManager.default.fileExists(atPath: path) else {
+        throw ValidationError("File not found at '\(path)'.")
+      }
+      return try extractZipToTemp(path)
+    }
+    var isDir: ObjCBool = false
+    guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
+      throw ValidationError("Folder not found at '\(path)'.")
+    }
+    return path
+  }
+
+  // List subdirectories and zip files in the current directory
+  let cwd = FileManager.default.currentDirectoryPath
+  let entries = (try? FileManager.default.contentsOfDirectory(atPath: cwd))?
+    .filter { !$0.hasPrefix(".") }
+    .sorted() ?? []
+
+  var candidates: [(name: String, isZip: Bool)] = []
+  for entry in entries {
+    let path = (cwd as NSString).appendingPathComponent(entry)
+    if entry.hasSuffix(".zip") {
+      candidates.append((entry, true))
+    } else {
+      var isDir: ObjCBool = false
+      if FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
+        candidates.append((entry, false))
+      }
+    }
+  }
+
+  if !candidates.isEmpty {
+    print("\(prompt):")
+    for (i, c) in candidates.enumerated() {
+      let suffix = c.isZip ? " (zip)" : ""
+      print("  [\(i + 1)] \(c.name)\(suffix)")
+    }
+    let manualOption = candidates.count + 1
+    print("  [\(manualOption)] Enter path manually")
+    print()
+    print("Select (1-\(manualOption)): ", terminator: "")
+
+    guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+          let choice = Int(input),
+          choice >= 1, choice <= manualOption else {
+      throw ValidationError("Invalid selection.")
+    }
+
+    if choice <= candidates.count {
+      let selected = candidates[choice - 1]
+      let fullPath = (cwd as NSString).appendingPathComponent(selected.name)
+      return selected.isZip ? try extractZipToTemp(fullPath) : fullPath
+    }
+  }
+
+  // Manual path entry
+  let path = expandPath(promptText("Path to folder or zip: "))
+  if path.hasSuffix(".zip") {
+    guard FileManager.default.fileExists(atPath: path) else {
+      throw ValidationError("File not found at '\(path)'.")
+    }
+    return try extractZipToTemp(path)
+  }
+  var isDir: ObjCBool = false
+  guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
+    throw ValidationError("Folder not found at '\(path)'.")
+  }
+  return path
+}
+
+/// Extracts a zip file to a temporary directory and returns the path.
+/// If the zip contains a single root directory, returns that directory instead.
+func extractZipToTemp(_ zipPath: String) throws -> String {
+  let tempDir = NSTemporaryDirectory() + "asc-client-media-\(UUID().uuidString)"
+  try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
+
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+  process.arguments = ["-q", zipPath, "-d", tempDir]
+  try process.run()
+  process.waitUntilExit()
+
+  guard process.terminationStatus == 0 else {
+    throw ValidationError("Failed to extract zip file '\(zipPath)'.")
+  }
+
+  // If the zip has a single root directory, use that as the media folder
+  let contents = try FileManager.default.contentsOfDirectory(atPath: tempDir)
+    .filter { !$0.hasPrefix(".") && $0 != "__MACOSX" }
+  if contents.count == 1 {
+    let inner = (tempDir as NSString).appendingPathComponent(contents[0])
+    var isDir: ObjCBool = false
+    if FileManager.default.fileExists(atPath: inner, isDirectory: &isDir), isDir.boolValue {
+      return inner
+    }
+  }
+
+  return tempDir
+}
+
 /// Resolves a file path from an optional argument. If nil, lists files matching the given
 /// extension in the current directory and lets the user pick one or type a path manually.
 func resolveFile(_ file: String?, extension ext: String, prompt: String) throws -> String {
@@ -426,6 +533,20 @@ private func padToVisible(_ str: String, width: Int) -> String {
   let visible = visibleLength(str)
   if visible >= width { return str }
   return str + String(repeating: " ", count: width - visible)
+}
+
+// MARK: - Shared Locale Fields
+
+/// Shared JSON schema for IAP and subscription localizations (name + description).
+struct ProductLocaleFields: Codable {
+  var name: String?
+  var description: String?
+}
+
+/// JSON schema for subscription group localizations (name + customAppName).
+struct GroupLocaleFields: Codable {
+  var name: String?
+  var customAppName: String?
 }
 
 enum Table {

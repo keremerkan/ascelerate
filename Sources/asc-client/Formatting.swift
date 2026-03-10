@@ -372,7 +372,7 @@ func checkForUpdatesInteractively() async -> Bool {
   if let detail = skill { items.append("Claude Code skill\(detail)") }
 
   let label = items.joined(separator: " and ")
-  print("\(label.prefix(1).uppercased())\(label.dropFirst()) \(items.count == 1 ? "is" : "are") outdated. Update now? [Y/n] ", terminator: "")
+  print("\(label.prefix(1).uppercased())\(label.dropFirst()) outdated. Update now? [Y/n] ", terminator: "")
   fflush(stdout)
 
   let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""

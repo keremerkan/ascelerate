@@ -20,7 +20,8 @@ struct ASCClient: AsyncParsableCommand {
 
   func run() async throws {
     print("asc-client \(Self.appVersion)")
-    let prompted = checkCompletionsVersion(interactive: true)
+    var prompted = checkCompletionsVersion(interactive: true)
+    checkSkillVersion()
     if prompted { print() }
     print(Self.boldHelpHeaders(Self.helpMessage()))
   }

@@ -22,7 +22,7 @@ struct ASCClient: AsyncParsableCommand {
     print("asc-client \(Self.appVersion)")
     let prompted = checkCompletionsVersion(interactive: true)
     if prompted { print() }
-    print(Self.helpMessage())
+    print(Self.boldHelpHeaders(Self.helpMessage()))
   }
 
   static func main() async {
@@ -41,8 +41,14 @@ struct ASCClient: AsyncParsableCommand {
         try command.run()
       }
     } catch {
-      if let message = formatError(error) {
-        FileHandle.standardError.write(Data((message + "\n").utf8))
+      // Bold section headers in help output
+      let message = fullMessage(for: error)
+      if exitCode(for: error) == .success, !message.isEmpty {
+        print(boldHelpHeaders(message))
+        return
+      }
+      if let formatted = formatError(error) {
+        FileHandle.standardError.write(Data((formatted + "\n").utf8))
         exit(withError: ExitCode.failure)
       }
       exit(withError: error)
@@ -58,6 +64,15 @@ struct ASCClient: AsyncParsableCommand {
     func run() {
       print(ASCClient.appVersion)
     }
+  }
+
+  static func boldHelpHeaders(_ text: String) -> String {
+    guard isatty(STDOUT_FILENO) != 0 else { return text }
+    return text.replacingOccurrences(
+      of: #"(?m)^([A-Z][A-Z &]+(?:SUBCOMMANDS)?:)"#,
+      with: "\u{1B}[1m$1\u{1B}[0m",
+      options: .regularExpression
+    )
   }
 
   private static func formatError(_ error: Error) -> String? {

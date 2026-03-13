@@ -43,6 +43,10 @@ struct InstallCompletionsCommand: ParsableCommand {
     // Remove -V flag so zsh sorts completions alphabetically
     completionScript = completionScript.replacingOccurrences(
       of: "_describe -V ", with: "_describe ")
+    // Fix _files -g in subcommand functions: ArgumentParser sets extendedglob+nullglob
+    // which breaks _files -g (pattern:tag syntax conflicts with extendedglob modifiers).
+    // Replace _files -g with _asc_files wrapper that uses zstyle file-patterns instead.
+    completionScript = patchFileCompletions(completionScript)
     // Stamp version after the #compdef line (must remain first line for zsh to recognize)
     completionScript = completionScript.replacingOccurrences(
       of: "#compdef asc-client\n",
@@ -188,6 +192,58 @@ struct InstallCompletionsCommand: ParsableCommand {
       """
 
     return script.replacingOccurrences(of: broken, with: fixed)
+  }
+
+  /// Fixes `_files -g` in subcommand completion functions.
+  /// ArgumentParser's generated zsh completions set `extendedglob` + `nullglob` which breaks
+  /// `_files -g` pattern filtering (the internal `pattern:tag` format conflicts with extendedglob).
+  /// This adds a wrapper function that uses `zstyle file-patterns` instead of `-g`, which works
+  /// correctly regardless of shell options, and replaces all `_files -g` calls with the wrapper.
+  private func patchFileCompletions(_ script: String) -> String {
+    // Wrapper function: converts -g args to zstyle file-patterns before calling _files
+    let wrapper = """
+    _asc_files() {
+        local -a pats rest
+        while (( $# )); do
+            if [[ "$1" = -g ]]; then
+                shift
+                pats+=( "${1}:globbed-files" )
+                shift
+            else
+                rest+=( "$1" )
+                shift
+            fi
+        done
+        if (( ${#pats} )); then
+            pats+=( '*(-/):directories' )
+            zstyle ':completion:*' file-patterns "${pats[@]}"
+            _files "${rest[@]}"
+            zstyle -d ':completion:*' file-patterns
+        else
+            _files "${rest[@]}"
+        fi
+    }
+
+    """
+
+    // Insert wrapper after the #compdef line (and any version stamp)
+    var result = script
+    if let range = result.range(of: "#compdef asc-client\n") {
+      var insertPoint = range.upperBound
+      // Skip past version stamp line if present
+      if result[insertPoint...].hasPrefix("# asc-client v") {
+        if let eol = result[insertPoint...].firstIndex(of: "\n") {
+          insertPoint = result.index(after: eol)
+        }
+      }
+      result.insert(contentsOf: "\n\(wrapper)", at: insertPoint)
+    }
+
+    // Replace _files with _asc_files wherever -g is used
+    // Handle both single-extension and multi-extension (space-separated) patterns
+    result = result.replacingOccurrences(of: "_files -g ", with: "_asc_files -g ")
+
+    return result
   }
 
   private func ensureSourceLine(rcFile: URL, sourceLine: String, fm: FileManager) throws {

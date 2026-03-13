@@ -10,7 +10,8 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     abstract: "Run a sequence of asc-client commands from a workflow file."
   )
 
-  @Argument(help: "Path to the workflow file. If omitted, lists workflow files in the current directory.")
+  @Argument(help: "Path to the workflow file. If omitted, lists workflow files in the current directory.",
+            completion: .file(extensions: ["workflow", "txt"]))
   var file: String?
 
   @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")

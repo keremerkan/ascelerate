@@ -46,7 +46,8 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "Show info for an app."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     func run() async throws {
@@ -66,7 +67,8 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "List App Store versions."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     func run() async throws {
@@ -121,7 +123,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "List localizations for an App Store version."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -180,7 +183,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Update localization metadata for the latest App Store version."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "The locale to update (e.g. en-US). Defaults to the app's primary locale.")
@@ -267,11 +271,13 @@ struct AppsCommand: AsyncParsableCommand {
         commandName: "import",
         abstract: "Update localizations from a JSON file for the latest App Store version."
       )
-      
-      @Argument(help: "The bundle identifier of the app.")
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
-      
-      @Option(name: .long, help: "Path to the JSON file with localization data.")
+
+      @Option(name: .long, help: "Path to the JSON file with localization data.",
+              completion: .file(extensions: ["json"]))
       var file: String?
       
       @Flag(name: .long, help: "Show full API response for each locale update.")
@@ -456,13 +462,15 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Export localizations to a JSON file from an App Store version."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
       
-      @Option(name: .long, help: "Output file path (default: <bundle-id>-localizations.json).")
+      @Option(name: .long, help: "Output file path (default: <bundle-id>-localizations.json).",
+              completion: .file(extensions: ["json"]))
       var output: String?
       
       func run() async throws {
@@ -509,7 +517,8 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "Create a new App Store version."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Argument(help: "The version string (e.g. 2.1.0).")
@@ -602,7 +611,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Interactively select and attach a build to an App Store version."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -637,7 +647,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Attach the most recent build to an App Store version."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -752,7 +763,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Remove the attached build from an App Store version."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -810,7 +822,8 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "View or manage phased release for an App Store version."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -970,13 +983,15 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "View or upload routing app coverage (.geojson)."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
     var version: String?
     
-    @Option(name: .long, help: "Path to a .geojson file to upload.")
+    @Option(name: .long, help: "Path to a .geojson file to upload.",
+            completion: .file(extensions: ["geojson"]))
     var file: String?
     
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1105,7 +1120,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Run pre-submission checks for a version."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -1307,7 +1323,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Show review submission status."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Filter by version string (e.g. 14.3).")
@@ -1414,7 +1431,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Submit an App Store version for review."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -1683,7 +1701,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Mark rejected review items as resolved."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1784,7 +1803,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Cancel an active review submission."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1893,7 +1913,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "View app info, categories, and localizations."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String?
       
       @Flag(name: .long, help: "List available category IDs (iOS categories).")
@@ -2000,7 +2021,8 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Update app info localizations and/or categories."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "The locale to update (e.g. en-US). Defaults to the app's primary locale.")
@@ -2138,11 +2160,13 @@ struct AppsCommand: AsyncParsableCommand {
         commandName: "import",
         abstract: "Update app info localizations from a JSON file."
       )
-      
-      @Argument(help: "The bundle identifier of the app.")
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
-      
-      @Option(name: .long, help: "Path to the JSON file with localization data.")
+
+      @Option(name: .long, help: "Path to the JSON file with localization data.",
+              completion: .file(extensions: ["json"]))
       var file: String?
       
       @Flag(name: .long, help: "Show full API response for each locale update.")
@@ -2294,10 +2318,12 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "Export app info localizations to a JSON file."
       )
       
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
-      @Option(name: .long, help: "Output file path (default: <bundle-id>-app-infos.json).")
+      @Option(name: .long, help: "Output file path (default: <bundle-id>-app-infos.json).",
+              completion: .file(extensions: ["json"]))
       var output: String?
       
       func run() async throws {
@@ -2340,13 +2366,15 @@ struct AppsCommand: AsyncParsableCommand {
         abstract: "View or update age rating declaration for an App Store version."
       )
     
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
     
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
     
-      @Option(name: .long, help: "Path to a JSON file with age rating fields to update.")
+      @Option(name: .long, help: "Path to a JSON file with age rating fields to update.",
+              completion: .file(extensions: ["json"]))
       var file: String?
     
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -2553,7 +2581,8 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "View or update territory availability."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Option(name: .long, help: "Comma-separated territory codes to make available (e.g. CHN,RUS).")
@@ -2734,7 +2763,8 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "View or create encryption declarations."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Flag(name: .long, help: "Create a new encryption declaration.")
@@ -2850,10 +2880,12 @@ struct AppsCommand: AsyncParsableCommand {
       abstract: "View or manage custom EULA."
     )
     
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
-    @Option(name: .long, help: "Path to a text file with EULA content.")
+    @Option(name: .long, help: "Path to a text file with EULA content.",
+            completion: .file(extensions: ["txt"]))
     var file: String?
     
     @Flag(name: .long, help: "Remove the custom EULA.")

@@ -31,7 +31,8 @@ struct IAPCommand: AsyncParsableCommand {
       abstract: "List in-app purchases for an app."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Option(name: .long, help: "Filter by type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION).")
@@ -87,7 +88,8 @@ struct IAPCommand: AsyncParsableCommand {
       abstract: "Show details for an in-app purchase."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -149,7 +151,8 @@ struct IAPCommand: AsyncParsableCommand {
       abstract: "List promoted purchases for an app."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     func run() async throws {
@@ -222,7 +225,8 @@ struct IAPCommand: AsyncParsableCommand {
       abstract: "Create a new in-app purchase."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Option(name: .long, help: "IAP type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION).")
@@ -312,7 +316,8 @@ struct IAPCommand: AsyncParsableCommand {
       abstract: "Update an in-app purchase."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -386,7 +391,8 @@ struct IAPCommand: AsyncParsableCommand {
       abstract: "Delete an in-app purchase."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -419,7 +425,8 @@ struct IAPCommand: AsyncParsableCommand {
       abstract: "Submit an in-app purchase for review."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -484,7 +491,8 @@ struct IAPCommand: AsyncParsableCommand {
         abstract: "View localizations for an in-app purchase."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -524,13 +532,15 @@ struct IAPCommand: AsyncParsableCommand {
         abstract: "Export in-app purchase localizations to a JSON file."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
       var productID: String
 
-      @Option(name: .long, help: "Output file path.")
+      @Option(name: .long, help: "Output file path.",
+              completion: .file(extensions: ["json"]))
       var output: String?
 
       func run() async throws {
@@ -570,13 +580,15 @@ struct IAPCommand: AsyncParsableCommand {
         abstract: "Import in-app purchase localizations from a JSON file."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
       var productID: String
 
-      @Option(name: .long, help: "Path to JSON file.")
+      @Option(name: .long, help: "Path to JSON file.",
+              completion: .file(extensions: ["json"]))
       var file: String?
 
       @Flag(name: .long, help: "Show detailed API responses.")

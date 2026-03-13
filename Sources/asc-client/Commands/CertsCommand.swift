@@ -103,7 +103,8 @@ struct CertsCommand: AsyncParsableCommand {
       abstract: "Create a signing certificate."
     )
 
-    @Option(name: .long, help: "Path to a CSR file (PEM format). If omitted, a key pair and CSR are generated automatically.")
+    @Option(name: .long, help: "Path to a CSR file (PEM format). If omitted, a key pair and CSR are generated automatically.",
+            completion: .file(extensions: ["pem"]))
     var csr: String?
 
     @Option(name: .long, help: """

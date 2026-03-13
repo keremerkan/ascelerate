@@ -40,9 +40,9 @@ struct InstallCompletionsCommand: ParsableCommand {
 
     // 2. Write completion script (with patched help completions and alphabetical sorting)
     var completionScript = patchZshHelpCompletions(ASCClient.completionScript(for: .zsh))
-    // Remove -V flag so zsh sorts subcommands alphabetically (reliable across environments)
+    // Remove -V flag so zsh sorts completions alphabetically
     completionScript = completionScript.replacingOccurrences(
-      of: "_describe -V subcommand subcommands", with: "_describe subcommand subcommands")
+      of: "_describe -V ", with: "_describe ")
     // Stamp version after the #compdef line (must remain first line for zsh to recognize)
     completionScript = completionScript.replacingOccurrences(
       of: "#compdef asc-client\n",

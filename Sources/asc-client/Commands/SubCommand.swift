@@ -82,7 +82,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "List subscription groups with their subscriptions."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     func run() async throws {
@@ -129,7 +130,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "List all subscriptions across groups."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     func run() async throws {
@@ -170,7 +172,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Show details for a subscription."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the subscription.")
@@ -235,7 +238,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Create a new subscription group."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Option(name: .long, help: "Reference name for the group.")
@@ -281,7 +285,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Update a subscription group."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Option(name: .long, help: "New reference name.")
@@ -326,7 +331,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Delete a subscription group."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -356,7 +362,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Create a new subscription."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Option(name: .long, help: "Product identifier (e.g. com.example.monthly).")
@@ -464,7 +471,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Update a subscription."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the subscription.")
@@ -556,7 +564,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Delete a subscription."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the subscription.")
@@ -591,7 +600,8 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "Submit a subscription for review."
     )
 
-    @Argument(help: "The bundle identifier of the app.")
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Argument(help: "The product identifier of the subscription.")
@@ -659,7 +669,8 @@ struct SubCommand: AsyncParsableCommand {
         abstract: "View localizations for a subscription."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Argument(help: "The product identifier of the subscription.")
@@ -701,13 +712,15 @@ struct SubCommand: AsyncParsableCommand {
         abstract: "Export subscription localizations to a JSON file."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Argument(help: "The product identifier of the subscription.")
       var productID: String
 
-      @Option(name: .long, help: "Output file path.")
+      @Option(name: .long, help: "Output file path.",
+              completion: .file(extensions: ["json"]))
       var output: String?
 
       func run() async throws {
@@ -749,13 +762,15 @@ struct SubCommand: AsyncParsableCommand {
         abstract: "Import subscription localizations from a JSON file."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Argument(help: "The product identifier of the subscription.")
       var productID: String
 
-      @Option(name: .long, help: "Path to JSON file.")
+      @Option(name: .long, help: "Path to JSON file.",
+              completion: .file(extensions: ["json"]))
       var file: String?
 
       @Flag(name: .long, help: "Show detailed API responses.")
@@ -890,7 +905,8 @@ struct SubCommand: AsyncParsableCommand {
         abstract: "View localizations for a subscription group."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       func run() async throws {
@@ -927,10 +943,12 @@ struct SubCommand: AsyncParsableCommand {
         abstract: "Export subscription group localizations to a JSON file."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
-      @Option(name: .long, help: "Output file path.")
+      @Option(name: .long, help: "Output file path.",
+              completion: .file(extensions: ["json"]))
       var output: String?
 
       func run() async throws {
@@ -971,10 +989,12 @@ struct SubCommand: AsyncParsableCommand {
         abstract: "Import subscription group localizations from a JSON file."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
-      @Option(name: .long, help: "Path to JSON file.")
+      @Option(name: .long, help: "Path to JSON file.",
+              completion: .file(extensions: ["json"]))
       var file: String?
 
       @Flag(name: .long, help: "Show detailed API responses.")

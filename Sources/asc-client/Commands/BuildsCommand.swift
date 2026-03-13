@@ -15,7 +15,8 @@ struct BuildsCommand: AsyncParsableCommand {
       abstract: "List builds."
     )
 
-    @Option(name: .long, help: "Filter by bundle identifier.")
+    @Option(name: .long, help: "Filter by bundle identifier.",
+            completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String?
 
     @Option(name: .long, help: "Filter by app version (e.g. 14.3).")
@@ -82,7 +83,8 @@ struct BuildsCommand: AsyncParsableCommand {
       abstract: "Wait for a build to finish processing."
     )
 
-    @Argument(help: "The app's bundle identifier.")
+    @Argument(help: "The app's bundle identifier.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Option(name: .long, help: "Build version number to wait for (e.g. 903). If omitted, waits for the latest build.")
@@ -292,7 +294,8 @@ struct BuildsCommand: AsyncParsableCommand {
       abstract: "Upload a build to App Store Connect via xcrun altool."
     )
 
-    @Argument(help: "Path to the .ipa, .pkg, or .xcarchive file.")
+    @Argument(help: "Path to the .ipa, .pkg, or .xcarchive file.",
+              completion: .file(extensions: ["ipa", "pkg", "xcarchive"]))
     var file: String?
 
     @Flag(name: .long, help: "Use the latest .xcarchive from Xcode's archive location.")
@@ -376,7 +379,8 @@ struct BuildsCommand: AsyncParsableCommand {
       abstract: "Validate a build before uploading via xcrun altool."
     )
 
-    @Argument(help: "Path to the .ipa, .pkg, or .xcarchive file.")
+    @Argument(help: "Path to the .ipa, .pkg, or .xcarchive file.",
+              completion: .file(extensions: ["ipa", "pkg", "xcarchive"]))
     var file: String?
 
     @Flag(name: .long, help: "Use the latest .xcarchive from Xcode's archive location.")

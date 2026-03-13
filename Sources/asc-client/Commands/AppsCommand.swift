@@ -1552,8 +1552,8 @@ struct AppsCommand: AsyncParsableCommand {
           fetchedIAPs.append(contentsOf: page.data)
         }
 
-        var fetchedSubs: [Subscription] = []
         let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
+        var fetchedSubs: [Subscription] = []
         for group in groups {
           fetchedSubs.append(contentsOf: group.subscriptions)
         }
@@ -1569,6 +1569,12 @@ struct AppsCommand: AsyncParsableCommand {
         }
         let skippedSubs = fetchedSubs.filter {
           !($0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false)
+        }
+        // Groups that contain at least one submittable subscription
+        let submittableGroups = groups.filter { group in
+          group.subscriptions.contains { sub in
+            sub.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
+          }
         }
 
         if !skippedIAPs.isEmpty || !skippedSubs.isEmpty {
@@ -1588,8 +1594,14 @@ struct AppsCommand: AsyncParsableCommand {
           for iap in submittableIAPs {
             print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
           }
-          for sub in submittableSubs {
-            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
+          for group in submittableGroups {
+            let groupSubs = group.subscriptions.filter {
+              $0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
+            }
+            print("  Group: \(group.name)")
+            for sub in groupSubs {
+              print("    Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
+            }
           }
           print()
           print("Items with pending changes will be submitted for review.")
@@ -1611,19 +1623,38 @@ struct AppsCommand: AsyncParsableCommand {
               )
               print("  \(green("Submitted")) IAP '\(iap.attributes?.name ?? "—")'")
             }
-            for sub in submittableSubs {
+            for group in submittableGroups {
+              // Submit individual subscriptions
+              let groupSubs = group.subscriptions.filter {
+                $0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
+              }
+              for sub in groupSubs {
+                _ = try await client.send(
+                  Resources.v1.subscriptionSubmissions.post(
+                    SubscriptionSubmissionCreateRequest(
+                      data: .init(
+                        relationships: .init(
+                          subscription: .init(data: .init(id: sub.id))
+                        )
+                      )
+                    )
+                  )
+                )
+                print("  \(green("Submitted")) subscription '\(sub.attributes?.name ?? "—")'")
+              }
+              // Submit the group itself (group-level localizations)
               _ = try await client.send(
-                Resources.v1.subscriptionSubmissions.post(
-                  SubscriptionSubmissionCreateRequest(
+                Resources.v1.subscriptionGroupSubmissions.post(
+                  SubscriptionGroupSubmissionCreateRequest(
                     data: .init(
                       relationships: .init(
-                        subscription: .init(data: .init(id: sub.id))
+                        subscriptionGroup: .init(data: .init(id: group.id))
                       )
                     )
                   )
                 )
               )
-              print("  \(green("Submitted")) subscription '\(sub.attributes?.name ?? "—")'")
+              print("  \(green("Submitted")) subscription group '\(group.name)'")
             }
           }
         }

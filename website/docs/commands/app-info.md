@@ -1,0 +1,94 @@
+---
+sidebar_position: 5
+title: App Info & Categories
+---
+
+# App Info & Categories
+
+## View
+
+```bash
+# View app info, categories, and per-locale metadata
+asc apps app-info view <bundle-id>
+
+# List all available category IDs (no bundle ID needed)
+asc apps app-info view --list-categories
+```
+
+## Update
+
+```bash
+# Update localization fields for a single locale
+asc apps app-info update <bundle-id> --name "My App" --subtitle "Best app ever"
+asc apps app-info update <bundle-id> --locale de-DE --name "Meine App"
+
+# Update categories (can combine with localization flags)
+asc apps app-info update <bundle-id> --primary-category UTILITIES
+asc apps app-info update <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
+```
+
+## Export
+
+```bash
+asc apps app-info export <bundle-id>
+asc apps app-info export <bundle-id> --output app-infos.json
+```
+
+## Import
+
+```bash
+asc apps app-info import <bundle-id> --file app-infos.json
+```
+
+## JSON format
+
+```json
+{
+  "en-US": {
+    "name": "My App",
+    "subtitle": "Best app ever",
+    "privacyPolicyURL": "https://example.com/privacy",
+    "privacyChoicesURL": "https://example.com/choices"
+  }
+}
+```
+
+Only fields present get updated — omitted fields are left unchanged.
+
+:::note
+The `app-info update` and `app-info import` commands require the AppInfo to be in an editable state (`PREPARE_FOR_SUBMISSION` or `WAITING_FOR_REVIEW`).
+:::
+
+## Age rating
+
+```bash
+# View age rating declaration for the latest version
+asc apps app-info age-rating <bundle-id>
+asc apps app-info age-rating <bundle-id> --version 2.1.0
+
+# Update age ratings from a JSON file
+asc apps app-info age-rating <bundle-id> --file age-rating.json
+```
+
+The JSON file uses the same field names as the API. Only fields present in the file are updated:
+
+```json
+{
+  "isAdvertising": false,
+  "isUserGeneratedContent": true,
+  "violenceCartoonOrFantasy": "INFREQUENT_OR_MILD",
+  "alcoholTobaccoOrDrugUseOrReferences": "NONE"
+}
+```
+
+Intensity fields accept: `NONE`, `INFREQUENT_OR_MILD`, `FREQUENT_OR_INTENSE`. Boolean fields accept `true`/`false`.
+
+## Routing app coverage
+
+```bash
+# View current routing coverage status
+asc apps routing-coverage <bundle-id>
+
+# Upload a .geojson file
+asc apps routing-coverage <bundle-id> --file coverage.geojson
+```

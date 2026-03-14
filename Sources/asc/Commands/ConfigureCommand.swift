@@ -33,7 +33,7 @@ struct ConfigureCommand: ParsableCommand {
       try fm.createDirectory(at: Config.configDirectory, withIntermediateDirectories: true)
     }
 
-    // Copy the .p8 file into ~/.asc-client/
+    // Copy the .p8 file into ~/.asc/
     let keyFilename = URL(fileURLWithPath: expandedSource).lastPathComponent
     let destinationURL = Config.configDirectory.appendingPathComponent(keyFilename)
 

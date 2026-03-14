@@ -731,7 +731,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         } catch {
           let devicesArg = (needsDevices && !existingDeviceIDs.isEmpty) ? " --devices \(existingDeviceIDs.joined(separator: ","))" : ""
           print("  FAIL \(profileName) — recreate failed: \(error.localizedDescription)")
-          print("         Recovery: asc-client profiles create --name \"\(profileName)\" --type \(profileTypeRaw) --bundle-id \(bundleIDIdentifier) --certificates \(certIDs.joined(separator: ","))\(devicesArg)")
+          print("         Recovery: asc profiles create --name \"\(profileName)\" --type \(profileTypeRaw) --bundle-id \(bundleIDIdentifier) --certificates \(certIDs.joined(separator: ","))\(devicesArg)")
           failed += 1
         }
       }

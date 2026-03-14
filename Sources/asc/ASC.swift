@@ -3,12 +3,12 @@ import ArgumentParser
 import Foundation
 
 @main
-struct ASCClient: AsyncParsableCommand {
-  static let appVersion = "0.6.4"
+struct ASC: AsyncParsableCommand {
+  static let appVersion = "0.7.0"
 
   static let configuration = CommandConfiguration(
-    commandName: "asc-client",
-    abstract: "A command-line tool for the App Store Connect API.",
+    commandName: "asc",
+    abstract: "A Swift CLI for App Store Connect.",
     subcommands: [AppsCommand.self, BuildsCommand.self],
     groupedSubcommands: [
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
@@ -19,7 +19,8 @@ struct ASCClient: AsyncParsableCommand {
   )
 
   func run() async throws {
-    print("asc-client \(Self.appVersion)")
+    migrateFromLegacyName()
+    print("asc \(Self.appVersion)")
     let prompted = await checkForUpdatesInteractively()
     if prompted { print() }
     print(Self.boldHelpHeaders(Self.helpMessage()))
@@ -62,7 +63,7 @@ struct ASCClient: AsyncParsableCommand {
     )
 
     func run() {
-      print(ASCClient.appVersion)
+      print(ASC.appVersion)
     }
   }
 
@@ -105,7 +106,7 @@ struct ASCClient: AsyncParsableCommand {
         }
       }
       if statusCode == 401 {
-        msg += "\n  Check your API credentials (run 'asc-client configure')."
+        msg += "\n  Check your API credentials (run 'asc configure')."
       } else if statusCode == 403 {
         msg += "\n  Your API key may lack the required permissions."
       } else if statusCode >= 500 {

@@ -4,7 +4,7 @@ import Foundation
 struct InstallCompletionsCommand: ParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "install-completions",
-    abstract: "Install shell completions for asc-client."
+    abstract: "Install shell completions for asc."
   )
 
   func run() throws {
@@ -39,7 +39,7 @@ struct InstallCompletionsCommand: ParsableCommand {
     }
 
     // 2. Write completion script (with patched help completions and alphabetical sorting)
-    var completionScript = patchZshHelpCompletions(ASCClient.completionScript(for: .zsh))
+    var completionScript = patchZshHelpCompletions(ASC.completionScript(for: .zsh))
     // Remove -V flag so zsh sorts completions alphabetically
     completionScript = completionScript.replacingOccurrences(
       of: "_describe -V ", with: "_describe ")
@@ -49,9 +49,9 @@ struct InstallCompletionsCommand: ParsableCommand {
     completionScript = patchFileCompletions(completionScript)
     // Stamp version after the #compdef line (must remain first line for zsh to recognize)
     completionScript = completionScript.replacingOccurrences(
-      of: "#compdef asc-client\n",
-      with: "#compdef asc-client\n# asc-client v\(ASCClient.appVersion)\n")
-    let completionFile = zfuncDir.appendingPathComponent("_asc-client")
+      of: "#compdef asc\n",
+      with: "#compdef asc\n# asc v\(ASC.appVersion)\n")
+    let completionFile = zfuncDir.appendingPathComponent("_asc")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
 
@@ -67,7 +67,7 @@ struct InstallCompletionsCommand: ParsableCommand {
     var localModified = false
 
     if !localContents.contains(fpathLine) {
-      let block = "\n# asc-client completions\n\(fpathLine)\n\(compinitLine)\n"
+      let block = "\n# asc completions\n\(fpathLine)\n\(compinitLine)\n"
       localContents += block
       localModified = true
     } else if !localContents.contains(compinitLine) {
@@ -102,10 +102,10 @@ struct InstallCompletionsCommand: ParsableCommand {
     }
 
     // 2. Write completion script (with patched help completions)
-    var completionScript = patchBashHelpCompletions(ASCClient.completionScript(for: .bash))
+    var completionScript = patchBashHelpCompletions(ASC.completionScript(for: .bash))
     // Stamp version so we can detect outdated completions after upgrades
-    completionScript = "# asc-client v\(ASCClient.appVersion)\n" + completionScript
-    let completionFile = completionsDir.appendingPathComponent("asc-client.bash")
+    completionScript = "# asc v\(ASC.appVersion)\n" + completionScript
+    let completionFile = completionsDir.appendingPathComponent("asc.bash")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
 
@@ -116,9 +116,9 @@ struct InstallCompletionsCommand: ParsableCommand {
       localContents = try String(contentsOf: bashrcLocal, encoding: .utf8)
     }
 
-    let sourceLine = "source ~/.bash_completions/asc-client.bash"
+    let sourceLine = "source ~/.bash_completions/asc.bash"
     if !localContents.contains(sourceLine) {
-      localContents += "\n# asc-client completions\n\(sourceLine)\n"
+      localContents += "\n# asc completions\n\(sourceLine)\n"
       try localContents.write(to: bashrcLocal, atomically: true, encoding: .utf8)
       print("Updated \(bashrcLocal.path)")
     } else {
@@ -133,9 +133,9 @@ struct InstallCompletionsCommand: ParsableCommand {
     )
   }
 
-  /// Patches the zsh completion script so `asc-client help <tab>` lists subcommands.
+  /// Patches the zsh completion script so `asc help <tab>` lists subcommands.
   private func patchZshHelpCompletions(_ script: String) -> String {
-    let entries = ASCClient.configuration.subcommands
+    let entries = ASC.configuration.subcommands
       .map { sub in
         let name = sub._commandName
         let abstract = sub.configuration.abstract
@@ -144,7 +144,7 @@ struct InstallCompletionsCommand: ParsableCommand {
       .joined(separator: "\n")
 
     let broken = """
-      _asc-client_help() {
+      _asc_help() {
           local -i ret=1
           local -ar arg_specs=(
               '*:subcommands:'
@@ -156,7 +156,7 @@ struct InstallCompletionsCommand: ParsableCommand {
       """
 
     let fixed = """
-      _asc-client_help() {
+      _asc_help() {
           local -i ret=1
           local -ar arg_specs=(
           )
@@ -173,20 +173,20 @@ struct InstallCompletionsCommand: ParsableCommand {
     return script.replacingOccurrences(of: broken, with: fixed)
   }
 
-  /// Patches the bash completion script so `asc-client help <tab>` lists subcommands.
+  /// Patches the bash completion script so `asc help <tab>` lists subcommands.
   private func patchBashHelpCompletions(_ script: String) -> String {
-    let subcommands = ASCClient.configuration.subcommands
+    let subcommands = ASC.configuration.subcommands
       .map { $0._commandName }
       .joined(separator: " ")
 
     let broken = """
-      _asc-client_help() {
+      _asc_help() {
           :
       }
       """
 
     let fixed = """
-      _asc-client_help() {
+      _asc_help() {
           COMPREPLY+=($(compgen -W '\(subcommands)' -- "${cur}"))
       }
       """
@@ -228,10 +228,10 @@ struct InstallCompletionsCommand: ParsableCommand {
 
     // Insert wrapper after the #compdef line (and any version stamp)
     var result = script
-    if let range = result.range(of: "#compdef asc-client\n") {
+    if let range = result.range(of: "#compdef asc\n") {
       var insertPoint = range.upperBound
       // Skip past version stamp line if present
-      if result[insertPoint...].hasPrefix("# asc-client v") {
+      if result[insertPoint...].hasPrefix("# asc v") {
         if let eol = result[insertPoint...].firstIndex(of: "\n") {
           insertPoint = result.index(after: eol)
         }

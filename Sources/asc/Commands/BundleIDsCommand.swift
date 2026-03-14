@@ -582,7 +582,7 @@ private func regenerateProfilesIfNeeded(bundleID: BundleID, client: AppStoreConn
       let bidIdentifier = bundleID.attributes?.identifier ?? bundleID.id
       let devicesArg = (needsDevices && !deviceIDs.isEmpty) ? " --devices \(deviceIDs.joined(separator: ","))" : ""
       print("  FAIL \(profileName) — recreate failed: \(error.localizedDescription)")
-      print("         Recovery: asc-client profiles create --name \"\(profileName)\" --type \(profileTypeRaw) --bundle-id \(bidIdentifier) --certificates \(certIDs.joined(separator: ","))\(devicesArg)")
+      print("         Recovery: asc profiles create --name \"\(profileName)\" --type \(profileTypeRaw) --bundle-id \(bidIdentifier) --certificates \(certIDs.joined(separator: ","))\(devicesArg)")
       failed += 1
     }
   }

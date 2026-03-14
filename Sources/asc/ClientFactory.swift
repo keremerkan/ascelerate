@@ -3,6 +3,7 @@ import Foundation
 
 enum ClientFactory {
   static func makeClient() throws -> AppStoreConnectClient {
+    migrateFromLegacyName()
     if !autoConfirm {
       checkForUpdates()
     }

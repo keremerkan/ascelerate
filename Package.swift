@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "asc-client",
+    name: "asc",
     platforms: [.macOS(.v13)],
     dependencies: [
         .package(url: "https://github.com/aaronsky/asc-swift", from: "1.0.0"),
@@ -13,7 +13,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "asc-client",
+            name: "asc",
             dependencies: [
                 .product(name: "AppStoreConnect", package: "asc-swift"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),

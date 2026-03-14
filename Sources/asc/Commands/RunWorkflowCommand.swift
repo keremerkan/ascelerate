@@ -7,7 +7,7 @@ nonisolated(unsafe) private var activeWorkflows: [String] = []
 struct RunWorkflowCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "run-workflow",
-    abstract: "Run a sequence of asc-client commands from a workflow file."
+    abstract: "Run a sequence of asc commands from a workflow file."
   )
 
   @Argument(help: "Path to the workflow file. If omitted, lists workflow files in the current directory.",
@@ -79,7 +79,7 @@ struct RunWorkflowCommand: AsyncParsableCommand {
 
       let args = splitArguments(step)
       do {
-        var command = try ASCClient.parseAsRoot(args)
+        var command = try ASC.parseAsRoot(args)
         if var async = command as? AsyncParsableCommand {
           try await async.run()
         } else {

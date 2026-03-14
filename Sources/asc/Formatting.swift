@@ -99,7 +99,7 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
 /// Extracts a zip file to a temporary directory and returns the path.
 /// If the zip contains a single root directory, returns that directory instead.
 func extractZipToTemp(_ zipPath: String) throws -> String {
-  let tempDir = NSTemporaryDirectory() + "asc-client-media-\(UUID().uuidString)"
+  let tempDir = NSTemporaryDirectory() + "asc-media-\(UUID().uuidString)"
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
 
   let process = Process()
@@ -291,9 +291,9 @@ func completionsVersionDetail() -> String? {
 
   let completionPath: String
   if shell.hasSuffix("/zsh") {
-    completionPath = home.appendingPathComponent(".zfunc/_asc-client").path
+    completionPath = home.appendingPathComponent(".zfunc/_asc").path
   } else if shell.hasSuffix("/bash") {
-    completionPath = home.appendingPathComponent(".bash_completions/asc-client.bash").path
+    completionPath = home.appendingPathComponent(".bash_completions/asc.bash").path
   } else {
     return nil
   }
@@ -303,8 +303,8 @@ func completionsVersionDetail() -> String? {
     let contents = String(data: data, encoding: .utf8)
   else { return nil }
 
-  let currentVersion = ASCClient.appVersion
-  let prefix = "# asc-client v"
+  let currentVersion = ASC.appVersion
+  let prefix = "# asc v"
 
   // Version stamp may be on line 1 (bash) or line 2 (zsh, after #compdef)
   if let range = contents.range(of: prefix),
@@ -326,15 +326,72 @@ func skillVersionDetail() -> String? {
         let contents = String(data: data, encoding: .utf8)
   else { return nil }
 
-  let prefix = "<!-- asc-client v"
+  let prefix = "<!-- asc v"
   guard let range = contents.range(of: prefix) else { return nil }
   let afterPrefix = contents[range.upperBound...]
   guard let endRange = afterPrefix.range(of: " -->") else { return nil }
   let stampedVersion = String(afterPrefix[..<endRange.lowerBound])
 
-  let currentVersion = ASCClient.appVersion
+  let currentVersion = ASC.appVersion
   if stampedVersion == currentVersion { return nil }
   return " (v\(stampedVersion) → v\(currentVersion))"
+}
+
+// MARK: - Legacy Migration (asc-client → asc)
+
+/// Migrates configuration, completions, and skill from legacy `asc-client` paths to `asc`.
+/// Runs once per process. Silently skips if nothing to migrate.
+func migrateFromLegacyName() {
+  struct Once { nonisolated(unsafe) static var migrated = false }
+  guard !Once.migrated else { return }
+  Once.migrated = true
+
+  let fm = FileManager.default
+  let home = fm.homeDirectoryForCurrentUser
+
+  // 1. Migrate config directory: ~/.asc-client/ → ~/.asc/
+  let oldConfigDir = home.appendingPathComponent(".asc-client")
+  let newConfigDir = home.appendingPathComponent(".asc")
+  if fm.fileExists(atPath: oldConfigDir.path), !fm.fileExists(atPath: newConfigDir.path) {
+    do {
+      try fm.moveItem(at: oldConfigDir, to: newConfigDir)
+      // Update privateKeyPath in config.json if it references the old directory
+      let configFile = newConfigDir.appendingPathComponent("config.json")
+      if let data = fm.contents(atPath: configFile.path),
+         var json = String(data: data, encoding: .utf8),
+         json.contains(".asc-client/")
+      {
+        json = json.replacingOccurrences(of: ".asc-client/", with: ".asc/")
+        try json.write(to: configFile, atomically: true, encoding: .utf8)
+      }
+      print("Migrated configuration from ~/.asc-client/ to ~/.asc/")
+    } catch {
+      print("Warning: could not migrate ~/.asc-client/ to ~/.asc/: \(error.localizedDescription)")
+    }
+  }
+
+  // 2. Remove old completion files (user needs to run install-completions)
+  var completionsMigrated = false
+  let oldZshCompletion = home.appendingPathComponent(".zfunc/_asc-client")
+  if fm.fileExists(atPath: oldZshCompletion.path) {
+    try? fm.removeItem(at: oldZshCompletion)
+    completionsMigrated = true
+  }
+  let oldBashCompletion = home.appendingPathComponent(".bash_completions/asc-client.bash")
+  if fm.fileExists(atPath: oldBashCompletion.path) {
+    try? fm.removeItem(at: oldBashCompletion)
+    completionsMigrated = true
+  }
+  if completionsMigrated {
+    print("Removed old asc-client shell completions. Run 'asc install-completions' to reinstall.")
+  }
+
+  // 3. Remove old skill directory
+  let oldSkillDir = home.appendingPathComponent(".claude/skills/asc-client")
+  if fm.fileExists(atPath: oldSkillDir.path) {
+    try? fm.removeItem(at: oldSkillDir)
+    print("Removed old asc-client skill. Run 'asc install-skill' to reinstall.")
+  }
 }
 
 /// Check for outdated completions and skill, print NOTE for non-interactive contexts.
@@ -345,10 +402,10 @@ func checkForUpdates() {
 
   var notes: [String] = []
   if let detail = completionsVersionDetail() {
-    notes.append("Shell completions are outdated\(detail). Run 'asc-client install-completions' to update.")
+    notes.append("Shell completions are outdated\(detail). Run 'asc install-completions' to update.")
   }
   if let detail = skillVersionDetail() {
-    notes.append("Claude Code skill is outdated\(detail). Run 'asc-client install-skill' to update.")
+    notes.append("Claude Code skill is outdated\(detail). Run 'asc install-skill' to update.")
   }
   if !notes.isEmpty {
     print("NOTE: " + notes.joined(separator: "\n      ") + "\n")

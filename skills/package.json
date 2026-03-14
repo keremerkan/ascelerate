@@ -1,16 +1,16 @@
 {
-  "name": "asc-client-skill",
-  "version": "0.6.1",
-  "description": "asc-client skill for AI coding agents (Claude Code, Cursor, Windsurf, Copilot)",
+  "name": "asc-skill",
+  "version": "0.7.0",
+  "description": "asc skill for AI coding agents (Claude Code, Cursor, Windsurf, Copilot)",
   "license": "MIT",
   "author": "Kerem Erkan",
   "repository": {
     "type": "git",
-    "url": "https://github.com/keremerkan/asc-client.git",
+    "url": "https://github.com/keremerkan/asc-cli.git",
     "directory": "skills"
   },
   "bin": {
-    "asc-client-skill": "./bin/install.js"
+    "asc-skill": "./bin/install.js"
   },
   "files": [
     "bin"

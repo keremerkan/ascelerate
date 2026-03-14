@@ -16,7 +16,7 @@ struct BuildsCommand: AsyncParsableCommand {
     )
 
     @Option(name: .long, help: "Filter by bundle identifier.",
-            completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+            completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String?
 
     @Option(name: .long, help: "Filter by app version (e.g. 14.3).")
@@ -84,7 +84,7 @@ struct BuildsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The app's bundle identifier.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc-client/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
     @Option(name: .long, help: "Build version number to wait for (e.g. 903). If omitted, waits for the latest build.")
@@ -593,7 +593,7 @@ private func resolveUploadable(_ path: String) throws -> (String, String?) {
   print("Exporting .xcarchive to .ipa...")
   fflush(stdout)
 
-  let tempDir = NSTemporaryDirectory() + "asc-client-export-\(ProcessInfo.processInfo.processIdentifier)"
+  let tempDir = NSTemporaryDirectory() + "asc-export-\(ProcessInfo.processInfo.processIdentifier)"
   let exportDir = tempDir + "/output"
   let plistPath = tempDir + "/ExportOptions.plist"
 

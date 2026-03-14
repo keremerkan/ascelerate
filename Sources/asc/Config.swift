@@ -7,7 +7,7 @@ struct Config: Codable {
 
   static let configDirectory = FileManager.default
     .homeDirectoryForCurrentUser
-    .appendingPathComponent(".asc-client")
+    .appendingPathComponent(".asc")
 
   static let configFile = configDirectory.appendingPathComponent("config.json")
 
@@ -31,7 +31,7 @@ enum ConfigError: LocalizedError {
     case .missingConfigFile(let path):
       return """
         No configuration found at \(path).
-        Run 'asc-client configure' to set up your API credentials.
+        Run 'asc configure' to set up your API credentials.
         """
     case .missingPrivateKey(let path):
       return "Private key file not found at \(path)"

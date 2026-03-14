@@ -174,7 +174,7 @@ struct CertsCommand: AsyncParsableCommand {
       } else {
         // Auto-generate RSA 2048 key pair + CSR
         let key = try _RSA.Signing.PrivateKey(keySize: .bits2048)
-        let subject = try DistinguishedName { CommonName("asc-client") }
+        let subject = try DistinguishedName { CommonName("asc") }
         let csrRequest = try CertificateSigningRequest(
           version: .v1,
           subject: subject,

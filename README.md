@@ -761,6 +761,8 @@ asc -v          # Same as above
 
 Built on top of [asc-swift](https://github.com/aaronsky/asc-swift) by Aaron Sky.
 
+*"A Swift Client, App Store Connect"* — [@validatedev](https://x.com/validatedev/status/2026613415012118674)
+
 Developed with [Claude Code](https://claude.ai/code).
 
 ## License

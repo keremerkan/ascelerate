@@ -6,11 +6,11 @@
   "author": "Kerem Erkan",
   "repository": {
     "type": "git",
-    "url": "https://github.com/keremerkan/asc-cli.git",
+    "url": "git+https://github.com/keremerkan/asc-cli.git",
     "directory": "skills"
   },
   "bin": {
-    "asc-skill": "./bin/install.js"
+    "asc-skill": "bin/install.js"
   },
   "files": [
     "bin"

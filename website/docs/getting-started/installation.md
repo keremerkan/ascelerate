@@ -71,6 +71,17 @@ asc install-completions
 
 This detects your shell and configures everything automatically. Restart your shell or open a new tab to activate.
 
+## AI coding skill (optional)
+
+If you use an AI coding agent like Claude Code, Cursor, Windsurf, or GitHub Copilot, you can install a skill file that gives it full knowledge of all asc commands and workflows:
+
+```bash
+asc install-skill    # Claude Code
+npx asc-skill        # Any AI coding agent
+```
+
+See the [AI Coding Skill](/docs/guides/ai-skill) guide for details.
+
 ## Check your version
 
 ```bash

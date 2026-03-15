@@ -11,6 +11,12 @@
   }
 }
 
+.heroLogo {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 1rem;
+}
+
 .heroDescription {
   font-size: 1.2rem;
   max-width: 600px;

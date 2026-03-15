@@ -19,7 +19,15 @@ brew install asc-cli
 
 The tap provides a pre-built binary for Apple Silicon Macs, so installation is instant.
 
-## Download the binary
+## Install script
+
+```bash
+curl -sSL https://raw.githubusercontent.com/keremerkan/asc-cli/main/install.sh | bash
+```
+
+Downloads the latest release, installs to `/usr/local/bin`, and removes the quarantine attribute automatically. Apple Silicon only.
+
+## Download manually
 
 Download the latest release from [GitHub Releases](https://github.com/keremerkan/asc-cli/releases):
 

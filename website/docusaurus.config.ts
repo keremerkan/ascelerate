@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'asc',
   tagline: 'A Swift CLI for App Store Connect',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.svg',
 
   future: {
     v4: true,
@@ -19,9 +19,24 @@ const config: Config = {
 
   onBrokenLinks: 'throw',
 
+  headTags: [
+    {
+      tagName: 'style',
+      attributes: {},
+      innerHTML: `html{background:#303846}#__docusaurus{background:#fff}[data-theme='dark'] #__docusaurus{background:#1b1b1d}`,
+    },
+  ],
+
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'de', 'fr', 'ja', 'tr'],
+    localeConfigs: {
+      en: { label: 'English' },
+      de: { label: 'Deutsch' },
+      fr: { label: 'Français' },
+      ja: { label: '日本語' },
+      tr: { label: 'Türkçe' },
+    },
   },
 
   presets: [
@@ -45,13 +60,20 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'asc',
+      logo: {
+        alt: 'asc',
+        src: 'img/favicon.svg',
+      },
       items: [
         {
           type: 'docSidebar',
           sidebarId: 'docsSidebar',
           position: 'left',
           label: 'Docs',
+        },
+        {
+          type: 'localeDropdown',
+          position: 'right',
         },
         {
           href: 'https://github.com/keremerkan/asc-cli',
@@ -90,7 +112,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Kerem Erkan`,
+      copyright: `Copyright © ${new Date().getFullYear()} Kerem Erkan.<br/>Not affiliated with Apple Inc. Apple, App Store, App Store Connect, Xcode, and macOS are trademarks of Apple Inc.`,
     },
     prism: {
       theme: prismThemes.github,

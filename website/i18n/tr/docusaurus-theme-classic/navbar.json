@@ -1,0 +1,14 @@
+{
+  "item.label.Docs": {
+    "message": "Belgeler",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  },
+  "logo.alt": {
+    "message": "asc",
+    "description": "The alt text of navbar logo"
+  }
+}

@@ -5,6 +5,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
+import Translate, {translate} from '@docusaurus/Translate';
 
 import styles from './index.module.css';
 
@@ -13,19 +14,22 @@ function HomepageHeader() {
   return (
     <header className={clsx('hero', styles.heroBanner)}>
       <div className="container">
-        <Heading as="h1" className="hero__title">
+        <img src="/img/favicon.svg" alt="asc" className={styles.heroLogo} />
+        <Heading as="h1" className="hero__title" style={{display: 'none'}}>
           {siteConfig.title}
         </Heading>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
+        <p className="hero__subtitle" dangerouslySetInnerHTML={{__html: translate({id: 'homepage.tagline', message: '<strong>A</strong> <strong>S</strong>wift <strong>C</strong>LI for App Store Connect'})}} />
         <p className={styles.heroDescription}>
-          Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission.
-          Manage versions, localizations, screenshots, provisioning, in-app purchases, and subscriptions.
+          <Translate id="homepage.hero.description">
+            Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission.
+            Manage versions, localizations, screenshots, provisioning, in-app purchases, and subscriptions.
+          </Translate>
         </p>
         <div className={styles.buttons}>
           <Link
             className="button button--primary button--lg"
             to="/docs/getting-started/installation">
-            Get Started
+            <Translate id="homepage.hero.getStarted">Get Started</Translate>
           </Link>
           <Link
             className="button button--secondary button--lg"
@@ -44,7 +48,9 @@ function InstallSection() {
       <div className="container">
         <div className="row">
           <div className={clsx('col col--6 col--offset-3')}>
-            <Heading as="h2" className="text--center">Install</Heading>
+            <Heading as="h2" className="text--center">
+              <Translate id="homepage.install.title">Install</Translate>
+            </Heading>
             <CodeBlock language="bash">
               {`brew tap keremerkan/tap\nbrew install asc-cli`}
             </CodeBlock>
@@ -60,63 +66,68 @@ type FeatureItem = {
   description: ReactNode;
 };
 
-const features: FeatureItem[] = [
-  {
-    title: 'Full Release Pipeline',
-    description: (
-      <>
-        Archive, upload, manage versions and localizations, attach builds,
-        run preflight checks, and submit for App Review — all from the terminal.
-      </>
-    ),
-  },
-  {
-    title: 'Provisioning Management',
-    description: (
-      <>
-        Register devices, create certificates, manage bundle IDs and capabilities,
-        create and reissue provisioning profiles. Most commands support interactive mode.
-      </>
-    ),
-  },
-  {
-    title: 'Screenshots & Media',
-    description: (
-      <>
-        Upload and download screenshots and app previews with a simple folder structure.
-        Works with zip files and integrates with{' '}
-        <Link to="https://github.com/keremerkan/asc-screenshots">asc-screenshots</Link>.
-      </>
-    ),
-  },
-  {
-    title: 'In-App Purchases & Subscriptions',
-    description: (
-      <>
-        List, create, update, and delete IAPs and subscriptions.
-        Manage localizations and submit for review alongside your app version.
-      </>
-    ),
-  },
-  {
-    title: 'Workflows & Automation',
-    description: (
-      <>
-        Chain commands into workflow files for repeatable release processes.
-        Use <code>--yes</code> for fully unattended CI/CD execution.
-      </>
-    ),
-  },
-  {
-    title: 'AI-Ready',
-    description: (
-      <>
-        Ships with a skill file that gives AI coding agents (Claude Code, Cursor,
-        Windsurf, GitHub Copilot) full knowledge of all commands and workflows.
-      </>
-    ),
-  },
-];
+function getFeatures(): FeatureItem[] {
+  return [
+    {
+      title: translate({id: 'homepage.features.pipeline.title', message: 'Full Release Pipeline'}),
+      description: (
+        <Translate id="homepage.features.pipeline.description">
+          Archive, upload, manage versions and localizations, attach builds,
+          run preflight checks, and submit for App Review — all from the terminal.
+        </Translate>
+      ),
+    },
+    {
+      title: translate({id: 'homepage.features.provisioning.title', message: 'Provisioning Management'}),
+      description: (
+        <Translate id="homepage.features.provisioning.description">
+          Register devices, create certificates, manage bundle IDs and capabilities,
+          create and reissue provisioning profiles. Most commands support interactive mode.
+        </Translate>
+      ),
+    },
+    {
+      title: translate({id: 'homepage.features.media.title', message: 'Screenshots & Media'}),
+      description: (
+        <>
+          <Translate id="homepage.features.media.description">
+            Upload and download screenshots and app previews with a simple folder structure.
+            Works with zip files and integrates with asc-screenshots.
+          </Translate>
+        </>
+      ),
+    },
+    {
+      title: translate({id: 'homepage.features.iap.title', message: 'In-App Purchases & Subscriptions'}),
+      description: (
+        <Translate id="homepage.features.iap.description">
+          List, create, update, and delete IAPs and subscriptions.
+          Manage localizations and submit for review alongside your app version.
+        </Translate>
+      ),
+    },
+    {
+      title: translate({id: 'homepage.features.workflows.title', message: 'Workflows & Automation'}),
+      description: (
+        <>
+          <Translate id="homepage.features.workflows.description">
+            Chain commands into workflow files for repeatable release processes.
+            Use --yes for fully unattended CI/CD execution.
+          </Translate>
+        </>
+      ),
+    },
+    {
+      title: translate({id: 'homepage.features.ai.title', message: 'AI-Ready'}),
+      description: (
+        <Translate id="homepage.features.ai.description">
+          Ships with a skill file that gives AI coding agents (Claude Code, Cursor,
+          Windsurf, GitHub Copilot) full knowledge of all commands and workflows.
+        </Translate>
+      ),
+    },
+  ];
+}
 
 function Feature({title, description}: FeatureItem) {
   return (
@@ -130,6 +141,7 @@ function Feature({title, description}: FeatureItem) {
 }
 
 function FeaturesSection() {
+  const features = getFeatures();
   return (
     <section className={styles.features}>
       <div className="container">
@@ -146,8 +158,8 @@ function FeaturesSection() {
 export default function Home(): ReactNode {
   return (
     <Layout
-      title="A Swift CLI for App Store Connect"
-      description="A command-line tool for building, archiving, and publishing apps to the App Store.">
+      title={translate({id: 'homepage.title', message: 'A Swift CLI for App Store Connect'})}
+      description={translate({id: 'homepage.meta.description', message: 'A command-line tool for building, archiving, and publishing apps to the App Store.'})}>
       <HomepageHeader />
       <main>
         <InstallSection />

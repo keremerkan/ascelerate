@@ -1,0 +1,30 @@
+{
+  "link.title.Docs": {
+    "message": "Dokumentation",
+    "description": "The title of the footer links column with title=Docs in the footer"
+  },
+  "link.title.More": {
+    "message": "Mehr",
+    "description": "The title of the footer links column with title=More in the footer"
+  },
+  "link.item.label.Getting Started": {
+    "message": "Erste Schritte",
+    "description": "The label of footer link with label=Getting Started linking to /docs/getting-started/installation"
+  },
+  "link.item.label.Commands": {
+    "message": "Befehle",
+    "description": "The label of footer link with label=Commands linking to /docs/commands/apps"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/keremerkan/asc-cli"
+  },
+  "link.item.label.asc-swift": {
+    "message": "asc-swift",
+    "description": "The label of footer link with label=asc-swift linking to https://github.com/aaronsky/asc-swift"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 Kerem Erkan.<br/>Nicht mit Apple Inc. verbunden. Apple, App Store, App Store Connect, Xcode und macOS sind Marken von Apple Inc.",
+    "description": "The footer copyright"
+  }
+}

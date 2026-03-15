@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Social Card Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #e5e7eb; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+  .card {
+    width: 1200px;
+    height: 630px;
+    background: radial-gradient(circle at 136px 40%, #f6f8fa 0%, rgba(0, 122, 255, 0.03) 50%, rgba(0, 122, 255, 0.10) 100%);
+    border: none;
+    padding: 60px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    gap: 32px;
+  }
+
+  .logo svg {
+    width: 128px;
+    height: 128px;
+  }
+
+  .headline {
+    font-size: 40px;
+    font-weight: 700;
+    color: #24292f;
+  }
+
+  .subtitle {
+    font-size: 32px;
+    color: #424a53;
+    line-height: 1.5;
+  }
+
+  .bottom {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 8px;
+  }
+
+  .lang {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+    color: #24292f;
+  }
+
+  .lang-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #F05138;
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 22px;
+    color: #24292f;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: #007AFF;
+  }
+
+  .stat svg {
+    width: 18px;
+    height: 18px;
+    fill: #24292f;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#007AFF"/>
+      <text x="16" y="15" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle" dominant-baseline="central" letter-spacing="-0.5">asc</text>
+    </svg>
+  </div>
+
+  <div class="headline">A Swift CLI for App Store Connect</div>
+  <div class="subtitle">Manage apps, builds, screenshots, provisioning, and more — all from your terminal.</div>
+
+  <div class="bottom">
+    <div class="lang">
+      <span class="lang-dot"></span>
+      Swift
+    </div>
+    <div class="stat">
+      <svg viewBox="0 0 16 16"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>
+      Open Source
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

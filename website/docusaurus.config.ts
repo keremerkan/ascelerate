@@ -56,6 +56,7 @@ const config: Config = {
   ],
 
   themeConfig: {
+    image: 'img/social-card.webp',
     colorMode: {
       respectPrefersColorScheme: true,
     },

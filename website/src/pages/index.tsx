@@ -51,8 +51,11 @@ function InstallSection() {
             <Heading as="h2" className="text--center">
               <Translate id="homepage.install.title">Install</Translate>
             </Heading>
-            <CodeBlock language="bash">
+            <CodeBlock language="bash" title="Homebrew">
               {`brew tap keremerkan/tap\nbrew install asc-cli`}
+            </CodeBlock>
+            <CodeBlock language="bash" title="curl">
+              {`curl -sSL https://raw.githubusercontent.com/keremerkan/asc-cli/main/install.sh | bash`}
             </CodeBlock>
           </div>
         </div>

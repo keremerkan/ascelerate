@@ -113,7 +113,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Kerem Erkan.<br/>Not affiliated with Apple Inc. Apple, App Store, App Store Connect, Xcode, and macOS are trademarks of Apple Inc.`,
+      copyright: `Maintained by <a href="https://keremerkan.dev" target="_blank" rel="noopener noreferrer">Kerem Erkan</a>.<br/>Not affiliated with Apple Inc. Apple, App Store, App Store Connect, Xcode, and macOS are trademarks of Apple Inc.`,
     },
     prism: {
       theme: prismThemes.github,

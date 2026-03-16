@@ -229,6 +229,37 @@ asc run-workflow release.workflow --yes   # Skip all prompts (CI/CD)
 
 Commands are one per line, without the `asc` prefix. Lines starting with `#` are comments. `builds upload` automatically passes the build version to subsequent commands.
 
+## Adding a new language to an app
+
+When the user asks to add a new language/locale to an app, translate **all** of these:
+
+1. **App info localizations** (name, subtitle, privacy URLs) — always
+2. **Version localizations** (description, what's new, keywords, promo text) — always
+3. **In-app purchases** — ask the user: translate all IAPs, or specific ones?
+4. **Subscription groups** — ask the user: translate all groups, or specific ones?
+5. **Subscriptions** — ask the user: translate all subscriptions, or specific ones?
+
+### Workflow
+
+1. Export existing localizations to see the source text:
+   ```bash
+   asc apps app-info export <app>
+   asc apps localizations export <app>
+   asc iap localizations view <app> <product-id>       # for each IAP
+   asc sub group-localizations export <app>
+   asc sub localizations export <app> <product-id>     # for each subscription
+   ```
+2. Ask the user which IAPs, subscription groups, and subscriptions to translate (or all).
+3. Translate the source text into the new locale.
+4. Import the translations (use `-y` to skip confirmation prompts):
+   ```bash
+   asc apps app-info import <app> --file app-infos.json -y
+   asc apps localizations import <app> --file localizations.json -y
+   asc iap localizations import <app> <product-id> --file iap.json -y
+   asc sub group-localizations import <app> --file group.json -y
+   asc sub localizations import <app> <product-id> --file sub.json -y
+   ```
+
 ## Tips
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)

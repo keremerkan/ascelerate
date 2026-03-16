@@ -355,19 +355,20 @@ func migrateFromLegacyName() {
   if fm.fileExists(atPath: oldConfigDir.path), !fm.fileExists(atPath: newConfigDir.path) {
     do {
       try fm.moveItem(at: oldConfigDir, to: newConfigDir)
-      // Update privateKeyPath in config.json if it references the old directory
-      let configFile = newConfigDir.appendingPathComponent("config.json")
-      if let data = fm.contents(atPath: configFile.path),
-         var json = String(data: data, encoding: .utf8),
-         json.contains(".asc-client/")
-      {
-        json = json.replacingOccurrences(of: ".asc-client/", with: ".asc/")
-        try json.write(to: configFile, atomically: true, encoding: .utf8)
-      }
       print("Migrated configuration from ~/.asc-client/ to ~/.asc/")
     } catch {
       print("Warning: could not migrate ~/.asc-client/ to ~/.asc/: \(error.localizedDescription)")
     }
+  }
+
+  // Update privateKeyPath in config.json if it still references the old directory
+  let configFile = newConfigDir.appendingPathComponent("config.json")
+  if let data = fm.contents(atPath: configFile.path),
+     var json = String(data: data, encoding: .utf8),
+     json.contains(".asc-client/")
+  {
+    json = json.replacingOccurrences(of: ".asc-client/", with: ".asc/")
+    try? json.write(to: configFile, atomically: true, encoding: .utf8)
   }
 
   // 2. Remove old completion files (user needs to run install-completions)

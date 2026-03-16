@@ -362,11 +362,13 @@ func migrateFromLegacyName() {
   }
 
   // Update privateKeyPath in config.json if it still references the old directory
+  // Check both escaped (\/) and unescaped (/) forms since JSON may use either
   let configFile = newConfigDir.appendingPathComponent("config.json")
   if let data = fm.contents(atPath: configFile.path),
      var json = String(data: data, encoding: .utf8),
-     json.contains(".asc-client/")
+     json.contains(".asc-client")
   {
+    json = json.replacingOccurrences(of: ".asc-client\\/", with: ".asc\\/")
     json = json.replacingOccurrences(of: ".asc-client/", with: ".asc/")
     try? json.write(to: configFile, atomically: true, encoding: .utf8)
   }

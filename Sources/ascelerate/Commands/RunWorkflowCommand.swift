@@ -79,7 +79,7 @@ struct RunWorkflowCommand: AsyncParsableCommand {
 
       let args = splitArguments(step)
       do {
-        var command = try ASC.parseAsRoot(args)
+        var command = try Ascelerate.parseAsRoot(args)
         if var async = command as? AsyncParsableCommand {
           try await async.run()
         } else {

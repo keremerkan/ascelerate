@@ -8,12 +8,12 @@ title: Workflows
 Chain multiple commands into a single automated run with a workflow file:
 
 ```bash
-asc run-workflow release.txt
-asc run-workflow release.txt --yes   # skip all prompts (CI/CD)
-asc run-workflow                     # interactively select from .workflow/.txt files
+ascelerate run-workflow release.txt
+ascelerate run-workflow release.txt --yes   # skip all prompts (CI/CD)
+ascelerate run-workflow                     # interactively select from .workflow/.txt files
 ```
 
-A workflow file is a plain text file with one command per line (without the `asc` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported.
+A workflow file is a plain text file with one command per line (without the `ascelerate` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported.
 
 ## Example
 

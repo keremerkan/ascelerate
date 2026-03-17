@@ -8,12 +8,12 @@ title: Workflows
 Verketten Sie mehrere Befehle zu einem einzigen automatisierten Durchlauf mit einer Workflow-Datei:
 
 ```bash
-asc run-workflow release.txt
-asc run-workflow release.txt --yes   # alle Abfragen überspringen (CI/CD)
-asc run-workflow                     # interaktiv aus .workflow/.txt-Dateien auswählen
+ascelerate run-workflow release.txt
+ascelerate run-workflow release.txt --yes   # alle Abfragen überspringen (CI/CD)
+ascelerate run-workflow                     # interaktiv aus .workflow/.txt-Dateien auswählen
 ```
 
-Eine Workflow-Datei ist eine einfache Textdatei mit einem Befehl pro Zeile (ohne das `asc`-Präfix). Zeilen, die mit `#` beginnen, sind Kommentare, leere Zeilen werden ignoriert. Sowohl `.workflow`- als auch `.txt`-Erweiterungen werden unterstützt.
+Eine Workflow-Datei ist eine einfache Textdatei mit einem Befehl pro Zeile (ohne das `ascelerate`-Präfix). Zeilen, die mit `#` beginnen, sind Kommentare, leere Zeilen werden ignoriert. Sowohl `.workflow`- als auch `.txt`-Erweiterungen werden unterstützt.
 
 ## Beispiel
 

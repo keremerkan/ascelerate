@@ -4,7 +4,7 @@ import Foundation
 struct InstallCompletionsCommand: ParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "install-completions",
-    abstract: "Install shell completions for asc."
+    abstract: "Install shell completions for ascelerate."
   )
 
   func run() throws {
@@ -39,19 +39,19 @@ struct InstallCompletionsCommand: ParsableCommand {
     }
 
     // 2. Write completion script (with patched help completions and alphabetical sorting)
-    var completionScript = patchZshHelpCompletions(ASC.completionScript(for: .zsh))
+    var completionScript = patchZshHelpCompletions(Ascelerate.completionScript(for: .zsh))
     // Remove -V flag so zsh sorts completions alphabetically
     completionScript = completionScript.replacingOccurrences(
       of: "_describe -V ", with: "_describe ")
     // Fix _files -g in subcommand functions: ArgumentParser sets extendedglob+nullglob
     // which breaks _files -g (pattern:tag syntax conflicts with extendedglob modifiers).
-    // Replace _files -g with _asc_files wrapper that uses zstyle file-patterns instead.
+    // Replace _files -g with _ascelerate_files wrapper that uses zstyle file-patterns instead.
     completionScript = patchFileCompletions(completionScript)
     // Stamp version after the #compdef line (must remain first line for zsh to recognize)
     completionScript = completionScript.replacingOccurrences(
-      of: "#compdef asc\n",
-      with: "#compdef asc\n# asc v\(ASC.appVersion)\n")
-    let completionFile = zfuncDir.appendingPathComponent("_asc")
+      of: "#compdef ascelerate\n",
+      with: "#compdef ascelerate\n# ascelerate v\(Ascelerate.appVersion)\n")
+    let completionFile = zfuncDir.appendingPathComponent("_ascelerate")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
 
@@ -67,7 +67,7 @@ struct InstallCompletionsCommand: ParsableCommand {
     var localModified = false
 
     if !localContents.contains(fpathLine) {
-      let block = "\n# asc completions\n\(fpathLine)\n\(compinitLine)\n"
+      let block = "\n# ascelerate completions\n\(fpathLine)\n\(compinitLine)\n"
       localContents += block
       localModified = true
     } else if !localContents.contains(compinitLine) {
@@ -102,10 +102,10 @@ struct InstallCompletionsCommand: ParsableCommand {
     }
 
     // 2. Write completion script (with patched help completions)
-    var completionScript = patchBashHelpCompletions(ASC.completionScript(for: .bash))
+    var completionScript = patchBashHelpCompletions(Ascelerate.completionScript(for: .bash))
     // Stamp version so we can detect outdated completions after upgrades
-    completionScript = "# asc v\(ASC.appVersion)\n" + completionScript
-    let completionFile = completionsDir.appendingPathComponent("asc.bash")
+    completionScript = "# ascelerate v\(Ascelerate.appVersion)\n" + completionScript
+    let completionFile = completionsDir.appendingPathComponent("ascelerate.bash")
     try completionScript.write(to: completionFile, atomically: true, encoding: .utf8)
     print("Installed completion script to \(completionFile.path)")
 
@@ -116,9 +116,9 @@ struct InstallCompletionsCommand: ParsableCommand {
       localContents = try String(contentsOf: bashrcLocal, encoding: .utf8)
     }
 
-    let sourceLine = "source ~/.bash_completions/asc.bash"
+    let sourceLine = "source ~/.bash_completions/ascelerate.bash"
     if !localContents.contains(sourceLine) {
-      localContents += "\n# asc completions\n\(sourceLine)\n"
+      localContents += "\n# ascelerate completions\n\(sourceLine)\n"
       try localContents.write(to: bashrcLocal, atomically: true, encoding: .utf8)
       print("Updated \(bashrcLocal.path)")
     } else {
@@ -135,7 +135,7 @@ struct InstallCompletionsCommand: ParsableCommand {
 
   /// Patches the zsh completion script so `asc help <tab>` lists subcommands.
   private func patchZshHelpCompletions(_ script: String) -> String {
-    let entries = ASC.configuration.subcommands
+    let entries = Ascelerate.configuration.subcommands
       .map { sub in
         let name = sub._commandName
         let abstract = sub.configuration.abstract
@@ -144,7 +144,7 @@ struct InstallCompletionsCommand: ParsableCommand {
       .joined(separator: "\n")
 
     let broken = """
-      _asc_help() {
+      _ascelerate_help() {
           local -i ret=1
           local -ar arg_specs=(
               '*:subcommands:'
@@ -156,7 +156,7 @@ struct InstallCompletionsCommand: ParsableCommand {
       """
 
     let fixed = """
-      _asc_help() {
+      _ascelerate_help() {
           local -i ret=1
           local -ar arg_specs=(
           )
@@ -175,18 +175,18 @@ struct InstallCompletionsCommand: ParsableCommand {
 
   /// Patches the bash completion script so `asc help <tab>` lists subcommands.
   private func patchBashHelpCompletions(_ script: String) -> String {
-    let subcommands = ASC.configuration.subcommands
+    let subcommands = Ascelerate.configuration.subcommands
       .map { $0._commandName }
       .joined(separator: " ")
 
     let broken = """
-      _asc_help() {
+      _ascelerate_help() {
           :
       }
       """
 
     let fixed = """
-      _asc_help() {
+      _ascelerate_help() {
           COMPREPLY+=($(compgen -W '\(subcommands)' -- "${cur}"))
       }
       """
@@ -202,7 +202,7 @@ struct InstallCompletionsCommand: ParsableCommand {
   private func patchFileCompletions(_ script: String) -> String {
     // Wrapper function: converts -g args to zstyle file-patterns before calling _files
     let wrapper = """
-    _asc_files() {
+    _ascelerate_files() {
         local -a pats rest
         while (( $# )); do
             if [[ "$1" = -g ]]; then
@@ -228,10 +228,10 @@ struct InstallCompletionsCommand: ParsableCommand {
 
     // Insert wrapper after the #compdef line (and any version stamp)
     var result = script
-    if let range = result.range(of: "#compdef asc\n") {
+    if let range = result.range(of: "#compdef ascelerate\n") {
       var insertPoint = range.upperBound
       // Skip past version stamp line if present
-      if result[insertPoint...].hasPrefix("# asc v") {
+      if result[insertPoint...].hasPrefix("# ascelerate v") {
         if let eol = result[insertPoint...].firstIndex(of: "\n") {
           insertPoint = result.index(after: eol)
         }
@@ -239,9 +239,9 @@ struct InstallCompletionsCommand: ParsableCommand {
       result.insert(contentsOf: "\n\(wrapper)", at: insertPoint)
     }
 
-    // Replace _files with _asc_files wherever -g is used
+    // Replace _files with _ascelerate_files wherever -g is used
     // Handle both single-extension and multi-extension (space-separated) patterns
-    result = result.replacingOccurrences(of: "_files -g ", with: "_asc_files -g ")
+    result = result.replacingOccurrences(of: "_files -g ", with: "_ascelerate_files -g ")
 
     return result
   }

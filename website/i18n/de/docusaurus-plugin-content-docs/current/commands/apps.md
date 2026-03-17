@@ -8,26 +8,26 @@ title: Apps
 ## Apps auflisten
 
 ```bash
-asc apps list
+ascelerate apps list
 ```
 
 ## App-Details
 
 ```bash
-asc apps info <bundle-id>
+ascelerate apps info <bundle-id>
 ```
 
 ## Versionen auflisten
 
 ```bash
-asc apps versions <bundle-id>
+ascelerate apps versions <bundle-id>
 ```
 
 ## Version erstellen
 
 ```bash
-asc apps create-version <bundle-id> <version-string>
-asc apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
+ascelerate apps create-version <bundle-id> <version-string>
+ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
 ```
 
 Der `--release-type` ist optional — wird er weggelassen, wird die Einstellung der vorherigen Version verwendet.
@@ -37,15 +37,15 @@ Der `--release-type` ist optional — wird er weggelassen, wird die Einstellung 
 ### Review-Status prüfen
 
 ```bash
-asc apps review status <bundle-id>
-asc apps review status <bundle-id> --version 2.1.0
+ascelerate apps review status <bundle-id>
+ascelerate apps review status <bundle-id> --version 2.1.0
 ```
 
 ### Zur Überprüfung einreichen
 
 ```bash
-asc apps review submit <bundle-id>
-asc apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id>
+ascelerate apps review submit <bundle-id> --version 2.1.0
 ```
 
 Beim Einreichen erkennt der Befehl automatisch IAPs und Abonnements mit ausstehenden Änderungen und bietet an, diese zusammen mit der App-Version einzureichen.
@@ -55,13 +55,13 @@ Beim Einreichen erkennt der Befehl automatisch IAPs und Abonnements mit ausstehe
 Nach der Behebung von Problemen und der Antwort im Resolution Center:
 
 ```bash
-asc apps review resolve-issues <bundle-id>
+ascelerate apps review resolve-issues <bundle-id>
 ```
 
 ### Einreichung abbrechen
 
 ```bash
-asc apps review cancel-submission <bundle-id>
+ascelerate apps review cancel-submission <bundle-id>
 ```
 
 ## Preflight-Prüfungen
@@ -70,10 +70,10 @@ Führen Sie vor dem Einreichen zur Überprüfung `preflight` aus, um sicherzuste
 
 ```bash
 # Die neueste bearbeitbare Version prüfen
-asc apps review preflight <bundle-id>
+ascelerate apps review preflight <bundle-id>
 
 # Eine bestimmte Version prüfen
-asc apps review preflight <bundle-id> --version 2.1.0
+ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
 Der Befehl prüft den Versionsstatus, die Build-Zuordnung und geht dann jede Sprache durch, um Lokalisierungsfelder (Beschreibung, Neuigkeiten, Schlüsselwörter), App-Info-Felder (Name, Untertitel, Datenschutzrichtlinien-URL) und Screenshots zu überprüfen:
@@ -105,54 +105,54 @@ Der Befehl gibt einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlsc
 
 ```bash
 # Status der stufenweisen Veröffentlichung anzeigen
-asc apps phased-release <bundle-id>
+ascelerate apps phased-release <bundle-id>
 
 # Stufenweise Veröffentlichung aktivieren (startet inaktiv, wird aktiv wenn die Version live geht)
-asc apps phased-release <bundle-id> --enable
+ascelerate apps phased-release <bundle-id> --enable
 
 # Eine stufenweise Veröffentlichung pausieren, fortsetzen oder abschließen
-asc apps phased-release <bundle-id> --pause
-asc apps phased-release <bundle-id> --resume
-asc apps phased-release <bundle-id> --complete
+ascelerate apps phased-release <bundle-id> --pause
+ascelerate apps phased-release <bundle-id> --resume
+ascelerate apps phased-release <bundle-id> --complete
 
 # Stufenweise Veröffentlichung vollständig entfernen
-asc apps phased-release <bundle-id> --disable
+ascelerate apps phased-release <bundle-id> --disable
 ```
 
 ## Länderverfügbarkeit
 
 ```bash
 # Anzeigen, in welchen Ländern die App verfügbar ist
-asc apps availability <bundle-id>
+ascelerate apps availability <bundle-id>
 
 # Vollständige Ländernamen anzeigen
-asc apps availability <bundle-id> --verbose
+ascelerate apps availability <bundle-id> --verbose
 
 # Verfügbarkeit in Ländern aktivieren oder deaktivieren
-asc apps availability <bundle-id> --add CHN,RUS
-asc apps availability <bundle-id> --remove CHN
+ascelerate apps availability <bundle-id> --add CHN,RUS
+ascelerate apps availability <bundle-id> --remove CHN
 ```
 
 ## Verschlüsselungserklärungen
 
 ```bash
 # Bestehende Verschlüsselungserklärungen anzeigen
-asc apps encryption <bundle-id>
+ascelerate apps encryption <bundle-id>
 
 # Neue Verschlüsselungserklärung erstellen
-asc apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
-asc apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
+ascelerate apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
+ascelerate apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
 ```
 
 ## EULA
 
 ```bash
 # Aktuelle EULA anzeigen (oder sehen, dass die Standard-Apple-EULA gilt)
-asc apps eula <bundle-id>
+ascelerate apps eula <bundle-id>
 
 # Benutzerdefinierte EULA aus einer Textdatei setzen
-asc apps eula <bundle-id> --file eula.txt
+ascelerate apps eula <bundle-id> --file eula.txt
 
 # Benutzerdefinierte EULA entfernen (kehrt zur Standard-Apple-EULA zurück)
-asc apps eula <bundle-id> --delete
+ascelerate apps eula <bundle-id> --delete
 ```

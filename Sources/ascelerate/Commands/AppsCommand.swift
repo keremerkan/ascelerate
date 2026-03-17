@@ -47,7 +47,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     func run() async throws {
@@ -68,7 +68,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     func run() async throws {
@@ -124,7 +124,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -184,7 +184,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "The locale to update (e.g. en-US). Defaults to the app's primary locale.")
@@ -273,7 +273,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Option(name: .long, help: "Path to the JSON file with localization data.",
@@ -463,7 +463,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -518,7 +518,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Argument(help: "The version string (e.g. 2.1.0).")
@@ -612,7 +612,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -648,7 +648,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -764,7 +764,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -823,7 +823,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -984,7 +984,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -1121,7 +1121,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -1324,7 +1324,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Filter by version string (e.g. 14.3).")
@@ -1432,7 +1432,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -1702,7 +1702,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1792,7 +1792,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         print()
         print(green("Resolved") + " \(rejectedItems.count) item(s).")
-        print("Run 'asc apps review submit \(bundleID)' to resubmit.")
+        print("Run 'ascelerate apps review submit \(bundleID)' to resubmit.")
       }
     }
     
@@ -1804,7 +1804,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1914,7 +1914,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String?
       
       @Flag(name: .long, help: "List available category IDs (iOS categories).")
@@ -2022,7 +2022,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "The locale to update (e.g. en-US). Defaults to the app's primary locale.")
@@ -2162,7 +2162,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Option(name: .long, help: "Path to the JSON file with localization data.",
@@ -2319,7 +2319,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
       
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
       
       @Option(name: .long, help: "Output file path (default: <bundle-id>-app-infos.json).",
@@ -2367,7 +2367,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
     
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
     
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -2582,7 +2582,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Option(name: .long, help: "Comma-separated territory codes to make available (e.g. CHN,RUS).")
@@ -2764,7 +2764,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Flag(name: .long, help: "Create a new encryption declaration.")
@@ -2881,7 +2881,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.asc/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
     
     @Option(name: .long, help: "Path to a text file with EULA content.",

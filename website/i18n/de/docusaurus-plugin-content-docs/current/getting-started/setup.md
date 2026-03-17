@@ -12,18 +12,18 @@ Gehen Sie zu [App Store Connect > Benutzer und Zugriff > Integrationen > App Sto
 ## 2. Konfigurieren
 
 ```bash
-asc configure
+ascelerate configure
 ```
 
-Dies fragt nach Ihrer **Key ID**, **Issuer ID** und dem Pfad zu Ihrer `.p8`-Datei. Der private Schlüssel wird mit strengen Dateiberechtigungen (nur Eigentümerzugriff) nach `~/.asc/` kopiert.
+Dies fragt nach Ihrer **Key ID**, **Issuer ID** und dem Pfad zu Ihrer `.p8`-Datei. Der private Schlüssel wird mit strengen Dateiberechtigungen (nur Eigentümerzugriff) nach `~/.ascelerate/` kopiert.
 
-Die Konfiguration wird unter `~/.asc/config.json` gespeichert:
+Die Konfiguration wird unter `~/.ascelerate/config.json` gespeichert:
 
 ```json
 {
     "keyId": "KEY_ID",
     "issuerId": "ISSUER_ID",
-    "privateKeyPath": "/Users/.../.asc/AuthKey_XXXXXXXXXX.p8"
+    "privateKeyPath": "/Users/.../.ascelerate/AuthKey_XXXXXXXXXX.p8"
 }
 ```
 
@@ -32,7 +32,7 @@ Die Konfiguration wird unter `~/.asc/config.json` gespeichert:
 Führen Sie einen kurzen Befehl aus, um zu überprüfen, ob alles funktioniert:
 
 ```bash
-asc apps list
+ascelerate apps list
 ```
 
 Wenn Ihre Zugangsdaten korrekt sind, sehen Sie eine Liste aller Ihrer Apps.
@@ -42,7 +42,7 @@ Wenn Ihre Zugangsdaten korrekt sind, sehen Sie eine Liste aller Ihrer Apps.
 Die App Store Connect API hat ein rollierendes stündliches Limit von 3600 Anfragen. Sie können Ihren aktuellen Verbrauch jederzeit prüfen:
 
 ```bash
-asc rate-limit
+ascelerate rate-limit
 ```
 
 ```

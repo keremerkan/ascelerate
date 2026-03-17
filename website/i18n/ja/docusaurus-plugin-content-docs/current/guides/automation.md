@@ -8,8 +8,8 @@ title: 自動化とCI/CD
 確認プロンプトを表示するほとんどのコマンドは `--yes` / `-y` でプロンプトをスキップできるため、CI/CDパイプラインやスクリプトでの使用に適しています。
 
 ```bash
-asc apps build attach-latest <bundle-id> --yes
-asc apps review submit <bundle-id> --yes
+ascelerate apps build attach-latest <bundle-id> --yes
+ascelerate apps review submit <bundle-id> --yes
 ```
 
 :::warning
@@ -23,7 +23,7 @@ asc apps review submit <bundle-id> --yes
 Xcode GUIログインのないCI環境では、認証フラグを渡してください：
 
 ```bash
-asc builds archive \
+ascelerate builds archive \
   --authentication-key-path /path/to/AuthKey.p8 \
   --authentication-key-id YOUR_KEY_ID \
   --authentication-key-issuer-id YOUR_ISSUER_ID
@@ -34,5 +34,5 @@ asc builds archive \
 コマンドは失敗時にゼロ以外のステータスで終了するため、`set -e` や `&&` チェーンを使用するスクリプトで安全に使用できます。`preflight` コマンドはチェックが失敗するとゼロ以外で終了するため、提出のゲートとして使用できます：
 
 ```bash
-asc apps review preflight <bundle-id> && asc apps review submit <bundle-id>
+ascelerate apps review preflight <bundle-id> && asc apps review submit <bundle-id>
 ```

@@ -9,35 +9,35 @@ title: Uygulama Bilgileri ve Kategoriler
 
 ```bash
 # Uygulama bilgilerini, kategorileri ve locale bazlı meta verileri görüntüleyin
-asc apps app-info view <bundle-id>
+ascelerate apps app-info view <bundle-id>
 
 # Tüm kullanılabilir kategori ID'lerini listeleyin (bundle ID gerekmez)
-asc apps app-info view --list-categories
+ascelerate apps app-info view --list-categories
 ```
 
 ## Güncelleme
 
 ```bash
 # Tek bir locale için yerelleştirme alanlarını güncelleyin
-asc apps app-info update <bundle-id> --name "My App" --subtitle "Best app ever"
-asc apps app-info update <bundle-id> --locale de-DE --name "Meine App"
+ascelerate apps app-info update <bundle-id> --name "My App" --subtitle "Best app ever"
+ascelerate apps app-info update <bundle-id> --locale de-DE --name "Meine App"
 
 # Kategorileri güncelleyin (yerelleştirme flag'leriyle birleştirilebilir)
-asc apps app-info update <bundle-id> --primary-category UTILITIES
-asc apps app-info update <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
+ascelerate apps app-info update <bundle-id> --primary-category UTILITIES
+ascelerate apps app-info update <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
 ```
 
 ## Dışa aktarma
 
 ```bash
-asc apps app-info export <bundle-id>
-asc apps app-info export <bundle-id> --output app-infos.json
+ascelerate apps app-info export <bundle-id>
+ascelerate apps app-info export <bundle-id> --output app-infos.json
 ```
 
 ## İçe aktarma
 
 ```bash
-asc apps app-info import <bundle-id> --file app-infos.json
+ascelerate apps app-info import <bundle-id> --file app-infos.json
 ```
 
 ## JSON formatı
@@ -63,11 +63,11 @@ Yalnızca mevcut alanlar güncellenir -- belirtilmeyen alanlar değiştirilmez.
 
 ```bash
 # En son sürüm için yaş derecelendirme beyanını görüntüleyin
-asc apps app-info age-rating <bundle-id>
-asc apps app-info age-rating <bundle-id> --version 2.1.0
+ascelerate apps app-info age-rating <bundle-id>
+ascelerate apps app-info age-rating <bundle-id> --version 2.1.0
 
 # Yaş derecelendirmelerini bir JSON dosyasından güncelleyin
-asc apps app-info age-rating <bundle-id> --file age-rating.json
+ascelerate apps app-info age-rating <bundle-id> --file age-rating.json
 ```
 
 JSON dosyası API ile aynı alan adlarını kullanır. Yalnızca dosyada bulunan alanlar güncellenir:
@@ -87,8 +87,8 @@ Yoğunluk alanları şu değerleri kabul eder: `NONE`, `INFREQUENT_OR_MILD`, `FR
 
 ```bash
 # Mevcut routing coverage durumunu görüntüleyin
-asc apps routing-coverage <bundle-id>
+ascelerate apps routing-coverage <bundle-id>
 
 # Bir .geojson dosyası yükleyin
-asc apps routing-coverage <bundle-id> --file coverage.geojson
+ascelerate apps routing-coverage <bundle-id> --file coverage.geojson
 ```

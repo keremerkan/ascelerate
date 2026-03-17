@@ -8,8 +8,8 @@ title: Captures d'écran et aperçus
 ## Télécharger
 
 ```bash
-asc apps media download <bundle-id>
-asc apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id>
+ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 ```
 
 Le téléchargement se fait par défaut dans `<bundle-id>-media/`, en utilisant la même structure de dossiers attendue par le téléversement.
@@ -18,19 +18,19 @@ Le téléchargement se fait par défaut dans `<bundle-id>-media/`, en utilisant 
 
 ```bash
 # Téléverser depuis un dossier
-asc apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> --folder media/
 
 # Téléverser depuis un fichier zip (par ex. exporté depuis asc-screenshots)
-asc apps media upload <bundle-id> --folder screenshots.zip
+ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # Téléverser vers une version spécifique
-asc apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
 
 # Remplacer les médias existants dans les ensembles correspondants avant le téléversement
-asc apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> --folder media/ --replace
 
 # Mode interactif : choisir un dossier ou un zip depuis le répertoire courant
-asc apps media upload <bundle-id>
+ascelerate apps media upload <bundle-id>
 ```
 
 Lorsque `--folder` est omis, la commande liste tous les sous-répertoires et fichiers `.zip` du répertoire courant sous forme de sélecteur numéroté. Les fichiers zip sont extraits automatiquement avant le téléversement.
@@ -125,7 +125,7 @@ de-DE/APP_IPHONE_67/01_hero.png
 Téléversez le zip exporté directement :
 
 ```bash
-asc apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
 ```
 
 ## Vérifier et retenter les médias bloqués
@@ -134,13 +134,13 @@ Parfois, des captures d'écran ou des aperçus restent bloqués en « traitement
 
 ```bash
 # Vérifier le statut de toutes les captures d'écran et aperçus
-asc apps media verify <bundle-id>
+ascelerate apps media verify <bundle-id>
 
 # Vérifier une version spécifique
-asc apps media verify <bundle-id> --version 2.1.0
+ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Retenter les éléments bloqués en utilisant les fichiers locaux du dossier de médias
-asc apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> --folder media/
 ```
 
 Sans `--folder`, la commande affiche un rapport de statut en lecture seule. Les ensembles dont tous les éléments sont complets affichent une ligne compacte ; les ensembles avec des éléments bloqués s'étendent pour montrer chaque fichier et son état. Avec `--folder`, elle propose de retenter les éléments bloqués en les supprimant et en les re-téléversant depuis les fichiers locaux correspondants, en préservant l'ordre de position d'origine.

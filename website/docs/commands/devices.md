@@ -10,39 +10,39 @@ All device commands support interactive mode — arguments are optional. When om
 ## List
 
 ```bash
-asc devices list
-asc devices list --platform IOS --status ENABLED
+ascelerate devices list
+ascelerate devices list --platform IOS --status ENABLED
 ```
 
 ## Details
 
 ```bash
 # Interactive picker
-asc devices info
+ascelerate devices info
 
 # By name or UDID
-asc devices info "My iPhone"
+ascelerate devices info "My iPhone"
 ```
 
 ## Register
 
 ```bash
 # Interactive prompts
-asc devices register
+ascelerate devices register
 
 # Non-interactive
-asc devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
+ascelerate devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
 ```
 
 ## Update
 
 ```bash
 # Interactive picker and update prompts
-asc devices update
+ascelerate devices update
 
 # Rename a device
-asc devices update "My iPhone" --name "Work iPhone"
+ascelerate devices update "My iPhone" --name "Work iPhone"
 
 # Disable a device
-asc devices update "My iPhone" --status DISABLED
+ascelerate devices update "My iPhone" --status DISABLED
 ```

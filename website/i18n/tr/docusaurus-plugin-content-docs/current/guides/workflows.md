@@ -8,12 +8,12 @@ title: Workflow'lar
 Birden fazla komutu tek bir otomatik çalıştırmada bir workflow dosyasıyla zincirleyin:
 
 ```bash
-asc run-workflow release.txt
-asc run-workflow release.txt --yes   # tüm soruları atla (CI/CD)
-asc run-workflow                     # .workflow/.txt dosyalarından interaktif olarak seç
+ascelerate run-workflow release.txt
+ascelerate run-workflow release.txt --yes   # tüm soruları atla (CI/CD)
+ascelerate run-workflow                     # .workflow/.txt dosyalarından interaktif olarak seç
 ```
 
-Bir workflow dosyası, her satırda bir komut bulunan düz metin dosyasıdır (`asc` öneki olmadan). `#` ile başlayan satırlar yorumdur, boş satırlar yok sayılır. Hem `.workflow` hem de `.txt` uzantıları desteklenir.
+Bir workflow dosyası, her satırda bir komut bulunan düz metin dosyasıdır (`ascelerate` öneki olmadan). `#` ile başlayan satırlar yorumdur, boş satırlar yok sayılır. Hem `.workflow` hem de `.txt` uzantıları desteklenir.
 
 ## Örnek
 

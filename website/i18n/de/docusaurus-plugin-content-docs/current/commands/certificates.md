@@ -10,31 +10,31 @@ Alle Zertifikatsbefehle unterstützen den interaktiven Modus — Argumente sind 
 ## Auflisten
 
 ```bash
-asc certs list
-asc certs list --type DISTRIBUTION
+ascelerate certs list
+ascelerate certs list --type DISTRIBUTION
 ```
 
 ## Details
 
 ```bash
 # Interaktive Auswahl
-asc certs info
+ascelerate certs info
 
 # Nach Seriennummer oder Anzeigename
-asc certs info "Apple Distribution: Example Inc"
+ascelerate certs info "Apple Distribution: Example Inc"
 ```
 
 ## Erstellen
 
 ```bash
 # Interaktive Typauswahl, generiert automatisch RSA-Schlüsselpaar und CSR
-asc certs create
+ascelerate certs create
 
 # Typ angeben
-asc certs create --type DISTRIBUTION
+ascelerate certs create --type DISTRIBUTION
 
 # Eigene CSR verwenden
-asc certs create --type DEVELOPMENT --csr my-request.pem
+ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
 Wenn kein `--csr` angegeben wird, generiert der Befehl automatisch ein RSA-Schlüsselpaar und eine CSR und importiert alles in den Anmelde-Schlüsselbund.
@@ -43,8 +43,8 @@ Wenn kein `--csr` angegeben wird, generiert der Befehl automatisch ein RSA-Schl�
 
 ```bash
 # Interaktive Auswahl
-asc certs revoke
+ascelerate certs revoke
 
 # Nach Seriennummer
-asc certs revoke ABC123DEF456
+ascelerate certs revoke ABC123DEF456
 ```

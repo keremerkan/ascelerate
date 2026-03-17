@@ -5,24 +5,24 @@ title: AI Coding Skill
 
 # AI Coding Skill
 
-asc ships with a skill file that gives AI coding agents (Claude Code, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
+ascelerate ships with a skill file that gives AI coding agents (Claude Code, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
 
 ## Install via the binary (Claude Code only)
 
 ```bash
-asc install-skill
+ascelerate install-skill
 ```
 
 The tool checks for outdated skills on each run and prompts you to update after upgrades. To remove:
 
 ```bash
-asc install-skill --uninstall
+ascelerate install-skill --uninstall
 ```
 
 ## Install via npx (any AI coding agent)
 
 ```bash
-npx asc-skill
+npx ascelerate-skill
 ```
 
 This presents an interactive menu to select your agent and installs the skill to the appropriate directory. The skill file is fetched from GitHub, so it's always up to date.
@@ -30,14 +30,14 @@ This presents an interactive menu to select your agent and installs the skill to
 To remove:
 
 ```bash
-npx asc-skill --uninstall
+npx ascelerate-skill --uninstall
 ```
 
 ## What the skill enables
 
 With the skill installed, your AI coding agent can:
 
-- Run any asc command on your behalf
+- Run any ascelerate command on your behalf
 - Build workflow files for your release process
 - Manage localizations across multiple languages
 - Handle the full archive → upload → submit pipeline

@@ -10,32 +10,32 @@ Tüm profil komutları interaktif modu destekler -- argümanlar isteğe bağlıd
 ## Listeleme
 
 ```bash
-asc profiles list
-asc profiles list --type IOS_APP_STORE --state ACTIVE
+ascelerate profiles list
+ascelerate profiles list --type IOS_APP_STORE --state ACTIVE
 ```
 
 ## Detayları görüntüleme
 
 ```bash
-asc profiles info
-asc profiles info "My App Store Profile"
+ascelerate profiles info
+ascelerate profiles info "My App Store Profile"
 ```
 
 ## İndirme
 
 ```bash
-asc profiles download
-asc profiles download "My App Store Profile" --output ./profiles/
+ascelerate profiles download
+ascelerate profiles download "My App Store Profile" --output ./profiles/
 ```
 
 ## Oluşturma
 
 ```bash
 # Tamamen interaktif
-asc profiles create
+ascelerate profiles create
 
 # İnteraktif olmayan
-asc profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.example.MyApp --certificates all
+ascelerate profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.example.MyApp --certificates all
 ```
 
 `--certificates all` eşleşen ailenin (distribution, development veya Developer ID) tüm sertifikalarını kullanır. Seri numaralarını da belirtebilirsiniz: `--certificates ABC123,DEF456`.
@@ -43,8 +43,8 @@ asc profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.exa
 ## Silme
 
 ```bash
-asc profiles delete
-asc profiles delete "My App Store Profile"
+ascelerate profiles delete
+ascelerate profiles delete "My App Store Profile"
 ```
 
 ## Yeniden oluşturma
@@ -53,20 +53,20 @@ Profilleri silip eşleşen ailenin en son sertifikalarıyla yeniden oluşturarak
 
 ```bash
 # İnteraktif: tüm profillerden seçin (durumu gösterir)
-asc profiles reissue
+ascelerate profiles reissue
 
 # Belirli bir profili ada göre yeniden oluşturun
-asc profiles reissue "My Profile"
+ascelerate profiles reissue "My Profile"
 
 # Tüm geçersiz profilleri yeniden oluşturun
-asc profiles reissue --all-invalid
+ascelerate profiles reissue --all-invalid
 
 # Durumdan bağımsız olarak tüm profilleri yeniden oluşturun
-asc profiles reissue --all
+ascelerate profiles reissue --all
 
 # Tüm profilleri yeniden oluşturun, dev/adhoc için tüm etkin cihazları kullanın
-asc profiles reissue --all --all-devices
+ascelerate profiles reissue --all --all-devices
 
 # Otomatik algılama yerine belirli sertifikaları kullanın
-asc profiles reissue --all --to-certs ABC123,DEF456
+ascelerate profiles reissue --all --to-certs ABC123,DEF456
 ```

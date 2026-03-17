@@ -10,31 +10,31 @@ Toutes les commandes de certificats prennent en charge le mode interactif -- les
 ## Lister
 
 ```bash
-asc certs list
-asc certs list --type DISTRIBUTION
+ascelerate certs list
+ascelerate certs list --type DISTRIBUTION
 ```
 
 ## Détails
 
 ```bash
 # Sélecteur interactif
-asc certs info
+ascelerate certs info
 
 # Par numéro de série ou nom d'affichage
-asc certs info "Apple Distribution: Example Inc"
+ascelerate certs info "Apple Distribution: Example Inc"
 ```
 
 ## Créer
 
 ```bash
 # Sélecteur de type interactif, génère automatiquement une paire de clés RSA et un CSR
-asc certs create
+ascelerate certs create
 
 # Spécifier le type
-asc certs create --type DISTRIBUTION
+ascelerate certs create --type DISTRIBUTION
 
 # Utiliser votre propre CSR
-asc certs create --type DEVELOPMENT --csr my-request.pem
+ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
 Lorsqu'aucun `--csr` n'est fourni, la commande génère automatiquement une paire de clés RSA et un CSR, puis importe le tout dans le trousseau de connexion.
@@ -43,8 +43,8 @@ Lorsqu'aucun `--csr` n'est fourni, la commande génère automatiquement une pair
 
 ```bash
 # Sélecteur interactif
-asc certs revoke
+ascelerate certs revoke
 
 # Par numéro de série
-asc certs revoke ABC123DEF456
+ascelerate certs revoke ABC123DEF456
 ```

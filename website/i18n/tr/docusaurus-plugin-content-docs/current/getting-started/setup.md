@@ -12,18 +12,18 @@ title: Yapılandırma
 ## 2. Yapılandırma
 
 ```bash
-asc configure
+ascelerate configure
 ```
 
-Bu komut **Key ID**, **Issuer ID** ve `.p8` dosyanızın yolunu soracaktır. Özel anahtar, sıkı dosya izinleriyle (yalnızca sahip erişimi) `~/.asc/` dizinine kopyalanır.
+Bu komut **Key ID**, **Issuer ID** ve `.p8` dosyanızın yolunu soracaktır. Özel anahtar, sıkı dosya izinleriyle (yalnızca sahip erişimi) `~/.ascelerate/` dizinine kopyalanır.
 
-Yapılandırma `~/.asc/config.json` dosyasında saklanır:
+Yapılandırma `~/.ascelerate/config.json` dosyasında saklanır:
 
 ```json
 {
     "keyId": "KEY_ID",
     "issuerId": "ISSUER_ID",
-    "privateKeyPath": "/Users/.../.asc/AuthKey_XXXXXXXXXX.p8"
+    "privateKeyPath": "/Users/.../.ascelerate/AuthKey_XXXXXXXXXX.p8"
 }
 ```
 
@@ -32,7 +32,7 @@ Yapılandırma `~/.asc/config.json` dosyasında saklanır:
 Her şeyin çalıştığını doğrulamak için hızlıca bir komut çalıştırın:
 
 ```bash
-asc apps list
+ascelerate apps list
 ```
 
 Kimlik bilgileriniz doğruysa, tüm uygulamalarınızın listesini göreceksiniz.
@@ -42,7 +42,7 @@ Kimlik bilgileriniz doğruysa, tüm uygulamalarınızın listesini göreceksiniz
 App Store Connect API'nin saatlik 3600 istek kotası vardır (kayan pencere). Mevcut kullanımınızı istediğiniz zaman kontrol edebilirsiniz:
 
 ```bash
-asc rate-limit
+ascelerate rate-limit
 ```
 
 ```

@@ -10,32 +10,32 @@ title: プロビジョニングプロファイル
 ## 一覧
 
 ```bash
-asc profiles list
-asc profiles list --type IOS_APP_STORE --state ACTIVE
+ascelerate profiles list
+ascelerate profiles list --type IOS_APP_STORE --state ACTIVE
 ```
 
 ## 詳細
 
 ```bash
-asc profiles info
-asc profiles info "My App Store Profile"
+ascelerate profiles info
+ascelerate profiles info "My App Store Profile"
 ```
 
 ## ダウンロード
 
 ```bash
-asc profiles download
-asc profiles download "My App Store Profile" --output ./profiles/
+ascelerate profiles download
+ascelerate profiles download "My App Store Profile" --output ./profiles/
 ```
 
 ## 作成
 
 ```bash
 # 完全にインタラクティブ
-asc profiles create
+ascelerate profiles create
 
 # 非インタラクティブ
-asc profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.example.MyApp --certificates all
+ascelerate profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.example.MyApp --certificates all
 ```
 
 `--certificates all` は、該当するファミリー（distribution、development、またはDeveloper ID）のすべての証明書を使用します。シリアル番号で指定することもできます：`--certificates ABC123,DEF456`。
@@ -43,8 +43,8 @@ asc profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.exa
 ## 削除
 
 ```bash
-asc profiles delete
-asc profiles delete "My App Store Profile"
+ascelerate profiles delete
+ascelerate profiles delete "My App Store Profile"
 ```
 
 ## 再発行
@@ -53,20 +53,20 @@ asc profiles delete "My App Store Profile"
 
 ```bash
 # インタラクティブ：すべてのプロファイルから選択（ステータス表示あり）
-asc profiles reissue
+ascelerate profiles reissue
 
 # 名前を指定して特定のプロファイルを再発行
-asc profiles reissue "My Profile"
+ascelerate profiles reissue "My Profile"
 
 # すべての無効なプロファイルを再発行
-asc profiles reissue --all-invalid
+ascelerate profiles reissue --all-invalid
 
 # 状態に関係なくすべてのプロファイルを再発行
-asc profiles reissue --all
+ascelerate profiles reissue --all
 
 # すべてを再発行し、dev/adhocにはすべての有効なデバイスを使用
-asc profiles reissue --all --all-devices
+ascelerate profiles reissue --all --all-devices
 
 # 自動検出の代わりに特定の証明書を使用
-asc profiles reissue --all --to-certs ABC123,DEF456
+ascelerate profiles reissue --all --to-certs ABC123,DEF456
 ```

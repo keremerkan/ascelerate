@@ -8,26 +8,26 @@ title: Uygulamalar
 ## Uygulamaları listeleme
 
 ```bash
-asc apps list
+ascelerate apps list
 ```
 
 ## Uygulama detayları
 
 ```bash
-asc apps info <bundle-id>
+ascelerate apps info <bundle-id>
 ```
 
 ## Sürümleri listeleme
 
 ```bash
-asc apps versions <bundle-id>
+ascelerate apps versions <bundle-id>
 ```
 
 ## Sürüm oluşturma
 
 ```bash
-asc apps create-version <bundle-id> <version-string>
-asc apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
+ascelerate apps create-version <bundle-id> <version-string>
+ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
 ```
 
 `--release-type` isteğe bağlıdır -- belirtilmezse önceki sürümün ayarı kullanılır.
@@ -37,15 +37,15 @@ asc apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
 ### İnceleme durumunu kontrol etme
 
 ```bash
-asc apps review status <bundle-id>
-asc apps review status <bundle-id> --version 2.1.0
+ascelerate apps review status <bundle-id>
+ascelerate apps review status <bundle-id> --version 2.1.0
 ```
 
 ### İncelemeye gönderme
 
 ```bash
-asc apps review submit <bundle-id>
-asc apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id>
+ascelerate apps review submit <bundle-id> --version 2.1.0
 ```
 
 Gönderim sırasında komut, bekleyen değişiklikleri olan IAP'leri ve abonelikleri otomatik olarak algılar ve bunları uygulama sürümüyle birlikte göndermeyi teklif eder.
@@ -55,13 +55,13 @@ Gönderim sırasında komut, bekleyen değişiklikleri olan IAP'leri ve abonelik
 Sorunları düzeltip Resolution Center'da yanıtladıktan sonra:
 
 ```bash
-asc apps review resolve-issues <bundle-id>
+ascelerate apps review resolve-issues <bundle-id>
 ```
 
 ### Gönderimi iptal etme
 
 ```bash
-asc apps review cancel-submission <bundle-id>
+ascelerate apps review cancel-submission <bundle-id>
 ```
 
 ## Ön kontroller
@@ -70,10 +70,10 @@ asc apps review cancel-submission <bundle-id>
 
 ```bash
 # En son düzenlenebilir sürümü kontrol edin
-asc apps review preflight <bundle-id>
+ascelerate apps review preflight <bundle-id>
 
 # Belirli bir sürümü kontrol edin
-asc apps review preflight <bundle-id> --version 2.1.0
+ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
 Komut; sürüm durumunu, build eklentisini kontrol eder ve ardından her locale'i inceleyerek yerelleştirme alanlarını (açıklama, yenilikler, anahtar kelimeler), uygulama bilgi alanlarını (ad, alt başlık, gizlilik politikası URL'si) ve ekran görüntülerini doğrular:
@@ -105,54 +105,54 @@ Herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu dön
 
 ```bash
 # Aşamalı yayınlama durumunu görüntüleyin
-asc apps phased-release <bundle-id>
+ascelerate apps phased-release <bundle-id>
 
 # Aşamalı yayınlamayı etkinleştirin (pasif başlar, sürüm yayınlandığında aktifleşir)
-asc apps phased-release <bundle-id> --enable
+ascelerate apps phased-release <bundle-id> --enable
 
 # Aşamalı yayınlamayı duraklatın, devam ettirin veya tamamlayın
-asc apps phased-release <bundle-id> --pause
-asc apps phased-release <bundle-id> --resume
-asc apps phased-release <bundle-id> --complete
+ascelerate apps phased-release <bundle-id> --pause
+ascelerate apps phased-release <bundle-id> --resume
+ascelerate apps phased-release <bundle-id> --complete
 
 # Aşamalı yayınlamayı tamamen kaldırın
-asc apps phased-release <bundle-id> --disable
+ascelerate apps phased-release <bundle-id> --disable
 ```
 
 ## Bölge erişilebilirliği
 
 ```bash
 # Uygulamanın hangi bölgelerde erişilebilir olduğunu görüntüleyin
-asc apps availability <bundle-id>
+ascelerate apps availability <bundle-id>
 
 # Tam ülke adlarını gösterin
-asc apps availability <bundle-id> --verbose
+ascelerate apps availability <bundle-id> --verbose
 
 # Bölgeleri erişilebilir veya erişilemez yapın
-asc apps availability <bundle-id> --add CHN,RUS
-asc apps availability <bundle-id> --remove CHN
+ascelerate apps availability <bundle-id> --add CHN,RUS
+ascelerate apps availability <bundle-id> --remove CHN
 ```
 
 ## Şifreleme beyanları
 
 ```bash
 # Mevcut şifreleme beyanlarını görüntüleyin
-asc apps encryption <bundle-id>
+ascelerate apps encryption <bundle-id>
 
 # Yeni bir şifreleme beyanı oluşturun
-asc apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
-asc apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
+ascelerate apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
+ascelerate apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
 ```
 
 ## EULA
 
 ```bash
 # Mevcut EULA'yı görüntüleyin (veya standart Apple EULA'nın geçerli olduğunu görün)
-asc apps eula <bundle-id>
+ascelerate apps eula <bundle-id>
 
 # Bir metin dosyasından özel EULA ayarlayın
-asc apps eula <bundle-id> --file eula.txt
+ascelerate apps eula <bundle-id> --file eula.txt
 
 # Özel EULA'yı kaldırın (standart Apple EULA'ya geri döner)
-asc apps eula <bundle-id> --delete
+ascelerate apps eula <bundle-id> --delete
 ```

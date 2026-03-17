@@ -10,35 +10,35 @@ Tüm bundle ID komutları interaktif modu destekler -- argümanlar isteğe bağl
 ## Listeleme
 
 ```bash
-asc bundle-ids list
-asc bundle-ids list --platform IOS
+ascelerate bundle-ids list
+ascelerate bundle-ids list --platform IOS
 ```
 
 ## Detayları görüntüleme
 
 ```bash
 # İnteraktif seçici
-asc bundle-ids info
+ascelerate bundle-ids info
 
 # Tanımlayıcı ile
-asc bundle-ids info com.example.MyApp
+ascelerate bundle-ids info com.example.MyApp
 ```
 
 ## Kayıt etme
 
 ```bash
 # İnteraktif sorular
-asc bundle-ids register
+ascelerate bundle-ids register
 
 # İnteraktif olmayan
-asc bundle-ids register --name "My App" --identifier com.example.MyApp --platform IOS
+ascelerate bundle-ids register --name "My App" --identifier com.example.MyApp --platform IOS
 ```
 
 ## Yeniden adlandırma
 
 ```bash
-asc bundle-ids update
-asc bundle-ids update com.example.MyApp --name "My Renamed App"
+ascelerate bundle-ids update
+ascelerate bundle-ids update com.example.MyApp --name "My Renamed App"
 ```
 
 Tanımlayıcının kendisi değiştirilemez -- yalnızca ad değiştirilebilir.
@@ -46,8 +46,8 @@ Tanımlayıcının kendisi değiştirilemez -- yalnızca ad değiştirilebilir.
 ## Silme
 
 ```bash
-asc bundle-ids delete
-asc bundle-ids delete com.example.MyApp
+ascelerate bundle-ids delete
+ascelerate bundle-ids delete com.example.MyApp
 ```
 
 ## Yetenekler
@@ -56,18 +56,18 @@ asc bundle-ids delete com.example.MyApp
 
 ```bash
 # İnteraktif seçiciler (yalnızca henüz etkinleştirilmemiş yetenekleri gösterir)
-asc bundle-ids enable-capability
+ascelerate bundle-ids enable-capability
 
 # İnteraktif olmayan
-asc bundle-ids enable-capability com.example.MyApp --type PUSH_NOTIFICATIONS
+ascelerate bundle-ids enable-capability com.example.MyApp --type PUSH_NOTIFICATIONS
 ```
 
 ### Devre dışı bırakma
 
 ```bash
 # Şu anda etkinleştirilmiş yeteneklerden seçer
-asc bundle-ids disable-capability
-asc bundle-ids disable-capability com.example.MyApp
+ascelerate bundle-ids disable-capability
+ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
 Bir yeteneği etkinleştirdikten veya devre dışı bıraktıktan sonra, o bundle ID için provisioning profilleri varsa, komut bunları yeniden oluşturmayı teklif eder (değişikliklerin etkili olması için gereklidir).

@@ -10,31 +10,31 @@ title: 証明書
 ## 一覧
 
 ```bash
-asc certs list
-asc certs list --type DISTRIBUTION
+ascelerate certs list
+ascelerate certs list --type DISTRIBUTION
 ```
 
 ## 詳細
 
 ```bash
 # インタラクティブな選択
-asc certs info
+ascelerate certs info
 
 # シリアル番号または表示名で指定
-asc certs info "Apple Distribution: Example Inc"
+ascelerate certs info "Apple Distribution: Example Inc"
 ```
 
 ## 作成
 
 ```bash
 # インタラクティブなタイプ選択、RSAキーペアとCSRを自動生成
-asc certs create
+ascelerate certs create
 
 # タイプを指定
-asc certs create --type DISTRIBUTION
+ascelerate certs create --type DISTRIBUTION
 
 # 独自のCSRを使用
-asc certs create --type DEVELOPMENT --csr my-request.pem
+ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
 `--csr` を指定しない場合、コマンドはRSAキーペアとCSRを自動生成し、ログインキーチェーンにすべてをインポートします。
@@ -43,8 +43,8 @@ asc certs create --type DEVELOPMENT --csr my-request.pem
 
 ```bash
 # インタラクティブな選択
-asc certs revoke
+ascelerate certs revoke
 
 # シリアル番号で指定
-asc certs revoke ABC123DEF456
+ascelerate certs revoke ABC123DEF456
 ```

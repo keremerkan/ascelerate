@@ -10,31 +10,31 @@ Tüm sertifika komutları interaktif modu destekler -- argümanlar isteğe bağl
 ## Listeleme
 
 ```bash
-asc certs list
-asc certs list --type DISTRIBUTION
+ascelerate certs list
+ascelerate certs list --type DISTRIBUTION
 ```
 
 ## Detayları görüntüleme
 
 ```bash
 # İnteraktif seçici
-asc certs info
+ascelerate certs info
 
 # Seri numarası veya görünen ad ile
-asc certs info "Apple Distribution: Example Inc"
+ascelerate certs info "Apple Distribution: Example Inc"
 ```
 
 ## Oluşturma
 
 ```bash
 # İnteraktif tür seçici, RSA anahtar çifti ve CSR'yi otomatik oluşturur
-asc certs create
+ascelerate certs create
 
 # Tür belirtin
-asc certs create --type DISTRIBUTION
+ascelerate certs create --type DISTRIBUTION
 
 # Kendi CSR'nizi kullanın
-asc certs create --type DEVELOPMENT --csr my-request.pem
+ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
 `--csr` belirtilmediğinde komut otomatik olarak bir RSA anahtar çifti ve CSR oluşturur, ardından her şeyi login keychain'e aktarır.
@@ -43,8 +43,8 @@ asc certs create --type DEVELOPMENT --csr my-request.pem
 
 ```bash
 # İnteraktif seçici
-asc certs revoke
+ascelerate certs revoke
 
 # Seri numarası ile
-asc certs revoke ABC123DEF456
+ascelerate certs revoke ABC123DEF456
 ```

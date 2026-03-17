@@ -10,39 +10,39 @@ Tüm cihaz komutları interaktif modu destekler -- argümanlar isteğe bağlıd�
 ## Listeleme
 
 ```bash
-asc devices list
-asc devices list --platform IOS --status ENABLED
+ascelerate devices list
+ascelerate devices list --platform IOS --status ENABLED
 ```
 
 ## Detayları görüntüleme
 
 ```bash
 # İnteraktif seçici
-asc devices info
+ascelerate devices info
 
 # Ad veya UDID ile
-asc devices info "My iPhone"
+ascelerate devices info "My iPhone"
 ```
 
 ## Kayıt etme
 
 ```bash
 # İnteraktif sorular
-asc devices register
+ascelerate devices register
 
 # İnteraktif olmayan
-asc devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
+ascelerate devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
 ```
 
 ## Güncelleme
 
 ```bash
 # İnteraktif seçici ve güncelleme soruları
-asc devices update
+ascelerate devices update
 
 # Bir cihazı yeniden adlandırın
-asc devices update "My iPhone" --name "Work iPhone"
+ascelerate devices update "My iPhone" --name "Work iPhone"
 
 # Bir cihazı devre dışı bırakın
-asc devices update "My iPhone" --status DISABLED
+ascelerate devices update "My iPhone" --status DISABLED
 ```

@@ -14,7 +14,7 @@ title: Installation
 
 ```bash
 brew tap keremerkan/tap
-brew install asc-cli
+brew install ascelerate
 ```
 
 Der Tap stellt eine vorgefertigte Binärdatei für Apple Silicon Macs bereit, sodass die Installation sofort erfolgt.
@@ -32,15 +32,15 @@ Lädt die neueste Version herunter, installiert sie nach `/usr/local/bin` und en
 Laden Sie die neueste Version von [GitHub Releases](https://github.com/keremerkan/asc-cli/releases) herunter:
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/asc-macos-arm64.tar.gz -o asc.tar.gz
-tar xzf asc.tar.gz
-mv asc /usr/local/bin/
+curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
+tar xzf ascelerate.tar.gz
+mv ascelerate /usr/local/bin/
 ```
 
 Da die Binärdatei nicht signiert oder notarisiert ist, wird sie von macOS beim ersten Download unter Quarantäne gestellt. Entfernen Sie das Quarantäne-Attribut:
 
 ```bash
-xattr -d com.apple.quarantine /usr/local/bin/asc
+xattr -d com.apple.quarantine /usr/local/bin/ascelerate
 ```
 
 :::note
@@ -53,8 +53,8 @@ Vorgefertigte Binärdateien werden nur für Apple Silicon (arm64) bereitgestellt
 git clone https://github.com/keremerkan/asc-cli.git
 cd asc-cli
 swift build -c release
-strip .build/release/asc
-cp .build/release/asc /usr/local/bin/
+strip .build/release/ascelerate
+cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
@@ -66,7 +66,7 @@ Der Release-Build dauert einige Minuten, da die [asc-swift](https://github.com/a
 Richten Sie die Tab-Vervollständigung für Unterbefehle, Optionen und Flags ein (unterstützt zsh und bash):
 
 ```bash
-asc install-completions
+ascelerate install-completions
 ```
 
 Dies erkennt Ihre Shell und konfiguriert alles automatisch. Starten Sie Ihre Shell neu oder öffnen Sie einen neuen Tab, um die Vervollständigung zu aktivieren.
@@ -74,7 +74,7 @@ Dies erkennt Ihre Shell und konfiguriert alles automatisch. Starten Sie Ihre She
 ## Version prüfen
 
 ```bash
-asc version     # Gibt die Versionsnummer aus
-asc --version   # Wie oben
-asc -v          # Wie oben
+ascelerate version     # Gibt die Versionsnummer aus
+ascelerate --version   # Wie oben
+ascelerate -v          # Wie oben
 ```

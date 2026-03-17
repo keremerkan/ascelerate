@@ -10,39 +10,39 @@ Toutes les commandes d'appareils prennent en charge le mode interactif -- les ar
 ## Lister
 
 ```bash
-asc devices list
-asc devices list --platform IOS --status ENABLED
+ascelerate devices list
+ascelerate devices list --platform IOS --status ENABLED
 ```
 
 ## Détails
 
 ```bash
 # Sélecteur interactif
-asc devices info
+ascelerate devices info
 
 # Par nom ou UDID
-asc devices info "My iPhone"
+ascelerate devices info "My iPhone"
 ```
 
 ## Enregistrer
 
 ```bash
 # Invites interactives
-asc devices register
+ascelerate devices register
 
 # Non interactif
-asc devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
+ascelerate devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
 ```
 
 ## Mettre à jour
 
 ```bash
 # Sélecteur interactif et invites de mise à jour
-asc devices update
+ascelerate devices update
 
 # Renommer un appareil
-asc devices update "My iPhone" --name "Work iPhone"
+ascelerate devices update "My iPhone" --name "Work iPhone"
 
 # Désactiver un appareil
-asc devices update "My iPhone" --status DISABLED
+ascelerate devices update "My iPhone" --status DISABLED
 ```

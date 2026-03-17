@@ -8,12 +8,12 @@ title: ワークフロー
 ワークフローファイルを使用して、複数のコマンドを1回の自動実行にまとめます：
 
 ```bash
-asc run-workflow release.txt
-asc run-workflow release.txt --yes   # すべてのプロンプトをスキップ（CI/CD向け）
-asc run-workflow                     # .workflow/.txtファイルからインタラクティブに選択
+ascelerate run-workflow release.txt
+ascelerate run-workflow release.txt --yes   # すべてのプロンプトをスキップ（CI/CD向け）
+ascelerate run-workflow                     # .workflow/.txtファイルからインタラクティブに選択
 ```
 
-ワークフローファイルは、1行に1つのコマンドを記述するプレーンテキストファイルです（`asc` プレフィックスは不要）。`#` で始まる行はコメント、空行は無視されます。`.workflow` と `.txt` の両方の拡張子に対応しています。
+ワークフローファイルは、1行に1つのコマンドを記述するプレーンテキストファイルです（`ascelerate` プレフィックスは不要）。`#` で始まる行はコメント、空行は無視されます。`.workflow` と `.txt` の両方の拡張子に対応しています。
 
 ## 例
 

@@ -1,7 +1,7 @@
 {
-  "name": "asc-skill",
+  "name": "ascelerate-skill",
   "version": "0.7.0",
-  "description": "asc skill for AI coding agents (Claude Code, Cursor, Windsurf, Copilot)",
+  "description": "ascelerate skill for AI coding agents (Claude Code, Cursor, Windsurf, Copilot)",
   "license": "MIT",
   "author": "Kerem Erkan",
   "repository": {
@@ -10,7 +10,7 @@
     "directory": "skills"
   },
   "bin": {
-    "asc-skill": "bin/install.js"
+    "ascelerate-skill": "bin/install.js"
   },
   "files": [
     "bin"

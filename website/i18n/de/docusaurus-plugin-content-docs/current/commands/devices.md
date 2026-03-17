@@ -10,39 +10,39 @@ Alle Gerätebefehle unterstützen den interaktiven Modus — Argumente sind opti
 ## Auflisten
 
 ```bash
-asc devices list
-asc devices list --platform IOS --status ENABLED
+ascelerate devices list
+ascelerate devices list --platform IOS --status ENABLED
 ```
 
 ## Details
 
 ```bash
 # Interaktive Auswahl
-asc devices info
+ascelerate devices info
 
 # Nach Name oder UDID
-asc devices info "My iPhone"
+ascelerate devices info "My iPhone"
 ```
 
 ## Registrieren
 
 ```bash
 # Interaktive Eingabeaufforderungen
-asc devices register
+ascelerate devices register
 
 # Nicht-interaktiv
-asc devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
+ascelerate devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
 ```
 
 ## Aktualisieren
 
 ```bash
 # Interaktive Auswahl und Aktualisierungseingaben
-asc devices update
+ascelerate devices update
 
 # Ein Gerät umbenennen
-asc devices update "My iPhone" --name "Work iPhone"
+ascelerate devices update "My iPhone" --name "Work iPhone"
 
 # Ein Gerät deaktivieren
-asc devices update "My iPhone" --status DISABLED
+ascelerate devices update "My iPhone" --status DISABLED
 ```

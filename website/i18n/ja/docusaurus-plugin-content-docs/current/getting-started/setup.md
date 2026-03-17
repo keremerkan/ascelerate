@@ -12,18 +12,18 @@ title: セットアップ
 ## 2. 設定
 
 ```bash
-asc configure
+ascelerate configure
 ```
 
-**Key ID**、**Issuer ID**、および `.p8` ファイルのパスを入力するよう求められます。秘密鍵は厳格なファイル権限（所有者のみアクセス可能）で `~/.asc/` にコピーされます。
+**Key ID**、**Issuer ID**、および `.p8` ファイルのパスを入力するよう求められます。秘密鍵は厳格なファイル権限（所有者のみアクセス可能）で `~/.ascelerate/` にコピーされます。
 
-設定は `~/.asc/config.json` に保存されます：
+設定は `~/.ascelerate/config.json` に保存されます：
 
 ```json
 {
     "keyId": "KEY_ID",
     "issuerId": "ISSUER_ID",
-    "privateKeyPath": "/Users/.../.asc/AuthKey_XXXXXXXXXX.p8"
+    "privateKeyPath": "/Users/.../.ascelerate/AuthKey_XXXXXXXXXX.p8"
 }
 ```
 
@@ -32,7 +32,7 @@ asc configure
 簡単なコマンドを実行して、すべてが正常に動作することを確認します：
 
 ```bash
-asc apps list
+ascelerate apps list
 ```
 
 認証情報が正しければ、すべてのアプリの一覧が表示されます。
@@ -42,7 +42,7 @@ asc apps list
 App Store Connect APIには、1時間あたり3600リクエストのローリングクォータがあります。現在の使用状況はいつでも確認できます：
 
 ```bash
-asc rate-limit
+ascelerate rate-limit
 ```
 
 ```

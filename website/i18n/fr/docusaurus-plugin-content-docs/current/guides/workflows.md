@@ -8,12 +8,12 @@ title: Workflows
 Enchaînez plusieurs commandes en une seule exécution automatisée avec un fichier de workflow :
 
 ```bash
-asc run-workflow release.txt
-asc run-workflow release.txt --yes   # ignore toutes les invites (CI/CD)
-asc run-workflow                     # sélection interactive parmi les fichiers .workflow/.txt
+ascelerate run-workflow release.txt
+ascelerate run-workflow release.txt --yes   # ignore toutes les invites (CI/CD)
+ascelerate run-workflow                     # sélection interactive parmi les fichiers .workflow/.txt
 ```
 
-Un fichier de workflow est un fichier texte brut avec une commande par ligne (sans le préfixe `asc`). Les lignes commençant par `#` sont des commentaires, les lignes vides sont ignorées. Les extensions `.workflow` et `.txt` sont toutes deux prises en charge.
+Un fichier de workflow est un fichier texte brut avec une commande par ligne (sans le préfixe `ascelerate`). Les lignes commençant par `#` sont des commentaires, les lignes vides sont ignorées. Les extensions `.workflow` et `.txt` sont toutes deux prises en charge.
 
 ## Exemple
 

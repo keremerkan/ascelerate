@@ -8,8 +8,8 @@ title: Ekran Görüntüleri ve Önizlemeler
 ## İndirme
 
 ```bash
-asc apps media download <bundle-id>
-asc apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id>
+ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 ```
 
 Varsayılan olarak `<bundle-id>-media/` dizinine indirir, yükleme tarafından beklenen aynı klasör yapısını kullanır.
@@ -18,19 +18,19 @@ Varsayılan olarak `<bundle-id>-media/` dizinine indirir, yükleme tarafından b
 
 ```bash
 # Bir klasörden yükleyin
-asc apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> --folder media/
 
 # Bir zip dosyasından yükleyin (ör. asc-screenshots'tan dışa aktarılmış)
-asc apps media upload <bundle-id> --folder screenshots.zip
+ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # Belirli bir sürüme yükleyin
-asc apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
 
 # Yüklemeden önce eşleşen setlerdeki mevcut medyayı değiştirin
-asc apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> --folder media/ --replace
 
 # İnteraktif mod: geçerli dizinden bir klasör veya zip seçin
-asc apps media upload <bundle-id>
+ascelerate apps media upload <bundle-id>
 ```
 
 `--folder` belirtilmediğinde, komut geçerli dizindeki tüm alt dizinleri ve `.zip` dosyalarını numaralı seçici olarak listeler. Zip dosyaları yüklemeden önce otomatik olarak açılır.
@@ -125,7 +125,7 @@ de-DE/APP_IPHONE_67/01_hero.png
 Dışa aktarılan zip'i doğrudan yükleyin:
 
 ```bash
-asc apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
 ```
 
 ## Takılmış medyayı doğrulama ve yeniden deneme
@@ -134,13 +134,13 @@ Bazen ekran görüntüleri veya önizlemeler yüklemeden sonra "işleniyor" duru
 
 ```bash
 # Tüm ekran görüntüleri ve önizlemelerin durumunu kontrol edin
-asc apps media verify <bundle-id>
+ascelerate apps media verify <bundle-id>
 
 # Belirli bir sürümü kontrol edin
-asc apps media verify <bundle-id> --version 2.1.0
+ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Medya klasöründeki yerel dosyaları kullanarak takılmış öğeleri yeniden deneyin
-asc apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> --folder media/
 ```
 
 `--folder` olmadan komut salt okunur bir durum raporu gösterir. Tüm öğeleri tamamlanmış olan setler tek satırlık özet gösterir; takılmış öğeleri olan setler her dosyayı ve durumunu genişleterek gösterir. `--folder` ile takılmış öğeleri silip eşleşen yerel dosyalardan tekrar yüklemeyi teklif eder ve orijinal sıra düzenini korur.

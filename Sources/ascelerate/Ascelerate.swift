@@ -3,13 +3,13 @@ import ArgumentParser
 import Foundation
 
 @main
-struct ASC: AsyncParsableCommand {
+struct Ascelerate: AsyncParsableCommand {
   static let appVersion = "0.7.2"
 
   static let configuration = CommandConfiguration(
-    commandName: "asc",
+    commandName: "ascelerate",
     abstract: "A Swift CLI for App Store Connect.",
-    subcommands: [AppsCommand.self, BuildsCommand.self],
+    subcommands: [AppsCommand.self, BuildsCommand.self, ScreenshotCommand.self],
     groupedSubcommands: [
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
       CommandGroup(name: "Provisioning", subcommands: [BundleIDsCommand.self, CertsCommand.self, DevicesCommand.self, ProfilesCommand.self]),
@@ -20,7 +20,7 @@ struct ASC: AsyncParsableCommand {
 
   func run() async throws {
     migrateFromLegacyName()
-    print("asc \(Self.appVersion)")
+    print("ascelerate \(Self.appVersion)")
     let prompted = await checkForUpdatesInteractively()
     if prompted { print() }
     print(Self.boldHelpHeaders(Self.helpMessage()))
@@ -63,7 +63,7 @@ struct ASC: AsyncParsableCommand {
     )
 
     func run() {
-      print(ASC.appVersion)
+      print(Ascelerate.appVersion)
     }
   }
 
@@ -106,7 +106,7 @@ struct ASC: AsyncParsableCommand {
         }
       }
       if statusCode == 401 {
-        msg += "\n  Check your API credentials (run 'asc configure')."
+        msg += "\n  Check your API credentials (run 'ascelerate configure')."
       } else if statusCode == 403 {
         msg += "\n  Your API key may lack the required permissions."
       } else if statusCode >= 500 {

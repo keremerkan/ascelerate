@@ -5,24 +5,24 @@ title: KI-Coding-Skill
 
 # KI-Coding-Skill
 
-asc wird mit einer Skill-Datei ausgeliefert, die KI-Coding-Agenten (Claude Code, Cursor, Windsurf, GitHub Copilot) vollständiges Wissen über alle Befehle, JSON-Formate und Workflows vermittelt.
+ascelerate wird mit einer Skill-Datei ausgeliefert, die KI-Coding-Agenten (Claude Code, Cursor, Windsurf, GitHub Copilot) vollständiges Wissen über alle Befehle, JSON-Formate und Workflows vermittelt.
 
 ## Installation über die Binary (nur Claude Code)
 
 ```bash
-asc install-skill
+ascelerate install-skill
 ```
 
 Das Tool prüft bei jedem Aufruf, ob der Skill veraltet ist, und bietet bei Bedarf eine Aktualisierung an. Zum Entfernen:
 
 ```bash
-asc install-skill --uninstall
+ascelerate install-skill --uninstall
 ```
 
 ## Installation über npx (beliebiger KI-Coding-Agent)
 
 ```bash
-npx asc-skill
+npx ascelerate-skill
 ```
 
 Dies zeigt ein interaktives Menü zur Auswahl Ihres Agenten und installiert den Skill im entsprechenden Verzeichnis. Die Skill-Datei wird von GitHub abgerufen und ist daher immer aktuell.
@@ -30,7 +30,7 @@ Dies zeigt ein interaktives Menü zur Auswahl Ihres Agenten und installiert den 
 Zum Entfernen:
 
 ```bash
-npx asc-skill --uninstall
+npx ascelerate-skill --uninstall
 ```
 
 ## Was der Skill ermöglicht

@@ -1,4 +1,4 @@
-# asc
+# ascelerate
 
 A command-line tool for the App Store Connect API, built with Swift.
 
@@ -7,26 +7,26 @@ A command-line tool for the App Store Connect API, built with Swift.
 ```bash
 swift build                           # Debug build
 swift build -c release                # Release build (slow — AppStoreAPI has ~2500 generated files)
-swift run asc <command>        # Run directly
-swift run asc --help           # Show all commands
+swift run ascelerate <command>        # Run directly
+swift run ascelerate --help           # Show all commands
 ```
 
 Install globally:
 ```bash
-strip .build/release/asc              # Strip debug symbols (~175 MB → ~59 MB)
-cp .build/release/asc /usr/local/bin/
+strip .build/release/ascelerate              # Strip debug symbols (~175 MB → ~59 MB)
+cp .build/release/ascelerate /usr/local/bin/
 ```
 
 ## Project Structure
 
 ```
 Package.swift                         # SPM manifest (Swift 6.0, macOS 13+)
-Sources/asc/
+Sources/ascelerate/
   ASCClient.swift                     # @main entry, root AsyncParsableCommand, central error handling
-  Config.swift                        # ~/.asc/config.json loader, ConfigError
+  Config.swift                        # ~/.ascelerate/config.json loader, ConfigError
   ClientFactory.swift                 # Creates authenticated AppStoreConnectClient
   Formatting.swift                    # Shared helpers: Table.print, ANSI colors, formatFieldName/formatState, formatDate, expandPath
-  Aliases.swift                        # Alias storage (~/.asc/aliases.json), resolveAlias()
+  Aliases.swift                        # Alias storage (~/.ascelerate/aliases.json), resolveAlias()
   MediaUpload.swift                   # Media management: upload, download, retry screenshots/previews
   Commands/
     ConfigureCommand.swift            # Interactive credential setup, file permissions
@@ -44,7 +44,7 @@ Sources/asc/
     InstallSkillCommand.swift         # Claude Code skill installer (fetches from GitHub)
     RateLimitCommand.swift            # API rate limit status check
 skills/
-  asc/SKILL.md                # AI coding skill (single source of truth)
+  ascelerate/SKILL.md                # AI coding skill (single source of truth)
   package.json                        # npm package for npx installer
   bin/install.js                      # npx installer (fetches SKILL.md from GitHub)
 ```
@@ -61,19 +61,20 @@ skills/
   - Resolved version: 1.5.0 (with swift-crypto, URLQueryEncoder, swift-asn1 as transitive deps)
 - **[swift-argument-parser](https://github.com/apple/swift-argument-parser)** (1.3.0+) — CLI framework
 - **[swift-certificates](https://github.com/apple/swift-certificates)** (1.0.0+) — X.509 certificate and CSR generation (used by `certs create` auto-CSR flow)
+- **[Yams](https://github.com/jpsim/Yams)** (5.0.0+) — YAML parsing (used by `screenshot` command for `ascelerate.yml`)
 
 ## Authentication
 
-Config file at `~/.asc/config.json`:
+Config file at `~/.ascelerate/config.json`:
 ```json
 {
     "keyId": "KEY_ID",
     "issuerId": "ISSUER_ID",
-    "privateKeyPath": "/Users/.../.asc/AuthKey_XXXXXXXXXX.p8"
+    "privateKeyPath": "/Users/.../.ascelerate/AuthKey_XXXXXXXXXX.p8"
 }
 ```
 
-- `configure` command copies the .p8 file into `~/.asc/` and writes the config
+- `configure` command copies the .p8 file into `~/.ascelerate/` and writes the config
 - File permissions set to 700 (dir) and 600 (files) — owner-only access
 - JWT tokens use ES256 (P256) signing, 20-minute expiry, auto-renewed by asc-swift
 - Private key loaded via `JWT.PrivateKey(contentsOf: URL(fileURLWithPath: path))`
@@ -81,76 +82,79 @@ Config file at `~/.asc/config.json`:
 ## Commands
 
 ```
-asc configure                                              # Interactive setup
-asc apps list                                              # List all apps
-asc apps info <bundle-id>                                  # App details
-asc apps versions <bundle-id>                              # List App Store versions
-asc apps localizations view <bundle-id> [--version X]      # View localizations
-asc apps localizations update <bundle-id> [--locale X]     # Update single locale via flags
-asc apps localizations import <bundle-id> [--file X]       # Bulk update from JSON file
-asc apps localizations export <bundle-id> [--version X]    # Export to JSON file
-asc apps review preflight <bundle-id> [--version X]           # Pre-submission checks
-asc apps review status <bundle-id> [--version X]             # Review submission status
-asc apps create-version <bundle-id> <ver> [--platform X]   # Create new version
-asc apps build attach <bundle-id> [--version X]             # Interactively select and attach a build
-asc apps build attach-latest <bundle-id> [--version X]     # Attach the most recent build
-asc apps build detach <bundle-id> [--version X]            # Remove the attached build
-asc apps phased-release <bundle-id> [--version X]          # View/manage phased release
-asc apps app-info age-rating <bundle-id> [--version X] [--file X]   # View/update age rating
-asc apps routing-coverage <bundle-id> [--file X]           # View/upload routing coverage
-asc apps review submit <bundle-id> [--version X]            # Submit version for App Review
-asc apps review resolve-issues <bundle-id>                 # Mark rejected items as resolved
-asc apps review cancel-submission <bundle-id>              # Cancel an active review submission
-asc apps media upload <bundle-id> [--folder X] [--version X] [--replace]  # Upload screenshots/previews
-asc apps media download <bundle-id> [--folder X] [--version X]            # Download screenshots/previews
-asc apps media verify <bundle-id> [--version X] [--folder X]              # Check media status, retry stuck
-asc apps app-info view <bundle-id>                         # View app info, categories, and localizations
-asc apps app-info view --list-categories                   # List available category IDs
-asc apps app-info update <bundle-id> [--name X] [--subtitle X] [--primary-category X] [-y]  # Update localization fields and/or categories
-asc apps app-info import <bundle-id> [--file X] [--verbose] [-y]  # Bulk update localizations from JSON
-asc apps app-info export <bundle-id> [--output X]          # Export localizations to JSON
-asc apps availability <bundle-id> [--add X] [--remove X]  # View/update territory availability
-asc apps encryption <bundle-id> [--create]                 # View/create encryption declarations
-asc apps eula <bundle-id> [--file X] [--delete]            # View/manage custom EULA
-asc builds list [--bundle-id <id>] [--version X]           # List builds
-asc builds archive [--workspace X] [--scheme X] [--output X]  # Archive Xcode project
-asc builds upload [file]                                   # Upload build via altool
-asc builds validate [file]                                 # Validate build via altool
-asc builds await-processing <bundle-id> [--build-version X]  # Wait for build to finish processing
-asc iap list <bundle-id> [--type X] [--state X]            # List in-app purchases
-asc iap info <bundle-id> <product-id>                       # IAP details with localizations
-asc iap promoted <bundle-id>                                # List promoted purchases
-asc sub groups <bundle-id>                                 # List subscription groups with subscriptions
-asc sub list <bundle-id>                                   # Flat list of all subscriptions
-asc sub info <bundle-id> <product-id>                      # Subscription details with localizations
-asc devices list [--name X] [--platform X] [--status X]   # List registered devices
-asc devices info [name-or-udid]                            # Device details (interactive picker if omitted)
-asc devices register [--name X] [--udid X] [--platform X] [-y]  # Register a new device (interactive if omitted)
-asc devices update [name-or-udid] [--name X] [--status X] [-y]  # Update device (interactive if omitted)
-asc certs list [--type X] [--display-name X]               # List signing certificates
-asc certs info [serial-or-name]                            # Certificate details (interactive picker if omitted)
-asc certs create [--type X] [--csr <file>] [--output X] [-y]  # Create certificate (interactive type picker if omitted)
-asc certs revoke [serial-number] [-y]                      # Revoke a certificate (interactive picker if omitted)
-asc bundle-ids list [--platform X] [--identifier X]        # List bundle identifiers
-asc bundle-ids info [identifier]                           # Bundle ID details with capabilities (interactive picker if omitted)
-asc bundle-ids register [--name X] [--identifier X] [--platform X] [-y]  # Register a bundle ID (interactive if omitted)
-asc bundle-ids update [identifier] [--name X] [-y]         # Rename a bundle ID (interactive if omitted)
-asc bundle-ids delete [identifier] [-y]                    # Delete a bundle ID (interactive picker if omitted)
-asc bundle-ids enable-capability [identifier] [--type X] [-y]   # Enable a capability (interactive if omitted)
-asc bundle-ids disable-capability [identifier] [-y]        # Disable a capability (interactive picker)
-asc profiles list [--name X] [--type X] [--state X]       # List provisioning profiles
-asc profiles info [name]                                   # Profile details (interactive picker if omitted)
-asc profiles download [name] [--output X]                  # Download profile (interactive picker if omitted)
-asc profiles create [--name X] [--type X] [--bundle-id X] [--certificates X] [--devices X] [--output X] [-y]  # Create a profile (interactive if omitted; --certificates all = all of matching family)
-asc profiles delete [name] [-y]                            # Delete a profile (interactive picker if omitted)
-asc profiles reissue [name] [--all] [--all-invalid] [--to-certs X] [--all-devices] [-y]  # Reissue profiles with latest cert (or specific certs)
-asc alias add [name]                                       # Add/update an alias (interactive app picker if name omitted)
-asc alias remove [name] [-y]                               # Remove an alias (interactive picker if name omitted)
-asc alias list                                             # List all aliases
-asc run-workflow [file] [--yes]                            # Run commands from a workflow file
-asc rate-limit                                             # Show API rate limit status
-asc install-skill [--uninstall]                            # Install/remove Claude Code skill
-asc version                                                # Print version number (also: --version, -v)
+ascelerate configure                                              # Interactive setup
+ascelerate apps list                                              # List all apps
+ascelerate apps info <bundle-id>                                  # App details
+ascelerate apps versions <bundle-id>                              # List App Store versions
+ascelerate apps localizations view <bundle-id> [--version X]      # View localizations
+ascelerate apps localizations update <bundle-id> [--locale X]     # Update single locale via flags
+ascelerate apps localizations import <bundle-id> [--file X]       # Bulk update from JSON file
+ascelerate apps localizations export <bundle-id> [--version X]    # Export to JSON file
+ascelerate apps review preflight <bundle-id> [--version X]           # Pre-submission checks
+ascelerate apps review status <bundle-id> [--version X]             # Review submission status
+ascelerate apps create-version <bundle-id> <ver> [--platform X]   # Create new version
+ascelerate apps build attach <bundle-id> [--version X]             # Interactively select and attach a build
+ascelerate apps build attach-latest <bundle-id> [--version X]     # Attach the most recent build
+ascelerate apps build detach <bundle-id> [--version X]            # Remove the attached build
+ascelerate apps phased-release <bundle-id> [--version X]          # View/manage phased release
+ascelerate apps app-info age-rating <bundle-id> [--version X] [--file X]   # View/update age rating
+ascelerate apps routing-coverage <bundle-id> [--file X]           # View/upload routing coverage
+ascelerate apps review submit <bundle-id> [--version X]            # Submit version for App Review
+ascelerate apps review resolve-issues <bundle-id>                 # Mark rejected items as resolved
+ascelerate apps review cancel-submission <bundle-id>              # Cancel an active review submission
+ascelerate apps media upload <bundle-id> [--folder X] [--version X] [--replace]  # Upload screenshots/previews
+ascelerate apps media download <bundle-id> [--folder X] [--version X]            # Download screenshots/previews
+ascelerate apps media verify <bundle-id> [--version X] [--folder X]              # Check media status, retry stuck
+ascelerate apps app-info view <bundle-id>                         # View app info, categories, and localizations
+ascelerate apps app-info view --list-categories                   # List available category IDs
+ascelerate apps app-info update <bundle-id> [--name X] [--subtitle X] [--primary-category X] [-y]  # Update localization fields and/or categories
+ascelerate apps app-info import <bundle-id> [--file X] [--verbose] [-y]  # Bulk update localizations from JSON
+ascelerate apps app-info export <bundle-id> [--output X]          # Export localizations to JSON
+ascelerate apps availability <bundle-id> [--add X] [--remove X]  # View/update territory availability
+ascelerate apps encryption <bundle-id> [--create]                 # View/create encryption declarations
+ascelerate apps eula <bundle-id> [--file X] [--delete]            # View/manage custom EULA
+ascelerate builds list [--bundle-id <id>] [--version X]           # List builds
+ascelerate builds archive [--workspace X] [--scheme X] [--output X]  # Archive Xcode project
+ascelerate builds upload [file]                                   # Upload build via altool
+ascelerate builds validate [file]                                 # Validate build via altool
+ascelerate builds await-processing <bundle-id> [--build-version X]  # Wait for build to finish processing
+ascelerate iap list <bundle-id> [--type X] [--state X]            # List in-app purchases
+ascelerate iap info <bundle-id> <product-id>                       # IAP details with localizations
+ascelerate iap promoted <bundle-id>                                # List promoted purchases
+ascelerate sub groups <bundle-id>                                 # List subscription groups with subscriptions
+ascelerate sub list <bundle-id>                                   # Flat list of all subscriptions
+ascelerate sub info <bundle-id> <product-id>                      # Subscription details with localizations
+ascelerate devices list [--name X] [--platform X] [--status X]   # List registered devices
+ascelerate devices info [name-or-udid]                            # Device details (interactive picker if omitted)
+ascelerate devices register [--name X] [--udid X] [--platform X] [-y]  # Register a new device (interactive if omitted)
+ascelerate devices update [name-or-udid] [--name X] [--status X] [-y]  # Update device (interactive if omitted)
+ascelerate certs list [--type X] [--display-name X]               # List signing certificates
+ascelerate certs info [serial-or-name]                            # Certificate details (interactive picker if omitted)
+ascelerate certs create [--type X] [--csr <file>] [--output X] [-y]  # Create certificate (interactive type picker if omitted)
+ascelerate certs revoke [serial-number] [-y]                      # Revoke a certificate (interactive picker if omitted)
+ascelerate bundle-ids list [--platform X] [--identifier X]        # List bundle identifiers
+ascelerate bundle-ids info [identifier]                           # Bundle ID details with capabilities (interactive picker if omitted)
+ascelerate bundle-ids register [--name X] [--identifier X] [--platform X] [-y]  # Register a bundle ID (interactive if omitted)
+ascelerate bundle-ids update [identifier] [--name X] [-y]         # Rename a bundle ID (interactive if omitted)
+ascelerate bundle-ids delete [identifier] [-y]                    # Delete a bundle ID (interactive picker if omitted)
+ascelerate bundle-ids enable-capability [identifier] [--type X] [-y]   # Enable a capability (interactive if omitted)
+ascelerate bundle-ids disable-capability [identifier] [-y]        # Disable a capability (interactive picker)
+ascelerate profiles list [--name X] [--type X] [--state X]       # List provisioning profiles
+ascelerate profiles info [name]                                   # Profile details (interactive picker if omitted)
+ascelerate profiles download [name] [--output X]                  # Download profile (interactive picker if omitted)
+ascelerate profiles create [--name X] [--type X] [--bundle-id X] [--certificates X] [--devices X] [--output X] [-y]  # Create a profile (interactive if omitted; --certificates all = all of matching family)
+ascelerate profiles delete [name] [-y]                            # Delete a profile (interactive picker if omitted)
+ascelerate profiles reissue [name] [--all] [--all-invalid] [--to-certs X] [--all-devices] [-y]  # Reissue profiles with latest cert (or specific certs)
+ascelerate alias add [name]                                       # Add/update an alias (interactive app picker if name omitted)
+ascelerate alias remove [name] [-y]                               # Remove an alias (interactive picker if name omitted)
+ascelerate alias list                                             # List all aliases
+ascelerate run-workflow [file] [--yes]                            # Run commands from a workflow file
+ascelerate rate-limit                                             # Show API rate limit status
+ascelerate install-skill [--uninstall]                            # Install/remove Claude Code skill
+ascelerate screenshot run [-c ascelerate.yml]                     # Capture screenshots from simulators
+ascelerate screenshot init [-o ascelerate.yml]                    # Generate sample config
+ascelerate screenshot create-helper [-o ScreenshotHelper.swift]   # Generate UITest helper file
+ascelerate version                                                # Print version number (also: --version, -v)
 ```
 
 ## Key Patterns
@@ -162,7 +166,7 @@ asc version                                                # Print version numbe
 4. Use `findApp(bundleID:client:)` to resolve bundle ID to app ID
 5. Use `findVersion(appID:versionString:platform:client:)` to resolve version (nil = prefers editable, prompts if multiple platforms)
 6. Use shared helpers from Formatting.swift: `formatDate()`, `expandPath()`, `formatState()` for enum display, color helpers (`green()`, `red()`, `yellow()`, `bold()`)
-7. Run `asc install-completions` to regenerate completions after adding commands
+7. Run `ascelerate install-completions` to regenerate completions after adding commands
 
 ### Subcommand grouping
 `AppsCommand` uses `CommandGroup` (swift-argument-parser 1.7+) to organize subcommands into sections in `--help` output:
@@ -175,7 +179,7 @@ asc version                                                # Print version numbe
 When adding a new subcommand, place it in the appropriate `CommandGroup` or create a new one. Shell completions are alphabetically sorted by zsh — don't try to force custom ordering there.
 
 ### App aliases
-- Aliases map short names to bundle IDs, stored in `~/.asc/aliases.json`
+- Aliases map short names to bundle IDs, stored in `~/.ascelerate/aliases.json`
 - `resolveAlias()` in `Aliases.swift` is the single resolution function — if input contains no dots, look up in aliases
 - `findApp()` in `AppsCommand.swift` calls `resolveAlias()` at the top — this covers all app, IAP, subscription, and build commands automatically
 - Alias names must match `^[a-zA-Z0-9_-]+$` — no dots (dots distinguish real bundle IDs from aliases)
@@ -183,20 +187,20 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 
 ### Version management
 - **No `version:` on `CommandConfiguration`** — intentionally omitted. ArgumentParser leaks a root `--version` flag into every subcommand's completion function, which conflicts with subcommands that define their own `--version` option (e.g. `builds list --version`, `apps review status --version`).
-- Version is stored as `static let appVersion` in `ASCClient.swift`.
-- `asc version` subcommand prints just the version number. `--version` and `-v` are intercepted in `main()` before ArgumentParser and produce the same output.
-- `install-completions` stamps `# asc vX.Y.Z` into completion scripts (after `#compdef` line for zsh) and `install-skill` stamps `<!-- asc vX.Y.Z -->` into the installed skill file.
+- Version is stored as `static let appVersion` in `ASC.swift`.
+- `ascelerate version` subcommand prints just the version number. `--version` and `-v` are intercepted in `main()` before ArgumentParser and produce the same output.
+- `install-completions` stamps `# ascelerate vX.Y.Z` into completion scripts (after `#compdef` line for zsh) and `install-skill` stamps `<!-- ascelerate vX.Y.Z -->` into the installed skill file.
 - `checkForUpdates()` (non-interactive, API commands) and `checkForUpdatesInteractively()` (bare invocation) detect outdated completions and/or skill, offering a single Y/n prompt or NOTE line.
-- Both `install-skill` and the npx installer (`npx asc-skill`) fetch `SKILL.md` from GitHub — the skill content is NOT embedded in the binary. `skills/asc/SKILL.md` in the repo is the single source of truth.
+- Both `install-skill` and the npx installer (`npx ascelerate-skill`) fetch `SKILL.md` from GitHub — the skill content is NOT embedded in the binary. `skills/ascelerate/SKILL.md` in the repo is the single source of truth.
 
 ### Shell completions (`install-completions`)
 - ArgumentParser's generated completion scripts need post-processing:
   - **`#compdef` must be line 1** in zsh completion files — never prepend content before it or compinit won't recognize the file.
-  - `patchZshHelpCompletions` / `patchBashHelpCompletions` — fix `asc help <tab>` to list subcommands (ArgumentParser generates a broken/empty help function).
+  - `patchZshHelpCompletions` / `patchBashHelpCompletions` — fix `ascelerate help <tab>` to list subcommands (ArgumentParser generates a broken/empty help function).
   - `-V` flag removed from all `_describe` calls so zsh sorts completions alphabetically.
 - **Argument-level completions** via ArgumentParser's `completion:` parameter:
   - `.file(extensions:)` — file path completion filtered by extension (e.g. `.json`, `.workflow`, `.ipa`)
-  - `.shellCommand()` — dynamic completions from a shell command (used for alias names from `~/.asc/aliases.json`)
+  - `.shellCommand()` — dynamic completions from a shell command (used for alias names from `~/.ascelerate/aliases.json`)
   - Bundle ID arguments use `.shellCommand("grep ...")` to extract alias keys from the aliases JSON file
   - File arguments use `.file(extensions: ["json"])`, `.file(extensions: ["workflow", "txt"])`, etc.
 
@@ -226,7 +230,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - `URLError`: handles connectivity issues (no internet, DNS, timeout, connection lost, TLS).
 
 ### Workflow files (used by run-workflow)
-- One command per line, without the `asc` prefix
+- One command per line, without the `ascelerate` prefix
 - Lines starting with `#` are comments, blank lines are ignored
 - Quoted strings are respected for arguments with spaces (e.g. `--file "path with spaces.json"`)
 - Without `--yes`: prompts once to confirm the workflow, then individual commands still prompt normally
@@ -320,6 +324,73 @@ media/
 - `AppMediaAssetState.State` values: `.awaitingUpload`, `.uploadComplete`, `.complete`, `.failed` — stuck items show `uploadComplete`
 - `media verify` checks all media status; with `--folder` retries stuck items: delete → upload → reorder
 - File matching: server position N = Nth file alphabetically in local `locale/displayType/` folder
+
+## Screenshot Module (`ascelerate screenshot`)
+
+Captures App Store screenshots from iOS/iPadOS simulators. Replaces fastlane snapshot.
+
+### Architecture
+
+```
+Sources/ascelerate/
+  Screenshot/
+    ScreenshotConfig.swift       # YAML config model (via Yams), AscelerateConfig wrapper
+    ScreenshotRunner.swift       # Orchestrator: build → boot simulators → run tests → collect
+    ScreenshotTestRunner.swift   # xcodebuild wrapper: build-for-testing + test-without-building
+    ScreenshotCollector.swift    # Moves PNGs from per-device cache to output dir
+    SimulatorManager.swift       # xcrun simctl: boot, shutdown, erase, localize, status bar
+    ScreenshotShell.swift        # Process wrapper: run (capture), stream (passthrough), runToLog (to file)
+    ScreenshotError.swift        # Error types
+  Commands/
+    ScreenshotCommand.swift      # Subcommands: run, init, create-helper + embedded ScreenshotHelper.swift
+```
+
+### Config (`ascelerate.yml`)
+
+```yaml
+screenshot:
+  project: App.xcodeproj
+  scheme: AppUITests
+  devices:
+    - simulator: iPhone 16 Pro Max
+    - simulator: iPad Pro 13-inch (M4)
+  languages: [en-US, tr-TR]
+  outputDirectory: ./screenshots
+  clearPreviousScreenshots: true
+  eraseSimulator: false
+  localizeSimulator: true
+  overrideStatusBar: true
+  # helperPath: AppUITests/ScreenshotHelper.swift
+```
+
+Top-level `screenshot:` key namespaces the config — other sections can be added later.
+
+### Flow
+
+1. `build-for-testing` with `generic/platform=iOS Simulator` (or find existing xctestrun if `testWithoutBuilding`)
+2. xcodebuild writes to project's actual derived data (custom `-derivedDataPath` is ignored by Xcode workspace settings)
+3. Resolve xctestrun file from `~/Library/Developer/Xcode/DerivedData/{ProjectName}[-hash]/Build/Products/`
+4. For each language: boot all simulators → localize → override status bar → `test-without-building` concurrently per device → collect screenshots
+5. Each device gets isolated cache at `~/Library/Caches/tools.ascelerate/{UDID}/`
+6. ScreenshotHelper.swift uses `SIMULATOR_UDID` env var to find its cache directory
+7. Errors skip failing device/language, error logs saved as `{language}/{device}-error.log`
+8. Summary table printed at end
+
+### Key decisions
+
+- `-parallel-testing-enabled NO` prevents simulator cloning (needed for status bar override)
+- `xcrun simctl bootstatus` waits for full boot before applying status bar override
+- Test output goes to log files (not stdout) to prevent interleaved output from concurrent devices
+- Helper version tracked via `// ScreenshotHelperVersion [X.Y]` comment in generated file
+- `clearPreviousScreenshots` only clears per-language after all devices succeed
+
+### Commands
+
+```
+ascelerate screenshot run [-c ascelerate.yml]  # Capture screenshots
+ascelerate screenshot init [-o ascelerate.yml] # Generate sample config
+ascelerate screenshot create-helper [-o file]  # Generate ScreenshotHelper.swift
+```
 
 ## Not Yet Implemented
 

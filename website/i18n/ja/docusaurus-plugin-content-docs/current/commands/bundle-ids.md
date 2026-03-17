@@ -10,35 +10,35 @@ title: Bundle ID
 ## 一覧
 
 ```bash
-asc bundle-ids list
-asc bundle-ids list --platform IOS
+ascelerate bundle-ids list
+ascelerate bundle-ids list --platform IOS
 ```
 
 ## 詳細
 
 ```bash
 # インタラクティブな選択
-asc bundle-ids info
+ascelerate bundle-ids info
 
 # 識別子で指定
-asc bundle-ids info com.example.MyApp
+ascelerate bundle-ids info com.example.MyApp
 ```
 
 ## 登録
 
 ```bash
 # インタラクティブな入力
-asc bundle-ids register
+ascelerate bundle-ids register
 
 # 非インタラクティブ
-asc bundle-ids register --name "My App" --identifier com.example.MyApp --platform IOS
+ascelerate bundle-ids register --name "My App" --identifier com.example.MyApp --platform IOS
 ```
 
 ## 名前の変更
 
 ```bash
-asc bundle-ids update
-asc bundle-ids update com.example.MyApp --name "My Renamed App"
+ascelerate bundle-ids update
+ascelerate bundle-ids update com.example.MyApp --name "My Renamed App"
 ```
 
 識別子自体は変更できません。変更できるのは名前のみです。
@@ -46,8 +46,8 @@ asc bundle-ids update com.example.MyApp --name "My Renamed App"
 ## 削除
 
 ```bash
-asc bundle-ids delete
-asc bundle-ids delete com.example.MyApp
+ascelerate bundle-ids delete
+ascelerate bundle-ids delete com.example.MyApp
 ```
 
 ## ケイパビリティ
@@ -56,18 +56,18 @@ asc bundle-ids delete com.example.MyApp
 
 ```bash
 # インタラクティブな選択（まだ有効でないケイパビリティのみ表示）
-asc bundle-ids enable-capability
+ascelerate bundle-ids enable-capability
 
 # 非インタラクティブ
-asc bundle-ids enable-capability com.example.MyApp --type PUSH_NOTIFICATIONS
+ascelerate bundle-ids enable-capability com.example.MyApp --type PUSH_NOTIFICATIONS
 ```
 
 ### 無効化
 
 ```bash
 # 現在有効なケイパビリティから選択
-asc bundle-ids disable-capability
-asc bundle-ids disable-capability com.example.MyApp
+ascelerate bundle-ids disable-capability
+ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
 ケイパビリティの有効化・無効化後、そのBundle IDにプロビジョニングプロファイルが存在する場合、再生成するか確認します（変更を反映するために必要です）。

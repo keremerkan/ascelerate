@@ -8,8 +8,8 @@ title: スクリーンショットとプレビュー
 ## ダウンロード
 
 ```bash
-asc apps media download <bundle-id>
-asc apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id>
+ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 ```
 
 デフォルトでは `<bundle-id>-media/` にダウンロードされ、アップロードで使用されるのと同じフォルダ構造が使用されます。
@@ -18,19 +18,19 @@ asc apps media download <bundle-id> --folder my-media/ --version 2.1.0
 
 ```bash
 # フォルダからアップロード
-asc apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> --folder media/
 
 # zipファイルからアップロード（例：asc-screenshotsからエクスポートしたもの）
-asc apps media upload <bundle-id> --folder screenshots.zip
+ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # 特定のバージョンにアップロード
-asc apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
 
 # アップロード前にマッチするセットの既存メディアを削除して置き換え
-asc apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> --folder media/ --replace
 
 # インタラクティブモード：カレントディレクトリからフォルダまたはzipを選択
-asc apps media upload <bundle-id>
+ascelerate apps media upload <bundle-id>
 ```
 
 `--folder` を省略すると、カレントディレクトリのすべてのサブディレクトリと `.zip` ファイルが番号付きリストとして表示されます。Zipファイルはアップロード前に自動的に展開されます。
@@ -125,7 +125,7 @@ de-DE/APP_IPHONE_67/01_hero.png
 エクスポートしたzipを直接アップロードできます：
 
 ```bash
-asc apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
 ```
 
 ## 停滞したメディアの確認とリトライ
@@ -134,13 +134,13 @@ asc apps media upload <bundle-id> --folder screenshots.zip --replace
 
 ```bash
 # すべてのスクリーンショットとプレビューのステータスを確認
-asc apps media verify <bundle-id>
+ascelerate apps media verify <bundle-id>
 
 # 特定のバージョンを確認
-asc apps media verify <bundle-id> --version 2.1.0
+ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # メディアフォルダのローカルファイルを使用して停滞したアイテムをリトライ
-asc apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> --folder media/
 ```
 
 `--folder` を指定しない場合、読み取り専用のステータスレポートが表示されます。すべてのアイテムが完了しているセットはコンパクトな1行で表示され、停滞したアイテムがあるセットは各ファイルとその状態を展開して表示します。`--folder` を指定すると、停滞したアイテムを削除してマッチするローカルファイルから再アップロードし、元の並び順を保持します。

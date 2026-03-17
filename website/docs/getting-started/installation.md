@@ -14,7 +14,7 @@ title: Installation
 
 ```bash
 brew tap keremerkan/tap
-brew install asc-cli
+brew install ascelerate
 ```
 
 The tap provides a pre-built binary for Apple Silicon Macs, so installation is instant.
@@ -32,15 +32,15 @@ Downloads the latest release, installs to `/usr/local/bin`, and removes the quar
 Download the latest release from [GitHub Releases](https://github.com/keremerkan/asc-cli/releases):
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/asc-macos-arm64.tar.gz -o asc.tar.gz
-tar xzf asc.tar.gz
-mv asc /usr/local/bin/
+curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
+tar xzf ascelerate.tar.gz
+mv ascelerate /usr/local/bin/
 ```
 
 Since the binary is not signed or notarized, macOS will quarantine it on first download. Remove the quarantine attribute:
 
 ```bash
-xattr -d com.apple.quarantine /usr/local/bin/asc
+xattr -d com.apple.quarantine /usr/local/bin/ascelerate
 ```
 
 :::note
@@ -53,8 +53,8 @@ Pre-built binaries are provided for Apple Silicon (arm64) only. Intel Mac users 
 git clone https://github.com/keremerkan/asc-cli.git
 cd asc-cli
 swift build -c release
-strip .build/release/asc
-cp .build/release/asc /usr/local/bin/
+strip .build/release/ascelerate
+cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
@@ -66,18 +66,18 @@ The release build takes a few minutes because the [asc-swift](https://github.com
 Set up tab completion for subcommands, options, and flags (supports zsh and bash):
 
 ```bash
-asc install-completions
+ascelerate install-completions
 ```
 
 This detects your shell and configures everything automatically. Restart your shell or open a new tab to activate.
 
 ## AI coding skill (optional)
 
-If you use an AI coding agent like Claude Code, Cursor, Windsurf, or GitHub Copilot, you can install a skill file that gives it full knowledge of all asc commands and workflows:
+If you use an AI coding agent like Claude Code, Cursor, Windsurf, or GitHub Copilot, you can install a skill file that gives it full knowledge of all ascelerate commands and workflows:
 
 ```bash
-asc install-skill    # Claude Code
-npx asc-skill        # Any AI coding agent
+ascelerate install-skill    # Claude Code
+npx ascelerate-skill        # Any AI coding agent
 ```
 
 See the [AI Coding Skill](/docs/guides/ai-skill) guide for details.
@@ -85,7 +85,7 @@ See the [AI Coding Skill](/docs/guides/ai-skill) guide for details.
 ## Check your version
 
 ```bash
-asc version     # Prints version number
-asc --version   # Same as above
-asc -v          # Same as above
+ascelerate version     # Prints version number
+ascelerate --version   # Same as above
+ascelerate -v          # Same as above
 ```

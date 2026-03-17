@@ -119,7 +119,7 @@ struct AliasCommand: AsyncParsableCommand {
       let aliases = Aliases.load()
 
       guard !aliases.isEmpty else {
-        print("No aliases configured. Use 'asc alias add' to create one.")
+        print("No aliases configured. Use 'ascelerate alias add' to create one.")
         return
       }
 

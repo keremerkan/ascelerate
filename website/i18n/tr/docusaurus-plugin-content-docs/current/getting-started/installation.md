@@ -14,7 +14,7 @@ title: Kurulum
 
 ```bash
 brew tap keremerkan/tap
-brew install asc-cli
+brew install ascelerate
 ```
 
 Tap, Apple Silicon Mac'ler için önceden derlenmiş bir binary sağlar, bu yüzden kurulum anlıktır.
@@ -32,15 +32,15 @@ En son sürümü indirir, `/usr/local/bin` dizinine kurar ve karantina özniteli
 En son sürümü [GitHub Releases](https://github.com/keremerkan/asc-cli/releases) sayfasından indirin:
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/asc-macos-arm64.tar.gz -o asc.tar.gz
-tar xzf asc.tar.gz
-mv asc /usr/local/bin/
+curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o asc.tar.gz
+tar xzf ascelerate.tar.gz
+mv ascelerate /usr/local/bin/
 ```
 
 Binary imzalı veya notarize edilmiş olmadığından, macOS ilk indirmede karantinaya alır. Karantina özniteliğini kaldırın:
 
 ```bash
-xattr -d com.apple.quarantine /usr/local/bin/asc
+xattr -d com.apple.quarantine /usr/local/bin/ascelerate
 ```
 
 :::note
@@ -53,8 +53,8 @@ xattr -d com.apple.quarantine /usr/local/bin/asc
 git clone https://github.com/keremerkan/asc-cli.git
 cd asc-cli
 swift build -c release
-strip .build/release/asc
-cp .build/release/asc /usr/local/bin/
+strip .build/release/ascelerate
+cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
@@ -66,7 +66,7 @@ Release derlemesi birkaç dakika sürer çünkü [asc-swift](https://github.com/
 Alt komutlar, seçenekler ve flag'ler için sekme tamamlamayı ayarlayın (zsh ve bash desteklenir):
 
 ```bash
-asc install-completions
+ascelerate install-completions
 ```
 
 Bu, shell'inizi otomatik olarak algılar ve her şeyi yapılandırır. Etkinleştirmek için shell'inizi yeniden başlatın veya yeni bir sekme açın.
@@ -74,7 +74,7 @@ Bu, shell'inizi otomatik olarak algılar ve her şeyi yapılandırır. Etkinleş
 ## Sürüm kontrolü
 
 ```bash
-asc version     # Sürüm numarasını yazdırır
-asc --version   # Yukarıdakiyle aynı
-asc -v          # Yukarıdakiyle aynı
+ascelerate version     # Sürüm numarasını yazdırır
+ascelerate --version   # Yukarıdakiyle aynı
+ascelerate -v          # Yukarıdakiyle aynı
 ```

@@ -8,8 +8,8 @@ title: Screenshots & Vorschauen
 ## Herunterladen
 
 ```bash
-asc apps media download <bundle-id>
-asc apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id>
+ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 ```
 
 Wird standardmäßig nach `<bundle-id>-media/` heruntergeladen und verwendet die gleiche Ordnerstruktur, die auch für den Upload erwartet wird.
@@ -18,19 +18,19 @@ Wird standardmäßig nach `<bundle-id>-media/` heruntergeladen und verwendet die
 
 ```bash
 # Aus einem Ordner hochladen
-asc apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> --folder media/
 
 # Aus einer ZIP-Datei hochladen (z.B. exportiert von asc-screenshots)
-asc apps media upload <bundle-id> --folder screenshots.zip
+ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # In eine bestimmte Version hochladen
-asc apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
 
 # Bestehende Medien in passenden Sets vor dem Hochladen ersetzen
-asc apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> --folder media/ --replace
 
 # Interaktiver Modus: einen Ordner oder eine ZIP-Datei aus dem aktuellen Verzeichnis auswählen
-asc apps media upload <bundle-id>
+ascelerate apps media upload <bundle-id>
 ```
 
 Wenn `--folder` nicht angegeben wird, listet der Befehl alle Unterverzeichnisse und `.zip`-Dateien im aktuellen Verzeichnis als nummerierte Auswahl auf. ZIP-Dateien werden vor dem Upload automatisch entpackt.
@@ -125,7 +125,7 @@ de-DE/APP_IPHONE_67/01_hero.png
 Laden Sie die exportierte ZIP-Datei direkt hoch:
 
 ```bash
-asc apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
 ```
 
 ## Blockierte Medien überprüfen und erneut versuchen
@@ -134,13 +134,13 @@ Manchmal bleiben Screenshots oder Vorschauen nach dem Upload im Status "Verarbei
 
 ```bash
 # Status aller Screenshots und Vorschauen prüfen
-asc apps media verify <bundle-id>
+ascelerate apps media verify <bundle-id>
 
 # Eine bestimmte Version prüfen
-asc apps media verify <bundle-id> --version 2.1.0
+ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Blockierte Elemente mit lokalen Dateien aus dem Medienordner erneut versuchen
-asc apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> --folder media/
 ```
 
 Ohne `--folder` zeigt der Befehl einen reinen Statusbericht an. Sets, in denen alle Elemente abgeschlossen sind, werden als kompakte Einzeiler angezeigt; Sets mit blockierten Elementen werden erweitert, um jede Datei und ihren Status anzuzeigen. Mit `--folder` wird angeboten, blockierte Elemente erneut zu versuchen, indem sie gelöscht und aus den passenden lokalen Dateien erneut hochgeladen werden, wobei die ursprüngliche Reihenfolge beibehalten wird.

@@ -8,8 +8,8 @@ title: Automatisierung & CI/CD
 Die meisten Befehle, die eine Bestätigung verlangen, unterstützen `--yes` / `-y` zum Überspringen von Abfragen, wodurch sie für CI/CD-Pipelines und Skripte geeignet sind.
 
 ```bash
-asc apps build attach-latest <bundle-id> --yes
-asc apps review submit <bundle-id> --yes
+ascelerate apps build attach-latest <bundle-id> --yes
+ascelerate apps review submit <bundle-id> --yes
 ```
 
 :::warning
@@ -23,7 +23,7 @@ Sowohl `builds archive` als auch der Export von Archiv zu IPA übergeben `-allow
 Für CI-Umgebungen ohne Xcode-GUI-Anmeldung übergeben Sie Authentifizierungs-Flags:
 
 ```bash
-asc builds archive \
+ascelerate builds archive \
   --authentication-key-path /path/to/AuthKey.p8 \
   --authentication-key-id YOUR_KEY_ID \
   --authentication-key-issuer-id YOUR_ISSUER_ID
@@ -34,5 +34,5 @@ asc builds archive \
 Befehle beenden sich bei Fehlern mit einem Exit-Code ungleich Null, sodass sie sicher in Skripten mit `set -e` oder `&&`-Verkettung verwendet werden können. Der `preflight`-Befehl gibt speziell einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt, sodass Sie Einreichungen davon abhängig machen können:
 
 ```bash
-asc apps review preflight <bundle-id> && asc apps review submit <bundle-id>
+ascelerate apps review preflight <bundle-id> && asc apps review submit <bundle-id>
 ```

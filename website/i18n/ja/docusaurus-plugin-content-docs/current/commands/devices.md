@@ -10,39 +10,39 @@ title: デバイス
 ## 一覧
 
 ```bash
-asc devices list
-asc devices list --platform IOS --status ENABLED
+ascelerate devices list
+ascelerate devices list --platform IOS --status ENABLED
 ```
 
 ## 詳細
 
 ```bash
 # インタラクティブな選択
-asc devices info
+ascelerate devices info
 
 # 名前またはUDIDで指定
-asc devices info "My iPhone"
+ascelerate devices info "My iPhone"
 ```
 
 ## 登録
 
 ```bash
 # インタラクティブな入力
-asc devices register
+ascelerate devices register
 
 # 非インタラクティブ
-asc devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
+ascelerate devices register --name "My iPhone" --udid 00008101-XXXXXXXXXXXX --platform IOS
 ```
 
 ## 更新
 
 ```bash
 # インタラクティブな選択と更新
-asc devices update
+ascelerate devices update
 
 # デバイスの名前を変更
-asc devices update "My iPhone" --name "Work iPhone"
+ascelerate devices update "My iPhone" --name "Work iPhone"
 
 # デバイスを無効化
-asc devices update "My iPhone" --status DISABLED
+ascelerate devices update "My iPhone" --status DISABLED
 ```

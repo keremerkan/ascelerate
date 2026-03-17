@@ -8,8 +8,8 @@ title: Screenshots & Previews
 ## Download
 
 ```bash
-asc apps media download <bundle-id>
-asc apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id>
+ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 ```
 
 Downloads to `<bundle-id>-media/` by default, using the same folder structure expected by upload.
@@ -18,19 +18,19 @@ Downloads to `<bundle-id>-media/` by default, using the same folder structure ex
 
 ```bash
 # Upload from a folder
-asc apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> --folder media/
 
 # Upload from a zip file (e.g. exported from asc-screenshots)
-asc apps media upload <bundle-id> --folder screenshots.zip
+ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # Upload to a specific version
-asc apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
 
 # Replace existing media in matching sets before uploading
-asc apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> --folder media/ --replace
 
 # Interactive mode: pick a folder or zip from the current directory
-asc apps media upload <bundle-id>
+ascelerate apps media upload <bundle-id>
 ```
 
 When `--folder` is omitted, the command lists all subdirectories and `.zip` files in the current directory as a numbered picker. Zip files are extracted automatically before upload.
@@ -114,7 +114,7 @@ Watch and iMessage display types support screenshots only — video files in tho
 
 ## Using with asc-screenshots
 
-[asc-screenshots](https://github.com/keremerkan/asc-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style screenshot layouts with device bezels and exports them as a zip file in the exact folder structure asc expects:
+[asc-screenshots](https://github.com/keremerkan/asc-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style screenshot layouts with device bezels and exports them as a zip file in the exact folder structure ascelerate expects:
 
 ```
 en-US/APP_IPHONE_67/01_hero.png
@@ -125,7 +125,7 @@ de-DE/APP_IPHONE_67/01_hero.png
 Upload the exported zip directly:
 
 ```bash
-asc apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
 ```
 
 ## Verify and retry stuck media
@@ -134,13 +134,13 @@ Sometimes screenshots or previews get stuck in "processing" after upload. Use `m
 
 ```bash
 # Check status of all screenshots and previews
-asc apps media verify <bundle-id>
+ascelerate apps media verify <bundle-id>
 
 # Check a specific version
-asc apps media verify <bundle-id> --version 2.1.0
+ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Retry stuck items using local files from the media folder
-asc apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> --folder media/
 ```
 
 Without `--folder`, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With `--folder`, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.

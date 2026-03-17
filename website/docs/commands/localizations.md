@@ -10,27 +10,27 @@ Manage App Store version localizations (description, what's new, keywords, etc.)
 ## View
 
 ```bash
-asc apps localizations view <bundle-id>
-asc apps localizations view <bundle-id> --version 2.1.0 --locale en-US
+ascelerate apps localizations view <bundle-id>
+ascelerate apps localizations view <bundle-id> --version 2.1.0 --locale en-US
 ```
 
 ## Export
 
 ```bash
-asc apps localizations export <bundle-id>
-asc apps localizations export <bundle-id> --version 2.1.0 --output my-localizations.json
+ascelerate apps localizations export <bundle-id>
+ascelerate apps localizations export <bundle-id> --version 2.1.0 --output my-localizations.json
 ```
 
 ## Update a single locale
 
 ```bash
-asc apps localizations update <bundle-id> --whats-new "Bug fixes" --locale en-US
+ascelerate apps localizations update <bundle-id> --whats-new "Bug fixes" --locale en-US
 ```
 
 ## Bulk update from JSON
 
 ```bash
-asc apps localizations import <bundle-id> --file localizations.json
+ascelerate apps localizations import <bundle-id> --file localizations.json
 ```
 
 ## JSON format

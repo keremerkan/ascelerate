@@ -12,18 +12,18 @@ Rendez-vous sur [App Store Connect > Utilisateurs et accès > Intégrations > AP
 ## 2. Configurer
 
 ```bash
-asc configure
+ascelerate configure
 ```
 
-Cette commande vous demandera votre **Key ID**, **Issuer ID** et le chemin vers votre fichier `.p8`. La clé privée est copiée dans `~/.asc/` avec des permissions de fichier strictes (accès propriétaire uniquement).
+Cette commande vous demandera votre **Key ID**, **Issuer ID** et le chemin vers votre fichier `.p8`. La clé privée est copiée dans `~/.ascelerate/` avec des permissions de fichier strictes (accès propriétaire uniquement).
 
-La configuration est stockée dans `~/.asc/config.json` :
+La configuration est stockée dans `~/.ascelerate/config.json` :
 
 ```json
 {
     "keyId": "KEY_ID",
     "issuerId": "ISSUER_ID",
-    "privateKeyPath": "/Users/.../.asc/AuthKey_XXXXXXXXXX.p8"
+    "privateKeyPath": "/Users/.../.ascelerate/AuthKey_XXXXXXXXXX.p8"
 }
 ```
 
@@ -32,7 +32,7 @@ La configuration est stockée dans `~/.asc/config.json` :
 Exécutez une commande rapide pour vérifier que tout fonctionne :
 
 ```bash
-asc apps list
+ascelerate apps list
 ```
 
 Si vos identifiants sont corrects, vous verrez la liste de toutes vos applications.
@@ -42,7 +42,7 @@ Si vos identifiants sont corrects, vous verrez la liste de toutes vos applicatio
 L'API App Store Connect dispose d'un quota horaire glissant de 3600 requêtes. Vous pouvez vérifier votre utilisation actuelle à tout moment :
 
 ```bash
-asc rate-limit
+ascelerate rate-limit
 ```
 
 ```

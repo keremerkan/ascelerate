@@ -14,7 +14,7 @@ title: Installation
 
 ```bash
 brew tap keremerkan/tap
-brew install asc-cli
+brew install ascelerate
 ```
 
 Le tap fournit un binaire pré-compilé pour les Mac Apple Silicon, l'installation est donc instantanée.
@@ -32,15 +32,15 @@ Télécharge la dernière version, l'installe dans `/usr/local/bin` et supprime 
 Téléchargez la dernière version depuis [GitHub Releases](https://github.com/keremerkan/asc-cli/releases) :
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/asc-macos-arm64.tar.gz -o asc.tar.gz
-tar xzf asc.tar.gz
-mv asc /usr/local/bin/
+curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o asc.tar.gz
+tar xzf ascelerate.tar.gz
+mv ascelerate /usr/local/bin/
 ```
 
 Le binaire n'étant ni signé ni notarisé, macOS le mettra en quarantaine lors du premier téléchargement. Supprimez l'attribut de quarantaine :
 
 ```bash
-xattr -d com.apple.quarantine /usr/local/bin/asc
+xattr -d com.apple.quarantine /usr/local/bin/ascelerate
 ```
 
 :::note
@@ -53,8 +53,8 @@ Les binaires pré-compilés sont fournis uniquement pour Apple Silicon (arm64). 
 git clone https://github.com/keremerkan/asc-cli.git
 cd asc-cli
 swift build -c release
-strip .build/release/asc
-cp .build/release/asc /usr/local/bin/
+strip .build/release/ascelerate
+cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
@@ -66,7 +66,7 @@ La compilation en mode release prend quelques minutes car la dépendance [asc-sw
 Configurez la complétion par tabulation pour les sous-commandes, options (supporte zsh et bash) :
 
 ```bash
-asc install-completions
+ascelerate install-completions
 ```
 
 Cette commande détecte votre shell et configure tout automatiquement. Redémarrez votre shell ou ouvrez un nouvel onglet pour activer la complétion.
@@ -74,7 +74,7 @@ Cette commande détecte votre shell et configure tout automatiquement. Redémarr
 ## Vérifier votre version
 
 ```bash
-asc version     # Affiche le numéro de version
-asc --version   # Identique
-asc -v          # Identique
+ascelerate version     # Affiche le numéro de version
+ascelerate --version   # Identique
+ascelerate -v          # Identique
 ```

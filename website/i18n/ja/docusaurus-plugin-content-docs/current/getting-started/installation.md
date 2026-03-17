@@ -14,7 +14,7 @@ title: インストール
 
 ```bash
 brew tap keremerkan/tap
-brew install asc-cli
+brew install ascelerate
 ```
 
 このtapはApple Silicon Mac向けのビルド済みバイナリを提供しているため、インストールは瞬時に完了します。
@@ -32,15 +32,15 @@ curl -sSL https://raw.githubusercontent.com/keremerkan/asc-cli/main/install.sh |
 [GitHub Releases](https://github.com/keremerkan/asc-cli/releases) から最新リリースをダウンロードしてください：
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/asc-macos-arm64.tar.gz -o asc.tar.gz
-tar xzf asc.tar.gz
-mv asc /usr/local/bin/
+curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o asc.tar.gz
+tar xzf ascelerate.tar.gz
+mv ascelerate /usr/local/bin/
 ```
 
 バイナリは署名・公証されていないため、macOSは初回ダウンロード時にquarantine属性を付与します。以下のコマンドで削除してください：
 
 ```bash
-xattr -d com.apple.quarantine /usr/local/bin/asc
+xattr -d com.apple.quarantine /usr/local/bin/ascelerate
 ```
 
 :::note
@@ -53,8 +53,8 @@ xattr -d com.apple.quarantine /usr/local/bin/asc
 git clone https://github.com/keremerkan/asc-cli.git
 cd asc-cli
 swift build -c release
-strip .build/release/asc
-cp .build/release/asc /usr/local/bin/
+strip .build/release/ascelerate
+cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
@@ -66,7 +66,7 @@ cp .build/release/asc /usr/local/bin/
 サブコマンド、オプション、フラグのタブ補完を設定します（zshとbashに対応）：
 
 ```bash
-asc install-completions
+ascelerate install-completions
 ```
 
 シェルを自動検出してすべてを設定します。シェルを再起動するか、新しいタブを開くと有効になります。
@@ -74,7 +74,7 @@ asc install-completions
 ## バージョン確認
 
 ```bash
-asc version     # バージョン番号を表示
-asc --version   # 同上
-asc -v          # 同上
+ascelerate version     # バージョン番号を表示
+ascelerate --version   # 同上
+ascelerate -v          # 同上
 ```

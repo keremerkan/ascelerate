@@ -10,19 +10,19 @@ ascにはスキルファイルが付属しており、AIコーディングエー
 ## バイナリからインストール（Claude Codeのみ）
 
 ```bash
-asc install-skill
+ascelerate install-skill
 ```
 
 ascは実行時に古いスキルを検出し、アップグレード後に更新を促します。削除するには：
 
 ```bash
-asc install-skill --uninstall
+ascelerate install-skill --uninstall
 ```
 
 ## npxでインストール（すべてのAIコーディングエージェント対応）
 
 ```bash
-npx asc-skill
+npx ascelerate-skill
 ```
 
 インタラクティブなメニューが表示され、お使いのエージェントを選択して適切なディレクトリにスキルをインストールします。スキルファイルはGitHubから取得されるため、常に最新です。
@@ -30,7 +30,7 @@ npx asc-skill
 削除するには：
 
 ```bash
-npx asc-skill --uninstall
+npx ascelerate-skill --uninstall
 ```
 
 ## スキルで可能になること

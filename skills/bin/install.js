@@ -8,31 +8,31 @@ const readline = require("readline");
 
 const home = os.homedir();
 const skillURL =
-  "https://raw.githubusercontent.com/keremerkan/asc-cli/main/skills/asc/SKILL.md";
+  "https://raw.githubusercontent.com/keremerkan/asc-cli/main/skills/ascelerate/SKILL.md";
 
 const agents = [
   {
     name: "Claude Code",
-    dir: path.join(home, ".claude", "skills", "asc"),
+    dir: path.join(home, ".claude", "skills", "ascelerate"),
     file: "SKILL.md",
     detect: path.join(home, ".claude"),
   },
   {
     name: "Cursor",
     dir: path.join(home, ".cursor", "rules"),
-    file: "asc.md",
+    file: "ascelerate.md",
     detect: path.join(home, ".cursor"),
   },
   {
     name: "Windsurf",
     dir: path.join(home, ".windsurf", "rules"),
-    file: "asc.md",
+    file: "ascelerate.md",
     detect: path.join(home, ".windsurf"),
   },
   {
     name: "GitHub Copilot",
     dir: path.join(home, ".github", "instructions"),
-    file: "asc.md",
+    file: "ascelerate.md",
     detect: null,
   },
 ];
@@ -73,9 +73,9 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes("--help") || args.includes("-h")) {
-    console.log("Usage: npx asc-skill [--uninstall]");
+    console.log("Usage: npx ascelerate-skill [--uninstall]");
     console.log("");
-    console.log("Install the asc skill for AI coding agents.");
+    console.log("Install the ascelerate skill for AI coding agents.");
     console.log("Fetches the latest skill file from GitHub.");
     console.log("");
     console.log("Options:");
@@ -121,7 +121,7 @@ async function main() {
       return;
     }
     fs.unlinkSync(target);
-    console.log(`Removed asc skill from ${target}`);
+    console.log(`Removed ascelerate skill from ${target}`);
     return;
   }
 
@@ -131,7 +131,7 @@ async function main() {
 
   fs.mkdirSync(agent.dir, { recursive: true });
   fs.writeFileSync(target, content, "utf8");
-  console.log(`Installed asc skill for ${agent.name}.`);
+  console.log(`Installed ascelerate skill for ${agent.name}.`);
   console.log(`  ${target}`);
 }
 

@@ -9,35 +9,35 @@ title: Informations et catégories
 
 ```bash
 # Afficher les informations de l'application, les catégories et les métadonnées par langue
-asc apps app-info view <bundle-id>
+ascelerate apps app-info view <bundle-id>
 
 # Lister tous les identifiants de catégorie disponibles (aucun bundle ID requis)
-asc apps app-info view --list-categories
+ascelerate apps app-info view --list-categories
 ```
 
 ## Mettre à jour
 
 ```bash
 # Mettre à jour les champs de localisation pour une seule langue
-asc apps app-info update <bundle-id> --name "My App" --subtitle "Best app ever"
-asc apps app-info update <bundle-id> --locale de-DE --name "Meine App"
+ascelerate apps app-info update <bundle-id> --name "My App" --subtitle "Best app ever"
+ascelerate apps app-info update <bundle-id> --locale de-DE --name "Meine App"
 
 # Mettre à jour les catégories (peut être combiné avec les options de localisation)
-asc apps app-info update <bundle-id> --primary-category UTILITIES
-asc apps app-info update <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
+ascelerate apps app-info update <bundle-id> --primary-category UTILITIES
+ascelerate apps app-info update <bundle-id> --primary-category GAMES_ACTION --secondary-category ENTERTAINMENT
 ```
 
 ## Exporter
 
 ```bash
-asc apps app-info export <bundle-id>
-asc apps app-info export <bundle-id> --output app-infos.json
+ascelerate apps app-info export <bundle-id>
+ascelerate apps app-info export <bundle-id> --output app-infos.json
 ```
 
 ## Importer
 
 ```bash
-asc apps app-info import <bundle-id> --file app-infos.json
+ascelerate apps app-info import <bundle-id> --file app-infos.json
 ```
 
 ## Format JSON
@@ -63,11 +63,11 @@ Les commandes `app-info update` et `app-info import` nécessitent que l'AppInfo 
 
 ```bash
 # Afficher la déclaration de classification d'âge pour la dernière version
-asc apps app-info age-rating <bundle-id>
-asc apps app-info age-rating <bundle-id> --version 2.1.0
+ascelerate apps app-info age-rating <bundle-id>
+ascelerate apps app-info age-rating <bundle-id> --version 2.1.0
 
 # Mettre à jour les classifications d'âge depuis un fichier JSON
-asc apps app-info age-rating <bundle-id> --file age-rating.json
+ascelerate apps app-info age-rating <bundle-id> --file age-rating.json
 ```
 
 Le fichier JSON utilise les mêmes noms de champs que l'API. Seuls les champs présents dans le fichier sont mis à jour :
@@ -87,8 +87,8 @@ Les champs d'intensité acceptent : `NONE`, `INFREQUENT_OR_MILD`, `FREQUENT_OR_I
 
 ```bash
 # Voir le statut actuel de la couverture de routage
-asc apps routing-coverage <bundle-id>
+ascelerate apps routing-coverage <bundle-id>
 
 # Téléverser un fichier .geojson
-asc apps routing-coverage <bundle-id> --file coverage.geojson
+ascelerate apps routing-coverage <bundle-id> --file coverage.geojson
 ```

@@ -15,7 +15,7 @@ const config: Config = {
   baseUrl: '/',
 
   organizationName: 'keremerkan',
-  projectName: 'asc-cli',
+  projectName: 'ascelerate',
 
   onBrokenLinks: 'throw',
 

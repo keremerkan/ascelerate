@@ -24,7 +24,7 @@
     "message": "Screenshots & Medien"
   },
   "homepage.features.media.description": {
-    "message": "Screenshots und App-Vorschauen mit einer einfachen Ordnerstruktur hoch- und herunterladen. Funktioniert mit ZIP-Dateien und lässt sich mit asc-screenshots kombinieren."
+    "message": "Screenshots direkt vom Simulator aufnehmen — mit Dark Mode, Lokalisierung und Statusleisten-Override. Screenshots und App-Vorschauen mit einer einfachen Ordnerstruktur hoch- und herunterladen."
   },
   "homepage.features.iap.title": {
     "message": "In-App-Käufe & Abonnements"

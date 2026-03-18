@@ -22,17 +22,17 @@ Tap, Apple Silicon Mac'ler için önceden derlenmiş bir binary sağlar, bu yüz
 ## Kurulum betiği
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/keremerkan/asc-cli/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
 En son sürümü indirir, `/usr/local/bin` dizinine kurar ve karantina özniteliğini otomatik olarak kaldırır. Yalnızca Apple Silicon.
 
 ## Manuel indirme
 
-En son sürümü [GitHub Releases](https://github.com/keremerkan/asc-cli/releases) sayfasından indirin:
+En son sürümü [GitHub Releases](https://github.com/keremerkan/ascelerate/releases) sayfasından indirin:
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o asc.tar.gz
+curl -L https://github.com/keremerkan/ascelerate/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
 tar xzf ascelerate.tar.gz
 mv ascelerate /usr/local/bin/
 ```
@@ -50,8 +50,8 @@ xattr -d com.apple.quarantine /usr/local/bin/ascelerate
 ## Kaynaktan derleme
 
 ```bash
-git clone https://github.com/keremerkan/asc-cli.git
-cd asc-cli
+git clone https://github.com/keremerkan/ascelerate.git
+cd ascelerate
 swift build -c release
 strip .build/release/ascelerate
 cp .build/release/ascelerate /usr/local/bin/

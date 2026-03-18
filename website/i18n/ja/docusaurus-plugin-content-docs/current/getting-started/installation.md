@@ -22,17 +22,17 @@ brew install ascelerate
 ## インストールスクリプト
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/keremerkan/asc-cli/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
 最新リリースをダウンロードし、`/usr/local/bin` にインストールして、quarantine属性を自動的に削除します。Apple Siliconのみ対応です。
 
 ## 手動ダウンロード
 
-[GitHub Releases](https://github.com/keremerkan/asc-cli/releases) から最新リリースをダウンロードしてください：
+[GitHub Releases](https://github.com/keremerkan/ascelerate/releases) から最新リリースをダウンロードしてください：
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o asc.tar.gz
+curl -L https://github.com/keremerkan/ascelerate/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
 tar xzf ascelerate.tar.gz
 mv ascelerate /usr/local/bin/
 ```
@@ -50,8 +50,8 @@ xattr -d com.apple.quarantine /usr/local/bin/ascelerate
 ## ソースからビルド
 
 ```bash
-git clone https://github.com/keremerkan/asc-cli.git
-cd asc-cli
+git clone https://github.com/keremerkan/ascelerate.git
+cd ascelerate
 swift build -c release
 strip .build/release/ascelerate
 cp .build/release/ascelerate /usr/local/bin/

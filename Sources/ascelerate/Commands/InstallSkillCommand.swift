@@ -27,7 +27,7 @@ struct InstallSkillCommand: AsyncParsableCommand {
     }
 
     print("Fetching latest skill from GitHub...")
-    let url = URL(string: "https://raw.githubusercontent.com/keremerkan/asc-cli/main/skills/ascelerate/SKILL.md")!
+    let url = URL(string: "https://raw.githubusercontent.com/keremerkan/ascelerate/main/skills/ascelerate/SKILL.md")!
     let (data, response) = try await URLSession.shared.data(from: url)
 
     guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {

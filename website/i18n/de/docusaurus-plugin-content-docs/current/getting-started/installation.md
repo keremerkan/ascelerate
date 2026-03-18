@@ -22,17 +22,17 @@ Der Tap stellt eine vorgefertigte Binärdatei für Apple Silicon Macs bereit, so
 ## Installationsskript
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/keremerkan/asc-cli/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
 Lädt die neueste Version herunter, installiert sie nach `/usr/local/bin` und entfernt automatisch das Quarantäne-Attribut. Nur für Apple Silicon.
 
 ## Manueller Download
 
-Laden Sie die neueste Version von [GitHub Releases](https://github.com/keremerkan/asc-cli/releases) herunter:
+Laden Sie die neueste Version von [GitHub Releases](https://github.com/keremerkan/ascelerate/releases) herunter:
 
 ```bash
-curl -L https://github.com/keremerkan/asc-cli/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
+curl -L https://github.com/keremerkan/ascelerate/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
 tar xzf ascelerate.tar.gz
 mv ascelerate /usr/local/bin/
 ```
@@ -50,8 +50,8 @@ Vorgefertigte Binärdateien werden nur für Apple Silicon (arm64) bereitgestellt
 ## Aus dem Quellcode kompilieren
 
 ```bash
-git clone https://github.com/keremerkan/asc-cli.git
-cd asc-cli
+git clone https://github.com/keremerkan/ascelerate.git
+cd ascelerate
 swift build -c release
 strip .build/release/ascelerate
 cp .build/release/ascelerate /usr/local/bin/

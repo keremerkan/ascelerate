@@ -6,7 +6,7 @@
   "author": "Kerem Erkan",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/keremerkan/asc-cli.git",
+    "url": "git+https://github.com/keremerkan/ascelerate.git",
     "directory": "skills"
   },
   "bin": {

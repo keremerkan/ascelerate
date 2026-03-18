@@ -8,7 +8,7 @@ const readline = require("readline");
 
 const home = os.homedir();
 const skillURL =
-  "https://raw.githubusercontent.com/keremerkan/asc-cli/main/skills/ascelerate/SKILL.md";
+  "https://raw.githubusercontent.com/keremerkan/ascelerate/main/skills/ascelerate/SKILL.md";
 
 const agents = [
   {

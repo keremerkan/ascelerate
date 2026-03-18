@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO="keremerkan/asc-cli"
+REPO="keremerkan/ascelerate"
 INSTALL_DIR="/usr/local/bin"
 BINARY="ascelerate"
 

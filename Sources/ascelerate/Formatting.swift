@@ -160,13 +160,16 @@ func extractZipToTemp(_ zipPath: String) throws -> String {
     throw ValidationError("Failed to extract zip file '\(zipPath)'.")
   }
 
-  // If the zip has a single root directory, use that as the media folder
+  // If the zip has a single non-locale root directory, unwrap it.
+  // Don't unwrap locale folders (e.g. "de-DE", "tr", "zh-Hans") — those are the media structure.
   let contents = try FileManager.default.contentsOfDirectory(atPath: tempDir)
     .filter { !$0.hasPrefix(".") && $0 != "__MACOSX" }
   if contents.count == 1 {
-    let inner = (tempDir as NSString).appendingPathComponent(contents[0])
+    let name = contents[0]
+    let inner = (tempDir as NSString).appendingPathComponent(name)
     var isDir: ObjCBool = false
-    if FileManager.default.fileExists(atPath: inner, isDirectory: &isDir), isDir.boolValue {
+    let isLocale = name.range(of: #"^[a-z]{2}(-[a-zA-Z]{2,4})?$"#, options: .regularExpression) != nil
+    if !isLocale, FileManager.default.fileExists(atPath: inner, isDirectory: &isDir), isDir.boolValue {
       return inner
     }
   }

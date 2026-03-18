@@ -11,7 +11,7 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://asccli.dev',
+  url: 'https://ascelerate.dev',
   baseUrl: '/',
 
   organizationName: 'keremerkan',

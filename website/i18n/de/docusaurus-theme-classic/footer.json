@@ -24,7 +24,7 @@
     "description": "The label of footer link with label=asc-swift linking to https://github.com/aaronsky/asc-swift"
   },
   "copyright": {
-    "message": "Copyright © 2026 Kerem Erkan.<br/>Nicht mit Apple Inc. verbunden. Apple, App Store, App Store Connect, Xcode und macOS sind Marken von Apple Inc.",
+    "message": "Betreut von <a href=\"https://keremerkan.dev\" target=\"_blank\" rel=\"noopener noreferrer\">Kerem Erkan</a>.<br/>Nicht mit Apple Inc. verbunden. Apple, App Store, App Store Connect, Xcode und macOS sind Marken von Apple Inc.",
     "description": "The footer copyright"
   }
 }

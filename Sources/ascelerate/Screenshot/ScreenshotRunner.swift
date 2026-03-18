@@ -11,6 +11,7 @@ struct ScreenshotRunner: Sendable {
     }
 
     func run() async throws {
+        let startTime = Date()
         let simulatorManager = SimulatorManager()
         let testRunner = ScreenshotTestRunner(config: config)
         let collector = ScreenshotCollector(config: config)
@@ -153,10 +154,10 @@ struct ScreenshotRunner: Sendable {
             print("\n" + yellow("Warning:") + " \(message) Set 'helperPath' in screenshot.yml to enable version checking.")
         }
 
-        printSummary(results)
+        printSummary(results, elapsed: Date().timeIntervalSince(startTime))
     }
 
-    private func printSummary(_ results: [Result]) {
+    private func printSummary(_ results: [Result], elapsed: TimeInterval) {
         print("\n")
 
         let devices = config.devices.map(\.simulator)
@@ -193,7 +194,10 @@ struct ScreenshotRunner: Sendable {
             }
         }
 
-        print("\nScreenshots saved to \(config.outputDirectory)")
+        let minutes = Int(elapsed) / 60
+        let seconds = Int(elapsed) % 60
+        let timeStr = minutes > 0 ? "\(minutes)m \(seconds)s" : "\(seconds)s"
+        print("\nScreenshots saved to \(config.outputDirectory) (\(timeStr))")
     }
 
     private func languageToLocale(_ language: String) -> String {

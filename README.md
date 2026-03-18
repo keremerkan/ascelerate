@@ -433,6 +433,82 @@ ascelerate apps media verify <bundle-id> --folder media/
 
 Without `--folder`, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With `--folder`, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.
 
+### Capturing Screenshots
+
+Capture App Store screenshots directly from iOS/iPadOS simulators using UI tests. Replaces [fastlane snapshot](https://docs.fastlane.tools/actions/snapshot/).
+
+```bash
+# Generate config and helper files
+ascelerate screenshot init                        # Creates ascelerate/screenshot.yml and ascelerate/ScreenshotHelper.swift
+
+# Capture screenshots
+ascelerate screenshot run
+```
+
+Add `ScreenshotHelper.swift` to your UITest target, then call `setupScreenshots(app)` in `setUp()` and `screenshot("name")` to capture:
+
+```swift
+override func setUp() {
+    setupScreenshots(app)
+    app.launch()
+}
+
+func testScreenshots() {
+    screenshot("01-home")
+    app.buttons["Settings"].tap()
+    screenshot("02-settings")
+}
+```
+
+Configure via `ascelerate/screenshot.yml`:
+
+```yaml
+# workspace: MyApp.xcworkspace
+project: MyApp.xcodeproj
+scheme: AppUITests
+devices:
+  - simulator: iPhone 16 Pro Max
+  - simulator: iPad Pro 13-inch (M4)
+languages:
+  - en-US
+  - de-DE
+outputDirectory: ./screenshots
+clearPreviousScreenshots: true
+localizeSimulator: true
+overrideStatusBar: true
+# darkMode: false
+# disableAnimations: false
+# waitAfterBoot: 0
+# configuration: Debug
+# testplan: MyTestPlan
+# numberOfRetries: 0
+# stopAfterFirstError: false
+# reinstallApp: false
+# xcargs: -maximum-parallel-testing-workers 2
+```
+
+Features:
+- Builds once, then runs tests across all languages
+- iPhone and iPad run concurrently per language
+- Status bar override (9:41, full bars, no carrier)
+- Simulator localization per language
+- Dark mode support
+- Animation disabling for reliable captures
+- Test retries for flaky UI tests
+- Errors skip and continue, with summary table and error logs saved to output
+- Helper version tracking with update warnings
+- `create-helper` available separately but also run automatically by `init`
+
+Output structure:
+```
+screenshots/
+├── en-US/
+│   ├── iPhone-01-home.png
+│   └── iPad-01-home.png
+└── de-DE/
+    └── ...
+```
+
 ### App Info & Categories
 
 ```bash
@@ -610,82 +686,6 @@ ascelerate profiles reissue --all-invalid           # Reissue all invalid profil
 ascelerate profiles reissue --all                   # Reissue all profiles regardless of state
 ascelerate profiles reissue --all --all-devices     # Reissue all, using all enabled devices for dev/adhoc
 ascelerate profiles reissue --all --to-certs ABC123,DEF456  # Use specific certificates instead of auto-detect
-```
-
-### Screenshots (Simulator Capture)
-
-Capture App Store screenshots directly from iOS/iPadOS simulators using UI tests. Replaces [fastlane snapshot](https://docs.fastlane.tools/actions/snapshot/).
-
-```bash
-# Generate config and helper files
-ascelerate screenshot init                        # Creates ascelerate/screenshot.yml and ascelerate/ScreenshotHelper.swift
-
-# Capture screenshots
-ascelerate screenshot run
-```
-
-Add `ScreenshotHelper.swift` to your UITest target, then call `setupScreenshots(app)` in `setUp()` and `screenshot("name")` to capture:
-
-```swift
-override func setUp() {
-    setupScreenshots(app)
-    app.launch()
-}
-
-func testScreenshots() {
-    screenshot("01-home")
-    app.buttons["Settings"].tap()
-    screenshot("02-settings")
-}
-```
-
-Configure via `ascelerate/screenshot.yml`:
-
-```yaml
-# workspace: MyApp.xcworkspace
-project: MyApp.xcodeproj
-scheme: AppUITests
-devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
-languages:
-  - en-US
-  - de-DE
-outputDirectory: ./screenshots
-clearPreviousScreenshots: true
-localizeSimulator: true
-overrideStatusBar: true
-# darkMode: false
-# disableAnimations: false
-# waitAfterBoot: 0
-# configuration: Debug
-# testplan: MyTestPlan
-# numberOfRetries: 0
-# stopAfterFirstError: false
-# reinstallApp: false
-# xcargs: -maximum-parallel-testing-workers 2
-```
-
-Features:
-- Builds once, then runs tests across all languages
-- iPhone and iPad run concurrently per language
-- Status bar override (9:41, full bars, no carrier)
-- Simulator localization per language
-- Dark mode support
-- Animation disabling for reliable captures
-- Test retries for flaky UI tests
-- Errors skip and continue, with summary table and error logs saved to output
-- Helper version tracking with update warnings
-- `create-helper` available separately but also run automatically by `init`
-
-Output structure:
-```
-screenshots/
-├── en-US/
-│   ├── iPhone-01-home.png
-│   └── iPad-01-home.png
-└── de-DE/
-    └── ...
 ```
 
 ### Builds

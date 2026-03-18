@@ -24,7 +24,7 @@
     "message": "スクリーンショットとメディア"
   },
   "homepage.features.media.description": {
-    "message": "シンプルなフォルダ構成でスクリーンショットやAppプレビューのアップロード・ダウンロードができます。ZIPファイルに対応し、asc-screenshotsとも連携できます。"
+    "message": "ダークモード、ローカライズ、ステータスバーオーバーライドを使用してシミュレーターからスクリーンショットを撮影。シンプルなフォルダ構造でスクリーンショットとアプリプレビューをアップロード・ダウンロード。"
   },
   "homepage.features.iap.title": {
     "message": "App内課金とサブスクリプション"

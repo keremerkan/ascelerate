@@ -96,8 +96,8 @@ function getFeatures(): FeatureItem[] {
       description: (
         <>
           <Translate id="homepage.features.media.description">
+            Capture screenshots from simulators with dark mode, localization, and status bar overrides.
             Upload and download screenshots and app previews with a simple folder structure.
-            Works with zip files and integrates with asc-screenshots.
           </Translate>
         </>
       ),

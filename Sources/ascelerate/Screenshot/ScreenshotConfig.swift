@@ -94,6 +94,7 @@ struct ScreenshotConfig: Codable, Sendable {
     # testWithoutBuilding: true
     # cleanBuild: false
     # headless: false
+    # numberOfRetries: 0
 
     # Path to ScreenshotHelper.swift (used for version checking)
     # Update this if you move the file out of ascelerate/
@@ -105,7 +106,6 @@ struct ScreenshotConfig: Codable, Sendable {
 
     # Advanced options (rarely needed)
     # testplan: MyTestPlan
-    # numberOfRetries: 0
     # stopAfterFirstError: false
     # reinstallApp: com.example.MyApp
     # xcargs: -resultBundlePath ./results

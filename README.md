@@ -4,7 +4,7 @@ A command-line tool for building, archiving, and publishing apps to the App Stor
 
 > **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and full management of in-app purchases and subscriptions. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
 
-> **Full documentation:** [asccli.dev](https://asccli.dev)
+> **Full documentation:** [ascelerate.dev](https://ascelerate.dev)
 
 ## Requirements
 

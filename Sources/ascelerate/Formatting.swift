@@ -38,6 +38,28 @@ func setupSignalHandler() {
   sigaction(SIGINT, &action, nil)
 }
 
+/// Splits a string into arguments, respecting single and double quotes.
+func splitArguments(_ string: String) -> [String] {
+  var result: [String] = []
+  var current = ""
+  var inQuote: Character?
+
+  for char in string {
+    if let quote = inQuote {
+      if char == quote { inQuote = nil } else { current.append(char) }
+    } else if char == "'" || char == "\"" {
+      inQuote = char
+    } else if char == " " {
+      if !current.isEmpty { result.append(current); current = "" }
+    } else {
+      current.append(char)
+    }
+  }
+
+  if !current.isEmpty { result.append(current) }
+  return result
+}
+
 /// When true, all interactive confirmation prompts are automatically accepted.
 nonisolated(unsafe) var autoConfirm = false
 

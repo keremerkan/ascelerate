@@ -14,11 +14,13 @@ function HomepageHeader() {
   return (
     <header className={clsx('hero', styles.heroBanner)}>
       <div className="container">
-        <img src="/img/favicon.svg" alt="asc" className={styles.heroLogo} />
-        <Heading as="h1" className="hero__title" style={{display: 'none'}}>
+        <img src="/img/favicon.svg" alt="ASCelerate" className={styles.heroLogo} />
+        <Heading as="h1" className="hero__title">
           {siteConfig.title}
         </Heading>
-        <p className="hero__subtitle" dangerouslySetInnerHTML={{__html: translate({id: 'homepage.tagline', message: '<strong>A</strong> <strong>S</strong>wift <strong>C</strong>LI for App Store Connect'})}} />
+        <p className={styles.heroTagline}>
+          {translate({id: 'homepage.tagline', message: 'A Swift CLI for App Store Connect'})}
+        </p>
         <p className={styles.heroDescription}>
           <Translate id="homepage.hero.description">
             Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission.
@@ -52,7 +54,7 @@ function InstallSection() {
               <Translate id="homepage.install.title">Install</Translate>
             </Heading>
             <CodeBlock language="bash" title="Homebrew">
-              {`brew tap keremerkan/tap\nbrew install asc-cli`}
+              {`brew tap keremerkan/tap\nbrew install ascelerate`}
             </CodeBlock>
             <CodeBlock language="bash" title="curl">
               {`curl -sSL https://raw.githubusercontent.com/keremerkan/asc-cli/main/install.sh | bash`}

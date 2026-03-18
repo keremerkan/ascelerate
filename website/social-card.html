@@ -21,9 +21,22 @@
     gap: 32px;
   }
 
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
   .logo svg {
-    width: 128px;
-    height: 128px;
+    width: 80px;
+    height: 80px;
+  }
+
+  .title {
+    font-size: 64px;
+    font-weight: 800;
+    color: #24292f;
+    letter-spacing: -1px;
   }
 
   .headline {
@@ -88,11 +101,14 @@
 <body>
 
 <div class="card">
-  <div class="logo">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-      <rect width="32" height="32" rx="6" fill="#007AFF"/>
-      <text x="16" y="15" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle" dominant-baseline="central" letter-spacing="-0.5">asc</text>
-    </svg>
+  <div class="top">
+    <div class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <rect width="32" height="32" rx="6" fill="#007AFF"/>
+        <text x="16" y="15" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle" dominant-baseline="central" letter-spacing="-0.5">asc</text>
+      </svg>
+    </div>
+    <div class="title">ASCelerate</div>
   </div>
 
   <div class="headline">A Swift CLI for App Store Connect</div>

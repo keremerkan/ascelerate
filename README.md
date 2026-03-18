@@ -618,12 +618,10 @@ Capture App Store screenshots directly from iOS/iPadOS simulators using UI tests
 
 ```bash
 # Generate config and helper files
-ascelerate screenshot init                        # Creates ascelerate.yml
-ascelerate screenshot create-helper               # Generates ScreenshotHelper.swift
+ascelerate screenshot init                        # Creates ascelerate/screenshot.yml and ascelerate/ScreenshotHelper.swift
 
 # Capture screenshots
-ascelerate screenshot run                         # Uses ascelerate.yml in current dir
-ascelerate screenshot run -c custom.yml           # Use a custom config file
+ascelerate screenshot run
 ```
 
 Add `ScreenshotHelper.swift` to your UITest target, then call `setupScreenshots(app)` in `setUp()` and `screenshot("name")` to capture:
@@ -641,22 +639,31 @@ func testScreenshots() {
 }
 ```
 
-Configure via `ascelerate.yml`:
+Configure via `ascelerate/screenshot.yml`:
 
 ```yaml
-screenshot:
-  project: MyApp.xcodeproj
-  scheme: AppUITests
-  devices:
-    - simulator: iPhone 16 Pro Max
-    - simulator: iPad Pro 13-inch (M4)
-  languages:
-    - en-US
-    - de-DE
-  outputDirectory: ./screenshots
-  clearPreviousScreenshots: true
-  localizeSimulator: true
-  overrideStatusBar: true
+# workspace: MyApp.xcworkspace
+project: MyApp.xcodeproj
+scheme: AppUITests
+devices:
+  - simulator: iPhone 16 Pro Max
+  - simulator: iPad Pro 13-inch (M4)
+languages:
+  - en-US
+  - de-DE
+outputDirectory: ./screenshots
+clearPreviousScreenshots: true
+localizeSimulator: true
+overrideStatusBar: true
+# darkMode: false
+# disableAnimations: false
+# waitAfterBoot: 0
+# configuration: Debug
+# testplan: MyTestPlan
+# numberOfRetries: 0
+# stopAfterFirstError: false
+# reinstallApp: false
+# xcargs: -maximum-parallel-testing-workers 2
 ```
 
 Features:
@@ -664,8 +671,12 @@ Features:
 - iPhone and iPad run concurrently per language
 - Status bar override (9:41, full bars, no carrier)
 - Simulator localization per language
+- Dark mode support
+- Animation disabling for reliable captures
+- Test retries for flaky UI tests
 - Errors skip and continue, with summary table and error logs saved to output
 - Helper version tracking with update warnings
+- `create-helper` available separately but also run automatically by `init`
 
 Output structure:
 ```

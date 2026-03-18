@@ -20,7 +20,16 @@ struct ScreenshotTestRunner: Sendable {
             }
 
             args += ["-scheme", config.scheme]
+            args += ["-configuration", config.configuration ?? "Release"]
             args += ["-destination", "generic/platform=iOS Simulator"]
+
+            if let testplan = config.testplan {
+                args += ["-testPlan", testplan]
+            }
+
+            if let xcargs = config.xcargs {
+                args += xcargs.split(separator: " ").map(String.init)
+            }
 
             if config.cleanBuild == true {
                 args += ["clean"]
@@ -45,6 +54,19 @@ struct ScreenshotTestRunner: Sendable {
         args += ["-xctestrun", buildResult.xctestrunFile]
         args += ["-destination", "platform=iOS Simulator,id=\(udid)"]
         args += ["-parallel-testing-enabled", "NO"]
+
+        if let retries = config.numberOfRetries, retries > 0 {
+            args += ["-retry-tests-on-failure", "-test-iterations", "\(retries + 1)"]
+        }
+
+        if let testplan = config.testplan {
+            args += ["-testPlan", testplan]
+        }
+
+        if let xcargs = config.xcargs {
+            args += xcargs.split(separator: " ").map(String.init)
+        }
+
         args += ["test-without-building"]
 
         let logDir = ScreenshotCollector.cacheRoot.appendingPathComponent("logs")

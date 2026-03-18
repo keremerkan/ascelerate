@@ -33,8 +33,11 @@ struct ScreenshotCollector: Sendable {
         try locale.write(to: cacheDir.appendingPathComponent("locale.txt"), atomically: true, encoding: .utf8)
         try device.simulator.write(to: cacheDir.appendingPathComponent("device_name.txt"), atomically: true, encoding: .utf8)
 
-        let launchArgs = (config.launchArguments ?? []).joined(separator: " ")
-        try launchArgs.write(to: cacheDir.appendingPathComponent("screenshot-launch_arguments.txt"), atomically: true, encoding: .utf8)
+        var launchArgs = config.launchArguments ?? []
+        if config.disableAnimations == true {
+            launchArgs += ["-ASC_DISABLE_ANIMATIONS", "YES"]
+        }
+        try launchArgs.joined(separator: " ").write(to: cacheDir.appendingPathComponent("screenshot-launch_arguments.txt"), atomically: true, encoding: .utf8)
     }
 
     func collectScreenshots(language: String, device: ScreenshotConfig.Device, udid: String) throws {

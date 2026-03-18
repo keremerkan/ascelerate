@@ -165,30 +165,39 @@ ascelerate sub group-localizations import <app> --file group-de.json
 Capture App Store screenshots from simulators using UI tests. Replaces fastlane snapshot.
 
 ```bash
-ascelerate screenshot init                          # Generate ascelerate.yml config
+ascelerate screenshot init                          # Generate config and helper in ascelerate/ directory
 ascelerate screenshot create-helper                 # Generate ScreenshotHelper.swift for UITest target
-ascelerate screenshot run                           # Capture screenshots (uses ascelerate.yml)
-ascelerate screenshot run -c custom.yml             # Use custom config
+ascelerate screenshot run                           # Capture screenshots
 ```
 
-#### Config (`ascelerate.yml`)
+#### Config (`ascelerate/screenshot.yml`)
 
 ```yaml
-screenshot:
-  project: MyApp.xcodeproj
-  scheme: AppUITests
-  devices:
-    - simulator: iPhone 16 Pro Max
-    - simulator: iPad Pro 13-inch (M4)
-  languages: [en-US, de-DE]
-  outputDirectory: ./screenshots
-  clearPreviousScreenshots: true
-  localizeSimulator: true
-  overrideStatusBar: true
-  # helperPath: AppUITests/ScreenshotHelper.swift
-  # testWithoutBuilding: true
-  # headless: true
+project: MyApp.xcodeproj
+scheme: AppUITests
+devices:
+  - simulator: iPhone 16 Pro Max
+  - simulator: iPad Pro 13-inch (M4)
+languages: [en-US, de-DE]
+outputDirectory: ./screenshots
+clearPreviousScreenshots: true
+localizeSimulator: true
+overrideStatusBar: true
+# helperPath: AppUITests/ScreenshotHelper.swift
+# testWithoutBuilding: true
+# headless: true
+# darkMode: false
+# disableAnimations: true
+# waitAfterBoot: 5
+# configuration: Debug
+# testplan: MyTestPlan
+# numberOfRetries: 1
+# stopAfterFirstError: false
+# reinstallApp: false
+# xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
+
+Supports dark mode capture, animation disabling, test retries, custom test plans, Xcode build configurations, and arbitrary xcodebuild arguments.
 
 #### UITest usage
 

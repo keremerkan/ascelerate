@@ -66,6 +66,18 @@ struct SimulatorManager: Sendable {
         try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "status_bar", udid, "clear"])
     }
 
+    func setAppearance(udid: String, dark: Bool) throws {
+        try ScreenshotShell.run("/usr/bin/xcrun", arguments: [
+            "simctl", "ui", udid, "appearance", dark ? "dark" : "light",
+        ])
+    }
+
+    func uninstallApp(udid: String, bundleID: String) throws {
+        try ScreenshotShell.run("/usr/bin/xcrun", arguments: [
+            "simctl", "uninstall", udid, bundleID,
+        ])
+    }
+
     func localize(udid: String, language: String, locale: String) throws {
         try ScreenshotShell.run("/usr/bin/xcrun", arguments: [
             "simctl", "spawn", udid, "defaults", "write",
@@ -85,25 +97,4 @@ struct SimulatorManager: Sendable {
         print("  Localized simulator to \(language) (\(locale))")
     }
 
-    private func splitArguments(_ string: String) -> [String] {
-        var result: [String] = []
-        var current = ""
-        var inQuote: Character?
-
-        for char in string {
-            if let quote = inQuote {
-                if char == quote { inQuote = nil } else { current.append(char) }
-            } else if char == "'" || char == "\"" {
-                inQuote = char
-            } else if char == " " {
-                if !current.isEmpty { result.append(current); current = "" }
-            } else {
-                current.append(char)
-            }
-        }
-
-        if !current.isEmpty { result.append(current) }
-
-        return result
-    }
 }

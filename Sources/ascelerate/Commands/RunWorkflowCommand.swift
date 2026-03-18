@@ -141,30 +141,3 @@ private func selectWorkflowFile() throws -> String {
   return files[choice - 1]
 }
 
-/// Splits a command string into arguments, respecting single and double quotes.
-private func splitArguments(_ line: String) -> [String] {
-  var args: [String] = []
-  var current = ""
-  var inSingle = false
-  var inDouble = false
-
-  for char in line {
-    if char == "'" && !inDouble {
-      inSingle.toggle()
-    } else if char == "\"" && !inSingle {
-      inDouble.toggle()
-    } else if char == " " && !inSingle && !inDouble {
-      if !current.isEmpty {
-        args.append(current)
-        current = ""
-      }
-    } else {
-      current.append(char)
-    }
-  }
-  if !current.isEmpty {
-    args.append(current)
-  }
-
-  return args
-}

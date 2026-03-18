@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
         'commands/builds',
         'commands/localizations',
         'commands/media',
+        'commands/screenshots',
         'commands/app-info',
         'commands/iap',
         'commands/subscriptions',

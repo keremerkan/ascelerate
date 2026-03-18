@@ -17,6 +17,13 @@
   margin-bottom: 1rem;
 }
 
+.heroTagline {
+  font-size: 1.4rem;
+  opacity: 0.75;
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
+}
+
 .heroDescription {
   font-size: 1.2rem;
   max-width: 600px;

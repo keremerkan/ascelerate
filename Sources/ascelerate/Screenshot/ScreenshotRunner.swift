@@ -53,9 +53,23 @@ struct ScreenshotRunner: Sendable {
                         try simulatorManager.boot(udid: sim.udid)
                     }
 
+                    if let wait = config.waitAfterBoot, wait > 0 {
+                        print("  [\(device.simulator)] Waiting \(wait)s after boot...")
+                        sleep(UInt32(wait))
+                    }
+
+                    if config.darkMode == true {
+                        try simulatorManager.setAppearance(udid: sim.udid, dark: true)
+                    }
+
                     if config.overrideStatusBar {
                         print("  [\(device.simulator)] Overriding status bar...")
                         try simulatorManager.overrideStatusBar(udid: sim.udid, arguments: config.statusBarArguments)
+                    }
+
+                    if let bundleID = config.reinstallApp {
+                        print("  [\(device.simulator)] Uninstalling app...")
+                        try? simulatorManager.uninstallApp(udid: sim.udid, bundleID: bundleID)
                     }
 
                     try collector.prepareCacheDirectory(language: language, locale: locale, device: device, udid: sim.udid)
@@ -125,13 +139,18 @@ struct ScreenshotRunner: Sendable {
                 }
                 try? simulatorManager.shutdown(udid: sim.udid)
             }
+
+            if config.stopAfterFirstError == true && results.contains(where: { !$0.success }) {
+                print("\nStopping after first error.")
+                break
+            }
         }
 
         if !helperFound {
             let message = config.helperPath != nil
                 ? "Could not find \(config.helperPath!) to check for updates."
                 : "Could not find screenshot helper file to check for updates."
-            print("\n" + yellow("Warning:") + " \(message) Set 'helperPath' in ascelerate.yml to enable version checking.")
+            print("\n" + yellow("Warning:") + " \(message) Set 'helperPath' in screenshot.yml to enable version checking.")
         }
 
         printSummary(results)
@@ -203,13 +222,21 @@ struct ScreenshotRunner: Sendable {
                 : FileManager.default.currentDirectoryPath + "/" + helperPath
 
             guard FileManager.default.fileExists(atPath: fullPath) else {
-                print(yellow("Warning:") + " Helper file not found at '\(helperPath)'. Check helperPath in ascelerate.yml.")
+                print(yellow("Warning:") + " Helper file not found at '\(helperPath)'. Check helperPath in screenshot.yml.")
                 return false
             }
 
             checkVersionInFile(at: URL(fileURLWithPath: fullPath), currentVersion: currentVersion)
             return true
         } else {
+            // Check default location first
+            let defaultPath = ScreenshotCommand.defaultHelperPath
+            if FileManager.default.fileExists(atPath: defaultPath) {
+                checkVersionInFile(at: URL(fileURLWithPath: defaultPath), currentVersion: currentVersion)
+                return true
+            }
+
+            // Fall back to scanning the project
             let cwd = FileManager.default.currentDirectoryPath
             let enumerator = FileManager.default.enumerator(
                 at: URL(fileURLWithPath: cwd),

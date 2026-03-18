@@ -9,27 +9,22 @@ struct ScreenshotCommand: AsyncParsableCommand {
         defaultSubcommand: Run.self
     )
 
+    static let configPath = "ascelerate/screenshot.yml"
+    static let defaultHelperPath = "ascelerate/ScreenshotHelper.swift"
+
     struct Run: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
             abstract: "Capture screenshots for all configured devices and languages."
         )
 
-        @Argument(help: "Path to config file. Defaults to ascelerate.yml.",
-                  completion: .file(extensions: ["yml", "yaml"]))
-        var config: String?
-
         func run() async throws {
-            let configPath = expandPath(config ?? "ascelerate.yml")
+            let configPath = ScreenshotCommand.configPath
 
             guard FileManager.default.fileExists(atPath: configPath) else {
                 throw ScreenshotError.configNotFound(configPath)
             }
 
-            let ascelerateConfig = try AscelerateConfig.load(from: configPath)
-
-            guard let screenshotConfig = ascelerateConfig.screenshot else {
-                throw ValidationError("No 'screenshot' section found in \(config ?? "ascelerate.yml")")
-            }
+            let screenshotConfig = try ScreenshotConfig.load(from: configPath)
 
             print("ascelerate screenshot")
             print("  Scheme: \(screenshotConfig.scheme)")
@@ -44,24 +39,48 @@ struct ScreenshotCommand: AsyncParsableCommand {
 
     struct Init: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Generate a sample screenshot.json config file."
+            abstract: "Initialize screenshot configuration and helper."
         )
 
-        @Argument(help: "Output path for config file. Defaults to ascelerate.yml.",
-                  completion: .file(extensions: ["yml", "yaml"]))
-        var output: String?
-
         func run() throws {
-            let outputPath = expandPath(output ?? "ascelerate.yml")
+            let fm = FileManager.default
+            let cwd = fm.currentDirectoryPath
+            let dir = "ascelerate"
+            let configPath = ScreenshotCommand.configPath
+            let helperPath = ScreenshotCommand.defaultHelperPath
 
-            guard !FileManager.default.fileExists(atPath: outputPath) else {
-                print("Config file already exists at \(outputPath). Remove it first to regenerate.")
+            print("This will create files in \(cwd)/\(dir)/")
+            guard confirm("Continue? [y/N] ") else {
+                print("Cancelled.")
                 return
             }
 
-            try ScreenshotConfig.exampleYAML.write(toFile: outputPath, atomically: true, encoding: .utf8)
-            print("Created sample config at \(outputPath)")
-            print("Edit it to match your project, then run: ascelerate screenshot run")
+            // Create ascelerate/ directory
+            if !fm.fileExists(atPath: dir) {
+                try fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
+            }
+
+            // Create screenshot.yml
+            if fm.fileExists(atPath: configPath) {
+                print("Config already exists at \(configPath)")
+            } else {
+                try ScreenshotConfig.exampleYAML.write(toFile: configPath, atomically: true, encoding: .utf8)
+                print(green("Created") + " \(configPath)")
+            }
+
+            // Create ScreenshotHelper.swift
+            if fm.fileExists(atPath: helperPath) {
+                print("Helper already exists at \(helperPath)")
+            } else {
+                try CreateHelper.helperSource.write(toFile: helperPath, atomically: true, encoding: .utf8)
+                print(green("Created") + " \(helperPath)")
+            }
+
+            print()
+            print("Next steps:")
+            print("  1. Edit \(configPath) to match your project")
+            print("  2. Add \(helperPath) to your UITest target")
+            print("  3. Run: ascelerate screenshot")
         }
     }
 
@@ -79,9 +98,10 @@ struct ScreenshotCommand: AsyncParsableCommand {
             if let output {
                 filename = output
             } else {
-                print("Enter filename [\("ScreenshotHelper.swift")]: ", terminator: "")
+                let defaultPath = ScreenshotCommand.defaultHelperPath
+                print("Enter filename [\(defaultPath)]: ", terminator: "")
                 let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                filename = input.isEmpty ? "ScreenshotHelper.swift" : input
+                filename = input.isEmpty ? defaultPath : input
             }
 
             let outputPath = expandPath(filename)
@@ -93,12 +113,13 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 }
             }
 
+            // Ensure parent directory exists
+            let parentDir = (outputPath as NSString).deletingLastPathComponent
+            try FileManager.default.createDirectory(atPath: parentDir, withIntermediateDirectories: true)
+
             try Self.helperSource.write(toFile: outputPath, atomically: true, encoding: .utf8)
-            print("Wrote \(filename)")
+            print(green("Created") + " \(filename)")
             print("Add this file to your UITest target.")
-            if filename != "ScreenshotHelper.swift" {
-                print("Tip: set 'helperPath: \(filename)' in ascelerate.yml so version checks can find it.")
-            }
         }
 
         static let helperVersion = "1.0"
@@ -118,9 +139,19 @@ struct ScreenshotCommand: AsyncParsableCommand {
         // MARK: - Public API
 
         /// Call this in your test's setUp() before launching the app.
+        /// Set `waitForAnimations: false` if you disable animations via config.
         @MainActor
         func setupScreenshots(_ app: XCUIApplication, waitForAnimations: Bool = true) {
             Screenshot.setup(app, waitForAnimations: waitForAnimations)
+        }
+
+        /// Copy this function to your AppDelegate or SceneDelegate and call it on launch
+        /// to disable animations when running in screenshot mode.
+        /// Pair with `disableAnimations: true` in screenshot.yml.
+        func disableAnimationsIfNeeded() {
+            if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
+                UIView.setAnimationsEnabled(false)
+            }
         }
 
         /// Call this to capture a screenshot with the given name.
@@ -238,7 +269,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             private static func setLaunchArguments(_ app: XCUIApplication) {
                 guard let cacheDirectory else { return }
                 let path = cacheDirectory.appendingPathComponent("screenshot-launch_arguments.txt")
-                app.launchArguments += ["-ASCELERATE_SCREENSHOT", "YES", "-ui_testing"]
+                app.launchArguments += ["-ASC_SCREENSHOT", "YES", "-ui_testing"]
 
                 guard let args = try? String(contentsOf: path, encoding: .utf8),
                       !args.isEmpty else { return }

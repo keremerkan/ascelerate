@@ -1,4 +1,4 @@
-# ascelerate — **A** **S**wift **C**LI for App Store Connect
+# ascelerate — A Swift CLI for App Store Connect
 
 A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).
 

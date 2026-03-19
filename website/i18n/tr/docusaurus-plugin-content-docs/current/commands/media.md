@@ -20,7 +20,7 @@ Varsayılan olarak `<bundle-id>-media/` dizinine indirir, yükleme tarafından b
 # Bir klasörden yükleyin
 ascelerate apps media upload <bundle-id> --folder media/
 
-# Bir zip dosyasından yükleyin (ör. asc-screenshots'tan dışa aktarılmış)
+# Bir zip dosyasından yükleyin (ör. app-store-screenshots'tan dışa aktarılmış)
 ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # Belirli bir sürüme yükleyin
@@ -112,14 +112,20 @@ App Store Connect, iPhone uygulamaları için **`APP_IPHONE_67`** ve iPad uygula
 Watch ve iMessage display type'lar yalnızca ekran görüntülerini destekler -- bu klasörlerdeki video dosyaları uyarıyla atlanır. `--replace` flag'i, yenilerini yüklemeden önce eşleşen her setteki tüm mevcut varlıkları siler.
 :::
 
-## asc-screenshots ile kullanım
+## app-store-screenshots ile kullanım
 
-[asc-screenshots](https://github.com/keremerkan/asc-screenshots), yapay zeka kodlama ajanları için üretime hazır App Store ekran görüntüleri oluşturan yardımcı bir skill'dir. Cihaz çerçeveleriyle reklam tarzı ekran görüntüsü düzenleri oluşturan bir Next.js sayfası yaratır ve bunları asc'nin beklediği klasör yapısında zip dosyası olarak dışa aktarır:
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots), yapay zeka kodlama ajanları için üretime hazır App Store ekran görüntüleri oluşturan yardımcı bir skill'dir. `ascelerate screenshot frame` ile çerçevelenmiş cihaz ekran görüntülerini kullanarak reklam tarzı pazarlama düzenleri oluşturan bir Next.js sayfası yaratır ve bunları `ascelerate apps media upload` ile yüklenmeye hazır zip dosyası olarak dışa aktarır:
 
 ```
 en-US/APP_IPHONE_67/01_hero.png
 en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
 de-DE/APP_IPHONE_67/01_hero.png
+```
+
+Skill'i yapay zeka kodlama ajanınıza yükleyin:
+
+```bash
+npx skills add keremerkan/ascelerate
 ```
 
 Dışa aktarılan zip'i doğrudan yükleyin:

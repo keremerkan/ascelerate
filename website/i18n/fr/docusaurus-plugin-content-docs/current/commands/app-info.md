@@ -62,12 +62,14 @@ Les commandes `app-info update` et `app-info import` nécessitent que l'AppInfo 
 ## Classification d'âge
 
 ```bash
-# Afficher la déclaration de classification d'âge pour la dernière version
+# Afficher la déclaration de classification d'âge
 ascelerate apps app-info age-rating <bundle-id>
-ascelerate apps app-info age-rating <bundle-id> --version 2.1.0
+
+# Exporter la classification d'âge en JSON
+ascelerate apps app-info age-rating export <bundle-id>
 
 # Mettre à jour les classifications d'âge depuis un fichier JSON
-ascelerate apps app-info age-rating <bundle-id> --file age-rating.json
+ascelerate apps app-info age-rating import <bundle-id> --file age-rating.json
 ```
 
 Le fichier JSON utilise les mêmes noms de champs que l'API. Seuls les champs présents dans le fichier sont mis à jour :

@@ -62,12 +62,14 @@ Die Befehle `app-info update` und `app-info import` erfordern, dass die AppInfo 
 ## Altersfreigabe
 
 ```bash
-# Altersfreigabe-Erklärung für die neueste Version anzeigen
+# Altersfreigabe-Erklärung anzeigen
 ascelerate apps app-info age-rating <bundle-id>
-ascelerate apps app-info age-rating <bundle-id> --version 2.1.0
+
+# Altersfreigabe als JSON exportieren
+ascelerate apps app-info age-rating export <bundle-id>
 
 # Altersfreigabe aus einer JSON-Datei aktualisieren
-ascelerate apps app-info age-rating <bundle-id> --file age-rating.json
+ascelerate apps app-info age-rating import <bundle-id> --file age-rating.json
 ```
 
 Die JSON-Datei verwendet die gleichen Feldnamen wie die API. Nur die in der Datei vorhandenen Felder werden aktualisiert:

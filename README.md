@@ -231,12 +231,14 @@ ascelerate apps phased-release <bundle-id> --disable
 ### Age Rating
 
 ```bash
-# View age rating declaration for the latest version
+# View age rating declaration
 ascelerate apps app-info age-rating <bundle-id>
-ascelerate apps app-info age-rating <bundle-id> --version 2.1.0
+
+# Export age rating to JSON
+ascelerate apps app-info age-rating export <bundle-id>
 
 # Update age ratings from a JSON file
-ascelerate apps app-info age-rating <bundle-id> --file age-rating.json
+ascelerate apps app-info age-rating import <bundle-id> --file age-rating.json
 ```
 
 The JSON file uses the same field names as the API. Only fields present in the file are updated:
@@ -310,7 +312,7 @@ ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 # Upload screenshots and preview videos from a folder
 ascelerate apps media upload <bundle-id> --folder media/
 
-# Upload from a zip file (e.g. exported from asc-screenshots)
+# Upload from a zip file (e.g. exported from app-store-screenshots)
 ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # Upload to a specific version
@@ -400,14 +402,20 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 >
 > `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
 
-#### Using with asc-screenshots
+#### Using with app-store-screenshots
 
-[asc-screenshots](https://github.com/keremerkan/asc-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style screenshot layouts with device bezels and exports them as a zip file in the exact folder structure asc expects:
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style marketing layouts using framed device screenshots from `ascelerate screenshot frame` and exports them as a zip file ready for upload via `ascelerate apps media upload`:
 
 ```
 en-US/APP_IPHONE_67/01_hero.png
 en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
 de-DE/APP_IPHONE_67/01_hero.png
+```
+
+Install the skill for your AI coding agent:
+
+```bash
+npx skills add keremerkan/ascelerate
 ```
 
 Upload the exported zip directly:

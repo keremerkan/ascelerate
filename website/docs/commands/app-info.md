@@ -62,12 +62,14 @@ The `app-info update` and `app-info import` commands require the AppInfo to be i
 ## Age rating
 
 ```bash
-# View age rating declaration for the latest version
+# View age rating declaration
 ascelerate apps app-info age-rating <bundle-id>
-ascelerate apps app-info age-rating <bundle-id> --version 2.1.0
+
+# Export age rating to JSON
+ascelerate apps app-info age-rating export <bundle-id>
 
 # Update age ratings from a JSON file
-ascelerate apps app-info age-rating <bundle-id> --file age-rating.json
+ascelerate apps app-info age-rating import <bundle-id> --file age-rating.json
 ```
 
 The JSON file uses the same field names as the API. Only fields present in the file are updated:

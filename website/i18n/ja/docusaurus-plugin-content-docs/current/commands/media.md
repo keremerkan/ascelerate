@@ -20,7 +20,7 @@ ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 # フォルダからアップロード
 ascelerate apps media upload <bundle-id> --folder media/
 
-# zipファイルからアップロード（例：asc-screenshotsからエクスポートしたもの）
+# zipファイルからアップロード（例：app-store-screenshotsからエクスポートしたもの）
 ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # 特定のバージョンにアップロード
@@ -112,14 +112,20 @@ App Store Connectでは、iPhoneアプリには **`APP_IPHONE_67`** のスクリ
 WatchとiMessageのディスプレイタイプはスクリーンショットのみ対応しています。これらのフォルダ内の動画ファイルは警告とともにスキップされます。`--replace` フラグは、新しいファイルをアップロードする前にマッチする各セットの既存アセットをすべて削除します。
 :::
 
-## asc-screenshotsとの連携
+## app-store-screenshotsとの連携
 
-[asc-screenshots](https://github.com/keremerkan/asc-screenshots) は、AIコーディングエージェント用のコンパニオンスキルで、本番品質のApp Storeスクリーンショットを生成します。デバイスベゼル付きの広告スタイルのスクリーンショットレイアウトをレンダリングするNext.jsページを作成し、ascが期待する正確なフォルダ構造のzipファイルとしてエクスポートします：
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) は、AIコーディングエージェント用のコンパニオンスキルで、本番品質のApp Storeスクリーンショットを生成します。`ascelerate screenshot frame` でフレーム加工されたデバイススクリーンショットを使用して広告スタイルのマーケティングレイアウトをレンダリングするNext.jsページを作成し、`ascelerate apps media upload` でアップロード可能なzipファイルとしてエクスポートします：
 
 ```
 en-US/APP_IPHONE_67/01_hero.png
 en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
 de-DE/APP_IPHONE_67/01_hero.png
+```
+
+AIコーディングエージェントにスキルをインストールします：
+
+```bash
+npx skills add keremerkan/ascelerate
 ```
 
 エクスポートしたzipを直接アップロードできます：

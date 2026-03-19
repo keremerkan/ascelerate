@@ -20,7 +20,7 @@ Wird standardmäßig nach `<bundle-id>-media/` heruntergeladen und verwendet die
 # Aus einem Ordner hochladen
 ascelerate apps media upload <bundle-id> --folder media/
 
-# Aus einer ZIP-Datei hochladen (z.B. exportiert von asc-screenshots)
+# Aus einer ZIP-Datei hochladen (z.B. exportiert von app-store-screenshots)
 ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # In eine bestimmte Version hochladen
@@ -112,14 +112,20 @@ App Store Connect erfordert **`APP_IPHONE_67`**-Screenshots für iPhone-Apps und
 Watch- und iMessage-Anzeigetypen unterstützen nur Screenshots — Videodateien in diesen Ordnern werden mit einer Warnung übersprungen. Das `--replace`-Flag löscht alle bestehenden Assets in jedem passenden Set, bevor neue hochgeladen werden.
 :::
 
-## Verwendung mit asc-screenshots
+## Verwendung mit app-store-screenshots
 
-[asc-screenshots](https://github.com/keremerkan/asc-screenshots) ist ein begleitender Skill für KI-Coding-Agenten, der produktionsreife App Store-Screenshots generiert. Er erstellt eine Next.js-Seite, die werbeähnliche Screenshot-Layouts mit Geräterahmen rendert und sie als ZIP-Datei in genau der Ordnerstruktur exportiert, die asc erwartet:
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) ist ein begleitender Skill für KI-Coding-Agenten, der produktionsreife App Store-Screenshots generiert. Er erstellt eine Next.js-Seite, die werbeähnliche Marketing-Layouts mit gerahmten Geräte-Screenshots aus `ascelerate screenshot frame` rendert und sie als ZIP-Datei zum Hochladen via `ascelerate apps media upload` exportiert:
 
 ```
 en-US/APP_IPHONE_67/01_hero.png
 en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
 de-DE/APP_IPHONE_67/01_hero.png
+```
+
+Installieren Sie den Skill für Ihren KI-Coding-Agenten:
+
+```bash
+npx skills add keremerkan/ascelerate
 ```
 
 Laden Sie die exportierte ZIP-Datei direkt hoch:

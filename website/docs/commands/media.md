@@ -20,7 +20,7 @@ Downloads to `<bundle-id>-media/` by default, using the same folder structure ex
 # Upload from a folder
 ascelerate apps media upload <bundle-id> --folder media/
 
-# Upload from a zip file (e.g. exported from asc-screenshots)
+# Upload from a zip file (e.g. exported from app-store-screenshots)
 ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # Upload to a specific version
@@ -112,14 +112,20 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 Watch and iMessage display types support screenshots only — video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
 :::
 
-## Using with asc-screenshots
+## Using with app-store-screenshots
 
-[asc-screenshots](https://github.com/keremerkan/asc-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style screenshot layouts with device bezels and exports them as a zip file in the exact folder structure ascelerate expects:
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style marketing layouts using framed device screenshots from `ascelerate screenshot frame` and exports them as a zip file ready for upload via `ascelerate apps media upload`:
 
 ```
 en-US/APP_IPHONE_67/01_hero.png
 en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
 de-DE/APP_IPHONE_67/01_hero.png
+```
+
+Install the skill for your AI coding agent:
+
+```bash
+npx skills add keremerkan/ascelerate
 ```
 
 Upload the exported zip directly:

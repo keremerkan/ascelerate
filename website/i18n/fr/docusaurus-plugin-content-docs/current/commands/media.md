@@ -20,7 +20,7 @@ Le téléchargement se fait par défaut dans `<bundle-id>-media/`, en utilisant 
 # Téléverser depuis un dossier
 ascelerate apps media upload <bundle-id> --folder media/
 
-# Téléverser depuis un fichier zip (par ex. exporté depuis asc-screenshots)
+# Téléverser depuis un fichier zip (par ex. exporté depuis app-store-screenshots)
 ascelerate apps media upload <bundle-id> --folder screenshots.zip
 
 # Téléverser vers une version spécifique
@@ -112,14 +112,20 @@ App Store Connect exige des captures d'écran **`APP_IPHONE_67`** pour les appli
 Les types d'affichage Watch et iMessage ne prennent en charge que les captures d'écran -- les fichiers vidéo dans ces dossiers sont ignorés avec un avertissement. L'option `--replace` supprime tous les éléments existants dans chaque ensemble correspondant avant le téléversement.
 :::
 
-## Utilisation avec asc-screenshots
+## Utilisation avec app-store-screenshots
 
-[asc-screenshots](https://github.com/keremerkan/asc-screenshots) est un skill compagnon pour les agents de codage IA qui génère des captures d'écran App Store prêtes pour la production. Il crée une page Next.js qui produit des mises en page de captures d'écran de style publicitaire avec des contours d'appareils et les exporte sous forme de fichier zip dans la structure de dossiers exacte attendue par asc :
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) est un skill compagnon pour les agents de codage IA qui génère des captures d'écran App Store prêtes pour la production. Il crée une page Next.js qui produit des mises en page marketing de style publicitaire utilisant des captures d'écran encadrées par `ascelerate screenshot frame` et les exporte sous forme de fichier zip prêt à être téléversé via `ascelerate apps media upload` :
 
 ```
 en-US/APP_IPHONE_67/01_hero.png
 en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
 de-DE/APP_IPHONE_67/01_hero.png
+```
+
+Installez le skill pour votre agent de codage IA :
+
+```bash
+npx skills add keremerkan/ascelerate
 ```
 
 Téléversez le zip exporté directement :

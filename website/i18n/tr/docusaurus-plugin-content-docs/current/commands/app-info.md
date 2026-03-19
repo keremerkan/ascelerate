@@ -62,12 +62,14 @@ Yalnızca mevcut alanlar güncellenir -- belirtilmeyen alanlar değiştirilmez.
 ## Yaş derecelendirmesi
 
 ```bash
-# En son sürüm için yaş derecelendirme beyanını görüntüleyin
+# Yaş derecelendirme beyanını görüntüleyin
 ascelerate apps app-info age-rating <bundle-id>
-ascelerate apps app-info age-rating <bundle-id> --version 2.1.0
+
+# Yaş derecelendirmesini JSON olarak dışa aktarın
+ascelerate apps app-info age-rating export <bundle-id>
 
 # Yaş derecelendirmelerini bir JSON dosyasından güncelleyin
-ascelerate apps app-info age-rating <bundle-id> --file age-rating.json
+ascelerate apps app-info age-rating import <bundle-id> --file age-rating.json
 ```
 
 JSON dosyası API ile aynı alan adlarını kullanır. Yalnızca dosyada bulunan alanlar güncellenir:

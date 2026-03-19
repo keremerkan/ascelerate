@@ -266,7 +266,8 @@ Note: provisioning commands (devices, certs, bundle-ids, profiles) do NOT suppor
 ascelerate apps app-info view <app>
 ascelerate apps app-info update <app> --primary-category UTILITIES
 ascelerate apps app-info age-rating <app>
-ascelerate apps app-info age-rating <app> --file age-rating.json
+ascelerate apps app-info age-rating export <app>
+ascelerate apps app-info age-rating import <app> --file age-rating.json
 ascelerate apps availability <app> --add CHN,RUS
 ascelerate apps encryption <app> --create --description "Uses HTTPS"
 ascelerate apps eula <app> --file eula.txt

@@ -12,7 +12,7 @@ import styles from './index.module.css';
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   return (
-    <header className={clsx('hero', styles.heroBanner)}>
+    <header className={styles.heroBanner}>
       <div className="container">
         <img src="/img/favicon.svg" alt="ASCelerate" className={styles.heroLogo} />
         <Heading as="h1" className="hero__title">

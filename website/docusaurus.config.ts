@@ -23,7 +23,7 @@ const config: Config = {
     {
       tagName: 'style',
       attributes: {},
-      innerHTML: `html{background:#303846}#__docusaurus{background:#fff}[data-theme='dark'] #__docusaurus{background:#1b1b1d}`,
+      innerHTML: `html{background:#fff}[data-theme='dark'] html{background:#1b1b1d}`,
     },
   ],
 
@@ -84,7 +84,7 @@ const config: Config = {
       ],
     },
     footer: {
-      style: 'dark',
+      style: 'light',
       links: [
         {
           title: 'Docs',

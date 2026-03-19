@@ -154,11 +154,15 @@ screenshots/
 
 ## Device framing
 
-Frame captured screenshots with Apple device bezels from [Apple Design Resources](https://developer.apple.com/design/resources/).
+Frame captured screenshots with Apple device bezels.
+
+:::info
+Device bezels are not included with ascelerate — download them from [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) (requires an Apple Developer account). The download is a DMG file containing PNG bezels for all current devices.
+:::
 
 ### Setup
 
-1. Download device bezels from Apple Design Resources (DMG file)
+1. Download the Product Bezels DMG from [Apple Design Resources](https://developer.apple.com/design/resources/#product-bezels)
 2. Extract the bezel PNG files to a folder in your project (e.g. `./bezels/`)
 3. Enable framing per device in the config:
 

@@ -154,11 +154,15 @@ screenshots/
 
 ## Encadrement d'appareil
 
-Encadrez les captures d'écran avec les contours d'appareils Apple depuis [Apple Design Resources](https://developer.apple.com/design/resources/).
+Encadrez les captures d'écran avec les contours d'appareils Apple.
+
+:::info
+Les contours d'appareils ne sont pas inclus avec ascelerate — téléchargez-les depuis [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) (compte Apple Developer requis). Le téléchargement est un fichier DMG contenant les contours PNG pour tous les appareils actuels.
+:::
 
 ### Configuration
 
-1. Téléchargez les contours d'appareils depuis Apple Design Resources (fichier DMG)
+1. Téléchargez le DMG Product Bezels depuis [Apple Design Resources](https://developer.apple.com/design/resources/#product-bezels)
 2. Extrayez les fichiers PNG de contour dans un dossier de votre projet (ex. `./bezels/`)
 3. Activez l'encadrement par appareil dans la configuration :
 

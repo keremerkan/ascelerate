@@ -154,11 +154,15 @@ screenshots/
 
 ## Geräterahmen
 
-Rahmen Sie aufgenommene Screenshots mit Apple-Geräterahmen von [Apple Design Resources](https://developer.apple.com/design/resources/).
+Rahmen Sie aufgenommene Screenshots mit Apple-Geräterahmen.
+
+:::info
+Geräterahmen sind nicht in ascelerate enthalten — laden Sie sie von [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) herunter (Apple Developer Account erforderlich). Der Download ist eine DMG-Datei mit PNG-Rahmen für alle aktuellen Geräte.
+:::
 
 ### Einrichtung
 
-1. Laden Sie Geräterahmen von Apple Design Resources herunter (DMG-Datei)
+1. Laden Sie die Product Bezels DMG von [Apple Design Resources](https://developer.apple.com/design/resources/#product-bezels) herunter
 2. Extrahieren Sie die Rahmen-PNG-Dateien in einen Ordner in Ihrem Projekt (z.B. `./bezels/`)
 3. Aktivieren Sie das Rahmen pro Gerät in der Konfiguration:
 

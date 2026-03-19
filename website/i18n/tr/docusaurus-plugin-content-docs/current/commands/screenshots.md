@@ -154,11 +154,15 @@ screenshots/
 
 ## Cihaz çerçeveleme
 
-[Apple Design Resources](https://developer.apple.com/design/resources/) sayfasından indirilen Apple cihaz çerçeveleri ile yakalanan ekran görüntülerini çerçeveleyin.
+Apple cihaz çerçeveleri ile yakalanan ekran görüntülerini çerçeveleyin.
+
+:::info
+Cihaz çerçeveleri ascelerate ile birlikte gelmez — [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) sayfasından indirin (Apple Developer hesabı gereklidir). İndirme, tüm güncel cihazlar için PNG çerçeveler içeren bir DMG dosyasıdır.
+:::
 
 ### Kurulum
 
-1. Apple Design Resources'tan cihaz çerçevelerini indirin (DMG dosyası)
+1. [Apple Design Resources](https://developer.apple.com/design/resources/#product-bezels) sayfasından Product Bezels DMG dosyasını indirin
 2. Çerçeve PNG dosyalarını projenizde bir klasöre çıkarın (örn. `./bezels/`)
 3. Yapılandırmada her cihaz için çerçevelemeyi etkinleştirin:
 

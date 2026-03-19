@@ -512,7 +512,7 @@ Features:
 - Test retries for flaky UI tests
 - Errors skip and continue, with summary table and error logs saved to output
 - Helper version tracking with update warnings
-- Device bezel framing with Apple Product Bezels
+- Device bezel framing with [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) (download required)
 - Config validation via `doctor` subcommand
 - `create-helper` available separately but also run automatically by `init`
 

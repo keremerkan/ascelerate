@@ -154,11 +154,15 @@ screenshots/
 
 ## デバイスフレーミング
 
-[Apple Design Resources](https://developer.apple.com/design/resources/)のAppleデバイスベゼルを使用して、キャプチャしたスクリーンショットをフレーミングします。
+Appleデバイスベゼルを使用して、キャプチャしたスクリーンショットをフレーミングします。
+
+:::info
+デバイスベゼルはascelerateに含まれていません。[Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels)からダウンロードしてください（Apple Developerアカウントが必要です）。ダウンロードは、現行の全デバイスのPNGベゼルを含むDMGファイルです。
+:::
 
 ### セットアップ
 
-1. Apple Design Resourcesからデバイスベゼルをダウンロード（DMGファイル）
+1. [Apple Design Resources](https://developer.apple.com/design/resources/#product-bezels)からProduct Bezels DMGをダウンロード
 2. ベゼルPNGファイルをプロジェクト内のフォルダに展開（例：`./bezels/`）
 3. 設定でデバイスごとにフレーミングを有効化：
 

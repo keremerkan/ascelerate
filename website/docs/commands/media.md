@@ -66,7 +66,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 | Folder name | Device | Screenshots | Previews |
 |---|---|---|---|
-| `APP_IPHONE_67` | iPhone 6.7" (iPhone 16 Pro Max, 15 Pro Max, 14 Pro Max) | **Required** | Yes |
+| `APP_IPHONE_67` | iPhone 6.7" (iPhone 17 Pro Max, 16 Pro Max, 15 Pro Max) | **Required** | Yes |
 | `APP_IPAD_PRO_3GEN_129` | iPad Pro 12.9" (3rd gen+) | **Required** | Yes |
 
 <details>
@@ -74,7 +74,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 | Folder name | Device | Screenshots | Previews |
 |---|---|---|---|
-| `APP_IPHONE_61` | iPhone 6.1" (iPhone 16 Pro, 15 Pro, 14 Pro) | Yes | Yes |
+| `APP_IPHONE_61` | iPhone 6.1" (iPhone 17 Pro, 16 Pro, 15 Pro) | Yes | Yes |
 | `APP_IPHONE_65` | iPhone 6.5" (iPhone 11 Pro Max, XS Max) | Yes | Yes |
 | `APP_IPHONE_58` | iPhone 5.8" (iPhone 11 Pro, X, XS) | Yes | Yes |
 | `APP_IPHONE_55` | iPhone 5.5" (iPhone 8 Plus, 7 Plus, 6s Plus) | Yes | Yes |

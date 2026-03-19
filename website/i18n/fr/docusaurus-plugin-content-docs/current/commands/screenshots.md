@@ -40,6 +40,22 @@ ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
 ```
 
+### Encadrement
+
+```bash
+ascelerate screenshot frame                    # Frame screenshots with device bezels
+```
+
+Encadre les captures d'écran avec des contours d'appareil. Utilise les paramètres `frameDevice` et `deviceBezel` de la configuration. Peut être exécuté indépendamment après la capture.
+
+### Diagnostic
+
+```bash
+ascelerate screenshot doctor                   # Check config and environment
+```
+
+Vérifie la configuration et l'environnement : fichier de configuration, existence du projet/workspace, disponibilité de xcodebuild et simctl, simulateurs, version du fichier helper, fichiers de contour d'appareil et répertoires de sortie. Affiche une liste de contrôle avec des indicateurs de réussite/échec/avertissement.
+
 ## Configuration (`ascelerate/screenshot.yml`)
 
 ```yaml
@@ -47,12 +63,17 @@ workspace: MyApp.xcworkspace
 # project: MyApp.xcodeproj               # Use project instead of workspace
 scheme: AppUITests
 devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
+  - simulator: iPhone 17 Pro Max
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 languages:
   - en-US
   - de-DE
 outputDirectory: ./screenshots
+# framedOutputDirectory: ./screenshots/framed
 clearPreviousScreenshots: true
 eraseSimulator: false
 localizeSimulator: true
@@ -116,19 +137,53 @@ override func setUp() {
 2. Pour chaque langue : démarre tous les simulateurs, localise, remplace la barre d'état
 3. Exécute les tests en parallèle sur tous les appareils
 4. Collecte les screenshots du cache par appareil vers le répertoire de sortie
-5. Les erreurs sont ignorées et le processus continue — les logs d'erreur sont enregistrés dans la sortie
+5. Encadre les captures d'écran avec des contours d'appareil (si `frameDevice` est activé)
+6. Les erreurs sont ignorées et le processus continue — les logs d'erreur sont enregistrés dans la sortie
 
 ## Sortie
 
 ```
 screenshots/
 ├── en-US/
-│   ├── iPhone 16 Pro Max-01-home.png
-│   ├── iPhone 16 Pro Max-02-settings.png
-│   └── iPad Pro 13-inch (M4)-01-home.png
+│   ├── iPhone 17 Pro Max-01-home.png
+│   ├── iPhone 17 Pro Max-02-settings.png
+│   └── iPad Pro 13-inch (M5)-01-home.png
 └── de-DE/
     └── ...
 ```
+
+## Encadrement d'appareil
+
+Encadrez les captures d'écran avec les contours d'appareils Apple depuis [Apple Design Resources](https://developer.apple.com/design/resources/).
+
+### Configuration
+
+1. Téléchargez les contours d'appareils depuis Apple Design Resources (fichier DMG)
+2. Extrayez les fichiers PNG de contour dans un dossier de votre projet (ex. `./bezels/`)
+3. Activez l'encadrement par appareil dans la configuration :
+
+```yaml
+devices:
+  - simulator: iPhone 17 Pro Max
+    frameDevice: true
+    deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    frameDevice: false
+```
+
+### Sortie
+
+Les captures d'écran encadrées sont enregistrées dans `framedOutputDirectory` (par défaut : `{outputDirectory}/framed`) :
+
+```
+screenshots/framed/
+├── en-US/
+│   └── iPhone 17 Pro Max-01-home.png
+└── de-DE/
+    └── ...
+```
+
+Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'exécute automatiquement après chaque langue pendant `screenshot run`, ou de manière autonome via `screenshot frame`.
 
 ## Options
 
@@ -153,3 +208,6 @@ screenshots/
 | `stopAfterFirstError` | Arrêter tous les appareils après le premier échec |
 | `reinstallApp` | Supprimer et réinstaller l'application avant les tests |
 | `xcargs` | Arguments supplémentaires passés à `xcodebuild` |
+| `frameDevice` | Activer l'encadrement pour cet appareil (par appareil) |
+| `deviceBezel` | Chemin vers le fichier PNG de contour d'appareil (par appareil) |
+| `framedOutputDirectory` | Répertoire de sortie pour les captures encadrées (défaut : `{outputDirectory}/framed`) |

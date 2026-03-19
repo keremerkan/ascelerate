@@ -40,6 +40,22 @@ ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
 ```
 
+### フレーミング
+
+```bash
+ascelerate screenshot frame                    # Frame screenshots with device bezels
+```
+
+キャプチャしたスクリーンショットをデバイスベゼル画像でフレーミングします。設定の `frameDevice` と `deviceBezel` を使用します。スクリーンショットのキャプチャ後に独立して実行できます。
+
+### ドクター
+
+```bash
+ascelerate screenshot doctor                   # Check config and environment
+```
+
+スクリーンショットの設定と環境を検証します：設定ファイル、プロジェクト/ワークスペースの存在、xcodebuildとsimctlの利用可能性、シミュレーターデバイス、ヘルパーファイルのバージョン、デバイスベゼルファイル、出力ディレクトリをチェックします。合格/不合格/警告のインジケーター付きチェックリストを表示します。
+
 ## 設定（`ascelerate/screenshot.yml`）
 
 ```yaml
@@ -47,12 +63,17 @@ workspace: MyApp.xcworkspace
 # project: MyApp.xcodeproj               # Use project instead of workspace
 scheme: AppUITests
 devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
+  - simulator: iPhone 17 Pro Max
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 languages:
   - en-US
   - de-DE
 outputDirectory: ./screenshots
+# framedOutputDirectory: ./screenshots/framed
 clearPreviousScreenshots: true
 eraseSimulator: false
 localizeSimulator: true
@@ -116,19 +137,53 @@ override func setUp() {
 2. 各言語ごとに：すべてのシミュレーターを起動、ローカライズ、ステータスバーをオーバーライド
 3. 全デバイスで並行してテストを実行
 4. デバイスごとのキャッシュから出力ディレクトリにスクリーンショットを収集
-5. エラーはスキップして続行 — エラーログは出力に保存
+5. デバイスベゼルでスクリーンショットをフレーミング（`frameDevice` が有効な場合）
+6. エラーはスキップして続行 — エラーログは出力に保存
 
 ## 出力
 
 ```
 screenshots/
 ├── en-US/
-│   ├── iPhone 16 Pro Max-01-home.png
-│   ├── iPhone 16 Pro Max-02-settings.png
-│   └── iPad Pro 13-inch (M4)-01-home.png
+│   ├── iPhone 17 Pro Max-01-home.png
+│   ├── iPhone 17 Pro Max-02-settings.png
+│   └── iPad Pro 13-inch (M5)-01-home.png
 └── de-DE/
     └── ...
 ```
+
+## デバイスフレーミング
+
+[Apple Design Resources](https://developer.apple.com/design/resources/)のAppleデバイスベゼルを使用して、キャプチャしたスクリーンショットをフレーミングします。
+
+### セットアップ
+
+1. Apple Design Resourcesからデバイスベゼルをダウンロード（DMGファイル）
+2. ベゼルPNGファイルをプロジェクト内のフォルダに展開（例：`./bezels/`）
+3. 設定でデバイスごとにフレーミングを有効化：
+
+```yaml
+devices:
+  - simulator: iPhone 17 Pro Max
+    frameDevice: true
+    deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    frameDevice: false
+```
+
+### 出力
+
+フレーミングされたスクリーンショットは `framedOutputDirectory` に保存されます（デフォルト：`{outputDirectory}/framed`）：
+
+```
+screenshots/framed/
+├── en-US/
+│   └── iPhone 17 Pro Max-01-home.png
+└── de-DE/
+    └── ...
+```
+
+`frameDevice: true` のデバイスのみがフレーミングされます。フレーミングは `screenshot run` 中に各言語の後で自動的に実行されるか、`screenshot frame` で独立して実行できます。
 
 ## オプション
 
@@ -153,3 +208,6 @@ screenshots/
 | `stopAfterFirstError` | 最初のエラー後にすべてのデバイスを停止 |
 | `reinstallApp` | テスト前にアプリを削除して再インストール |
 | `xcargs` | `xcodebuild` に渡す追加の引数 |
+| `frameDevice` | このデバイスのベゼルフレーミングを有効化（デバイスごと） |
+| `deviceBezel` | デバイスベゼルPNGファイルへのパス（デバイスごと） |
+| `framedOutputDirectory` | フレーミングされたスクリーンショットの出力ディレクトリ（デフォルト：`{outputDirectory}/framed`） |

@@ -30,8 +30,12 @@ struct ScreenshotConfig: Codable, Sendable {
     var reinstallApp: String?
     var xcargs: String?
 
+    var framedOutputDirectory: String?
+
     struct Device: Codable, Sendable {
         var simulator: String
+        var frameDevice: Bool?
+        var deviceBezel: String?
     }
 
     static func load(from path: String) throws -> ScreenshotConfig {
@@ -64,8 +68,12 @@ struct ScreenshotConfig: Codable, Sendable {
 
     # Devices to capture screenshots from
     devices:
-      - simulator: iPhone 16 Pro Max
-      - simulator: iPad Pro 13-inch (M4)
+      - simulator: iPhone 17 Pro Max
+        # frameDevice: true
+        # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+      - simulator: iPad Pro 13-inch (M5)
+        # frameDevice: true
+        # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 
     # Languages to capture
     languages:
@@ -75,6 +83,9 @@ struct ScreenshotConfig: Codable, Sendable {
 
     # Output directory (relative to project root)
     outputDirectory: ./screenshots
+
+    # Screenshot framing (device bezels)
+    # framedOutputDirectory: ./screenshots/framed
 
     # Simulator settings
     clearPreviousScreenshots: true

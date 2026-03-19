@@ -354,7 +354,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 | Folder name | Device | Screenshots | Previews |
 |---|---|---|---|
-| `APP_IPHONE_67` | iPhone 6.7" (iPhone 16 Pro Max, 15 Pro Max, 14 Pro Max) | **Required** | Yes |
+| `APP_IPHONE_67` | iPhone 6.7" (iPhone 17 Pro Max, 16 Pro Max, 15 Pro Max) | **Required** | Yes |
 | `APP_IPAD_PRO_3GEN_129` | iPad Pro 12.9" (3rd gen+) | **Required** | Yes |
 
 <details>
@@ -362,7 +362,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 | Folder name | Device | Screenshots | Previews |
 |---|---|---|---|
-| `APP_IPHONE_61` | iPhone 6.1" (iPhone 16 Pro, 15 Pro, 14 Pro) | Yes | Yes |
+| `APP_IPHONE_61` | iPhone 6.1" (iPhone 17 Pro, 16 Pro, 15 Pro) | Yes | Yes |
 | `APP_IPHONE_65` | iPhone 6.5" (iPhone 11 Pro Max, XS Max) | Yes | Yes |
 | `APP_IPHONE_58` | iPhone 5.8" (iPhone 11 Pro, X, XS) | Yes | Yes |
 | `APP_IPHONE_55` | iPhone 5.5" (iPhone 8 Plus, 7 Plus, 6s Plus) | Yes | Yes |
@@ -443,6 +443,8 @@ ascelerate screenshot init                        # Creates ascelerate/screensho
 
 # Capture screenshots
 ascelerate screenshot run
+ascelerate screenshot frame                       # Frame screenshots with device bezels
+ascelerate screenshot doctor                      # Check config and environment for problems
 ```
 
 Add `ScreenshotHelper.swift` to your UITest target, then call `setupScreenshots(app)` in `setUp()` and `screenshot("name")` to capture:
@@ -467,12 +469,17 @@ Configure via `ascelerate/screenshot.yml`:
 project: MyApp.xcodeproj
 scheme: AppUITests
 devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
+  - simulator: iPhone 17 Pro Max
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 languages:
   - en-US
   - de-DE
 outputDirectory: ./screenshots
+# framedOutputDirectory: ./screenshots/framed
 clearPreviousScreenshots: true
 localizeSimulator: true
 overrideStatusBar: true
@@ -497,6 +504,8 @@ Features:
 - Test retries for flaky UI tests
 - Errors skip and continue, with summary table and error logs saved to output
 - Helper version tracking with update warnings
+- Device bezel framing with Apple Product Bezels
+- Config validation via `doctor` subcommand
 - `create-helper` available separately but also run automatically by `init`
 
 Output structure:
@@ -508,6 +517,8 @@ screenshots/
 └── de-DE/
     └── ...
 ```
+
+With `frameDevice` enabled, framed screenshots are saved to `{outputDirectory}/framed/` (or `framedOutputDirectory` if set).
 
 ### App Info & Categories
 

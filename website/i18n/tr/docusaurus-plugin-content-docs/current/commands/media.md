@@ -66,7 +66,7 @@ App Store Connect, iPhone uygulamaları için **`APP_IPHONE_67`** ve iPad uygula
 
 | Klasör adı | Cihaz | Ekran görüntüleri | Önizlemeler |
 |---|---|---|---|
-| `APP_IPHONE_67` | iPhone 6.7" (iPhone 16 Pro Max, 15 Pro Max, 14 Pro Max) | **Zorunlu** | Evet |
+| `APP_IPHONE_67` | iPhone 6.7" (iPhone 17 Pro Max, 16 Pro Max, 15 Pro Max) | **Zorunlu** | Evet |
 | `APP_IPAD_PRO_3GEN_129` | iPad Pro 12.9" (3. nesil+) | **Zorunlu** | Evet |
 
 <details>
@@ -74,7 +74,7 @@ App Store Connect, iPhone uygulamaları için **`APP_IPHONE_67`** ve iPad uygula
 
 | Klasör adı | Cihaz | Ekran görüntüleri | Önizlemeler |
 |---|---|---|---|
-| `APP_IPHONE_61` | iPhone 6.1" (iPhone 16 Pro, 15 Pro, 14 Pro) | Evet | Evet |
+| `APP_IPHONE_61` | iPhone 6.1" (iPhone 17 Pro, 16 Pro, 15 Pro) | Evet | Evet |
 | `APP_IPHONE_65` | iPhone 6.5" (iPhone 11 Pro Max, XS Max) | Evet | Evet |
 | `APP_IPHONE_58` | iPhone 5.8" (iPhone 11 Pro, X, XS) | Evet | Evet |
 | `APP_IPHONE_55` | iPhone 5.5" (iPhone 8 Plus, 7 Plus, 6s Plus) | Evet | Evet |

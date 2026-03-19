@@ -40,6 +40,22 @@ ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
 ```
 
+### Çerçeveleme
+
+```bash
+ascelerate screenshot frame                    # Frame screenshots with device bezels
+```
+
+Yakalanan ekran görüntülerini cihaz çerçeve görüntüleri ile çerçeveler. Yapılandırmadaki `frameDevice` ve `deviceBezel` ayarlarını kullanır. Ekran görüntüleri yakalandıktan sonra bağımsız olarak çalıştırılabilir.
+
+### Doktor
+
+```bash
+ascelerate screenshot doctor                   # Check config and environment
+```
+
+Ekran görüntüsü yapılandırmasını ve ortamı doğrular: yapılandırma dosyası, proje/workspace varlığı, xcodebuild ve simctl erişilebilirliği, simülatör cihazları, helper dosya sürümü, cihaz çerçeve dosyaları ve çıktı dizinlerini kontrol eder. Başarılı/başarısız/uyarı göstergeleri ile bir kontrol listesi gösterir.
+
 ## Yapılandırma (`ascelerate/screenshot.yml`)
 
 ```yaml
@@ -47,12 +63,17 @@ workspace: MyApp.xcworkspace
 # project: MyApp.xcodeproj               # Use project instead of workspace
 scheme: AppUITests
 devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
+  - simulator: iPhone 17 Pro Max
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 languages:
   - en-US
   - de-DE
 outputDirectory: ./screenshots
+# framedOutputDirectory: ./screenshots/framed
 clearPreviousScreenshots: true
 eraseSimulator: false
 localizeSimulator: true
@@ -116,19 +137,53 @@ override func setUp() {
 2. Her dil için: tüm simülatörleri başlatır, yerelleştirir, durum çubuğunu değiştirir
 3. Tüm cihazlarda testleri eş zamanlı çalıştırır
 4. Cihaz bazlı önbellekten çıktı dizinine ekran görüntülerini toplar
-5. Hatalar atlanır ve devam edilir — hata günlükleri çıktıya kaydedilir
+5. Ekran görüntülerini cihaz çerçeveleri ile çerçeveler (`frameDevice` etkinse)
+6. Hatalar atlanır ve devam edilir — hata günlükleri çıktıya kaydedilir
 
 ## Çıktı
 
 ```
 screenshots/
 ├── en-US/
-│   ├── iPhone 16 Pro Max-01-home.png
-│   ├── iPhone 16 Pro Max-02-settings.png
-│   └── iPad Pro 13-inch (M4)-01-home.png
+│   ├── iPhone 17 Pro Max-01-home.png
+│   ├── iPhone 17 Pro Max-02-settings.png
+│   └── iPad Pro 13-inch (M5)-01-home.png
 └── de-DE/
     └── ...
 ```
+
+## Cihaz çerçeveleme
+
+[Apple Design Resources](https://developer.apple.com/design/resources/) sayfasından indirilen Apple cihaz çerçeveleri ile yakalanan ekran görüntülerini çerçeveleyin.
+
+### Kurulum
+
+1. Apple Design Resources'tan cihaz çerçevelerini indirin (DMG dosyası)
+2. Çerçeve PNG dosyalarını projenizde bir klasöre çıkarın (örn. `./bezels/`)
+3. Yapılandırmada her cihaz için çerçevelemeyi etkinleştirin:
+
+```yaml
+devices:
+  - simulator: iPhone 17 Pro Max
+    frameDevice: true
+    deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    frameDevice: false
+```
+
+### Çıktı
+
+Çerçevelenmiş ekran görüntüleri `framedOutputDirectory` dizinine kaydedilir (varsayılan: `{outputDirectory}/framed`):
+
+```
+screenshots/framed/
+├── en-US/
+│   └── iPhone 17 Pro Max-01-home.png
+└── de-DE/
+    └── ...
+```
+
+Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `screenshot run` sırasında her dilden sonra otomatik olarak çalışır veya `screenshot frame` ile bağımsız olarak çalıştırılabilir.
 
 ## Seçenekler
 
@@ -153,3 +208,6 @@ screenshots/
 | `stopAfterFirstError` | İlk hatadan sonra tüm cihazları durdur |
 | `reinstallApp` | Testlerden önce uygulamayı silip yeniden yükle |
 | `xcargs` | `xcodebuild`'e aktarılan ek argümanlar |
+| `frameDevice` | Bu cihaz için çerçevelemeyi etkinleştir (cihaz başına) |
+| `deviceBezel` | Cihaz çerçeve PNG dosyasının yolu (cihaz başına) |
+| `framedOutputDirectory` | Çerçevelenmiş ekran görüntüleri için çıktı dizini (varsayılan: `{outputDirectory}/framed`) |

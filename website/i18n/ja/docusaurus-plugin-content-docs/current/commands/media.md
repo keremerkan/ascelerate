@@ -66,7 +66,7 @@ App Store Connectでは、iPhoneアプリには **`APP_IPHONE_67`** のスクリ
 
 | フォルダ名 | デバイス | スクリーンショット | プレビュー |
 |---|---|---|---|
-| `APP_IPHONE_67` | iPhone 6.7"（iPhone 16 Pro Max、15 Pro Max、14 Pro Max） | **必須** | 対応 |
+| `APP_IPHONE_67` | iPhone 6.7"（iPhone 17 Pro Max、16 Pro Max、15 Pro Max） | **必須** | 対応 |
 | `APP_IPAD_PRO_3GEN_129` | iPad Pro 12.9"（第3世代以降） | **必須** | 対応 |
 
 <details>
@@ -74,7 +74,7 @@ App Store Connectでは、iPhoneアプリには **`APP_IPHONE_67`** のスクリ
 
 | フォルダ名 | デバイス | スクリーンショット | プレビュー |
 |---|---|---|---|
-| `APP_IPHONE_61` | iPhone 6.1"（iPhone 16 Pro、15 Pro、14 Pro） | 対応 | 対応 |
+| `APP_IPHONE_61` | iPhone 6.1"（iPhone 17 Pro、16 Pro、15 Pro） | 対応 | 対応 |
 | `APP_IPHONE_65` | iPhone 6.5"（iPhone 11 Pro Max、XS Max） | 対応 | 対応 |
 | `APP_IPHONE_58` | iPhone 5.8"（iPhone 11 Pro、X、XS） | 対応 | 対応 |
 | `APP_IPHONE_55` | iPhone 5.5"（iPhone 8 Plus、7 Plus、6s Plus） | 対応 | 対応 |

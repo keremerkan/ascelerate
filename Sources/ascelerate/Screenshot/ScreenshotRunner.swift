@@ -28,6 +28,12 @@ struct ScreenshotRunner: Sendable {
 
         var results: [Result] = []
 
+        // Pre-load bezels for framing (empty if no device has frameDevice enabled)
+        let framer = ScreenshotFramer(config: config)
+        let bezels = config.devices.contains(where: { $0.frameDevice == true })
+            ? framer.loadBezels()
+            : []
+
         for (langIndex, language) in config.languages.enumerated() {
             let locale = languageToLocale(language)
             print("\n--- [\(langIndex + 1)/\(config.languages.count)] \(language) ---")
@@ -141,10 +147,19 @@ struct ScreenshotRunner: Sendable {
                 try? simulatorManager.shutdown(udid: sim.udid)
             }
 
+            // Frame screenshots for this language
+            if !bezels.isEmpty {
+                framer.frameLanguage(language, bezels: bezels)
+            }
+
             if config.stopAfterFirstError == true && results.contains(where: { !$0.success }) {
                 print("\nStopping after first error.")
                 break
             }
+        }
+
+        if !bezels.isEmpty {
+            framer.printFramingSummary()
         }
 
         if !helperFound {

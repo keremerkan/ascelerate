@@ -17,25 +17,31 @@ func stderrRed(_ text: String) -> String { isStderrTerminal ? "\u{1B}[31m\(text)
 /// Active child processes that should be interrupted on Ctrl-C.
 nonisolated(unsafe) private var activeProcesses: [Process] = []
 
+/// The dispatch source for SIGINT handling. Stored globally to keep it alive.
+nonisolated(unsafe) private var signalSource: (any DispatchSourceSignal)?
+
 /// Registers a child process for SIGINT forwarding.
 func trackProcess(_ process: Process) { activeProcesses.append(process) }
 
 /// Unregisters a child process after it exits.
 func untrackProcess(_ process: Process) { activeProcesses.removeAll { $0 === process } }
 
-/// Installs a SIGINT handler via sigaction. Must be called right before
-/// `waitUntilExit()` because Swift's async runtime overrides earlier handlers.
+/// Installs a SIGINT handler using DispatchSource (kqueue-based).
+/// Unlike sigaction, this persists even when Swift's async runtime overrides
+/// the process-level signal disposition — kqueue monitors signals independently.
 func setupSignalHandler() {
-  var action = sigaction()
-  action.__sigaction_u.__sa_handler = { _ in
+  guard signalSource == nil else { return }
+
+  signal(SIGINT, SIG_IGN)
+  let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .global())
+  source.setEventHandler {
     for process in activeProcesses where process.isRunning {
       kill(process.processIdentifier, SIGINT)
     }
     _exit(130)
   }
-  sigemptyset(&action.sa_mask)
-  action.sa_flags = 0
-  sigaction(SIGINT, &action, nil)
+  source.resume()
+  signalSource = source
 }
 
 /// Splits a string into arguments, respecting single and double quotes.

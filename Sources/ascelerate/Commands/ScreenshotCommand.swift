@@ -5,7 +5,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "screenshot",
         abstract: "Capture App Store screenshots from simulators.",
-        subcommands: [Run.self, Init.self, CreateHelper.self],
+        subcommands: [Run.self, Init.self, CreateHelper.self, Frame.self, Doctor.self],
         defaultSubcommand: Run.self
     )
 
@@ -81,6 +81,228 @@ struct ScreenshotCommand: AsyncParsableCommand {
             print("  1. Edit \(configPath) to match your project")
             print("  2. Add \(helperPath) to your UITest target")
             print("  3. Run: ascelerate screenshot")
+        }
+    }
+
+    struct Frame: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Frame captured screenshots with device bezels."
+        )
+
+        func run() throws {
+            let configPath = ScreenshotCommand.configPath
+            guard FileManager.default.fileExists(atPath: configPath) else {
+                throw ScreenshotError.configNotFound(configPath)
+            }
+
+            let config = try ScreenshotConfig.load(from: configPath)
+            let devices = config.devices.filter { $0.frameDevice == true }
+            guard !devices.isEmpty else {
+                print("No devices have frameDevice enabled in \(configPath)")
+                return
+            }
+
+            let framer = ScreenshotFramer(config: config)
+            try framer.frameAll()
+        }
+    }
+
+    struct Doctor: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Check screenshot configuration for problems."
+        )
+
+        private struct Check {
+            let name: String
+            let status: String
+            let detail: String
+        }
+
+        func run() throws {
+            let configPath = ScreenshotCommand.configPath
+            let fm = FileManager.default
+
+            print("ascelerate screenshot doctor\n")
+
+            var checks: [Check] = []
+
+            func pass(_ name: String, _ detail: String = "") {
+                checks.append(Check(name: name, status: green("✓"), detail: detail))
+            }
+
+            func fail(_ name: String, _ detail: String) {
+                checks.append(Check(name: name, status: red("✗"), detail: detail))
+            }
+
+            func warn(_ name: String, _ detail: String) {
+                checks.append(Check(name: name, status: yellow("!"), detail: detail))
+            }
+
+            // 1. Config file
+            guard fm.fileExists(atPath: configPath) else {
+                if fm.fileExists(atPath: URL(fileURLWithPath: configPath).lastPathComponent) {
+                    fail("Config", "Not found at \(configPath). It looks like you're inside the ascelerate/ folder. Run the command from the project root (cd ..).")
+                } else {
+                    fail("Config", "Not found at \(configPath). Run 'ascelerate screenshot init'.")
+                }
+                printChecks(checks)
+                return
+            }
+            pass("Config", configPath)
+
+            // 2. Parse config
+            let config: ScreenshotConfig
+            do {
+                config = try ScreenshotConfig.load(from: configPath)
+            } catch {
+                fail("Config", "Failed to parse: \(error)")
+                printChecks(checks)
+                return
+            }
+            pass("Config parsing", "Valid YAML")
+
+            // 3. Project or workspace
+            if let workspace = config.workspace {
+                if fm.fileExists(atPath: workspace) {
+                    pass("Workspace", workspace)
+                } else {
+                    fail("Workspace", "Not found: \(workspace)")
+                }
+            } else if let project = config.project {
+                if fm.fileExists(atPath: project) {
+                    pass("Project", project)
+                } else {
+                    fail("Project", "Not found: \(project)")
+                }
+            } else {
+                fail("Project", "No 'project' or 'workspace' specified in config")
+            }
+
+            // 4. xcodebuild
+            if let version = try? ScreenshotShell.run("/usr/bin/xcodebuild", arguments: ["-version"]) {
+                let firstLine = version.components(separatedBy: .newlines).first ?? version
+                pass("xcodebuild", firstLine)
+            } else {
+                fail("xcodebuild", "Not found or not working. Install Xcode Command Line Tools.")
+            }
+
+            // 5. xcrun simctl
+            if (try? ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "help"])) != nil {
+                pass("simctl", "Available")
+            } else {
+                fail("simctl", "xcrun simctl not working")
+            }
+
+            // 6. Simulators
+            let simulatorManager = SimulatorManager()
+            for device in config.devices {
+                do {
+                    let sim = try simulatorManager.findDevice(name: device.simulator)
+                    pass("Simulator", "\(device.simulator) (\(sim.udid))")
+                } catch {
+                    fail("Simulator", "'\(device.simulator)' not found. Check available devices with 'xcrun simctl list devices available'.")
+                }
+            }
+
+            // 7. Helper file
+            let helperPath = config.helperPath ?? ScreenshotCommand.defaultHelperPath
+            if fm.fileExists(atPath: helperPath) {
+                if let content = try? String(contentsOfFile: helperPath, encoding: .utf8),
+                   let range = content.range(of: #"ScreenshotHelperVersion \[(.+?)\]"#, options: .regularExpression) {
+                    let match = String(content[range])
+                    let version = match
+                        .replacingOccurrences(of: "ScreenshotHelperVersion [", with: "")
+                        .replacingOccurrences(of: "]", with: "")
+                    let current = CreateHelper.helperVersion
+                    if version == current {
+                        pass("Helper", "\(helperPath) (v\(version))")
+                    } else {
+                        warn("Helper", "\(helperPath) is v\(version), latest is v\(current). Run 'ascelerate screenshot create-helper'.")
+                    }
+                } else {
+                    warn("Helper", "\(helperPath) has no version marker")
+                }
+            } else {
+                warn("Helper", "Not found at \(helperPath). Run 'ascelerate screenshot create-helper'.")
+            }
+
+            // 8. Languages
+            if config.languages.isEmpty {
+                fail("Languages", "No languages configured")
+            } else {
+                pass("Languages", config.languages.joined(separator: ", "))
+            }
+
+            // 9. Output directory
+            let outputDir = config.outputDirectory
+            let outputURL = URL(fileURLWithPath: outputDir)
+            if fm.fileExists(atPath: outputURL.path) {
+                if fm.isWritableFile(atPath: outputURL.path) {
+                    pass("Output directory", outputDir)
+                } else {
+                    fail("Output directory", "\(outputDir) is not writable")
+                }
+            } else {
+                // Will be created at runtime
+                pass("Output directory", "\(outputDir) (will be created)")
+            }
+
+            // 10. Device bezels
+            let framingDevices = config.devices.filter { $0.frameDevice == true }
+            if !framingDevices.isEmpty {
+                for device in framingDevices {
+                    if let bezelPath = device.deviceBezel, !bezelPath.isEmpty {
+                        let resolved = URL(fileURLWithPath: bezelPath).path
+                        if fm.fileExists(atPath: resolved) {
+                            pass("Bezel", "\(device.simulator) → \(bezelPath)")
+                        } else {
+                            fail("Bezel", "\(device.simulator) → file not found: \(bezelPath)")
+                        }
+                    } else {
+                        fail("Bezel", "\(device.simulator) has frameDevice enabled but no deviceBezel path")
+                    }
+                }
+
+                // 11. Framed output directory
+                if let framedDir = config.framedOutputDirectory {
+                    let framedURL = URL(fileURLWithPath: framedDir)
+                    if fm.fileExists(atPath: framedURL.path) {
+                        if fm.isWritableFile(atPath: framedURL.path) {
+                            pass("Framed output", framedDir)
+                        } else {
+                            fail("Framed output", "\(framedDir) is not writable")
+                        }
+                    } else {
+                        pass("Framed output", "\(framedDir) (will be created)")
+                    }
+                } else {
+                    pass("Framed output", "\(outputDir)/framed (default)")
+                }
+            }
+
+            printChecks(checks)
+        }
+
+        private func printChecks(_ checks: [Check]) {
+            let nameWidth = max(checks.map { $0.name.count }.max() ?? 0, 6)
+
+            for check in checks {
+                let paddedName = check.name.padding(toLength: nameWidth, withPad: " ", startingAt: 0)
+                print("  \(check.status) \(bold(paddedName))  \(check.detail)")
+            }
+
+            let failures = checks.filter { $0.status.contains("✗") }.count
+            let warnings = checks.filter { $0.status.contains("!") }.count
+
+            print()
+            if failures == 0 && warnings == 0 {
+                print(green("All checks passed."))
+            } else {
+                var parts: [String] = []
+                if failures > 0 { parts.append(red("\(failures) error(s)")) }
+                if warnings > 0 { parts.append(yellow("\(warnings) warning(s)")) }
+                print(parts.joined(separator: ", "))
+            }
         }
     }
 

@@ -168,6 +168,8 @@ Capture App Store screenshots from simulators using UI tests. Replaces fastlane 
 ascelerate screenshot init                          # Generate config and helper in ascelerate/ directory
 ascelerate screenshot create-helper                 # Generate ScreenshotHelper.swift for UITest target
 ascelerate screenshot run                           # Capture screenshots
+ascelerate screenshot frame                         # Frame captured screenshots with device bezels
+ascelerate screenshot doctor                        # Check config and environment for problems
 ```
 
 #### Config (`ascelerate/screenshot.yml`)
@@ -176,8 +178,12 @@ ascelerate screenshot run                           # Capture screenshots
 project: MyApp.xcodeproj
 scheme: AppUITests
 devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
+  - simulator: iPhone 17 Pro Max
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 languages: [en-US, de-DE]
 outputDirectory: ./screenshots
 clearPreviousScreenshots: true
@@ -195,9 +201,14 @@ overrideStatusBar: true
 # stopAfterFirstError: false
 # reinstallApp: false
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
+# framedOutputDirectory: ./screenshots/framed
 ```
 
 Supports dark mode capture, animation disabling, test retries, custom test plans, Xcode build configurations, and arbitrary xcodebuild arguments.
+
+#### Device framing
+
+Frame screenshots with Apple device bezels (from [Apple Design Resources](https://developer.apple.com/design/resources/)). Per-device: set `frameDevice: true` and `deviceBezel` path to the bezel PNG. Framing runs automatically after capture, or standalone via `screenshot frame`. Output goes to `framedOutputDirectory` (defaults to `{outputDirectory}/framed`). Use `screenshot doctor` to validate config, simulators, bezels, and environment.
 
 #### UITest usage
 

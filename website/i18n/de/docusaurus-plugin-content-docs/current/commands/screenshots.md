@@ -40,6 +40,22 @@ ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
 ```
 
+### Rahmen
+
+```bash
+ascelerate screenshot frame                    # Frame screenshots with device bezels
+```
+
+Rahmt aufgenommene Screenshots mit Geräterahmen-Bildern. Verwendet die `frameDevice`- und `deviceBezel`-Einstellungen aus der Konfiguration. Kann nach der Aufnahme unabhängig ausgeführt werden.
+
+### Diagnose
+
+```bash
+ascelerate screenshot doctor                   # Check config and environment
+```
+
+Überprüft die Screenshot-Konfiguration und Umgebung: Konfigurationsdatei, Projekt-/Workspace-Existenz, xcodebuild- und simctl-Verfügbarkeit, Simulatorgeräte, Helper-Dateiversion, Geräterahmen-Dateien und Ausgabeverzeichnisse. Zeigt eine Checkliste mit Bestanden/Fehlgeschlagen/Warnung-Indikatoren.
+
 ## Konfiguration (`ascelerate/screenshot.yml`)
 
 ```yaml
@@ -47,12 +63,17 @@ workspace: MyApp.xcworkspace
 # project: MyApp.xcodeproj               # Use project instead of workspace
 scheme: AppUITests
 devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
+  - simulator: iPhone 17 Pro Max
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 languages:
   - en-US
   - de-DE
 outputDirectory: ./screenshots
+# framedOutputDirectory: ./screenshots/framed
 clearPreviousScreenshots: true
 eraseSimulator: false
 localizeSimulator: true
@@ -116,19 +137,53 @@ override func setUp() {
 2. Für jede Sprache: startet alle Simulatoren, lokalisiert, überschreibt die Statusleiste
 3. Führt Tests parallel auf allen Geräten aus
 4. Sammelt Screenshots aus dem gerätespezifischen Cache ins Ausgabeverzeichnis
-5. Fehler werden übersprungen — Fehlerprotokolle werden in der Ausgabe gespeichert
+5. Rahmt Screenshots mit Geräterahmen (wenn `frameDevice` aktiviert ist)
+6. Fehler werden übersprungen — Fehlerprotokolle werden in der Ausgabe gespeichert
 
 ## Ausgabe
 
 ```
 screenshots/
 ├── en-US/
-│   ├── iPhone 16 Pro Max-01-home.png
-│   ├── iPhone 16 Pro Max-02-settings.png
-│   └── iPad Pro 13-inch (M4)-01-home.png
+│   ├── iPhone 17 Pro Max-01-home.png
+│   ├── iPhone 17 Pro Max-02-settings.png
+│   └── iPad Pro 13-inch (M5)-01-home.png
 └── de-DE/
     └── ...
 ```
+
+## Geräterahmen
+
+Rahmen Sie aufgenommene Screenshots mit Apple-Geräterahmen von [Apple Design Resources](https://developer.apple.com/design/resources/).
+
+### Einrichtung
+
+1. Laden Sie Geräterahmen von Apple Design Resources herunter (DMG-Datei)
+2. Extrahieren Sie die Rahmen-PNG-Dateien in einen Ordner in Ihrem Projekt (z.B. `./bezels/`)
+3. Aktivieren Sie das Rahmen pro Gerät in der Konfiguration:
+
+```yaml
+devices:
+  - simulator: iPhone 17 Pro Max
+    frameDevice: true
+    deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    frameDevice: false
+```
+
+### Ausgabe
+
+Gerahmte Screenshots werden im `framedOutputDirectory` gespeichert (Standard: `{outputDirectory}/framed`):
+
+```
+screenshots/framed/
+├── en-US/
+│   └── iPhone 17 Pro Max-01-home.png
+└── de-DE/
+    └── ...
+```
+
+Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatisch nach jeder Sprache während `screenshot run` oder eigenständig über `screenshot frame`.
 
 ## Optionen
 
@@ -153,3 +208,6 @@ screenshots/
 | `stopAfterFirstError` | Alle Geräte nach dem ersten Fehler stoppen |
 | `reinstallApp` | App vor den Tests löschen und neu installieren |
 | `xcargs` | Zusätzliche Argumente für `xcodebuild` |
+| `frameDevice` | Geräterahmen für dieses Gerät aktivieren (pro Gerät) |
+| `deviceBezel` | Pfad zur Geräterahmen-PNG-Datei (pro Gerät) |
+| `framedOutputDirectory` | Ausgabeverzeichnis für gerahmte Screenshots (Standard: `{outputDirectory}/framed`) |

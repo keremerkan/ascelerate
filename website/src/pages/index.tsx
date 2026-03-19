@@ -97,6 +97,7 @@ function getFeatures(): FeatureItem[] {
         <>
           <Translate id="homepage.features.media.description">
             Capture screenshots from simulators with dark mode, localization, and status bar overrides.
+            Frame screenshots with Apple device bezels.
             Upload and download screenshots and app previews with a simple folder structure.
           </Translate>
         </>

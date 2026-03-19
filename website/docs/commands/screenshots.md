@@ -40,6 +40,22 @@ ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
 ```
 
+### Frame
+
+```bash
+ascelerate screenshot frame                    # Frame screenshots with device bezels
+```
+
+Frames captured screenshots using device bezel images. Uses the `frameDevice` and `deviceBezel` settings from the config. Can be run independently after capturing screenshots.
+
+### Doctor
+
+```bash
+ascelerate screenshot doctor                   # Check config and environment
+```
+
+Validates the screenshot configuration and environment: checks config file, project/workspace existence, xcodebuild and simctl availability, simulator devices, helper file version, device bezel files, and output directories. Shows a checklist with pass/fail/warning indicators.
+
 ## Config (`ascelerate/screenshot.yml`)
 
 ```yaml
@@ -47,12 +63,17 @@ workspace: MyApp.xcworkspace
 # project: MyApp.xcodeproj               # Use project instead of workspace
 scheme: AppUITests
 devices:
-  - simulator: iPhone 16 Pro Max
-  - simulator: iPad Pro 13-inch (M4)
+  - simulator: iPhone 17 Pro Max
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    # frameDevice: true
+    # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
 languages:
   - en-US
   - de-DE
 outputDirectory: ./screenshots
+# framedOutputDirectory: ./screenshots/framed
 clearPreviousScreenshots: true
 eraseSimulator: false
 localizeSimulator: true
@@ -116,19 +137,53 @@ override func setUp() {
 2. For each language: boots all simulators, localizes, overrides status bar
 3. Runs tests concurrently across devices
 4. Collects screenshots from per-device cache to output directory
-5. Errors skip and continue — error logs saved to output
+5. Frames screenshots with device bezels (if `frameDevice` is enabled)
+6. Errors skip and continue — error logs saved to output
 
 ## Output
 
 ```
 screenshots/
 ├── en-US/
-│   ├── iPhone 16 Pro Max-01-home.png
-│   ├── iPhone 16 Pro Max-02-settings.png
-│   └── iPad Pro 13-inch (M4)-01-home.png
+│   ├── iPhone 17 Pro Max-01-home.png
+│   ├── iPhone 17 Pro Max-02-settings.png
+│   └── iPad Pro 13-inch (M5)-01-home.png
 └── de-DE/
     └── ...
 ```
+
+## Device framing
+
+Frame captured screenshots with Apple device bezels from [Apple Design Resources](https://developer.apple.com/design/resources/).
+
+### Setup
+
+1. Download device bezels from Apple Design Resources (DMG file)
+2. Extract the bezel PNG files to a folder in your project (e.g. `./bezels/`)
+3. Enable framing per device in the config:
+
+```yaml
+devices:
+  - simulator: iPhone 17 Pro Max
+    frameDevice: true
+    deviceBezel: ./bezels/iPhone 17 Pro Max.png
+  - simulator: iPad Pro 13-inch (M5)
+    frameDevice: false
+```
+
+### Output
+
+Framed screenshots are saved to `framedOutputDirectory` (defaults to `{outputDirectory}/framed`):
+
+```
+screenshots/framed/
+├── en-US/
+│   └── iPhone 17 Pro Max-01-home.png
+└── de-DE/
+    └── ...
+```
+
+Only devices with `frameDevice: true` are framed. Framing runs automatically after each language during `screenshot run`, or standalone via `screenshot frame`.
 
 ## Options
 
@@ -153,3 +208,6 @@ screenshots/
 | `stopAfterFirstError` | Stop all devices after the first failure |
 | `reinstallApp` | Delete and reinstall the app before running tests |
 | `xcargs` | Extra arguments passed to `xcodebuild` |
+| `frameDevice` | Enable device bezel framing for this device (per-device) |
+| `deviceBezel` | Path to the device bezel PNG file (per-device) |
+| `framedOutputDirectory` | Output directory for framed screenshots (default: `{outputDirectory}/framed`) |

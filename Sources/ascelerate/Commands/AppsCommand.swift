@@ -53,12 +53,27 @@ struct AppsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      
+
       let attrs = app.attributes
       print("Name:            \(attrs?.name ?? "—")")
       print("Bundle ID:       \(attrs?.bundleID ?? "—")")
       print("SKU:             \(attrs?.sku ?? "—")")
       print("Primary Locale:  \(attrs?.primaryLocale.map { localeName($0) } ?? "—")")
+
+      let versions = try await client.send(
+        Resources.v1.apps.id(app.id).appStoreVersions.get(
+          filterAppVersionState: [.prepareForSubmission, .waitingForReview, .inReview, .pendingDeveloperRelease, .readyForDistribution]
+        )
+      )
+      if let latest = versions.data.first {
+        let v = latest.attributes
+        print("")
+        print("Latest Version:  \(v?.versionString ?? "—")")
+        print("Platform:        \(v?.platform.map { formatState($0) } ?? "—")")
+        print("State:           \(v?.appVersionState.map { formatState($0) } ?? "—")")
+        print("Release Type:    \(v?.releaseType.map { formatState($0) } ?? "—")")
+        print("Created:         \(v?.createdDate.map { formatDate($0) } ?? "—")")
+      }
     }
   }
   

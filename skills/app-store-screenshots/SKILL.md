@@ -581,7 +581,17 @@ Dark/contrast background with app icon, headline ("And so much more."), and feat
 
 ### Why html-to-image, NOT html2canvas
 
-`html2canvas` breaks on CSS filters, gradients, drop-shadow, backdrop-filter, and complex clipping. `html-to-image` uses native browser SVG serialization — handles all CSS faithfully.
+`html2canvas` breaks on CSS filters, gradients, drop-shadow, backdrop-filter, and complex clipping. `html-to-image` uses native browser SVG serialization — handles most CSS faithfully.
+
+**IMPORTANT: Use `filter: drop-shadow()` instead of `box-shadow`.** While `html-to-image` handles most CSS well, `box-shadow` renders with visible boxy artifacts in exports. Always use CSS `filter: drop-shadow()` for shadows on devices, floating elements, and cards. Note that `drop-shadow` blur radius is roughly half of `box-shadow` blur for a similar visual effect:
+
+```css
+/* BAD — renders boxy/corrupted in exports */
+box-shadow: 0 16px 50px rgba(0,0,0,0.35);
+
+/* GOOD — renders correctly in exports */
+filter: drop-shadow(0 16px 25px rgba(0,0,0,0.35));
+```
 
 ### Export Implementation
 
@@ -652,4 +662,5 @@ ref={(el) => { if (el?.firstElementChild) exportRefs.current.set(i, el.firstElem
 | Export is blank | Use double-call trick; move element on-screen before capture |
 | Export has empty top, content at bottom | `toPng` must target the slide's root div (has `position: relative`), not the offscreen wrapper |
 | Screenshots not framed | Run `ascelerate screenshot frame` first, then copy `screenshots/framed/` to `public/framed/` |
+| Shadows look boxy/corrupted in export | Use `filter: drop-shadow()` instead of `box-shadow` — `html-to-image` doesn't render `box-shadow` correctly |
 | Framed image looks wrong | Check bezel configuration in `ascelerate/screenshot.yml` — bezel must match the capture device |

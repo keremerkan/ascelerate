@@ -23,7 +23,7 @@ const config: Config = {
     {
       tagName: 'style',
       attributes: {},
-      innerHTML: `html{background:#fff}[data-theme='dark'] html{background:#1b1b1d}`,
+      innerHTML: `html{background:#fff}html[data-theme='dark']{background:#1b1b1d}`,
     },
   ],
 

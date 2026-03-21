@@ -79,11 +79,12 @@ Only fields present in the JSON get updated — omitted fields are left unchange
 
 ```bash
 ascelerate apps media download <app>
-ascelerate apps media upload <app> --folder media/
-ascelerate apps media upload <app> --folder screenshots.zip   # Zip support
-ascelerate apps media upload <app>                            # Interactive folder/zip picker
-ascelerate apps media upload <app> --folder media/ --replace  # Replace existing
+ascelerate apps media upload <app> media/
+ascelerate apps media upload <app> screenshots.zip            # Zip/tar/tar.gz support
+ascelerate apps media upload <app>                            # Interactive picker
+ascelerate apps media upload <app> media/ --replace           # Replace existing
 ascelerate apps media verify <app>                            # Check processing status
+ascelerate apps media verify <app> media/                     # Retry stuck items
 ```
 
 #### Folder structure

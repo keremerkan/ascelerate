@@ -18,22 +18,22 @@ Le téléchargement se fait par défaut dans `<bundle-id>-media/`, en utilisant 
 
 ```bash
 # Téléverser depuis un dossier
-ascelerate apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> media/
 
-# Téléverser depuis un fichier zip (par ex. exporté depuis app-store-screenshots)
-ascelerate apps media upload <bundle-id> --folder screenshots.zip
+# Téléverser depuis une archive (zip, tar, tar.gz supportés)
+ascelerate apps media upload <bundle-id> screenshots.zip
 
 # Téléverser vers une version spécifique
-ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0
 
 # Remplacer les médias existants dans les ensembles correspondants avant le téléversement
-ascelerate apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> media/ --replace
 
-# Mode interactif : choisir un dossier ou un zip depuis le répertoire courant
+# Mode interactif : choisir un dossier ou une archive depuis le répertoire courant
 ascelerate apps media upload <bundle-id>
 ```
 
-Lorsque `--folder` est omis, la commande liste tous les sous-répertoires et fichiers `.zip` du répertoire courant sous forme de sélecteur numéroté. Les fichiers zip sont extraits automatiquement avant le téléversement.
+Lorsque l'argument dossier est omis, la commande liste tous les sous-répertoires et fichiers d'archive du répertoire courant sous forme de sélecteur numéroté. Les archives (zip, tar, tar.gz) sont extraites automatiquement avant le téléversement.
 
 ## Structure des dossiers
 
@@ -131,7 +131,7 @@ npx skills add keremerkan/ascelerate
 Téléversez le zip exporté directement :
 
 ```bash
-ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> screenshots.zip --replace
 ```
 
 ## Vérifier et retenter les médias bloqués
@@ -146,7 +146,7 @@ ascelerate apps media verify <bundle-id>
 ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Retenter les éléments bloqués en utilisant les fichiers locaux du dossier de médias
-ascelerate apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> media/
 ```
 
-Sans `--folder`, la commande affiche un rapport de statut en lecture seule. Les ensembles dont tous les éléments sont complets affichent une ligne compacte ; les ensembles avec des éléments bloqués s'étendent pour montrer chaque fichier et son état. Avec `--folder`, elle propose de retenter les éléments bloqués en les supprimant et en les re-téléversant depuis les fichiers locaux correspondants, en préservant l'ordre de position d'origine.
+Sans argument dossier, la commande affiche un rapport de statut en lecture seule. Les ensembles dont tous les éléments sont complets affichent une ligne compacte ; les ensembles avec des éléments bloqués s'étendent pour montrer chaque fichier et son état. Avec un argument dossier, elle propose de retenter les éléments bloqués en les supprimant et en les re-téléversant depuis les fichiers locaux correspondants, en préservant l'ordre de position d'origine.

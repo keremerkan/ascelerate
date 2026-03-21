@@ -18,22 +18,22 @@ Wird standardmäßig nach `<bundle-id>-media/` heruntergeladen und verwendet die
 
 ```bash
 # Aus einem Ordner hochladen
-ascelerate apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> media/
 
-# Aus einer ZIP-Datei hochladen (z.B. exportiert von app-store-screenshots)
-ascelerate apps media upload <bundle-id> --folder screenshots.zip
+# Aus einem Archiv hochladen (zip, tar, tar.gz unterstützt)
+ascelerate apps media upload <bundle-id> screenshots.zip
 
 # In eine bestimmte Version hochladen
-ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0
 
 # Bestehende Medien in passenden Sets vor dem Hochladen ersetzen
-ascelerate apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> media/ --replace
 
-# Interaktiver Modus: einen Ordner oder eine ZIP-Datei aus dem aktuellen Verzeichnis auswählen
+# Interaktiver Modus: einen Ordner oder ein Archiv aus dem aktuellen Verzeichnis auswählen
 ascelerate apps media upload <bundle-id>
 ```
 
-Wenn `--folder` nicht angegeben wird, listet der Befehl alle Unterverzeichnisse und `.zip`-Dateien im aktuellen Verzeichnis als nummerierte Auswahl auf. ZIP-Dateien werden vor dem Upload automatisch entpackt.
+Wenn das Ordner-Argument nicht angegeben wird, listet der Befehl alle Unterverzeichnisse und Archivdateien im aktuellen Verzeichnis als nummerierte Auswahl auf. Archive (zip, tar, tar.gz) werden vor dem Upload automatisch entpackt.
 
 ## Ordnerstruktur
 
@@ -131,7 +131,7 @@ npx skills add keremerkan/ascelerate
 Laden Sie die exportierte ZIP-Datei direkt hoch:
 
 ```bash
-ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> screenshots.zip --replace
 ```
 
 ## Blockierte Medien überprüfen und erneut versuchen
@@ -146,7 +146,7 @@ ascelerate apps media verify <bundle-id>
 ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Blockierte Elemente mit lokalen Dateien aus dem Medienordner erneut versuchen
-ascelerate apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> media/
 ```
 
-Ohne `--folder` zeigt der Befehl einen reinen Statusbericht an. Sets, in denen alle Elemente abgeschlossen sind, werden als kompakte Einzeiler angezeigt; Sets mit blockierten Elementen werden erweitert, um jede Datei und ihren Status anzuzeigen. Mit `--folder` wird angeboten, blockierte Elemente erneut zu versuchen, indem sie gelöscht und aus den passenden lokalen Dateien erneut hochgeladen werden, wobei die ursprüngliche Reihenfolge beibehalten wird.
+Ohne Ordner-Argument zeigt der Befehl einen reinen Statusbericht an. Sets, in denen alle Elemente abgeschlossen sind, werden als kompakte Einzeiler angezeigt; Sets mit blockierten Elementen werden erweitert, um jede Datei und ihren Status anzuzeigen. Mit einem Ordner-Argument wird angeboten, blockierte Elemente erneut zu versuchen, indem sie gelöscht und aus den passenden lokalen Dateien erneut hochgeladen werden, wobei die ursprüngliche Reihenfolge beibehalten wird.

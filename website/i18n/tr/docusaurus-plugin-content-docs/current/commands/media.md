@@ -18,22 +18,22 @@ Varsayılan olarak `<bundle-id>-media/` dizinine indirir, yükleme tarafından b
 
 ```bash
 # Bir klasörden yükleyin
-ascelerate apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> media/
 
-# Bir zip dosyasından yükleyin (ör. app-store-screenshots'tan dışa aktarılmış)
-ascelerate apps media upload <bundle-id> --folder screenshots.zip
+# Bir arşivden yükleyin (zip, tar, tar.gz desteklenir)
+ascelerate apps media upload <bundle-id> screenshots.zip
 
 # Belirli bir sürüme yükleyin
-ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0
 
 # Yüklemeden önce eşleşen setlerdeki mevcut medyayı değiştirin
-ascelerate apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> media/ --replace
 
-# İnteraktif mod: geçerli dizinden bir klasör veya zip seçin
+# İnteraktif mod: geçerli dizinden bir klasör veya arşiv seçin
 ascelerate apps media upload <bundle-id>
 ```
 
-`--folder` belirtilmediğinde, komut geçerli dizindeki tüm alt dizinleri ve `.zip` dosyalarını numaralı seçici olarak listeler. Zip dosyaları yüklemeden önce otomatik olarak açılır.
+Klasör argümanı belirtilmediğinde, komut geçerli dizindeki tüm alt dizinleri ve arşiv dosyalarını numaralı seçici olarak listeler. Arşivler (zip, tar, tar.gz) yüklemeden önce otomatik olarak açılır.
 
 ## Klasör yapısı
 
@@ -131,7 +131,7 @@ npx skills add keremerkan/ascelerate
 Dışa aktarılan zip'i doğrudan yükleyin:
 
 ```bash
-ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> screenshots.zip --replace
 ```
 
 ## Takılmış medyayı doğrulama ve yeniden deneme
@@ -146,7 +146,7 @@ ascelerate apps media verify <bundle-id>
 ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Medya klasöründeki yerel dosyaları kullanarak takılmış öğeleri yeniden deneyin
-ascelerate apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> media/
 ```
 
-`--folder` olmadan komut salt okunur bir durum raporu gösterir. Tüm öğeleri tamamlanmış olan setler tek satırlık özet gösterir; takılmış öğeleri olan setler her dosyayı ve durumunu genişleterek gösterir. `--folder` ile takılmış öğeleri silip eşleşen yerel dosyalardan tekrar yüklemeyi teklif eder ve orijinal sıra düzenini korur.
+Klasör argümanı olmadan komut salt okunur bir durum raporu gösterir. Tüm öğeleri tamamlanmış olan setler tek satırlık özet gösterir; takılmış öğeleri olan setler her dosyayı ve durumunu genişleterek gösterir. Klasör argümanı ile takılmış öğeleri silip eşleşen yerel dosyalardan tekrar yüklemeyi teklif eder ve orijinal sıra düzenini korur.

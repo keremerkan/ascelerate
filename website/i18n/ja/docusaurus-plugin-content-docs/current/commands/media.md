@@ -18,22 +18,22 @@ ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 
 ```bash
 # フォルダからアップロード
-ascelerate apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> media/
 
-# zipファイルからアップロード（例：app-store-screenshotsからエクスポートしたもの）
-ascelerate apps media upload <bundle-id> --folder screenshots.zip
+# アーカイブからアップロード（zip、tar、tar.gz対応）
+ascelerate apps media upload <bundle-id> screenshots.zip
 
 # 特定のバージョンにアップロード
-ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0
 
 # アップロード前にマッチするセットの既存メディアを削除して置き換え
-ascelerate apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> media/ --replace
 
-# インタラクティブモード：カレントディレクトリからフォルダまたはzipを選択
+# インタラクティブモード：カレントディレクトリからフォルダまたはアーカイブを選択
 ascelerate apps media upload <bundle-id>
 ```
 
-`--folder` を省略すると、カレントディレクトリのすべてのサブディレクトリと `.zip` ファイルが番号付きリストとして表示されます。Zipファイルはアップロード前に自動的に展開されます。
+フォルダ引数を省略すると、カレントディレクトリのすべてのサブディレクトリとアーカイブファイルが番号付きリストとして表示されます。アーカイブ（zip、tar、tar.gz）はアップロード前に自動的に展開されます。
 
 ## フォルダ構造
 
@@ -131,7 +131,7 @@ npx skills add keremerkan/ascelerate
 エクスポートしたzipを直接アップロードできます：
 
 ```bash
-ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> screenshots.zip --replace
 ```
 
 ## 停滞したメディアの確認とリトライ
@@ -146,7 +146,7 @@ ascelerate apps media verify <bundle-id>
 ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # メディアフォルダのローカルファイルを使用して停滞したアイテムをリトライ
-ascelerate apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> media/
 ```
 
-`--folder` を指定しない場合、読み取り専用のステータスレポートが表示されます。すべてのアイテムが完了しているセットはコンパクトな1行で表示され、停滞したアイテムがあるセットは各ファイルとその状態を展開して表示します。`--folder` を指定すると、停滞したアイテムを削除してマッチするローカルファイルから再アップロードし、元の並び順を保持します。
+フォルダ引数を指定しない場合、読み取り専用のステータスレポートが表示されます。すべてのアイテムが完了しているセットはコンパクトな1行で表示され、停滞したアイテムがあるセットは各ファイルとその状態を展開して表示します。フォルダ引数を指定すると、停滞したアイテムを削除してマッチするローカルファイルから再アップロードし、元の並び順を保持します。

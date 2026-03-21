@@ -310,22 +310,22 @@ ascelerate apps media download <bundle-id>
 ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
 
 # Upload screenshots and preview videos from a folder
-ascelerate apps media upload <bundle-id> --folder media/
+ascelerate apps media upload <bundle-id> media/
 
-# Upload from a zip file (e.g. exported from app-store-screenshots)
-ascelerate apps media upload <bundle-id> --folder screenshots.zip
+# Upload from an archive (zip, tar, tar.gz supported)
+ascelerate apps media upload <bundle-id> screenshots.zip
 
 # Upload to a specific version
-ascelerate apps media upload <bundle-id> --folder media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0
 
 # Replace existing media in matching sets before uploading
-ascelerate apps media upload <bundle-id> --folder media/ --replace
+ascelerate apps media upload <bundle-id> media/ --replace
 
-# Interactive mode: pick a folder or zip from the current directory
+# Interactive mode: pick a folder or archive from the current directory
 ascelerate apps media upload <bundle-id>
 ```
 
-When `--folder` is omitted, the command lists all subdirectories and `.zip` files in the current directory as a numbered picker. Zip files are extracted automatically before upload.
+When the folder argument is omitted, the command lists all subdirectories and archive files in the current directory as a numbered picker. Archives (zip, tar, tar.gz) are extracted automatically before upload.
 
 Organize your media folder with locale and display type subfolders:
 
@@ -421,7 +421,7 @@ npx skills add keremerkan/ascelerate
 Upload the exported zip directly:
 
 ```bash
-ascelerate apps media upload <bundle-id> --folder screenshots.zip --replace
+ascelerate apps media upload <bundle-id> screenshots.zip --replace
 ```
 
 #### Verify and retry stuck media
@@ -436,7 +436,7 @@ ascelerate apps media verify <bundle-id>
 ascelerate apps media verify <bundle-id> --version 2.1.0
 
 # Retry stuck items using local files from the media folder
-ascelerate apps media verify <bundle-id> --folder media/
+ascelerate apps media verify <bundle-id> media/
 ```
 
 Without `--folder`, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With `--folder`, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.

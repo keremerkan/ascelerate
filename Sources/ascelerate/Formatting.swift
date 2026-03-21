@@ -29,14 +29,24 @@ func untrackProcess(_ process: Process) { activeProcesses.removeAll { $0 === pro
 /// Installs a SIGINT handler using DispatchSource (kqueue-based).
 /// Unlike sigaction, this persists even when Swift's async runtime overrides
 /// the process-level signal disposition — kqueue monitors signals independently.
+///
+/// Uses a no-op handler instead of SIG_IGN to prevent the parent from terminating.
+/// SIG_IGN is inherited by child processes and preserved across exec/posix_spawn,
+/// which would cause xcodebuild to silently ignore SIGINT. A custom handler is
+/// reset to SIG_DFL in child processes, so they receive Ctrl-C normally.
 func setupSignalHandler() {
   guard signalSource == nil else { return }
 
-  signal(SIGINT, SIG_IGN)
+  signal(SIGINT, { _ in })
   let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .global())
   source.setEventHandler {
     for process in activeProcesses where process.isRunning {
-      kill(process.processIdentifier, SIGINT)
+      let pid = process.processIdentifier
+      // SIGTERM instead of SIGINT: xcodebuild ignores SIGINT during package resolution.
+      // killpg to reach the entire process group (Foundation uses POSIX_SPAWN_SETPGROUP).
+      if killpg(pid, SIGTERM) != 0 {
+        kill(pid, SIGTERM)
+      }
     }
     _exit(130)
   }

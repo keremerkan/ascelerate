@@ -161,7 +161,32 @@ struct BuildsCommand: AsyncParsableCommand {
       // 2. Detect scheme
       let schemeName = try detectScheme(buildFlag: buildFlag, buildPath: buildPath)
 
-      // 3. Build archive arguments
+      // 3. Clean before archiving
+      print("Cleaning build...")
+      fflush(stdout)
+
+      let cleanProcess = Process()
+      cleanProcess.executableURL = URL(fileURLWithPath: "/usr/bin/xcodebuild")
+      cleanProcess.arguments = [
+        "clean",
+        buildFlag, buildPath,
+        "-scheme", schemeName,
+        "-configuration", configuration ?? "Release",
+      ]
+      cleanProcess.standardOutput = FileHandle.standardOutput
+      cleanProcess.standardError = FileHandle.standardError
+
+      try cleanProcess.run()
+      trackProcess(cleanProcess)
+      setupSignalHandler()
+      cleanProcess.waitUntilExit()
+      untrackProcess(cleanProcess)
+
+      if cleanProcess.terminationStatus != 0 {
+        throw ExitCode(cleanProcess.terminationStatus)
+      }
+
+      // 4. Build archive arguments
       var args = [
         "archive",
         buildFlag, buildPath,
@@ -182,7 +207,7 @@ struct BuildsCommand: AsyncParsableCommand {
         archivePath = confirmed
       }
 
-      // 4. Run xcodebuild archive
+      // 5. Run xcodebuild archive
       print("Archiving scheme '\(schemeName)'...")
       print()
       fflush(stdout)
@@ -203,7 +228,7 @@ struct BuildsCommand: AsyncParsableCommand {
         throw ExitCode(process.terminationStatus)
       }
 
-      // 5. Print result
+      // 6. Print result
       print()
       if let archivePath {
         print("Archive created at: \(archivePath)")

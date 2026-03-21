@@ -178,8 +178,7 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
   return path
 }
 
-/// Extracts a zip file to a temporary directory and returns the path.
-/// If the zip contains a single root directory, returns that directory instead.
+/// Extracts a zip file to a temporary directory and returns the media root.
 func extractZipToTemp(_ zipPath: String) throws -> String {
   let tempDir = NSTemporaryDirectory() + "ascelerate-media-\(UUID().uuidString)"
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
@@ -194,25 +193,10 @@ func extractZipToTemp(_ zipPath: String) throws -> String {
     throw ValidationError("Failed to extract zip file '\(zipPath)'.")
   }
 
-  // If the zip has a single non-locale root directory, unwrap it.
-  // Don't unwrap locale folders (e.g. "de-DE", "tr", "zh-Hans") — those are the media structure.
-  let contents = try FileManager.default.contentsOfDirectory(atPath: tempDir)
-    .filter { !$0.hasPrefix(".") && $0 != "__MACOSX" }
-  if contents.count == 1 {
-    let name = contents[0]
-    let inner = (tempDir as NSString).appendingPathComponent(name)
-    var isDir: ObjCBool = false
-    let isLocale = name.range(of: #"^[a-z]{2}(-[a-zA-Z]{2,4})?$"#, options: .regularExpression) != nil
-    if !isLocale, FileManager.default.fileExists(atPath: inner, isDirectory: &isDir), isDir.boolValue {
-      return inner
-    }
-  }
-
-  return tempDir
+  return findMediaRoot(in: tempDir, ignoring: ["__MACOSX"])
 }
 
-/// Extracts a tar (or tar.gz/tgz) file to a temporary directory and returns the path.
-/// If the archive contains a single root directory, returns that directory instead.
+/// Extracts a tar (or tar.gz/tgz) file to a temporary directory and returns the media root.
 func extractTarToTemp(_ tarPath: String) throws -> String {
   let tempDir = NSTemporaryDirectory() + "ascelerate-media-\(UUID().uuidString)"
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
@@ -227,20 +211,62 @@ func extractTarToTemp(_ tarPath: String) throws -> String {
     throw ValidationError("Failed to extract archive '\(tarPath)'.")
   }
 
-  // Same single-root-directory unwrap logic as zip extraction.
-  let contents = try FileManager.default.contentsOfDirectory(atPath: tempDir)
-    .filter { !$0.hasPrefix(".") }
-  if contents.count == 1 {
-    let name = contents[0]
-    let inner = (tempDir as NSString).appendingPathComponent(name)
-    var isDir: ObjCBool = false
-    let isLocale = name.range(of: #"^[a-z]{2}(-[a-zA-Z]{2,4})?$"#, options: .regularExpression) != nil
-    if !isLocale, FileManager.default.fileExists(atPath: inner, isDirectory: &isDir), isDir.boolValue {
-      return inner
-    }
-  }
+  return findMediaRoot(in: tempDir)
+}
 
-  return tempDir
+/// Walks down from `root` through single-child directories until it finds the media root:
+/// a directory containing locale subdirectories (e.g. en-US, de-DE, tr) that in turn
+/// contain display type subdirectories (e.g. APP_IPHONE_67).
+/// A folder named "tr" wrapping the actual locales won't fool it — the locale dirs must
+/// contain display types, not more locales.
+private func findMediaRoot(in root: String, ignoring: [String] = []) -> String {
+  let fm = FileManager.default
+  var current = root
+
+  while true {
+    let entries = ((try? fm.contentsOfDirectory(atPath: current)) ?? [])
+      .filter { !$0.hasPrefix(".") && !ignoring.contains($0) }
+
+    // Find locale-looking subdirectories
+    let localeDirs = entries.filter { name in
+      var isDir: ObjCBool = false
+      let path = (current as NSString).appendingPathComponent(name)
+      return fm.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
+        && isLocaleCode(name)
+    }
+
+    // Verify at least one locale dir contains display type subdirectories
+    // (SCREAMING_SNAKE_CASE like APP_IPHONE_67), not more locale dirs.
+    if !localeDirs.isEmpty {
+      let confirmed = localeDirs.contains { locale in
+        let localePath = (current as NSString).appendingPathComponent(locale)
+        let children = ((try? fm.contentsOfDirectory(atPath: localePath)) ?? [])
+          .filter { !$0.hasPrefix(".") }
+        return children.contains { name in
+          var isDir: ObjCBool = false
+          let path = (localePath as NSString).appendingPathComponent(name)
+          return fm.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
+            && name.range(of: #"^[A-Z][A-Z0-9_]+$"#, options: .regularExpression) != nil
+        }
+      }
+      if confirmed { return current }
+    }
+
+    // If there's exactly one subdirectory, descend into it
+    let subdirs = entries.filter { name in
+      var isDir: ObjCBool = false
+      let path = (current as NSString).appendingPathComponent(name)
+      return fm.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
+    }
+
+    guard subdirs.count == 1 else { return current }
+    current = (current as NSString).appendingPathComponent(subdirs[0])
+  }
+}
+
+/// Matches locale codes used by App Store Connect (e.g. en-US, de-DE, tr, zh-Hans, pt-BR).
+private func isLocaleCode(_ name: String) -> Bool {
+  name.range(of: #"^[a-z]{2}(-[a-zA-Z]{2,8})?$"#, options: .regularExpression) != nil
 }
 
 /// Resolves a file path from an optional argument. If nil, lists files matching the given

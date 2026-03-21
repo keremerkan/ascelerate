@@ -83,17 +83,35 @@ nonisolated(unsafe) var autoConfirm = false
 /// (e.g. `await-processing`, `attach-latest-build`) can wait for this specific build.
 nonisolated(unsafe) var lastUploadedBuildVersion: String?
 
-/// Resolves a folder path from an optional argument. If nil, lists subdirectories and zip
-/// files in the current directory and lets the user pick one or type a path manually.
-/// Zip files are extracted to a temporary directory automatically.
+/// Archive extensions recognized by `resolveFolder`.
+private let archiveExtensions = [".zip", ".tar.gz", ".tgz", ".tar"]
+
+/// Returns true if the path ends with a recognized archive extension.
+private func isArchive(_ path: String) -> Bool {
+  let lower = path.lowercased()
+  return archiveExtensions.contains { lower.hasSuffix($0) }
+}
+
+/// Extracts an archive (zip, tar, tar.gz) to a temp directory and returns the path.
+private func extractArchiveToTemp(_ path: String) throws -> String {
+  if path.lowercased().hasSuffix(".zip") {
+    return try extractZipToTemp(path)
+  } else {
+    return try extractTarToTemp(path)
+  }
+}
+
+/// Resolves a folder path from an optional argument. If nil, lists subdirectories and
+/// archive files in the current directory and lets the user pick one or type a path manually.
+/// Archives (zip, tar, tar.gz) are extracted to a temporary directory automatically.
 func resolveFolder(_ folder: String?, prompt: String) throws -> String {
   if let f = folder {
     let path = expandPath(f)
-    if path.hasSuffix(".zip") {
+    if isArchive(path) {
       guard FileManager.default.fileExists(atPath: path) else {
         throw ValidationError("File not found at '\(path)'.")
       }
-      return try extractZipToTemp(path)
+      return try extractArchiveToTemp(path)
     }
     var isDir: ObjCBool = false
     guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
@@ -102,16 +120,16 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
     return path
   }
 
-  // List subdirectories and zip files in the current directory
+  // List subdirectories and archive files in the current directory
   let cwd = FileManager.default.currentDirectoryPath
   let entries = (try? FileManager.default.contentsOfDirectory(atPath: cwd))?
     .filter { !$0.hasPrefix(".") }
     .sorted() ?? []
 
-  var candidates: [(name: String, isZip: Bool)] = []
+  var candidates: [(name: String, isArchive: Bool)] = []
   for entry in entries {
     let path = (cwd as NSString).appendingPathComponent(entry)
-    if entry.hasSuffix(".zip") {
+    if isArchive(entry) {
       candidates.append((entry, true))
     } else {
       var isDir: ObjCBool = false
@@ -124,7 +142,7 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
   if !candidates.isEmpty {
     print("\(prompt):")
     for (i, c) in candidates.enumerated() {
-      let suffix = c.isZip ? " (zip)" : ""
+      let suffix = c.isArchive ? " (archive)" : ""
       print("  [\(i + 1)] \(c.name)\(suffix)")
     }
     let manualOption = candidates.count + 1
@@ -141,17 +159,17 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
     if choice <= candidates.count {
       let selected = candidates[choice - 1]
       let fullPath = (cwd as NSString).appendingPathComponent(selected.name)
-      return selected.isZip ? try extractZipToTemp(fullPath) : fullPath
+      return selected.isArchive ? try extractArchiveToTemp(fullPath) : fullPath
     }
   }
 
   // Manual path entry
-  let path = expandPath(promptText("Path to folder or zip: "))
-  if path.hasSuffix(".zip") {
+  let path = expandPath(promptText("Path to folder or archive: "))
+  if isArchive(path) {
     guard FileManager.default.fileExists(atPath: path) else {
       throw ValidationError("File not found at '\(path)'.")
     }
-    return try extractZipToTemp(path)
+    return try extractArchiveToTemp(path)
   }
   var isDir: ObjCBool = false
   guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
@@ -180,6 +198,38 @@ func extractZipToTemp(_ zipPath: String) throws -> String {
   // Don't unwrap locale folders (e.g. "de-DE", "tr", "zh-Hans") — those are the media structure.
   let contents = try FileManager.default.contentsOfDirectory(atPath: tempDir)
     .filter { !$0.hasPrefix(".") && $0 != "__MACOSX" }
+  if contents.count == 1 {
+    let name = contents[0]
+    let inner = (tempDir as NSString).appendingPathComponent(name)
+    var isDir: ObjCBool = false
+    let isLocale = name.range(of: #"^[a-z]{2}(-[a-zA-Z]{2,4})?$"#, options: .regularExpression) != nil
+    if !isLocale, FileManager.default.fileExists(atPath: inner, isDirectory: &isDir), isDir.boolValue {
+      return inner
+    }
+  }
+
+  return tempDir
+}
+
+/// Extracts a tar (or tar.gz/tgz) file to a temporary directory and returns the path.
+/// If the archive contains a single root directory, returns that directory instead.
+func extractTarToTemp(_ tarPath: String) throws -> String {
+  let tempDir = NSTemporaryDirectory() + "ascelerate-media-\(UUID().uuidString)"
+  try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
+
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
+  process.arguments = ["-xf", tarPath, "-C", tempDir]
+  try process.run()
+  process.waitUntilExit()
+
+  guard process.terminationStatus == 0 else {
+    throw ValidationError("Failed to extract archive '\(tarPath)'.")
+  }
+
+  // Same single-root-directory unwrap logic as zip extraction.
+  let contents = try FileManager.default.contentsOfDirectory(atPath: tempDir)
+    .filter { !$0.hasPrefix(".") }
   if contents.count == 1 {
     let name = contents[0]
     let inner = (tempDir as NSString).appendingPathComponent(name)

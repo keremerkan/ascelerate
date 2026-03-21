@@ -274,10 +274,12 @@ extension AppsCommand {
         abstract: "Upload screenshots and app preview videos from a folder."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
-      @Option(name: .long, help: "Path to the media folder.")
+      @Argument(help: "Path to the media folder or zip file.",
+                completion: .file(extensions: ["zip", "tar", "tgz", "tar.gz"]))
       var folder: String?
 
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -614,7 +616,8 @@ extension AppsCommand {
         abstract: "Download screenshots and app preview videos to a folder."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Option(name: .long, help: "Output folder path. Defaults to <bundle-id>-media.")
@@ -794,13 +797,15 @@ extension AppsCommand {
         abstract: "Check processing status of all screenshots and previews, optionally retry stuck items."
       )
 
-      @Argument(help: "The bundle identifier of the app.")
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
 
-      @Option(name: .long, help: "Path to the media folder for retrying stuck uploads.")
+      @Argument(help: "Path to the media folder or zip file for retrying stuck uploads.",
+                completion: .file(extensions: ["zip", "tar", "tgz", "tar.gz"]))
       var folder: String?
 
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")

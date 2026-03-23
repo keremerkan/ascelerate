@@ -8,6 +8,7 @@ struct ScreenshotRunner: Sendable {
         let device: String
         let success: Bool
         let error: String?
+        var retried: Bool = false
     }
 
     func run() async throws {
@@ -112,40 +113,113 @@ struct ScreenshotRunner: Sendable {
                 return collected
             }
 
-            let allSucceeded = deviceResults.allSatisfy { $0.2 == nil }
+            var languageResults = evaluateTestResults(
+                deviceResults, language: language, simulatorManager: simulatorManager
+            )
+            // Track which device results to collect from (updated if retries succeed)
+            var pendingCollection = deviceResults
+
+            // Retry failed devices with fresh simulator state (erase + reboot + re-localize)
+            let maxRetries = config.numberOfRetries ?? 0
+            if maxRetries > 0 {
+            for attempt in 1...maxRetries where languageResults.contains(where: { !$0.success }) {
+
+                let failedDevices = resolvedDevices.filter { device, _ in
+                    languageResults.contains { !$0.success && $0.device == device.simulator }
+                }
+                guard !failedDevices.isEmpty else { break }
+
+                print("\n  Retry \(attempt)/\(maxRetries) for \(language) — erasing failed simulators...")
+
+                // Remove failed results — they'll be replaced by retry results
+                let failedDeviceNames = Set(failedDevices.map { $0.0.simulator })
+                languageResults.removeAll { failedDeviceNames.contains($0.device) }
+                pendingCollection.removeAll { failedDeviceNames.contains($0.0.simulator) }
+
+                do {
+                    for (device, sim) in failedDevices {
+                        print("\n  [\(device.simulator)] Erasing and re-localizing...")
+                        try simulatorManager.erase(udid: sim.udid)
+
+                        if config.localizeSimulator {
+                            try simulatorManager.boot(udid: sim.udid, waitUntilReady: false)
+                            try simulatorManager.localize(udid: sim.udid, language: language, locale: locale)
+                            try simulatorManager.shutdown(udid: sim.udid)
+                            try simulatorManager.boot(udid: sim.udid)
+                        } else {
+                            try simulatorManager.boot(udid: sim.udid)
+                        }
+
+                        if let wait = config.waitAfterBoot, wait > 0 {
+                            sleep(UInt32(wait))
+                        }
+
+                        if config.darkMode == true {
+                            try simulatorManager.setAppearance(udid: sim.udid, dark: true)
+                        }
+
+                        if config.overrideStatusBar {
+                            try simulatorManager.overrideStatusBar(udid: sim.udid, arguments: config.statusBarArguments)
+                        }
+
+                        if let bundleID = config.reinstallApp {
+                            try? simulatorManager.uninstallApp(udid: sim.udid, bundleID: bundleID)
+                        }
+
+                        try collector.prepareCacheDirectory(language: language, locale: locale, device: device, udid: sim.udid)
+                    }
+
+                    print("\n  Running retry tests...")
+                    let retryResults = await withTaskGroup(of: (ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?).self) { group in
+                        for (device, sim) in failedDevices {
+                            group.addTask {
+                                do {
+                                    try testRunner.test(device: device, udid: sim.udid, language: language, buildResult: buildResult)
+                                    return (device, sim, nil)
+                                } catch {
+                                    return (device, sim, error)
+                                }
+                            }
+                        }
+
+                        var collected: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)] = []
+                        for await result in group {
+                            collected.append(result)
+                        }
+                        return collected
+                    }
+
+                    var retryLanguageResults = evaluateTestResults(
+                        retryResults, language: language, simulatorManager: simulatorManager
+                    )
+                    for i in retryLanguageResults.indices {
+                        retryLanguageResults[i].retried = true
+                    }
+                    languageResults += retryLanguageResults
+                    pendingCollection += retryResults
+                } catch {
+                    print("\n  Retry preparation failed: \(error)")
+                    for (device, _) in failedDevices {
+                        languageResults.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
+                    }
+                    for (_, sim) in failedDevices {
+                        try? simulatorManager.shutdown(udid: sim.udid)
+                    }
+                    break
+                }
+            }
+            }
+
+            // Clear previous screenshots only if all devices succeeded (including after retries)
+            let allSucceeded = languageResults.allSatisfy(\.success)
             if config.clearPreviousScreenshots && allSucceeded {
                 try? collector.clearLanguageScreenshots(language: language)
             }
 
-            for (device, sim, error) in deviceResults {
-                if let error {
-                    print("  [\(device.simulator)] Failed: \(error)")
-                    let logFile = ScreenshotCollector.cacheRoot
-                        .appendingPathComponent("logs")
-                        .appendingPathComponent("\(device.simulator)-\(language).log")
-                    let outputDir = URL(fileURLWithPath: config.outputDirectory)
-                        .appendingPathComponent(language)
-                    try? FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
-                    let errorDest = outputDir.appendingPathComponent("\(device.simulator)-error.log")
-                    try? FileManager.default.removeItem(at: errorDest)
-                    try? FileManager.default.copyItem(at: logFile, to: errorDest)
-                    results.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
-                } else {
-                    let oldErrorLog = URL(fileURLWithPath: config.outputDirectory)
-                        .appendingPathComponent(language)
-                        .appendingPathComponent("\(device.simulator)-error.log")
-                    try? FileManager.default.removeItem(at: oldErrorLog)
+            // Collect screenshots from cache to output directory
+            collectScreenshots(results: &languageResults, deviceResults: pendingCollection, language: language, collector: collector)
 
-                    do {
-                        try collector.collectScreenshots(language: language, device: device, udid: sim.udid)
-                        results.append(Result(language: language, device: device.simulator, success: true, error: nil))
-                    } catch {
-                        print("  [\(device.simulator)] Failed to collect: \(error)")
-                        results.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
-                    }
-                }
-                try? simulatorManager.shutdown(udid: sim.udid)
-            }
+            results += languageResults
 
             // Frame screenshots for this language
             if !bezels.isEmpty {
@@ -172,6 +246,62 @@ struct ScreenshotRunner: Sendable {
         printSummary(results, elapsed: Date().timeIntervalSince(startTime))
     }
 
+    /// Evaluates test results and shuts down simulators. Does NOT collect screenshots yet.
+    private func evaluateTestResults(
+        _ deviceResults: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)],
+        language: String,
+        simulatorManager: SimulatorManager
+    ) -> [Result] {
+        var results: [Result] = []
+
+        for (device, sim, error) in deviceResults {
+            if let error {
+                print("  [\(device.simulator)] Failed: \(error)")
+                let logFile = ScreenshotCollector.cacheRoot
+                    .appendingPathComponent("logs")
+                    .appendingPathComponent("\(device.simulator)-\(language).log")
+                let outputDir = URL(fileURLWithPath: config.outputDirectory)
+                    .appendingPathComponent(language)
+                try? FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
+                let errorDest = outputDir.appendingPathComponent("\(device.simulator)-error.log")
+                try? FileManager.default.removeItem(at: errorDest)
+                try? FileManager.default.copyItem(at: logFile, to: errorDest)
+                results.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
+            } else {
+                results.append(Result(language: language, device: device.simulator, success: true, error: nil))
+            }
+            try? simulatorManager.shutdown(udid: sim.udid)
+        }
+
+        return results
+    }
+
+    /// Collects screenshots from cache for successful results. Updates results in place on collection failure.
+    private func collectScreenshots(
+        results: inout [Result],
+        deviceResults: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)],
+        language: String,
+        collector: ScreenshotCollector
+    ) {
+        for (device, sim, _) in deviceResults {
+            guard let idx = results.firstIndex(where: { $0.language == language && $0.device == device.simulator && $0.success }) else {
+                continue
+            }
+
+            let oldErrorLog = URL(fileURLWithPath: config.outputDirectory)
+                .appendingPathComponent(language)
+                .appendingPathComponent("\(device.simulator)-error.log")
+            try? FileManager.default.removeItem(at: oldErrorLog)
+
+            do {
+                try collector.collectScreenshots(language: language, device: device, udid: sim.udid)
+            } catch {
+                print("  [\(device.simulator)] Failed to collect: \(error)")
+                results[idx] = Result(language: language, device: device.simulator, success: false, error: "\(error)", retried: results[idx].retried)
+            }
+        }
+    }
+
     private func printSummary(_ results: [Result], elapsed: TimeInterval) {
         print("\n")
 
@@ -179,7 +309,8 @@ struct ScreenshotRunner: Sendable {
         let languages = config.languages
 
         let langWidth = max(8, languages.map(\.count).max() ?? 0)
-        let deviceWidths = devices.map { max($0.count, 1) }
+
+        let deviceWidths = devices.map { max($0.count, 10) }
 
         var header = "Language".padding(toLength: langWidth + 2, withPad: " ", startingAt: 0)
         for (i, device) in devices.enumerated() {
@@ -192,7 +323,12 @@ struct ScreenshotRunner: Sendable {
             var row = language.padding(toLength: langWidth + 2, withPad: " ", startingAt: 0)
             for (i, device) in devices.enumerated() {
                 let result = results.first { $0.language == language && $0.device == device }
-                let mark = result?.success == true ? "✅" : "❌"
+                let mark: String
+                if result?.success == true {
+                    mark = result?.retried == true ? "✅ 🔄" : "✅"
+                } else {
+                    mark = "❌"
+                }
                 row += mark.padding(toLength: deviceWidths[i] + 2, withPad: " ", startingAt: 0)
             }
             print(row)
@@ -200,7 +336,12 @@ struct ScreenshotRunner: Sendable {
 
         let succeeded = results.filter(\.success).count
         let failed = results.filter { !$0.success }.count
-        print("\n\(succeeded) succeeded, \(failed) failed")
+        let retried = results.filter { $0.success && $0.retried }.count
+        var summary = "\(succeeded) succeeded, \(failed) failed"
+        if retried > 0 {
+            summary += " (\(retried) succeeded after retry — verify those screenshots)"
+        }
+        print("\n\(summary)")
 
         if failed > 0 {
             print("\nFailed:")

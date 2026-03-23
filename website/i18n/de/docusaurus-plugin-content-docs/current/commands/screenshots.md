@@ -90,7 +90,7 @@ waitAfterBoot: 0
 #   - -ui_testing
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
-# numberOfRetries: 0                     # Retry failed tests
+# numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
@@ -136,9 +136,10 @@ override func setUp() {
 1. Baut einmal mit `build-for-testing` (oder überspringt, wenn `testWithoutBuilding: true`)
 2. Für jede Sprache: startet alle Simulatoren, lokalisiert, überschreibt die Statusleiste
 3. Führt Tests parallel auf allen Geräten aus
-4. Sammelt Screenshots aus dem gerätespezifischen Cache ins Ausgabeverzeichnis
-5. Rahmt Screenshots mit Geräterahmen (wenn `frameDevice` aktiviert ist)
-6. Fehler werden übersprungen — Fehlerprotokolle werden in der Ausgabe gespeichert
+4. Wenn `numberOfRetries` gesetzt ist und ein Gerät fehlschlägt: setzt fehlgeschlagene Simulatoren zurück, lokalisiert neu, startet neu und wiederholt die Tests
+5. Sammelt Screenshots aus dem gerätespezifischen Cache ins Ausgabeverzeichnis
+6. Rahmt Screenshots mit Geräterahmen (wenn `frameDevice` aktiviert ist)
+7. Fehler werden übersprungen — Fehlerprotokolle werden in der Ausgabe gespeichert
 
 ## Ausgabe
 
@@ -208,7 +209,7 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 | `launchArguments` | Zusätzliche Startargumente für die App |
 | `configuration` | Build-Konfiguration (z.B. Debug, Release) |
 | `testplan` | Name des Xcode-Testplans |
-| `numberOfRetries` | Anzahl der Wiederholungsversuche bei fehlgeschlagenen Tests |
+| `numberOfRetries` | Anzahl der Wiederholungsversuche bei fehlgeschlagenen Sprachen — setzt den Simulator zurück, lokalisiert neu, startet neu und führt Tests erneut aus. Nur fehlgeschlagene Geräte werden wiederholt. Wiederholte Ergebnisse werden in der Übersichtstabelle markiert. |
 | `stopAfterFirstError` | Alle Geräte nach dem ersten Fehler stoppen |
 | `reinstallApp` | App vor den Tests löschen und neu installieren |
 | `xcargs` | Zusätzliche Argumente für `xcodebuild` |

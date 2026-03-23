@@ -55,10 +55,6 @@ struct ScreenshotTestRunner: Sendable {
         args += ["-destination", "platform=iOS Simulator,id=\(udid)"]
         args += ["-parallel-testing-enabled", "NO"]
 
-        if let retries = config.numberOfRetries, retries > 0 {
-            args += ["-retry-tests-on-failure", "-test-iterations", "\(retries + 1)"]
-        }
-
         if let testplan = config.testplan {
             args += ["-testPlan", testplan]
         }

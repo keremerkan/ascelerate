@@ -360,8 +360,14 @@ extension AppsCommand {
           uniquingKeysWith: { first, _ in first }
         )
 
-        var successCount = 0
-        var failureCount = 0
+        struct UploadResult {
+          let locale: String
+          let displayType: String
+          var succeeded: Int = 0
+          var failed: Int = 0
+        }
+
+        var results: [UploadResult] = []
 
         for localeMedia in plan.locales {
           guard let localization = locByLocale[localeMedia.locale] else {
@@ -398,6 +404,8 @@ extension AppsCommand {
 
           for dt in localeMedia.displayTypes {
             print("  \(dt.folderName):")
+            var dtSucceeded = 0
+            var dtFailed = 0
 
             // Handle screenshots
             if !dt.screenshots.isEmpty, let displayType = dt.screenshotDisplayType {
@@ -487,10 +495,10 @@ extension AppsCommand {
                   )
 
                   print("Done.")
-                  successCount += 1
+                  dtSucceeded += 1
                 } catch {
                   print("Failed: \(error.localizedDescription)")
-                  failureCount += 1
+                  dtFailed += 1
                 }
               }
             }
@@ -589,22 +597,54 @@ extension AppsCommand {
                   )
 
                   print("Done.")
-                  successCount += 1
+                  dtSucceeded += 1
                 } catch {
                   print("Failed: \(error.localizedDescription)")
-                  failureCount += 1
+                  dtFailed += 1
                 }
               }
+            }
+
+            if dtSucceeded + dtFailed > 0 {
+              results.append(UploadResult(
+                locale: localeMedia.locale,
+                displayType: dt.folderName,
+                succeeded: dtSucceeded,
+                failed: dtFailed
+              ))
             }
           }
         }
 
-        // Final summary
+        // Results table
+        let totalSucceeded = results.reduce(0) { $0 + $1.succeeded }
+        let totalFailed = results.reduce(0) { $0 + $1.failed }
+
         print()
-        if failureCount == 0 {
-          print("Done. \(successCount) file\(successCount == 1 ? "" : "s") uploaded successfully.")
+        if totalFailed == 0 {
+          print("Done. \(totalSucceeded) file\(totalSucceeded == 1 ? "" : "s") uploaded successfully.")
         } else {
-          print("Done. \(successCount) succeeded, \(failureCount) failed.")
+          var rows: [[String]] = []
+          var lastLocale = ""
+          for r in results {
+            let localeLabel = r.locale == lastLocale ? "" : localeName(r.locale)
+            lastLocale = r.locale
+            let status: String
+            if r.failed == 0 {
+              status = green("\(r.succeeded) succeeded")
+            } else if r.succeeded == 0 {
+              status = red("\(r.failed) failed")
+            } else {
+              status = "\(green("\(r.succeeded) succeeded")), \(red("\(r.failed) failed"))"
+            }
+            rows.append([localeLabel, r.displayType, status])
+          }
+          // Totals row
+          rows.append(["", "", ""])
+          let totalStatus = "\(green("\(totalSucceeded) succeeded")), \(red("\(totalFailed) failed"))"
+          rows.append([bold("Total"), "", totalStatus])
+
+          Table.print(headers: ["Locale", "Display Type", "Result"], rows: rows)
         }
       }
     }

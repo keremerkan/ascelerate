@@ -496,7 +496,7 @@ overrideStatusBar: true
 # waitAfterBoot: 0
 # configuration: Debug
 # testplan: MyTestPlan
-# numberOfRetries: 0
+# numberOfRetries: 0                    # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false
 # reinstallApp: false
 # xcargs: -maximum-parallel-testing-workers 2
@@ -509,7 +509,7 @@ Features:
 - Simulator localization per language
 - Dark mode support
 - Animation disabling for reliable captures
-- Test retries for flaky UI tests
+- Automatic retries for failed languages (erases simulator, re-localizes, reboots, and reruns)
 - Errors skip and continue, with summary table and error logs saved to output
 - Helper version tracking with update warnings
 - Device bezel framing with [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) (download required)

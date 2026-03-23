@@ -90,7 +90,7 @@ waitAfterBoot: 0
 #   - -ui_testing
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
-# numberOfRetries: 0                     # Retry failed tests
+# numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
@@ -136,9 +136,10 @@ override func setUp() {
 1. `build-for-testing` ile bir kez derler (`testWithoutBuilding: true` ise atlar)
 2. Her dil için: tüm simülatörleri başlatır, yerelleştirir, durum çubuğunu değiştirir
 3. Tüm cihazlarda testleri eş zamanlı çalıştırır
-4. Cihaz bazlı önbellekten çıktı dizinine ekran görüntülerini toplar
-5. Ekran görüntülerini cihaz çerçeveleri ile çerçeveler (`frameDevice` etkinse)
-6. Hatalar atlanır ve devam edilir — hata günlükleri çıktıya kaydedilir
+4. `numberOfRetries` ayarlıysa ve herhangi bir cihaz başarısız olursa: başarısız simülatörleri sıfırlar, yeniden yerelleştirir, yeniden başlatır ve tekrar dener
+5. Cihaz bazlı önbellekten çıktı dizinine ekran görüntülerini toplar
+6. Ekran görüntülerini cihaz çerçeveleri ile çerçeveler (`frameDevice` etkinse)
+7. Hatalar atlanır ve devam edilir — hata günlükleri çıktıya kaydedilir
 
 ## Çıktı
 
@@ -208,7 +209,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `launchArguments` | Uygulamaya aktarılan ek başlatma argümanları |
 | `configuration` | Derleme yapılandırması (örn. Debug, Release) |
 | `testplan` | Xcode test planı adı |
-| `numberOfRetries` | Başarısız testler için tekrar deneme sayısı |
+| `numberOfRetries` | Başarısız diller için tekrar deneme sayısı — simülatörü sıfırlar, yeniden yerelleştirir, yeniden başlatır ve testleri tekrar çalıştırır. Yalnızca başarısız cihazları tekrar dener. Tekrar denenen sonuçlar özet tablosunda işaretlenir. |
 | `stopAfterFirstError` | İlk hatadan sonra tüm cihazları durdur |
 | `reinstallApp` | Testlerden önce uygulamayı silip yeniden yükle |
 | `xcargs` | `xcodebuild`'e aktarılan ek argümanlar |

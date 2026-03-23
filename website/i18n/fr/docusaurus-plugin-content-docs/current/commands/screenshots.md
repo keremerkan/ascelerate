@@ -90,7 +90,7 @@ waitAfterBoot: 0
 #   - -ui_testing
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
-# numberOfRetries: 0                     # Retry failed tests
+# numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
@@ -136,9 +136,10 @@ override func setUp() {
 1. Build unique avec `build-for-testing` (ou ignoré si `testWithoutBuilding: true`)
 2. Pour chaque langue : démarre tous les simulateurs, localise, remplace la barre d'état
 3. Exécute les tests en parallèle sur tous les appareils
-4. Collecte les screenshots du cache par appareil vers le répertoire de sortie
-5. Encadre les captures d'écran avec des contours d'appareil (si `frameDevice` est activé)
-6. Les erreurs sont ignorées et le processus continue — les logs d'erreur sont enregistrés dans la sortie
+4. Si `numberOfRetries` est défini et qu'un appareil échoue : réinitialise les simulateurs en échec, re-localise, redémarre et relance les tests
+5. Collecte les screenshots du cache par appareil vers le répertoire de sortie
+6. Encadre les captures d'écran avec des contours d'appareil (si `frameDevice` est activé)
+7. Les erreurs sont ignorées et le processus continue — les logs d'erreur sont enregistrés dans la sortie
 
 ## Sortie
 
@@ -208,7 +209,7 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 | `launchArguments` | Arguments de lancement supplémentaires passés à l'application |
 | `configuration` | Configuration de build (ex. Debug, Release) |
 | `testplan` | Nom du plan de test Xcode |
-| `numberOfRetries` | Nombre de tentatives pour les tests échoués |
+| `numberOfRetries` | Nombre de tentatives pour les langues échouées — réinitialise le simulateur, re-localise, redémarre et relance les tests. Seuls les appareils en échec sont relancés. Les résultats relancés sont marqués dans le tableau récapitulatif. |
 | `stopAfterFirstError` | Arrêter tous les appareils après le premier échec |
 | `reinstallApp` | Supprimer et réinstaller l'application avant les tests |
 | `xcargs` | Arguments supplémentaires passés à `xcodebuild` |

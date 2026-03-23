@@ -90,7 +90,7 @@ waitAfterBoot: 0
 #   - -ui_testing
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
-# numberOfRetries: 0                     # Retry failed tests
+# numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
@@ -136,9 +136,10 @@ override func setUp() {
 1. Builds once with `build-for-testing` (or skips if `testWithoutBuilding: true`)
 2. For each language: boots all simulators, localizes, overrides status bar
 3. Runs tests concurrently across devices
-4. Collects screenshots from per-device cache to output directory
-5. Frames screenshots with device bezels (if `frameDevice` is enabled)
-6. Errors skip and continue — error logs saved to output
+4. If `numberOfRetries` is set and any device fails: erases failed simulators, re-localizes, reboots, and retries
+5. Collects screenshots from per-device cache to output directory
+6. Frames screenshots with device bezels (if `frameDevice` is enabled)
+7. Errors skip and continue — error logs saved to output
 
 ## Output
 
@@ -208,7 +209,7 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `launchArguments` | Extra launch arguments passed to the app |
 | `configuration` | Build configuration (e.g. Debug, Release) |
 | `testplan` | Xcode test plan name |
-| `numberOfRetries` | Number of times to retry failed tests |
+| `numberOfRetries` | Number of times to retry failed languages — erases the simulator, re-localizes, reboots, and reruns tests. Only retries failed devices. Retried results are marked in the summary table. |
 | `stopAfterFirstError` | Stop all devices after the first failure |
 | `reinstallApp` | Delete and reinstall the app before running tests |
 | `xcargs` | Extra arguments passed to `xcodebuild` |

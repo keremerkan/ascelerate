@@ -90,7 +90,7 @@ waitAfterBoot: 0
 #   - -ui_testing
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
-# numberOfRetries: 0                     # Retry failed tests
+# numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
@@ -136,9 +136,10 @@ override func setUp() {
 1. `build-for-testing` で一度ビルド（`testWithoutBuilding: true` の場合はスキップ）
 2. 各言語ごとに：すべてのシミュレーターを起動、ローカライズ、ステータスバーをオーバーライド
 3. 全デバイスで並行してテストを実行
-4. デバイスごとのキャッシュから出力ディレクトリにスクリーンショットを収集
-5. デバイスベゼルでスクリーンショットをフレーミング（`frameDevice` が有効な場合）
-6. エラーはスキップして続行 — エラーログは出力に保存
+4. `numberOfRetries` が設定されていてデバイスが失敗した場合：失敗したシミュレーターをリセットし、再ローカライズ、再起動してテストを再実行
+5. デバイスごとのキャッシュから出力ディレクトリにスクリーンショットを収集
+6. デバイスベゼルでスクリーンショットをフレーミング（`frameDevice` が有効な場合）
+7. エラーはスキップして続行 — エラーログは出力に保存
 
 ## 出力
 
@@ -208,7 +209,7 @@ screenshots/framed/
 | `launchArguments` | アプリに渡す追加の起動引数 |
 | `configuration` | ビルド構成（例: Debug、Release） |
 | `testplan` | Xcodeテストプラン名 |
-| `numberOfRetries` | 失敗したテストの再試行回数 |
+| `numberOfRetries` | 失敗した言語の再試行回数 — シミュレーターをリセットし、再ローカライズ、再起動してテストを再実行します。失敗したデバイスのみ再試行されます。再試行された結果はサマリーテーブルに表示されます。 |
 | `stopAfterFirstError` | 最初のエラー後にすべてのデバイスを停止 |
 | `reinstallApp` | テスト前にアプリを削除して再インストール |
 | `xcargs` | `xcodebuild` に渡す追加の引数 |

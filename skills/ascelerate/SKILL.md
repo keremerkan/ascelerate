@@ -205,7 +205,7 @@ overrideStatusBar: true
 # framedOutputDirectory: ./screenshots/framed
 ```
 
-Supports dark mode capture, animation disabling, test retries, custom test plans, Xcode build configurations, and arbitrary xcodebuild arguments.
+Supports dark mode capture, animation disabling, automatic retries (erases simulator, re-localizes, reboots), custom test plans, Xcode build configurations, and arbitrary xcodebuild arguments.
 
 #### Device framing
 

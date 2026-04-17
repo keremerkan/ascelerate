@@ -310,7 +310,7 @@ struct CertsCommand: AsyncParsableCommand {
 
   struct Revoke: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-      abstract: "Revoke a signing certificate."
+      abstract: "Revoke one or more signing certificates."
     )
 
     @Argument(help: "Certificate serial number.")
@@ -328,7 +328,7 @@ struct CertsCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let cert: AppStoreAPI.Certificate
+      let certs: [AppStoreAPI.Certificate]
       if let serialNumber {
         let response = try await client.send(
           Resources.v1.certificates.get(filterSerialNumber: [serialNumber], limit: 1)
@@ -336,28 +336,61 @@ struct CertsCommand: AsyncParsableCommand {
         guard let found = response.data.first else {
           throw ValidationError("No certificate found with serial number '\(serialNumber)'.")
         }
-        cert = found
+        certs = [found]
       } else {
-        cert = try await promptCertificate(client: client)
+        let allCerts = try await fetchAll(
+          client.pages(Resources.v1.certificates.get(limit: 200)),
+          data: \.data,
+          emptyMessage: "No certificates found in your account.",
+          sort: { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
+        )
+        certs = try promptMultiSelection(
+          "Certificates", items: allCerts,
+          display: { "\($0.attributes?.displayName ?? "—") (\($0.attributes?.serialNumber ?? "—")) — \($0.attributes?.certificateType.map { formatState($0) } ?? "—"), expires \($0.attributes?.expirationDate.map { formatDate($0) } ?? "—")" },
+          prompt: "Select certificate"
+        )
       }
 
-      let attrs = cert.attributes
-      print("Certificate:")
-      print("  Display Name:  \(attrs?.displayName ?? "—")")
-      print("  Type:          \(attrs?.certificateType.map { formatState($0) } ?? "—")")
-      print("  Serial Number: \(attrs?.serialNumber ?? "—")")
+      print()
+      print("Certificates to revoke (\(certs.count)):")
+      print()
+      Table.print(
+        headers: ["Display Name", "Type", "Serial Number", "Expires"],
+        rows: certs.map { c in
+          [
+            c.attributes?.displayName ?? "—",
+            c.attributes?.certificateType.map { formatState($0) } ?? "—",
+            c.attributes?.serialNumber ?? "—",
+            c.attributes?.expirationDate.map { formatDate($0) } ?? "—",
+          ]
+        }
+      )
       print()
       print("WARNING: Revoking a certificate cannot be undone.")
       print()
 
-      guard confirm("Revoke this certificate? [y/N] ") else {
+      guard confirm("Revoke \(certs.count) certificate(s)? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
-
-      _ = try await client.send(Resources.v1.certificates.id(cert.id).delete)
       print()
-      print(green("Revoked") + " certificate '\(attrs?.displayName ?? serialNumber ?? "—")'.")
+
+      var succeeded = 0
+      var failed = 0
+      for cert in certs {
+        let label = cert.attributes?.displayName ?? cert.attributes?.serialNumber ?? "—"
+        do {
+          _ = try await client.send(Resources.v1.certificates.id(cert.id).delete)
+          print("  OK   \(label)")
+          succeeded += 1
+        } catch {
+          print("  FAIL \(label) — \(error.localizedDescription)")
+          failed += 1
+        }
+      }
+
+      print()
+      print("Done. \(succeeded) revoked, \(failed) failed.")
     }
   }
 }

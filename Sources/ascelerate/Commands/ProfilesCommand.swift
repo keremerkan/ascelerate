@@ -554,30 +554,19 @@ struct ProfilesCommand: AsyncParsableCommand {
           return
         }
 
-        print("Profiles:")
-        for (i, profile) in sorted.enumerated() {
-          let pName = profile.attributes?.name ?? "—"
-          let pType = profile.attributes?.profileType.map { formatState($0) } ?? "—"
-          let pState = profile.attributes?.profileState?.rawValue ?? "—"
-          let bidID = profile.relationships?.bundleID?.data?.id ?? ""
-          let bidIdentifier = includedBundleIDs[bidID]?.attributes?.identifier ?? "—"
-          print("  [\(i + 1)] \(pName) (\(pType)) — \(bidIdentifier) [\(pState)]")
-        }
-        print()
-        print("Select profile (1-\(sorted.count), or 'all'): ", terminator: "")
-        guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !input.isEmpty else {
-          throw ValidationError("No selection made.")
-        }
-
-        if input.lowercased() == "all" {
-          targets = sorted
-        } else {
-          guard let choice = Int(input), choice >= 1, choice <= sorted.count else {
-            throw ValidationError("Invalid selection.")
-          }
-          targets = [sorted[choice - 1]]
-        }
+        targets = try promptMultiSelection(
+          "Profiles",
+          items: sorted,
+          display: { profile in
+            let pName = profile.attributes?.name ?? "—"
+            let pType = profile.attributes?.profileType.map { formatState($0) } ?? "—"
+            let pState = profile.attributes?.profileState?.rawValue ?? "—"
+            let bidID = profile.relationships?.bundleID?.data?.id ?? ""
+            let bidIdentifier = includedBundleIDs[bidID]?.attributes?.identifier ?? "—"
+            return "\(pName) (\(pType)) — \(bidIdentifier) [\(pState)]"
+          },
+          prompt: "Select profile"
+        )
       }
 
       // Resolve certificates
@@ -743,7 +732,7 @@ struct ProfilesCommand: AsyncParsableCommand {
 
   struct Delete: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-      abstract: "Delete a provisioning profile."
+      abstract: "Delete one or more provisioning profiles."
     )
 
     @Argument(help: "Profile name.")
@@ -761,30 +750,62 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let profile: Profile
+      let profiles: [Profile]
       if let name {
-        profile = try await findProfile(name: name, client: client)
+        profiles = [try await findProfile(name: name, client: client)]
       } else {
-        profile = try await promptProfile(client: client)
+        let allProfiles = try await fetchAll(
+          client.pages(Resources.v1.profiles.get(limit: 200)),
+          data: \.data,
+          emptyMessage: "No provisioning profiles found in your account.",
+          sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
+        )
+        profiles = try promptMultiSelection(
+          "Provisioning profiles", items: allProfiles,
+          display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.profileType.map { formatState($0) } ?? "—"), \($0.attributes?.profileState.map { formatState($0) } ?? "—"))" },
+          prompt: "Select profile"
+        )
       }
 
-      let attrs = profile.attributes
-      print("Profile:")
-      print("  Name:  \(attrs?.name ?? "—")")
-      print("  Type:  \(attrs?.profileType.map { formatState($0) } ?? "—")")
-      print("  State: \(attrs?.profileState.map { formatState($0) } ?? "—")")
+      print()
+      print("Profiles to delete (\(profiles.count)):")
+      print()
+      Table.print(
+        headers: ["Name", "Type", "State"],
+        rows: profiles.map { p in
+          [
+            p.attributes?.name ?? "—",
+            p.attributes?.profileType.map { formatState($0) } ?? "—",
+            p.attributes?.profileState.map { formatState($0) } ?? "—",
+          ]
+        }
+      )
       print()
       print("WARNING: Deleting a profile cannot be undone.")
       print()
 
-      guard confirm("Delete this profile? [y/N] ") else {
+      guard confirm("Delete \(profiles.count) profile(s)? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
-
-      _ = try await client.send(Resources.v1.profiles.id(profile.id).delete)
       print()
-      print(green("Deleted") + " profile '\(attrs?.name ?? name ?? "—")'.")
+
+      var succeeded = 0
+      var failed = 0
+      for profile in profiles {
+        let pName = profile.attributes?.name ?? "—"
+        do {
+          _ = try await client.send(Resources.v1.profiles.id(profile.id).delete)
+          print("  OK   \(pName)")
+          succeeded += 1
+        } catch {
+          print("  FAIL \(pName) — \(error.localizedDescription)")
+          failed += 1
+        }
+      }
+
+      print()
+      print("Done. \(succeeded) deleted, \(failed) failed.")
     }
   }
 }

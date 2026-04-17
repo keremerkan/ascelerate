@@ -66,7 +66,7 @@ struct AliasCommand: AsyncParsableCommand {
 
   struct Remove: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-      abstract: "Remove an alias."
+      abstract: "Remove one or more aliases."
     )
 
     @Argument(help: "The alias name to remove.")
@@ -76,6 +76,8 @@ struct AliasCommand: AsyncParsableCommand {
     var yes = false
 
     func run() throws {
+      if yes { autoConfirm = true }
+
       var aliases = Aliases.load()
 
       guard !aliases.isEmpty else {
@@ -83,30 +85,34 @@ struct AliasCommand: AsyncParsableCommand {
         return
       }
 
-      let name: String
+      let names: [String]
       if let provided = self.name {
-        name = provided
+        guard aliases[provided] != nil else {
+          throw ValidationError("Alias '\(provided)' not found.")
+        }
+        names = [provided]
       } else {
-        // Show picker
         let sorted = aliases.sorted { $0.key < $1.key }
-        let entry = try promptSelection(
-          "Select an alias to remove",
+        let entries = try promptMultiSelection(
+          "Aliases",
           items: sorted,
-          display: { "\($0.key) → \($0.value)" }
+          display: { "\($0.key) → \($0.value)" },
+          prompt: "Select alias to remove"
         )
-        name = entry.key
+        names = entries.map(\.key)
       }
 
-      guard aliases[name] != nil else {
-        throw ValidationError("Alias '\(name)' not found.")
+      let label = names.count == 1 ? "alias '\(names[0])'" : "\(names.count) aliases"
+      guard confirm("Remove \(label)? [y/N] ") else {
+        print(yellow("Cancelled."))
+        return
       }
 
-      if yes { autoConfirm = true }
-      guard confirm("Remove alias '\(name)'? [y/N] ") else { return }
-
-      aliases.removeValue(forKey: name)
+      for name in names {
+        aliases.removeValue(forKey: name)
+      }
       try Aliases.save(aliases)
-      print(green("Removed") + " alias '\(name)'.")
+      print(green("Removed") + " \(label).")
     }
   }
 

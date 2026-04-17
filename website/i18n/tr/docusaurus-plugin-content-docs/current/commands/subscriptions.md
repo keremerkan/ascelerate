@@ -52,3 +52,42 @@ ascelerate sub group-localizations import <bundle-id> --file group-de.json
 ```
 
 İçe aktarma komutları eksik locale'leri onay ile otomatik olarak oluşturur, böylece App Store Connect'i ziyaret etmeden yeni diller ekleyebilirsiniz.
+
+## Fiyatlandırma
+
+Abonelik fiyatlandırması bölgeye özeldir. IAP'lerde olduğu gibi otomatik eşitleme kavramı yoktur — fiyatlamak istediğiniz her bölgenin kendi kaydı olmalıdır. CLI ya tek bir bölgeyi ayarlar ya da Apple'ın yerel para birimi kademe karşılıklarını kullanarak fiyatı tüm bölgelere yayar.
+
+```bash
+# Mevcut bölgeye özel fiyatları göster (yoksa uyarır)
+ascelerate sub pricing show <bundle-id> <product-id>
+
+# Bir bölgedeki mevcut fiyat kademelerini listele
+ascelerate sub pricing tiers <bundle-id> <product-id> --territory USA
+
+# Tek bir bölge için fiyat ayarla
+ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --territory USA
+
+# Tüm bölgelere fiyatı yay (her bölge için bir POST)
+ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-territories
+```
+
+### Fiyat değişiklikleri ve mevcut aboneler
+
+Apple, fiyat değişikliklerini değişikliğin yönüne göre mevcut aboneler için farklı şekilde uygular. `sub pricing set` komutu her etkilenen bölgenin mevcut fiyatını alır, değişikliği sınıflandırır ve doğru davranışı uygular:
+
+- **Düşürme**: mevcut aboneler otomatik olarak düşük fiyata geçer. Etkileşimli çalıştırmalarda uyarı ile birlikte sorulur. `--yes` modunda, gelir etkisini onaylamak için `--confirm-decrease` eklemeniz gerekir — sadece `--yes` yeterli değildir.
+- **Artış**: mevcut abonelerle nasıl başa çıkılacağını açıkça seçmeniz gerekir. Aşağıdakilerden biri ayarlanmadığı sürece komut hata verir:
+  - `--preserve-current` — mevcut aboneleri eski fiyatlarında tutar
+  - `--no-preserve-current` — Apple'ın bildirim süresinden sonra yeni fiyatı mevcut abonelere uygular
+- **Yeni bölge** (mevcut fiyat yok): değerlendirilecek mevcut abone yok; bayraklar isteğe bağlıdır.
+- **Değişiklik yok**: sessizce atlanır.
+
+`--equalize-all-territories` için aynı kurallar toplu olarak uygulanır. Yayılan bölgelerden herhangi biri artış ise, korunma bayrağı hepsi için gereklidir. Herhangi biri `--yes` modunda düşüş ise, `--confirm-decrease` gereklidir.
+
+```bash
+# Standart küresel fiyat artışı: tüm bölgelerde $4.99 → $9.99,
+# mevcut aboneleri eski fiyatta tut
+ascelerate sub pricing set myapp com.example.monthly \
+  --price 9.99 --territory USA --equalize-all-territories \
+  --preserve-current
+```

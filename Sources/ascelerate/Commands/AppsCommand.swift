@@ -1313,6 +1313,64 @@ struct AppsCommand: AsyncParsableCommand {
           }
         }
 
+        // 7. In-app purchases
+        print("Checking in-app purchases...")
+        var iaps: [InAppPurchaseV2] = []
+        for try await page in client.pages(
+          Resources.v1.apps.id(app.id).inAppPurchasesV2.get(limit: 200)
+        ) {
+          iaps.append(contentsOf: page.data)
+        }
+
+        if !iaps.isEmpty {
+          rows.append(["", ""])
+          rows.append(["In-App Purchases (\(iaps.count))", ""])
+          for iap in iaps.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") }) {
+            let label = "  " + (iap.attributes?.productID ?? iap.attributes?.name ?? iap.id)
+            let state = iap.attributes?.state
+            let stateStr = state.map { formatState($0) } ?? "unknown"
+            let hasSchedule = try await IAPCommand.iapPriceScheduleExists(iapID: iap.id, client: client)
+
+            if !hasSchedule {
+              rows.append([label, red("✗") + " No price schedule"])
+              failCount += 1
+            } else if state == .readyToSubmit || state == .approved
+                      || state == .waitingForReview || state == .inReview {
+              rows.append([label, green("✓") + " \(stateStr)"])
+            } else {
+              rows.append([label, red("✗") + " \(stateStr)"])
+              failCount += 1
+            }
+          }
+        }
+
+        // 8. Subscriptions
+        print("Checking subscriptions...")
+        let subGroups = try await SubCommand.fetchGroups(appID: app.id, client: client)
+        let allSubs = subGroups.flatMap(\.subscriptions)
+
+        if !allSubs.isEmpty {
+          rows.append(["", ""])
+          rows.append(["Subscriptions (\(allSubs.count))", ""])
+          for sub in allSubs.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") }) {
+            let label = "  " + (sub.attributes?.productID ?? sub.attributes?.name ?? sub.id)
+            let state = sub.attributes?.state
+            let stateStr = state.map { formatState($0) } ?? "unknown"
+            let hasPrices = try await SubCommand.subscriptionHasPrices(subscriptionID: sub.id, client: client)
+
+            if !hasPrices {
+              rows.append([label, red("✗") + " No prices set"])
+              failCount += 1
+            } else if state == .readyToSubmit || state == .approved
+                      || state == .waitingForReview || state == .inReview {
+              rows.append([label, green("✓") + " \(stateStr)"])
+            } else {
+              rows.append([label, red("✗") + " \(stateStr)"])
+              failCount += 1
+            }
+          }
+        }
+
         let passCount = rows.count(where: { $0[1].contains("✓") })
         print()
 

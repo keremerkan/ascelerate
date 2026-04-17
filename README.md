@@ -753,9 +753,21 @@ ascelerate iap submit <bundle-id> <product-id>
 ascelerate iap localizations view <bundle-id> <product-id>
 ascelerate iap localizations export <bundle-id> <product-id>
 ascelerate iap localizations import <bundle-id> <product-id> --file iap-de.json
+
+# Pricing — set the base region price (auto-equalizes to all other territories)
+ascelerate iap pricing show <bundle-id> <product-id>
+ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
+ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
+ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-region GBR
+
+# Pricing — manage per-territory manual overrides
+ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territory FRA
+ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 ```
 
 Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. States: `APPROVED`, `MISSING_METADATA`, `READY_TO_SUBMIT`, `WAITING_FOR_REVIEW`, `IN_REVIEW`, etc.
+
+`iap info` and `iap pricing show` warn when an IAP has no price schedule — the same condition surfaced in `apps review preflight`. When `set` changes the base region price, existing per-territory manual overrides are preserved by default. If overrides exist, an interactive menu offers to revert any of them; pass `--remove-all-overrides` for a non-interactive wipe.
 
 ### Subscriptions
 
@@ -787,11 +799,29 @@ ascelerate sub localizations import <bundle-id> <product-id> --file sub-de.json
 ascelerate sub group-localizations view <bundle-id>
 ascelerate sub group-localizations export <bundle-id>
 ascelerate sub group-localizations import <bundle-id> --file group-de.json
+
+# Pricing — single territory or fan-out across all territories
+ascelerate sub pricing show <bundle-id> <product-id>
+ascelerate sub pricing tiers <bundle-id> <product-id> --territory USA
+ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --territory USA
+ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-territories
+
+# Standard global price raise: grandfather existing subscribers at the old price
+ascelerate sub pricing set <bundle-id> <product-id> --price 9.99 --equalize-all-territories --preserve-current
 ```
 
 When submitting an app version for review, `apps review submit` automatically detects IAPs and subscriptions that may have pending changes and offers to submit them alongside the app version.
 
 The localization import commands create missing locales automatically with confirmation, so you can add new languages without visiting App Store Connect.
+
+Subscription pricing is per-territory. There is no auto-equalize concept like IAPs have, so `--equalize-all-territories` mirrors what the App Store Connect web UI does behind the scenes: looks up the equivalent local-currency tier in every territory and POSTs one price record per territory.
+
+Apple treats price changes differently for existing subscribers depending on direction — `sub pricing set` enforces this:
+
+- **Decrease**: existing subscribers automatically move to the lower price. Interactive runs prompt; `--yes` mode requires `--confirm-decrease` to acknowledge the revenue impact.
+- **Increase**: you must explicitly choose how to handle existing subscribers. Errors unless `--preserve-current` (grandfather them at the old price) or `--no-preserve-current` (push them to the new price after Apple's notification period) is set. Same rule applies aggregated across `--equalize-all-territories`.
+- **New territory** (no existing price): no existing subscribers to consider; flags optional.
+- **Unchanged**: skipped silently.
 
 ### Rate Limit
 

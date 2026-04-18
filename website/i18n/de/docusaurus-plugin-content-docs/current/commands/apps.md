@@ -156,3 +156,21 @@ ascelerate apps eula <bundle-id> --file eula.txt
 # Benutzerdefinierte EULA entfernen (kehrt zur Standard-Apple-EULA zurück)
 ascelerate apps eula <bundle-id> --delete
 ```
+
+## Abonnement-Kulanzzeitraum
+
+Der Kulanzzeitraum ermöglicht es Abonnenten, nach einer fehlgeschlagenen Verlängerungszahlung für eine kurze Zeit Zugriff zu behalten, während Apple die Abrechnung erneut versucht. Die Einstellung gilt für die gesamte App.
+
+```bash
+# Aktuelle Konfiguration anzeigen
+ascelerate apps subscription-grace-period <bundle-id>
+
+# Für die Produktion mit 16 Tagen aktivieren, gilt für alle Verlängerungen
+ascelerate apps subscription-grace-period <bundle-id> \
+  --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
+
+# Auch für Sandbox-Tests aktivieren
+ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+```
+
+Gültige `--duration`-Werte: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Gültige `--renewal-type`-Werte: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.

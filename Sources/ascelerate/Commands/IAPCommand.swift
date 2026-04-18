@@ -7,7 +7,7 @@ struct IAPCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "iap",
     abstract: "Manage in-app purchases.",
-    subcommands: [List.self, Info.self, Promoted.self, Create.self, Update.self, Delete.self, Submit.self, Localizations.self, Pricing.self]
+    subcommands: [List.self, Info.self, Promoted.self, Create.self, Update.self, Delete.self, Submit.self, Localizations.self, Pricing.self, Availability.self, OfferCode.self, Images.self, ReviewScreenshot.self]
   )
 
   // MARK: - Helpers
@@ -1041,7 +1041,7 @@ struct IAPCommand: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "Set the base price for an in-app purchase.",
         discussion: """
-          Sets or updates the price in the base region (the territory Apple uses to
+          Sets or updates the price in the base territory (the territory Apple uses to
           auto-equalize prices in all other territories). Existing per-territory manual
           overrides are preserved by default — when there are overrides, an interactive
           menu offers to revert any of them to auto-equalize from the new base.
@@ -1055,11 +1055,11 @@ struct IAPCommand: AsyncParsableCommand {
       @Argument(help: "The product identifier of the in-app purchase.")
       var productID: String
 
-      @Option(name: .long, help: "Customer price in the base region's currency (e.g. 4.99).")
+      @Option(name: .long, help: "Customer price in the base territory's currency (e.g. 4.99).")
       var price: String
 
-      @Option(name: .customLong("base-region"), help: "Base region code. Defaults to existing base region, or USA if no schedule exists yet.")
-      var baseRegion: String?
+      @Option(name: .customLong("base-territory"), help: "Base territory code. Defaults to the existing base territory, or USA if no schedule exists yet.")
+      var baseTerritory: String?
 
       @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: today).")
       var startDate: String?
@@ -1077,7 +1077,7 @@ struct IAPCommand: AsyncParsableCommand {
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client)
-        let newBase = (baseRegion ?? existing?.baseTerritoryID ?? "USA").uppercased()
+        let newBase = (baseTerritory ?? existing?.baseTerritoryID ?? "USA").uppercased()
 
         let resolved = try await IAPCommand.resolvePricePoint(
           iapID: iap.id, territoryID: newBase, customerPrice: price, client: client)
@@ -1144,7 +1144,7 @@ struct IAPCommand: AsyncParsableCommand {
         print()
         print("Set base price:")
         print("  Product ID:     \(productID)")
-        print("  Base Region:    \(newBase)")
+        print("  Base Territory: \(newBase)")
         print("  Customer Price: \(basePoint.attributes?.customerPrice ?? "—") \(baseCurrency)")
         print("  Start Date:     \(dateStr)")
         if let existingBase = existing?.baseTerritoryID, existingBase != newBase {
@@ -1187,7 +1187,7 @@ struct IAPCommand: AsyncParsableCommand {
         abstract: "Add or update a per-territory manual price override.",
         discussion: """
           Adds an explicit price for a single territory on top of the existing base price.
-          The base region's price and any other manual overrides are preserved. To revert
+          The base territory's price and any other manual overrides are preserved. To revert
           a territory to auto-equalize, use 'iap pricing remove --territory X'.
           """
       )
@@ -1223,7 +1223,7 @@ struct IAPCommand: AsyncParsableCommand {
 
         let territoryID = territory.uppercased()
         if territoryID == existing.baseTerritoryID {
-          throw ValidationError("\(territoryID) is the base region. Use 'iap pricing set' to change the base price.")
+          throw ValidationError("\(territoryID) is the base territory. Use 'iap pricing set' to change the base price.")
         }
 
         let resolved = try await IAPCommand.resolvePricePoint(
@@ -1240,7 +1240,7 @@ struct IAPCommand: AsyncParsableCommand {
         print("  Territory:      \(territoryID)")
         print("  Customer Price: \(newPoint.attributes?.customerPrice ?? "—") \(currency)")
         print("  Start Date:     \(dateStr)")
-        print("  Base Region:    \(existing.baseTerritoryID) (preserved)")
+        print("  Base Territory: \(existing.baseTerritoryID) (preserved)")
         let otherOverrides = existing.nonBaseOverrides.filter { $0.territoryID != territoryID }
         if !otherOverrides.isEmpty {
           print("  Other overrides: \(otherOverrides.map(\.territoryID).sorted().joined(separator: ", ")) (preserved)")
@@ -1280,8 +1280,8 @@ struct IAPCommand: AsyncParsableCommand {
         abstract: "Remove a per-territory manual price override.",
         discussion: """
           Drops the manual price for a territory; that territory will revert to the
-          auto-equalized price computed from the base region. The base region itself
-          cannot be removed — use 'iap pricing set --base-region X' to change the base.
+          auto-equalized price computed from the base territory. The base territory itself
+          cannot be removed — use 'iap pricing set --base-territory X' to change the base.
           """
       )
 
@@ -1313,7 +1313,7 @@ struct IAPCommand: AsyncParsableCommand {
 
         let territoryID = territory.uppercased()
         if territoryID == existing.baseTerritoryID {
-          throw ValidationError("\(territoryID) is the base region. Use 'iap pricing set --base-region X' to change the base region first.")
+          throw ValidationError("\(territoryID) is the base territory. Use 'iap pricing set --base-territory X' to change the base territory first.")
         }
         guard existing.nonBaseOverrides.contains(where: { $0.territoryID == territoryID }) else {
           throw ValidationError("No manual override exists for territory \(territoryID).")
@@ -1355,5 +1355,987 @@ struct IAPCommand: AsyncParsableCommand {
       }
     }
 
+  }
+
+  // MARK: - Availability
+
+  struct Availability: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "availability",
+      abstract: "View or update per-IAP territory availability.",
+      discussion: """
+        An IAP's availability is distinct from the app's. By default an IAP inherits its
+        app's territories. Use --add / --remove to change the per-IAP territory list.
+        Each edit replaces the full availability schedule (wholesale POST).
+        """
+    )
+
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+    var bundleID: String
+
+    @Argument(help: "The product identifier of the in-app purchase.")
+    var productID: String
+
+    @Option(name: .long, help: "Comma-separated territory codes to make available (e.g. CHN,RUS).")
+    var add: String?
+
+    @Option(name: .long, help: "Comma-separated territory codes to make unavailable.")
+    var remove: String?
+
+    @Option(name: .customLong("available-in-new-territories"), help: "Auto-enable new territories Apple adds (true/false). Defaults to keeping the current setting.")
+    var availableInNewTerritories: String?
+
+    @Flag(name: .long, help: "Show full country names.")
+    var verbose = false
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+      // Fetch current availability
+      var currentAvailableInNew: Bool?
+      var currentTerritories: [String] = []
+      var hasAvailability = false
+      do {
+        let response = try await client.send(
+          Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseAvailability.get(
+            include: [.availableTerritories],
+            limitAvailableTerritories: 50
+          )
+        )
+        currentAvailableInNew = response.data.attributes?.isAvailableInNewTerritories
+        hasAvailability = true
+        // Paginate for the full list
+        for try await page in client.pages(
+          Resources.v1.inAppPurchaseAvailabilities.id(response.data.id).availableTerritories.get(limit: 200)
+        ) {
+          currentTerritories.append(contentsOf: page.data.map(\.id))
+        }
+      } catch is DecodingError {
+        hasAvailability = false
+      } catch let error as ResponseError {
+        if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
+          hasAvailability = false
+        } else {
+          throw error
+        }
+      }
+
+      let isEditMode = add != nil || remove != nil || availableInNewTerritories != nil
+
+      let newAvailableInNewFlag: Bool?
+      if let s = availableInNewTerritories {
+        guard let b = Bool(s.lowercased()) else {
+          throw ValidationError("Invalid value for --available-in-new-territories. Use 'true' or 'false'.")
+        }
+        newAvailableInNewFlag = b
+      } else {
+        newAvailableInNewFlag = nil
+      }
+
+      if !isEditMode {
+        // View mode
+        print("Product ID: \(productID)")
+        if !hasAvailability {
+          print(yellow("⚠ No per-IAP availability set — inherits the app's territories."))
+          return
+        }
+        print("Available in new territories: \(currentAvailableInNew == true ? "Yes" : currentAvailableInNew == false ? "No" : "—")")
+        print()
+        let sorted = currentTerritories.sorted()
+        print("Available (\(sorted.count)):")
+        printTerritories(sorted)
+        return
+      }
+
+      // Edit mode — compute the new territory list
+      let addCodes = Swift.Set(add?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
+      let removeCodes = Swift.Set(remove?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
+
+      let overlap = addCodes.intersection(removeCodes)
+      if !overlap.isEmpty {
+        throw ValidationError("Territory codes in both --add and --remove: \(overlap.sorted().joined(separator: ", "))")
+      }
+
+      var newTerritories = Swift.Set(currentTerritories)
+      newTerritories.formUnion(addCodes)
+      newTerritories.subtract(removeCodes)
+
+      let effectiveAvailableInNew = newAvailableInNewFlag ?? currentAvailableInNew ?? true
+      let finalList = newTerritories.sorted()
+
+      if finalList.isEmpty {
+        throw ValidationError("Cannot have zero available territories — at least one is required.")
+      }
+
+      // Summary
+      print("Product ID: \(productID)")
+      print("Available in new territories: \(effectiveAvailableInNew ? "Yes" : "No")")
+      let addedCodes = addCodes.subtracting(currentTerritories).sorted()
+      let removedCodes = removeCodes.intersection(currentTerritories).sorted()
+      if !addedCodes.isEmpty {
+        print("Adding:    \(addedCodes.joined(separator: ", "))")
+      }
+      if !removedCodes.isEmpty {
+        print("Removing:  \(removedCodes.joined(separator: ", "))")
+      }
+      if addedCodes.isEmpty && removedCodes.isEmpty && newAvailableInNewFlag == nil {
+        print("No changes.")
+        return
+      }
+      print("New total available: \(finalList.count) territor\(finalList.count == 1 ? "y" : "ies")")
+      print()
+
+      guard confirm("Apply this availability? [y/N] ") else {
+        print(yellow("Cancelled."))
+        return
+      }
+
+      _ = try await client.send(
+        Resources.v1.inAppPurchaseAvailabilities.post(
+          InAppPurchaseAvailabilityCreateRequest(
+            data: .init(
+              attributes: .init(isAvailableInNewTerritories: effectiveAvailableInNew),
+              relationships: .init(
+                inAppPurchase: .init(data: .init(id: iap.id)),
+                availableTerritories: .init(data: finalList.map { .init(id: $0) })
+              )
+            )
+          )
+        )
+      )
+
+      print()
+      print(green("Updated") + " availability for \(productID) (\(finalList.count) territories).")
+    }
+
+    private func printTerritories(_ codes: [String]) {
+      if verbose {
+        let en = Locale(identifier: "en")
+        for code in codes {
+          let name = en.localizedString(forRegionCode: code) ?? code
+          print("  \(code)  \(name)")
+        }
+      } else {
+        for i in stride(from: 0, to: codes.count, by: 10) {
+          let end = min(i + 10, codes.count)
+          let row = codes[i..<end].joined(separator: "  ")
+          print("  \(row)")
+        }
+      }
+    }
+  }
+
+  // MARK: - OfferCode
+
+  struct OfferCode: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "offer-code",
+      abstract: "Manage offer codes for in-app purchases.",
+      subcommands: [List.self, Info.self, Create.self, Toggle.self, GenCodes.self, AddCustomCodes.self, ViewCodes.self]
+    )
+
+    // MARK: List
+
+    struct List: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "List offer codes for an in-app purchase."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        var codes: [InAppPurchaseOfferCode] = []
+        for try await page in client.pages(
+          Resources.v2.inAppPurchases.id(iap.id).offerCodes.get(limit: 200)
+        ) {
+          codes.append(contentsOf: page.data)
+        }
+
+        if codes.isEmpty {
+          print("No offer codes for \(productID).")
+          return
+        }
+
+        Table.print(
+          headers: ["ID", "Name", "Active", "Eligibilities"],
+          rows: codes.map { c in
+            let attrs = c.attributes
+            let elig = attrs?.customerEligibilities?.map { $0.rawValue }.joined(separator: ", ") ?? "—"
+            return [
+              c.id,
+              attrs?.name ?? "—",
+              attrs?.isActive == true ? "Yes" : attrs?.isActive == false ? "No" : "—",
+              elig,
+            ]
+          }
+        )
+      }
+    }
+
+    // MARK: Info
+
+    struct Info: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Show details for an offer code (prices + code counts)."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Argument(help: "The offer code ID (from `offer-code list`).")
+      var offerCodeID: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        _ = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        let response = try await client.send(
+          Resources.v1.inAppPurchaseOfferCodes.id(offerCodeID).get(
+            include: [.prices, .oneTimeUseCodes, .customCodes],
+            limitCustomCodes: 50,
+            limitOneTimeUseCodes: 50,
+            limitPrices: 200
+          )
+        )
+        let attrs = response.data.attributes
+        print("Offer Code:    \(attrs?.name ?? "—")")
+        print("ID:            \(response.data.id)")
+        print("Active:        \(attrs?.isActive == true ? "Yes" : attrs?.isActive == false ? "No" : "—")")
+        print("Eligibilities: \(attrs?.customerEligibilities?.map { $0.rawValue }.joined(separator: ", ") ?? "—")")
+
+        let priceCount = response.data.relationships?.prices?.data?.count ?? 0
+        let oneTimeCount = response.data.relationships?.oneTimeUseCodes?.data?.count ?? 0
+        let customCount = response.data.relationships?.customCodes?.data?.count ?? 0
+        print()
+        print("Prices:        \(priceCount) territor\(priceCount == 1 ? "y" : "ies")")
+        print("One-Time Codes Batches: \(oneTimeCount)")
+        print("Custom Codes:           \(customCount)")
+      }
+    }
+
+    // MARK: Create
+
+    struct Create: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Create an offer code with prices.",
+        discussion: """
+          Either set --price + --territory for a single-territory price, or use
+          --equalize-all-territories to fan the price out across every territory using
+          local-currency tier equivalents.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Option(name: .long, help: "Reference name for this offer code.")
+      var name: String
+
+      @Option(name: .long, help: "Comma-separated customer eligibilities. Valid values: NON_SPENDER, ACTIVE_SPENDER, CHURNED_SPENDER.")
+      var eligibility: String
+
+      @Option(name: .long, help: "Customer price (in territory's currency, e.g. 0.99).")
+      var price: String
+
+      @Option(name: .long, help: "Territory code (default: USA). Used for price lookup and as the source for equalization.")
+      var territory: String = "USA"
+
+      @Flag(name: .customLong("equalize-all-territories"), help: "Fan the price out across every territory using local-currency tier equivalents.")
+      var equalizeAllTerritories = false
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        let eligibilities: [InAppPurchaseOfferCodeCreateRequest.Data.Attributes.CustomerEligibility] = try eligibility
+          .split(separator: ",")
+          .map { $0.trimmingCharacters(in: .whitespaces) }
+          .map { try parseEnum($0, name: "eligibility") }
+        guard !eligibilities.isEmpty else {
+          throw ValidationError("--eligibility cannot be empty.")
+        }
+
+        let territoryID = territory.uppercased()
+        let resolved = try await IAPCommand.resolvePricePoint(
+          iapID: iap.id, territoryID: territoryID, customerPrice: price, client: client)
+
+        // Build (territory, pricePointID) tuples
+        var priceEntries: [(territory: String, pricePointID: String)] = []
+        if equalizeAllTerritories {
+          var equalized: [InAppPurchasePricePoint] = []
+          for try await page in client.pages(
+            Resources.v1.inAppPurchasePricePoints.id(resolved.point.id).equalizations.get(
+              filterInAppPurchaseV2: [iap.id], limit: 200, include: [.territory]
+            )
+          ) {
+            equalized.append(contentsOf: page.data)
+          }
+          if !equalized.contains(where: { $0.relationships?.territory?.data?.id == territoryID }) {
+            equalized.insert(resolved.point, at: 0)
+          }
+          for point in equalized {
+            guard let t = point.relationships?.territory?.data?.id else { continue }
+            priceEntries.append((t, point.id))
+          }
+        } else {
+          priceEntries.append((territoryID, resolved.point.id))
+        }
+
+        print()
+        print("Create offer code:")
+        print("  Subscription:  (n/a — IAP)")
+        print("  IAP:           \(productID)")
+        print("  Name:          \(name)")
+        print("  Eligibilities: \(eligibilities.map { $0.rawValue }.joined(separator: ", "))")
+        print("  Source Tier:   \(resolved.point.attributes?.customerPrice ?? "?") \(resolved.currency ?? "") (\(territoryID))")
+        print("  Territories:   \(priceEntries.count)\(equalizeAllTerritories ? " (equalized)" : " (single)")")
+        print()
+
+        guard confirm("Create this offer code? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        // Build inline price entries
+        var inlines: [InAppPurchaseOfferPriceInlineCreate] = []
+        var refs: [InAppPurchaseOfferCodeCreateRequest.Data.Relationships.Prices.Datum] = []
+        for (i, entry) in priceEntries.enumerated() {
+          let localID = "${price\(i)}"
+          inlines.append(
+            InAppPurchaseOfferPriceInlineCreate(
+              id: localID,
+              relationships: .init(
+                territory: .init(data: .init(id: entry.territory)),
+                pricePoint: .init(data: .init(id: entry.pricePointID))
+              )
+            )
+          )
+          refs.append(.init(id: localID))
+        }
+
+        let response = try await client.send(
+          Resources.v1.inAppPurchaseOfferCodes.post(
+            InAppPurchaseOfferCodeCreateRequest(
+              data: .init(
+                attributes: .init(name: name, customerEligibilities: eligibilities),
+                relationships: .init(
+                  inAppPurchase: .init(data: .init(id: iap.id)),
+                  prices: .init(data: refs)
+                )
+              ),
+              included: inlines
+            )
+          )
+        )
+
+        print()
+        print(green("Created") + " offer code '\(name)' (id: \(response.data.id)).")
+      }
+    }
+
+    // MARK: Toggle
+
+    struct Toggle: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Activate or deactivate an offer code."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Argument(help: "The offer code ID.")
+      var offerCodeID: String
+
+      @Option(name: .long, help: "Set active state (true or false).")
+      var active: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        guard let activeBool = Bool(active.lowercased()) else {
+          throw ValidationError("--active must be 'true' or 'false'.")
+        }
+        let client = try ClientFactory.makeClient()
+        _ = try await findApp(bundleID: bundleID, client: client)
+
+        guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        _ = try await client.send(
+          Resources.v1.inAppPurchaseOfferCodes.id(offerCodeID).patch(
+            InAppPurchaseOfferCodeUpdateRequest(
+              data: .init(id: offerCodeID, attributes: .init(isActive: activeBool))
+            )
+          )
+        )
+        print()
+        print(green("Updated") + " offer code \(offerCodeID) (active=\(activeBool)).")
+      }
+    }
+
+    // MARK: GenCodes (one-time-use)
+
+    struct GenCodes: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        commandName: "gen-codes",
+        abstract: "Generate a batch of one-time-use codes for an offer code."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Argument(help: "The offer code ID to generate codes against.")
+      var offerCodeID: String
+
+      @Option(name: .long, help: "Number of codes to generate.")
+      var count: Int
+
+      @Option(name: .long, help: "Expiration date in YYYY-MM-DD format.")
+      var expires: String
+
+      @Option(name: .long, help: "Environment. Valid values: PRODUCTION, SANDBOX. Defaults to PRODUCTION.")
+      var environment: String?
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        guard count > 0 else {
+          throw ValidationError("--count must be greater than 0.")
+        }
+        let env: OfferCodeEnvironment? = try environment.map {
+          try parseEnum($0, name: "environment")
+        }
+        let client = try ClientFactory.makeClient()
+        _ = try await findApp(bundleID: bundleID, client: client)
+
+        print("Generate \(count) one-time-use code(s):")
+        print("  Offer Code ID: \(offerCodeID)")
+        print("  Expires:       \(expires)")
+        print("  Environment:   \(env.map { $0.rawValue } ?? "PRODUCTION (default)")")
+        print()
+
+        guard confirm("Generate? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        let response = try await client.send(
+          Resources.v1.inAppPurchaseOfferCodeOneTimeUseCodes.post(
+            InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest(
+              data: .init(
+                attributes: .init(
+                  numberOfCodes: count,
+                  expirationDate: expires,
+                  environment: env
+                ),
+                relationships: .init(
+                  offerCode: .init(data: .init(id: offerCodeID))
+                )
+              )
+            )
+          )
+        )
+
+        let batchID = response.data.id
+        print()
+        print(green("Created") + " one-time-use code batch (id: \(batchID)).")
+        print()
+        print("Codes are generated asynchronously. Fetch with:")
+        print("  ascelerate iap offer-code view-codes \(batchID)")
+      }
+    }
+
+    // MARK: AddCustomCodes
+
+    struct AddCustomCodes: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        commandName: "add-custom-codes",
+        abstract: "Add a custom code (e.g. PROMO2026) to an offer code."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Argument(help: "The offer code ID.")
+      var offerCodeID: String
+
+      @Option(name: .long, help: "The custom code string (e.g. 'PROMO2026').")
+      var code: String
+
+      @Option(name: .long, help: "Total number of times this code can be redeemed.")
+      var count: Int
+
+      @Option(name: .long, help: "Optional expiration date in YYYY-MM-DD format.")
+      var expires: String?
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        guard count > 0 else {
+          throw ValidationError("--count must be greater than 0.")
+        }
+        let client = try ClientFactory.makeClient()
+        _ = try await findApp(bundleID: bundleID, client: client)
+
+        print("Add custom code:")
+        print("  Offer Code ID: \(offerCodeID)")
+        print("  Code:          \(code)")
+        print("  Redemptions:   \(count)")
+        if let expires { print("  Expires:       \(expires)") }
+        print()
+
+        guard confirm("Create? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        let response = try await client.send(
+          Resources.v1.inAppPurchaseOfferCodeCustomCodes.post(
+            InAppPurchaseOfferCodeCustomCodeCreateRequest(
+              data: .init(
+                attributes: .init(
+                  customCode: code,
+                  numberOfCodes: count,
+                  expirationDate: expires
+                ),
+                relationships: .init(
+                  offerCode: .init(data: .init(id: offerCodeID))
+                )
+              )
+            )
+          )
+        )
+
+        print()
+        print(green("Created") + " custom code '\(code)' (id: \(response.data.id)).")
+      }
+    }
+
+    // MARK: ViewCodes
+
+    struct ViewCodes: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        commandName: "view-codes",
+        abstract: "Print the actual one-time-use code values for a generated batch.",
+        discussion: """
+          The codes are generated asynchronously after `gen-codes`. If the batch isn't ready
+          yet, the response will be empty — wait a few seconds and try again.
+          """
+      )
+
+      @Argument(help: "The one-time-use code batch ID (returned by `gen-codes`).")
+      var batchID: String
+
+      @Option(name: .long, help: "Optional output file. If omitted, prints to stdout.")
+      var output: String?
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+
+        let raw = try await client.send(
+          Resources.v1.inAppPurchaseOfferCodeOneTimeUseCodes.id(batchID).values.get
+        )
+
+        if raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+          print(yellow("⚠ No codes returned. Generation may still be in progress; retry in a few seconds."))
+          return
+        }
+
+        if let output {
+          let path = expandPath(confirmOutputPath(output, isDirectory: false))
+          try raw.write(toFile: path, atomically: true, encoding: .utf8)
+          let lineCount = raw.split(separator: "\n").count
+          print(green("Wrote") + " \(lineCount) code(s) to \(path).")
+        } else {
+          print(raw)
+        }
+      }
+    }
+  }
+
+  // MARK: - Images
+
+  struct Images: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "images",
+      abstract: "Manage promotional images for an in-app purchase.",
+      subcommands: [List.self, Upload.self, Delete.self]
+    )
+
+    struct List: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "List uploaded images for an in-app purchase."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        var images: [InAppPurchaseImage] = []
+        for try await page in client.pages(
+          Resources.v2.inAppPurchases.id(iap.id).images.get(limit: 50)
+        ) {
+          images.append(contentsOf: page.data)
+        }
+
+        if images.isEmpty {
+          print("No images uploaded for \(productID).")
+          return
+        }
+
+        Table.print(
+          headers: ["ID", "File", "Size", "State"],
+          rows: images.map { img in
+            [
+              img.id,
+              img.attributes?.fileName ?? "—",
+              img.attributes?.fileSize.map { formatBytes($0) } ?? "—",
+              img.attributes?.state.map { formatState($0) } ?? "—",
+            ]
+          }
+        )
+      }
+    }
+
+    struct Upload: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Upload a promotional image (.png or .jpg) for an in-app purchase."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Argument(help: "Path to the image file.",
+                completion: .file(extensions: ["png", "jpg", "jpeg"]))
+      var file: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        let path = expandPath(file)
+        let url = URL(fileURLWithPath: path)
+        let attrs = try FileManager.default.attributesOfItem(atPath: path)
+        let fileSize = (attrs[.size] as? Int) ?? 0
+        let fileName = url.lastPathComponent
+
+        print("Upload image:")
+        print("  Product:  \(productID)")
+        print("  File:     \(fileName)")
+        print("  Size:     \(formatBytes(fileSize))")
+        print()
+
+        guard confirm("Upload? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        // 1. Reserve
+        let createResponse = try await client.send(
+          Resources.v1.inAppPurchaseImages.post(
+            InAppPurchaseImageCreateRequest(
+              data: .init(
+                attributes: .init(fileSize: fileSize, fileName: fileName),
+                relationships: .init(inAppPurchase: .init(data: .init(id: iap.id)))
+              )
+            )
+          )
+        )
+        let imageID = createResponse.data.id
+        let operations = createResponse.data.attributes?.uploadOperations ?? []
+        guard !operations.isEmpty else {
+          throw MediaUploadError.noUploadOperations
+        }
+
+        // 2. Upload chunks
+        try await uploadChunks(filePath: path, operations: operations)
+
+        // 3. Compute MD5
+        let md5 = try md5Hex(filePath: path)
+
+        // 4. Commit
+        _ = try await client.send(
+          Resources.v1.inAppPurchaseImages.id(imageID).patch(
+            InAppPurchaseImageUpdateRequest(
+              data: .init(
+                id: imageID,
+                attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+              )
+            )
+          )
+        )
+
+        print()
+        print(green("Uploaded") + " \(fileName) (id: \(imageID)).")
+      }
+    }
+
+    struct Delete: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Delete an uploaded image."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Argument(help: "The image ID (from `images list`).")
+      var imageID: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        _ = try await findApp(bundleID: bundleID, client: client)
+
+        guard confirm("Delete image \(imageID)? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        _ = try await client.send(
+          Resources.v1.inAppPurchaseImages.id(imageID).delete
+        )
+        print()
+        print(green("Deleted") + " image \(imageID).")
+      }
+    }
+  }
+
+  // MARK: - ReviewScreenshot
+
+  struct ReviewScreenshot: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "review-screenshot",
+      abstract: "Manage the App Review screenshot for an in-app purchase (one per IAP).",
+      subcommands: [View.self, Upload.self, Delete.self]
+    )
+
+    struct View: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Show the current App Review screenshot."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        do {
+          let response = try await client.send(
+            Resources.v2.inAppPurchases.id(iap.id).appStoreReviewScreenshot.get()
+          )
+          let attrs = response.data.attributes
+          print("Review Screenshot:")
+          print("  ID:    \(response.data.id)")
+          print("  File:  \(attrs?.fileName ?? "—")")
+          print("  Size:  \(attrs?.fileSize.map { formatBytes($0) } ?? "—")")
+          print("  State: \(attrs?.assetDeliveryState?.state.map { formatState($0) } ?? "—")")
+        } catch is DecodingError {
+          print("No review screenshot uploaded for \(productID).")
+        } catch let error as ResponseError {
+          if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
+            print("No review screenshot uploaded for \(productID).")
+          } else {
+            throw error
+          }
+        }
+      }
+    }
+
+    struct Upload: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Upload an App Review screenshot. Replaces any existing one."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Argument(help: "Path to the screenshot file (.png, .jpg).",
+                completion: .file(extensions: ["png", "jpg", "jpeg"]))
+      var file: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        let path = expandPath(file)
+        let url = URL(fileURLWithPath: path)
+        let attrs = try FileManager.default.attributesOfItem(atPath: path)
+        let fileSize = (attrs[.size] as? Int) ?? 0
+        let fileName = url.lastPathComponent
+
+        print("Upload review screenshot:")
+        print("  Product: \(productID)")
+        print("  File:    \(fileName)")
+        print("  Size:    \(formatBytes(fileSize))")
+        print()
+
+        guard confirm("Upload? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        let createResponse = try await client.send(
+          Resources.v1.inAppPurchaseAppStoreReviewScreenshots.post(
+            InAppPurchaseAppStoreReviewScreenshotCreateRequest(
+              data: .init(
+                attributes: .init(fileSize: fileSize, fileName: fileName),
+                relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id)))
+              )
+            )
+          )
+        )
+        let screenshotID = createResponse.data.id
+        let operations = createResponse.data.attributes?.uploadOperations ?? []
+        guard !operations.isEmpty else {
+          throw MediaUploadError.noUploadOperations
+        }
+
+        try await uploadChunks(filePath: path, operations: operations)
+        let md5 = try md5Hex(filePath: path)
+
+        _ = try await client.send(
+          Resources.v1.inAppPurchaseAppStoreReviewScreenshots.id(screenshotID).patch(
+            InAppPurchaseAppStoreReviewScreenshotUpdateRequest(
+              data: .init(
+                id: screenshotID,
+                attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+              )
+            )
+          )
+        )
+
+        print()
+        print(green("Uploaded") + " review screenshot (id: \(screenshotID)).")
+      }
+    }
+
+    struct Delete: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Delete the App Review screenshot."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        let response = try await client.send(
+          Resources.v2.inAppPurchases.id(iap.id).appStoreReviewScreenshot.get()
+        )
+        let screenshotID = response.data.id
+
+        guard confirm("Delete review screenshot for \(productID)? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+
+        _ = try await client.send(
+          Resources.v1.inAppPurchaseAppStoreReviewScreenshots.id(screenshotID).delete
+        )
+        print()
+        print(green("Deleted") + " review screenshot.")
+      }
+    }
   }
 }

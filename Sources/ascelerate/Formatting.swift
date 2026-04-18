@@ -15,16 +15,32 @@ func stderrRed(_ text: String) -> String { isStderrTerminal ? "\u{1B}[31m\(text)
 // MARK: - Child Process Signal Forwarding
 
 /// Active child processes that should be interrupted on Ctrl-C.
+/// Mutated by ScreenshotShell.run/stream/runToLog from concurrent task groups,
+/// so all access must go through `processLock`.
 nonisolated(unsafe) private var activeProcesses: [Process] = []
 
 /// The dispatch source for SIGINT handling. Stored globally to keep it alive.
 nonisolated(unsafe) private var signalSource: (any DispatchSourceSignal)?
 
+/// Serializes access to `activeProcesses` and `signalSource`. Required because
+/// the screenshot runner spawns simctl/xcodebuild processes concurrently across
+/// devices via task groups; without locking, append/removeAll on the array races
+/// and corrupts memory (bus error).
+private let processLock = NSLock()
+
 /// Registers a child process for SIGINT forwarding.
-func trackProcess(_ process: Process) { activeProcesses.append(process) }
+func trackProcess(_ process: Process) {
+  processLock.lock()
+  defer { processLock.unlock() }
+  activeProcesses.append(process)
+}
 
 /// Unregisters a child process after it exits.
-func untrackProcess(_ process: Process) { activeProcesses.removeAll { $0 === process } }
+func untrackProcess(_ process: Process) {
+  processLock.lock()
+  defer { processLock.unlock() }
+  activeProcesses.removeAll { $0 === process }
+}
 
 /// Installs a SIGINT handler using DispatchSource (kqueue-based).
 /// Unlike sigaction, this persists even when Swift's async runtime overrides
@@ -35,12 +51,21 @@ func untrackProcess(_ process: Process) { activeProcesses.removeAll { $0 === pro
 /// which would cause xcodebuild to silently ignore SIGINT. A custom handler is
 /// reset to SIG_DFL in child processes, so they receive Ctrl-C normally.
 func setupSignalHandler() {
-  guard signalSource == nil else { return }
+  processLock.lock()
+  if signalSource != nil {
+    processLock.unlock()
+    return
+  }
 
   signal(SIGINT, { _ in })
   let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .global())
   source.setEventHandler {
-    for process in activeProcesses where process.isRunning {
+    // Snapshot the running processes under lock, then signal them outside the lock
+    // so a concurrent track/untrack can't deadlock with the kill syscall.
+    processLock.lock()
+    let snapshot = activeProcesses.filter { $0.isRunning }
+    processLock.unlock()
+    for process in snapshot {
       let pid = process.processIdentifier
       // SIGTERM instead of SIGINT: xcodebuild ignores SIGINT during package resolution.
       // killpg to reach the entire process group (Foundation uses POSIX_SPAWN_SETPGROUP).
@@ -52,6 +77,7 @@ func setupSignalHandler() {
   }
   source.resume()
   signalSource = source
+  processLock.unlock()
 }
 
 /// Splits a string into arguments, respecting single and double quotes.

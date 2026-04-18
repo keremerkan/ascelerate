@@ -156,3 +156,21 @@ ascelerate apps eula <bundle-id> --file eula.txt
 # Supprimer l'EULA personnalisé (revient à l'EULA standard d'Apple)
 ascelerate apps eula <bundle-id> --delete
 ```
+
+## Période de grâce d'abonnement
+
+La période de grâce permet aux abonnés de conserver l'accès pendant une courte fenêtre après un échec de paiement de renouvellement, pendant qu'Apple retente la facturation. Le paramètre s'applique à toute l'application.
+
+```bash
+# Voir la configuration actuelle
+ascelerate apps subscription-grace-period <bundle-id>
+
+# Activer pour la production avec une fenêtre de 16 jours, s'applique à tous les renouvellements
+ascelerate apps subscription-grace-period <bundle-id> \
+  --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
+
+# Activer aussi pour les tests sandbox
+ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+```
+
+Valeurs valides pour `--duration` : `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Valeurs valides pour `--renewal-type` : `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.

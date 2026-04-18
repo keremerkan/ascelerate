@@ -44,46 +44,16 @@ struct ScreenshotRunner: Sendable {
                     try ScreenshotShell.run("/usr/bin/open", arguments: ["-a", "Simulator"])
                 }
 
-                for (device, sim) in resolvedDevices {
-                    print("\n  [\(device.simulator)] Preparing...")
-
-                    if config.eraseSimulator {
-                        print("  [\(device.simulator)] Erasing...")
-                        try simulatorManager.erase(udid: sim.udid)
-                    }
-
-                    if config.localizeSimulator {
-                        try simulatorManager.boot(udid: sim.udid, waitUntilReady: false)
-                        try simulatorManager.localize(udid: sim.udid, language: language, locale: locale)
-                        try simulatorManager.shutdown(udid: sim.udid)
-                        try simulatorManager.boot(udid: sim.udid)
-                    } else {
-                        try simulatorManager.boot(udid: sim.udid)
-                    }
-
-                    if let wait = config.waitAfterBoot, wait > 0 {
-                        print("  [\(device.simulator)] Waiting \(wait)s after boot...")
-                        sleep(UInt32(wait))
-                    }
-
-                    if config.darkMode == true {
-                        try simulatorManager.setAppearance(udid: sim.udid, dark: true)
-                    }
-
-                    if config.overrideStatusBar {
-                        print("  [\(device.simulator)] Overriding status bar...")
-                        try simulatorManager.overrideStatusBar(udid: sim.udid, arguments: config.statusBarArguments)
-                    }
-
-                    if let bundleID = config.reinstallApp {
-                        print("  [\(device.simulator)] Uninstalling app...")
-                        try? simulatorManager.uninstallApp(udid: sim.udid, bundleID: bundleID)
-                    }
-
-                    try collector.prepareCacheDirectory(language: language, locale: locale, device: device, udid: sim.udid)
-                }
+                try await prepareDevicesConcurrently(
+                    resolvedDevices: resolvedDevices,
+                    language: language,
+                    locale: locale,
+                    simulatorManager: simulatorManager,
+                    collector: collector,
+                    isFirstRun: langIndex == 0
+                )
             } catch {
-                print("\n  Failed to prepare simulators for \(language): \(error)")
+                print("\n  " + red("Failed to prepare simulators for \(language): \(error)"))
                 for (device, _) in resolvedDevices {
                     results.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
                 }
@@ -129,7 +99,7 @@ struct ScreenshotRunner: Sendable {
                 }
                 guard !failedDevices.isEmpty else { break }
 
-                print("\n  Retry \(attempt)/\(maxRetries) for \(language) — erasing failed simulators...")
+                print("\n  " + yellow("Retry \(attempt)/\(maxRetries) for \(language) — erasing failed simulators..."))
 
                 // Remove failed results — they'll be replaced by retry results
                 let failedDeviceNames = Set(failedDevices.map { $0.0.simulator })
@@ -137,37 +107,14 @@ struct ScreenshotRunner: Sendable {
                 pendingCollection.removeAll { failedDeviceNames.contains($0.0.simulator) }
 
                 do {
-                    for (device, sim) in failedDevices {
-                        print("\n  [\(device.simulator)] Erasing and re-localizing...")
-                        try simulatorManager.erase(udid: sim.udid)
-
-                        if config.localizeSimulator {
-                            try simulatorManager.boot(udid: sim.udid, waitUntilReady: false)
-                            try simulatorManager.localize(udid: sim.udid, language: language, locale: locale)
-                            try simulatorManager.shutdown(udid: sim.udid)
-                            try simulatorManager.boot(udid: sim.udid)
-                        } else {
-                            try simulatorManager.boot(udid: sim.udid)
-                        }
-
-                        if let wait = config.waitAfterBoot, wait > 0 {
-                            sleep(UInt32(wait))
-                        }
-
-                        if config.darkMode == true {
-                            try simulatorManager.setAppearance(udid: sim.udid, dark: true)
-                        }
-
-                        if config.overrideStatusBar {
-                            try simulatorManager.overrideStatusBar(udid: sim.udid, arguments: config.statusBarArguments)
-                        }
-
-                        if let bundleID = config.reinstallApp {
-                            try? simulatorManager.uninstallApp(udid: sim.udid, bundleID: bundleID)
-                        }
-
-                        try collector.prepareCacheDirectory(language: language, locale: locale, device: device, udid: sim.udid)
-                    }
+                    try await prepareDevicesConcurrently(
+                        resolvedDevices: failedDevices,
+                        language: language,
+                        locale: locale,
+                        simulatorManager: simulatorManager,
+                        collector: collector,
+                        forceErase: true
+                    )
 
                     print("\n  Running retry tests...")
                     let retryResults = await withTaskGroup(of: (ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?).self) { group in
@@ -198,7 +145,7 @@ struct ScreenshotRunner: Sendable {
                     languageResults += retryLanguageResults
                     pendingCollection += retryResults
                 } catch {
-                    print("\n  Retry preparation failed: \(error)")
+                    print("\n  " + red("Retry preparation failed: \(error)"))
                     for (device, _) in failedDevices {
                         languageResults.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
                     }
@@ -246,6 +193,76 @@ struct ScreenshotRunner: Sendable {
         printSummary(results, elapsed: Date().timeIntervalSince(startTime))
     }
 
+    /// Runs the full per-device prep flow for every device concurrently: optional erase,
+    /// boot (with localization dance if enabled), the single waitAfterBoot sleep, appearance,
+    /// status bar override, app uninstall, and cache dir prep. Boot commands run in parallel
+    /// so the `waitAfterBoot` isn't multiplied by device count.
+    private func prepareDevicesConcurrently(
+        resolvedDevices: [(ScreenshotConfig.Device, SimulatorManager.SimDevice)],
+        language: String,
+        locale: String,
+        simulatorManager: SimulatorManager,
+        collector: ScreenshotCollector,
+        forceErase: Bool = false,
+        isFirstRun: Bool = false
+    ) async throws {
+        let config = self.config
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for (device, sim) in resolvedDevices {
+                group.addTask {
+                    let tag = "[\(device.simulator)]"
+                    print("\n  \(tag) Preparing...")
+
+                    let didErase = forceErase || config.eraseSimulator
+                    if didErase {
+                        print("  \(tag) Erasing...")
+                        try simulatorManager.erase(udid: sim.udid)
+                    }
+
+                    if config.localizeSimulator {
+                        try simulatorManager.boot(udid: sim.udid, waitUntilReady: false)
+                        try simulatorManager.localize(udid: sim.udid, language: language, locale: locale)
+                        print("  \(tag) Localized to \(language) (\(locale))")
+                        try simulatorManager.shutdown(udid: sim.udid)
+                        print("  \(tag) Booting and waiting for ready state...")
+                        try simulatorManager.boot(udid: sim.udid)
+                    } else {
+                        print("  \(tag) Booting and waiting for ready state...")
+                        try simulatorManager.boot(udid: sim.udid)
+                    }
+
+                    if let wait = config.waitAfterBoot, wait > 0 {
+                        print("  \(tag) Waiting \(wait)s after boot...")
+                        try await Task.sleep(nanoseconds: UInt64(wait) * 1_000_000_000)
+                    }
+
+                    if (didErase || isFirstRun), let extraWait = config.waitAfterEraseAndReboot, extraWait > 0 {
+                        let reason = didErase ? "erased simulator" : "first run of this session"
+                        print("  \(tag) Waiting \(extraWait)s for first-run system alerts (\(reason))...")
+                        try await Task.sleep(nanoseconds: UInt64(extraWait) * 1_000_000_000)
+                    }
+
+                    if config.darkMode == true {
+                        try simulatorManager.setAppearance(udid: sim.udid, dark: true)
+                    }
+
+                    if config.overrideStatusBar {
+                        print("  \(tag) Overriding status bar...")
+                        try simulatorManager.overrideStatusBar(udid: sim.udid, arguments: config.statusBarArguments)
+                    }
+
+                    if let bundleID = config.reinstallApp {
+                        print("  \(tag) Uninstalling app...")
+                        try? simulatorManager.uninstallApp(udid: sim.udid, bundleID: bundleID)
+                    }
+
+                    try collector.prepareCacheDirectory(language: language, locale: locale, device: device, udid: sim.udid)
+                }
+            }
+            try await group.waitForAll()
+        }
+    }
+
     /// Evaluates test results and shuts down simulators. Does NOT collect screenshots yet.
     private func evaluateTestResults(
         _ deviceResults: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)],
@@ -256,7 +273,7 @@ struct ScreenshotRunner: Sendable {
 
         for (device, sim, error) in deviceResults {
             if let error {
-                print("  [\(device.simulator)] Failed: \(error)")
+                print("  [\(device.simulator)] " + red("Failed: \(error)"))
                 let logFile = ScreenshotCollector.cacheRoot
                     .appendingPathComponent("logs")
                     .appendingPathComponent("\(device.simulator)-\(language).log")
@@ -296,7 +313,7 @@ struct ScreenshotRunner: Sendable {
             do {
                 try collector.collectScreenshots(language: language, device: device, udid: sim.udid)
             } catch {
-                print("  [\(device.simulator)] Failed to collect: \(error)")
+                print("  [\(device.simulator)] " + red("Failed to collect: \(error)"))
                 results[idx] = Result(language: language, device: device.simulator, success: false, error: "\(error)", retried: results[idx].retried)
             }
         }
@@ -337,16 +354,18 @@ struct ScreenshotRunner: Sendable {
         let succeeded = results.filter(\.success).count
         let failed = results.filter { !$0.success }.count
         let retried = results.filter { $0.success && $0.retried }.count
-        var summary = "\(succeeded) succeeded, \(failed) failed"
+        let succeededStr = succeeded > 0 ? green("\(succeeded) succeeded") : "\(succeeded) succeeded"
+        let failedStr = failed > 0 ? red("\(failed) failed") : "\(failed) failed"
+        var summary = "\(succeededStr), \(failedStr)"
         if retried > 0 {
-            summary += " (\(retried) succeeded after retry — verify those screenshots)"
+            summary += " " + yellow("(\(retried) succeeded after retry — verify those screenshots)")
         }
         print("\n\(summary)")
 
         if failed > 0 {
-            print("\nFailed:")
+            print("\n" + red("Failed:"))
             for result in results where !result.success {
-                print("  ❌ \(result.language) / \(result.device): \(result.error ?? "unknown")")
+                print("  " + red("❌ \(result.language) / \(result.device): \(result.error ?? "unknown")"))
             }
         }
 

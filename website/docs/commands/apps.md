@@ -156,3 +156,21 @@ ascelerate apps eula <bundle-id> --file eula.txt
 # Remove the custom EULA (reverts to standard Apple EULA)
 ascelerate apps eula <bundle-id> --delete
 ```
+
+## Subscription grace period
+
+The grace period lets subscribers keep access for a short window after a failed renewal payment while Apple retries billing. The setting applies app-wide.
+
+```bash
+# View current configuration
+ascelerate apps subscription-grace-period <bundle-id>
+
+# Enable for production with a 16-day window, applies to all renewals
+ascelerate apps subscription-grace-period <bundle-id> \
+  --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
+
+# Enable for sandbox testing too
+ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+```
+
+Valid `--duration` values: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Valid `--renewal-type` values: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.

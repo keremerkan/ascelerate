@@ -156,3 +156,21 @@ ascelerate apps eula <bundle-id> --file eula.txt
 # Özel EULA'yı kaldırın (standart Apple EULA'ya geri döner)
 ascelerate apps eula <bundle-id> --delete
 ```
+
+## Abonelik ödemesiz dönem (grace period)
+
+Ödemesiz dönem, başarısız bir yenileme ödemesinden sonra Apple yeniden faturalandırmayı denerken abonelerin kısa bir süre erişimi koruyabilmesini sağlar. Ayar uygulama genelinde uygulanır.
+
+```bash
+# Mevcut yapılandırmayı görüntüle
+ascelerate apps subscription-grace-period <bundle-id>
+
+# Tüm yenilemeler için 16 günlük üretim ödemesiz dönemini etkinleştir
+ascelerate apps subscription-grace-period <bundle-id> \
+  --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
+
+# Sandbox testi için de etkinleştir
+ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+```
+
+Geçerli `--duration` değerleri: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Geçerli `--renewal-type` değerleri: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.

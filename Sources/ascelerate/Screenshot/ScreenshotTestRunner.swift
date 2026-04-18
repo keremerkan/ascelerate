@@ -81,7 +81,7 @@ struct ScreenshotTestRunner: Sendable {
             throw ScreenshotError.xcodebuildFailed(status)
         }
 
-        print("  [\(device.simulator)] Tests passed ✓")
+        print("  [\(device.simulator)] " + green("Tests passed ✓"))
     }
 
     private func findXctestrunFile(derivedDataPath: String) throws -> String {

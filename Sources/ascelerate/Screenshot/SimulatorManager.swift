@@ -33,7 +33,6 @@ struct SimulatorManager: Sendable {
             // Already booted is fine
         }
         if waitUntilReady {
-            print("  Waiting for simulator to be ready...")
             try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "bootstatus", udid, "-b"])
         }
     }
@@ -93,8 +92,6 @@ struct SimulatorManager: Sendable {
             "simctl", "spawn", udid, "defaults", "write",
             "Apple Global Domain", "AppleKeyboards", "-array", keyboard,
         ])
-
-        print("  Localized simulator to \(language) (\(locale))")
     }
 
 }

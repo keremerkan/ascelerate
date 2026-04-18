@@ -11,7 +11,7 @@ struct AppsCommand: AsyncParsableCommand {
     groupedSubcommands: [
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, BuildCommand.self, PhasedRelease.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
-      CommandGroup(name: "Configuration", subcommands: [Availability.self, Encryption.self, EULACommand.self]),
+      CommandGroup(name: "Configuration", subcommands: [Availability.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
     ]
   )
@@ -3172,6 +3172,124 @@ struct AppsCommand: AsyncParsableCommand {
       print()
       let preview = String(text.prefix(500))
       print("  \(preview)\(text.count > 500 ? "\n  [truncated]" : "")")
+    }
+  }
+
+  // MARK: - Subscription Grace Period
+
+  struct SubscriptionGracePeriod: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "subscription-grace-period",
+      abstract: "View or update the app's subscription grace period settings.",
+      discussion: """
+        The grace period lets subscribers keep access for a short window after a failed
+        renewal payment while Apple retries billing. Settings apply to the whole app.
+        """
+    )
+
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+    var bundleID: String
+
+    @Option(name: .customLong("opt-in"), help: "Enable the grace period for production (true/false).")
+    var optIn: String?
+
+    @Option(name: .customLong("sandbox-opt-in"), help: "Enable the grace period for sandbox testing (true/false).")
+    var sandboxOptIn: String?
+
+    @Option(name: .long, help: "Grace period duration. Valid values: THREE_DAYS, SIXTEEN_DAYS, TWENTY_EIGHT_DAYS.")
+    var duration: String?
+
+    @Option(name: .customLong("renewal-type"), help: "Which renewals get the grace period. Valid values: ALL_RENEWALS, PAID_TO_PAID_ONLY.")
+    var renewalType: String?
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+
+      let current: AppStoreAPI.SubscriptionGracePeriod
+      do {
+        let response = try await client.send(
+          Resources.v1.apps.id(app.id).subscriptionGracePeriod.get()
+        )
+        current = response.data
+      } catch is DecodingError {
+        throw ValidationError("No subscription grace period configuration exists for this app.")
+      } catch let error as ResponseError {
+        if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
+          throw ValidationError("No subscription grace period configuration exists for this app.")
+        }
+        throw error
+      }
+
+      let isEdit = optIn != nil || sandboxOptIn != nil || duration != nil || renewalType != nil
+
+      if !isEdit {
+        let attrs = current.attributes
+        print("Subscription Grace Period:")
+        print("  Opt-in (production): \(attrs?.isOptIn == true ? "Yes" : attrs?.isOptIn == false ? "No" : "—")")
+        print("  Opt-in (sandbox):    \(attrs?.isSandboxOptIn == true ? "Yes" : attrs?.isSandboxOptIn == false ? "No" : "—")")
+        print("  Duration:            \(attrs?.duration.map { formatState($0) } ?? "—")")
+        print("  Renewal Type:        \(attrs?.renewalType.map { formatState($0) } ?? "—")")
+        return
+      }
+
+      // Parse updates
+      typealias Attrs = SubscriptionGracePeriodUpdateRequest.Data.Attributes
+
+      let newOptIn: Bool? = try optIn.map {
+        guard let b = Bool($0.lowercased()) else {
+          throw ValidationError("Invalid value for --opt-in. Use 'true' or 'false'.")
+        }
+        return b
+      }
+      let newSandboxOptIn: Bool? = try sandboxOptIn.map {
+        guard let b = Bool($0.lowercased()) else {
+          throw ValidationError("Invalid value for --sandbox-opt-in. Use 'true' or 'false'.")
+        }
+        return b
+      }
+      let newDuration: SubscriptionGracePeriodDuration? = try duration.map {
+        try parseEnum($0, name: "duration")
+      }
+      let newRenewalType: Attrs.RenewalType? = try renewalType.map {
+        try parseEnum($0, name: "renewal-type")
+      }
+
+      print("Updates for subscription grace period:")
+      if let v = newOptIn { print("  Opt-in (production): \(v ? "Yes" : "No")") }
+      if let v = newSandboxOptIn { print("  Opt-in (sandbox):    \(v ? "Yes" : "No")") }
+      if let v = newDuration { print("  Duration:            \(formatState(v))") }
+      if let v = newRenewalType { print("  Renewal Type:        \(formatState(v))") }
+      print()
+
+      guard confirm("Apply these changes? [y/N] ") else {
+        print(yellow("Cancelled."))
+        return
+      }
+
+      _ = try await client.send(
+        Resources.v1.subscriptionGracePeriods.id(current.id).patch(
+          SubscriptionGracePeriodUpdateRequest(
+            data: .init(
+              id: current.id,
+              attributes: .init(
+                isOptIn: newOptIn,
+                isSandboxOptIn: newSandboxOptIn,
+                duration: newDuration,
+                renewalType: newRenewalType
+              )
+            )
+          )
+        )
+      )
+
+      print()
+      print(green("Updated") + " subscription grace period.")
     }
   }
 }

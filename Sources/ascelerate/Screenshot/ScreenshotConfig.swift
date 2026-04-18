@@ -15,6 +15,7 @@ struct ScreenshotConfig: Codable, Sendable {
     var darkMode: Bool?
     var disableAnimations: Bool?
     var waitAfterBoot: Int?
+    var waitAfterEraseAndReboot: Int?
     var overrideStatusBar: Bool
     var statusBarArguments: String?
     var configuration: String?
@@ -94,6 +95,19 @@ struct ScreenshotConfig: Codable, Sendable {
     # darkMode: false
     # disableAnimations: false
     # waitAfterBoot: 0
+    # Extra wait (in seconds) for first-run system alerts to appear and settle.
+    # A simulator may show alerts like "Apple Intelligence is ready for your
+    # device" the first time it boots or after an erase, and these can leak into
+    # screenshots. This wait gives those alerts time to appear so they can be
+    # dismissed (manually or by the test) before screenshots are captured.
+    # Triggers when:
+    #   - It's the first language being processed in this run (regardless of
+    #     other settings — the simulator state from prior runs is unknown)
+    #   - The simulator was erased in this prep cycle (either via
+    #     eraseSimulator: true or a retry forcing an erase after a failure)
+    # Subsequent languages with no erase reuse the warm simulator and skip
+    # this wait, since first-run alerts won't reappear.
+    # waitAfterEraseAndReboot: 30
 
     # Status bar override (9:41, full bars, no carrier)
     overrideStatusBar: true

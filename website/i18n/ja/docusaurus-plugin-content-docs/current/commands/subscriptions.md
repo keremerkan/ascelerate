@@ -91,3 +91,128 @@ ascelerate sub pricing set myapp com.example.monthly \
   --price 9.99 --territory USA --equalize-all-territories \
   --preserve-current
 ```
+
+## 地域別の利用可否
+
+各サブスクリプションは、アプリとは独立した独自の地域別利用可否を持ちます。デフォルトではサブスクリプションはアプリの地域を継承しますが、`sub availability` で変更を加えると、サブスクリプションに明示的なリストが作成されます。
+
+```bash
+ascelerate sub availability <bundle-id> <product-id>
+ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
+ascelerate sub availability <bundle-id> <product-id> --remove ITA
+ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true
+```
+
+## 導入オファー
+
+導入オファーは**新規サブスクライバー**を対象とします — 無料トライアルおよび導入時の割引です。
+
+```bash
+ascelerate sub intro-offer list <bundle-id> <product-id>
+
+# 無料トライアル（価格不要；--periods と --duration で期間を設定）
+ascelerate sub intro-offer create <bundle-id> <product-id> \
+  --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+
+# Pay-as-you-go割引（3ヶ月、月額$0.99、USA限定）
+ascelerate sub intro-offer create <bundle-id> <product-id> \
+  --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --territory USA --price 0.99
+
+# 終了日のみを更新（他のフィールドは削除＋再作成が必要）
+ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date 2026-12-31
+
+ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id>
+```
+
+モード：`FREE_TRIAL`、`PAY_AS_YOU_GO`、`PAY_UP_FRONT`。`--territory` を指定しない場合、オファーはグローバルに適用されます。指定すると、その1つの地域のみに限定されます。`--price` は2つの有料モードでは必須で、`FREE_TRIAL` では使用できません。
+
+## プロモーションオファー
+
+プロモーションオファーは**既存サブスクライバー**を対象とします — 通常はアプリ内のアップセルフローで使用されます。`--code` の値（オファーコード）は、クライアントがオファーを利用する前に、サーバーが実行時に生成する署名付きペイロードに埋め込まれている必要があります。
+
+```bash
+ascelerate sub promo-offer list <bundle-id> <product-id>
+ascelerate sub promo-offer info <bundle-id> <product-id> <offer-id>
+
+# 作成 — 単一地域または --equalize-all-territories パターンを使用
+ascelerate sub promo-offer create <bundle-id> <product-id> \
+  --name "Loyalty 50%" --code LOYALTY50 \
+  --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --price 4.99 --territory USA --equalize-all-territories
+
+# 価格のみを更新（他のフィールドは削除＋再作成が必要）
+ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
+  --price 5.99 --equalize-all-territories
+
+ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
+```
+
+## オファーコード
+
+サブスクリプション用の引換可能コードで、2種類あります：
+
+- **ワンタイムユースコード**：Appleが非同期でN個の一意のコードをバッチで生成します。
+- **カスタムコード**：開発者が指定する文字列で、N回まで使用可能です。
+
+```bash
+ascelerate sub offer-code list <bundle-id> <product-id>
+ascelerate sub offer-code info <bundle-id> <product-id> <offer-code-id>
+
+# オファーコードを作成（すべてのオファー属性を含む）
+ascelerate sub offer-code create <bundle-id> <product-id> \
+  --name "Launch Free Month" \
+  --eligibility NEW \
+  --offer-eligibility STACK_WITH_INTRO_OFFERS \
+  --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
+  --price 0 --territory USA --equalize-all-territories
+
+ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+
+# ワンタイムユースコードを生成（非同期）
+ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
+  --count 500 --expires 2026-12-31
+
+# 生成完了後に実際のコード値を取得
+ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
+
+# 開発者指定のカスタムコードを追加
+ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
+  --code SUBPROMO --count 1000 --expires 2026-12-31
+```
+
+サブスクリプションオファーコードの顧客対象：`NEW`、`EXISTING`、`EXPIRED`。オファー対象：`STACK_WITH_INTRO_OFFERS` または `REPLACE_INTRO_OFFERS`。
+
+## サブスクリプショングループを審査に提出
+
+サブスクリプショングループは次のアプリバージョンと一緒に審査されます。`sub submit-group` は `sub submit` のグループレベルに相当します。
+
+```bash
+ascelerate sub submit-group <bundle-id>
+```
+
+## プロモーション画像
+
+App Storeでサブスクリプションと並んで表示されるプロモーション画像をアップロードします。
+
+```bash
+ascelerate sub images list <bundle-id> <product-id>
+ascelerate sub images upload <bundle-id> <product-id> ./hero.png
+ascelerate sub images delete <bundle-id> <product-id> <image-id>
+```
+
+## App Reviewスクリーンショット
+
+各サブスクリプションは最大1つのApp Reviewスクリーンショットを持つことができます。アップロードすると既存のスクリーンショットが置き換えられます。
+
+```bash
+ascelerate sub review-screenshot view <bundle-id> <product-id>
+ascelerate sub review-screenshot upload <bundle-id> <product-id> ./review.png
+ascelerate sub review-screenshot delete <bundle-id> <product-id>
+```
+
+画像およびスクリーンショットのアップロードはAppleの3ステップフローを使用します（予約 → チャンクをPUT → MD5でコミット）。単一の `upload` 呼び出しで3つのステップすべてを処理します。
+
+## ウィンバックオファー（未実装）
+
+ウィンバックオファー（解約したサブスクライバー向けのオファー）は意図的にまだ実装されていません。`asc-swift` 依存関係の `WinBackOfferPriceInlineCreate` 型には、APIが必要とする `territory` および `subscriptionPricePoint` の関係が含まれていないため、有効な作成リクエストを構築できません。依存関係が更新されたら再検討します。

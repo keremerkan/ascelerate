@@ -66,10 +66,10 @@ ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 
 ```bash
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
-ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-region GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
 ```
 
-`--base-region` verwendet standardmäßig die bestehende Basisregion (oder USA bei einem neuen Plan). Wenn der Plan regionsspezifische manuelle Preise enthält, zeigt `set` ein interaktives Menü an, in dem Sie diese optional zur automatischen Anpassung von der neuen Basisregion zurücksetzen können. Mit `--remove-all-overrides` werden alle manuellen Preise ohne Rückfrage entfernt.
+`--base-territory` verwendet standardmäßig die bestehende Basisregion (oder USA bei einem neuen Plan). Wenn der Plan regionsspezifische manuelle Preise enthält, zeigt `set` ein interaktives Menü an, in dem Sie diese optional zur automatischen Anpassung von der neuen Basisregion zurücksetzen können. Mit `--remove-all-overrides` werden alle manuellen Preise ohne Rückfrage entfernt.
 
 ### Regionsspezifische manuelle Preise
 
@@ -84,3 +84,76 @@ ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 `override` und `remove` arbeiten nur mit Nicht-Basisregionen. Um den Preis der Basisregion zu ändern, verwenden Sie `set`.
 
 Wenn ein In-App-Kauf keinen Preisplan hat, geben sowohl `iap info` als auch `iap pricing show` eine Warnung aus; derselbe Zustand wird in `apps review preflight` als blockierender Fehler für die Einreichung markiert.
+
+## Regionale Verfügbarkeit
+
+Jeder In-App-Kauf hat seine eigene regionale Verfügbarkeit, unabhängig von der App. Standardmäßig erbt ein IAP die Regionen der App; sobald Sie `iap availability` mit Änderungen aufrufen, hat der IAP eine explizite Liste.
+
+```bash
+# Aktuelle IAP-spezifische Regionen anzeigen
+ascelerate iap availability <bundle-id> <product-id>
+
+# Regionsliste bearbeiten (POST ersetzt die gesamte Liste)
+ascelerate iap availability <bundle-id> <product-id> --add CHN,RUS
+ascelerate iap availability <bundle-id> <product-id> --remove ITA
+ascelerate iap availability <bundle-id> <product-id> --available-in-new-territories true
+```
+
+## Angebotscodes
+
+Angebotscodes sind einlösbare Codes, die einen einmaligen Rabatt auf einen IAP gewähren. Sie werden in zwei Varianten unter derselben Angebotscode-Ressource verwaltet:
+
+- **Einmalnutzungscodes**: Apple generiert N eindeutige Codes in einem Batch (asynchron). Jeder kann nur einmal eingelöst werden.
+- **Benutzerdefinierte Codes**: vom Entwickler bereitgestellte Zeichenfolge (z. B. `PROMO2026`), N-mal einlösbar.
+
+```bash
+# Alle Angebotscodes eines IAP auflisten
+ascelerate iap offer-code list <bundle-id> <product-id>
+
+# Details + Code-Zähler für einen Angebotscode anzeigen
+ascelerate iap offer-code info <bundle-id> <product-id> <offer-code-id>
+
+# Angebotscode mit rabattiertem Preis erstellen (auto-equalisiert über alle Regionen)
+ascelerate iap offer-code create <bundle-id> <product-id> \
+  --name "Launch Promo" \
+  --eligibility NON_SPENDER,ACTIVE_SPENDER \
+  --price 0.99 --territory USA --equalize-all-territories
+
+# Aktivieren oder deaktivieren
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+
+# Batch von Einmalnutzungscodes generieren (Codes werden asynchron erstellt)
+ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
+  --count 100 --expires 2026-12-31
+
+# Tatsächliche Codewerte nach Abschluss der Generierung abrufen
+ascelerate iap offer-code view-codes <one-time-use-batch-id> --output codes.txt
+
+# Vom Entwickler definierten benutzerdefinierten Code hinzufügen
+ascelerate iap offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
+  --code PROMO2026 --count 1000 --expires 2026-12-31
+```
+
+Kundenberechtigungen für IAP-Angebotscodes: `NON_SPENDER`, `ACTIVE_SPENDER`, `CHURNED_SPENDER`.
+
+## Werbebilder
+
+Werbebilder hochladen, die im App Store neben dem IAP angezeigt werden.
+
+```bash
+ascelerate iap images list <bundle-id> <product-id>
+ascelerate iap images upload <bundle-id> <product-id> ./hero.png
+ascelerate iap images delete <bundle-id> <product-id> <image-id>
+```
+
+Uploads verwenden Apples 3-Schritt-Flow: mit `fileSize` + `fileName` reservieren, Dateichunks an vorsignierte URLs per PUT senden, dann mit dem MD5 der Datei per PATCH festschreiben. Die CLI erledigt alle drei Schritte in einem einzigen `upload`-Aufruf.
+
+## App-Review-Screenshot
+
+Jeder IAP kann höchstens einen App-Review-Screenshot haben (für Apples Prüfer sichtbar). Ein Upload ersetzt einen vorhandenen.
+
+```bash
+ascelerate iap review-screenshot view <bundle-id> <product-id>
+ascelerate iap review-screenshot upload <bundle-id> <product-id> ./review.png
+ascelerate iap review-screenshot delete <bundle-id> <product-id>
+```

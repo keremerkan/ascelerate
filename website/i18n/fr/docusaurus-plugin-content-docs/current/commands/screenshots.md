@@ -81,6 +81,7 @@ overrideStatusBar: true
 darkMode: false
 disableAnimations: true
 waitAfterBoot: 0
+# waitAfterEraseAndReboot: 30           # Attente supplémentaire pour les alertes système de premier lancement (ex. Apple Intelligence)
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
@@ -202,6 +203,7 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 | `darkMode` | Activer le mode sombre sur les simulateurs |
 | `disableAnimations` | Désactiver les animations pendant les tests |
 | `waitAfterBoot` | Secondes d'attente après le démarrage du simulateur (défaut : 0) |
+| `waitAfterEraseAndReboot` | Secondes d'attente supplémentaires lorsque le simulateur est dans un état neuf — première langue de l'exécution, ou chaque fois que le simulateur a été effacé (via `eraseSimulator: true` ou un nouvel essai). Donne aux alertes système de premier lancement (par exemple "Apple Intelligence est prêt") le temps d'apparaître avant les captures d'écran. |
 | `testWithoutBuilding` | Ignorer le build, utiliser le fichier xctestrun existant |
 | `cleanBuild` | Exécuter `clean` avant le build |
 | `headless` | Ne pas ouvrir Simulator.app |

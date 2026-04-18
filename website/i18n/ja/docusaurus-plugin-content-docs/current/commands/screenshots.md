@@ -81,6 +81,7 @@ overrideStatusBar: true
 darkMode: false
 disableAnimations: true
 waitAfterBoot: 0
+# waitAfterEraseAndReboot: 30           # 初回起動システム通知（Apple Intelligenceなど）のための追加待機
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
@@ -202,6 +203,7 @@ screenshots/framed/
 | `darkMode` | シミュレーターでダークモードを有効化 |
 | `disableAnimations` | テスト中のアニメーションを無効化 |
 | `waitAfterBoot` | シミュレーター起動後の待機秒数（デフォルト: 0） |
+| `waitAfterEraseAndReboot` | シミュレーターが新鮮な状態のときの追加待機秒数 — 実行の最初の言語のとき、またはシミュレーターが消去されたとき（`eraseSimulator: true` または再試行による）。スクリーンショット撮影前に初回起動システム通知（「Apple Intelligenceの準備ができました」など）が表示される時間を確保します。 |
 | `testWithoutBuilding` | ビルドをスキップし、既存のxctestrunファイルを使用 |
 | `cleanBuild` | ビルド前に `clean` を実行 |
 | `headless` | Simulator.appを開かない |

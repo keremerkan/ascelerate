@@ -81,6 +81,7 @@ overrideStatusBar: true
 darkMode: false
 disableAnimations: true
 waitAfterBoot: 0
+# waitAfterEraseAndReboot: 30           # Extra wait for first-run system alerts (e.g. Apple Intelligence)
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
@@ -202,6 +203,7 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `darkMode` | Enable dark mode on simulators |
 | `disableAnimations` | Disable animations during tests |
 | `waitAfterBoot` | Seconds to wait after simulator boot (default: 0) |
+| `waitAfterEraseAndReboot` | Extra seconds to wait when the simulator is in a fresh state — first language of the run, or any time the simulator was erased (via `eraseSimulator: true` or a retry). Gives first-run system alerts (e.g. "Apple Intelligence is ready") time to appear before screenshots. |
 | `testWithoutBuilding` | Skip build, use existing xctestrun file |
 | `cleanBuild` | Run `clean` before building |
 | `headless` | Don't open Simulator.app |

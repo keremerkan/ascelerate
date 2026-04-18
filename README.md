@@ -591,6 +591,23 @@ ascelerate apps eula <bundle-id> --file eula.txt
 ascelerate apps eula <bundle-id> --delete
 ```
 
+### Subscription Grace Period
+
+The grace period lets subscribers keep access for a short window after a failed renewal payment while Apple retries billing. Settings apply to the whole app.
+
+```bash
+# View current grace period configuration
+ascelerate apps subscription-grace-period <bundle-id>
+
+# Enable for production with a 16-day window, applies to all renewals
+ascelerate apps subscription-grace-period <bundle-id> --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
+
+# Enable for sandbox testing too
+ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+```
+
+Valid `--duration` values: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Valid `--renewal-type` values: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.
+
 ### Devices
 
 ```bash
@@ -758,16 +775,40 @@ ascelerate iap localizations import <bundle-id> <product-id> --file iap-de.json
 ascelerate iap pricing show <bundle-id> <product-id>
 ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
-ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-region GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
 
 # Pricing — manage per-territory manual overrides
 ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territory FRA
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
+
+# Per-IAP territory availability (independent of the app's territories)
+ascelerate iap availability <bundle-id> <product-id>
+ascelerate iap availability <bundle-id> <product-id> --add CHN,RUS --remove ITA --available-in-new-territories true
+
+# Offer codes (campaigns + redeem codes)
+ascelerate iap offer-code list <bundle-id> <product-id>
+ascelerate iap offer-code create <bundle-id> <product-id> --name "Launch Promo" --eligibility NON_SPENDER,ACTIVE_SPENDER --price 0.99 --territory USA --equalize-all-territories
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> --count 100 --expires 2026-12-31
+ascelerate iap offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> --code PROMO2026 --count 1000 --expires 2026-12-31
+ascelerate iap offer-code view-codes <one-time-use-batch-id> --output codes.txt
+
+# Promotional images + App Review screenshot
+ascelerate iap images list <bundle-id> <product-id>
+ascelerate iap images upload <bundle-id> <product-id> ./hero.png
+ascelerate iap images delete <bundle-id> <product-id> <image-id>
+ascelerate iap review-screenshot view <bundle-id> <product-id>
+ascelerate iap review-screenshot upload <bundle-id> <product-id> ./review.png
+ascelerate iap review-screenshot delete <bundle-id> <product-id>
 ```
 
 Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. States: `APPROVED`, `MISSING_METADATA`, `READY_TO_SUBMIT`, `WAITING_FOR_REVIEW`, `IN_REVIEW`, etc.
 
-`iap info` and `iap pricing show` warn when an IAP has no price schedule — the same condition surfaced in `apps review preflight`. When `set` changes the base region price, existing per-territory manual overrides are preserved by default. If overrides exist, an interactive menu offers to revert any of them; pass `--remove-all-overrides` for a non-interactive wipe.
+`iap info` and `iap pricing show` warn when an IAP has no price schedule — the same condition surfaced in `apps review preflight`. When `set` changes the base territory price, existing per-territory manual overrides are preserved by default. If overrides exist, an interactive menu offers to revert any of them; pass `--remove-all-overrides` for a non-interactive wipe.
+
+Offer code one-time-use codes are generated asynchronously. After `gen-codes`, run `view-codes <batch-id>` to fetch the actual code values. If the response is empty, retry in a few seconds. Custom codes (`add-custom-codes`) are developer-supplied strings that don't need separate generation.
+
+Images and review screenshots use Apple's 3-step file upload flow (reserve → PUT chunks → commit with MD5). The CLI handles all three steps in `upload`.
 
 ### Subscriptions
 
@@ -808,11 +849,53 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 # Standard global price raise: grandfather existing subscribers at the old price
 ascelerate sub pricing set <bundle-id> <product-id> --price 9.99 --equalize-all-territories --preserve-current
+
+# Per-subscription territory availability (independent of the app's territories)
+ascelerate sub availability <bundle-id> <product-id>
+ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS --remove ITA --available-in-new-territories true
+
+# Introductory offers (free trials and intro discounts for new subscribers)
+ascelerate sub intro-offer list <bundle-id> <product-id>
+ascelerate sub intro-offer create <bundle-id> <product-id> --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+ascelerate sub intro-offer create <bundle-id> <product-id> --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --territory USA --price 0.99
+ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date 2026-12-31
+ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id>
+
+# Promotional offers (server-signed offers for existing subscribers)
+ascelerate sub promo-offer list <bundle-id> <product-id>
+ascelerate sub promo-offer create <bundle-id> <product-id> --name "Loyalty 50%" --code LOYALTY50 --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --price 4.99 --territory USA --equalize-all-territories
+ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> --price 5.99 --equalize-all-territories
+ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
+
+# Offer codes (redeemable codes — one-time-use batches and custom codes)
+ascelerate sub offer-code list <bundle-id> <product-id>
+ascelerate sub offer-code create <bundle-id> <product-id> --name "Launch Free Month" --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --price 0 --territory USA --equalize-all-territories
+ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> --count 500 --expires 2026-12-31
+ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> --code SUBPROMO --count 1000 --expires 2026-12-31
+ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
+
+# Submit a subscription group for review (mirror of `sub submit` but for the whole group)
+ascelerate sub submit-group <bundle-id>
+
+# Promotional images + App Review screenshot
+ascelerate sub images list <bundle-id> <product-id>
+ascelerate sub images upload <bundle-id> <product-id> ./hero.png
+ascelerate sub images delete <bundle-id> <product-id> <image-id>
+ascelerate sub review-screenshot view <bundle-id> <product-id>
+ascelerate sub review-screenshot upload <bundle-id> <product-id> ./review.png
+ascelerate sub review-screenshot delete <bundle-id> <product-id>
 ```
 
 When submitting an app version for review, `apps review submit` automatically detects IAPs and subscriptions that may have pending changes and offers to submit them alongside the app version.
 
 The localization import commands create missing locales automatically with confirmation, so you can add new languages without visiting App Store Connect.
+
+`sub intro-offer` is for new subscribers (free trials and intro discounts). `sub promo-offer` is for existing subscribers (requires server-side signing of the offer payload at runtime). `sub offer-code` produces redeemable code campaigns — one-time-use batches generate asynchronously (use `view-codes <batch-id>` to fetch values), while custom codes are developer-supplied strings.
+
+Images and review screenshots use Apple's 3-step upload flow (reserve → PUT chunks → commit with MD5) — `upload` handles all three steps.
+
+**Win-back offers** are intentionally not yet implemented because asc-swift's generated `WinBackOfferPriceInlineCreate` is missing the territory and price-point relationships the API requires. Will revisit once the dependency is updated.
 
 Subscription pricing is per-territory. There is no auto-equalize concept like IAPs have, so `--equalize-all-territories` mirrors what the App Store Connect web UI does behind the scenes: looks up the equivalent local-currency tier in every territory and POSTs one price record per territory.
 

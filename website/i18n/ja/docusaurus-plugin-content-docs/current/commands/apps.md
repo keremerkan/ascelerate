@@ -156,3 +156,21 @@ ascelerate apps eula <bundle-id> --file eula.txt
 # カスタムEULAを削除（標準のApple EULAに戻す）
 ascelerate apps eula <bundle-id> --delete
 ```
+
+## サブスクリプションの猶予期間
+
+猶予期間により、更新支払いが失敗した場合にAppleが再請求を試みている間、サブスクライバーが短期間アクセスを保持できます。この設定はアプリ全体に適用されます。
+
+```bash
+# 現在の設定を表示
+ascelerate apps subscription-grace-period <bundle-id>
+
+# 本番環境で16日間の猶予期間を有効化、すべての更新に適用
+ascelerate apps subscription-grace-period <bundle-id> \
+  --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
+
+# サンドボックステストでも有効化
+ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+```
+
+`--duration` の有効な値：`THREE_DAYS`、`SIXTEEN_DAYS`、`TWENTY_EIGHT_DAYS`。`--renewal-type` の有効な値：`ALL_RENEWALS`、`PAID_TO_PAID_ONLY`。

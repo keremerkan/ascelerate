@@ -375,7 +375,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             print("Add this file to your UITest target.")
         }
 
-        static let helperVersion = "1.0"
+        static let helperVersion = "1.1"
 
         static let helperSource = """
         //
@@ -443,7 +443,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             }
 
             static func capture(_ name: String) {
-                guard app != nil else {
+                guard let app else {
                     NSLog("ScreenshotHelper: Call setupScreenshots() before screenshot()")
                     return
                 }
@@ -454,7 +454,13 @@ struct ScreenshotCommand: AsyncParsableCommand {
                     sleep(1)
                 }
 
-                let screenshotImage = XCUIScreen.main.screenshot()
+                // Use app.screenshot() rather than XCUIScreen.main.screenshot(): the
+                // former is an RPC into the target app, so if the app has already
+                // terminated (e.g. an iPad-only crash triggered by the last test tap),
+                // the call throws 'Lost connection to the application' and the test
+                // fails. XCUIScreen would silently fall back to the simulator's current
+                // framebuffer and save a home-screen PNG as a passing screenshot.
+                let screenshotImage = app.screenshot()
 
                 #if os(iOS) && !targetEnvironment(macCatalyst)
                 let image = XCUIDevice.shared.orientation.isLandscape

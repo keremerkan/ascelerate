@@ -17,6 +17,15 @@ struct ScreenshotCommand: AsyncParsableCommand {
             abstract: "Capture screenshots for all configured devices and languages."
         )
 
+        @Option(
+            name: [.customLong("languages"), .customShort("l")],
+            help: ArgumentHelp(
+                "Override configured languages. Comma-separated, or repeat the flag.",
+                discussion: "Must be a subset of the languages in screenshot.yml. Example: --languages en-US,tr-TR"
+            )
+        )
+        var languages: [String] = []
+
         func run() async throws {
             let configPath = ScreenshotCommand.configPath
 
@@ -24,7 +33,29 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 throw ScreenshotError.configNotFound(configPath)
             }
 
-            let screenshotConfig = try ScreenshotConfig.load(from: configPath)
+            var screenshotConfig = try ScreenshotConfig.load(from: configPath)
+
+            if !languages.isEmpty {
+                let requested = languages
+                    .flatMap { $0.split(separator: ",") }
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+
+                guard !requested.isEmpty else {
+                    throw ValidationError("--languages must contain at least one non-empty code.")
+                }
+
+                let available = Set(screenshotConfig.languages)
+                let unknown = requested.filter { !available.contains($0) }
+                guard unknown.isEmpty else {
+                    throw ValidationError(
+                        "Language(s) not in \(configPath): \(unknown.joined(separator: ", ")). "
+                        + "Available: \(screenshotConfig.languages.joined(separator: ", "))."
+                    )
+                }
+
+                screenshotConfig.languages = requested
+            }
 
             print("ascelerate screenshot")
             print("  Scheme: \(screenshotConfig.scheme)")

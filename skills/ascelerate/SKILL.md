@@ -114,7 +114,7 @@ ascelerate apps review resolve-issues <app>      # After fixing rejection
 ascelerate apps review cancel-submission <app>   # Cancel active review
 ```
 
-`preflight` checks build attachment, localizations, app info, and screenshots across all locales. Exits non-zero on failures.
+`preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices). Exits non-zero on failures.
 
 When submitting, the tool detects IAPs and subscriptions and offers to submit them alongside the app version.
 
@@ -122,7 +122,7 @@ When submitting, the tool detects IAPs and subscriptions and offers to submit th
 
 ```bash
 ascelerate iap list <app>
-ascelerate iap info <app> <product-id>
+ascelerate iap info <app> <product-id>                   # warns if no price schedule set
 ascelerate iap create <app> --name "Name" --product-id <id> --type CONSUMABLE
 ascelerate iap update <app> <product-id> --name "New Name"
 ascelerate iap delete <app> <product-id>
@@ -132,20 +132,49 @@ ascelerate iap submit <app> <product-id>
 ascelerate iap localizations view <app> <product-id>
 ascelerate iap localizations export <app> <product-id>
 ascelerate iap localizations import <app> <product-id> --file iap-de.json
+
+# Pricing — wholesale schedule POST is read-modify-write, preserves overrides
+ascelerate iap pricing show <app> <product-id>
+ascelerate iap pricing tiers <app> <product-id> --territory USA
+ascelerate iap pricing set <app> <product-id> --price 4.99 [--base-territory USA] [--remove-all-overrides]
+ascelerate iap pricing override <app> <product-id> --price 5.99 --territory FRA
+ascelerate iap pricing remove <app> <product-id> --territory FRA   # revert to auto-equalize
+
+# Per-IAP territory availability (independent of app's)
+ascelerate iap availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true]
+
+# Offer codes (one-time-use batches + custom codes)
+ascelerate iap offer-code list <app> <product-id>
+ascelerate iap offer-code info <app> <product-id> <offer-code-id>
+ascelerate iap offer-code create <app> <product-id> --name X --eligibility NON_SPENDER,ACTIVE_SPENDER --price 0.99 [--territory USA] [--equalize-all-territories]
+ascelerate iap offer-code toggle <app> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code gen-codes <app> <product-id> <offer-code-id> --count 100 --expires 2026-12-31
+ascelerate iap offer-code add-custom-codes <app> <product-id> <offer-code-id> --code PROMO2026 --count 1000 --expires 2026-12-31
+ascelerate iap offer-code view-codes <one-time-use-batch-id> [--output codes.txt]   # async; may need retry
+
+# Promotional images + App Review screenshot (Apple's 3-step file upload flow)
+ascelerate iap images list/upload/delete <app> <product-id> [<file>|<image-id>]
+ascelerate iap review-screenshot view/upload/delete <app> <product-id> [<file>]   # one screenshot per IAP
 ```
 
-IAP types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`.
+IAP types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. Offer code eligibilities: `NON_SPENDER`, `ACTIVE_SPENDER`, `CHURNED_SPENDER`.
+
+Pricing notes:
+- `set` preserves per-territory overrides by default; interactive menu offers to drop them, or `--remove-all-overrides` for non-interactive wipe.
+- `override` and `remove` only operate on non-base territories.
+- One-time-use offer codes generate asynchronously — `gen-codes` returns a batch ID; use `view-codes <batch-id>` to fetch values once ready.
 
 ### Subscriptions
 
 ```bash
 ascelerate sub list <app>
 ascelerate sub groups <app>
-ascelerate sub info <app> <product-id>
+ascelerate sub info <app> <product-id>                         # warns if no prices set
 ascelerate sub create <app> --name "Monthly" --product-id <id> --period ONE_MONTH --group-id <gid>
 ascelerate sub update <app> <product-id> --name "New Name"
 ascelerate sub delete <app> <product-id>
 ascelerate sub submit <app> <product-id>
+ascelerate sub submit-group <app>                              # submit whole group for review
 
 # Subscription localizations
 ascelerate sub localizations export <app> <product-id>
@@ -159,7 +188,50 @@ ascelerate sub delete-group <app>
 # Group localizations
 ascelerate sub group-localizations export <app>
 ascelerate sub group-localizations import <app> --file group-de.json
+
+# Pricing — per-territory; --equalize-all-territories fans out via Apple's equalizations
+ascelerate sub pricing show <app> <product-id>
+ascelerate sub pricing tiers <app> <product-id> --territory USA
+ascelerate sub pricing set <app> <product-id> --price 4.99 [--territory USA] [--equalize-all-territories]
+  [--preserve-current | --no-preserve-current]   # required on price increases
+  [--confirm-decrease]                           # required on decreases in --yes mode
+
+# Per-subscription territory availability (independent of app's)
+ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true]
+
+# Introductory offers (free trials + intro discounts for NEW subscribers)
+ascelerate sub intro-offer list <app> <product-id>
+ascelerate sub intro-offer create <app> <product-id> --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+ascelerate sub intro-offer create <app> <product-id> --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --territory USA --price 0.99
+ascelerate sub intro-offer update <app> <product-id> <offer-id> --end-date 2026-12-31
+ascelerate sub intro-offer delete <app> <product-id> <offer-id>
+
+# Promotional offers (server-signed offers for EXISTING subscribers)
+ascelerate sub promo-offer list/info/delete <app> <product-id> [<offer-id>]
+ascelerate sub promo-offer create <app> <product-id> --name X --code LOYALTY50 --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --price 4.99 --territory USA --equalize-all-territories
+ascelerate sub promo-offer update <app> <product-id> <offer-id> --price 5.99 --equalize-all-territories   # only prices can change
+
+# Offer codes (one-time-use batches + custom codes)
+ascelerate sub offer-code list/info <app> <product-id> [<offer-code-id>]
+ascelerate sub offer-code create <app> <product-id> --name X --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --price 0 --territory USA --equalize-all-territories
+ascelerate sub offer-code toggle <app> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code gen-codes <app> <product-id> <offer-code-id> --count 500 --expires 2026-12-31
+ascelerate sub offer-code add-custom-codes <app> <product-id> <offer-code-id> --code SUBPROMO --count 1000 --expires 2026-12-31
+ascelerate sub offer-code view-codes <one-time-use-batch-id> [--output codes.txt]
+
+# Promotional images + App Review screenshot (Apple's 3-step file upload flow)
+ascelerate sub images list/upload/delete <app> <product-id> [<file>|<image-id>]
+ascelerate sub review-screenshot view/upload/delete <app> <product-id> [<file>]   # one screenshot per sub
 ```
+
+Subscription pricing safety:
+- **Price increase** in any territory requires `--preserve-current` (grandfather existing subs at old price) OR `--no-preserve-current` (push new price after Apple's notification period). Errors if neither set.
+- **Price decrease** prompts interactively; under `--yes`, requires `--confirm-decrease` to acknowledge revenue impact.
+- **`--equalize-all-territories`** aggregates the analysis: if any territory in the fan-out is an increase, the preserve flag is required for all.
+
+Offer code eligibilities for subs: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibility: `STACK_WITH_INTRO_OFFERS` or `REPLACE_INTRO_OFFERS`. Modes: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`.
+
+NOT YET IMPLEMENTED: `sub win-back-offer` is blocked on asc-swift codegen (the inline price create type is missing required relationships). `iap hosted-content` is intentionally skipped.
 
 ### Screenshots (Simulator Capture)
 
@@ -196,6 +268,7 @@ overrideStatusBar: true
 # darkMode: false
 # disableAnimations: true
 # waitAfterBoot: 5
+# waitAfterEraseAndReboot: 30   # extra wait for first-run system alerts (Apple Intelligence etc.); fires on first language and on retries
 # configuration: Debug
 # testplan: MyTestPlan
 # numberOfRetries: 1
@@ -273,7 +346,14 @@ ascelerate apps availability <app> --add CHN,RUS
 ascelerate apps encryption <app> --create --description "Uses HTTPS"
 ascelerate apps eula <app> --file eula.txt
 ascelerate apps phased-release <app> --enable
+
+# App-level subscription grace period (after failed renewal payments)
+ascelerate apps subscription-grace-period <app>                         # view
+ascelerate apps subscription-grace-period <app> --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
+ascelerate apps subscription-grace-period <app> --sandbox-opt-in true
 ```
+
+Grace period durations: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Renewal types: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.
 
 ### Workflow files
 

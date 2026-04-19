@@ -241,6 +241,7 @@ Capture App Store screenshots from simulators using UI tests. Replaces fastlane 
 ascelerate screenshot init                          # Generate config and helper in ascelerate/ directory
 ascelerate screenshot create-helper                 # Generate ScreenshotHelper.swift for UITest target
 ascelerate screenshot run                           # Capture screenshots
+ascelerate screenshot run -l en-US,tr-TR            # Override languages (subset of configured), comma-separated
 ascelerate screenshot frame                         # Frame captured screenshots with device bezels
 ascelerate screenshot doctor                        # Check config and environment for problems
 ```

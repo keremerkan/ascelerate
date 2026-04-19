@@ -1,6 +1,6 @@
 {
   "name": "ascelerate-skill",
-  "version": "0.8.0",
+  "version": "0.11.1",
   "description": "ascelerate skill for AI coding agents (Claude Code, Cursor, Windsurf, Copilot)",
   "license": "MIT",
   "author": "Kerem Erkan",

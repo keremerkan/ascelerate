@@ -451,6 +451,7 @@ ascelerate screenshot init                        # Creates ascelerate/screensho
 
 # Capture screenshots
 ascelerate screenshot run
+ascelerate screenshot run -l en-US,tr-TR          # Only capture a subset of configured languages
 ascelerate screenshot frame                       # Frame screenshots with device bezels
 ascelerate screenshot doctor                      # Check config and environment for problems
 ```

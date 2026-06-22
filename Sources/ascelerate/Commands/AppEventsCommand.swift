@@ -7,7 +7,7 @@ struct AppEventsCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "events",
     abstract: "Manage in-app events.",
-    subcommands: [List.self, Info.self, Create.self, Update.self, Delete.self]
+    subcommands: [List.self, Info.self, Create.self, Update.self, Delete.self, Localizations.self]
   )
 
   // MARK: - Shared helpers
@@ -420,6 +420,224 @@ struct AppEventsCommand: AsyncParsableCommand {
       _ = try await client.send(Resources.v1.appEvents.id(appEvent.id).delete)
       print()
       success("Deleted", "in-app event '\(name)'.")
+    }
+  }
+
+  // MARK: - Localizations
+
+  /// JSON schema for in-app event localizations.
+  struct EventLocaleFields: Codable {
+    var name: String?
+    var shortDescription: String?
+    var longDescription: String?
+  }
+
+  struct Localizations: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "localizations",
+      abstract: "View, export, and import in-app event localizations.",
+      subcommands: [View.self, Export.self, Import.self]
+    )
+
+    struct View: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "View localizations for an in-app event."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The event reference name or ID.")
+      var event: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appEvent = try await AppEventsCommand.findAppEvent(
+          ref: event, appID: app.id, client: client)
+
+        let resp = try await client.send(
+          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        if resp.data.isEmpty {
+          print("No localizations found.")
+          return
+        }
+
+        print("Localizations for '\(appEvent.attributes?.referenceName ?? event)':")
+        print()
+        for loc in resp.data.sorted(by: {
+          ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
+        }) {
+          let a = loc.attributes
+          print("[\(localeName(a?.locale ?? "?"))]")
+          print("  Name:              \(a?.name ?? "—")")
+          print("  Short Description: \(a?.shortDescription ?? "—")")
+          if let long = a?.longDescription, !long.isEmpty {
+            print("  Long Description:  \(long.prefix(100))\(long.count > 100 ? "…" : "")")
+          }
+          print()
+        }
+      }
+    }
+
+    struct Export: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Export in-app event localizations to a JSON file."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The event reference name or ID.")
+      var event: String
+
+      @Option(name: .long, help: "Output file path.",
+              completion: .file(extensions: ["json"]))
+      var output: String?
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appEvent = try await AppEventsCommand.findAppEvent(
+          ref: event, appID: app.id, client: client)
+
+        let resp = try await client.send(
+          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+
+        var result: [String: EventLocaleFields] = [:]
+        for loc in resp.data {
+          guard let locale = loc.attributes?.locale else { continue }
+          result[locale] = EventLocaleFields(
+            name: loc.attributes?.name,
+            shortDescription: loc.attributes?.shortDescription,
+            longDescription: loc.attributes?.longDescription
+          )
+        }
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(result)
+
+        let refName = appEvent.attributes?.referenceName ?? "event"
+        let outputPath = expandPath(
+          confirmOutputPath(output ?? "\(refName)-localizations.json", isDirectory: false))
+        try data.write(to: URL(fileURLWithPath: outputPath))
+
+        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+      }
+    }
+
+    struct Import: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Import in-app event localizations from a JSON file."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The event reference name or ID.")
+      var event: String
+
+      @Option(name: .long, help: "Path to JSON file.",
+              completion: .file(extensions: ["json"]))
+      var file: String?
+
+      @Flag(name: .long, help: "Show detailed API responses.")
+      var verbose: Bool = false
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes: Bool = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appEvent = try await AppEventsCommand.findAppEvent(
+          ref: event, appID: app.id, client: client)
+
+        let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
+        let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
+        let localeUpdates = try JSONDecoder().decode([String: EventLocaleFields].self, from: data)
+
+        guard !localeUpdates.isEmpty else {
+          throw ValidationError("JSON file contains no locale data.")
+        }
+
+        print("Importing \(localeUpdates.count) locale(s) for '\(appEvent.attributes?.referenceName ?? event)':")
+        for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
+          print("  [\(localeName(locale))] \(fields.name ?? "—")")
+        }
+        print()
+
+        guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
+          cancelled()
+          return
+        }
+        print()
+
+        let existing = try await client.send(
+          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        let byLocale = Dictionary(
+          existing.data.compactMap { loc in loc.attributes?.locale.map { ($0, loc) } },
+          uniquingKeysWith: { first, _ in first })
+
+        for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
+          if let loc = byLocale[locale] {
+            let response = try await client.send(
+              Resources.v1.appEventLocalizations.id(loc.id).patch(
+                AppEventLocalizationUpdateRequest(
+                  data: .init(
+                    id: loc.id,
+                    attributes: .init(
+                      name: fields.name,
+                      shortDescription: fields.shortDescription,
+                      longDescription: fields.longDescription
+                    )
+                  )
+                )
+              ))
+            print("  [\(localeName(locale))] Updated.")
+            if verbose { Self.printResponse(response.data.attributes) }
+          } else {
+            guard confirm("  [\(localeName(locale))] Locale not present. Create it? [y/N] ") else {
+              print("  [\(localeName(locale))] Skipped.")
+              continue
+            }
+            let response = try await client.send(
+              Resources.v1.appEventLocalizations.post(
+                AppEventLocalizationCreateRequest(
+                  data: .init(
+                    attributes: .init(
+                      locale: locale,
+                      name: fields.name,
+                      shortDescription: fields.shortDescription,
+                      longDescription: fields.longDescription
+                    ),
+                    relationships: .init(appEvent: .init(data: .init(id: appEvent.id)))
+                  )
+                )
+              ))
+            print("  [\(localeName(locale))] \(green("Created."))")
+            if verbose { Self.printResponse(response.data.attributes) }
+          }
+        }
+
+        print()
+        print("Done.")
+      }
+
+      private static func printResponse(_ attrs: AppEventLocalization.Attributes?) {
+        print("    Response:")
+        print("      Locale:            \(attrs?.locale.map { localeName($0) } ?? "—")")
+        if let v = attrs?.name { print("      Name:              \(v)") }
+        if let v = attrs?.shortDescription { print("      Short Description: \(v)") }
+        if let v = attrs?.longDescription {
+          print("      Long Description:  \(v.prefix(120))\(v.count > 120 ? "…" : "")")
+        }
+      }
     }
   }
 }

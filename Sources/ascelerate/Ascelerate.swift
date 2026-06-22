@@ -9,7 +9,7 @@ struct Ascelerate: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "ascelerate",
     abstract: "A Swift CLI for App Store Connect.",
-    subcommands: [AppsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ScreenshotCommand.self],
+    subcommands: [AppsCommand.self, AppEventsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ScreenshotCommand.self],
     groupedSubcommands: [
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
       CommandGroup(name: "Provisioning", subcommands: [BundleIDsCommand.self, CertsCommand.self, DevicesCommand.self, ProfilesCommand.self]),

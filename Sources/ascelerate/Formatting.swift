@@ -983,6 +983,31 @@ private func printLocalizationResponse(_ record: LocalizationRecord) {
   }
 }
 
+/// A price point reduced to the fields the shared tier renderer needs. Decouples the renderer
+/// from the concrete IAP vs subscription price-point types.
+struct PriceTier {
+  let id: String
+  let customerPrice: String?
+  let proceeds: String?
+}
+
+/// Renders available price tiers for a territory as a sorted table (by customer price),
+/// or a "no tiers" message when empty. Shared by `iap pricing tiers` and `sub pricing tiers`.
+func printPriceTiers(_ tiers: [PriceTier], currency: String?, territoryID: String) {
+  if tiers.isEmpty {
+    print("No price tiers found for territory \(territoryID).")
+    return
+  }
+  let cur = currency ?? ""
+  let sorted = tiers.sorted {
+    (Double($0.customerPrice ?? "0") ?? 0) < (Double($1.customerPrice ?? "0") ?? 0)
+  }
+  Table.print(
+    headers: ["Tier ID", "Customer Price", "Proceeds", "Currency"],
+    rows: sorted.map { [$0.id, $0.customerPrice ?? "—", $0.proceeds ?? "—", cur] }
+  )
+}
+
 enum Table {
   static func print(headers: [String], rows: [[String]]) {
     guard !rows.isEmpty else {

@@ -1362,7 +1362,7 @@ struct SubCommand: AsyncParsableCommand {
           productID: productID, appID: app.id, client: client)
 
         let territoryID = territory.uppercased()
-        var tiers: [SubscriptionPricePoint] = []
+        var tiers: [PriceTier] = []
         var currency: String?
         for try await page in client.pages(
           Resources.v1.subscriptions.id(sub.id).pricePoints.get(
@@ -1371,35 +1371,18 @@ struct SubCommand: AsyncParsableCommand {
             include: [.territory]
           )
         ) {
-          tiers.append(contentsOf: page.data)
-          for t in page.included ?? [] {
-            if currency == nil {
-              currency = t.attributes?.currency
-            }
+          tiers.append(
+            contentsOf: page.data.map {
+              PriceTier(
+                id: $0.id, customerPrice: $0.attributes?.customerPrice,
+                proceeds: $0.attributes?.proceeds)
+            })
+          for t in page.included ?? [] where currency == nil {
+            currency = t.attributes?.currency
           }
         }
 
-        if tiers.isEmpty {
-          print("No price tiers found for territory \(territoryID).")
-          return
-        }
-
-        let cur = currency ?? ""
-        let sorted = tiers.sorted {
-          (Double($0.attributes?.customerPrice ?? "0") ?? 0)
-            < (Double($1.attributes?.customerPrice ?? "0") ?? 0)
-        }
-        Table.print(
-          headers: ["Tier ID", "Customer Price", "Proceeds", "Currency"],
-          rows: sorted.map { tier in
-            [
-              tier.id,
-              tier.attributes?.customerPrice ?? "—",
-              tier.attributes?.proceeds ?? "—",
-              cur,
-            ]
-          }
-        )
+        printPriceTiers(tiers, currency: currency, territoryID: territoryID)
       }
     }
 

@@ -930,7 +930,7 @@ struct IAPCommand: AsyncParsableCommand {
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         let territoryID = territory.uppercased()
-        var tiers: [InAppPurchasePricePoint] = []
+        var tiers: [PriceTier] = []
         var currency: String?
         for try await page in client.pages(
           Resources.v2.inAppPurchases.id(iap.id).pricePoints.get(
@@ -939,35 +939,18 @@ struct IAPCommand: AsyncParsableCommand {
             include: [.territory]
           )
         ) {
-          tiers.append(contentsOf: page.data)
-          for t in page.included ?? [] {
-            if currency == nil {
-              currency = t.attributes?.currency
-            }
+          tiers.append(
+            contentsOf: page.data.map {
+              PriceTier(
+                id: $0.id, customerPrice: $0.attributes?.customerPrice,
+                proceeds: $0.attributes?.proceeds)
+            })
+          for t in page.included ?? [] where currency == nil {
+            currency = t.attributes?.currency
           }
         }
 
-        if tiers.isEmpty {
-          print("No price tiers found for territory \(territoryID).")
-          return
-        }
-
-        let cur = currency ?? ""
-        let sorted = tiers.sorted {
-          (Double($0.attributes?.customerPrice ?? "0") ?? 0)
-            < (Double($1.attributes?.customerPrice ?? "0") ?? 0)
-        }
-        Table.print(
-          headers: ["Tier ID", "Customer Price", "Proceeds", "Currency"],
-          rows: sorted.map { tier in
-            [
-              tier.id,
-              tier.attributes?.customerPrice ?? "—",
-              tier.attributes?.proceeds ?? "—",
-              cur,
-            ]
-          }
-        )
+        printPriceTiers(tiers, currency: currency, territoryID: territoryID)
       }
     }
 

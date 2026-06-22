@@ -141,7 +141,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Register this bundle identifier? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -159,7 +159,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print(green("Registered") + " bundle identifier '\(attrs?.identifier ?? bundleIDIdentifier)'.")
+      success("Registered", "bundle identifier '\(attrs?.identifier ?? bundleIDIdentifier)'.")
       print("  Name:     \(attrs?.name ?? bundleIDName)")
       print("  Seed ID:  \(attrs?.seedID ?? "—")")
     }
@@ -202,13 +202,13 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Delete this bundle identifier? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
       _ = try await client.send(Resources.v1.bundleIDs.id(bundleID.id).delete)
       print()
-      print(green("Deleted") + " bundle identifier '\(attrs?.identifier ?? identifier ?? "—")'.")
+      success("Deleted", "bundle identifier '\(attrs?.identifier ?? identifier ?? "—")'.")
     }
   }
   struct Update: AsyncParsableCommand {
@@ -252,7 +252,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Update this bundle identifier? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -267,7 +267,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print(green("Updated") + " bundle identifier '\(attrs?.identifier ?? bidIdentifier)'.")
+      success("Updated", "bundle identifier '\(attrs?.identifier ?? bidIdentifier)'.")
       print("  Name: \(attrs?.name ?? newName)")
     }
   }
@@ -351,7 +351,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Enable this capability? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -368,7 +368,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print(green("Enabled") + " \(attrs?.capabilityType.map { formatState($0) } ?? "\(capabilityType)") on '\(bidIdentifier)'.")
+      success("Enabled", "\(attrs?.capabilityType.map { formatState($0) } ?? "\(capabilityType)") on '\(bidIdentifier)'.")
 
       if Self.requiresPortalConfiguration.contains(capabilityType) {
         print()
@@ -442,13 +442,13 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Disable this capability? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
       _ = try await client.send(Resources.v1.bundleIDCapabilities.id(capability.id).delete)
       print()
-      print(green("Disabled") + " \(capType) on '\(bidIdentifier)'.")
+      success("Disabled", "\(capType) on '\(bidIdentifier)'.")
 
       try await regenerateProfilesIfNeeded(bundleID: bundleID, client: client)
     }

@@ -205,6 +205,39 @@ func md5Hex(filePath: String) throws -> String {
   return digest.map { String(format: "%02x", $0) }.joined()
 }
 
+extension MediaFile {
+  /// Reads a file's name and size from disk, expanding `~` in the path.
+  init(readingFrom file: String) throws {
+    let path = expandPath(file)
+    let attrs = try FileManager.default.attributesOfItem(atPath: path)
+    self.path = path
+    self.fileName = (path as NSString).lastPathComponent
+    self.fileSize = (attrs[.size] as? Int) ?? 0
+  }
+}
+
+/// Runs the App Store Connect 3-step asset upload protocol shared by IAP/subscription
+/// promotional images and App Review screenshots: reserve → upload chunks → commit with checksum.
+///
+/// - Parameters:
+///   - reserve: performs the create POST; returns the new asset's ID and its upload operations.
+///   - commit: performs the PATCH marking the asset uploaded, given the ID and computed MD5 checksum.
+/// - Returns: the new asset's ID.
+func uploadAsset(
+  filePath: String,
+  reserve: () async throws -> (id: String, operations: [UploadOperation]),
+  commit: (_ id: String, _ md5: String) async throws -> Void
+) async throws -> String {
+  let (id, operations) = try await reserve()
+  guard !operations.isEmpty else {
+    throw MediaUploadError.noUploadOperations
+  }
+  try await uploadChunks(filePath: filePath, operations: operations)
+  let md5 = try md5Hex(filePath: filePath)
+  try await commit(id, md5)
+  return id
+}
+
 func mediaMimeType(for fileName: String) -> String {
   let ext = (fileName as NSString).pathExtension.lowercased()
   switch ext {
@@ -343,7 +376,7 @@ extension AppsCommand {
         guard confirm(
           "Upload \(plan.totalScreenshots) screenshot\(plan.totalScreenshots == 1 ? "" : "s") and \(plan.totalPreviews) preview\(plan.totalPreviews == 1 ? "" : "s") for \(localeCount) locale\(localeCount == 1 ? "" : "s")? [y/N] ")
         else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         print()
@@ -919,7 +952,7 @@ extension AppsCommand {
 
         print()
         guard confirm("Retry \(matchedRetries.count) stuck item\(matchedRetries.count == 1 ? "" : "s")? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         print()

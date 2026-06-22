@@ -3,6 +3,15 @@ import AppStoreConnect
 import ArgumentParser
 import Foundation
 
+extension InAppPurchaseLocalization {
+  /// Reduces this API localization to the shared `LocalizationRecord` used by the import/export helpers.
+  var localizationRecord: LocalizationRecord {
+    LocalizationRecord(
+      id: id, locale: attributes?.locale ?? "", name: attributes?.name,
+      description: attributes?.description)
+  }
+}
+
 struct IAPCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "iap",
@@ -493,7 +502,7 @@ struct IAPCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Create this in-app purchase? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -516,7 +525,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Created") + " in-app purchase '\(response.data.attributes?.name ?? refName)'.")
+      success("Created", "in-app purchase '\(response.data.attributes?.name ?? refName)'.")
     }
   }
 
@@ -572,7 +581,7 @@ struct IAPCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Apply updates? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -591,7 +600,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Updated") + " '\(name ?? iap.attributes?.name ?? productID)'.")
+      success("Updated", "'\(name ?? iap.attributes?.name ?? productID)'.")
     }
   }
 
@@ -619,13 +628,13 @@ struct IAPCommand: AsyncParsableCommand {
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
       guard confirm("Delete in-app purchase '\(iap.attributes?.name ?? productID)'? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
       _ = try await client.send(Resources.v2.inAppPurchases.id(iap.id).delete)
 
-      print(green("Deleted") + " '\(iap.attributes?.name ?? productID)'.")
+      success("Deleted", "'\(iap.attributes?.name ?? productID)'.")
     }
   }
 
@@ -667,7 +676,7 @@ struct IAPCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Submit for review? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -683,7 +692,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Submitted") + " '\(iap.attributes?.name ?? productID)' for review.")
+      success("Submitted", "'\(iap.attributes?.name ?? productID)' for review.")
     }
   }
 
@@ -762,25 +771,8 @@ struct IAPCommand: AsyncParsableCommand {
         let locsResponse = try await client.send(
           Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseLocalizations.get(limit: 50)
         )
-
-        var result: [String: ProductLocaleFields] = [:]
-        for loc in locsResponse.data {
-          guard let locale = loc.attributes?.locale else { continue }
-          result[locale] = ProductLocaleFields(
-            name: loc.attributes?.name,
-            description: loc.attributes?.description
-          )
-        }
-
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(result)
-
-        let outputPath = expandPath(
-          confirmOutputPath(output ?? "\(productID)-localizations.json", isDirectory: false))
-        try data.write(to: URL(fileURLWithPath: outputPath))
-
-        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+        try exportProductLocalizations(
+          locsResponse.data.map(\.localizationRecord), productID: productID, output: output)
       }
     }
 
@@ -822,96 +814,39 @@ struct IAPCommand: AsyncParsableCommand {
           throw ValidationError("JSON file contains no locale data.")
         }
 
-        print("Importing \(localeUpdates.count) locale(s) for '\(iap.attributes?.name ?? productID)':")
-        for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
-          print("  [\(localeName(locale))] \(fields.name ?? "—") — \(fields.description?.prefix(60) ?? "—")\(fields.description.map { $0.count > 60 ? "..." : "" } ?? "")")
-        }
-        print()
-
-        guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
-          print(yellow("Cancelled."))
-          return
-        }
-        print()
-
-        // Fetch existing localizations
         let locsResponse = try await client.send(
           Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseLocalizations.get(limit: 50)
         )
 
-        let locByLocale = Dictionary(
-          locsResponse.data.compactMap { loc in
-            loc.attributes?.locale.map { ($0, loc) }
-          },
-          uniquingKeysWith: { first, _ in first }
-        )
-
-        for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
-          guard let localization = locByLocale[locale] else {
-            guard let name = fields.name else {
-              print("  [\(localeName(locale))] Skipped — locale not found in current localizations for the app and \"name\" is required to create it.")
-              continue
-            }
-
-            guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
-              print("  [\(localeName(locale))] Skipped.")
-              continue
-            }
-
+        try await importProductLocalizations(
+          localeUpdates,
+          productName: iap.attributes?.name ?? productID,
+          existing: locsResponse.data.map(\.localizationRecord),
+          verbose: verbose,
+          create: { locale, name, description in
             let response = try await client.send(
               Resources.v1.inAppPurchaseLocalizations.post(
                 InAppPurchaseLocalizationCreateRequest(
                   data: .init(
-                    attributes: .init(
-                      name: name,
-                      locale: locale,
-                      description: fields.description
-                    ),
-                    relationships: .init(
-                      inAppPurchaseV2: .init(data: .init(id: iap.id))
-                    )
+                    attributes: .init(name: name, locale: locale, description: description),
+                    relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id)))
                   )
                 )
               )
             )
-            print("  [\(localeName(locale))] \(green("Created."))")
-
-            if verbose {
-              let attrs = response.data.attributes
-              print("    Response:")
-              print("      Locale:      \(attrs?.locale.map { localeName($0) } ?? "—")")
-              if let v = attrs?.name { print("      Name:        \(v)") }
-              if let v = attrs?.description { print("      Description: \(v.prefix(120))\(v.count > 120 ? "..." : "")") }
-            }
-            continue
-          }
-
-          let response = try await client.send(
-            Resources.v1.inAppPurchaseLocalizations.id(localization.id).patch(
-              InAppPurchaseLocalizationUpdateRequest(
-                data: .init(
-                  id: localization.id,
-                  attributes: .init(
-                    name: fields.name,
-                    description: fields.description
-                  )
+            return response.data.localizationRecord
+          },
+          update: { id, name, description in
+            let response = try await client.send(
+              Resources.v1.inAppPurchaseLocalizations.id(id).patch(
+                InAppPurchaseLocalizationUpdateRequest(
+                  data: .init(id: id, attributes: .init(name: name, description: description))
                 )
               )
             )
-          )
-          print("  [\(localeName(locale))] Updated.")
-
-          if verbose {
-            let attrs = response.data.attributes
-            print("    Response:")
-            print("      Locale:      \(attrs?.locale.map { localeName($0) } ?? "—")")
-            if let v = attrs?.name { print("      Name:        \(v)") }
-            if let v = attrs?.description { print("      Description: \(v.prefix(120))\(v.count > 120 ? "..." : "")") }
+            return response.data.localizationRecord
           }
-        }
-
-        print()
-        print("Done.")
+        )
       }
     }
   }
@@ -1159,7 +1094,7 @@ struct IAPCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Apply this schedule? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1176,7 +1111,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Updated") + " price for '\(iap.attributes?.name ?? productID)'.")
+        success("Updated", "price for '\(iap.attributes?.name ?? productID)'.")
       }
     }
 
@@ -1248,7 +1183,7 @@ struct IAPCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Apply this override? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1269,7 +1204,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green(isUpdate ? "Updated" : "Added") + " manual price for \(territoryID).")
+        success(isUpdate ? "Updated" : "Added", "manual price for \(territoryID).")
       }
     }
 
@@ -1332,7 +1267,7 @@ struct IAPCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Remove this override? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1351,7 +1286,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Removed") + " manual price for \(territoryID).")
+        success("Removed", "manual price for \(territoryID).")
       }
     }
 
@@ -1493,7 +1428,7 @@ struct IAPCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Apply this availability? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -1512,7 +1447,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       print()
-      print(green("Updated") + " availability for \(productID) (\(finalList.count) territories).")
+      success("Updated", "availability for \(productID) (\(finalList.count) territories).")
     }
 
     private func printTerritories(_ codes: [String]) {
@@ -1722,7 +1657,7 @@ struct IAPCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Create this offer code? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1759,7 +1694,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Created") + " offer code '\(name)' (id: \(response.data.id)).")
+        success("Created", "offer code '\(name)' (id: \(response.data.id)).")
       }
     }
 
@@ -1795,7 +1730,7 @@ struct IAPCommand: AsyncParsableCommand {
         _ = try await findApp(bundleID: bundleID, client: client)
 
         guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1807,7 +1742,7 @@ struct IAPCommand: AsyncParsableCommand {
           )
         )
         print()
-        print(green("Updated") + " offer code \(offerCodeID) (active=\(activeBool)).")
+        success("Updated", "offer code \(offerCodeID) (active=\(activeBool)).")
       }
     }
 
@@ -1859,7 +1794,7 @@ struct IAPCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Generate? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1882,7 +1817,7 @@ struct IAPCommand: AsyncParsableCommand {
 
         let batchID = response.data.id
         print()
-        print(green("Created") + " one-time-use code batch (id: \(batchID)).")
+        success("Created", "one-time-use code batch (id: \(batchID)).")
         print()
         print("Codes are generated asynchronously. Fetch with:")
         print("  ascelerate iap offer-code view-codes \(batchID)")
@@ -1935,7 +1870,7 @@ struct IAPCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Create? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1957,7 +1892,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Created") + " custom code '\(code)' (id: \(response.data.id)).")
+        success("Created", "custom code '\(code)' (id: \(response.data.id)).")
       }
     }
 
@@ -1995,7 +1930,7 @@ struct IAPCommand: AsyncParsableCommand {
           let path = expandPath(confirmOutputPath(output, isDirectory: false))
           try raw.write(toFile: path, atomically: true, encoding: .utf8)
           let lineCount = raw.split(separator: "\n").count
-          print(green("Wrote") + " \(lineCount) code(s) to \(path).")
+          success("Wrote", "\(lineCount) code(s) to \(path).")
         } else {
           print(raw)
         }
@@ -2080,60 +2015,50 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let path = expandPath(file)
-        let url = URL(fileURLWithPath: path)
-        let attrs = try FileManager.default.attributesOfItem(atPath: path)
-        let fileSize = (attrs[.size] as? Int) ?? 0
-        let fileName = url.lastPathComponent
+        let media = try MediaFile(readingFrom: file)
 
         print("Upload image:")
         print("  Product:  \(productID)")
-        print("  File:     \(fileName)")
-        print("  Size:     \(formatBytes(fileSize))")
+        print("  File:     \(media.fileName)")
+        print("  Size:     \(formatBytes(media.fileSize))")
         print()
 
         guard confirm("Upload? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
-        // 1. Reserve
-        let createResponse = try await client.send(
-          Resources.v1.inAppPurchaseImages.post(
-            InAppPurchaseImageCreateRequest(
-              data: .init(
-                attributes: .init(fileSize: fileSize, fileName: fileName),
-                relationships: .init(inAppPurchase: .init(data: .init(id: iap.id)))
+        let imageID = try await uploadAsset(
+          filePath: media.path,
+          reserve: {
+            let response = try await client.send(
+              Resources.v1.inAppPurchaseImages.post(
+                InAppPurchaseImageCreateRequest(
+                  data: .init(
+                    attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
+                    relationships: .init(inAppPurchase: .init(data: .init(id: iap.id)))
+                  )
+                )
               )
             )
-          )
-        )
-        let imageID = createResponse.data.id
-        let operations = createResponse.data.attributes?.uploadOperations ?? []
-        guard !operations.isEmpty else {
-          throw MediaUploadError.noUploadOperations
-        }
-
-        // 2. Upload chunks
-        try await uploadChunks(filePath: path, operations: operations)
-
-        // 3. Compute MD5
-        let md5 = try md5Hex(filePath: path)
-
-        // 4. Commit
-        _ = try await client.send(
-          Resources.v1.inAppPurchaseImages.id(imageID).patch(
-            InAppPurchaseImageUpdateRequest(
-              data: .init(
-                id: imageID,
-                attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+          },
+          commit: { id, md5 in
+            _ = try await client.send(
+              Resources.v1.inAppPurchaseImages.id(id).patch(
+                InAppPurchaseImageUpdateRequest(
+                  data: .init(
+                    id: id,
+                    attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+                  )
+                )
               )
             )
-          )
+          }
         )
 
         print()
-        print(green("Uploaded") + " \(fileName) (id: \(imageID)).")
+        success("Uploaded", "\(media.fileName) (id: \(imageID)).")
       }
     }
 
@@ -2161,7 +2086,7 @@ struct IAPCommand: AsyncParsableCommand {
         _ = try await findApp(bundleID: bundleID, client: client)
 
         guard confirm("Delete image \(imageID)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2169,7 +2094,7 @@ struct IAPCommand: AsyncParsableCommand {
           Resources.v1.inAppPurchaseImages.id(imageID).delete
         )
         print()
-        print(green("Deleted") + " image \(imageID).")
+        success("Deleted", "image \(imageID).")
       }
     }
   }
@@ -2247,55 +2172,50 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let path = expandPath(file)
-        let url = URL(fileURLWithPath: path)
-        let attrs = try FileManager.default.attributesOfItem(atPath: path)
-        let fileSize = (attrs[.size] as? Int) ?? 0
-        let fileName = url.lastPathComponent
+        let media = try MediaFile(readingFrom: file)
 
         print("Upload review screenshot:")
         print("  Product: \(productID)")
-        print("  File:    \(fileName)")
-        print("  Size:    \(formatBytes(fileSize))")
+        print("  File:    \(media.fileName)")
+        print("  Size:    \(formatBytes(media.fileSize))")
         print()
 
         guard confirm("Upload? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
-        let createResponse = try await client.send(
-          Resources.v1.inAppPurchaseAppStoreReviewScreenshots.post(
-            InAppPurchaseAppStoreReviewScreenshotCreateRequest(
-              data: .init(
-                attributes: .init(fileSize: fileSize, fileName: fileName),
-                relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id)))
+        let screenshotID = try await uploadAsset(
+          filePath: media.path,
+          reserve: {
+            let response = try await client.send(
+              Resources.v1.inAppPurchaseAppStoreReviewScreenshots.post(
+                InAppPurchaseAppStoreReviewScreenshotCreateRequest(
+                  data: .init(
+                    attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
+                    relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id)))
+                  )
+                )
               )
             )
-          )
-        )
-        let screenshotID = createResponse.data.id
-        let operations = createResponse.data.attributes?.uploadOperations ?? []
-        guard !operations.isEmpty else {
-          throw MediaUploadError.noUploadOperations
-        }
-
-        try await uploadChunks(filePath: path, operations: operations)
-        let md5 = try md5Hex(filePath: path)
-
-        _ = try await client.send(
-          Resources.v1.inAppPurchaseAppStoreReviewScreenshots.id(screenshotID).patch(
-            InAppPurchaseAppStoreReviewScreenshotUpdateRequest(
-              data: .init(
-                id: screenshotID,
-                attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+          },
+          commit: { id, md5 in
+            _ = try await client.send(
+              Resources.v1.inAppPurchaseAppStoreReviewScreenshots.id(id).patch(
+                InAppPurchaseAppStoreReviewScreenshotUpdateRequest(
+                  data: .init(
+                    id: id,
+                    attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+                  )
+                )
               )
             )
-          )
+          }
         )
 
         print()
-        print(green("Uploaded") + " review screenshot (id: \(screenshotID)).")
+        success("Uploaded", "review screenshot (id: \(screenshotID)).")
       }
     }
 
@@ -2326,7 +2246,7 @@ struct IAPCommand: AsyncParsableCommand {
         let screenshotID = response.data.id
 
         guard confirm("Delete review screenshot for \(productID)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2334,7 +2254,7 @@ struct IAPCommand: AsyncParsableCommand {
           Resources.v1.inAppPurchaseAppStoreReviewScreenshots.id(screenshotID).delete
         )
         print()
-        print(green("Deleted") + " review screenshot.")
+        success("Deleted", "review screenshot.")
       }
     }
   }

@@ -3,6 +3,15 @@ import AppStoreConnect
 import ArgumentParser
 import Foundation
 
+extension SubscriptionLocalization {
+  /// Reduces this API localization to the shared `LocalizationRecord` used by the import/export helpers.
+  var localizationRecord: LocalizationRecord {
+    LocalizationRecord(
+      id: id, locale: attributes?.locale ?? "", name: attributes?.name,
+      description: attributes?.description)
+  }
+}
+
 struct SubCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "sub",
@@ -467,7 +476,7 @@ struct SubCommand: AsyncParsableCommand {
       let refName = name ?? promptText("Group Reference Name: ")
 
       guard confirm("Create subscription group '\(refName)'? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -484,7 +493,7 @@ struct SubCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Created") + " subscription group '\(response.data.attributes?.referenceName ?? refName)'.")
+      success("Created", "subscription group '\(response.data.attributes?.referenceName ?? refName)'.")
     }
   }
 
@@ -515,7 +524,7 @@ struct SubCommand: AsyncParsableCommand {
       let newName = name ?? promptText("New Reference Name: ")
 
       guard confirm("Rename group '\(group.name)' to '\(newName)'? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -530,7 +539,7 @@ struct SubCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Updated") + " group '\(newName)'.")
+      success("Updated", "group '\(newName)'.")
     }
   }
 
@@ -556,13 +565,13 @@ struct SubCommand: AsyncParsableCommand {
       let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
       guard confirm("Delete subscription group '\(group.name)' and all its subscriptions? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
       _ = try await client.send(Resources.v1.subscriptionGroups.id(group.id).delete)
 
-      print(green("Deleted") + " group '\(group.name)'.")
+      success("Deleted", "group '\(group.name)'.")
     }
   }
 
@@ -647,7 +656,7 @@ struct SubCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Create this subscription? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -671,7 +680,7 @@ struct SubCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Created") + " subscription '\(response.data.attributes?.name ?? refName)'.")
+      success("Created", "subscription '\(response.data.attributes?.name ?? refName)'.")
     }
   }
 
@@ -743,7 +752,7 @@ struct SubCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Apply updates? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -764,7 +773,7 @@ struct SubCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Updated") + " '\(name ?? sub.attributes?.name ?? productID)'.")
+      success("Updated", "'\(name ?? sub.attributes?.name ?? productID)'.")
     }
   }
 
@@ -794,13 +803,13 @@ struct SubCommand: AsyncParsableCommand {
       )
 
       guard confirm("Delete subscription '\(sub.attributes?.name ?? productID)'? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
       _ = try await client.send(Resources.v1.subscriptions.id(sub.id).delete)
 
-      print(green("Deleted") + " '\(sub.attributes?.name ?? productID)'.")
+      success("Deleted", "'\(sub.attributes?.name ?? productID)'.")
     }
   }
 
@@ -845,7 +854,7 @@ struct SubCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Submit for review? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -861,7 +870,7 @@ struct SubCommand: AsyncParsableCommand {
         )
       )
 
-      print(green("Submitted") + " '\(sub.attributes?.name ?? productID)' for review.")
+      success("Submitted", "'\(sub.attributes?.name ?? productID)' for review.")
     }
   }
 
@@ -944,25 +953,8 @@ struct SubCommand: AsyncParsableCommand {
         let locsResponse = try await client.send(
           Resources.v1.subscriptions.id(sub.id).subscriptionLocalizations.get(limit: 50)
         )
-
-        var result: [String: ProductLocaleFields] = [:]
-        for loc in locsResponse.data {
-          guard let locale = loc.attributes?.locale else { continue }
-          result[locale] = ProductLocaleFields(
-            name: loc.attributes?.name,
-            description: loc.attributes?.description
-          )
-        }
-
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(result)
-
-        let outputPath = expandPath(
-          confirmOutputPath(output ?? "\(productID)-localizations.json", isDirectory: false))
-        try data.write(to: URL(fileURLWithPath: outputPath))
-
-        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+        try exportProductLocalizations(
+          locsResponse.data.map(\.localizationRecord), productID: productID, output: output)
       }
     }
 
@@ -1006,96 +998,39 @@ struct SubCommand: AsyncParsableCommand {
           throw ValidationError("JSON file contains no locale data.")
         }
 
-        print("Importing \(localeUpdates.count) locale(s) for '\(sub.attributes?.name ?? productID)':")
-        for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
-          print("  [\(localeName(locale))] \(fields.name ?? "—") — \(fields.description?.prefix(60) ?? "—")\(fields.description.map { $0.count > 60 ? "..." : "" } ?? "")")
-        }
-        print()
-
-        guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
-          print(yellow("Cancelled."))
-          return
-        }
-        print()
-
-        // Fetch existing localizations
         let locsResponse = try await client.send(
           Resources.v1.subscriptions.id(sub.id).subscriptionLocalizations.get(limit: 50)
         )
 
-        let locByLocale = Dictionary(
-          locsResponse.data.compactMap { loc in
-            loc.attributes?.locale.map { ($0, loc) }
-          },
-          uniquingKeysWith: { first, _ in first }
-        )
-
-        for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
-          guard let localization = locByLocale[locale] else {
-            guard let name = fields.name else {
-              print("  [\(localeName(locale))] Skipped — locale not found in current localizations for the app and \"name\" is required to create it.")
-              continue
-            }
-
-            guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
-              print("  [\(localeName(locale))] Skipped.")
-              continue
-            }
-
+        try await importProductLocalizations(
+          localeUpdates,
+          productName: sub.attributes?.name ?? productID,
+          existing: locsResponse.data.map(\.localizationRecord),
+          verbose: verbose,
+          create: { locale, name, description in
             let response = try await client.send(
               Resources.v1.subscriptionLocalizations.post(
                 SubscriptionLocalizationCreateRequest(
                   data: .init(
-                    attributes: .init(
-                      name: name,
-                      locale: locale,
-                      description: fields.description
-                    ),
-                    relationships: .init(
-                      subscription: .init(data: .init(id: sub.id))
-                    )
+                    attributes: .init(name: name, locale: locale, description: description),
+                    relationships: .init(subscription: .init(data: .init(id: sub.id)))
                   )
                 )
               )
             )
-            print("  [\(localeName(locale))] \(green("Created."))")
-
-            if verbose {
-              let attrs = response.data.attributes
-              print("    Response:")
-              print("      Locale:      \(attrs?.locale.map { localeName($0) } ?? "—")")
-              if let v = attrs?.name { print("      Name:        \(v)") }
-              if let v = attrs?.description { print("      Description: \(v.prefix(120))\(v.count > 120 ? "..." : "")") }
-            }
-            continue
-          }
-
-          let response = try await client.send(
-            Resources.v1.subscriptionLocalizations.id(localization.id).patch(
-              SubscriptionLocalizationUpdateRequest(
-                data: .init(
-                  id: localization.id,
-                  attributes: .init(
-                    name: fields.name,
-                    description: fields.description
-                  )
+            return response.data.localizationRecord
+          },
+          update: { id, name, description in
+            let response = try await client.send(
+              Resources.v1.subscriptionLocalizations.id(id).patch(
+                SubscriptionLocalizationUpdateRequest(
+                  data: .init(id: id, attributes: .init(name: name, description: description))
                 )
               )
             )
-          )
-          print("  [\(localeName(locale))] Updated.")
-
-          if verbose {
-            let attrs = response.data.attributes
-            print("    Response:")
-            print("      Locale:      \(attrs?.locale.map { localeName($0) } ?? "—")")
-            if let v = attrs?.name { print("      Name:        \(v)") }
-            if let v = attrs?.description { print("      Description: \(v.prefix(120))\(v.count > 120 ? "..." : "")") }
+            return response.data.localizationRecord
           }
-        }
-
-        print()
-        print("Done.")
+        )
       }
     }
   }
@@ -1189,7 +1124,7 @@ struct SubCommand: AsyncParsableCommand {
           confirmOutputPath(output ?? "\(safeName)-group-localizations.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
 
-        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+        success("Exported", "\(result.count) locale(s) to \(outputPath)")
       }
     }
 
@@ -1235,7 +1170,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         print()
@@ -1626,7 +1561,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Set this price? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -1634,7 +1569,7 @@ struct SubCommand: AsyncParsableCommand {
           subID: sub.id, territoryID: territoryID, pricePointID: point.id, client: client)
 
         print()
-        print(green("Updated") + " price for '\(sub.attributes?.name ?? productID)' in \(territoryID).")
+        success("Updated", "price for '\(sub.attributes?.name ?? productID)' in \(territoryID).")
       }
 
       private func runEqualizeAllTerritories(
@@ -1737,7 +1672,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Apply equalized pricing? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         print()
@@ -1917,7 +1852,7 @@ struct SubCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Apply this availability? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -1936,7 +1871,7 @@ struct SubCommand: AsyncParsableCommand {
       )
 
       print()
-      print(green("Updated") + " availability for \(productID) (\(finalList.count) territories).")
+      success("Updated", "availability for \(productID) (\(finalList.count) territories).")
     }
 
     private func printTerritories(_ codes: [String]) {
@@ -2147,7 +2082,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Create this offer? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2187,7 +2122,7 @@ struct SubCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Created") + " introductory offer (id: \(response.data.id)).")
+        success("Created", "introductory offer (id: \(response.data.id)).")
       }
     }
 
@@ -2224,7 +2159,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Apply update? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2240,7 +2175,7 @@ struct SubCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Updated") + " introductory offer end date.")
+        success("Updated", "introductory offer end date.")
       }
     }
 
@@ -2269,7 +2204,7 @@ struct SubCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
 
         guard confirm("Delete introductory offer \(offerID)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2278,7 +2213,7 @@ struct SubCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Deleted") + " introductory offer \(offerID).")
+        success("Deleted", "introductory offer \(offerID).")
       }
     }
   }
@@ -2487,7 +2422,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Create this offer code? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2532,7 +2467,7 @@ struct SubCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Created") + " offer code '\(name)' (id: \(response.data.id)).")
+        success("Created", "offer code '\(name)' (id: \(response.data.id)).")
       }
     }
 
@@ -2568,7 +2503,7 @@ struct SubCommand: AsyncParsableCommand {
         _ = try await findApp(bundleID: bundleID, client: client)
 
         guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2580,7 +2515,7 @@ struct SubCommand: AsyncParsableCommand {
           )
         )
         print()
-        print(green("Updated") + " offer code \(offerCodeID) (active=\(activeBool)).")
+        success("Updated", "offer code \(offerCodeID) (active=\(activeBool)).")
       }
     }
 
@@ -2632,7 +2567,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Generate? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2655,7 +2590,7 @@ struct SubCommand: AsyncParsableCommand {
 
         let batchID = response.data.id
         print()
-        print(green("Created") + " one-time-use code batch (id: \(batchID)).")
+        success("Created", "one-time-use code batch (id: \(batchID)).")
         print()
         print("Codes are generated asynchronously. Fetch with:")
         print("  ascelerate sub offer-code view-codes \(batchID)")
@@ -2708,7 +2643,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Create? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2730,7 +2665,7 @@ struct SubCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Created") + " custom code '\(code)' (id: \(response.data.id)).")
+        success("Created", "custom code '\(code)' (id: \(response.data.id)).")
       }
     }
 
@@ -2768,7 +2703,7 @@ struct SubCommand: AsyncParsableCommand {
           let path = expandPath(confirmOutputPath(output, isDirectory: false))
           try raw.write(toFile: path, atomically: true, encoding: .utf8)
           let lineCount = raw.split(separator: "\n").count
-          print(green("Wrote") + " \(lineCount) code(s) to \(path).")
+          success("Wrote", "\(lineCount) code(s) to \(path).")
         } else {
           print(raw)
         }
@@ -2951,7 +2886,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Create this promotional offer? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -2993,7 +2928,7 @@ struct SubCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Created") + " promotional offer '\(name)' (id: \(response.data.id)).")
+        success("Created", "promotional offer '\(name)' (id: \(response.data.id)).")
       }
     }
 
@@ -3047,7 +2982,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         guard confirm("Apply update? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -3080,7 +3015,7 @@ struct SubCommand: AsyncParsableCommand {
         )
 
         print()
-        print(green("Updated") + " promotional offer prices.")
+        success("Updated", "promotional offer prices.")
       }
     }
 
@@ -3109,7 +3044,7 @@ struct SubCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
 
         guard confirm("Delete promotional offer \(offerID)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -3117,7 +3052,7 @@ struct SubCommand: AsyncParsableCommand {
           Resources.v1.subscriptionPromotionalOffers.id(offerID).delete
         )
         print()
-        print(green("Deleted") + " promotional offer \(offerID).")
+        success("Deleted", "promotional offer \(offerID).")
       }
     }
   }
@@ -3152,7 +3087,7 @@ struct SubCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Submit group '\(group.name)' for review? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -3169,7 +3104,7 @@ struct SubCommand: AsyncParsableCommand {
       )
 
       print()
-      print(green("Submitted") + " group '\(group.name)' for review.")
+      success("Submitted", "group '\(group.name)' for review.")
     }
   }
 
@@ -3252,55 +3187,50 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let path = expandPath(file)
-        let url = URL(fileURLWithPath: path)
-        let attrs = try FileManager.default.attributesOfItem(atPath: path)
-        let fileSize = (attrs[.size] as? Int) ?? 0
-        let fileName = url.lastPathComponent
+        let media = try MediaFile(readingFrom: file)
 
         print("Upload image:")
         print("  Subscription: \(productID)")
-        print("  File:         \(fileName)")
-        print("  Size:         \(formatBytes(fileSize))")
+        print("  File:         \(media.fileName)")
+        print("  Size:         \(formatBytes(media.fileSize))")
         print()
 
         guard confirm("Upload? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
-        let createResponse = try await client.send(
-          Resources.v1.subscriptionImages.post(
-            SubscriptionImageCreateRequest(
-              data: .init(
-                attributes: .init(fileSize: fileSize, fileName: fileName),
-                relationships: .init(subscription: .init(data: .init(id: sub.id)))
+        let imageID = try await uploadAsset(
+          filePath: media.path,
+          reserve: {
+            let response = try await client.send(
+              Resources.v1.subscriptionImages.post(
+                SubscriptionImageCreateRequest(
+                  data: .init(
+                    attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
+                    relationships: .init(subscription: .init(data: .init(id: sub.id)))
+                  )
+                )
               )
             )
-          )
-        )
-        let imageID = createResponse.data.id
-        let operations = createResponse.data.attributes?.uploadOperations ?? []
-        guard !operations.isEmpty else {
-          throw MediaUploadError.noUploadOperations
-        }
-
-        try await uploadChunks(filePath: path, operations: operations)
-        let md5 = try md5Hex(filePath: path)
-
-        _ = try await client.send(
-          Resources.v1.subscriptionImages.id(imageID).patch(
-            SubscriptionImageUpdateRequest(
-              data: .init(
-                id: imageID,
-                attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+          },
+          commit: { id, md5 in
+            _ = try await client.send(
+              Resources.v1.subscriptionImages.id(id).patch(
+                SubscriptionImageUpdateRequest(
+                  data: .init(
+                    id: id,
+                    attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+                  )
+                )
               )
             )
-          )
+          }
         )
 
         print()
-        print(green("Uploaded") + " \(fileName) (id: \(imageID)).")
+        success("Uploaded", "\(media.fileName) (id: \(imageID)).")
       }
     }
 
@@ -3328,7 +3258,7 @@ struct SubCommand: AsyncParsableCommand {
         _ = try await findApp(bundleID: bundleID, client: client)
 
         guard confirm("Delete image \(imageID)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -3336,7 +3266,7 @@ struct SubCommand: AsyncParsableCommand {
           Resources.v1.subscriptionImages.id(imageID).delete
         )
         print()
-        print(green("Deleted") + " image \(imageID).")
+        success("Deleted", "image \(imageID).")
       }
     }
   }
@@ -3416,55 +3346,50 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let path = expandPath(file)
-        let url = URL(fileURLWithPath: path)
-        let attrs = try FileManager.default.attributesOfItem(atPath: path)
-        let fileSize = (attrs[.size] as? Int) ?? 0
-        let fileName = url.lastPathComponent
+        let media = try MediaFile(readingFrom: file)
 
         print("Upload review screenshot:")
         print("  Subscription: \(productID)")
-        print("  File:         \(fileName)")
-        print("  Size:         \(formatBytes(fileSize))")
+        print("  File:         \(media.fileName)")
+        print("  Size:         \(formatBytes(media.fileSize))")
         print()
 
         guard confirm("Upload? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
-        let createResponse = try await client.send(
-          Resources.v1.subscriptionAppStoreReviewScreenshots.post(
-            SubscriptionAppStoreReviewScreenshotCreateRequest(
-              data: .init(
-                attributes: .init(fileSize: fileSize, fileName: fileName),
-                relationships: .init(subscription: .init(data: .init(id: sub.id)))
+        let screenshotID = try await uploadAsset(
+          filePath: media.path,
+          reserve: {
+            let response = try await client.send(
+              Resources.v1.subscriptionAppStoreReviewScreenshots.post(
+                SubscriptionAppStoreReviewScreenshotCreateRequest(
+                  data: .init(
+                    attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
+                    relationships: .init(subscription: .init(data: .init(id: sub.id)))
+                  )
+                )
               )
             )
-          )
-        )
-        let screenshotID = createResponse.data.id
-        let operations = createResponse.data.attributes?.uploadOperations ?? []
-        guard !operations.isEmpty else {
-          throw MediaUploadError.noUploadOperations
-        }
-
-        try await uploadChunks(filePath: path, operations: operations)
-        let md5 = try md5Hex(filePath: path)
-
-        _ = try await client.send(
-          Resources.v1.subscriptionAppStoreReviewScreenshots.id(screenshotID).patch(
-            SubscriptionAppStoreReviewScreenshotUpdateRequest(
-              data: .init(
-                id: screenshotID,
-                attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+          },
+          commit: { id, md5 in
+            _ = try await client.send(
+              Resources.v1.subscriptionAppStoreReviewScreenshots.id(id).patch(
+                SubscriptionAppStoreReviewScreenshotUpdateRequest(
+                  data: .init(
+                    id: id,
+                    attributes: .init(sourceFileChecksum: md5, isUploaded: true)
+                  )
+                )
               )
             )
-          )
+          }
         )
 
         print()
-        print(green("Uploaded") + " review screenshot (id: \(screenshotID)).")
+        success("Uploaded", "review screenshot (id: \(screenshotID)).")
       }
     }
 
@@ -3496,7 +3421,7 @@ struct SubCommand: AsyncParsableCommand {
         let screenshotID = response.data.id
 
         guard confirm("Delete review screenshot for \(productID)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
 
@@ -3504,7 +3429,7 @@ struct SubCommand: AsyncParsableCommand {
           Resources.v1.subscriptionAppStoreReviewScreenshots.id(screenshotID).delete
         )
         print()
-        print(green("Deleted") + " review screenshot.")
+        success("Deleted", "review screenshot.")
       }
     }
   }

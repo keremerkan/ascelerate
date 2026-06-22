@@ -190,7 +190,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         confirmOutputPath(output ?? "\(defaultName).mobileprovision", isDirectory: false)
       )
       try profileData.write(to: URL(fileURLWithPath: outputPath))
-      print(green("Downloaded") + " profile to \(outputPath)")
+      success("Downloaded", "profile to \(outputPath)")
     }
   }
 
@@ -413,7 +413,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Create this profile? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -442,7 +442,7 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print(green("Created") + " profile '\(attrs?.name ?? profileName)'.")
+      success("Created", "profile '\(attrs?.name ?? profileName)'.")
       print("  UUID:    \(attrs?.uuid ?? "—")")
       print("  State:   \(attrs?.profileState.map { formatState($0) } ?? "—")")
       print("  Expires: \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
@@ -636,7 +636,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Reissue \(targets.count) profile(s)? This will delete and recreate each profile. [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
       print()
@@ -785,7 +785,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Delete \(profiles.count) profile(s)? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
       print()

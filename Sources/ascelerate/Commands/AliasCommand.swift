@@ -60,7 +60,7 @@ struct AliasCommand: AsyncParsableCommand {
       aliases[name] = selected.bundleID
       try Aliases.save(aliases)
 
-      print(green("Alias") + " '\(name)' → \(selected.bundleID)")
+      success("Alias", "'\(name)' → \(selected.bundleID)")
     }
   }
 
@@ -104,7 +104,7 @@ struct AliasCommand: AsyncParsableCommand {
 
       let label = names.count == 1 ? "alias '\(names[0])'" : "\(names.count) aliases"
       guard confirm("Remove \(label)? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -112,7 +112,7 @@ struct AliasCommand: AsyncParsableCommand {
         aliases.removeValue(forKey: name)
       }
       try Aliases.save(aliases)
-      print(green("Removed") + " \(label).")
+      success("Removed", "\(label).")
     }
   }
 

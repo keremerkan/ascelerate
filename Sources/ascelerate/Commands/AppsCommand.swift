@@ -268,7 +268,7 @@ struct AppsCommand: AsyncParsableCommand {
         let response = try await client.send(request)
         let attrs = response.data.attributes
         let versionString = version.attributes?.versionString ?? "unknown"
-        print(green("Updated") + " localization for version \(versionString) [\(attrs?.locale.map { localeName($0) } ?? "—")]")
+        success("Updated", "localization for version \(versionString) [\(attrs?.locale.map { localeName($0) } ?? "—")]")
         
         if let d = attrs?.description, !d.isEmpty { print("  Description:      \(d.prefix(80))\(d.count > 80 ? "..." : "")") }
         if let w = attrs?.whatsNew, !w.isEmpty { print("  What's New:       \(w.prefix(80))\(w.count > 80 ? "..." : "")") }
@@ -371,7 +371,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         guard confirm("Send updates for \(effectiveUpdates.count) locale(s)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         print()
@@ -521,7 +521,7 @@ struct AppsCommand: AsyncParsableCommand {
         try data.write(to: URL(fileURLWithPath: outputPath))
         
         let versionString = version.attributes?.versionString ?? "unknown"
-        print(green("Exported") + " \(result.count) locale(s) for version \(versionString) to \(outputPath)")
+        success("Exported", "\(result.count) locale(s) for version \(versionString) to \(outputPath)")
       }
     }
   }
@@ -605,7 +605,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       let response = try await client.send(request)
       let attrs = response.data.attributes
-      print(green("Created") + " version \(attrs?.versionString ?? versionString)")
+      success("Created", "version \(attrs?.versionString ?? versionString)")
       print("  Platform:     \(attrs?.platform.map { formatState($0) } ?? "—")")
       print("  State:        \(attrs?.appVersionState.map { formatState($0) } ?? "—")")
       print("  Release Type: \(attrs?.releaseType.map { formatState($0) } ?? "—")")
@@ -650,7 +650,7 @@ struct AppsCommand: AsyncParsableCommand {
         let buildNumber = build.attributes?.version ?? "unknown"
         let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
         print()
-        print(green("Attached") + " build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
+        success("Attached", "build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
       }
     }
     
@@ -696,7 +696,7 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           
           guard confirm("Attach this build? [y/N] ") else {
-            print(yellow("Cancelled."))
+            cancelled()
             return
           }
           
@@ -709,7 +709,7 @@ struct AppsCommand: AsyncParsableCommand {
           )
           
           print()
-          print(green("Attached") + " build \(pendingBuild) (uploaded \(uploaded)) to version \(versionString).")
+          success("Attached", "build \(pendingBuild) (uploaded \(uploaded)) to version \(versionString).")
           return
         }
         
@@ -745,7 +745,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
             print()
           } else {
-            print(yellow("Cancelled."))
+            cancelled()
             return
           }
         } else if state == .failed || state == .invalid {
@@ -754,7 +754,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         guard confirm("Attach this build? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         
@@ -767,7 +767,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
         
         print()
-        print(green("Attached") + " build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
+        success("Attached", "build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
       }
     }
     
@@ -812,7 +812,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Detach this build from version \(versionString)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         
@@ -826,7 +826,7 @@ struct AppsCommand: AsyncParsableCommand {
         try await client.send(request)
         
         print()
-        print(green("Detached") + " build \(buildNumber) from version \(versionString).")
+        success("Detached", "build \(buildNumber) from version \(versionString).")
       }
     }
   }
@@ -891,7 +891,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
         let response = try await client.send(request)
         let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
-        print(green("Enabled") + " phased release for version \(versionString).")
+        success("Enabled", "phased release for version \(versionString).")
         print("  State: \(state)")
         return
       }
@@ -912,7 +912,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
         let response = try await client.send(request)
         let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
-        print(green("Paused") + " phased release for version \(versionString).")
+        success("Paused", "phased release for version \(versionString).")
         print("  State: \(state)")
         return
       }
@@ -928,7 +928,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
         let response = try await client.send(request)
         let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
-        print(green("Resumed") + " phased release for version \(versionString).")
+        success("Resumed", "phased release for version \(versionString).")
         print("  State: \(state)")
         return
       }
@@ -938,7 +938,7 @@ struct AppsCommand: AsyncParsableCommand {
           throw ValidationError("No phased release configured for version \(versionString). Use --enable first.")
         }
         guard confirm("Complete phased release for version \(versionString)? This will release to all users immediately. [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
@@ -948,7 +948,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
         let response = try await client.send(request)
         let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
-        print(green("Completed") + " phased release for version \(versionString) — released to all users.")
+        success("Completed", "phased release for version \(versionString) — released to all users.")
         print("  State: \(state)")
         return
       }
@@ -959,13 +959,13 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         guard confirm("Remove phased release for version \(versionString)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         try await client.send(
           Resources.v1.appStoreVersionPhasedReleases.id(pr.id).delete
         )
-        print(green("Removed") + " phased release for version \(versionString).")
+        success("Removed", "phased release for version \(versionString).")
         return
       }
       
@@ -1068,13 +1068,13 @@ struct AppsCommand: AsyncParsableCommand {
         let existingName = existingCoverage.attributes?.fileName ?? "unknown"
         print("Existing routing coverage: \(existingName)")
         guard confirm("Replace existing routing coverage with '\(fileName)'? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         try await client.send(
           Resources.v1.routingAppCoverages.id(existingCoverage.id).delete
         )
-        print(green("Deleted") + " existing coverage.")
+        success("Deleted", "existing coverage.")
         print()
       }
       
@@ -1117,7 +1117,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
       )
       
-      print(green("Uploaded") + " routing coverage '\(fileName)' for version \(versionString).")
+      success("Uploaded", "routing coverage '\(fileName)' for version \(versionString).")
     }
   }
   
@@ -1551,7 +1551,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("Platform: \(platformValue)")
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
-            print(yellow("Cancelled."))
+            cancelled()
             return
           }
         } else {
@@ -1568,7 +1568,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("Build \(buildNumber) attached. Continuing with submission...")
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
-            print(yellow("Cancelled."))
+            cancelled()
             return
           }
         }
@@ -1595,7 +1595,7 @@ struct AppsCommand: AsyncParsableCommand {
             case .unresolvedIssues:
               print("Found existing review submission with unresolved issues from a previous review.")
               guard confirm("Resubmit for review? [y/N] ") else {
-                print(yellow("Cancelled."))
+                cancelled()
                 return
               }
               submissionID = active.id
@@ -1762,7 +1762,7 @@ struct AppsCommand: AsyncParsableCommand {
         let result = try await client.send(submitRequest)
         let state = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
         print()
-        print(green("Submitted for review."))
+        success("Submitted for review.")
         print("  State: \(state)")
       }
     }
@@ -1846,7 +1846,7 @@ struct AppsCommand: AsyncParsableCommand {
         print("Resolving without addressing the feedback will likely result in another rejection.")
         print()
         guard confirm("Mark \(rejectedItems.count) rejected item(s) as resolved? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         
@@ -1864,7 +1864,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         print()
-        print(green("Resolved") + " \(rejectedItems.count) item(s).")
+        success("Resolved", "\(rejectedItems.count) item(s).")
         print("Run 'ascelerate apps review submit \(bundleID)' to resubmit.")
       }
     }
@@ -1920,7 +1920,7 @@ struct AppsCommand: AsyncParsableCommand {
         print("State:      \(state)")
         print()
         guard confirm("Cancel this review submission? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         
@@ -1937,7 +1937,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         let newState = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
         print()
-        print(green("Submission cancelled."))
+        success("Submission cancelled.")
         print("  State: \(newState)")
       }
     }
@@ -2164,7 +2164,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Apply updates? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         print()
@@ -2198,7 +2198,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
           )
           let updatedLocale = response.data.attributes?.locale ?? locale ?? "primary"
-          print(green("Updated") + " localization [\(updatedLocale)].")
+          success("Updated", "localization [\(updatedLocale)].")
         }
         
         // Update categories
@@ -2218,7 +2218,7 @@ struct AppsCommand: AsyncParsableCommand {
               )
             )
           )
-          print(green("Updated") + " categories.")
+          success("Updated", "categories.")
         }
         
         print()
@@ -2287,7 +2287,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         print()
@@ -2429,7 +2429,7 @@ struct AppsCommand: AsyncParsableCommand {
           confirmOutputPath(output ?? "\(bundleID)-app-infos.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
         
-        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+        success("Exported", "\(result.count) locale(s) to \(outputPath)")
       }
     }
 
@@ -2593,7 +2593,7 @@ struct AppsCommand: AsyncParsableCommand {
           let outputPath = confirmOutputPath(output ?? "age-rating.json", isDirectory: false)
           let expandedOutput = expandPath(outputPath)
           try jsonData.write(to: URL(fileURLWithPath: expandedOutput))
-          print(green("Exported") + " age rating for \(appName) → \(outputPath)")
+          success("Exported", "age rating for \(appName) → \(outputPath)")
         }
       }
 
@@ -2667,7 +2667,7 @@ struct AppsCommand: AsyncParsableCommand {
 
           print()
           guard confirm("Update \(changeCount) age rating field\(changeCount == 1 ? "" : "s")? [y/N] ") else {
-            print(yellow("Cancelled."))
+            cancelled()
             return
           }
 
@@ -2713,7 +2713,7 @@ struct AppsCommand: AsyncParsableCommand {
 
           _ = try await client.send(updateRequest)
           print()
-          print(green("Updated") + " age rating declaration for \(appName).")
+          success("Updated", "age rating declaration for \(appName).")
         }
       }
     }
@@ -2829,7 +2829,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Apply \(changes.count) change\(changes.count == 1 ? "" : "s")? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         
@@ -2852,7 +2852,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         let succeeded = changes.count - failed.count
         if succeeded > 0 {
-          print(green("Updated") + " \(succeeded) territory availability\(succeeded == 1 ? "" : " entries").")
+          success("Updated", "\(succeeded) territory availability\(succeeded == 1 ? "" : " entries").")
         }
         if !failed.isEmpty {
           print("Failed: \(failed.joined(separator: ", "))")
@@ -2954,7 +2954,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Create encryption declaration? [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         
@@ -2980,7 +2980,7 @@ struct AppsCommand: AsyncParsableCommand {
         let state = attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—"
         let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
         print()
-        print(green("Created") + " encryption declaration.")
+        success("Created", "encryption declaration.")
         print("  State:  \(state)")
         print("  Exempt: \(exempt)")
         return
@@ -3078,7 +3078,7 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         guard confirm("Delete custom EULA? This will revert to the standard Apple EULA. [y/N] ") else {
-          print(yellow("Cancelled."))
+          cancelled()
           return
         }
         
@@ -3086,7 +3086,7 @@ struct AppsCommand: AsyncParsableCommand {
           Resources.v1.endUserLicenseAgreements.id(eula.id).delete
         )
         print()
-        print(green("Deleted") + " custom EULA.")
+        success("Deleted", "custom EULA.")
         return
       }
       
@@ -3112,7 +3112,7 @@ struct AppsCommand: AsyncParsableCommand {
         if let eula = existing {
           // Update existing
           guard confirm("Update existing EULA? [y/N] ") else {
-            print(yellow("Cancelled."))
+            cancelled()
             return
           }
           
@@ -3124,7 +3124,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
           )
           print()
-          print(green("Updated") + " EULA.")
+          success("Updated", "EULA.")
         } else {
           // Create new — need all territory IDs
           var allTerritoryIDs: [String] = []
@@ -3135,7 +3135,7 @@ struct AppsCommand: AsyncParsableCommand {
           }
           
           guard confirm("Create custom EULA for all \(allTerritoryIDs.count) territories? [y/N] ") else {
-            print(yellow("Cancelled."))
+            cancelled()
             return
           }
           
@@ -3153,7 +3153,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
           )
           print()
-          print(green("Created") + " EULA for \(allTerritoryIDs.count) territories.")
+          success("Created", "EULA for \(allTerritoryIDs.count) territories.")
         }
         return
       }
@@ -3268,7 +3268,7 @@ struct AppsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Apply these changes? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -3289,7 +3289,7 @@ struct AppsCommand: AsyncParsableCommand {
       )
 
       print()
-      print(green("Updated") + " subscription grace period.")
+      success("Updated", "subscription grace period.")
     }
   }
 }

@@ -96,7 +96,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 print("Config already exists at \(configPath)")
             } else {
                 try ScreenshotConfig.exampleYAML.write(toFile: configPath, atomically: true, encoding: .utf8)
-                print(green("Created") + " \(configPath)")
+                success("Created", "\(configPath)")
             }
 
             // Create ScreenshotHelper.swift
@@ -104,7 +104,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 print("Helper already exists at \(helperPath)")
             } else {
                 try CreateHelper.helperSource.write(toFile: helperPath, atomically: true, encoding: .utf8)
-                print(green("Created") + " \(helperPath)")
+                success("Created", "\(helperPath)")
             }
 
             print()
@@ -327,7 +327,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
 
             print()
             if failures == 0 && warnings == 0 {
-                print(green("All checks passed."))
+                success("All checks passed.")
             } else {
                 var parts: [String] = []
                 if failures > 0 { parts.append(red("\(failures) error(s)")) }
@@ -371,7 +371,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             try FileManager.default.createDirectory(atPath: parentDir, withIntermediateDirectories: true)
 
             try Self.helperSource.write(toFile: outputPath, atomically: true, encoding: .utf8)
-            print(green("Created") + " \(filename)")
+            success("Created", "\(filename)")
             print("Add this file to your UITest target.")
         }
 

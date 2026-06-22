@@ -193,7 +193,7 @@ struct CertsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Create this certificate? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -210,7 +210,7 @@ struct CertsCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print(green("Created") + " certificate.")
+      success("Created", "certificate.")
       print("  Display Name:  \(attrs?.displayName ?? "—")")
       print("  Serial Number: \(attrs?.serialNumber ?? "—")")
       print("  Expires:       \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
@@ -370,7 +370,7 @@ struct CertsCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Revoke \(certs.count) certificate(s)? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
       print()

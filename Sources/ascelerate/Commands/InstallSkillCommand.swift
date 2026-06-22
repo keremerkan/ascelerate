@@ -22,7 +22,7 @@ struct InstallSkillCommand: AsyncParsableCommand {
         return
       }
       try fm.removeItem(at: skillDir)
-      print(green("Removed") + " ascelerate skill from \(skillDir.path)")
+      success("Removed", "ascelerate skill from \(skillDir.path)")
       return
     }
 
@@ -43,7 +43,7 @@ struct InstallSkillCommand: AsyncParsableCommand {
     let stamped = "<!-- ascelerate v\(Ascelerate.appVersion) -->\n" + content
     try stamped.write(to: skillFile, atomically: true, encoding: .utf8)
 
-    print(green("Installed") + " ascelerate skill v\(Ascelerate.appVersion) for Claude Code.")
+    success("Installed", "ascelerate skill v\(Ascelerate.appVersion) for Claude Code.")
     print("  \(skillFile.path)")
     print()
     print("Claude Code will discover the skill automatically.")

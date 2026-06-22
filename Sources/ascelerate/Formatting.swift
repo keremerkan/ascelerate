@@ -12,6 +12,15 @@ func yellow(_ text: String) -> String { isTerminal ? "\u{1B}[38;5;208m\(text)\u{
 func bold(_ text: String) -> String { isTerminal ? "\u{1B}[1m\(text)\u{1B}[0m" : text }
 func stderrRed(_ text: String) -> String { isStderrTerminal ? "\u{1B}[31m\(text)\u{1B}[0m" : text }
 
+/// Prints the standard "Cancelled." message used when a user declines a confirmation prompt.
+func cancelled() { print(yellow("Cancelled.")) }
+
+/// Prints a success line: a green `label` (typically a verb like "Created"/"Updated"),
+/// optionally followed by a space and plain `detail` text.
+func success(_ label: String, _ detail: String = "") {
+  print(detail.isEmpty ? green(label) : green(label) + " " + detail)
+}
+
 // MARK: - Child Process Signal Forwarding
 
 /// Active child processes that should be interrupted on Ctrl-C.
@@ -848,6 +857,103 @@ struct ProductLocaleFields: Codable {
 struct GroupLocaleFields: Codable {
   var name: String?
   var customAppName: String?
+}
+
+/// A localization reduced to the fields the shared import/export helpers operate on.
+/// Decouples the helpers from the concrete asc-swift types (IAP vs subscription localizations).
+struct LocalizationRecord {
+  let id: String
+  let locale: String
+  let name: String?
+  let description: String?
+}
+
+/// Writes product (IAP/subscription) localizations to a JSON file keyed by locale.
+func exportProductLocalizations(
+  _ existing: [LocalizationRecord], productID: String, output: String?
+) throws {
+  var result: [String: ProductLocaleFields] = [:]
+  for loc in existing where !loc.locale.isEmpty {
+    result[loc.locale] = ProductLocaleFields(name: loc.name, description: loc.description)
+  }
+
+  let encoder = JSONEncoder()
+  encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+  let data = try encoder.encode(result)
+
+  let outputPath = expandPath(
+    confirmOutputPath(output ?? "\(productID)-localizations.json", isDirectory: false))
+  try data.write(to: URL(fileURLWithPath: outputPath))
+
+  success("Exported", "\(result.count) locale(s) to \(outputPath)")
+}
+
+/// Drives the shared create-or-update import flow for product (IAP/subscription) localizations:
+/// prints the plan, confirms, then for each locale either updates the existing localization or
+/// creates a missing one (prompting first). `create`/`update` perform the type-specific API calls.
+func importProductLocalizations(
+  _ localeUpdates: [String: ProductLocaleFields],
+  productName: String,
+  existing: [LocalizationRecord],
+  verbose: Bool,
+  create: (_ locale: String, _ name: String, _ description: String?) async throws -> LocalizationRecord,
+  update: (_ id: String, _ name: String?, _ description: String?) async throws -> LocalizationRecord
+) async throws {
+  print("Importing \(localeUpdates.count) locale(s) for '\(productName)':")
+  for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
+    print(
+      "  [\(localeName(locale))] \(fields.name ?? "—") — \(fields.description?.prefix(60) ?? "—")\(fields.description.map { $0.count > 60 ? "..." : "" } ?? "")"
+    )
+  }
+  print()
+
+  guard confirm("Send updates for \(localeUpdates.count) locale(s)? [y/N] ") else {
+    cancelled()
+    return
+  }
+  print()
+
+  let byLocale = Dictionary(
+    existing.map { ($0.locale, $0) }, uniquingKeysWith: { first, _ in first })
+
+  for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
+    guard let record = byLocale[locale] else {
+      guard let name = fields.name else {
+        print(
+          "  [\(localeName(locale))] Skipped — locale not found in current localizations for the app and \"name\" is required to create it."
+        )
+        continue
+      }
+      guard
+        confirm(
+          "  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] "
+        )
+      else {
+        print("  [\(localeName(locale))] Skipped.")
+        continue
+      }
+      let created = try await create(locale, name, fields.description)
+      print("  [\(localeName(locale))] \(green("Created."))")
+      if verbose { printLocalizationResponse(created) }
+      continue
+    }
+
+    let updated = try await update(record.id, fields.name, fields.description)
+    print("  [\(localeName(locale))] Updated.")
+    if verbose { printLocalizationResponse(updated) }
+  }
+
+  print()
+  print("Done.")
+}
+
+private func printLocalizationResponse(_ record: LocalizationRecord) {
+  print("    Response:")
+  print("      Locale:      \(record.locale.isEmpty ? "—" : localeName(record.locale))")
+  if let v = record.name { print("      Name:        \(v)") }
+  if let v = record.description {
+    print("      Description: \(v.prefix(120))\(v.count > 120 ? "..." : "")")
+  }
 }
 
 enum Table {

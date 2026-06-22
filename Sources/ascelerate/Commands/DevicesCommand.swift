@@ -138,7 +138,7 @@ struct DevicesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Register this device? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -156,7 +156,7 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print(green("Registered") + " device '\(attrs?.name ?? deviceName)'.")
+      success("Registered", "device '\(attrs?.name ?? deviceName)'.")
       print("  UDID:   \(attrs?.udid ?? deviceUDID)")
       print("  Status: \(attrs?.status.map { formatState($0) } ?? "—")")
     }
@@ -272,7 +272,7 @@ struct DevicesCommand: AsyncParsableCommand {
       print()
 
       guard confirm("Update this device? [y/N] ") else {
-        print(yellow("Cancelled."))
+        cancelled()
         return
       }
 
@@ -290,7 +290,7 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let attrs = response.data.attributes
       print()
-      print(green("Updated") + " device '\(attrs?.name ?? currentName)'.")
+      success("Updated", "device '\(attrs?.name ?? currentName)'.")
     }
   }
 }

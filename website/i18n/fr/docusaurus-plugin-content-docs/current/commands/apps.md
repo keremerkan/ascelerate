@@ -71,6 +71,11 @@ Affichez ou mettez à jour les coordonnées, le compte de démonstration et les 
 ```bash
 ascelerate apps review info <bundle-id>
 ascelerate apps review info <bundle-id> --contact-email vous@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "Étapes de test…"
+
+# Pièces jointes (vidéos de démo, documents, etc.)
+ascelerate apps review attachment list <bundle-id>
+ascelerate apps review attachment upload <bundle-id> demo.mp4
+ascelerate apps review attachment delete <attachment-id>
 ```
 
 ## Vérifications préalables

@@ -1124,7 +1124,7 @@ struct AppsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "review",
       abstract: "Manage review submissions.",
-      subcommands: [Preflight.self, Status.self, Submit.self, ResolveIssues.self, CancelSubmission.self, Info.self]
+      subcommands: [Preflight.self, Status.self, Submit.self, ResolveIssues.self, CancelSubmission.self, Info.self, Attachment.self]
     )
     
     // MARK: - Preflight
@@ -2142,6 +2142,186 @@ struct AppsCommand: AsyncParsableCommand {
 
         print()
         success("Updated", "App Review Information for version \(versionString).")
+      }
+    }
+
+    // MARK: - App Review Attachments
+
+    struct Attachment: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        commandName: "attachment",
+        abstract: "Manage App Review attachment files.",
+        subcommands: [List.self, Upload.self, Delete.self]
+      )
+
+      /// Fetches the version's App Review detail (nil when none exists yet).
+      static func reviewDetail(
+        versionID: String, client: AppStoreConnectClient
+      ) async throws -> AppStoreReviewDetail? {
+        do {
+          return try await client.send(
+            Resources.v1.appStoreVersions.id(versionID).appStoreReviewDetail.get()
+          ).data
+        } catch is DecodingError {
+          return nil
+        }
+      }
+
+      /// Returns the version's App Review detail ID, creating an empty detail if needed.
+      static func ensureReviewDetailID(
+        versionID: String, client: AppStoreConnectClient
+      ) async throws -> String {
+        if let detail = try await reviewDetail(versionID: versionID, client: client) {
+          return detail.id
+        }
+        let created = try await client.send(
+          Resources.v1.appStoreReviewDetails.post(
+            AppStoreReviewDetailCreateRequest(
+              data: .init(
+                attributes: .init(),
+                relationships: .init(appStoreVersion: .init(data: .init(id: versionID)))
+              ))))
+        return created.data.id
+      }
+
+      struct List: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+          abstract: "List App Review attachment files for a version."
+        )
+
+        @Argument(help: "The bundle identifier of the app.",
+                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+        var bundleID: String
+
+        @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest editable version.")
+        var version: String?
+
+        func run() async throws {
+          let client = try ClientFactory.makeClient()
+          let app = try await findApp(bundleID: bundleID, client: client)
+          let appVersion = try await findVersion(
+            appID: app.id, versionString: version, client: client)
+
+          guard let detail = try await Attachment.reviewDetail(
+            versionID: appVersion.id, client: client)
+          else {
+            print("No App Review Information (or attachments) set for this version.")
+            return
+          }
+
+          let resp = try await client.send(
+            Resources.v1.appStoreReviewDetails.id(detail.id).appStoreReviewAttachments.get(limit: 50))
+          if resp.data.isEmpty {
+            print("No attachments found.")
+            return
+          }
+
+          var rows: [[String]] = []
+          for att in resp.data {
+            rows.append([
+              att.attributes?.fileName ?? "—",
+              att.attributes?.fileSize.map { formatBytes($0) } ?? "—",
+              att.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—",
+              att.id,
+            ])
+          }
+          Table.print(headers: ["File", "Size", "State", "Attachment ID"], rows: rows)
+        }
+      }
+
+      struct Upload: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+          abstract: "Upload an App Review attachment file."
+        )
+
+        @Argument(help: "The bundle identifier of the app.",
+                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+        var bundleID: String
+
+        @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest editable version.")
+        var version: String?
+
+        @Argument(help: "Path to the attachment file.", completion: .file())
+        var file: String
+
+        @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+        var yes = false
+
+        func run() async throws {
+          if yes { autoConfirm = true }
+          let client = try ClientFactory.makeClient()
+          let app = try await findApp(bundleID: bundleID, client: client)
+          let appVersion = try await findVersion(
+            appID: app.id, versionString: version, client: client)
+          let media = try MediaFile(readingFrom: file)
+
+          print("Upload App Review attachment:")
+          print("  Version: \(appVersion.attributes?.versionString ?? "—")")
+          print("  File:    \(media.fileName) (\(formatBytes(media.fileSize)))")
+          print()
+          guard confirm("Upload? [y/N] ") else {
+            cancelled()
+            return
+          }
+
+          let detailID = try await Attachment.ensureReviewDetailID(
+            versionID: appVersion.id, client: client)
+
+          let attachmentID = try await uploadAsset(
+            filePath: media.path,
+            reserve: {
+              let r = try await client.send(
+                Resources.v1.appStoreReviewAttachments.post(
+                  AppStoreReviewAttachmentCreateRequest(
+                    data: .init(
+                      attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
+                      relationships: .init(
+                        appStoreReviewDetail: .init(data: .init(id: detailID)))))))
+              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
+            },
+            commit: { id, md5 in
+              _ = try await client.send(
+                Resources.v1.appStoreReviewAttachments.id(id).patch(
+                  AppStoreReviewAttachmentUpdateRequest(
+                    data: .init(
+                      id: id, attributes: .init(sourceFileChecksum: md5, isUploaded: true)))))
+            })
+
+          print()
+          success("Uploaded", "attachment \(media.fileName) (id: \(attachmentID)).")
+        }
+      }
+
+      struct Delete: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+          abstract: "Delete an App Review attachment file."
+        )
+
+        @Argument(help: "The attachment ID (from `attachment list`).")
+        var attachmentID: String
+
+        @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+        var yes = false
+
+        func run() async throws {
+          if yes { autoConfirm = true }
+          let client = try ClientFactory.makeClient()
+
+          let name =
+            (try? await client.send(
+              Resources.v1.appStoreReviewAttachments.id(attachmentID).get()
+            ).data.attributes?.fileName) ?? nil
+          print("Attachment: \(name ?? attachmentID)")
+          print()
+          guard confirm("Delete this attachment? [y/N] ") else {
+            cancelled()
+            return
+          }
+
+          _ = try await client.send(Resources.v1.appStoreReviewAttachments.id(attachmentID).delete)
+          print()
+          success("Deleted", "attachment \(name ?? attachmentID).")
+        }
       }
     }
   }

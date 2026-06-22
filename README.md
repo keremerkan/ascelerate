@@ -161,6 +161,11 @@ ascelerate apps review cancel-submission <bundle-id>
 # View or update App Review Information (contact, demo account, notes)
 ascelerate apps review info <bundle-id>
 ascelerate apps review info <bundle-id> --contact-email you@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "Steps to test…"
+
+# App Review attachment files (demo videos, docs, etc.)
+ascelerate apps review attachment list <bundle-id>
+ascelerate apps review attachment upload <bundle-id> demo.mp4
+ascelerate apps review attachment delete <attachment-id>
 ```
 
 #### Pre-submission preflight checks

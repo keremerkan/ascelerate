@@ -114,6 +114,9 @@ ascelerate apps review resolve-issues <app>      # After fixing rejection
 ascelerate apps review cancel-submission <app>   # Cancel active review
 ascelerate apps review info <app>                # View App Review Information
 ascelerate apps review info <app> [--contact-email X] [--demo-account-name X] [--demo-account-password X] [--demo-account-required true|false] [--notes X]  # Update (per-version upsert; omitted fields unchanged)
+ascelerate apps review attachment list <app> [--version X]
+ascelerate apps review attachment upload <app> [--version X] <file>   # reserve/PUT/commit; any file type
+ascelerate apps review attachment delete <attachment-id>
 ```
 
 `preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices). Exits non-zero on failures.

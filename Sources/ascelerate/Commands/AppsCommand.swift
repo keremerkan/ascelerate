@@ -323,35 +323,9 @@ struct AppsCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: nil, client: client)
         
-        // Check if version is in an editable state
-        let promoTextOnly: Bool
-        if let state = version.attributes?.appVersionState, !Localizations.editableStates.contains(state) {
-          let hasNonPromoFields = localeUpdates.values.contains { fields in
-            fields.description != nil || fields.whatsNew != nil || fields.keywords != nil
-            || fields.marketingURL != nil || fields.supportURL != nil
-          }
-          if hasNonPromoFields {
-            print("Warning: Version is in state '\(state)' — only promotional text can be updated. Other fields will be ignored.")
-            print()
-          }
-          promoTextOnly = true
-        } else {
-          promoTextOnly = false
-        }
-        
-        // Filter out locales with nothing to send
-        let effectiveUpdates: [String: LocaleFields]
-        if promoTextOnly {
-          effectiveUpdates = localeUpdates.compactMapValues { fields in
-            fields.promotionalText != nil ? LocaleFields(promotionalText: fields.promotionalText) : nil
-          }
-          if effectiveUpdates.isEmpty {
-            throw ValidationError("No promotional text fields found in JSON — nothing to update in current version state.")
-          }
-        } else {
-          effectiveUpdates = localeUpdates
-        }
-        
+        let effectiveUpdates = try resolveEffectiveUpdates(
+          version: version, localeUpdates: localeUpdates)
+
         let versionString = version.attributes?.versionString ?? "unknown"
         let versionState = version.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
         print("App:     \(app.attributes?.name ?? bundleID)")
@@ -389,14 +363,52 @@ struct AppsCommand: AsyncParsableCommand {
           uniquingKeysWith: { first, _ in first }
         )
         
-        // Send updates
-        for (locale, fields) in effectiveUpdates.sorted(by: { $0.key < $1.key }) {
+        try await sendLocaleUpdates(
+          effectiveUpdates, versionID: version.id, existing: locByLocale, client: client)
+
+        print()
+        print("Done.")
+      }
+
+      /// Computes which locale updates to send: when the version is no longer editable, keeps only
+      /// promotional text (warning about ignored fields) and throws if nothing remains.
+      private func resolveEffectiveUpdates(
+        version: AppStoreVersion, localeUpdates: [String: LocaleFields]
+      ) throws -> [String: LocaleFields] {
+        guard let state = version.attributes?.appVersionState,
+          !Localizations.editableStates.contains(state)
+        else {
+          return localeUpdates
+        }
+        let hasNonPromoFields = localeUpdates.values.contains { fields in
+          fields.description != nil || fields.whatsNew != nil || fields.keywords != nil
+            || fields.marketingURL != nil || fields.supportURL != nil
+        }
+        if hasNonPromoFields {
+          print("Warning: Version is in state '\(state)' — only promotional text can be updated. Other fields will be ignored.")
+          print()
+        }
+        let filtered = localeUpdates.compactMapValues { fields in
+          fields.promotionalText != nil ? LocaleFields(promotionalText: fields.promotionalText) : nil
+        }
+        if filtered.isEmpty {
+          throw ValidationError("No promotional text fields found in JSON — nothing to update in current version state.")
+        }
+        return filtered
+      }
+
+      /// Sends each locale's update, creating the localization (after confirmation) when absent.
+      private func sendLocaleUpdates(
+        _ updates: [String: LocaleFields], versionID: String,
+        existing locByLocale: [String: AppStoreVersionLocalization],
+        client: AppStoreConnectClient
+      ) async throws {
+        for (locale, fields) in updates.sorted(by: { $0.key < $1.key }) {
           guard let localization = locByLocale[locale] else {
             guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
               print("  [\(localeName(locale))] Skipped.")
               continue
             }
-
             let response = try await client.send(
               Resources.v1.appStoreVersionLocalizations.post(
                 AppStoreVersionLocalizationCreateRequest(
@@ -411,62 +423,49 @@ struct AppsCommand: AsyncParsableCommand {
                       whatsNew: fields.whatsNew
                     ),
                     relationships: .init(
-                      appStoreVersion: .init(data: .init(id: version.id))
+                      appStoreVersion: .init(data: .init(id: versionID))
                     )
                   )
                 )
               )
             )
             print("  [\(localeName(locale))] \(green("Created."))")
-
-            if verbose {
-              let attrs = response.data.attributes
-              print("    Response:")
-              print("      Locale:           \(attrs?.locale.map { localeName($0) } ?? "—")")
-              if let d = attrs?.description { print("      Description:      \(d.prefix(120))\(d.count > 120 ? "..." : "")") }
-              if let w = attrs?.whatsNew { print("      What's New:       \(w.prefix(120))\(w.count > 120 ? "..." : "")") }
-              if let k = attrs?.keywords { print("      Keywords:         \(k.prefix(120))\(k.count > 120 ? "..." : "")") }
-              if let p = attrs?.promotionalText { print("      Promotional Text: \(p.prefix(120))\(p.count > 120 ? "..." : "")") }
-              if let u = attrs?.marketingURL { print("      Marketing URL:    \(u)") }
-              if let u = attrs?.supportURL { print("      Support URL:      \(u)") }
-            }
+            if verbose { printLocaleResponse(response.data.attributes) }
             continue
           }
 
-          let request = Resources.v1.appStoreVersionLocalizations.id(localization.id).patch(
-            AppStoreVersionLocalizationUpdateRequest(
-              data: .init(
-                id: localization.id,
-                attributes: .init(
-                  description: fields.description,
-                  keywords: fields.keywords,
-                  marketingURL: fields.marketingURL.flatMap { URL(string: $0) },
-                  promotionalText: fields.promotionalText,
-                  supportURL: fields.supportURL.flatMap { URL(string: $0) },
-                  whatsNew: fields.whatsNew
+          let response = try await client.send(
+            Resources.v1.appStoreVersionLocalizations.id(localization.id).patch(
+              AppStoreVersionLocalizationUpdateRequest(
+                data: .init(
+                  id: localization.id,
+                  attributes: .init(
+                    description: fields.description,
+                    keywords: fields.keywords,
+                    marketingURL: fields.marketingURL.flatMap { URL(string: $0) },
+                    promotionalText: fields.promotionalText,
+                    supportURL: fields.supportURL.flatMap { URL(string: $0) },
+                    whatsNew: fields.whatsNew
+                  )
                 )
               )
             )
           )
-
-          let response = try await client.send(request)
           print("  [\(localeName(locale))] Updated.")
-
-          if verbose {
-            let attrs = response.data.attributes
-            print("    Response:")
-            print("      Locale:           \(attrs?.locale.map { localeName($0) } ?? "—")")
-            if let d = attrs?.description { print("      Description:      \(d.prefix(120))\(d.count > 120 ? "..." : "")") }
-            if let w = attrs?.whatsNew { print("      What's New:       \(w.prefix(120))\(w.count > 120 ? "..." : "")") }
-            if let k = attrs?.keywords { print("      Keywords:         \(k.prefix(120))\(k.count > 120 ? "..." : "")") }
-            if let p = attrs?.promotionalText { print("      Promotional Text: \(p.prefix(120))\(p.count > 120 ? "..." : "")") }
-            if let u = attrs?.marketingURL { print("      Marketing URL:    \(u)") }
-            if let u = attrs?.supportURL { print("      Support URL:      \(u)") }
-          }
+          if verbose { printLocaleResponse(response.data.attributes) }
         }
-        
-        print()
-        print("Done.")
+      }
+
+      /// Prints the verbose API response for a single localization (shared by create and update).
+      private func printLocaleResponse(_ attrs: AppStoreVersionLocalization.Attributes?) {
+        print("    Response:")
+        print("      Locale:           \(attrs?.locale.map { localeName($0) } ?? "—")")
+        if let d = attrs?.description { print("      Description:      \(d.prefix(120))\(d.count > 120 ? "..." : "")") }
+        if let w = attrs?.whatsNew { print("      What's New:       \(w.prefix(120))\(w.count > 120 ? "..." : "")") }
+        if let k = attrs?.keywords { print("      Keywords:         \(k.prefix(120))\(k.count > 120 ? "..." : "")") }
+        if let p = attrs?.promotionalText { print("      Promotional Text: \(p.prefix(120))\(p.count > 120 ? "..." : "")") }
+        if let u = attrs?.marketingURL { print("      Marketing URL:    \(u)") }
+        if let u = attrs?.supportURL { print("      Support URL:      \(u)") }
       }
     }
     
@@ -1584,6 +1583,40 @@ struct AppsCommand: AsyncParsableCommand {
           default: throw ValidationError("Invalid platform '\(platform)'. Use: ios, macos, tvos, visionos.")
         }
         
+        guard try await confirmBuildAttached(
+          app: app, appVersion: appVersion, versionString: versionString,
+          versionState: versionState, platformValue: platformValue, client: client)
+        else { return }
+        print()
+
+        guard
+          let submissionID = try await resolveSubmission(
+            app: app, appVersion: appVersion, versionString: versionString,
+            platformValue: platformValue, client: client)
+        else { return }
+
+        try await submitBundledProducts(app: app, client: client)
+
+        // Step 3: Submit for review
+        let submitRequest = Resources.v1.reviewSubmissions.id(submissionID).patch(
+          ReviewSubmissionUpdateRequest(
+            data: .init(
+              id: submissionID,
+              attributes: .init(isSubmitted: true)
+            )
+          )
+        )
+        let result = try await client.send(submitRequest)
+        let state = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
+        print()
+        success("Submitted for review.")
+        print("  State: \(state)")
+      }
+
+      private func confirmBuildAttached(
+        app: App, appVersion: AppStoreVersion, versionString: String,
+        versionState: String, platformValue: Platform, client: AppStoreConnectClient
+      ) async throws -> Bool {
         // Check if a build is already attached
         // The API returns {"data": null} when no build is attached, which fails
         // to decode since BuildWithoutIncludesResponse.data is non-optional.
@@ -1602,7 +1635,7 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
             cancelled()
-            return
+            return false
           }
         } else {
           print("App:      \(app.attributes?.name ?? bundleID)")
@@ -1619,11 +1652,16 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
             cancelled()
-            return
+            return false
           }
         }
-        print()
-        
+        return true
+      }
+
+      private func resolveSubmission(
+        app: App, appVersion: AppStoreVersion, versionString: String,
+        platformValue: Platform, client: AppStoreConnectClient
+      ) async throws -> String? {
         // Check for existing active review submissions
         let existingSubmissions = try await client.send(
           Resources.v1.apps.id(app.id).reviewSubmissions.get(
@@ -1638,7 +1676,7 @@ struct AppsCommand: AsyncParsableCommand {
           switch activeState {
             case .waitingForReview, .inReview:
               print("Version is already submitted for review (state: \(activeState.map { formatState($0) } ?? "—")).")
-              return
+              return nil
             case .readyForReview:
               print("Found existing review submission (state: readyForReview). Resubmitting...")
               submissionID = active.id
@@ -1646,7 +1684,7 @@ struct AppsCommand: AsyncParsableCommand {
               print("Found existing review submission with unresolved issues from a previous review.")
               guard confirm("Resubmit for review? [y/N] ") else {
                 cancelled()
-                return
+                return nil
               }
               submissionID = active.id
             default:
@@ -1682,7 +1720,10 @@ struct AppsCommand: AsyncParsableCommand {
           _ = try await client.send(createItem)
           print("Added version \(versionString) to submission")
         }
-        
+        return submissionID
+      }
+
+      private func submitBundledProducts(app: App, client: AppStoreConnectClient) async throws {
         // Offer to submit IAPs/subscriptions alongside the app version
         let submittableIAPStates: Set<InAppPurchaseState> = [.readyToSubmit, .approved]
         let submittableSubStates: Set<Subscription.Attributes.State> = [.readyToSubmit, .approved]
@@ -1799,21 +1840,6 @@ struct AppsCommand: AsyncParsableCommand {
             }
           }
         }
-
-        // Step 3: Submit for review
-        let submitRequest = Resources.v1.reviewSubmissions.id(submissionID).patch(
-          ReviewSubmissionUpdateRequest(
-            data: .init(
-              id: submissionID,
-              attributes: .init(isSubmitted: true)
-            )
-          )
-        )
-        let result = try await client.send(submitRequest)
-        let state = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
-        print()
-        success("Submitted for review.")
-        print("  State: \(state)")
       }
     }
 

@@ -7,7 +7,7 @@ struct AppEventsCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "events",
     abstract: "Manage in-app events.",
-    subcommands: [List.self, Info.self, Create.self, Update.self, Delete.self, Localizations.self]
+    subcommands: [List.self, Info.self, Create.self, Update.self, Delete.self, Localizations.self, Media.self]
   )
 
   // MARK: - Shared helpers
@@ -637,6 +637,253 @@ struct AppEventsCommand: AsyncParsableCommand {
         if let v = attrs?.longDescription {
           print("      Long Description:  \(v.prefix(120))\(v.count > 120 ? "…" : "")")
         }
+      }
+    }
+  }
+
+  // MARK: - Media
+
+  struct Media: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "media",
+      abstract: "Manage in-app event card screenshots and video clips.",
+      subcommands: [List.self, Upload.self, Delete.self]
+    )
+
+    /// Resolves a locale to its localization ID on the event.
+    static func localizationID(
+      forLocale locale: String, eventID: String, client: AppStoreConnectClient
+    ) async throws -> String {
+      let resp = try await client.send(
+        Resources.v1.appEvents.id(eventID).localizations.get(limit: 50))
+      guard let loc = resp.data.first(where: { $0.attributes?.locale == locale }) else {
+        throw ValidationError(
+          "No '\(locale)' localization on this event. Create it first with 'events localizations import'.")
+      }
+      return loc.id
+    }
+
+    struct List: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "List event card screenshots and video clips across localizations."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The event reference name or ID.")
+      var event: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appEvent = try await AppEventsCommand.findAppEvent(
+          ref: event, appID: app.id, client: client)
+
+        let locs = try await client.send(
+          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+
+        var rows: [[String]] = []
+        for loc in locs.data.sorted(by: {
+          ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
+        }) {
+          let locale = loc.attributes?.locale ?? "?"
+          let shots = try await client.send(
+            Resources.v1.appEventLocalizations.id(loc.id).appEventScreenshots.get(limit: 50))
+          for s in shots.data {
+            rows.append([
+              locale, "Screenshot",
+              s.attributes?.appEventAssetType.map { formatState($0) } ?? "—",
+              s.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—",
+              s.id,
+            ])
+          }
+          let clips = try await client.send(
+            Resources.v1.appEventLocalizations.id(loc.id).appEventVideoClips.get(limit: 50))
+          for c in clips.data {
+            rows.append([
+              locale, "Video",
+              c.attributes?.appEventAssetType.map { formatState($0) } ?? "—",
+              c.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—",
+              c.id,
+            ])
+          }
+        }
+
+        if rows.isEmpty {
+          print("No event media found.")
+          return
+        }
+        Table.print(
+          headers: ["Locale", "Type", "Asset Type", "State", "Media ID"], rows: rows)
+      }
+    }
+
+    struct Upload: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Upload an event card screenshot (.png/.jpg) or video clip (.mp4/.mov)."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The event reference name or ID.")
+      var event: String
+
+      @Option(name: .long, help: "Locale of the localization to attach media to (e.g. en-US).")
+      var locale: String
+
+      @Option(name: .long, help: "Asset type: EVENT_CARD or EVENT_DETAILS_PAGE.")
+      var assetType: String
+
+      @Option(name: .long, help: "Preview frame timecode for video clips (e.g. 00:00:03).")
+      var previewFrame: String?
+
+      @Argument(help: "Path to the media file.",
+                completion: .file(extensions: ["png", "jpg", "jpeg", "mp4", "mov"]))
+      var file: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appEvent = try await AppEventsCommand.findAppEvent(
+          ref: event, appID: app.id, client: client)
+        let assetTypeValue: AppEventAssetType = try parseEnum(assetType, name: "asset-type")
+        let locID = try await Media.localizationID(
+          forLocale: locale, eventID: appEvent.id, client: client)
+
+        let media = try MediaFile(readingFrom: file)
+        let ext = (media.fileName as NSString).pathExtension.lowercased()
+        let isImage = ["png", "jpg", "jpeg"].contains(ext)
+        let isVideo = ["mp4", "mov"].contains(ext)
+        guard isImage || isVideo else {
+          throw ValidationError(
+            "Unsupported file type '.\(ext)'. Use png/jpg for screenshots or mp4/mov for video clips.")
+        }
+
+        print("Upload \(isImage ? "screenshot" : "video clip"):")
+        print("  Event:      \(appEvent.attributes?.referenceName ?? event)")
+        print("  Locale:     \(localeName(locale))")
+        print("  Asset Type: \(assetType.uppercased())")
+        print("  File:       \(media.fileName) (\(formatBytes(media.fileSize)))")
+        print()
+        guard confirm("Upload? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        let mediaID: String
+        if isImage {
+          mediaID = try await uploadAsset(
+            filePath: media.path,
+            reserve: {
+              let r = try await client.send(
+                Resources.v1.appEventScreenshots.post(
+                  AppEventScreenshotCreateRequest(
+                    data: .init(
+                      attributes: .init(
+                        fileSize: media.fileSize, fileName: media.fileName,
+                        appEventAssetType: assetTypeValue),
+                      relationships: .init(appEventLocalization: .init(data: .init(id: locID)))
+                    ))))
+              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
+            },
+            commit: { id, _ in
+              _ = try await client.send(
+                Resources.v1.appEventScreenshots.id(id).patch(
+                  AppEventScreenshotUpdateRequest(
+                    data: .init(id: id, attributes: .init(isUploaded: true)))))
+            })
+        } else {
+          mediaID = try await uploadAsset(
+            filePath: media.path,
+            reserve: {
+              let r = try await client.send(
+                Resources.v1.appEventVideoClips.post(
+                  AppEventVideoClipCreateRequest(
+                    data: .init(
+                      attributes: .init(
+                        fileSize: media.fileSize, fileName: media.fileName,
+                        previewFrameTimeCode: previewFrame, appEventAssetType: assetTypeValue),
+                      relationships: .init(appEventLocalization: .init(data: .init(id: locID)))
+                    ))))
+              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
+            },
+            commit: { id, _ in
+              _ = try await client.send(
+                Resources.v1.appEventVideoClips.id(id).patch(
+                  AppEventVideoClipUpdateRequest(
+                    data: .init(
+                      id: id,
+                      attributes: .init(previewFrameTimeCode: previewFrame, isUploaded: true)))))
+            })
+        }
+
+        print()
+        success("Uploaded", "\(isImage ? "screenshot" : "video clip") (id: \(mediaID)).")
+      }
+    }
+
+    struct Delete: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Delete an event card screenshot or video clip."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The event reference name or ID.")
+      var event: String
+
+      @Argument(help: "The media ID (from `events media list`).")
+      var mediaID: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appEvent = try await AppEventsCommand.findAppEvent(
+          ref: event, appID: app.id, client: client)
+
+        // Locate the media across the event's localizations to pick the right endpoint.
+        let locs = try await client.send(
+          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        var kind: String?
+        for loc in locs.data {
+          let shots = try await client.send(
+            Resources.v1.appEventLocalizations.id(loc.id).appEventScreenshots.get(limit: 50))
+          if shots.data.contains(where: { $0.id == mediaID }) { kind = "screenshot"; break }
+          let clips = try await client.send(
+            Resources.v1.appEventLocalizations.id(loc.id).appEventVideoClips.get(limit: 50))
+          if clips.data.contains(where: { $0.id == mediaID }) { kind = "video"; break }
+        }
+
+        guard let kind else {
+          throw ValidationError("Media '\(mediaID)' not found on this event.")
+        }
+
+        guard confirm("Delete this \(kind)? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        if kind == "screenshot" {
+          _ = try await client.send(Resources.v1.appEventScreenshots.id(mediaID).delete)
+        } else {
+          _ = try await client.send(Resources.v1.appEventVideoClips.id(mediaID).delete)
+        }
+        print()
+        success("Deleted", "\(kind) \(mediaID).")
       }
     }
   }

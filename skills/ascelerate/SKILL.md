@@ -112,6 +112,8 @@ ascelerate apps review submit <app>              # Submit (offers to include IAP
 ascelerate apps review status <app>              # Check status
 ascelerate apps review resolve-issues <app>      # After fixing rejection
 ascelerate apps review cancel-submission <app>   # Cancel active review
+ascelerate apps review info <app>                # View App Review Information
+ascelerate apps review info <app> [--contact-email X] [--demo-account-name X] [--demo-account-password X] [--demo-account-required true|false] [--notes X]  # Update (per-version upsert; omitted fields unchanged)
 ```
 
 `preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices). Exits non-zero on failures.

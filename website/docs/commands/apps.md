@@ -64,6 +64,15 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+### App Review Information
+
+View or update the contact, demo account, and notes provided to App Review. With no flags it prints the current values; pass any field flag to update it (omitted fields are left unchanged).
+
+```bash
+ascelerate apps review info <bundle-id>
+ascelerate apps review info <bundle-id> --contact-email you@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "Steps to test…"
+```
+
 ## Preflight checks
 
 Before submitting for review, run `preflight` to verify that all required fields are filled in across every locale:

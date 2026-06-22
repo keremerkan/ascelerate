@@ -64,6 +64,15 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+### Uygulama İnceleme Bilgileri
+
+App Review'a sunulan iletişim bilgilerini, demo hesabını ve notları görüntüleyin veya güncelleyin. Bayrak verilmediğinde mevcut değerler yazdırılır; herhangi bir alan bayrağı vererek o alanı güncelleyin (belirtilmeyen alanlar değiştirilmez).
+
+```bash
+ascelerate apps review info <bundle-id>
+ascelerate apps review info <bundle-id> --contact-email siz@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "Test adımları…"
+```
+
 ## Ön kontroller
 
 İncelemeye göndermeden önce, her locale'de tüm gerekli alanların doldurulduğunu doğrulamak için `preflight` çalıştırın:

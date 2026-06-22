@@ -1124,7 +1124,7 @@ struct AppsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "review",
       abstract: "Manage review submissions.",
-      subcommands: [Preflight.self, Status.self, Submit.self, ResolveIssues.self, CancelSubmission.self]
+      subcommands: [Preflight.self, Status.self, Submit.self, ResolveIssues.self, CancelSubmission.self, Info.self]
     )
     
     // MARK: - Preflight
@@ -2017,8 +2017,135 @@ struct AppsCommand: AsyncParsableCommand {
         print("  State: \(newState)")
       }
     }
+
+    // MARK: - App Review Information
+
+    struct Info: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "View or update App Review Information (contact, demo account, notes).",
+        discussion: """
+          With no update flags, prints the current App Review Information. Pass any field flag
+          to update it (creating the record if the version doesn't have one yet); omitted fields
+          are left unchanged.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest editable version.")
+      var version: String?
+
+      @Option(name: .long, help: "Review contact first name.")
+      var contactFirstName: String?
+
+      @Option(name: .long, help: "Review contact last name.")
+      var contactLastName: String?
+
+      @Option(name: .long, help: "Review contact phone number.")
+      var contactPhone: String?
+
+      @Option(name: .long, help: "Review contact email.")
+      var contactEmail: String?
+
+      @Option(name: .long, help: "Demo account username.")
+      var demoAccountName: String?
+
+      @Option(name: .long, help: "Demo account password.")
+      var demoAccountPassword: String?
+
+      @Option(name: .long, help: "Whether a demo account is required to review the app (true/false).")
+      var demoAccountRequired: Bool?
+
+      @Option(name: .long, help: "Notes for the App Review team.")
+      var notes: String?
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appVersion = try await findVersion(
+          appID: app.id, versionString: version, client: client)
+
+        // The endpoint returns {"data": null} when no review detail exists yet.
+        let existing: AppStoreReviewDetail?
+        do {
+          existing = try await client.send(
+            Resources.v1.appStoreVersions.id(appVersion.id).appStoreReviewDetail.get()
+          ).data
+        } catch is DecodingError {
+          existing = nil
+        }
+
+        let hasUpdates =
+          contactFirstName != nil || contactLastName != nil || contactPhone != nil
+          || contactEmail != nil || demoAccountName != nil || demoAccountPassword != nil
+          || demoAccountRequired != nil || notes != nil
+
+        let versionString = appVersion.attributes?.versionString ?? "unknown"
+
+        if !hasUpdates {
+          guard let detail = existing, let a = detail.attributes else {
+            print("No App Review Information set for version \(versionString).")
+            return
+          }
+          let name = [a.contactFirstName, a.contactLastName].compactMap { $0 }.joined(separator: " ")
+          print("App Review Information for \(app.attributes?.name ?? bundleID) v\(versionString):")
+          print("  Contact:       \(name.isEmpty ? "—" : name)")
+          print("  Phone:         \(a.contactPhone ?? "—")")
+          print("  Email:         \(a.contactEmail ?? "—")")
+          print("  Demo Required: \(a.isDemoAccountRequired == true ? "Yes" : "No")")
+          print("  Demo Account:  \(a.demoAccountName ?? "—")")
+          print("  Demo Password: \(a.demoAccountPassword ?? "—")")
+          print("  Notes:         \(a.notes ?? "—")")
+          return
+        }
+
+        guard confirm("Update App Review Information for version \(versionString)? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        if let detail = existing {
+          _ = try await client.send(
+            Resources.v1.appStoreReviewDetails.id(detail.id).patch(
+              AppStoreReviewDetailUpdateRequest(
+                data: .init(
+                  id: detail.id,
+                  attributes: .init(
+                    contactFirstName: contactFirstName, contactLastName: contactLastName,
+                    contactPhone: contactPhone, contactEmail: contactEmail,
+                    demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
+                    isDemoAccountRequired: demoAccountRequired, notes: notes
+                  )
+                )
+              )))
+        } else {
+          _ = try await client.send(
+            Resources.v1.appStoreReviewDetails.post(
+              AppStoreReviewDetailCreateRequest(
+                data: .init(
+                  attributes: .init(
+                    contactFirstName: contactFirstName, contactLastName: contactLastName,
+                    contactPhone: contactPhone, contactEmail: contactEmail,
+                    demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
+                    isDemoAccountRequired: demoAccountRequired, notes: notes
+                  ),
+                  relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id)))
+                )
+              )))
+        }
+
+        print()
+        success("Updated", "App Review Information for version \(versionString).")
+      }
+    }
   }
-  
+
   // MARK: - Configuration Commands
   
   struct AppInfoCommand: AsyncParsableCommand {

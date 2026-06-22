@@ -64,6 +64,15 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+### Informations pour l'examen de l'app
+
+Affichez ou mettez à jour les coordonnées, le compte de démonstration et les notes fournis à l'examen de l'app. Sans option, les valeurs actuelles sont affichées ; passez une option de champ pour la mettre à jour (les champs omis restent inchangés).
+
+```bash
+ascelerate apps review info <bundle-id>
+ascelerate apps review info <bundle-id> --contact-email vous@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "Étapes de test…"
+```
+
 ## Vérifications préalables
 
 Avant de soumettre pour examen, exécutez `preflight` pour vérifier que tous les champs requis sont remplis pour chaque langue :

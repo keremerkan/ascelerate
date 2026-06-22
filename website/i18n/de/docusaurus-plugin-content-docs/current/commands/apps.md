@@ -64,6 +64,15 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+### App-Review-Informationen
+
+Zeige oder aktualisiere die Kontaktdaten, das Demo-Konto und die Hinweise für die App-Prüfung. Ohne Flags werden die aktuellen Werte ausgegeben; gib ein Feld-Flag an, um es zu aktualisieren (nicht angegebene Felder bleiben unverändert).
+
+```bash
+ascelerate apps review info <bundle-id>
+ascelerate apps review info <bundle-id> --contact-email du@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "Testschritte…"
+```
+
 ## Preflight-Prüfungen
 
 Führen Sie vor dem Einreichen zur Überprüfung `preflight` aus, um sicherzustellen, dass alle erforderlichen Felder in jeder Sprache ausgefüllt sind:

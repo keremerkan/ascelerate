@@ -157,6 +157,10 @@ ascelerate apps review resolve-issues <bundle-id>
 
 # Cancel an active review submission
 ascelerate apps review cancel-submission <bundle-id>
+
+# View or update App Review Information (contact, demo account, notes)
+ascelerate apps review info <bundle-id>
+ascelerate apps review info <bundle-id> --contact-email you@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "Steps to test…"
 ```
 
 #### Pre-submission preflight checks

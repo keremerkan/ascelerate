@@ -64,6 +64,15 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+### App審査に関する情報
+
+App審査に提供する連絡先情報、デモアカウント、メモを表示または更新します。フラグを指定しない場合は現在の値が表示されます。フィールドのフラグを指定するとその項目が更新されます（指定しないフィールドは変更されません）。
+
+```bash
+ascelerate apps review info <bundle-id>
+ascelerate apps review info <bundle-id> --contact-email you@example.com --demo-account-name reviewer --demo-account-password "hunter2" --demo-account-required true --notes "テスト手順…"
+```
+
 ## プリフライトチェック
 
 審査に提出する前に `preflight` を実行して、すべてのロケールで必須フィールドが入力されていることを確認します：

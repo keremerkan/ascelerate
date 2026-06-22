@@ -488,8 +488,23 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
 /// When `interactive` is true (bare invocation), offers to run install-completions automatically.
 /// Otherwise shows a one-time warning. No-op if completions were never installed.
 /// Returns true if the user was prompted (interactive mode only).
+/// Compares dotted numeric versions (e.g. "0.12.0"). Returns true if `a` is strictly older than `b`.
+/// Missing components are treated as 0; non-numeric parts as 0.
+func isVersionOlder(_ a: String, than b: String) -> Bool {
+  let pa = a.split(separator: ".").map { Int($0) ?? 0 }
+  let pb = b.split(separator: ".").map { Int($0) ?? 0 }
+  for i in 0..<max(pa.count, pb.count) {
+    let x = i < pa.count ? pa[i] : 0
+    let y = i < pb.count ? pb[i] : 0
+    if x != y { return x < y }
+  }
+  return false
+}
+
 @discardableResult
-/// Returns a version detail string like " (v0.5.0 → v0.6.1)" if completions are outdated, nil if current.
+/// Returns a version detail string like " (v0.5.0 → v0.6.1)" if completions are older than this
+/// binary (a genuine upgrade), nil if current or newer. Never reports a downgrade — an older
+/// binary in PATH must not offer to "update" files installed by a newer one.
 func completionsVersionDetail() -> String? {
   guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return nil }
   let home = FileManager.default.homeDirectoryForCurrentUser
@@ -517,7 +532,7 @@ func completionsVersionDetail() -> String? {
   {
     let afterPrefix = contents[range.upperBound...]
     let stampedVersion = String(afterPrefix.prefix(while: { $0 != "\n" }))
-    if stampedVersion == currentVersion { return nil }
+    guard isVersionOlder(stampedVersion, than: currentVersion) else { return nil }
     return " (v\(stampedVersion) → v\(currentVersion))"
   }
   return ""  // installed but no stamp — outdated
@@ -537,7 +552,7 @@ func skillVersionDetail() -> String? {
       let endRange = contents[range.upperBound...].range(of: " -->")
     else { continue }  // not installed or unstamped — skip
     let stampedVersion = String(contents[range.upperBound..<endRange.lowerBound])
-    if stampedVersion != currentVersion {
+    if isVersionOlder(stampedVersion, than: currentVersion) {
       return " (v\(stampedVersion) → v\(currentVersion))"
     }
   }

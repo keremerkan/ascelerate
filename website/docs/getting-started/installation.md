@@ -76,8 +76,8 @@ This detects your shell and configures everything automatically. Restart your sh
 If you use an AI coding agent like Claude Code, Cursor, Windsurf, or GitHub Copilot, you can install a skill file that gives it full knowledge of all ascelerate commands and workflows:
 
 ```bash
-ascelerate install-skill    # Claude Code
-npx ascelerate-skill        # Any AI coding agent
+ascelerate install-skill    # detected agents (Claude Code/Cursor/Windsurf; +Copilot with --all)
+npx ascelerate-skill        # any AI coding agent (no CLI needed)
 ```
 
 See the [AI Coding Skill](/docs/guides/ai-skill) guide for details.

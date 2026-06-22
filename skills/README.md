@@ -25,15 +25,17 @@ The installer fetches the latest skill file from GitHub each time, so you always
 npx ascelerate-skill --uninstall
 ```
 
-## Claude Code shortcut
+## Already have the CLI?
 
-If you use **Claude Code** and have the `ascelerate` binary installed, you can install or update the skill directly — no `npx` needed:
+If you've installed the `ascelerate` binary, you can install or update the skill for your agents directly — no `npx` needed:
 
 ```bash
-ascelerate install-skill
+ascelerate install-skill            # install/update for every detected agent
+ascelerate install-skill --all      # include all supported agents (e.g. Copilot)
+ascelerate install-skill --uninstall
 ```
 
-This installs to `~/.claude/skills/` only. For **Cursor, Windsurf, and GitHub Copilot**, use `npx ascelerate-skill` (above) — that's the only way to install the skill for those agents.
+It auto-detects **Claude Code**, **Cursor**, and **Windsurf**, installs/updates the skill for each (and **GitHub Copilot** with `--all`), and stamps each install with the version so the CLI can tell you when the skill is out of date.
 
 ## Links
 

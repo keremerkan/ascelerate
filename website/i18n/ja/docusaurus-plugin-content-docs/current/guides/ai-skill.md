@@ -7,13 +7,14 @@ title: AIコーディングスキル
 
 ascにはスキルファイルが付属しており、AIコーディングエージェント（Claude Code、Cursor、Windsurf、GitHub Copilot）にすべてのコマンド、JSONフォーマット、ワークフローに関する完全な知識を提供します。
 
-## バイナリからインストール（Claude Codeのみ）
+## バイナリからインストール
 
 ```bash
-ascelerate install-skill
+ascelerate install-skill          # 検出したすべてのエージェントにインストール/更新
+ascelerate install-skill --all    # サポートするすべてのエージェントを含める（例：Copilot）
 ```
 
-ascは実行時に古いスキルを検出し、アップグレード後に更新を促します。削除するには：
+Claude Code、Cursor、Windsurf を自動検出し（`--all` で GitHub Copilot も）、それぞれにスキルをインストールまたは更新します。実行時に古いスキルも検出します。すべてのエージェントから削除するには：
 
 ```bash
 ascelerate install-skill --uninstall

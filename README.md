@@ -74,13 +74,14 @@ This detects your shell and configures everything automatically. Restart your sh
 
 ascelerate ships with a skill file that gives AI coding agents (Claude Code, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
 
-**Via the binary** (Claude Code only):
+**Via the binary** (detects your installed agents):
 
 ```bash
-ascelerate install-skill
+ascelerate install-skill          # install/update for every detected agent
+ascelerate install-skill --all    # include all supported agents (e.g. Copilot)
 ```
 
-The tool checks for outdated skills on each run and prompts you to update after upgrades.
+It auto-detects Claude Code, Cursor, and Windsurf (and GitHub Copilot with `--all`), installs/updates the skill for each, and checks for outdated skills on each run to prompt you after upgrades.
 
 **Via npx** (any AI coding agent):
 

@@ -523,23 +523,25 @@ func completionsVersionDetail() -> String? {
   return ""  // installed but no stamp — outdated
 }
 
-/// Returns a version detail string like " (v0.5.0 → v0.6.1)" if skill is outdated, nil if current or not installed.
+/// Returns a version detail string like " (v0.5.0 → v0.6.1)" if any CLI-installed (stamped) skill
+/// is outdated, nil if all are current / none installed. Unstamped skills (e.g. installed via
+/// `npx ascelerate-skill`) carry no version, so they're skipped to avoid false "outdated" prompts.
 func skillVersionDetail() -> String? {
-  let path = InstallSkillCommand.skillPath
-  guard FileManager.default.fileExists(atPath: path),
-        let data = FileManager.default.contents(atPath: path),
-        let contents = String(data: data, encoding: .utf8)
-  else { return nil }
-
-  let prefix = "<!-- ascelerate v"
-  guard let range = contents.range(of: prefix) else { return nil }
-  let afterPrefix = contents[range.upperBound...]
-  guard let endRange = afterPrefix.range(of: " -->") else { return nil }
-  let stampedVersion = String(afterPrefix[..<endRange.lowerBound])
-
   let currentVersion = Ascelerate.appVersion
-  if stampedVersion == currentVersion { return nil }
-  return " (v\(stampedVersion) → v\(currentVersion))"
+  let prefix = "<!-- ascelerate v"
+
+  for path in InstallSkillCommand.installedSkillPaths() {
+    guard let data = FileManager.default.contents(atPath: path),
+      let contents = String(data: data, encoding: .utf8),
+      let range = contents.range(of: prefix),
+      let endRange = contents[range.upperBound...].range(of: " -->")
+    else { continue }  // not installed or unstamped — skip
+    let stampedVersion = String(contents[range.upperBound..<endRange.lowerBound])
+    if stampedVersion != currentVersion {
+      return " (v\(stampedVersion) → v\(currentVersion))"
+    }
+  }
+  return nil
 }
 
 // MARK: - Legacy Migration (asc-client/asc → ascelerate)
@@ -631,7 +633,7 @@ func checkForUpdates() {
     notes.append("Shell completions are outdated\(detail). Run 'ascelerate install-completions' to update.")
   }
   if let detail = skillVersionDetail() {
-    notes.append("Claude Code skill is outdated\(detail). Run 'ascelerate install-skill' to update.")
+    notes.append("ascelerate skill is outdated\(detail). Run 'ascelerate install-skill' to update.")
   }
   if !notes.isEmpty {
     print("NOTE: " + notes.joined(separator: "\n      ") + "\n")
@@ -652,7 +654,7 @@ func checkForUpdatesInteractively() async -> Bool {
   // Build prompt
   var items: [String] = []
   if let detail = completions { items.append("shell completions\(detail)") }
-  if let detail = skill { items.append("Claude Code skill\(detail)") }
+  if let detail = skill { items.append("ascelerate skill\(detail)") }
 
   let label = items.joined(separator: " and ")
   print("\(label.prefix(1).uppercased())\(label.dropFirst()) outdated. Update now? [Y/n] ", terminator: "")

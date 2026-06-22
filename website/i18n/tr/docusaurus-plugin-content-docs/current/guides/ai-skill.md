@@ -7,13 +7,14 @@ title: Yapay Zeka Kodlama Skill'i
 
 asc, yapay zeka kodlama ajanlarına (Claude Code, Cursor, Windsurf, GitHub Copilot) tüm komutlar, JSON formatları ve workflow'lar hakkında tam bilgi veren bir skill dosyasıyla birlikte gelir.
 
-## Binary ile kurulum (yalnızca Claude Code)
+## Binary ile kurulum
 
 ```bash
-ascelerate install-skill
+ascelerate install-skill          # algılanan her ajan için kur/güncelle
+ascelerate install-skill --all    # desteklenen tüm ajanları dahil et (ör. Copilot)
 ```
 
-Araç her çalıştırmada skill'in güncel olup olmadığını kontrol eder ve yeni sürüm varsa güncellemeyi teklif eder. Kaldırmak için:
+Claude Code, Cursor ve Windsurf'ü otomatik algılar (ve `--all` ile GitHub Copilot'ı), skill'i her biri için kurar veya günceller ve her çalıştırmada skill'in güncel olup olmadığını kontrol eder. Tüm ajanlardan kaldırmak için:
 
 ```bash
 ascelerate install-skill --uninstall

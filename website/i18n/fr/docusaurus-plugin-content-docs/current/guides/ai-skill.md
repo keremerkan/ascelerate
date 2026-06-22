@@ -7,13 +7,14 @@ title: Skill pour agent IA
 
 ascelerate est livré avec un fichier de skill qui donne aux agents de codage IA (Claude Code, Cursor, Windsurf, GitHub Copilot) une connaissance complète de toutes les commandes, formats JSON et workflows.
 
-## Installation via le binaire (Claude Code uniquement)
+## Installation via le binaire
 
 ```bash
-ascelerate install-skill
+ascelerate install-skill          # installer/mettre à jour pour chaque agent détecté
+ascelerate install-skill --all    # inclure tous les agents pris en charge (par ex. Copilot)
 ```
 
-L'outil vérifie la présence de skills obsolètes à chaque exécution et vous propose de mettre à jour après les mises à niveau. Pour désinstaller :
+Détecte automatiquement Claude Code, Cursor et Windsurf (et GitHub Copilot avec `--all`), installe ou met à jour le skill pour chacun, et vérifie la présence de skills obsolètes à chaque exécution. Pour désinstaller de tous les agents :
 
 ```bash
 ascelerate install-skill --uninstall

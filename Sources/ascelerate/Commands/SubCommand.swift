@@ -12,6 +12,10 @@ extension SubscriptionLocalization {
   }
 }
 
+extension SubscriptionPricePoint: ResolvablePricePoint {
+  var resolverCustomerPrice: String? { attributes?.customerPrice }
+}
+
 struct SubCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "sub",
@@ -218,9 +222,7 @@ struct SubCommand: AsyncParsableCommand {
     subID: String, sourceTerritory: String, customerPrice: String,
     equalize: Bool, client: AppStoreConnectClient
   ) async throws -> ResolvedOfferPrices {
-    guard let target = Double(customerPrice.trimmingCharacters(in: .whitespaces)) else {
-      throw ValidationError("Invalid price '\(customerPrice)'. Use a decimal number like 4.99.")
-    }
+    let target = try parseCustomerPrice(customerPrice)
     var sourceTiers: [SubscriptionPricePoint] = []
     var sourceCurrency: String?
     for try await page in client.pages(
@@ -229,17 +231,13 @@ struct SubCommand: AsyncParsableCommand {
       )
     ) {
       sourceTiers.append(contentsOf: page.data)
-      for t in page.included ?? [] {
-        if sourceCurrency == nil { sourceCurrency = t.attributes?.currency }
+      for t in page.included ?? [] where sourceCurrency == nil {
+        sourceCurrency = t.attributes?.currency
       }
     }
-    guard let sourcePoint = sourceTiers.first(where: {
-      guard let cp = $0.attributes?.customerPrice, let v = Double(cp) else { return false }
-      return abs(v - target) < 0.001
-    }) else {
-      let nearest = sourceTiers.compactMap { $0.attributes?.customerPrice }.prefix(5).joined(separator: ", ")
-      throw ValidationError("No tier with customer price \(customerPrice) in \(sourceTerritory). Nearby: \(nearest)")
-    }
+    let sourcePoint = try findPricePoint(
+      in: sourceTiers, target: target, priceLabel: customerPrice, territoryID: sourceTerritory,
+      currency: sourceCurrency)
 
     if !equalize {
       return ResolvedOfferPrices(

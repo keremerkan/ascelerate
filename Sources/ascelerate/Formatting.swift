@@ -1008,6 +1008,49 @@ func printPriceTiers(_ tiers: [PriceTier], currency: String?, territoryID: Strin
   )
 }
 
+/// Parses a customer-facing price string (e.g. "4.99") to a Double, or throws ValidationError.
+func parseCustomerPrice(_ price: String) throws -> Double {
+  guard let value = Double(price.trimmingCharacters(in: .whitespaces)) else {
+    throw ValidationError("Invalid price '\(price)'. Use a decimal number like 4.99.")
+  }
+  return value
+}
+
+/// A price point exposing just the fields the shared resolver needs, so it works across both
+/// IAP and subscription price-point types (conformances live in their command files).
+protocol ResolvablePricePoint {
+  var id: String { get }
+  var resolverCustomerPrice: String? { get }
+}
+
+/// Finds the price point whose customer price matches `target` (within 0.001) in `territoryID`.
+/// Throws ValidationError for an empty tier list, or no match — listing the five nearest tiers
+/// by price distance. `priceLabel` is the original price string, used only in error text.
+func findPricePoint<P: ResolvablePricePoint>(
+  in tiers: [P], target: Double, priceLabel: String, territoryID: String, currency: String?
+) throws -> P {
+  guard !tiers.isEmpty else {
+    throw ValidationError("No price tiers available for territory \(territoryID).")
+  }
+  if let exact = tiers.first(where: {
+    guard let v = $0.resolverCustomerPrice.flatMap({ Double($0) }) else { return false }
+    return abs(v - target) < 0.001
+  }) {
+    return exact
+  }
+  let nearest = tiers
+    .compactMap { p -> (P, Double)? in
+      guard let v = p.resolverCustomerPrice.flatMap({ Double($0) }) else { return nil }
+      return (p, abs(v - target))
+    }
+    .sorted { $0.1 < $1.1 }
+    .prefix(5)
+    .map(\.0)
+  var msg = "No tier with customer price \(priceLabel) \(currency ?? "") in territory \(territoryID).\n"
+  msg += "Nearest tiers: " + nearest.compactMap { $0.resolverCustomerPrice }.joined(separator: ", ")
+  throw ValidationError(msg)
+}
+
 enum Table {
   static func print(headers: [String], rows: [[String]]) {
     guard !rows.isEmpty else {

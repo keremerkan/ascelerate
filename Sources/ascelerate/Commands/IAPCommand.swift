@@ -12,6 +12,10 @@ extension InAppPurchaseLocalization {
   }
 }
 
+extension InAppPurchasePricePoint: ResolvablePricePoint {
+  var resolverCustomerPrice: String? { attributes?.customerPrice }
+}
+
 struct IAPCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "iap",
@@ -176,9 +180,7 @@ struct IAPCommand: AsyncParsableCommand {
   static func resolvePricePoint(
     iapID: String, territoryID: String, customerPrice: String, client: AppStoreConnectClient
   ) async throws -> (point: InAppPurchasePricePoint, currency: String?) {
-    guard let target = Double(customerPrice.trimmingCharacters(in: .whitespaces)) else {
-      throw ValidationError("Invalid price '\(customerPrice)'. Use a decimal number like 4.99.")
-    }
+    let target = try parseCustomerPrice(customerPrice)
 
     var tiers: [InAppPurchasePricePoint] = []
     var currency: String?
@@ -188,33 +190,15 @@ struct IAPCommand: AsyncParsableCommand {
       )
     ) {
       tiers.append(contentsOf: page.data)
-      for t in page.included ?? [] {
-        if currency == nil { currency = t.attributes?.currency }
+      for t in page.included ?? [] where currency == nil {
+        currency = t.attributes?.currency
       }
     }
 
-    guard !tiers.isEmpty else {
-      throw ValidationError("No price tiers available for territory \(territoryID).")
-    }
-
-    if let exact = tiers.first(where: {
-      guard let cp = $0.attributes?.customerPrice, let v = Double(cp) else { return false }
-      return abs(v - target) < 0.001
-    }) {
-      return (exact, currency)
-    }
-
-    let nearest = tiers
-      .compactMap { tier -> (InAppPurchasePricePoint, Double)? in
-        guard let cp = tier.attributes?.customerPrice, let v = Double(cp) else { return nil }
-        return (tier, abs(v - target))
-      }
-      .sorted { $0.1 < $1.1 }
-      .prefix(5)
-      .map(\.0)
-    var msg = "No tier with customer price \(customerPrice) \(currency ?? "") in territory \(territoryID).\n"
-    msg += "Nearest tiers: " + nearest.compactMap { $0.attributes?.customerPrice }.joined(separator: ", ")
-    throw ValidationError(msg)
+    let point = try findPricePoint(
+      in: tiers, target: target, priceLabel: customerPrice, territoryID: territoryID,
+      currency: currency)
+    return (point, currency)
   }
 
   /// Looks up the customer price string for a given price point ID in a given territory.

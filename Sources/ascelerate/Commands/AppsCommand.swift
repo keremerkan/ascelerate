@@ -1244,6 +1244,47 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         // 6. Build per-locale rows
+        let localeCheck = buildLocaleRows(
+          versionLocs: versionLocs, appInfoByLocale: appInfoByLocale,
+          screenshotsByLocale: screenshotsByLocale)
+        rows += localeCheck.rows
+        failCount += localeCheck.failures
+
+        // 7. In-app purchases
+        let iapCheck = try await checkInAppPurchases(appID: app.id, client: client)
+        rows += iapCheck.rows
+        failCount += iapCheck.failures
+
+        // 8. Subscriptions
+        let subCheck = try await checkSubscriptions(appID: app.id, client: client)
+        rows += subCheck.rows
+        failCount += subCheck.failures
+
+        let passCount = rows.count(where: { $0[1].contains("✓") })
+        print()
+
+        Table.print(
+          headers: ["Check", "Status"],
+          rows: rows
+        )
+
+        print()
+        let resultText = "\(green("\(passCount) passed")), \(failCount > 0 ? red("\(failCount) failed") : "\(failCount) failed")"
+        print("Result: \(resultText)")
+
+        if failCount > 0 {
+          throw ExitCode.failure
+        }
+      }
+
+      /// Builds the per-locale app-info / localization / screenshot rows for the preflight table.
+      private func buildLocaleRows(
+        versionLocs: [AppStoreVersionLocalization],
+        appInfoByLocale: [String: AppInfoLocalization],
+        screenshotsByLocale: [String: (sets: Int, count: Int)]
+      ) -> (rows: [[String]], failures: Int) {
+        var rows: [[String]] = []
+        var failures = 0
         let allLocales = Set(versionLocs.compactMap { $0.attributes?.locale })
           .union(appInfoByLocale.keys)
           .sorted()
@@ -1268,7 +1309,7 @@ struct AppsCommand: AsyncParsableCommand {
               rows.append(["  App info", green("✓") + " All fields filled"])
             } else {
               rows.append(["  App info", red("✗") + " Missing: \(missing.joined(separator: ", "))"])
-              failCount += 1
+              failures += 1
             }
           }
 
@@ -1302,7 +1343,7 @@ struct AppsCommand: AsyncParsableCommand {
               if !missing.isEmpty { parts.append("Missing: \(missing.joined(separator: ", "))") }
               if !invalid.isEmpty { parts.append(invalid.joined(separator: ", ")) }
               rows.append(["  Localizations", red("✗") + " \(parts.joined(separator: "; "))"])
-              failCount += 1
+              failures += 1
             }
           }
 
@@ -1312,16 +1353,23 @@ struct AppsCommand: AsyncParsableCommand {
               rows.append(["  Screenshots", green("✓") + " \(ss.sets) set\(ss.sets == 1 ? "" : "s"), \(ss.count) screenshot\(ss.count == 1 ? "" : "s")"])
             } else {
               rows.append(["  Screenshots", red("✗") + " No screenshots"])
-              failCount += 1
+              failures += 1
             }
           }
         }
+        return (rows, failures)
+      }
 
-        // 7. In-app purchases
+      /// Checks each in-app purchase's price schedule and state, returning preflight rows.
+      private func checkInAppPurchases(
+        appID: String, client: AppStoreConnectClient
+      ) async throws -> (rows: [[String]], failures: Int) {
         print("Checking in-app purchases...")
+        var rows: [[String]] = []
+        var failures = 0
         var iaps: [InAppPurchaseV2] = []
         for try await page in client.pages(
-          Resources.v1.apps.id(app.id).inAppPurchasesV2.get(limit: 200)
+          Resources.v1.apps.id(appID).inAppPurchasesV2.get(limit: 200)
         ) {
           iaps.append(contentsOf: page.data)
         }
@@ -1340,20 +1388,27 @@ struct AppsCommand: AsyncParsableCommand {
 
             if !hasSchedule {
               rows.append([label, red("✗") + " No price schedule"])
-              failCount += 1
+              failures += 1
             } else if state == .readyToSubmit || state == .approved
                       || state == .waitingForReview || state == .inReview {
               rows.append([label, green("✓") + " \(stateStr)"])
             } else {
               rows.append([label, red("✗") + " \(stateStr)"])
-              failCount += 1
+              failures += 1
             }
           }
         }
+        return (rows, failures)
+      }
 
-        // 8. Subscriptions
+      /// Checks each subscription's prices and state, returning preflight rows.
+      private func checkSubscriptions(
+        appID: String, client: AppStoreConnectClient
+      ) async throws -> (rows: [[String]], failures: Int) {
         print("Checking subscriptions...")
-        let subGroups = try await SubCommand.fetchGroups(appID: app.id, client: client)
+        var rows: [[String]] = []
+        var failures = 0
+        let subGroups = try await SubCommand.fetchGroups(appID: appID, client: client)
         let allSubs = subGroups.flatMap(\.subscriptions)
 
         if !allSubs.isEmpty {
@@ -1370,32 +1425,17 @@ struct AppsCommand: AsyncParsableCommand {
 
             if !hasPrices {
               rows.append([label, red("✗") + " No prices set"])
-              failCount += 1
+              failures += 1
             } else if state == .readyToSubmit || state == .approved
                       || state == .waitingForReview || state == .inReview {
               rows.append([label, green("✓") + " \(stateStr)"])
             } else {
               rows.append([label, red("✗") + " \(stateStr)"])
-              failCount += 1
+              failures += 1
             }
           }
         }
-
-        let passCount = rows.count(where: { $0[1].contains("✓") })
-        print()
-
-        Table.print(
-          headers: ["Check", "Status"],
-          rows: rows
-        )
-
-        print()
-        let resultText = "\(green("\(passCount) passed")), \(failCount > 0 ? red("\(failCount) failed") : "\(failCount) failed")"
-        print("Result: \(resultText)")
-
-        if failCount > 0 {
-          throw ExitCode.failure
-        }
+        return (rows, failures)
       }
     }
 

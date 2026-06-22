@@ -22,9 +22,17 @@ ascelerate iap info <bundle-id> <product-id>
 
 ## Tanıtılan satın almalar
 
+App Store ürün sayfanızda uygulama içi satın almaları veya abonelikleri tanıtın. Görüntülenme sırasına göre listelenir.
+
 ```bash
-ascelerate iap promoted <bundle-id>
+ascelerate iap promoted list <bundle-id>
+ascelerate iap promoted add <bundle-id> <product-id> --visible-for-all true --enabled true
+ascelerate iap promoted reorder <bundle-id> com.example.a,com.example.b
+ascelerate iap promoted toggle <bundle-id> <product-id> --enabled false
+ascelerate iap promoted remove <bundle-id> <product-id>
 ```
+
+`reorder`, ürün tanımlayıcılarını istediğiniz sırada alır; belirtmediğiniz öğeler korunur ve belirttiklerinizin ardına eklenir.
 
 ## Oluşturma, güncelleme ve silme
 

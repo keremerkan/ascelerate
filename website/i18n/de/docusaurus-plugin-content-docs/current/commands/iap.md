@@ -22,9 +22,17 @@ ascelerate iap info <bundle-id> <product-id>
 
 ## Beworbene Käufe
 
+Bewirb In-App-Käufe oder Abonnements auf deiner App-Store-Produktseite. Sie werden in der Anzeigereihenfolge aufgelistet.
+
 ```bash
-ascelerate iap promoted <bundle-id>
+ascelerate iap promoted list <bundle-id>
+ascelerate iap promoted add <bundle-id> <product-id> --visible-for-all true --enabled true
+ascelerate iap promoted reorder <bundle-id> com.example.a,com.example.b
+ascelerate iap promoted toggle <bundle-id> <product-id> --enabled false
+ascelerate iap promoted remove <bundle-id> <product-id>
 ```
+
+`reorder` erwartet die Produkt-IDs in der gewünschten Reihenfolge; nicht angegebene werden beibehalten und hinten angehängt.
 
 ## Erstellen, Aktualisieren und Löschen
 

@@ -22,9 +22,17 @@ ascelerate iap info <bundle-id> <product-id>
 
 ## Achats promus
 
+Mettez en avant des achats intégrés ou des abonnements sur votre page produit App Store. Ils apparaissent dans l'ordre d'affichage.
+
 ```bash
-ascelerate iap promoted <bundle-id>
+ascelerate iap promoted list <bundle-id>
+ascelerate iap promoted add <bundle-id> <product-id> --visible-for-all true --enabled true
+ascelerate iap promoted reorder <bundle-id> com.example.a,com.example.b
+ascelerate iap promoted toggle <bundle-id> <product-id> --enabled false
+ascelerate iap promoted remove <bundle-id> <product-id>
 ```
+
+`reorder` attend les identifiants de produit dans l'ordre souhaité ; ceux que vous omettez sont conservés et ajoutés après ceux que vous indiquez.
 
 ## Créer, mettre à jour et supprimer
 

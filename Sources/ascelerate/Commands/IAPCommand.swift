@@ -352,72 +352,279 @@ struct IAPCommand: AsyncParsableCommand {
 
   struct Promoted: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-      abstract: "List promoted purchases for an app."
+      commandName: "promoted",
+      abstract: "View and manage promoted purchases.",
+      subcommands: [List.self, Add.self, Remove.self, Reorder.self, Toggle.self]
     )
 
-    @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
-    var bundleID: String
+    /// A promoted purchase resolved to its underlying product.
+    struct PromotedInfo {
+      let promotedID: String
+      let productID: String
+      let name: String
+      let kind: String
+      let state: String
+      let isVisible: Bool
+      let isEnabled: Bool
+    }
 
-    func run() async throws {
-      let client = try ClientFactory.makeClient()
-      let app = try await findApp(bundleID: bundleID, client: client)
-
-      var rows: [[String]] = []
-      let request = Resources.v1.apps.id(app.id).promotedPurchases.get(
-        limit: 200,
-        include: [.inAppPurchaseV2, .subscription]
-      )
-
-      for try await page in client.pages(request) {
-        var iapInfo: [String: (String, String)] = [:]
-        var subInfo: [String: (String, String)] = [:]
-
+    /// Fetches the app's promoted purchases in display order, resolved to their products.
+    static func fetchPromoted(
+      appID: String, client: AppStoreConnectClient
+    ) async throws -> [PromotedInfo] {
+      var result: [PromotedInfo] = []
+      for try await page in client.pages(
+        Resources.v1.apps.id(appID).promotedPurchases.get(
+          limit: 200, include: [.inAppPurchaseV2, .subscription])
+      ) {
+        var iapInfo: [String: (productID: String, name: String)] = [:]
+        var subInfo: [String: (productID: String, name: String)] = [:]
         for item in page.included ?? [] {
           switch item {
           case .inAppPurchaseV2(let iap):
-            iapInfo[iap.id] = (
-              iap.attributes?.name ?? "—",
-              iap.attributes?.inAppPurchaseType.map { formatState($0) } ?? "—"
-            )
+            iapInfo[iap.id] = (iap.attributes?.productID ?? "—", iap.attributes?.name ?? "—")
           case .subscription(let sub):
-            subInfo[sub.id] = (
-              sub.attributes?.name ?? "—",
-              sub.attributes?.subscriptionPeriod.map { formatState($0) } ?? "—"
-            )
+            subInfo[sub.id] = (sub.attributes?.productID ?? "—", sub.attributes?.name ?? "—")
           }
         }
-
         for promo in page.data {
-          let attrs = promo.attributes
-          let promoState = attrs?.state.map { formatState($0) } ?? "—"
-          let visible = attrs?.isVisibleForAllUsers == true ? "Yes" : "No"
-          let enabled = attrs?.isEnabled == true ? "Yes" : "No"
-
-          var productName = "—"
-          var productType = "—"
-
-          if let iapID = promo.relationships?.inAppPurchaseV2?.data?.id,
-             let info = iapInfo[iapID] {
-            productName = "\(info.0) (IAP)"
-            productType = info.1
-          } else if let subID = promo.relationships?.subscription?.data?.id,
-                    let info = subInfo[subID] {
-            productName = "\(info.0) (Subscription)"
-            productType = info.1
+          let a = promo.attributes
+          var productID = "—", name = "—", kind = "—"
+          if let iapID = promo.relationships?.inAppPurchaseV2?.data?.id, let info = iapInfo[iapID] {
+            productID = info.productID; name = info.name; kind = "IAP"
+          } else if let subID = promo.relationships?.subscription?.data?.id, let info = subInfo[subID] {
+            productID = info.productID; name = info.name; kind = "Subscription"
           }
-
-          rows.append([productName, productType, promoState, visible, enabled])
+          result.append(
+            PromotedInfo(
+              promotedID: promo.id, productID: productID, name: name, kind: kind,
+              state: a?.state.map { formatState($0) } ?? "—",
+              isVisible: a?.isVisibleForAllUsers == true, isEnabled: a?.isEnabled == true))
         }
       }
+      return result
+    }
 
-      if rows.isEmpty {
-        print("No promoted purchases found.")
-      } else {
+    struct List: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "List promoted purchases (in App Store display order)."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
+
+        if promoted.isEmpty {
+          print("No promoted purchases found.")
+          return
+        }
+        let rows = promoted.map {
+          [
+            $0.productID, $0.name, $0.kind, $0.state,
+            $0.isVisible ? "Yes" : "No", $0.isEnabled ? "Yes" : "No",
+          ]
+        }
         Table.print(
-          headers: ["Product", "Type", "State", "Visible", "Enabled"],
-          rows: rows
-        )
+          headers: ["Product ID", "Name", "Kind", "State", "Visible", "Enabled"], rows: rows)
+      }
+    }
+
+    struct Add: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Promote an in-app purchase or subscription."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the IAP or subscription to promote.")
+      var productID: String
+
+      @Option(name: .long, help: "Visible to all users (true) or a limited audience (false). Default: true.")
+      var visibleForAll: Bool = true
+
+      @Option(name: .long, help: "Whether the promotion is enabled. Default: true.")
+      var enabled: Bool = true
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+
+        // Resolve the product to either an IAP or a subscription.
+        var iap: InAppPurchaseV2?
+        do {
+          iap = try await findIAP(productID: productID, appID: app.id, client: client)
+        } catch is ValidationError {
+          iap = nil
+        }
+
+        let relationships: PromotedPurchaseCreateRequest.Data.Relationships
+        let label: String
+        if let iap {
+          relationships = .init(
+            app: .init(data: .init(id: app.id)),
+            inAppPurchaseV2: .init(data: .init(id: iap.id)))
+          label = "IAP '\(iap.attributes?.name ?? productID)'"
+        } else {
+          let (sub, _) = try await SubCommand.findSubscription(
+            productID: productID, appID: app.id, client: client)
+          relationships = .init(
+            app: .init(data: .init(id: app.id)),
+            subscription: .init(data: .init(id: sub.id)))
+          label = "subscription '\(sub.attributes?.name ?? productID)'"
+        }
+
+        guard confirm("Promote \(label)? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        let resp = try await client.send(
+          Resources.v1.promotedPurchases.post(
+            PromotedPurchaseCreateRequest(
+              data: .init(
+                attributes: .init(isVisibleForAllUsers: visibleForAll, isEnabled: enabled),
+                relationships: relationships))))
+
+        print()
+        success("Promoted", "\(label) (id: \(resp.data.id)).")
+      }
+    }
+
+    struct Remove: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Stop promoting an in-app purchase or subscription."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the promoted IAP or subscription.")
+      var productID: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
+        guard let target = promoted.first(where: { $0.productID == productID }) else {
+          throw ValidationError("No promoted purchase found for product '\(productID)'.")
+        }
+
+        guard confirm("Stop promoting '\(target.name)'? [y/N] ") else {
+          cancelled()
+          return
+        }
+        _ = try await client.send(Resources.v1.promotedPurchases.id(target.promotedID).delete)
+        print()
+        success("Removed", "promoted purchase '\(target.name)'.")
+      }
+    }
+
+    struct Toggle: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Enable or disable a promoted purchase."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the promoted IAP or subscription.")
+      var productID: String
+
+      @Option(name: .long, help: "Whether the promotion is enabled (true/false).")
+      var enabled: Bool
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
+        guard let target = promoted.first(where: { $0.productID == productID }) else {
+          throw ValidationError("No promoted purchase found for product '\(productID)'.")
+        }
+
+        guard confirm("Set '\(target.name)' enabled=\(enabled)? [y/N] ") else {
+          cancelled()
+          return
+        }
+        _ = try await client.send(
+          Resources.v1.promotedPurchases.id(target.promotedID).patch(
+            PromotedPurchaseUpdateRequest(
+              data: .init(id: target.promotedID, attributes: .init(isEnabled: enabled)))))
+        print()
+        success("Updated", "'\(target.name)' (enabled=\(enabled)).")
+      }
+    }
+
+    struct Reorder: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Set the App Store display order of promoted purchases.",
+        discussion: """
+          Pass product identifiers in the desired order. Any promoted purchases you omit are
+          kept and appended after the ones you list.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "Comma-separated product identifiers in the desired order.")
+      var productIDs: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
+
+        let requested = productIDs.split(separator: ",").map {
+          $0.trimmingCharacters(in: .whitespaces)
+        }
+        var orderedIDs: [String] = []
+        for pid in requested {
+          guard let target = promoted.first(where: { $0.productID == pid }) else {
+            throw ValidationError("No promoted purchase found for product '\(pid)'.")
+          }
+          orderedIDs.append(target.promotedID)
+        }
+        // Preserve any promoted purchases the user didn't list, after the requested ones.
+        let requestedSet = Set(requested)
+        for p in promoted where !requestedSet.contains(p.productID) {
+          orderedIDs.append(p.promotedID)
+        }
+
+        guard confirm("Reorder \(orderedIDs.count) promoted purchase(s)? [y/N] ") else {
+          cancelled()
+          return
+        }
+        _ = try await client.send(
+          Resources.v1.apps.id(app.id).relationships.promotedPurchases.patch(
+            AppPromotedPurchasesLinkagesRequest(data: orderedIDs.map { .init(id: $0) })))
+        print()
+        success("Reordered", "promoted purchases.")
       }
     }
   }

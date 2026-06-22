@@ -128,6 +128,14 @@ When submitting, the tool detects IAPs and subscriptions and offers to submit th
 ```bash
 ascelerate iap list <app>
 ascelerate iap info <app> <product-id>                   # warns if no price schedule set
+
+# Promoted purchases (IAPs or subscriptions, shown on the App Store product page)
+ascelerate iap promoted list <app>
+ascelerate iap promoted add <app> <product-id> [--visible-for-all true|false] [--enabled true|false]
+ascelerate iap promoted remove <app> <product-id>
+ascelerate iap promoted reorder <app> <product-id,product-id,...>   # omitted ones appended after
+ascelerate iap promoted toggle <app> <product-id> --enabled true|false
+
 ascelerate iap create <app> --name "Name" --product-id <id> --type CONSUMABLE
 ascelerate iap update <app> <product-id> --name "New Name"
 ascelerate iap delete <app> <product-id>

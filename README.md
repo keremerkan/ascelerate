@@ -766,7 +766,13 @@ The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the cur
 ascelerate iap list <bundle-id>
 ascelerate iap list <bundle-id> --type consumable --state approved
 ascelerate iap info <bundle-id> <product-id>
-ascelerate iap promoted <bundle-id>
+
+# Promoted purchases (shown on the App Store product page)
+ascelerate iap promoted list <bundle-id>
+ascelerate iap promoted add <bundle-id> <product-id>
+ascelerate iap promoted reorder <bundle-id> com.example.a,com.example.b
+ascelerate iap promoted toggle <bundle-id> <product-id> --enabled false
+ascelerate iap promoted remove <bundle-id> <product-id>
 
 # Create, update, and delete
 ascelerate iap create <bundle-id> --name "100 Coins" --product-id <product-id> --type CONSUMABLE

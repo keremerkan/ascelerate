@@ -22,9 +22,17 @@ ascelerate iap info <bundle-id> <product-id>
 
 ## Promoted purchases
 
+Promote in-app purchases or subscriptions on your App Store product page. They appear in display order.
+
 ```bash
-ascelerate iap promoted <bundle-id>
+ascelerate iap promoted list <bundle-id>
+ascelerate iap promoted add <bundle-id> <product-id> --visible-for-all true --enabled true
+ascelerate iap promoted reorder <bundle-id> com.example.a,com.example.b
+ascelerate iap promoted toggle <bundle-id> <product-id> --enabled false
+ascelerate iap promoted remove <bundle-id> <product-id>
 ```
+
+`reorder` takes product identifiers in the desired order; any you omit are kept and appended after the ones you list.
 
 ## Create, update, and delete
 

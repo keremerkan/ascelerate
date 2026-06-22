@@ -2,6 +2,22 @@
   "name": "ascelerate-skill",
   "version": "0.12.0",
   "description": "ascelerate skill for AI coding agents (Claude Code, Cursor, Windsurf, Copilot)",
+  "keywords": [
+    "ascelerate",
+    "app-store-connect",
+    "app-store",
+    "ios",
+    "asc",
+    "app-review",
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "github-copilot",
+    "ai",
+    "skill",
+    "cli",
+    "fastlane-alternative"
+  ],
   "license": "MIT",
   "author": "Kerem Erkan",
   "repository": {

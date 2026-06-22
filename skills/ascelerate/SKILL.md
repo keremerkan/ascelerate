@@ -244,7 +244,7 @@ Subscription pricing safety:
 
 Offer code eligibilities for subs: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibility: `STACK_WITH_INTRO_OFFERS` or `REPLACE_INTRO_OFFERS`. Modes: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`.
 
-NOT YET IMPLEMENTED: `sub win-back-offer` is blocked on asc-swift codegen (the inline price create type is missing required relationships). `iap hosted-content` is intentionally skipped.
+NOT YET IMPLEMENTED: `sub win-back-offer` is blocked on asc-swift codegen (the inline price create type is missing required relationships). Custom product page search-keyword linkages are blocked by the same kind of codegen gap (the `AppKeyword` entity exposes no keyword text). `iap hosted-content` is intentionally skipped.
 
 ### Customer reviews
 

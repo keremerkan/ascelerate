@@ -49,3 +49,16 @@ ascelerate product-pages localizations import <bundle-id> "Summer 2026" --file p
   "fr-FR": { "promotionalText": "Offre à durée limitée" }
 }
 ```
+
+## スクリーンショットとアプリプレビュー
+
+ローカリゼーションごとのスクリーンショット（`.png`/`.jpg`、表示タイプ別）とアプリプレビュー（`.mp4`/`.mov`、プレビュータイプ別）です。セットは最初のアップロード時に自動的に作成されます。
+
+```bash
+ascelerate product-pages media list <bundle-id> "Summer 2026"
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --display-type APP_IPHONE_67 screenshot.png
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --preview-type APP_IPHONE_67 preview.mp4 --preview-frame 00:00:03
+ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
+```
+
+ファイルの種類によって、スクリーンショットとしてアップロードされるかアプリプレビューとしてアップロードされるかが決まります。表示タイプとプレビュータイプは、標準の App Store デバイス識別子（例：`APP_IPHONE_67`、`APP_IPAD_PRO_3GEN_129`）を使用します。

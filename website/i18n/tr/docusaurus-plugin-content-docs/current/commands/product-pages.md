@@ -49,3 +49,16 @@ Her yerelleştirme, sayfanın düzenlenebilir sürümüne uygulanan `promotional
   "fr-FR": { "promotionalText": "Offre à durée limitée" }
 }
 ```
+
+## Ekran görüntüleri ve uygulama önizlemeleri
+
+Yerel ayar başına ekran görüntüleri (`.png`/`.jpg`, görüntü türüne göre) ve uygulama önizlemeleri (`.mp4`/`.mov`, önizleme türüne göre). Set, ilk yüklemede otomatik olarak oluşturulur.
+
+```bash
+ascelerate product-pages media list <bundle-id> "Summer 2026"
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --display-type APP_IPHONE_67 screenshot.png
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --preview-type APP_IPHONE_67 preview.mp4 --preview-frame 00:00:03
+ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
+```
+
+Dosya türü, içeriğin ekran görüntüsü mü yoksa uygulama önizlemesi olarak mı yükleneceğini belirler. Görüntü ve önizleme türleri standart App Store cihaz tanımlayıcılarını kullanır (örn. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).

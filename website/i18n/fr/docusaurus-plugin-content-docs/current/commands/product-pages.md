@@ -49,3 +49,16 @@ Chaque localisation comporte `promotionalText`, appliqué à la version modifiab
   "fr-FR": { "promotionalText": "Offre à durée limitée" }
 }
 ```
+
+## Captures d'écran et aperçus de l'app
+
+Captures d'écran par langue (`.png`/`.jpg`, par type d'affichage) et aperçus de l'app (`.mp4`/`.mov`, par type d'aperçu). Le jeu est créé automatiquement lors du premier téléversement.
+
+```bash
+ascelerate product-pages media list <bundle-id> "Summer 2026"
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --display-type APP_IPHONE_67 screenshot.png
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --preview-type APP_IPHONE_67 preview.mp4 --preview-frame 00:00:03
+ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
+```
+
+Le type de fichier détermine s'il est téléversé comme capture d'écran ou comme aperçu de l'app. Les types d'affichage et d'aperçu utilisent les identifiants d'appareil App Store standard (par ex. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).

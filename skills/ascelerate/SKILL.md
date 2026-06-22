@@ -283,6 +283,12 @@ ascelerate product-pages delete <app> <name-or-id>
 ascelerate product-pages localizations view <app> <name-or-id>
 ascelerate product-pages localizations export <app> <name-or-id>
 ascelerate product-pages localizations import <app> <name-or-id> --file page-locales.json    # promotional text per locale
+
+# Media (png/jpg -> screenshot by --display-type, mp4/mov -> app preview by --preview-type; set auto-created)
+ascelerate product-pages media list <app> <name-or-id>
+ascelerate product-pages media upload <app> <name-or-id> --locale en-US --display-type APP_IPHONE_67 shot.png
+ascelerate product-pages media upload <app> <name-or-id> --locale en-US --preview-type APP_IPHONE_67 clip.mp4 [--preview-frame 00:00:03]
+ascelerate product-pages media delete <app> <name-or-id> <media-id>
 ```
 
 Pages are referenced by name or ID. `create` issues a compound POST (page + version + localization linked via `${local-id}` inline references).

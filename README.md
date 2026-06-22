@@ -973,6 +973,12 @@ ascelerate product-pages delete <bundle-id> "Summer Campaign"
 ascelerate product-pages localizations view <bundle-id> "Summer 2026"
 ascelerate product-pages localizations export <bundle-id> "Summer 2026"
 ascelerate product-pages localizations import <bundle-id> "Summer 2026" --file page-locales.json
+
+# Screenshots & app previews (sets created on first upload)
+ascelerate product-pages media list <bundle-id> "Summer 2026"
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --display-type APP_IPHONE_67 screenshot.png
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --preview-type APP_IPHONE_67 preview.mp4 --preview-frame 00:00:03
+ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 
 Pages are referenced by name or ID. Each page's shareable App Store URL (with its `ppid`) appears in `list` and `info`.

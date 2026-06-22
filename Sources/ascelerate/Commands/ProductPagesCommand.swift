@@ -7,7 +7,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "product-pages",
     abstract: "Manage custom product pages.",
-    subcommands: [List.self, Info.self, Create.self, Update.self, Delete.self, Localizations.self]
+    subcommands: [List.self, Info.self, Create.self, Update.self, Delete.self, Localizations.self, Media.self]
   )
 
   // MARK: - Shared helpers
@@ -48,6 +48,21 @@ struct ProductPagesCommand: AsyncParsableCommand {
       return live.id
     }
     return versions.data[0].id
+  }
+
+  /// Resolves a locale to its localization ID on the page's editable version.
+  static func localizationID(
+    forLocale locale: String, pageID: String, client: AppStoreConnectClient
+  ) async throws -> String {
+    let versionID = try await activeVersionID(pageID: pageID, client: client)
+    let locs = try await client.send(
+      Resources.v1.appCustomProductPageVersions.id(versionID)
+        .appCustomProductPageLocalizations.get(limit: 50))
+    guard let loc = locs.data.first(where: { $0.attributes?.locale == locale }) else {
+      throw ValidationError(
+        "No '\(locale)' localization on this page. Add it first with 'product-pages localizations import'.")
+    }
+    return loc.id
   }
 
   // MARK: - List
@@ -513,6 +528,316 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
         print()
         print("Done.")
+      }
+    }
+  }
+
+  // MARK: - Media
+
+  struct Media: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "media",
+      abstract: "Manage custom product page screenshots and app previews.",
+      subcommands: [List.self, Upload.self, Delete.self]
+    )
+
+    struct List: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "List screenshots and app previews across the page's localizations."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The page name or ID.")
+      var page: String
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let productPage = try await ProductPagesCommand.findProductPage(
+          ref: page, appID: app.id, client: client)
+        let versionID = try await ProductPagesCommand.activeVersionID(
+          pageID: productPage.id, client: client)
+
+        let locs = try await client.send(
+          Resources.v1.appCustomProductPageVersions.id(versionID)
+            .appCustomProductPageLocalizations.get(limit: 50))
+
+        var rows: [[String]] = []
+        for loc in locs.data.sorted(by: {
+          ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
+        }) {
+          let locale = loc.attributes?.locale ?? "?"
+          let sets = try await client.send(
+            Resources.v1.appCustomProductPageLocalizations.id(loc.id).appScreenshotSets.get(limit: 50))
+          for set in sets.data {
+            let displayType = set.attributes?.screenshotDisplayType.map { formatState($0) } ?? "—"
+            let shots = try await client.send(
+              Resources.v1.appScreenshotSets.id(set.id).appScreenshots.get(limit: 50))
+            for s in shots.data {
+              rows.append([
+                locale, "Screenshot", displayType,
+                s.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", s.id,
+              ])
+            }
+          }
+          let previewSets = try await client.send(
+            Resources.v1.appCustomProductPageLocalizations.id(loc.id).appPreviewSets.get(limit: 50))
+          for set in previewSets.data {
+            let previewType = set.attributes?.previewType.map { formatState($0) } ?? "—"
+            let previews = try await client.send(
+              Resources.v1.appPreviewSets.id(set.id).appPreviews.get(limit: 50))
+            for p in previews.data {
+              rows.append([
+                locale, "Preview", previewType,
+                p.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", p.id,
+              ])
+            }
+          }
+        }
+
+        if rows.isEmpty {
+          print("No screenshots or previews found.")
+          return
+        }
+        Table.print(headers: ["Locale", "Kind", "Type", "State", "Media ID"], rows: rows)
+      }
+    }
+
+    struct Upload: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Upload a screenshot (.png/.jpg) or app preview (.mp4/.mov) to a localization."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The page name or ID.")
+      var page: String
+
+      @Option(name: .long, help: "Locale to attach media to (e.g. en-US).")
+      var locale: String
+
+      @Option(name: .long, help: "Screenshot display type for images (e.g. APP_IPHONE_67).")
+      var displayType: String?
+
+      @Option(name: .long, help: "Preview type for videos (e.g. APP_IPHONE_67).")
+      var previewType: String?
+
+      @Option(name: .long, help: "Preview frame timecode for app previews (e.g. 00:00:03).")
+      var previewFrame: String?
+
+      @Argument(help: "Path to the media file.",
+                completion: .file(extensions: ["png", "jpg", "jpeg", "mp4", "mov"]))
+      var file: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let productPage = try await ProductPagesCommand.findProductPage(
+          ref: page, appID: app.id, client: client)
+        let locID = try await ProductPagesCommand.localizationID(
+          forLocale: locale, pageID: productPage.id, client: client)
+
+        let media = try MediaFile(readingFrom: file)
+        let ext = (media.fileName as NSString).pathExtension.lowercased()
+        let isImage = ["png", "jpg", "jpeg"].contains(ext)
+        let isVideo = ["mp4", "mov"].contains(ext)
+        guard isImage || isVideo else {
+          throw ValidationError(
+            "Unsupported file type '.\(ext)'. Use png/jpg for screenshots or mp4/mov for previews.")
+        }
+        if isImage && displayType == nil {
+          throw ValidationError("--display-type is required for screenshots (e.g. APP_IPHONE_67).")
+        }
+        if isVideo && previewType == nil {
+          throw ValidationError("--preview-type is required for app previews (e.g. APP_IPHONE_67).")
+        }
+
+        let typeLabel = (isImage ? displayType : previewType)?.uppercased() ?? "—"
+        print("Upload \(isImage ? "screenshot" : "app preview"):")
+        print("  Page:   \(productPage.attributes?.name ?? page)")
+        print("  Locale: \(localeName(locale))")
+        print("  Type:   \(typeLabel)")
+        print("  File:   \(media.fileName) (\(formatBytes(media.fileSize)))")
+        print()
+        guard confirm("Upload? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        let mediaID: String
+        if isImage {
+          let display: ScreenshotDisplayType = try parseEnum(displayType!, name: "display-type")
+          let setID = try await Self.screenshotSetID(
+            localizationID: locID, displayType: display, client: client)
+          mediaID = try await uploadAsset(
+            filePath: media.path,
+            reserve: {
+              let r = try await client.send(
+                Resources.v1.appScreenshots.post(
+                  AppScreenshotCreateRequest(
+                    data: .init(
+                      attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
+                      relationships: .init(appScreenshotSet: .init(data: .init(id: setID)))))))
+              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
+            },
+            commit: { id, md5 in
+              _ = try await client.send(
+                Resources.v1.appScreenshots.id(id).patch(
+                  AppScreenshotUpdateRequest(
+                    data: .init(
+                      id: id, attributes: .init(sourceFileChecksum: md5, isUploaded: true)))))
+            })
+        } else {
+          let preview: PreviewType = try parseEnum(previewType!, name: "preview-type")
+          let setID = try await Self.previewSetID(
+            localizationID: locID, previewType: preview, client: client)
+          mediaID = try await uploadAsset(
+            filePath: media.path,
+            reserve: {
+              let r = try await client.send(
+                Resources.v1.appPreviews.post(
+                  AppPreviewCreateRequest(
+                    data: .init(
+                      attributes: .init(
+                        fileSize: media.fileSize, fileName: media.fileName,
+                        previewFrameTimeCode: previewFrame,
+                        mimeType: mediaMimeType(for: media.fileName)),
+                      relationships: .init(appPreviewSet: .init(data: .init(id: setID)))))))
+              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
+            },
+            commit: { id, md5 in
+              _ = try await client.send(
+                Resources.v1.appPreviews.id(id).patch(
+                  AppPreviewUpdateRequest(
+                    data: .init(
+                      id: id,
+                      attributes: .init(
+                        sourceFileChecksum: md5, previewFrameTimeCode: previewFrame,
+                        isUploaded: true)))))
+            })
+        }
+
+        print()
+        success("Uploaded", "\(isImage ? "screenshot" : "app preview") (id: \(mediaID)).")
+      }
+
+      /// Finds the screenshot set with `displayType`, creating it under the localization if absent.
+      private static func screenshotSetID(
+        localizationID: String, displayType: ScreenshotDisplayType, client: AppStoreConnectClient
+      ) async throws -> String {
+        let sets = try await client.send(
+          Resources.v1.appCustomProductPageLocalizations.id(localizationID).appScreenshotSets.get(
+            limit: 50))
+        if let existing = sets.data.first(where: {
+          $0.attributes?.screenshotDisplayType == displayType
+        }) {
+          return existing.id
+        }
+        let created = try await client.send(
+          Resources.v1.appScreenshotSets.post(
+            AppScreenshotSetCreateRequest(
+              data: .init(
+                attributes: .init(screenshotDisplayType: displayType),
+                relationships: .init(
+                  appCustomProductPageLocalization: .init(data: .init(id: localizationID)))))))
+        return created.data.id
+      }
+
+      /// Finds the preview set with `previewType`, creating it under the localization if absent.
+      private static func previewSetID(
+        localizationID: String, previewType: PreviewType, client: AppStoreConnectClient
+      ) async throws -> String {
+        let sets = try await client.send(
+          Resources.v1.appCustomProductPageLocalizations.id(localizationID).appPreviewSets.get(
+            limit: 50))
+        if let existing = sets.data.first(where: { $0.attributes?.previewType == previewType }) {
+          return existing.id
+        }
+        let created = try await client.send(
+          Resources.v1.appPreviewSets.post(
+            AppPreviewSetCreateRequest(
+              data: .init(
+                attributes: .init(previewType: previewType),
+                relationships: .init(
+                  appCustomProductPageLocalization: .init(data: .init(id: localizationID)))))))
+        return created.data.id
+      }
+    }
+
+    struct Delete: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Delete a screenshot or app preview."
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The page name or ID.")
+      var page: String
+
+      @Argument(help: "The media ID (from `product-pages media list`).")
+      var mediaID: String
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let productPage = try await ProductPagesCommand.findProductPage(
+          ref: page, appID: app.id, client: client)
+        let versionID = try await ProductPagesCommand.activeVersionID(
+          pageID: productPage.id, client: client)
+
+        let locs = try await client.send(
+          Resources.v1.appCustomProductPageVersions.id(versionID)
+            .appCustomProductPageLocalizations.get(limit: 50))
+
+        var kind: String?
+        outer: for loc in locs.data {
+          let sets = try await client.send(
+            Resources.v1.appCustomProductPageLocalizations.id(loc.id).appScreenshotSets.get(limit: 50))
+          for set in sets.data {
+            let shots = try await client.send(
+              Resources.v1.appScreenshotSets.id(set.id).appScreenshots.get(limit: 50))
+            if shots.data.contains(where: { $0.id == mediaID }) { kind = "screenshot"; break outer }
+          }
+          let previewSets = try await client.send(
+            Resources.v1.appCustomProductPageLocalizations.id(loc.id).appPreviewSets.get(limit: 50))
+          for set in previewSets.data {
+            let previews = try await client.send(
+              Resources.v1.appPreviewSets.id(set.id).appPreviews.get(limit: 50))
+            if previews.data.contains(where: { $0.id == mediaID }) { kind = "preview"; break outer }
+          }
+        }
+
+        guard let kind else {
+          throw ValidationError("Media '\(mediaID)' not found on this page.")
+        }
+
+        guard confirm("Delete this \(kind)? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        if kind == "screenshot" {
+          _ = try await client.send(Resources.v1.appScreenshots.id(mediaID).delete)
+        } else {
+          _ = try await client.send(Resources.v1.appPreviews.id(mediaID).delete)
+        }
+        print()
+        success("Deleted", "\(kind) \(mediaID).")
       }
     }
   }

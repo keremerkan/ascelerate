@@ -49,3 +49,16 @@ Each localization carries `promotionalText`, applied to the page's editable vers
   "fr-FR": { "promotionalText": "Offre à durée limitée" }
 }
 ```
+
+## Screenshots & app previews
+
+Per-locale screenshots (`.png`/`.jpg`, by display type) and app previews (`.mp4`/`.mov`, by preview type). The set is created automatically on first upload.
+
+```bash
+ascelerate product-pages media list <bundle-id> "Summer 2026"
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --display-type APP_IPHONE_67 screenshot.png
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --preview-type APP_IPHONE_67 preview.mp4 --preview-frame 00:00:03
+ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
+```
+
+The file type determines whether it's uploaded as a screenshot or an app preview. Display and preview types use the standard App Store device identifiers (e.g. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).

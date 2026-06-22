@@ -1216,27 +1216,31 @@ struct AppsCommand: AsyncParsableCommand {
           }
         }
 
-        // 5. Fetch screenshots per locale
+        // 5. Fetch screenshots per locale. Two bounded-concurrency phases (sets, then
+        // screenshots) replace the sequential L + L×S call chain with identical counts.
         print("Fetching screenshots...")
-        var screenshotsByLocale: [String: (sets: Int, count: Int)] = [:]
-        for loc in versionLocs {
-          let locale = loc.attributes?.locale ?? "unknown"
+        let setsByLocale = try await boundedConcurrentMap(versionLocs) { loc in
           let setsResponse = try await client.send(
             Resources.v1.appStoreVersionLocalizations.id(loc.id)
               .appScreenshotSets.get(limit: 50)
           )
-          var totalSets = 0
-          var totalScreenshots = 0
-          for set in setsResponse.data {
+          return (loc.attributes?.locale ?? "unknown", setsResponse.data.map(\.id))
+        }
+
+        let countsBySet = Dictionary(
+          try await boundedConcurrentMap(setsByLocale.flatMap(\.1)) { setID in
             let screenshotsResponse = try await client.send(
-              Resources.v1.appScreenshotSets.id(set.id).appScreenshots.get()
+              Resources.v1.appScreenshotSets.id(setID).appScreenshots.get()
             )
-            if !screenshotsResponse.data.isEmpty {
-              totalSets += 1
-              totalScreenshots += screenshotsResponse.data.count
-            }
-          }
-          screenshotsByLocale[locale] = (totalSets, totalScreenshots)
+            return (setID, screenshotsResponse.data.count)
+          },
+          uniquingKeysWith: { first, _ in first }
+        )
+
+        var screenshotsByLocale: [String: (sets: Int, count: Int)] = [:]
+        for (locale, setIDs) in setsByLocale {
+          let nonEmpty = setIDs.compactMap { countsBySet[$0] }.filter { $0 > 0 }
+          screenshotsByLocale[locale] = (nonEmpty.count, nonEmpty.reduce(0, +))
         }
 
         // 6. Build per-locale rows

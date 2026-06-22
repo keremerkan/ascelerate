@@ -1325,11 +1325,14 @@ struct AppsCommand: AsyncParsableCommand {
         if !iaps.isEmpty {
           rows.append(["", ""])
           rows.append(["In-App Purchases (\(iaps.count))", ""])
-          for iap in iaps.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") }) {
+          let sortedIAPs = iaps.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
+          let schedules = try await boundedConcurrentMap(sortedIAPs.map(\.id)) { id in
+            try await IAPCommand.iapPriceScheduleExists(iapID: id, client: client)
+          }
+          for (iap, hasSchedule) in zip(sortedIAPs, schedules) {
             let label = "  " + (iap.attributes?.productID ?? iap.attributes?.name ?? iap.id)
             let state = iap.attributes?.state
             let stateStr = state.map { formatState($0) } ?? "unknown"
-            let hasSchedule = try await IAPCommand.iapPriceScheduleExists(iapID: iap.id, client: client)
 
             if !hasSchedule {
               rows.append([label, red("✗") + " No price schedule"])
@@ -1352,11 +1355,14 @@ struct AppsCommand: AsyncParsableCommand {
         if !allSubs.isEmpty {
           rows.append(["", ""])
           rows.append(["Subscriptions (\(allSubs.count))", ""])
-          for sub in allSubs.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") }) {
+          let sortedSubs = allSubs.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
+          let priced = try await boundedConcurrentMap(sortedSubs.map(\.id)) { id in
+            try await SubCommand.subscriptionHasPrices(subscriptionID: id, client: client)
+          }
+          for (sub, hasPrices) in zip(sortedSubs, priced) {
             let label = "  " + (sub.attributes?.productID ?? sub.attributes?.name ?? sub.id)
             let state = sub.attributes?.state
             let stateStr = state.map { formatState($0) } ?? "unknown"
-            let hasPrices = try await SubCommand.subscriptionHasPrices(subscriptionID: sub.id, client: client)
 
             if !hasPrices {
               rows.append([label, red("✗") + " No prices set"])

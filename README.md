@@ -2,7 +2,7 @@
 
 A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).
 
-> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and full management of in-app purchases and subscriptions. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
+> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and full management of in-app purchases and subscriptions. Also handles customer reviews and developer responses, in-app events, and custom product pages. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
 
 > **Full documentation:** [ascelerate.dev](https://ascelerate.dev)
 
@@ -906,6 +906,76 @@ Apple treats price changes differently for existing subscribers depending on dir
 - **Increase**: you must explicitly choose how to handle existing subscribers. Errors unless `--preserve-current` (grandfather them at the old price) or `--no-preserve-current` (push them to the new price after Apple's notification period) is set. Same rule applies aggregated across `--equalize-all-territories`.
 - **New territory** (no existing price): no existing subscribers to consider; flags optional.
 - **Unchanged**: skipped silently.
+
+### Customer Reviews
+
+```bash
+# List reviews (newest first by default)
+ascelerate reviews list <bundle-id>
+ascelerate reviews list <bundle-id> --rating 1 --sort critical --unanswered --limit 20
+ascelerate reviews list <bundle-id> --territory USA
+
+# Full review text + developer response
+ascelerate reviews info <review-id>
+
+# Publish (or replace) a developer response
+ascelerate reviews respond <review-id> --body "Thanks for the feedback! ..."
+
+# Delete the developer response
+ascelerate reviews delete-response <review-id>
+```
+
+Reviews are read-only — you can only manage the developer response. `--sort` accepts `recent`, `oldest`, `critical` (lowest rating first), or `best`. Review IDs come from `reviews list`.
+
+### In-App Events
+
+```bash
+# List and inspect
+ascelerate events list <bundle-id>
+ascelerate events list <bundle-id> --state PUBLISHED
+ascelerate events info <bundle-id> <reference-name-or-id>
+
+# Create, update, delete (events are referenced by name or ID)
+ascelerate events create <bundle-id> --reference-name "summer-sale" --badge SPECIAL_EVENT --purpose ATTRACT_NEW_USERS --priority HIGH
+ascelerate events create <bundle-id> --reference-name "launch" --territories USA,GBR --publish-start 2026-07-01 --event-start 2026-07-05 --event-end 2026-07-12
+ascelerate events update <bundle-id> summer-sale --priority NORMAL --badge NONE
+ascelerate events delete <bundle-id> summer-sale
+
+# Localizations (name, short description, long description per locale)
+ascelerate events localizations view <bundle-id> summer-sale
+ascelerate events localizations export <bundle-id> summer-sale
+ascelerate events localizations import <bundle-id> summer-sale --file event-locales.json
+
+# Media — event card / details page screenshots and video clips
+ascelerate events media list <bundle-id> summer-sale
+ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_CARD card.png
+ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_DETAILS_PAGE clip.mp4 --preview-frame 00:00:03
+ascelerate events media delete <bundle-id> summer-sale <media-id>
+```
+
+Badges: `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Purposes: `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`. Schedule dates accept ISO8601 or `yyyy-MM-dd`. Asset types: `EVENT_CARD`, `EVENT_DETAILS_PAGE`. Localization locales must match the app's configured locales (e.g. `tr`, not `tr-TR`).
+
+### Custom Product Pages
+
+```bash
+# List and inspect
+ascelerate product-pages list <bundle-id>
+ascelerate product-pages info <bundle-id> <name-or-id>
+
+# Create — the API requires a first version + localization, so --locale is required
+ascelerate product-pages create <bundle-id> --name "Summer Campaign" --locale en-US --promotional-text "Limited-time offer"
+
+# Rename or toggle App Store visibility
+ascelerate product-pages update <bundle-id> "Summer Campaign" --name "Summer 2026" --visible false
+ascelerate product-pages delete <bundle-id> "Summer Campaign"
+
+# Localizations (promotional text per locale)
+ascelerate product-pages localizations view <bundle-id> "Summer 2026"
+ascelerate product-pages localizations export <bundle-id> "Summer 2026"
+ascelerate product-pages localizations import <bundle-id> "Summer 2026" --file page-locales.json
+```
+
+Pages are referenced by name or ID. Each page's shareable App Store URL (with its `ppid`) appears in `list` and `info`.
 
 ### Rate Limit
 

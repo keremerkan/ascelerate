@@ -233,6 +233,66 @@ Offer code eligibilities for subs: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibili
 
 NOT YET IMPLEMENTED: `sub win-back-offer` is blocked on asc-swift codegen (the inline price create type is missing required relationships). `iap hosted-content` is intentionally skipped.
 
+### Customer reviews
+
+```bash
+ascelerate reviews list <app> [--rating 1-5] [--territory USA] [--sort recent|oldest|critical|best] [--unanswered] [--limit 50]
+ascelerate reviews info <review-id>                       # full text + developer response
+ascelerate reviews respond <review-id> --body "..."       # publish/replace developer response
+ascelerate reviews delete-response <review-id>
+```
+
+Reviews are read-only; only the developer response is writable. Review IDs come from `reviews list`.
+
+### In-app events
+
+```bash
+ascelerate events list <app> [--state PUBLISHED]
+ascelerate events info <app> <ref-or-id>
+ascelerate events create <app> --reference-name X [--badge SPECIAL_EVENT] [--purpose ATTRACT_NEW_USERS] [--priority HIGH] [--deep-link URL] [--primary-locale en-US] [--territories USA,GBR --publish-start 2026-07-01 --event-start 2026-07-05 --event-end 2026-07-12]
+ascelerate events update <app> <ref-or-id> [--badge NONE]   # --badge NONE clears the badge
+ascelerate events delete <app> <ref-or-id>
+
+# Localizations (name, shortDescription, longDescription)
+ascelerate events localizations view <app> <ref-or-id>
+ascelerate events localizations export <app> <ref-or-id>
+ascelerate events localizations import <app> <ref-or-id> --file event-locales.json
+
+# Media (png/jpg -> screenshot, mp4/mov -> video clip)
+ascelerate events media list <app> <ref-or-id>
+ascelerate events media upload <app> <ref-or-id> --locale en-US --asset-type EVENT_CARD|EVENT_DETAILS_PAGE <file> [--preview-frame 00:00:03]
+ascelerate events media delete <app> <ref-or-id> <media-id>
+```
+
+Badges: `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Purposes: `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`. Schedule dates: ISO8601 or `yyyy-MM-dd`. Event localization locales must match the app's locales (e.g. `tr`, not `tr-TR`).
+
+#### Event localization JSON format
+
+```json
+{ "en-US": { "name": "Summer Sale", "shortDescription": "...", "longDescription": "..." } }
+```
+
+### Custom product pages
+
+```bash
+ascelerate product-pages list <app>
+ascelerate product-pages info <app> <name-or-id>
+ascelerate product-pages create <app> --name X --locale en-US [--promotional-text "..."]   # compound create (page + version + first locale)
+ascelerate product-pages update <app> <name-or-id> [--name X] [--visible true|false]
+ascelerate product-pages delete <app> <name-or-id>
+ascelerate product-pages localizations view <app> <name-or-id>
+ascelerate product-pages localizations export <app> <name-or-id>
+ascelerate product-pages localizations import <app> <name-or-id> --file page-locales.json    # promotional text per locale
+```
+
+Pages are referenced by name or ID. `create` issues a compound POST (page + version + localization linked via `${local-id}` inline references).
+
+#### Custom product page localization JSON format
+
+```json
+{ "en-US": { "promotionalText": "Limited-time offer" } }
+```
+
 ### Screenshots (Simulator Capture)
 
 Capture App Store screenshots from simulators using UI tests. Replaces fastlane snapshot.

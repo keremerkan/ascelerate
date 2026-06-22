@@ -27,6 +27,11 @@ struct Ascelerate: AsyncParsableCommand {
   }
 
   static func main() async {
+    // Ignore SIGPIPE so a downstream reader that closes the pipe early (e.g. `ascelerate ... | head`)
+    // can't terminate us mid-operation — which for write commands could leave changes half-applied.
+    // Writes to the broken stdout then fail silently instead of killing the process.
+    signal(SIGPIPE, SIG_IGN)
+
     // Catch --version before ArgumentParser rejects it as unknown flag
     let args = Array(CommandLine.arguments.dropFirst())
     if args == ["--version"] || args == ["-v"] {

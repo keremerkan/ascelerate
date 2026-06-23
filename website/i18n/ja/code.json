@@ -1,6 +1,6 @@
 {
   "homepage.hero.description": {
-    "message": "XcodeアーカイブからApp Reviewへの提出まで、App Storeへのアプリ公開をすべてターミナルから管理できます。バージョン、ローカライズ、スクリーンショット、プロビジョニング、App内課金、サブスクリプションに対応しています。"
+    "message": "XcodeアーカイブからApp Reviewへの提出まで、App Storeへのアプリ公開をすべてターミナルから管理できます。バージョン、ローカライズ、スクリーンショット、プロビジョニング、App内課金、サブスクリプション、売上レポートに対応しています。"
   },
   "homepage.hero.getStarted": {
     "message": "はじめる"
@@ -31,6 +31,12 @@
   },
   "homepage.features.iap.description": {
     "message": "IAPとサブスクリプションの一覧表示、作成、更新、削除。ローカライゼーションを管理し、アプリバージョンと一緒に審査に提出できます。"
+  },
+  "homepage.features.reports.title": {
+    "message": "レポートと分析"
+  },
+  "homepage.features.reports.description": {
+    "message": "売上、財務、App Analyticsのレポートをダウンロード — ユニット数、ダウンロード、収益。ターミナルで概要を表示するか、独自の分析用に生データとして保存できます。"
   },
   "homepage.features.workflows.title": {
     "message": "ワークフローと自動化"

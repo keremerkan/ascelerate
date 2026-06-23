@@ -1,6 +1,6 @@
 {
   "homepage.hero.description": {
-    "message": "Apps erstellen, archivieren und im App Store veröffentlichen — vom Xcode-Archiv bis zur App Review-Einreichung. Verwalten Sie Versionen, Lokalisierungen, Screenshots, Provisioning, In-App-Käufe und Abonnements."
+    "message": "Apps erstellen, archivieren und im App Store veröffentlichen — vom Xcode-Archiv bis zur App Review-Einreichung. Verwalten Sie Versionen, Lokalisierungen, Screenshots, Provisioning, In-App-Käufe, Abonnements und Verkaufsberichte."
   },
   "homepage.hero.getStarted": {
     "message": "Erste Schritte"
@@ -31,6 +31,12 @@
   },
   "homepage.features.iap.description": {
     "message": "IAPs und Abonnements auflisten, erstellen, aktualisieren und löschen. Lokalisierungen verwalten und zusammen mit Ihrer App-Version zur App Review einreichen."
+  },
+  "homepage.features.reports.title": {
+    "message": "Berichte & Analytics"
+  },
+  "homepage.features.reports.description": {
+    "message": "Sales-, Finanz- und App-Analytics-Berichte herunterladen — Einheiten, Downloads und Erlöse. Im Terminal zusammengefasst oder als Rohdaten für Ihre eigene Analyse gespeichert."
   },
   "homepage.features.workflows.title": {
     "message": "Workflows & Automatisierung"

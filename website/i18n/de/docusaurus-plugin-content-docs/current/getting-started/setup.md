@@ -27,6 +27,8 @@ Die Konfiguration wird unter `~/.ascelerate/config.json` gespeichert:
 }
 ```
 
+`configure` fragt außerdem nach einer optionalen **Vendor-Nummer** (App Store Connect → Zahlungen und Finanzberichte). Sie wird nur für [Sales- und Finanzberichte](../commands/reports.md) benötigt und als Feld `vendorNumber` gespeichert; Sie können sie überspringen und später hinzufügen oder pro Befehl mit `--vendor-number` übergeben.
+
 ## 3. Überprüfen
 
 Führen Sie einen kurzen Befehl aus, um zu überprüfen, ob alles funktioniert:

@@ -27,6 +27,8 @@ Yapılandırma `~/.ascelerate/config.json` dosyasında saklanır:
 }
 ```
 
+`configure` ayrıca isteğe bağlı bir **satıcı numarası** sorar (App Store Connect → Payments and Financial Reports). Bu yalnızca [Satış ve Finans raporları](../commands/reports.md) için gereklidir ve bir `vendorNumber` alanı olarak saklanır; bunu atlayıp daha sonra ekleyebilir veya her komutta `--vendor-number` ile geçebilirsiniz.
+
 ## 3. Doğrulama
 
 Her şeyin çalıştığını doğrulamak için hızlıca bir komut çalıştırın:

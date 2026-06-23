@@ -27,6 +27,8 @@ ascelerate configure
 }
 ```
 
+`configure` では、オプションの**ベンダー番号**も入力を求められます（App Store Connect → お支払いと財務レポート）。これは[売上レポートと財務レポート](../commands/reports.md)にのみ必要で、`vendorNumber` フィールドとして保存されます。スキップして後で追加することも、コマンドごとに `--vendor-number` で渡すこともできます。
+
 ## 3. 確認
 
 簡単なコマンドを実行して、すべてが正常に動作することを確認します：

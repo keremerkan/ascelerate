@@ -1,6 +1,6 @@
 {
   "homepage.hero.description": {
-    "message": "Compilez, archivez et publiez des applications sur l'App Store — de l'archive Xcode à la soumission App Review. Gérez les versions, les localisations, les captures d'écran, le provisioning, les achats intégrés et les abonnements."
+    "message": "Compilez, archivez et publiez des applications sur l'App Store — de l'archive Xcode à la soumission App Review. Gérez les versions, les localisations, les captures d'écran, le provisioning, les achats intégrés, les abonnements et les rapports de ventes."
   },
   "homepage.hero.getStarted": {
     "message": "Commencer"
@@ -31,6 +31,12 @@
   },
   "homepage.features.iap.description": {
     "message": "Listez, créez, mettez à jour et supprimez les IAP et les abonnements. Gérez les localisations et soumettez-les pour examen avec votre version d'application."
+  },
+  "homepage.features.reports.title": {
+    "message": "Rapports & Analytics"
+  },
+  "homepage.features.reports.description": {
+    "message": "Téléchargez les rapports Ventes, Finances et App Analytics — unités, téléchargements et revenus. Résumés dans le terminal, ou enregistrés en données brutes pour votre propre analyse."
   },
   "homepage.features.workflows.title": {
     "message": "Workflows et automatisation"

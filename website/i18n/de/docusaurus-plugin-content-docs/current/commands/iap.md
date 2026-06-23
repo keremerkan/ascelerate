@@ -22,7 +22,7 @@ ascelerate iap info <bundle-id> <product-id>
 
 ## Beworbene Käufe
 
-Bewirb In-App-Käufe oder Abonnements auf deiner App-Store-Produktseite. Sie werden in der Anzeigereihenfolge aufgelistet.
+Bewerben Sie In-App-Käufe oder Abonnements auf Ihrer App-Store-Produktseite. Sie werden in der Anzeigereihenfolge aufgelistet.
 
 ```bash
 ascelerate iap promoted list <bundle-id>

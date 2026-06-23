@@ -27,6 +27,8 @@ La configuration est stockée dans `~/.ascelerate/config.json` :
 }
 ```
 
+`configure` demande également un **numéro de vendeur** facultatif (App Store Connect → Paiements et rapports financiers). Il n'est nécessaire que pour les [rapports Ventes et financiers](../commands/reports.md) et est stocké dans un champ `vendorNumber` ; vous pouvez l'ignorer et l'ajouter plus tard, ou le passer par commande avec `--vendor-number`.
+
 ## 3. Vérifier
 
 Exécutez une commande rapide pour vérifier que tout fonctionne :

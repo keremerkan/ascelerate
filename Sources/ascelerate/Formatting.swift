@@ -598,7 +598,7 @@ func migrateFromLegacyName() {
     var path = config.privateKeyPath
     path = path.replacingOccurrences(of: ".asc-client/", with: ".ascelerate/")
     path = path.replacingOccurrences(of: "/.asc/", with: "/.ascelerate/")
-    config = Config(keyId: config.keyId, issuerId: config.issuerId, privateKeyPath: path)
+    config = Config(keyId: config.keyId, issuerId: config.issuerId, privateKeyPath: path, vendorNumber: config.vendorNumber)
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     if let updated = try? encoder.encode(config) {

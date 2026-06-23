@@ -4,6 +4,9 @@ struct Config: Codable {
   let keyId: String
   let issuerId: String
   let privateKeyPath: String
+  /// Vendor number for Sales and Finance report downloads (App Store Connect →
+  /// Payments and Financial Reports). Optional — only the `reports` commands need it.
+  var vendorNumber: String?
 
   static let configDirectory = FileManager.default
     .homeDirectoryForCurrentUser

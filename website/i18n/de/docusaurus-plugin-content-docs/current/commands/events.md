@@ -5,7 +5,7 @@ title: In-App-Events
 
 # In-App-Events
 
-In-App-Events erstellen und verwalten — zeitnahe Events (Live-Events, Premieren, Challenges, Sonderangebote), die auf deiner App-Store-Produktseite und in der Suche erscheinen. Events werden über ihren **Referenznamen** oder ihre ID angesprochen.
+In-App-Events erstellen und verwalten — zeitnahe Events (Live-Events, Premieren, Challenges, Sonderangebote), die auf Ihrer App-Store-Produktseite und in der Suche erscheinen. Events werden über ihren **Referenznamen** oder ihre ID angesprochen.
 
 ## Auflisten und ansehen
 
@@ -30,10 +30,10 @@ ascelerate events update <bundle-id> summer-sale --priority NORMAL --badge NONE
 ascelerate events delete <bundle-id> summer-sale
 ```
 
-- **Badges:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Gib `update` ein `--badge NONE` mit, um das Badge zu entfernen.
+- **Badges:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Geben Sie `update` ein `--badge NONE` mit, um das Badge zu entfernen.
 - **Zwecke:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Priorität:** `HIGH` oder `NORMAL`.
-- **Zeitplandaten** (`--publish-start`, `--event-start`, `--event-end`) akzeptieren ISO8601 (`2026-07-01T09:00:00Z`) oder `yyyy-MM-dd` (UTC-Mitternacht). Lass `--territories` weg, um für alle Regionen zu planen.
+- **Zeitplandaten** (`--publish-start`, `--event-start`, `--event-end`) akzeptieren ISO8601 (`2026-07-01T09:00:00Z`) oder `yyyy-MM-dd` (UTC-Mitternacht). Lassen Sie `--territories` weg, um für alle Regionen zu planen.
 
 ## Lokalisierungen
 

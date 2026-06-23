@@ -5,7 +5,7 @@ title: Kundenrezensionen
 
 # Kundenrezensionen
 
-Kundenrezensionen anzeigen und Entwicklerantworten verwalten. Die Rezensionen selbst sind schreibgeschützt — du kannst nur die **Entwicklerantwort** veröffentlichen, ersetzen oder löschen.
+Kundenrezensionen anzeigen und Entwicklerantworten verwalten. Die Rezensionen selbst sind schreibgeschützt — Sie können nur die **Entwicklerantwort** veröffentlichen, ersetzen oder löschen.
 
 ## Auflisten
 
@@ -34,7 +34,7 @@ Zeigt den vollständigen Rezensionstext und ggf. die Entwicklerantwort. Rezensio
 ## Antworten
 
 ```bash
-ascelerate reviews respond <review-id> --body "Danke für dein Feedback! Wir haben das im neuesten Update behoben."
+ascelerate reviews respond <review-id> --body "Danke für Ihr Feedback! Wir haben das im neuesten Update behoben."
 ```
 
 Veröffentlicht eine Entwicklerantwort. Hat die Rezension bereits eine Antwort, wird diese nach einer Bestätigung ersetzt.

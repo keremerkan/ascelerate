@@ -28,6 +28,7 @@ const sidebars: SidebarsConfig = {
         'commands/reviews',
         'commands/events',
         'commands/product-pages',
+        'commands/reports',
         'commands/devices',
         'commands/certificates',
         'commands/bundle-ids',

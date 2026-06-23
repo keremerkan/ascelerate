@@ -2,7 +2,7 @@
 
 A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).
 
-> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and full management of in-app purchases and subscriptions. Also handles customer reviews and developer responses, in-app events, and custom product pages. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
+> **Note:** Covers the core app release workflow: archiving, uploading builds, managing versions and localizations, screenshots, review submission, provisioning (devices, certificates, bundle IDs, profiles), and full management of in-app purchases and subscriptions. Also handles customer reviews and developer responses, in-app events, custom product pages, and Sales/Finance/Analytics report downloads. Most provisioning commands support interactive mode — run without arguments to get guided prompts.
 
 > **Full documentation:** [ascelerate.dev](https://ascelerate.dev)
 
@@ -103,7 +103,7 @@ Go to [App Store Connect > Users and Access > Integrations > App Store Connect A
 ascelerate configure
 ```
 
-This will prompt for your **Key ID**, **Issuer ID**, and the path to your `.p8` file. The private key is copied into `~/.ascelerate/` with strict file permissions (owner-only access).
+This will prompt for your **Key ID**, **Issuer ID**, and the path to your `.p8` file, plus an optional **vendor number** (only needed for `reports sales`/`reports finance`). The private key is copied into `~/.ascelerate/` with strict file permissions (owner-only access).
 
 ## Usage
 
@@ -998,6 +998,32 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 
 Pages are referenced by name or ID. Each page's shareable App Store URL (with its `ppid`) appears in `list` and `info`.
+
+### Reports
+
+Download Sales & Trends, Financial, and App Analytics reports. Sales/Finance reports come back as Apple's gzipped TSV — ascelerate decompresses and summarizes them (or saves the raw file with `--output`/`--raw`).
+
+```bash
+# Sales & Trends — units/downloads, proceeds, IAP/subscription activity
+ascelerate reports sales                                    # most recent day, all apps
+ascelerate reports sales --frequency WEEKLY
+ascelerate reports sales --frequency MONTHLY --date 2026-05
+ascelerate reports sales --frequency YEARLY --date 2025 --bundle-id com.example.App
+ascelerate reports sales --frequency DAILY --date 2026-06-20 --output sales.tsv
+
+# Financial report — units + partner proceeds for a fiscal period, by region
+ascelerate reports finance --date 2026-05 --region US
+ascelerate reports finance --date 2026-05 --region US --type FINANCE_DETAIL --output finance.tsv
+
+# App Analytics — downloads, impressions, sessions (async: creates/reuses a report request)
+ascelerate reports analytics <bundle-id>
+ascelerate reports analytics <bundle-id> --category APP_USAGE --granularity WEEKLY
+```
+
+- `reports sales` / `reports finance` need a **vendor number** (App Store Connect → Payments and Financial Reports). Save it with `configure` or pass `--vendor-number`.
+- The sales summary groups units by app and **product type identifier**, distinguishing first-time downloads (`1*`/`3*`) from updates (`7*`) and in-app purchases (`IA*`). Use `--raw` for the full TSV.
+- Apple generates analytics reports asynchronously — a freshly created snapshot isn't ready immediately; re-run the command after a few minutes to download the segments.
+- The API does not expose aggregate rating counts or the star-rating average — only individual reviews (see Customer Reviews).
 
 ### Rate Limit
 

@@ -66,7 +66,7 @@ ascelerate apps review cancel-submission <bundle-id>
 
 ### App-Review-Informationen
 
-Zeige oder aktualisiere die Kontaktdaten, das Demo-Konto und die Hinweise für die App-Prüfung. Ohne Flags werden die aktuellen Werte ausgegeben; gib ein Feld-Flag an, um es zu aktualisieren (nicht angegebene Felder bleiben unverändert).
+Zeigen oder aktualisieren Sie die Kontaktdaten, das Demo-Konto und die Hinweise für die App-Prüfung. Ohne Flags werden die aktuellen Werte ausgegeben; geben Sie ein Feld-Flag an, um es zu aktualisieren (nicht angegebene Felder bleiben unverändert).
 
 ```bash
 ascelerate apps review info <bundle-id>

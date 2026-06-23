@@ -5,7 +5,7 @@ title: Individuelle Produktseiten
 
 # Individuelle Produktseiten
 
-Individuelle Produktseiten erstellen und verwalten — alternative Varianten deiner App-Store-Produktseite mit eigenem Werbetext und eigenen Screenshots, jeweils über eine eindeutige URL erreichbar. Seiten werden über ihren **Namen** oder ihre ID angesprochen.
+Individuelle Produktseiten erstellen und verwalten — alternative Varianten Ihrer App-Store-Produktseite mit eigenem Werbetext und eigenen Screenshots, jeweils über eine eindeutige URL erreichbar. Seiten werden über ihren **Namen** oder ihre ID angesprochen.
 
 ## Auflisten und ansehen
 
@@ -22,7 +22,7 @@ ascelerate product-pages info <bundle-id> <name-or-id>
 ascelerate product-pages create <bundle-id> --name "Summer Campaign" --locale en-US --promotional-text "Zeitlich begrenztes Angebot"
 ```
 
-Die App-Store-Connect-API verlangt, dass eine Seite zusammen mit einer ersten Version und mindestens einer Lokalisierung erstellt wird, daher ist `--locale` erforderlich. Füge weitere Sprachen anschließend mit `product-pages localizations import` hinzu.
+Die App-Store-Connect-API verlangt, dass eine Seite zusammen mit einer ersten Version und mindestens einer Lokalisierung erstellt wird, daher ist `--locale` erforderlich. Fügen Sie weitere Sprachen anschließend mit `product-pages localizations import` hinzu.
 
 ## Aktualisieren und löschen
 

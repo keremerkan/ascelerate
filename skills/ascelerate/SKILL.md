@@ -257,6 +257,23 @@ ascelerate reviews delete-response <review-id>
 
 Reviews are read-only; only the developer response is writable. Review IDs come from `reviews list`.
 
+The App Store Connect API does **not** expose aggregate rating counts or the star-rating average/histogram — only individual reviews (above). For download/unit numbers and revenue, use `reports` (below).
+
+### Reports (downloads, proceeds, analytics)
+
+```bash
+# Sales & Trends — units/downloads + proceeds. Summarizes units by title/product type.
+ascelerate reports sales [--frequency DAILY|WEEKLY|MONTHLY|YEARLY] [--date X] [--type SALES] [--sub-type SUMMARY] [--bundle-id <app>] [--vendor-number X] [--output report.tsv] [--raw]
+# Financial report — units + partner proceeds for a fiscal period.
+ascelerate reports finance --date YYYY-MM --region US [--type FINANCIAL|FINANCE_DETAIL] [--vendor-number X] [--output X] [--raw]
+# App Analytics — downloads, impressions, sessions, etc. (async: creates/reuses a report request, downloads segments).
+ascelerate reports analytics <app> [--category APP_STORE_ENGAGEMENT|APP_USAGE|COMMERCE|FRAMEWORK_USAGE|PERFORMANCE] [--granularity DAILY|WEEKLY|MONTHLY] [--report-name X] [--processing-date YYYY-MM-DD] [--ongoing] [--output dir/] [-y]
+```
+
+- **Vendor number** is required for `sales`/`finance` (App Store Connect → Payments and Financial Reports). Save it once with `ascelerate configure`, or pass `--vendor-number`.
+- `sales`/`finance` default to a parsed **summary**; add `--raw` to print the TSV or `--output PATH` to save it. `--date` defaults to the most recent completed period for sales; for `finance` it's a *fiscal* period `YYYY-MM` (not a calendar month) and is required along with `--region`.
+- `analytics` reuses an existing report request or prompts to create one (a one-time snapshot by default; `--ongoing` for recurring). A freshly created snapshot isn't ready immediately — re-run the command after a few minutes to download the segments.
+
 ### In-app events
 
 ```bash

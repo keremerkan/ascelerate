@@ -1,6 +1,6 @@
 {
   "homepage.hero.description": {
-    "message": "Xcode arşivinden App Review'a gönderime kadar her şeyi terminalden yönetin. Sürümler, yerelleştirmeler, ekran görüntüleri, provisioning profilleri, uygulama içi satın almalar ve abonelikler — hepsi tek bir komut satırı aracında."
+    "message": "Xcode arşivinden App Review'a gönderime kadar her şeyi terminalden yönetin. Sürümler, yerelleştirmeler, ekran görüntüleri, provisioning profilleri, uygulama içi satın almalar, abonelikler ve satış raporları — hepsi tek bir komut satırı aracında."
   },
   "homepage.hero.getStarted": {
     "message": "Başlayın"
@@ -31,6 +31,12 @@
   },
   "homepage.features.iap.description": {
     "message": "IAP'leri ve abonelikleri listeleyin, oluşturun, güncelleyin ve silin. Yerelleştirmeleri yönetin ve uygulama sürümünüzle birlikte incelemeye gönderin."
+  },
+  "homepage.features.reports.title": {
+    "message": "Raporlar ve Analizler"
+  },
+  "homepage.features.reports.description": {
+    "message": "Satış, Finans ve App Analytics raporlarını indirin — birim sayıları, indirmeler ve gelirler. Terminalde özetlenir veya kendi analiziniz için ham veri olarak kaydedilir."
   },
   "homepage.features.workflows.title": {
     "message": "Workflow'lar ve Otomasyon"

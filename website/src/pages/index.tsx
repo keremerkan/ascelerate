@@ -24,7 +24,7 @@ function HomepageHeader() {
         <p className={styles.heroDescription}>
           <Translate id="homepage.hero.description">
             Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission.
-            Manage versions, localizations, screenshots, provisioning, in-app purchases, and subscriptions.
+            Manage versions, localizations, screenshots, provisioning, in-app purchases, subscriptions, and sales reports.
           </Translate>
         </p>
         <div className={styles.buttons}>
@@ -109,6 +109,15 @@ function getFeatures(): FeatureItem[] {
         <Translate id="homepage.features.iap.description">
           List, create, update, and delete IAPs and subscriptions.
           Manage localizations and submit for review alongside your app version.
+        </Translate>
+      ),
+    },
+    {
+      title: translate({id: 'homepage.features.reports.title', message: 'Reports & Analytics'}),
+      description: (
+        <Translate id="homepage.features.reports.description">
+          Download Sales, Finance, and App Analytics reports — units, downloads, and proceeds.
+          Summarized in the terminal, or saved as raw data for your own analysis.
         </Translate>
       ),
     },

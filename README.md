@@ -17,8 +17,11 @@ A command-line tool for building, archiving, and publishing apps to the App Stor
 
 ```bash
 brew tap keremerkan/tap
+brew trust keremerkan/tap
 brew install ascelerate
 ```
+
+Since Homebrew 6.0, third-party taps must be explicitly trusted before their code runs. The `brew trust` step above approves the tap; alternatively, a fully-qualified install (`brew install keremerkan/tap/ascelerate`) prompts you to trust it interactively.
 
 The tap provides a pre-built binary for Apple Silicon Macs, so installation is instant.
 

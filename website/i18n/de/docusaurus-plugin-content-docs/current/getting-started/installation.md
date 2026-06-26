@@ -14,10 +14,15 @@ title: Installation
 
 ```bash
 brew tap keremerkan/tap
+brew trust keremerkan/tap
 brew install ascelerate
 ```
 
 Der Tap stellt eine vorgefertigte Binärdatei für Apple Silicon Macs bereit, sodass die Installation sofort erfolgt.
+
+:::note
+Seit Homebrew 6.0 müssen Taps von Drittanbietern ausdrücklich als vertrauenswürdig eingestuft werden, bevor ihr Code ausgeführt wird. Der obige `brew trust`-Schritt bestätigt den Tap. Alternativ fordert eine voll qualifizierte Installation (`brew install keremerkan/tap/ascelerate`) Sie interaktiv zur Bestätigung auf.
+:::
 
 ## Installationsskript
 

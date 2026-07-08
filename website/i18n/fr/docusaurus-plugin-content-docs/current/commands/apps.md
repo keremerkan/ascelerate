@@ -32,6 +32,19 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 
 L'option `--release-type` est facultative -- son omission reprend le paramètre de la version précédente.
 
+:::note Achat universel
+Pour les applications en achat universel (une seule fiche App Store couvrant iOS, macOS, tvOS et/ou visionOS), la même chaîne de version peut exister une fois par plateforme. `create-version` et `review submit` ciblent iOS par défaut -- passez `--platform macos` (ou `tvos`, `visionos`) pour viser une autre plateforme. Toutes les autres commandes liées à une version (localisations, médias, association de build, vérifications préalables, informations et pièces jointes d'examen, `resolve-issues`/`cancel-submission`, déploiement progressif) acceptent elles aussi une option `--platform` facultative ; sans elle, elles demandent de choisir dès qu'une version (ou une soumission d'examen active) correspond à plusieurs plateformes -- avec `--yes`, elles refusent en affichant une indication au lieu de demander.
+:::
+
+## Copyright
+
+```bash
+ascelerate apps copyright <bundle-id>
+ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
+```
+
+Sans `--set`, la mention de copyright actuelle est affichée. La mise à jour nécessite que la version soit dans un état modifiable.
+
 ## Examen
 
 ### Vérifier le statut d'examen
@@ -46,6 +59,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 ```bash
 ascelerate apps review submit <bundle-id>
 ascelerate apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 Lors de la soumission, la commande détecte automatiquement les achats intégrés et les abonnements avec des modifications en attente et propose de les soumettre en même temps que la version de l'application.
@@ -90,7 +104,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-La commande vérifie l'état de la version, l'association du build, puis parcourt chaque langue pour vérifier les champs de localisation (description, nouveautés, mots-clés), les champs d'informations de l'application (nom, sous-titre, URL de politique de confidentialité) et les captures d'écran :
+La commande vérifie l'état de la version, l'association du build, puis parcourt chaque langue pour vérifier les champs de localisation (description, nouveautés, mots-clés, URL d'assistance), les champs d'informations de l'application (nom, sous-titre, URL de politique de confidentialité) et les captures d'écran :
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)

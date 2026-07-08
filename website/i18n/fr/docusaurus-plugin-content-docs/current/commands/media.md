@@ -23,8 +23,9 @@ ascelerate apps media upload <bundle-id> media/
 # Téléverser depuis une archive (zip, tar, tar.gz supportés)
 ascelerate apps media upload <bundle-id> screenshots.zip
 
-# Téléverser vers une version spécifique
+# Téléverser vers une version spécifique (ajoutez --platform pour les applications en achat universel)
 ascelerate apps media upload <bundle-id> media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0 --platform macos
 
 # Remplacer les médias existants dans les ensembles correspondants avant le téléversement
 ascelerate apps media upload <bundle-id> media/ --replace
@@ -150,3 +151,14 @@ ascelerate apps media verify <bundle-id> media/
 ```
 
 Sans argument dossier, la commande affiche un rapport de statut en lecture seule. Les ensembles dont tous les éléments sont complets affichent une ligne compacte ; les ensembles avec des éléments bloqués s'étendent pour montrer chaque fichier et son état. Avec un argument dossier, elle propose de retenter les éléments bloqués en les supprimant et en les re-téléversant depuis les fichiers locaux correspondants, en préservant l'ordre de position d'origine.
+
+## Purger les ensembles obsolètes
+
+`--replace` lors du téléversement ne vide que les ensembles correspondant à un dossier local -- les ensembles côté serveur pour des tailles d'écran que vous ne fournissez plus conservent leurs captures d'écran obsolètes. `media prune` supprime les ensembles sans dossier local correspondant (locale/type d'affichage), après les avoir listés avec le nombre d'éléments et demandé confirmation :
+
+```bash
+ascelerate apps media prune <bundle-id> media/
+ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
+```
+
+Les locales sans dossier local sont entièrement ignorées -- la commande ne purge qu'au sein des locales réellement gérées par le dossier.

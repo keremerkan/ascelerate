@@ -148,6 +148,10 @@ ascelerate apps versions <bundle-id>
 ascelerate apps create-version <bundle-id> <version-string>
 ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type manual
 
+# View or update the copyright notice
+ascelerate apps copyright <bundle-id>
+ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
+
 # Check review submission status
 ascelerate apps review status <bundle-id>
 ascelerate apps review status <bundle-id> --version 2.1.0
@@ -155,6 +159,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 # Submit for review
 ascelerate apps review submit <bundle-id>
 ascelerate apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id> --platform macos
 
 # Resolve rejected review items (after fixing issues and replying in Resolution Center)
 ascelerate apps review resolve-issues <bundle-id>
@@ -172,6 +177,8 @@ ascelerate apps review attachment upload <bundle-id> demo.mp4
 ascelerate apps review attachment delete <attachment-id>
 ```
 
+For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` and `review submit` default to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release, routing coverage) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
+
 #### Pre-submission preflight checks
 
 Before submitting for review, run `preflight` to verify that all required fields are filled in across every locale:
@@ -184,7 +191,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-The command checks version state, build attachment, and then goes through each locale to verify localization fields (description, what's new, keywords), app info fields (name, subtitle, privacy policy URL), and screenshots. Results are grouped by locale with colored pass/fail indicators:
+The command checks version state, build attachment, and then goes through each locale to verify localization fields (description, what's new, keywords, support URL), app info fields (name, subtitle, privacy policy URL), and screenshots. Results are grouped by locale with colored pass/fail indicators:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -218,10 +225,13 @@ ascelerate apps build attach <bundle-id> --version 2.1.0
 
 # Attach the most recent build automatically
 ascelerate apps build attach-latest <bundle-id>
+ascelerate apps build attach-latest <bundle-id> --platform macos
 
 # Remove the attached build from a version
 ascelerate apps build detach <bundle-id>
 ```
+
+Build lookups are platform-aware: on universal-purchase apps, iOS and macOS builds can share build numbers, so the attach commands only consider builds matching the target version's platform.
 
 ### Phased Release
 
@@ -453,6 +463,17 @@ ascelerate apps media verify <bundle-id> media/
 ```
 
 Without `--folder`, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With `--folder`, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.
+
+#### Prune stale sets
+
+`--replace` on upload only clears sets that match a local folder — server sets for screen sizes you no longer ship (say, an old 5.8-inch set) keep their outdated screenshots. `media prune` deletes the sets that have no matching local locale/display-type folder, after listing them with asset counts and confirming:
+
+```bash
+ascelerate apps media prune <bundle-id> media/
+ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
+```
+
+Locales that have no local folder at all are skipped entirely — the command only prunes within locales the folder actually manages.
 
 ### Capturing Screenshots
 
@@ -741,10 +762,11 @@ ascelerate profiles reissue --all --to-certs ABC123,DEF456  # Use specific certi
 ### Builds
 
 ```bash
-# List all builds (shows app version and build number)
+# List all builds (shows app version, platform, and build number)
 ascelerate builds list
 ascelerate builds list --bundle-id <bundle-id>
 ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
+ascelerate builds list --bundle-id <bundle-id> --platform macos
 
 # Archive an Xcode project
 ascelerate builds archive
@@ -759,9 +781,10 @@ ascelerate builds upload MyApp.ipa
 # Wait for a build to finish processing
 ascelerate builds await-processing <bundle-id>
 ascelerate builds await-processing <bundle-id> --build-version 903
+ascelerate builds await-processing <bundle-id> --build-version 903 --platform macos
 ```
 
-The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it automatically exports to `.ipa` before uploading.
+The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it detects the archive's platform and automatically exports to `.ipa` (iOS-family) or `.pkg` (macOS) before uploading, passing the matching platform to altool.
 
 ### In-App Purchases
 
@@ -1088,6 +1111,8 @@ Most commands that prompt for confirmation support `--yes` / `-y` to skip prompt
 ascelerate apps build attach-latest <bundle-id> --yes
 ascelerate apps review submit <bundle-id> --yes
 ```
+
+On universal-purchase apps, also pass `--platform` so unattended runs never hit the interactive platform-disambiguation prompt.
 
 ### Version
 

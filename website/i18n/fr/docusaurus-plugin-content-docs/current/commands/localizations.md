@@ -7,6 +7,8 @@ title: Localisations
 
 Gérez les localisations des versions App Store (description, nouveautés, mots-clés, etc.).
 
+Toutes les sous-commandes acceptent `--platform ios|macos|tvos|visionos` pour les applications en achat universel qui portent la même version sur plusieurs plateformes ; sans cette option, elles demandent de choisir lorsqu'une version est ambiguë.
+
 ## Afficher
 
 ```bash

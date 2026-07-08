@@ -23,8 +23,9 @@ ascelerate apps media upload <bundle-id> media/
 # Bir arşivden yükleyin (zip, tar, tar.gz desteklenir)
 ascelerate apps media upload <bundle-id> screenshots.zip
 
-# Belirli bir sürüme yükleyin
+# Belirli bir sürüme yükleyin (evrensel satın alma kullanan uygulamalar için --platform ekleyin)
 ascelerate apps media upload <bundle-id> media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0 --platform macos
 
 # Yüklemeden önce eşleşen setlerdeki mevcut medyayı değiştirin
 ascelerate apps media upload <bundle-id> media/ --replace
@@ -150,3 +151,14 @@ ascelerate apps media verify <bundle-id> media/
 ```
 
 Klasör argümanı olmadan komut salt okunur bir durum raporu gösterir. Tüm öğeleri tamamlanmış olan setler tek satırlık özet gösterir; takılmış öğeleri olan setler her dosyayı ve durumunu genişleterek gösterir. Klasör argümanı ile takılmış öğeleri silip eşleşen yerel dosyalardan tekrar yüklemeyi teklif eder ve orijinal sıra düzenini korur.
+
+## Eski Setleri Temizleme
+
+Yükleme sırasındaki `--replace` yalnızca yerel bir klasörle eşleşen setleri boşaltır; artık sunmadığınız ekran boyutlarına ait sunucu setleri eski ekran görüntülerini korur. `media prune`, eşleşen yerel locale/display-type klasörü olmayan setleri, öğe sayılarıyla birlikte listeleyip onay aldıktan sonra siler:
+
+```bash
+ascelerate apps media prune <bundle-id> media/
+ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
+```
+
+Yerel klasörü olmayan locale'ler tamamen atlanır; komut yalnızca klasörün gerçekten yönettiği locale'ler içinde temizlik yapar.

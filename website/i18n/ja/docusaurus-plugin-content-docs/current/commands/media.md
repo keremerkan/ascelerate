@@ -23,8 +23,9 @@ ascelerate apps media upload <bundle-id> media/
 # アーカイブからアップロード（zip、tar、tar.gz対応）
 ascelerate apps media upload <bundle-id> screenshots.zip
 
-# 特定のバージョンにアップロード
+# 特定のバージョンにアップロード（ユニバーサル購入のアプリでは --platform を追加）
 ascelerate apps media upload <bundle-id> media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0 --platform macos
 
 # アップロード前にマッチするセットの既存メディアを削除して置き換え
 ascelerate apps media upload <bundle-id> media/ --replace
@@ -150,3 +151,14 @@ ascelerate apps media verify <bundle-id> media/
 ```
 
 フォルダ引数を指定しない場合、読み取り専用のステータスレポートが表示されます。すべてのアイテムが完了しているセットはコンパクトな1行で表示され、停滞したアイテムがあるセットは各ファイルとその状態を展開して表示します。フォルダ引数を指定すると、停滞したアイテムを削除してマッチするローカルファイルから再アップロードし、元の並び順を保持します。
+
+## 古いセットの削除
+
+アップロード時の `--replace` は、ローカルフォルダに対応するセットのみを入れ替えます。提供を終了した画面サイズのサーバー側セットには、古いスクリーンショットが残ったままになります。`media prune` は、対応するロケール/ディスプレイタイプのフォルダが存在しないセットを、アセット数とともに一覧表示して確認した上で削除します。
+
+```bash
+ascelerate apps media prune <bundle-id> media/
+ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
+```
+
+ローカルフォルダのないロケールは完全にスキップされます。このコマンドは、フォルダが実際に管理しているロケール内のみを削除対象とします。

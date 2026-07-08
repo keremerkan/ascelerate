@@ -32,6 +32,19 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 
 The `--release-type` is optional — omitting it uses the previous version's setting.
 
+:::note Universal purchase
+For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` and `review submit` default to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
+:::
+
+## Copyright
+
+```bash
+ascelerate apps copyright <bundle-id>
+ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
+```
+
+Without `--set`, prints the current copyright notice. Updating requires the version to be in an editable state.
+
 ## Review
 
 ### Check review status
@@ -46,6 +59,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 ```bash
 ascelerate apps review submit <bundle-id>
 ascelerate apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 When submitting, the command automatically detects IAPs and subscriptions with pending changes and offers to submit them alongside the app version.
@@ -90,7 +104,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-The command checks version state, build attachment, and then goes through each locale to verify localization fields (description, what's new, keywords), app info fields (name, subtitle, privacy policy URL), and screenshots:
+The command checks version state, build attachment, and then goes through each locale to verify localization fields (description, what's new, keywords, support URL), app info fields (name, subtitle, privacy policy URL), and screenshots:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)

@@ -7,6 +7,8 @@ title: Yerelleştirmeler
 
 App Store sürüm yerelleştirmelerini (açıklama, yenilikler, anahtar kelimeler vb.) yönet.
 
+Evrensel satın alma kullanan ve aynı sürümü birden fazla platformda taşıyan uygulamalar için tüm alt komutlar `--platform ios|macos|tvos|visionos` seçeneğini kabul eder; seçenek verilmediğinde, sürüm birden fazla platformla eşleşiyorsa sizden platform seçmeniz istenir.
+
 ## Görüntüleme
 
 ```bash

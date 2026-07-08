@@ -32,6 +32,19 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 
 `--release-type` isteğe bağlıdır -- belirtilmezse önceki sürümün ayarı kullanılır.
 
+:::note Evrensel Satın Alma
+Evrensel satın alma kullanan uygulamalarda (iOS, macOS, tvOS ve/veya visionOS'i kapsayan tek bir App Store kaydı) aynı sürüm numarası her platformda birer kez bulunabilir. `create-version` ve `review submit` varsayılan olarak iOS'i hedefler; başka bir platformu hedeflemek için `--platform macos` (veya `tvos`, `visionos`) verin. Sürüm kapsamındaki diğer tüm komutlar (yerelleştirmeler, medya, build ekleme, review preflight/info/attachments/resolve-issues/cancel-submission, aşamalı yayınlama) da isteğe bağlı bir `--platform` seçeneği kabul eder; seçenek verilmediğinde, bir sürüm (veya etkin bir inceleme gönderimi) birden fazla platformla eşleşiyorsa sizden platform seçmeniz istenir. `--yes` ile bu komutlar seçim istemek yerine yönlendirici bir hatayla durur.
+:::
+
+## Telif Hakkı
+
+```bash
+ascelerate apps copyright <bundle-id>
+ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
+```
+
+`--set` verilmediğinde mevcut telif hakkı bildirimi gösterilir. Güncelleme için sürümün düzenlenebilir durumda olması gerekir.
+
 ## İnceleme
 
 ### İnceleme durumunu kontrol etme
@@ -46,6 +59,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 ```bash
 ascelerate apps review submit <bundle-id>
 ascelerate apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 Gönderim sırasında komut, bekleyen değişiklikleri olan IAP'leri ve abonelikleri otomatik olarak algılar ve bunları uygulama sürümüyle birlikte göndermeyi teklif eder.
@@ -90,7 +104,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-Komut; sürüm durumunu, build eklentisini kontrol eder ve ardından her locale'i inceleyerek yerelleştirme alanlarını (açıklama, yenilikler, anahtar kelimeler), uygulama bilgi alanlarını (ad, alt başlık, gizlilik politikası URL'si) ve ekran görüntülerini doğrular:
+Komut; sürüm durumunu, build eklentisini kontrol eder ve ardından her locale'i inceleyerek yerelleştirme alanlarını (açıklama, yenilikler, anahtar kelimeler, destek URL'si), uygulama bilgi alanlarını (ad, alt başlık, gizlilik politikası URL'si) ve ekran görüntülerini doğrular:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)

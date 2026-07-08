@@ -23,8 +23,9 @@ ascelerate apps media upload <bundle-id> media/
 # Upload from an archive (zip, tar, tar.gz supported)
 ascelerate apps media upload <bundle-id> screenshots.zip
 
-# Upload to a specific version
+# Upload to a specific version (add --platform for universal-purchase apps)
 ascelerate apps media upload <bundle-id> media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0 --platform macos
 
 # Replace existing media in matching sets before uploading
 ascelerate apps media upload <bundle-id> media/ --replace
@@ -150,3 +151,14 @@ ascelerate apps media verify <bundle-id> media/
 ```
 
 Without a folder argument, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With a folder argument, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.
+
+## Prune stale sets
+
+`--replace` on upload only clears sets that match a local folder — server sets for screen sizes you no longer ship keep their outdated screenshots. `media prune` deletes the sets with no matching local locale/display-type folder, after listing them with asset counts and confirming:
+
+```bash
+ascelerate apps media prune <bundle-id> media/
+ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
+```
+
+Locales without a local folder are skipped entirely — the command only prunes within locales the folder actually manages.

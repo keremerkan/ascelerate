@@ -23,8 +23,9 @@ ascelerate apps media upload <bundle-id> media/
 # Aus einem Archiv hochladen (zip, tar, tar.gz unterstützt)
 ascelerate apps media upload <bundle-id> screenshots.zip
 
-# In eine bestimmte Version hochladen
+# In eine bestimmte Version hochladen (bei Apps mit Universalkauf --platform ergänzen)
 ascelerate apps media upload <bundle-id> media/ --version 2.1.0
+ascelerate apps media upload <bundle-id> media/ --version 2.1.0 --platform macos
 
 # Bestehende Medien in passenden Sets vor dem Hochladen ersetzen
 ascelerate apps media upload <bundle-id> media/ --replace
@@ -150,3 +151,14 @@ ascelerate apps media verify <bundle-id> media/
 ```
 
 Ohne Ordner-Argument zeigt der Befehl einen reinen Statusbericht an. Sets, in denen alle Elemente abgeschlossen sind, werden als kompakte Einzeiler angezeigt; Sets mit blockierten Elementen werden erweitert, um jede Datei und ihren Status anzuzeigen. Mit einem Ordner-Argument wird angeboten, blockierte Elemente erneut zu versuchen, indem sie gelöscht und aus den passenden lokalen Dateien erneut hochgeladen werden, wobei die ursprüngliche Reihenfolge beibehalten wird.
+
+## Veraltete Sets entfernen
+
+`--replace` beim Hochladen leert nur Sets, die einem lokalen Ordner entsprechen — Server-Sets für Bildschirmgrößen, die Sie nicht mehr ausliefern, behalten ihre veralteten Screenshots. `media prune` löscht die Sets ohne passenden lokalen Locale-/Display-Type-Ordner, nachdem sie mit Asset-Anzahl aufgelistet und bestätigt wurden:
+
+```bash
+ascelerate apps media prune <bundle-id> media/
+ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
+```
+
+Locales ohne lokalen Ordner werden vollständig übersprungen — der Befehl bereinigt nur innerhalb der Locales, die der Ordner tatsächlich verwaltet.

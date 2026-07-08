@@ -32,6 +32,19 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 
 `--release-type` はオプションです。省略した場合、前のバージョンの設定が使用されます。
 
+:::note ユニバーサル購入
+ユニバーサル購入のアプリ（iOS、macOS、tvOS、visionOSにまたがる1つのApp Storeレコード）では、同じバージョン文字列がプラットフォームごとに1つずつ存在できます。`create-version` と `review submit` はデフォルトでiOSを対象とするため、別のプラットフォームを対象にするには `--platform macos`（または `tvos`、`visionos`）を指定してください。バージョンを対象とするその他のコマンド（ローカライゼーション、メディア、ビルドの添付、review preflight/info/attachments/resolve-issues/cancel-submission、段階的リリース）もオプションの `--platform` を受け付けます。省略した場合、バージョン（またはアクティブな審査提出）が複数のプラットフォームに該当するときに選択を求められます。`--yes` 指定時は選択を求める代わりに、ヒントを表示して中止します。
+:::
+
+## 著作権表示
+
+```bash
+ascelerate apps copyright <bundle-id>
+ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
+```
+
+`--set` を省略すると、現在の著作権表示が表示されます。更新するには、バージョンが編集可能な状態である必要があります。
+
 ## レビュー
 
 ### レビューステータスの確認
@@ -46,6 +59,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 ```bash
 ascelerate apps review submit <bundle-id>
 ascelerate apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 提出時に、保留中の変更があるIAPやサブスクリプションを自動検出し、アプリバージョンと一緒に提出するか確認します。
@@ -90,7 +104,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-バージョンの状態、ビルドの添付、各ロケールのローカライゼーションフィールド（説明文、新機能、キーワード）、アプリ情報フィールド（名前、サブタイトル、プライバシーポリシーURL）、スクリーンショットを確認します：
+バージョンの状態、ビルドの添付、各ロケールのローカライゼーションフィールド（説明文、新機能、キーワード、サポートURL）、アプリ情報フィールド（名前、サブタイトル、プライバシーポリシーURL）、スクリーンショットを確認します：
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)

@@ -24,12 +24,15 @@ Any argument without a dot is treated as an alias. Real bundle IDs work unchange
 
 ```bash
 ascelerate apps create-version <app> <version>
+ascelerate apps copyright <app> --set "2026 Your Name"   # View/update version copyright
 ascelerate apps build attach-latest <app>
 ascelerate apps build attach <app>        # Interactive build picker
 ascelerate apps build detach <app>
 ```
 
 `--version` targets a specific version. Without it, commands prefer the latest editable version (Prepare for Submission or Waiting for Review).
+
+Universal-purchase apps (one app record, several platforms) can hold the same version per platform. Version-scoped commands (localizations, media, build attach, review, `builds list`/`await-processing`) accept `--platform ios|macos|tvos|visionos` to disambiguate; without it they prompt when ambiguous. `apps create-version` and `apps review submit` default to iOS — pass `--platform macos` for the Mac version/submission.
 
 ### Localizations
 
@@ -85,6 +88,7 @@ ascelerate apps media upload <app>                            # Interactive pick
 ascelerate apps media upload <app> media/ --replace           # Replace existing
 ascelerate apps media verify <app>                            # Check processing status
 ascelerate apps media verify <app> media/                     # Retry stuck items
+ascelerate apps media prune <app> media/                      # Delete server sets with no matching local folder
 ```
 
 #### Folder structure

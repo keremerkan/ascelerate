@@ -32,6 +32,19 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 
 Der `--release-type` ist optional — wird er weggelassen, wird die Einstellung der vorherigen Version verwendet.
 
+:::note Universalkauf
+Bei Apps mit Universalkauf (ein App Store-Eintrag, der iOS, macOS, tvOS und/oder visionOS umfasst) kann dieselbe Versionsnummer einmal pro Plattform existieren. `create-version` und `review submit` verwenden standardmäßig iOS — übergeben Sie `--platform macos` (oder `tvos`, `visionos`), um eine andere Plattform anzusprechen. Alle anderen versionsbezogenen Befehle (Lokalisierungen, Medien, Build-Zuordnung, Review-Preflight/-Informationen/-Anhänge, `resolve-issues`/`cancel-submission`, stufenweise Veröffentlichung) akzeptieren ebenfalls ein optionales `--platform`; ohne diese Option fragen sie nach, wenn eine Version (oder eine aktive Review-Einreichung) für mehr als eine Plattform existiert — mit `--yes` brechen sie stattdessen mit einem Hinweis ab.
+:::
+
+## Copyright
+
+```bash
+ascelerate apps copyright <bundle-id>
+ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
+```
+
+Ohne `--set` wird der aktuelle Copyright-Hinweis angezeigt. Für die Aktualisierung muss sich die Version in einem bearbeitbaren Zustand befinden.
+
 ## Review
 
 ### Review-Status prüfen
@@ -46,6 +59,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 ```bash
 ascelerate apps review submit <bundle-id>
 ascelerate apps review submit <bundle-id> --version 2.1.0
+ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 Beim Einreichen erkennt der Befehl automatisch IAPs und Abonnements mit ausstehenden Änderungen und bietet an, diese zusammen mit der App-Version einzureichen.
@@ -90,7 +104,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-Der Befehl prüft den Versionsstatus, die Build-Zuordnung und geht dann jede Sprache durch, um Lokalisierungsfelder (Beschreibung, Neuigkeiten, Schlüsselwörter), App-Info-Felder (Name, Untertitel, Datenschutzrichtlinien-URL) und Screenshots zu überprüfen:
+Der Befehl prüft den Versionsstatus, die Build-Zuordnung und geht dann jede Sprache durch, um Lokalisierungsfelder (Beschreibung, Neuigkeiten, Schlüsselwörter, Support-URL), App-Info-Felder (Name, Untertitel, Datenschutzrichtlinien-URL) und Screenshots zu überprüfen:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)

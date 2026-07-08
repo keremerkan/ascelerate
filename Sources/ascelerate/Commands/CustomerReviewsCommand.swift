@@ -185,6 +185,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
       CustomerReviewsCommand.printReview(review, response: existing)
       print()
 
+      let replacedBody = existing?.attributes?.responseBody
       if let existing {
         guard confirm("This review already has a response. Replace it? [y/N] ") else {
           cancelled()
@@ -193,15 +194,28 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         _ = try await client.send(Resources.v1.customerReviewResponses.id(existing.id).delete)
       }
 
-      let resp = try await client.send(
-        Resources.v1.customerReviewResponses.post(
-          CustomerReviewResponseV1CreateRequest(
-            data: .init(
-              attributes: .init(responseBody: body),
-              relationships: .init(review: .init(data: .init(id: reviewID)))
+      let resp: CustomerReviewResponseV1Response
+      do {
+        resp = try await client.send(
+          Resources.v1.customerReviewResponses.post(
+            CustomerReviewResponseV1CreateRequest(
+              data: .init(
+                attributes: .init(responseBody: body),
+                relationships: .init(review: .init(data: .init(id: reviewID)))
+              )
             )
-          )
-        ))
+          ))
+      } catch {
+        // The old response is already deleted at this point — the API only allows
+        // one response per review, so replace works as delete-then-create.
+        if let replacedBody {
+          print()
+          print(red("The previous response was deleted but publishing the new one failed."))
+          print("Previous response text (for recovery):")
+          print("  \(replacedBody)")
+        }
+        throw error
+      }
 
       let state = resp.data.attributes?.state.map { formatState($0) } ?? "—"
       print()

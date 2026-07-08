@@ -40,6 +40,15 @@ struct AppEventsCommand: AsyncParsableCommand {
       "Invalid \(field) date '\(value)'. Use ISO8601 (2026-07-01T09:00:00Z) or yyyy-MM-dd.")
   }
 
+  /// Validates a `--deep-link` value; a typo'd URL must throw, not silently drop the field.
+  static func parseDeepLink(_ value: String?) throws -> URL? {
+    guard let value else { return nil }
+    guard let url = URL(string: value), url.scheme != nil else {
+      throw ValidationError("Invalid --deep-link URL: '\(value)'.")
+    }
+    return url
+  }
+
   /// Splits a comma-separated territory list into uppercased codes.
   static func territoryList(_ value: String?) -> [String]? {
     value.map {
@@ -254,7 +263,7 @@ struct AppEventsCommand: AsyncParsableCommand {
               attributes: .init(
                 referenceName: referenceName,
                 badge: badgeValue,
-                deepLink: deepLink.flatMap { URL(string: $0) },
+                deepLink: try AppEventsCommand.parseDeepLink(deepLink),
                 purchaseRequirement: purchaseRequirement,
                 primaryLocale: primaryLocale,
                 priority: priorityValue,
@@ -336,23 +345,30 @@ struct AppEventsCommand: AsyncParsableCommand {
         try priority.map { try parseEnum($0, name: "priority") }
       let purposeValue: AppEventUpdateRequest.Data.Attributes.Purpose? =
         try purpose.map { try parseEnum($0, name: "purpose") }
+      let clearBadge = badge?.uppercased() == "NONE"
       let badgeValue: AppEventUpdateRequest.Data.Attributes.Badge? =
         try badge.flatMap { $0.uppercased() == "NONE" ? nil : try parseEnum($0, name: "badge") }
 
       var schedules: [AppEventUpdateRequest.Data.Attributes.TerritorySchedule]?
       if territories != nil || publishStart != nil || eventStart != nil || eventEnd != nil {
+        // The PATCH replaces the whole territorySchedules array — merge omitted
+        // fields from the existing schedule instead of clearing them.
+        let existing = appEvent.attributes?.territorySchedules?.first
+        if (appEvent.attributes?.territorySchedules?.count ?? 0) > 1 {
+          print(yellow("⚠ This event has multiple territory schedules — the update replaces them with a single schedule."))
+        }
         schedules = [
           .init(
-            territories: AppEventsCommand.territoryList(territories),
+            territories: AppEventsCommand.territoryList(territories) ?? existing?.territories,
             publishStart: try publishStart.map {
               try AppEventsCommand.parseEventDate($0, field: "--publish-start")
-            },
+            } ?? existing?.publishStart,
             eventStart: try eventStart.map {
               try AppEventsCommand.parseEventDate($0, field: "--event-start")
-            },
+            } ?? existing?.eventStart,
             eventEnd: try eventEnd.map {
               try AppEventsCommand.parseEventDate($0, field: "--event-end")
-            }
+            } ?? existing?.eventEnd
           )
         ]
       }
@@ -370,7 +386,7 @@ struct AppEventsCommand: AsyncParsableCommand {
               attributes: .init(
                 referenceName: referenceName,
                 badge: badgeValue,
-                deepLink: deepLink.flatMap { URL(string: $0) },
+                deepLink: try AppEventsCommand.parseDeepLink(deepLink),
                 purchaseRequirement: purchaseRequirement,
                 priority: priorityValue,
                 purpose: purposeValue,
@@ -380,8 +396,37 @@ struct AppEventsCommand: AsyncParsableCommand {
           )
         ))
 
+      if clearBadge {
+        // Clearing requires an explicit `"badge": null` in the PATCH body — the
+        // generated update request omits nil keys, which would be a no-op.
+        _ = try await client.send(
+          Request<AppEventResponse>(
+            path: "/v1/appEvents/\(appEvent.id)",
+            method: "PATCH",
+            body: ClearBadgeBody(id: appEvent.id)
+          )
+        )
+      }
+
       print()
       success("Updated", "in-app event '\(appEvent.attributes?.referenceName ?? event)'.")
+    }
+
+    private struct ClearBadgeBody: Encodable, Sendable {
+      let id: String
+
+      enum CodingKeys: String, CodingKey { case data }
+      enum DataKeys: String, CodingKey { case type, id, attributes }
+      enum AttrKeys: String, CodingKey { case badge }
+
+      func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        var data = container.nestedContainer(keyedBy: DataKeys.self, forKey: .data)
+        try data.encode("appEvents", forKey: .type)
+        try data.encode(id, forKey: .id)
+        var attrs = data.nestedContainer(keyedBy: AttrKeys.self, forKey: .attributes)
+        try attrs.encodeNil(forKey: .badge)
+      }
     }
   }
 

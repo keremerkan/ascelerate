@@ -93,17 +93,23 @@ struct ScreenshotTestRunner: Sendable {
             return file.path
         }
 
+        // Fallback: search recursively, but pick the most recently modified file —
+        // enumeration order is arbitrary and could return a stale build's xctestrun.
         let enumerator = FileManager.default.enumerator(
             at: baseURL,
-            includingPropertiesForKeys: nil,
+            includingPropertiesForKeys: [.contentModificationDateKey],
             options: [.skipsHiddenFiles]
         )
 
+        var candidates: [URL] = []
         while let url = enumerator?.nextObject() as? URL {
             if url.pathExtension == "xctestrun" {
-                print("  Using xctestrun: \(url.path)")
-                return url.path
+                candidates.append(url)
             }
+        }
+        if let newest = candidates.max(by: { modificationDate($0) < modificationDate($1) }) {
+            print("  Using xctestrun: \(newest.path)")
+            return newest.path
         }
 
         throw ScreenshotError.xctestrunNotFound(derivedDataPath)
@@ -117,12 +123,11 @@ struct ScreenshotTestRunner: Sendable {
 
         return contents
             .filter { $0.pathExtension == "xctestrun" }
-            .sorted {
-                let d1 = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
-                let d2 = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
-                return d1 > d2
-            }
-            .first
+            .max { modificationDate($0) < modificationDate($1) }
+    }
+
+    private func modificationDate(_ url: URL) -> Date {
+        (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
     }
 
     private func resolveDerivedDataPath() throws -> String {
@@ -146,12 +151,14 @@ struct ScreenshotTestRunner: Sendable {
 
         let contents = try FileManager.default.contentsOfDirectory(
             at: derivedDataRoot,
-            includingPropertiesForKeys: nil
+            includingPropertiesForKeys: [.contentModificationDateKey]
         )
 
+        // Multiple ProjectName-<hash> dirs exist after the project path moves or is
+        // renamed — pick the most recently modified one, not directory order.
         let matches = contents.filter { $0.lastPathComponent.hasPrefix("\(projectName)-") }
 
-        guard let match = matches.first else {
+        guard let match = matches.max(by: { modificationDate($0) < modificationDate($1) }) else {
             throw ScreenshotError.derivedDataNotFound(projectName)
         }
 

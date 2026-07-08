@@ -34,15 +34,19 @@ enum Reports {
     process.executableURL = URL(fileURLWithPath: "/usr/bin/gzip")
     process.arguments = ["-dc", url.path]
     let stdout = Pipe()
+    let stderr = Pipe()
     process.standardOutput = stdout
-    process.standardError = Pipe()
+    process.standardError = stderr
     try process.run()
     // readDataToEndOfFile drains the pipe as gzip streams, so this can't deadlock on buffer fill.
     let data = stdout.fileHandleForReading.readDataToEndOfFile()
+    let errorData = stderr.fileHandleForReading.readDataToEndOfFile()
     process.waitUntilExit()
     guard process.terminationStatus == 0 else {
+      let detail = String(data: errorData, encoding: .utf8)?
+        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
       throw ValidationError(
-        "Failed to decompress report (gzip exited \(process.terminationStatus)).")
+        "Failed to decompress report (gzip exited \(process.terminationStatus))\(detail.isEmpty ? "" : ": \(detail)").")
     }
     return data
   }
@@ -156,6 +160,14 @@ enum Reports {
     let (header, rows) = parseTSV(text)
     guard !rows.isEmpty else {
       print("Report is empty — no sales in this period.")
+      return
+    }
+    // Non-SALES report types (SUBSCRIPTION, SUBSCRIBER, ...) have different columns —
+    // summarizing them here would misleadingly collapse everything into "0 units".
+    guard header.contains("Units"), header.contains("Title") else {
+      print("This report type has no Units/Title columns to summarize — showing raw data.")
+      print()
+      print(text, terminator: text.hasSuffix("\n") ? "" : "\n")
       return
     }
 

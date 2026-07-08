@@ -14,10 +14,13 @@ enum ScreenshotShell {
         try process.run()
         trackProcess(process)
         setupSignalHandler()
+        // Drain the pipe BEFORE waiting: output larger than the ~64 KB pipe buffer
+        // would otherwise block the child while we block in waitUntilExit — deadlock.
+        // (`simctl list devices -j` alone can exceed the buffer.)
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         untrackProcess(process)
 
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         guard process.terminationStatus == 0 else {

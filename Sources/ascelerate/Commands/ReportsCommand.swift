@@ -287,7 +287,11 @@ extension ReportsCommand {
       var savedFiles: [String] = []
       for (i, segment) in segments.enumerated() {
         guard let url = segment.attributes?.url else { continue }
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+          throw ValidationError(
+            "Segment \(i + 1) download failed (HTTP \(http.statusCode)). The presigned URL may have expired — re-run the command.")
+        }
         let text = String(decoding: try Reports.gunzip(data), as: UTF8.self)
         totalRows += max(0, text.split(whereSeparator: \.isNewline).count - 1)
         let file = (outDir as NSString).appendingPathComponent("segment-\(i + 1).csv")

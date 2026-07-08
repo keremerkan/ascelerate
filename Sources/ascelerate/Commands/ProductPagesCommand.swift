@@ -32,22 +32,26 @@ struct ProductPagesCommand: AsyncParsableCommand {
   static func activeVersionID(
     pageID: String, client: AppStoreConnectClient
   ) async throws -> String {
-    let versions = try await client.send(
-      Resources.v1.appCustomProductPages.id(pageID).appCustomProductPageVersions.get(limit: 50))
-    guard !versions.data.isEmpty else {
+    var versions: [AppCustomProductPageVersion] = []
+    for try await page in client.pages(
+      Resources.v1.appCustomProductPages.id(pageID).appCustomProductPageVersions.get(limit: 50)
+    ) {
+      versions.append(contentsOf: page.data)
+    }
+    guard !versions.isEmpty else {
       throw ValidationError("This custom product page has no versions.")
     }
-    if let editable = versions.data.first(where: {
+    if let editable = versions.first(where: {
       $0.attributes?.state == .prepareForSubmission
     }) {
       return editable.id
     }
-    if let live = versions.data.first(where: {
+    if let live = versions.first(where: {
       $0.attributes?.state != .replacedWithNewVersion
     }) {
       return live.id
     }
-    return versions.data[0].id
+    return versions[0].id
   }
 
   /// Resolves a locale to its localization ID on the page's editable version.

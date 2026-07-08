@@ -16,9 +16,9 @@ struct ConfigureCommand: ParsableCommand {
     print("https://appstoreconnect.apple.com/access/integrations/api")
     print()
 
-    let keyId = promptText("Key ID: ")
-    let issuerId = promptText("Issuer ID: ")
-    let sourceKeyPath = promptText("Private key (.p8) path: ")
+    let keyId = try promptText("Key ID: ")
+    let issuerId = try promptText("Issuer ID: ")
+    let sourceKeyPath = try promptText("Private key (.p8) path: ")
 
     print()
     print("Vendor Number — optional, only needed for 'ascelerate reports sales' and 'reports finance'.")
@@ -35,12 +35,18 @@ struct ConfigureCommand: ParsableCommand {
       throw ValidationError("File not found at '\(expandedSource)'.")
     }
 
-    // Create config directory if needed
+    // Create the config directory owner-only from the start — the key must never
+    // be readable by other users, even transiently or after a mid-run failure.
     if !fm.fileExists(atPath: Config.configDirectory.path) {
-      try fm.createDirectory(at: Config.configDirectory, withIntermediateDirectories: true)
+      try fm.createDirectory(
+        at: Config.configDirectory, withIntermediateDirectories: true,
+        attributes: [.posixPermissions: 0o700])
+    } else {
+      try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: Config.configDirectory.path)
     }
 
-    // Copy the .p8 file into ~/.asc/
+    // Copy the .p8 file into the config directory. copyItem preserves the source
+    // file's permissions (a downloaded key is typically 644), so tighten immediately.
     let keyFilename = URL(fileURLWithPath: expandedSource).lastPathComponent
     let destinationURL = Config.configDirectory.appendingPathComponent(keyFilename)
 
@@ -48,6 +54,7 @@ struct ConfigureCommand: ParsableCommand {
       try fm.removeItem(at: destinationURL)
     }
     try fm.copyItem(atPath: expandedSource, toPath: destinationURL.path)
+    try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: destinationURL.path)
 
     let config = Config(
       keyId: keyId,
@@ -59,12 +66,8 @@ struct ConfigureCommand: ParsableCommand {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     let data = try encoder.encode(config)
-    try data.write(to: Config.configFile)
-
-    // Set strict permissions: owner-only read/write (700 for dir, 600 for files)
-    try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: Config.configDirectory.path)
+    try data.write(to: Config.configFile, options: .atomic)
     try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Config.configFile.path)
-    try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: destinationURL.path)
 
     print()
     print("Private key copied to \(destinationURL.path)")

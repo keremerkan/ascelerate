@@ -55,7 +55,7 @@ struct SimulatorManager: Sendable {
     func overrideStatusBar(udid: String, arguments: String?) throws {
         var args = ["simctl", "status_bar", udid, "override"]
 
-        let parts = splitArguments(arguments ?? Self.defaultStatusBarArguments)
+        let parts = try splitArguments(arguments ?? Self.defaultStatusBarArguments)
         args.append(contentsOf: parts)
 
         try ScreenshotShell.run("/usr/bin/xcrun", arguments: args)

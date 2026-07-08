@@ -22,6 +22,8 @@ struct BuildsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Filter by app version (e.g. 14.3).")
     var version: String?
 
+    @OptionGroup var platformOption: PlatformOption
+
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
@@ -35,6 +37,7 @@ struct BuildsCommand: AsyncParsableCommand {
 
       let request = Resources.v1.builds.get(
         filterPreReleaseVersionVersion: version.map { [$0] },
+        filterPreReleaseVersionPlatform: platformFilter(try platformOption.parsed()),
         filterApp: filterApp,
         sort: [.minusUploadedDate],
         include: [.preReleaseVersion]
@@ -56,19 +59,21 @@ struct BuildsCommand: AsyncParsableCommand {
           let uploaded = build.attributes?.uploadedDate
             .map { formatDate($0) } ?? "—"
 
-          // Look up app version from included pre-release version
+          // Look up app version and platform from included pre-release version
           var appVersion = "—"
+          var platform = "—"
           if let ref = build.relationships?.preReleaseVersion?.data,
              let v = prereleaseVersions[ref.id] {
             appVersion = v.attributes?.version ?? "—"
+            platform = v.attributes?.platform.map { formatState($0) } ?? "—"
           }
 
-          allBuilds.append([appVersion, buildNumber, state, uploaded])
+          allBuilds.append([appVersion, platform, buildNumber, state, uploaded])
         }
       }
 
       Table.print(
-        headers: ["Version", "Build", "State", "Uploaded"],
+        headers: ["Version", "Platform", "Build", "State", "Uploaded"],
         rows: allBuilds
       )
 
@@ -90,6 +95,8 @@ struct BuildsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Build version number to wait for (e.g. 903). If omitted, waits for the latest build.")
     var buildVersion: String?
 
+    @OptionGroup var platformOption: PlatformOption
+
     @Option(name: .long, help: "Polling interval in seconds (default: 30).")
     var interval: Int = 30
 
@@ -99,8 +106,11 @@ struct BuildsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
+      let platform = try platformOption.parsed()
 
-      let effectiveVersion = buildVersion ?? lastUploadedBuildVersion
+      // Per-platform lookup: with two uploads in one workflow (iOS + macOS), each
+      // await must inherit its own platform's build number, not the last upload's.
+      let effectiveVersion = buildVersion ?? lastUploadedBuild(for: platform)
       let label: String
       if let v = effectiveVersion {
         label = "build \(v)"
@@ -117,6 +127,7 @@ struct BuildsCommand: AsyncParsableCommand {
       _ = try await awaitBuildProcessing(
         appID: app.id,
         buildVersion: effectiveVersion,
+        platform: platform,
         client: client,
         interval: interval,
         timeout: timeout
@@ -368,17 +379,15 @@ struct BuildsCommand: AsyncParsableCommand {
 
       let config = try Config.load()
 
-      // Export .xcarchive to .ipa if needed
-      let (uploadPath, tempDir) = try resolveUploadable(expandedPath)
+      // Export .xcarchive to .ipa/.pkg if needed
+      let (uploadPath, tempDir, archivePlatform) = try resolveUploadable(expandedPath)
       defer { if let dir = tempDir { try? FileManager.default.removeItem(atPath: dir) } }
 
       print("Uploading \((uploadPath as NSString).lastPathComponent)...")
       print()
       fflush(stdout)
 
-      let process = Process()
-      process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-      process.arguments = [
+      var altoolArgs = [
         "altool", "--upload-app",
         "-f", uploadPath,
         "--apiKey", config.keyId,
@@ -386,6 +395,13 @@ struct BuildsCommand: AsyncParsableCommand {
         "--p8-file-path", config.privateKeyPath,
         "--show-progress",
       ]
+      if let archivePlatform {
+        altoolArgs += ["--type", archivePlatform.altoolType]
+      }
+
+      let process = Process()
+      process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+      process.arguments = altoolArgs
       process.standardOutput = FileHandle.standardOutput
       process.standardError = FileHandle.standardError
 
@@ -400,7 +416,7 @@ struct BuildsCommand: AsyncParsableCommand {
       }
 
       if let buildNumber = uploadedBuildNumber {
-        lastUploadedBuildVersion = buildNumber
+        recordUploadedBuild(buildNumber, platform: archivePlatform?.ascPlatform)
       }
     }
   }
@@ -450,23 +466,28 @@ struct BuildsCommand: AsyncParsableCommand {
 
       let config = try Config.load()
 
-      // Export .xcarchive to .ipa if needed
-      let (uploadPath, tempDir) = try resolveUploadable(expandedPath)
+      // Export .xcarchive to .ipa/.pkg if needed
+      let (uploadPath, tempDir, archivePlatform) = try resolveUploadable(expandedPath)
       defer { if let dir = tempDir { try? FileManager.default.removeItem(atPath: dir) } }
 
       print("Validating \((uploadPath as NSString).lastPathComponent)...")
       print()
       fflush(stdout)
 
-      let process = Process()
-      process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-      process.arguments = [
+      var altoolArgs = [
         "altool", "--validate-app",
         "-f", uploadPath,
         "--apiKey", config.keyId,
         "--apiIssuer", config.issuerId,
         "--p8-file-path", config.privateKeyPath,
       ]
+      if let archivePlatform {
+        altoolArgs += ["--type", archivePlatform.altoolType]
+      }
+
+      let process = Process()
+      process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+      process.arguments = altoolArgs
       process.standardOutput = FileHandle.standardOutput
       process.standardError = FileHandle.standardError
 
@@ -615,19 +636,98 @@ private func resolveFilePath(_ file: String?, prompt: String) throws -> String {
   return expandedPath
 }
 
-/// If the path is an .xcarchive, exports it to a temporary .ipa and returns that path.
-/// Returns (uploadablePath, tempDirToCleanUp). tempDir is nil if no export was needed.
-private func resolveUploadable(_ path: String) throws -> (String, String?) {
+/// The platform of an .xcarchive, detected from the archived app's Info.plist.
+private enum ArchivePlatform {
+  case iOS, macOS, tvOS, visionOS
+
+  /// The value for altool's `--type` flag.
+  var altoolType: String {
+    switch self {
+    case .iOS: return "ios"
+    case .macOS: return "macos"
+    case .tvOS: return "appletvos"
+    case .visionOS: return "visionos"
+    }
+  }
+
+  /// The file extension an App Store export produces for this platform.
+  var exportExtension: String {
+    self == .macOS ? "pkg" : "ipa"
+  }
+
+  /// The corresponding App Store Connect API platform.
+  var ascPlatform: Platform {
+    switch self {
+    case .iOS: return .iOS
+    case .macOS: return .macOS
+    case .tvOS: return .tvOS
+    case .visionOS: return .visionOS
+    }
+  }
+
+  var label: String {
+    switch self {
+    case .iOS: return "iOS"
+    case .macOS: return "macOS"
+    case .tvOS: return "tvOS"
+    case .visionOS: return "visionOS"
+    }
+  }
+}
+
+/// Detects the archive's platform: reads DTPlatformName from the app's Info.plist,
+/// falling back to bundle layout (macOS apps keep Info.plist under Contents/).
+private func detectArchivePlatform(_ archivePath: String) -> ArchivePlatform {
+  let fm = FileManager.default
+  let archivePlistPath = (archivePath as NSString).appendingPathComponent("Info.plist")
+
+  var appPath: String?
+  if let data = fm.contents(atPath: archivePlistPath),
+     let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+     let appProps = plist["ApplicationProperties"] as? [String: Any],
+     let relativePath = appProps["ApplicationPath"] as? String {
+    appPath = (archivePath as NSString).appendingPathComponent("Products/\(relativePath)")
+  }
+  guard let appPath else { return .iOS }
+
+  let macPlist = (appPath as NSString).appendingPathComponent("Contents/Info.plist")
+  let iosPlist = (appPath as NSString).appendingPathComponent("Info.plist")
+  let isMacLayout = fm.fileExists(atPath: macPlist)
+
+  guard let data = fm.contents(atPath: isMacLayout ? macPlist : iosPlist),
+        let info = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+  else {
+    return isMacLayout ? .macOS : .iOS
+  }
+
+  switch (info["DTPlatformName"] as? String)?.lowercased() {
+  case "macosx": return .macOS
+  case "appletvos": return .tvOS
+  case "xros", "visionos": return .visionOS
+  case "iphoneos": return .iOS
+  default: return isMacLayout ? .macOS : .iOS
+  }
+}
+
+/// If the path is an .xcarchive, exports it to a temporary .ipa (iOS-family) or
+/// .pkg (macOS) and returns that path.
+/// Returns (uploadablePath, tempDirToCleanUp, platform).
+/// tempDir is nil if no export was needed; platform is nil when it cannot be
+/// detected (bare .ipa input — altool infers it from the package).
+private func resolveUploadable(_ path: String) throws -> (String, String?, ArchivePlatform?) {
   let ext = (path as NSString).pathExtension.lowercased()
 
   guard ext == "xcarchive" else {
-    return (path, nil)
+    // Only macOS App Store packages ship as .pkg.
+    return (path, nil, ext == "pkg" ? .macOS : nil)
   }
 
-  print("Exporting .xcarchive to .ipa...")
+  let platform = detectArchivePlatform(path)
+  print("Exporting .xcarchive to .\(platform.exportExtension) (\(platform.label))...")
   fflush(stdout)
 
-  let tempDir = NSTemporaryDirectory() + "ascelerate-export-\(ProcessInfo.processInfo.processIdentifier)"
+  // UUID, not PID: a predictable path could pick up a stale export from a prior crashed run.
+  let tempDir = NSTemporaryDirectory() + "ascelerate-export-\(UUID().uuidString)"
   let exportDir = tempDir + "/output"
   let plistPath = tempDir + "/ExportOptions.plist"
 
@@ -659,30 +759,42 @@ private func resolveUploadable(_ path: String) throws -> (String, String?) {
     "-exportOptionsPlist", plistPath,
     "-allowProvisioningUpdates",
   ]
-  process.standardOutput = FileHandle.nullDevice
+  // Capture stdout (it carries the *.xcdistributionlogs path) and surface it only on failure.
+  let stdoutPipe = Pipe()
+  process.standardOutput = stdoutPipe
   process.standardError = FileHandle.standardError
 
   try process.run()
+  let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
   process.waitUntilExit()
 
   if process.terminationStatus != 0 {
     try? FileManager.default.removeItem(atPath: tempDir)
-    throw ValidationError("Failed to export .xcarchive. Check that the archive is signed for App Store distribution.")
+    if let output = String(data: stdoutData, encoding: .utf8)?
+      .trimmingCharacters(in: .whitespacesAndNewlines), !output.isEmpty {
+      print(output)
+    }
+    throw ValidationError(
+      """
+      Failed to export .xcarchive for \(platform.label) App Store distribution.
+      Check the signing certificates\(platform == .macOS ? " (macOS needs a Mac Installer Distribution certificate for the .pkg installer signature)" : "") \
+      and Xcode's export log in the *.xcdistributionlogs bundle above.
+      """)
   }
 
-  // Find the exported .ipa
+  // Find the exported package
   let contents = try FileManager.default.contentsOfDirectory(atPath: exportDir)
-  guard let ipaName = contents.first(where: { $0.hasSuffix(".ipa") }) else {
+  guard let exportName = contents.first(where: { $0.hasSuffix(".\(platform.exportExtension)") }) else {
     try? FileManager.default.removeItem(atPath: tempDir)
-    throw ValidationError("No .ipa found after exporting .xcarchive. The archive may be a macOS app — use .pkg instead.")
+    throw ValidationError("No .\(platform.exportExtension) found after exporting the \(platform.label) .xcarchive.")
   }
 
-  let ipaPath = exportDir + "/" + ipaName
-  print("Exported \(ipaName)")
+  let exportPath = exportDir + "/" + exportName
+  print("Exported \(exportName)")
   print()
   fflush(stdout)
 
-  return (ipaPath, tempDir)
+  return (exportPath, tempDir, platform)
 }
 
 /// Extracts CFBundleVersion from an .xcarchive's Info.plist, or nil if unavailable.

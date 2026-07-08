@@ -9,7 +9,7 @@ struct AppsCommand: AsyncParsableCommand {
     abstract: "Manage apps.",
     subcommands: [List.self, Info.self, Versions.self],
     groupedSubcommands: [
-      CommandGroup(name: "Version", subcommands: [CreateVersion.self, BuildCommand.self, PhasedRelease.self, RoutingCoverage.self]),
+      CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
       CommandGroup(name: "Configuration", subcommands: [Availability.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
@@ -144,6 +144,8 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
+
+      @OptionGroup var platformOption: PlatformOption
       
       @Option(name: .long, help: "Filter by locale (e.g. en-US).")
       var locale: String?
@@ -151,7 +153,7 @@ struct AppsCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let version = try await findVersion(appID: app.id, versionString: version, client: client)
+        let version = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
         let versionString = version.attributes?.versionString ?? "unknown"
         print("Version: \(versionString)")
@@ -204,7 +206,9 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "The locale to update (e.g. en-US). Defaults to the app's primary locale.")
       var locale: String?
-      
+
+      @OptionGroup var platformOption: PlatformOption
+
       @Option(name: .long, help: "App description.")
       var description: String?
       
@@ -231,7 +235,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let version = try await findVersion(appID: app.id, versionString: nil, client: client)
+        let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
         
         let onlyPromoText = promotionalText != nil && description == nil && whatsNew == nil
         && keywords == nil && marketingURL == nil && supportURL == nil
@@ -294,6 +298,8 @@ struct AppsCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Path to the JSON file with localization data.",
               completion: .file(extensions: ["json"]))
       var file: String?
+
+      @OptionGroup var platformOption: PlatformOption
       
       @Flag(name: .long, help: "Show full API response for each locale update.")
       var verbose = false
@@ -321,7 +327,7 @@ struct AppsCommand: AsyncParsableCommand {
         // Show summary and confirm
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let version = try await findVersion(appID: app.id, versionString: nil, client: client)
+        let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
         
         let effectiveUpdates = try resolveEffectiveUpdates(
           version: version, localeUpdates: localeUpdates)
@@ -482,6 +488,8 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
+
+      @OptionGroup var platformOption: PlatformOption
       
       @Option(name: .long, help: "Output file path (default: <bundle-id>-localizations.json).",
               completion: .file(extensions: ["json"]))
@@ -490,7 +498,7 @@ struct AppsCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let version = try await findVersion(appID: app.id, versionString: version, client: client)
+        let version = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
         let locsResponse = try await client.send(
           Resources.v1.appStoreVersions.id(version.id)
@@ -551,27 +559,24 @@ struct AppsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       
-      // Check if version already exists
+      let platformValue = try parsePlatform(platform)
+
+      // Check if version already exists — for THIS platform: one app record
+      // can hold the same version string per platform (universal purchase).
       let existingVersions = try await client.send(
         Resources.v1.apps.id(app.id).appStoreVersions.get(
           filterVersionString: [versionString]
         )
       )
-      if let existing = existingVersions.data.first(where: { $0.attributes?.versionString == versionString }) {
+      if let existing = existingVersions.data.first(where: {
+        $0.attributes?.versionString == versionString && $0.attributes?.platform == platformValue
+      }) {
         let state = existing.attributes?.appVersionState
         if state == .prepareForSubmission {
-          print("Version \(versionString) already exists (PREPARE_FOR_SUBMISSION). Continuing.")
+          print("Version \(versionString) already exists for \(platform) (PREPARE_FOR_SUBMISSION). Continuing.")
           return
         }
-        throw ValidationError("Version \(versionString) already exists (state: \(state.map { formatState($0) } ?? "unknown")).")
-      }
-      
-      let platformValue: Platform = switch platform.lowercased() {
-        case "ios": .iOS
-        case "macos": .macOS
-        case "tvos": .tvOS
-        case "visionos": .visionOS
-        default: throw ValidationError("Invalid platform '\(platform)'. Use: ios, macos, tvos, visionos.")
+        throw ValidationError("Version \(versionString) already exists for \(platform) (state: \(state.map { formatState($0) } ?? "unknown")).")
       }
       
       let releaseTypeValue: AppStoreVersionCreateRequest.Data.Attributes.ReleaseType?
@@ -611,6 +616,75 @@ struct AppsCommand: AsyncParsableCommand {
     }
   }
   
+  struct Copyright: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      abstract: "View or update the copyright notice for an App Store version."
+    )
+
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+    var bundleID: String
+
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest editable version.")
+    var version: String?
+
+    @OptionGroup var platformOption: PlatformOption
+
+    @Option(name: .customLong("set"), help: "New copyright notice (e.g. \"2026 Your Name\"). Omit to view the current one.")
+    var newCopyright: String?
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appVersion = try await findVersion(
+        appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
+
+      let versionString = appVersion.attributes?.versionString ?? "unknown"
+      let platformStr = appVersion.attributes?.platform.map { formatState($0) } ?? "—"
+      let current = appVersion.attributes?.copyright
+
+      guard let newCopyright else {
+        print("App:       \(app.attributes?.name ?? bundleID)")
+        print("Version:   \(versionString) (\(platformStr))")
+        print("Copyright: \(current?.isEmpty == false ? current! : "—")")
+        return
+      }
+
+      let state = appVersion.attributes?.appVersionState
+      guard state == .prepareForSubmission || state == .waitingForReview else {
+        throw ValidationError(
+          "Version \(versionString) (\(platformStr)) is in state '\(state.map { formatState($0) } ?? "unknown")' — copyright can only be updated on an editable version.")
+      }
+
+      print("App:       \(app.attributes?.name ?? bundleID)")
+      print("Version:   \(versionString) (\(platformStr))")
+      print("Copyright: \(current?.isEmpty == false ? current! : "—") → \(newCopyright)")
+      print()
+      guard confirm("Update copyright? [y/N] ") else {
+        cancelled()
+        return
+      }
+
+      _ = try await client.send(
+        Resources.v1.appStoreVersions.id(appVersion.id).patch(
+          AppStoreVersionUpdateRequest(
+            data: .init(
+              id: appVersion.id,
+              attributes: .init(copyright: newCopyright)
+            )
+          )
+        )
+      )
+
+      print()
+      success("Updated", "copyright for version \(versionString) (\(platformStr)).")
+    }
+  }
+
   struct BuildCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "build",
@@ -631,6 +705,8 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
+
+      @OptionGroup var platformOption: PlatformOption
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
@@ -639,13 +715,15 @@ struct AppsCommand: AsyncParsableCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+        let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         print("Version: \(versionString)")
         print()
         
-        let build = try await selectBuild(appID: app.id, versionID: appVersion.id, versionString: versionString, client: client)
+        let build = try await selectBuild(
+          appID: app.id, versionID: appVersion.id, versionString: versionString,
+          platform: appVersion.attributes?.platform, client: client)
         let buildNumber = build.attributes?.version ?? "unknown"
         let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
         print()
@@ -667,6 +745,8 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
+
+      @OptionGroup var platformOption: PlatformOption
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
@@ -675,17 +755,19 @@ struct AppsCommand: AsyncParsableCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+        let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         
-        // If a build was just uploaded in this workflow, wait for it to appear and process
-        if let pendingBuild = lastUploadedBuildVersion {
+        // If a build was just uploaded in this workflow for THIS version's platform,
+        // wait for it to appear and process
+        if let pendingBuild = lastUploadedBuild(for: appVersion.attributes?.platform) {
           print("Waiting for uploaded build \(pendingBuild) to become available...")
           print()
           let awaitedBuild = try await awaitBuildProcessing(
             appID: app.id,
             buildVersion: pendingBuild,
+            platform: appVersion.attributes?.platform,
             client: client
           )
           let uploaded = awaitedBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
@@ -715,6 +797,7 @@ struct AppsCommand: AsyncParsableCommand {
         let buildsResponse = try await client.send(
           Resources.v1.builds.get(
             filterPreReleaseVersionVersion: [versionString],
+            filterPreReleaseVersionPlatform: platformFilter(appVersion.attributes?.platform),
             filterApp: [app.id],
             sort: [.minusUploadedDate],
             limit: 1
@@ -740,6 +823,7 @@ struct AppsCommand: AsyncParsableCommand {
             latestBuild = try await awaitBuildProcessing(
               appID: app.id,
               buildVersion: buildNumber,
+              platform: appVersion.attributes?.platform,
               client: client
             )
             print()
@@ -760,16 +844,16 @@ struct AppsCommand: AsyncParsableCommand {
         try await client.send(
           Resources.v1.appStoreVersions.id(appVersion.id).relationships.build.patch(
             AppStoreVersionBuildLinkageRequest(
-              data: .init(id: build.id)
+              data: .init(id: latestBuild.id)
             )
           )
         )
-        
+
         print()
         success("Attached", "build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
       }
     }
-    
+
     // MARK: - Detach
     
     struct Detach: AsyncParsableCommand {
@@ -783,6 +867,8 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
+
+      @OptionGroup var platformOption: PlatformOption
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
@@ -791,14 +877,14 @@ struct AppsCommand: AsyncParsableCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+        let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         
         // Check if a build is attached
-        guard let existingBuild: Build = try? await client.send(
-          Resources.v1.appStoreVersions.id(appVersion.id).build.get()
-        ).data, existingBuild.attributes?.version != nil else {
+        let buildResponse = try await fetchOptionalResource(
+          Resources.v1.appStoreVersions.id(appVersion.id).build.get(), client: client)
+        guard let existingBuild = buildResponse?.data, existingBuild.attributes?.version != nil else {
           print("No build attached to version \(versionString).")
           return
         }
@@ -842,6 +928,8 @@ struct AppsCommand: AsyncParsableCommand {
     
     @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
     var version: String?
+
+    @OptionGroup var platformOption: PlatformOption
     
     @Flag(name: .long, help: "Enable phased release (starts inactive, activates when version goes live).")
     var enable = false
@@ -872,7 +960,7 @@ struct AppsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+      let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
       
       let versionString = appVersion.attributes?.versionString ?? "unknown"
       let appName = app.attributes?.name ?? bundleID
@@ -896,9 +984,10 @@ struct AppsCommand: AsyncParsableCommand {
       }
       
       // All other actions require an existing phased release
-      let existing: AppStoreVersionPhasedRelease? = try? await client.send(
-        Resources.v1.appStoreVersions.id(appVersion.id).appStoreVersionPhasedRelease.get()
-      ).data
+      let existing: AppStoreVersionPhasedRelease? = try await fetchOptionalResource(
+        Resources.v1.appStoreVersions.id(appVersion.id).appStoreVersionPhasedRelease.get(),
+        client: client
+      )?.data
       
       if pause {
         guard let pr = existing else {
@@ -1003,6 +1092,8 @@ struct AppsCommand: AsyncParsableCommand {
     
     @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
     var version: String?
+
+    @OptionGroup var platformOption: PlatformOption
     
     @Option(name: .long, help: "Path to a .geojson file to upload.",
             completion: .file(extensions: ["geojson"]))
@@ -1015,16 +1106,17 @@ struct AppsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+      let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
       
       let versionString = appVersion.attributes?.versionString ?? "unknown"
       let appName = app.attributes?.name ?? bundleID
       
       guard let filePath = file else {
         // View mode
-        let existing: RoutingAppCoverage? = try? await client.send(
-          Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get()
-        ).data
+        let existing: RoutingAppCoverage? = try await fetchOptionalResource(
+          Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get(),
+          client: client
+        )?.data
         
         guard let coverage = existing else {
           print("App:              \(appName)")
@@ -1059,9 +1151,10 @@ struct AppsCommand: AsyncParsableCommand {
       let fileName = (expandedPath as NSString).lastPathComponent
       
       // Check for existing coverage
-      let existing: RoutingAppCoverage? = try? await client.send(
-        Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get()
-      ).data
+      let existing: RoutingAppCoverage? = try await fetchOptionalResource(
+        Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get(),
+        client: client
+      )?.data
       
       if let existingCoverage = existing {
         let existingName = existingCoverage.attributes?.fileName ?? "unknown"
@@ -1141,10 +1234,12 @@ struct AppsCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
 
+      @OptionGroup var platformOption: PlatformOption
+
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+        let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         let versionState = appVersion.attributes?.appVersionState
@@ -1334,6 +1429,9 @@ struct AppsCommand: AsyncParsableCommand {
             }
             if loc.attributes?.keywords == nil || loc.attributes?.keywords?.isEmpty == true {
               missing.append(formatFieldName("keywords"))
+            }
+            if loc.attributes?.supportURL == nil {
+              missing.append(formatFieldName("supportURL"))
             }
             if missing.isEmpty && invalid.isEmpty {
               rows.append(["  Localizations", green("✓") + " All fields filled"])
@@ -1559,7 +1657,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
-      
+
       @Option(name: .long, help: "Platform: ios, macos, tvos, visionos (default: ios).")
       var platform: String = "ios"
       
@@ -1569,20 +1667,14 @@ struct AppsCommand: AsyncParsableCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
+        let platformValue = try parsePlatform(platform)
         let app = try await findApp(bundleID: bundleID, client: client)
-        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
-        
+        let appVersion = try await findVersion(
+          appID: app.id, versionString: version, platform: platformValue, client: client)
+
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         let versionState = appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
 
-        let platformValue: Platform = switch platform.lowercased() {
-          case "ios": .iOS
-          case "macos": .macOS
-          case "tvos": .tvOS
-          case "visionos": .visionOS
-          default: throw ValidationError("Invalid platform '\(platform)'. Use: ios, macos, tvos, visionos.")
-        }
-        
         guard try await confirmBuildAttached(
           app: app, appVersion: appVersion, versionString: versionString,
           versionState: versionState, platformValue: platformValue, client: client)
@@ -1618,11 +1710,9 @@ struct AppsCommand: AsyncParsableCommand {
         versionState: String, platformValue: Platform, client: AppStoreConnectClient
       ) async throws -> Bool {
         // Check if a build is already attached
-        // The API returns {"data": null} when no build is attached, which fails
-        // to decode since BuildWithoutIncludesResponse.data is non-optional.
-        let existingBuild: Build? = try? await client.send(
-          Resources.v1.appStoreVersions.id(appVersion.id).build.get()
-        ).data
+        let existingBuild: Build? = try await fetchOptionalResource(
+          Resources.v1.appStoreVersions.id(appVersion.id).build.get(), client: client
+        )?.data
         
         if let build = existingBuild, build.attributes?.version != nil {
           let buildNumber = build.attributes?.version ?? "unknown"
@@ -1645,13 +1735,16 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           print("No build attached to this version. Select a build first:")
           print()
-          let selected = try await selectBuild(appID: app.id, versionID: appVersion.id, versionString: versionString, client: client)
+          let selected = try await selectBuild(
+            appID: app.id, versionID: appVersion.id, versionString: versionString,
+            platform: platformValue, client: client)
           let buildNumber = selected.attributes?.version ?? "unknown"
           print()
           print("Build \(buildNumber) attached. Continuing with submission...")
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
             cancelled()
+            print("Note: build \(buildNumber) remains attached to the version.")
             return false
           }
         }
@@ -1669,8 +1762,10 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         
+        // A universal-purchase app can have one active submission per platform —
+        // only an active submission for THIS platform counts.
         let submissionID: String
-        if let active = existingSubmissions.data.first {
+        if let active = existingSubmissions.data.first(where: { $0.attributes?.platform == platformValue }) {
           let activeState = active.attributes?.state
           
           switch activeState {
@@ -1853,15 +1948,17 @@ struct AppsCommand: AsyncParsableCommand {
       @Argument(help: "The bundle identifier of the app.",
                 completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
-      
+
+      @OptionGroup var platformOption: PlatformOption
+
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
-      
+
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        
+
         // Find submission with unresolved issues
         let response = try await client.send(
           Resources.v1.apps.id(app.id).reviewSubmissions.get(
@@ -1870,23 +1967,14 @@ struct AppsCommand: AsyncParsableCommand {
             include: [.appStoreVersionForReview, .items]
           )
         )
-        
-        guard let submission = response.data.first else {
+
+        guard let (submission, versionString) = try selectSubmission(
+          from: response, platform: platformOption.parsed())
+        else {
           print("No submissions with unresolved issues found.")
           return
         }
-        
-        // Get version info from included data
-        var versionString = "unknown"
-        if let included = response.included {
-          for item in included {
-            if case .appStoreVersion(let v) = item,
-               v.id == submission.relationships?.appStoreVersionForReview?.data?.id {
-              versionString = v.attributes?.versionString ?? "unknown"
-            }
-          }
-        }
-        
+
         // Get rejected items from included data
         let itemRefs = submission.relationships?.items?.data ?? []
         var rejectedItems: [ReviewSubmissionItem] = []
@@ -1903,6 +1991,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         print("Submission: \(submission.id)")
+        print("Platform:   \(submission.attributes?.platform.map { formatState($0) } ?? "—")")
         print("Version:    \(versionString)")
         print("State:      unresolvedIssues")
         print("Items:      \(rejectedItems.count) rejected")
@@ -1955,15 +2044,17 @@ struct AppsCommand: AsyncParsableCommand {
       @Argument(help: "The bundle identifier of the app.",
                 completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
-      
+
+      @OptionGroup var platformOption: PlatformOption
+
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
-      
+
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        
+
         // Find active submissions
         let response = try await client.send(
           Resources.v1.apps.id(app.id).reviewSubmissions.get(
@@ -1972,26 +2063,18 @@ struct AppsCommand: AsyncParsableCommand {
             include: [.appStoreVersionForReview]
           )
         )
-        
-        guard let submission = response.data.first else {
+
+        guard let (submission, versionString) = try selectSubmission(
+          from: response, platform: platformOption.parsed())
+        else {
           print("No active review submissions found.")
           return
         }
-        
+
         let state = submission.attributes?.state.map { formatState($0) } ?? "unknown"
 
-        // Get version info from included data
-        var versionString = "unknown"
-        if let included = response.included {
-          for item in included {
-            if case .appStoreVersion(let v) = item,
-               v.id == submission.relationships?.appStoreVersionForReview?.data?.id {
-              versionString = v.attributes?.versionString ?? "unknown"
-            }
-          }
-        }
-        
         print("Submission: \(submission.id)")
+        print("Platform:   \(submission.attributes?.platform.map { formatState($0) } ?? "—")")
         print("Version:    \(versionString)")
         print("State:      \(state)")
         print()
@@ -2037,6 +2120,8 @@ struct AppsCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest editable version.")
       var version: String?
 
+      @OptionGroup var platformOption: PlatformOption
+
       @Option(name: .long, help: "Review contact first name.")
       var contactFirstName: String?
 
@@ -2069,7 +2154,7 @@ struct AppsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
-          appID: app.id, versionString: version, client: client)
+          appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
         // The endpoint returns {"data": null} when no review detail exists yet.
         let existing: AppStoreReviewDetail?
@@ -2196,11 +2281,13 @@ struct AppsCommand: AsyncParsableCommand {
         @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest editable version.")
         var version: String?
 
+        @OptionGroup var platformOption: PlatformOption
+
         func run() async throws {
           let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let appVersion = try await findVersion(
-            appID: app.id, versionString: version, client: client)
+            appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
           guard let detail = try await Attachment.reviewDetail(
             versionID: appVersion.id, client: client)
@@ -2241,6 +2328,8 @@ struct AppsCommand: AsyncParsableCommand {
         @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest editable version.")
         var version: String?
 
+        @OptionGroup var platformOption: PlatformOption
+
         @Argument(help: "Path to the attachment file.", completion: .file())
         var file: String
 
@@ -2252,7 +2341,7 @@ struct AppsCommand: AsyncParsableCommand {
           let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let appVersion = try await findVersion(
-            appID: app.id, versionString: version, client: client)
+            appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
           let media = try MediaFile(readingFrom: file)
 
           print("Upload App Review attachment:")
@@ -3228,7 +3317,7 @@ struct AppsCommand: AsyncParsableCommand {
             )
           } catch {
             failed.append(change.code)
-            print("  Failed to update \(change.code): \(error.localizedDescription)")
+            print("  Failed to update \(change.code): \(describeError(error))")
           }
         }
         
@@ -3761,7 +3850,48 @@ func findApp(bundleID: String, client: AppStoreConnectClient) async throws -> Ap
   return app
 }
 
+func parsePlatform(_ raw: String) throws -> Platform {
+  switch raw.lowercased() {
+    case "ios": return .iOS
+    case "macos": return .macOS
+    case "tvos": return .tvOS
+    case "visionos": return .visionOS
+    default: throw ValidationError("Invalid platform '\(raw)'. Use: ios, macos, tvos, visionos.")
+  }
+}
+
+/// Shared `--platform` option for commands that resolve an App Store version.
+/// A universal-purchase app can hold the same version on multiple platforms;
+/// without this option such commands prompt to disambiguate.
+struct PlatformOption: ParsableArguments {
+  @Option(name: .long, help: "Platform: ios, macos, tvos, visionos. Defaults to all (prompts if ambiguous).")
+  var platform: String?
+
+  func parsed() throws -> Platform? {
+    try platform.map(parsePlatform)
+  }
+}
+
+/// Maps a Platform to an endpoint-specific platform filter enum. Every generated
+/// platform filter enum shares the same raw values (IOS, MAC_OS, TV_OS, VISION_OS),
+/// so one generic mapping covers versions, builds, and future endpoints.
+func platformFilter<F: RawRepresentable>(_ platform: Platform?) -> [F]? where F.RawValue == String {
+  platform.map {
+    guard let filter = F(rawValue: $0.rawValue) else {
+      preconditionFailure("Platform \($0.rawValue) is missing from \(F.self) — asc-swift enums out of sync.")
+    }
+    return [filter]
+  }
+}
+
 func findVersion(appID: String, versionString: String?, platform: Platform? = nil, client: AppStoreConnectClient) async throws -> AppStoreVersion {
+  func describe(_ v: AppStoreVersion) -> String {
+    let p = v.attributes?.platform.map { formatState($0) } ?? "?"
+    let ver = v.attributes?.versionString ?? "?"
+    let state = v.attributes?.appVersionState.map { formatState($0) } ?? "?"
+    return "\(p) — \(ver) (\(state))"
+  }
+
   // When no specific version requested, prefer editable versions (prepareForSubmission/waitingForReview)
   if versionString == nil {
     let editableRequest = Resources.v1.apps.id(appID).appStoreVersions.get(
@@ -3778,25 +3908,36 @@ func findVersion(appID: String, versionString: String?, platform: Platform? = ni
     if editable.count == 1 {
       return editable[0]
     } else if editable.count > 1 {
-      return try promptSelection("Multiple editable versions found", items: editable) { v in
-        let p = v.attributes?.platform.map { formatState($0) } ?? "?"
-        let ver = v.attributes?.versionString ?? "?"
-        let state = v.attributes?.appVersionState.map { formatState($0) } ?? "?"
-        return "\(p) — \(ver) (\(state))"
-      }
+      return try promptSelection(
+        "Multiple editable versions found", items: editable, display: describe,
+        nonInteractiveHint: "Pass --platform to disambiguate.")
     }
   }
 
+  // A universal-purchase app can hold the same version string on multiple
+  // platforms — filter by platform, and prompt if still ambiguous.
   let request = Resources.v1.apps.id(appID).appStoreVersions.get(
-    filterVersionString: versionString.map { [$0] },
-    limit: 1
+    filterPlatform: platformFilter(platform),
+    filterVersionString: versionString.map { [$0] }
   )
   let response = try await client.send(request)
-  guard let version = response.data.first else {
+  var candidates = response.data
+  if versionString == nil {
+    // Fallback (no editable versions): reduce to the latest version per platform.
+    // The API returns versions newest-first, so keep the first one seen per platform.
+    var seenPlatforms = Set<Platform?>()
+    candidates = candidates.filter { seenPlatforms.insert($0.attributes?.platform).inserted }
+  }
+  if candidates.count > 1 {
+    return try promptSelection(
+      "Multiple matching versions found", items: candidates, display: describe,
+      nonInteractiveHint: "Pass --platform to disambiguate.")
+  }
+  guard let version = candidates.first else {
     if let v = versionString {
-      throw AppLookupError.versionNotFound(v)
+      throw AppLookupError.versionNotFound(v, platform)
     }
-    throw AppLookupError.noVersions
+    throw AppLookupError.noVersions(platform)
   }
   return version
 }
@@ -3806,6 +3947,7 @@ func findVersion(appID: String, versionString: String?, platform: Platform? = ni
 func awaitBuildProcessing(
   appID: String,
   buildVersion: String?,
+  platform: Platform? = nil,
   client: AppStoreConnectClient,
   interval: Int = 30,
   timeout: Int = 30
@@ -3813,10 +3955,11 @@ func awaitBuildProcessing(
   let deadline = Date().addingTimeInterval(Double(timeout * 60))
   var waitingElapsed = 0
   var waitingStarted = false
-  
+
   while Date() < deadline {
     let request = Resources.v1.builds.get(
       filterVersion: buildVersion.map { [$0] },
+      filterPreReleaseVersionPlatform: platformFilter(platform),
       filterApp: [appID],
       sort: [.minusUploadedDate],
       limit: 1
@@ -3861,13 +4004,56 @@ func awaitBuildProcessing(
   throw ExitCode.failure
 }
 
+/// Picks a review submission from a response, prompting when more than one matches
+/// (a universal-purchase app can have one active submission per platform).
+/// A `platform` filter narrows the candidates first.
+/// Returns nil when no submissions match.
+private func selectSubmission(
+  from response: ReviewSubmissionsResponse,
+  platform: Platform? = nil
+) throws -> (submission: ReviewSubmission, versionString: String)? {
+  var includedVersions: [String: AppStoreVersion] = [:]
+  for item in response.included ?? [] {
+    if case .appStoreVersion(let v) = item {
+      includedVersions[v.id] = v
+    }
+  }
+  func versionString(_ submission: ReviewSubmission) -> String {
+    guard let ref = submission.relationships?.appStoreVersionForReview?.data,
+          let v = includedVersions[ref.id] else { return "unknown" }
+    return v.attributes?.versionString ?? "unknown"
+  }
+
+  var candidates = response.data
+  if let platform {
+    candidates = candidates.filter { $0.attributes?.platform == platform }
+  }
+
+  guard !candidates.isEmpty else { return nil }
+  let submission: ReviewSubmission
+  if candidates.count == 1 {
+    submission = candidates[0]
+  } else {
+    submission = try promptSelection(
+      "Multiple review submissions found", items: candidates,
+      display: { s in
+        let p = s.attributes?.platform.map { formatState($0) } ?? "?"
+        let state = s.attributes?.state.map { formatState($0) } ?? "?"
+        return "\(p) — \(versionString(s)) (\(state))"
+      },
+      nonInteractiveHint: "Pass --platform to disambiguate.")
+  }
+  return (submission, versionString(submission))
+}
+
 /// Fetches builds for the app matching the given version, prompts the user to pick one, and attaches it.
 /// Returns the selected build.
 @discardableResult
-private func selectBuild(appID: String, versionID: String, versionString: String?, client: AppStoreConnectClient) async throws -> Build {
+private func selectBuild(appID: String, versionID: String, versionString: String?, platform: Platform? = nil, client: AppStoreConnectClient) async throws -> Build {
   let buildsResponse = try await client.send(
     Resources.v1.builds.get(
       filterPreReleaseVersionVersion: versionString.map { [$0] },
+      filterPreReleaseVersionPlatform: platformFilter(platform),
       filterApp: [appID],
       sort: [.minusUploadedDate],
       limit: 10
@@ -3920,17 +4106,21 @@ private func selectBuild(appID: String, versionID: String, versionString: String
 
 enum AppLookupError: LocalizedError {
   case notFound(String)
-  case versionNotFound(String)
-  case noVersions
-  
+  case versionNotFound(String, Platform?)
+  case noVersions(Platform?)
+
+  private static func platformSuffix(_ platform: Platform?) -> String {
+    platform.map { " for \(formatState($0))" } ?? ""
+  }
+
   var errorDescription: String? {
     switch self {
       case .notFound(let bundleID):
         return "No app found with bundle ID '\(bundleID)'."
-      case .versionNotFound(let version):
-        return "No App Store version '\(version)' found."
-      case .noVersions:
-        return "No App Store versions found."
+      case .versionNotFound(let version, let platform):
+        return "No App Store version '\(version)' found\(Self.platformSuffix(platform))."
+      case .noVersions(let platform):
+        return "No App Store versions found\(Self.platformSuffix(platform))."
     }
   }
 }

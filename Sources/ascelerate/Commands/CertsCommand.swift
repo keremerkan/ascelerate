@@ -300,7 +300,7 @@ struct CertsCommand: AsyncParsableCommand {
             allSucceeded = false
           }
         } catch {
-          print("Warning: Could not import \(filePath) into keychain: \(error.localizedDescription)")
+          print("Warning: Could not import \(filePath) into keychain: \(describeError(error))")
           allSucceeded = false
         }
       }
@@ -330,10 +330,11 @@ struct CertsCommand: AsyncParsableCommand {
 
       let certs: [AppStoreAPI.Certificate]
       if let serialNumber {
+        // Exact-match guard: revoking a partial-filter match would destroy the wrong cert
         let response = try await client.send(
-          Resources.v1.certificates.get(filterSerialNumber: [serialNumber], limit: 1)
+          Resources.v1.certificates.get(filterSerialNumber: [serialNumber], limit: 200)
         )
-        guard let found = response.data.first else {
+        guard let found = response.data.first(where: { $0.attributes?.serialNumber == serialNumber }) else {
           throw ValidationError("No certificate found with serial number '\(serialNumber)'.")
         }
         certs = [found]
@@ -384,7 +385,7 @@ struct CertsCommand: AsyncParsableCommand {
           print("  OK   \(label)")
           succeeded += 1
         } catch {
-          print("  FAIL \(label) — \(error.localizedDescription)")
+          print("  FAIL \(label) — \(describeError(error))")
           failed += 1
         }
       }
@@ -412,11 +413,11 @@ func promptCertificate(client: AppStoreConnectClient) async throws -> AppStoreAP
 
 /// Looks up a certificate by serial number first, then falls back to display name.
 func findCertificate(serialOrName: String, client: AppStoreConnectClient) async throws -> AppStoreAPI.Certificate {
-  // Try serial number first
+  // Try serial number first — ASC filters can partial-match, so require an exact hit
   let bySerial = try await client.send(
-    Resources.v1.certificates.get(filterSerialNumber: [serialOrName], limit: 1)
+    Resources.v1.certificates.get(filterSerialNumber: [serialOrName], limit: 200)
   )
-  if let cert = bySerial.data.first {
+  if let cert = bySerial.data.first(where: { $0.attributes?.serialNumber == serialOrName }) {
     return cert
   }
 

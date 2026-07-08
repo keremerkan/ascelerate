@@ -19,11 +19,18 @@ struct AliasCommand: AsyncParsableCommand {
     var name: String?
 
     func run() async throws {
+      // Validate the name BEFORE fetching apps and prompting — a bad name should
+      // fail immediately, not after the user has picked an app from the list.
+      if let name, !Aliases.isValidAliasName(name) {
+        throw ValidationError(
+          "Invalid alias name '\(name)'. Use only letters, numbers, dashes, and underscores.")
+      }
+
       let client = try ClientFactory.makeClient()
 
       // Fetch all apps and show picker
       var apps: [(id: String, bundleID: String, name: String)] = []
-      for try await page in client.pages(Resources.v1.apps.get()) {
+      for try await page in client.pages(Resources.v1.apps.get(limit: 200)) {
         for app in page.data {
           apps.append((
             id: app.id,
@@ -46,7 +53,7 @@ struct AliasCommand: AsyncParsableCommand {
         display: { "\($0.name) (\($0.bundleID))" }
       )
 
-      let name = self.name ?? promptText("Alias name: ")
+      let name = try self.name ?? promptText("Alias name: ")
 
       guard Aliases.isValidAliasName(name) else {
         throw ValidationError(

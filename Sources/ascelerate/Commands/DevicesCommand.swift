@@ -121,8 +121,8 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let deviceName = name ?? promptText("Device name: ")
-      let deviceUDID = udid ?? promptText("Device UDID: ")
+      let deviceName = try name ?? promptText("Device name: ")
+      let deviceUDID = try udid ?? promptText("Device UDID: ")
 
       let platformValue: BundleIDPlatform
       if let platform {

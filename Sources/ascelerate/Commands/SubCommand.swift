@@ -56,7 +56,17 @@ struct SubCommand: AsyncParsableCommand {
       for group in page.data {
         let name = group.attributes?.referenceName ?? "—"
         let subIDs = group.relationships?.subscriptions?.data?.map(\.id) ?? []
-        let subs = subIDs.compactMap { subsByID[$0] }
+        var subs = subIDs.compactMap { subsByID[$0] }
+        if subIDs.count >= 50 {
+          // The included relationship is capped at limitSubscriptions — a group at
+          // the cap may have more; fetch the full list via the sub-resource endpoint.
+          subs = []
+          for try await subPage in client.pages(
+            Resources.v1.subscriptionGroups.id(group.id).subscriptions.get(limit: 50)
+          ) {
+            subs.append(contentsOf: subPage.data)
+          }
+        }
         result.append(GroupInfo(id: group.id, name: name, subscriptions: subs))
       }
     }
@@ -73,6 +83,63 @@ struct SubCommand: AsyncParsableCommand {
       }
     }
     throw ValidationError("No subscription found with product ID '\(productID)'.")
+  }
+
+  enum OwnedOfferKind {
+    case introOffer, offerCode, promoOffer
+
+    var label: String {
+      switch self {
+      case .introOffer: return "Introductory offer"
+      case .offerCode: return "Offer code"
+      case .promoOffer: return "Promotional offer"
+      }
+    }
+  }
+
+  /// Verifies that an offer ID actually belongs to the given subscription — a stale
+  /// or mistyped ID from another product must not be mutated or deleted.
+  static func ensureOfferBelongs(
+    _ offerID: String, kind: OwnedOfferKind, subID: String, productID: String,
+    client: AppStoreConnectClient
+  ) async throws {
+    var found = false
+    switch kind {
+    case .introOffer:
+      for try await page in client.pages(
+        Resources.v1.subscriptions.id(subID).introductoryOffers.get(limit: 200)
+      ) where page.data.contains(where: { $0.id == offerID }) {
+        found = true
+        break
+      }
+    case .offerCode:
+      for try await page in client.pages(
+        Resources.v1.subscriptions.id(subID).offerCodes.get(limit: 200)
+      ) where page.data.contains(where: { $0.id == offerID }) {
+        found = true
+        break
+      }
+    case .promoOffer:
+      for try await page in client.pages(
+        Resources.v1.subscriptions.id(subID).promotionalOffers.get(limit: 200)
+      ) where page.data.contains(where: { $0.id == offerID }) {
+        found = true
+        break
+      }
+    }
+    guard found else {
+      throw ValidationError("\(kind.label) '\(offerID)' does not belong to '\(productID)'.")
+    }
+  }
+
+  /// Resolves the subscription from bundle/product ID, then verifies offer ownership.
+  static func validateOwnedOffer(
+    _ offerID: String, kind: OwnedOfferKind, bundleID: String, productID: String,
+    client: AppStoreConnectClient
+  ) async throws {
+    let app = try await findApp(bundleID: bundleID, client: client)
+    let (sub, _) = try await findSubscription(productID: productID, appID: app.id, client: client)
+    try await ensureOfferBelongs(offerID, kind: kind, subID: sub.id, productID: productID, client: client)
   }
 
   /// Returns true if the subscription has at least one price entry.
@@ -134,13 +201,30 @@ struct SubCommand: AsyncParsableCommand {
         }
       }
     }
-    guard let latest = prices.sorted(by: {
-      ($0.attributes?.startDate ?? "") > ($1.attributes?.startDate ?? "")
-    }).first else {
+    guard let current = currentPriceRecord(prices) else {
       return nil
     }
-    let pointID = latest.relationships?.subscriptionPricePoint?.data?.id ?? ""
-    return pointPrices[pointID]
+    let pointID = current.relationships?.subscriptionPricePoint?.data?.id ?? ""
+    guard let cp = pointPrices[pointID] else {
+      throw ValidationError("Could not resolve the current price for territory \(territoryID). Retry, or inspect with 'sub pricing show'.")
+    }
+    return cp
+  }
+
+  /// Picks the record that represents the price customers pay *today*: preserved
+  /// (grandfathered) records are ignored, and future-scheduled records don't count —
+  /// increase/decrease gating must compare against the live price, not a scheduled one.
+  /// A nil startDate means "active since the beginning".
+  static func currentPriceRecord(_ prices: [SubscriptionPrice]) -> SubscriptionPrice? {
+    let df = DateFormatter()
+    df.dateFormat = "yyyy-MM-dd"
+    df.locale = Locale(identifier: "en_US_POSIX")
+    df.timeZone = TimeZone(identifier: "UTC")
+    let today = df.string(from: Date())
+    return prices
+      .filter { $0.attributes?.isPreserved != true }
+      .filter { ($0.attributes?.startDate ?? "") <= today }
+      .max { ($0.attributes?.startDate ?? "") < ($1.attributes?.startDate ?? "") }
   }
 
   /// Fetches the current customer price for every territory the subscription is priced in.
@@ -162,24 +246,28 @@ struct SubCommand: AsyncParsableCommand {
         }
       }
     }
-    // Group by territory, picking the most recent record per territory by startDate desc
-    var latestByTerritory: [String: SubscriptionPrice] = [:]
+    // Group records by territory, then pick the live (non-preserved, non-future) one.
+    var recordsByTerritory: [String: [SubscriptionPrice]] = [:]
     for price in prices {
       guard let territoryID = price.relationships?.territory?.data?.id else { continue }
-      if let existing = latestByTerritory[territoryID] {
-        let existingDate = existing.attributes?.startDate ?? ""
-        let newDate = price.attributes?.startDate ?? ""
-        if newDate > existingDate { latestByTerritory[territoryID] = price }
-      } else {
-        latestByTerritory[territoryID] = price
+      recordsByTerritory[territoryID, default: []].append(price)
+    }
+    var latestByTerritory: [String: SubscriptionPrice] = [:]
+    for (territoryID, records) in recordsByTerritory {
+      if let current = currentPriceRecord(records) {
+        latestByTerritory[territoryID] = current
       }
     }
     var result: [String: String] = [:]
     for (territoryID, price) in latestByTerritory {
       let pointID = price.relationships?.subscriptionPricePoint?.data?.id ?? ""
-      if let cp = pointPrices[pointID] {
-        result[territoryID] = cp
+      guard let cp = pointPrices[pointID] else {
+        // A price record exists but couldn't be resolved — treating it as "no
+        // current price" would classify the territory as new and bypass the
+        // increase/decrease safety gates.
+        throw ValidationError("Could not resolve the current price for territory \(territoryID). Retry, or inspect with 'sub pricing show'.")
       }
+      result[territoryID] = cp
     }
     return result
   }
@@ -471,7 +559,7 @@ struct SubCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let refName = name ?? promptText("Group Reference Name: ")
+      let refName = try name ?? promptText("Group Reference Name: ")
 
       guard confirm("Create subscription group '\(refName)'? [y/N] ") else {
         cancelled()
@@ -519,7 +607,7 @@ struct SubCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
-      let newName = name ?? promptText("New Reference Name: ")
+      let newName = try name ?? promptText("New Reference Name: ")
 
       guard confirm("Rename group '\(group.name)' to '\(newName)'? [y/N] ") else {
         cancelled()
@@ -611,8 +699,8 @@ struct SubCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
-      let pid = productID ?? promptText("Product ID: ")
-      let refName = name ?? promptText("Reference Name: ")
+      let pid = try productID ?? promptText("Product ID: ")
+      let refName = try name ?? promptText("Reference Name: ")
 
       typealias CreateAttrs = SubscriptionCreateRequest.Data.Attributes
 
@@ -1432,9 +1520,7 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        guard let targetPrice = Double(price.trimmingCharacters(in: .whitespaces)) else {
-          throw ValidationError("Invalid price '\(price)'. Use a decimal number like 4.99.")
-        }
+        let targetPrice = try parseCustomerPrice(price)
 
         let territoryID = territory.uppercased()
         var tiers: [SubscriptionPricePoint] = []
@@ -1454,28 +1540,9 @@ struct SubCommand: AsyncParsableCommand {
           }
         }
 
-        guard !tiers.isEmpty else {
-          throw ValidationError("No price tiers available for territory \(territoryID).")
-        }
-
-        let match = tiers.first {
-          guard let cp = $0.attributes?.customerPrice, let val = Double(cp) else { return false }
-          return abs(val - targetPrice) < 0.001
-        }
-
-        guard let match else {
-          let nearest = tiers
-            .compactMap { tier -> (SubscriptionPricePoint, Double)? in
-              guard let cp = tier.attributes?.customerPrice, let val = Double(cp) else { return nil }
-              return (tier, abs(val - targetPrice))
-            }
-            .sorted { $0.1 < $1.1 }
-            .prefix(5)
-            .map(\.0)
-          var msg = "No tier with customer price \(price) \(currency ?? "") in territory \(territoryID).\n"
-          msg += "Nearest tiers: " + nearest.compactMap { $0.attributes?.customerPrice }.joined(separator: ", ")
-          throw ValidationError(msg)
-        }
+        let match = try findPricePoint(
+          in: tiers, target: targetPrice, priceLabel: price, territoryID: territoryID,
+          currency: currency)
 
         if equalizeAllTerritories {
           try await runEqualizeAllTerritories(
@@ -1667,13 +1734,17 @@ struct SubCommand: AsyncParsableCommand {
               pricePointID: target.pricePointID, client: client)
             succeeded += 1
           } catch {
-            print("  FAIL \(target.territoryID) — \(error.localizedDescription)")
+            print("  FAIL \(target.territoryID) — \(describeError(error))")
             failed += 1
           }
         }
 
         print()
         print("Done. \(succeeded) territor\(succeeded == 1 ? "y" : "ies") updated, \(failed) failed, \(unchanged.count) unchanged (skipped).")
+        if failed > 0 {
+          // A half-repriced subscription must not look like success to scripts/workflows.
+          throw ExitCode.failure
+        }
       }
 
       private func postSubscriptionPrice(
@@ -1742,133 +1813,44 @@ struct SubCommand: AsyncParsableCommand {
       let (sub, _) = try await SubCommand.findSubscription(
         productID: productID, appID: app.id, client: client)
 
-      // Fetch current availability
-      var currentAvailableInNew: Bool?
-      var currentTerritories: [String] = []
-      var hasAvailability = false
-      do {
-        let response = try await client.send(
-          Resources.v1.subscriptions.id(sub.id).subscriptionAvailability.get(
-            include: [.availableTerritories],
-            limitAvailableTerritories: 50
+      try await runProductAvailability(
+        productID: productID,
+        productNoun: "subscription",
+        add: add,
+        remove: remove,
+        availableInNewTerritories: availableInNewTerritories,
+        verbose: verbose,
+        fetchCurrent: {
+          let response = try await client.send(
+            Resources.v1.subscriptions.id(sub.id).subscriptionAvailability.get(
+              include: [.availableTerritories],
+              limitAvailableTerritories: 50
+            )
           )
-        )
-        currentAvailableInNew = response.data.attributes?.isAvailableInNewTerritories
-        hasAvailability = true
-        for try await page in client.pages(
-          Resources.v1.subscriptionAvailabilities.id(response.data.id).availableTerritories.get(limit: 200)
-        ) {
-          currentTerritories.append(contentsOf: page.data.map(\.id))
-        }
-      } catch is DecodingError {
-        hasAvailability = false
-      } catch let error as ResponseError {
-        if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-          hasAvailability = false
-        } else {
-          throw error
-        }
-      }
-
-      let isEditMode = add != nil || remove != nil || availableInNewTerritories != nil
-
-      let newAvailableInNewFlag: Bool?
-      if let s = availableInNewTerritories {
-        guard let b = Bool(s.lowercased()) else {
-          throw ValidationError("Invalid value for --available-in-new-territories. Use 'true' or 'false'.")
-        }
-        newAvailableInNewFlag = b
-      } else {
-        newAvailableInNewFlag = nil
-      }
-
-      if !isEditMode {
-        print("Product ID: \(productID)")
-        if !hasAvailability {
-          print(yellow("⚠ No per-subscription availability set — inherits the app's territories."))
-          return
-        }
-        print("Available in new territories: \(currentAvailableInNew == true ? "Yes" : currentAvailableInNew == false ? "No" : "—")")
-        print()
-        let sorted = currentTerritories.sorted()
-        print("Available (\(sorted.count)):")
-        printTerritories(sorted)
-        return
-      }
-
-      let addCodes = Swift.Set(add?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
-      let removeCodes = Swift.Set(remove?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
-
-      let overlap = addCodes.intersection(removeCodes)
-      if !overlap.isEmpty {
-        throw ValidationError("Territory codes in both --add and --remove: \(overlap.sorted().joined(separator: ", "))")
-      }
-
-      var newTerritories = Swift.Set(currentTerritories)
-      newTerritories.formUnion(addCodes)
-      newTerritories.subtract(removeCodes)
-
-      let effectiveAvailableInNew = newAvailableInNewFlag ?? currentAvailableInNew ?? true
-      let finalList = newTerritories.sorted()
-
-      if finalList.isEmpty {
-        throw ValidationError("Cannot have zero available territories — at least one is required.")
-      }
-
-      print("Product ID: \(productID)")
-      print("Available in new territories: \(effectiveAvailableInNew ? "Yes" : "No")")
-      let addedCodes = addCodes.subtracting(currentTerritories).sorted()
-      let removedCodes = removeCodes.intersection(currentTerritories).sorted()
-      if !addedCodes.isEmpty {
-        print("Adding:    \(addedCodes.joined(separator: ", "))")
-      }
-      if !removedCodes.isEmpty {
-        print("Removing:  \(removedCodes.joined(separator: ", "))")
-      }
-      if addedCodes.isEmpty && removedCodes.isEmpty && newAvailableInNewFlag == nil {
-        print("No changes.")
-        return
-      }
-      print("New total available: \(finalList.count) territor\(finalList.count == 1 ? "y" : "ies")")
-      print()
-
-      guard confirm("Apply this availability? [y/N] ") else {
-        cancelled()
-        return
-      }
-
-      _ = try await client.send(
-        Resources.v1.subscriptionAvailabilities.post(
-          SubscriptionAvailabilityCreateRequest(
-            data: .init(
-              attributes: .init(isAvailableInNewTerritories: effectiveAvailableInNew),
-              relationships: .init(
-                subscription: .init(data: .init(id: sub.id)),
-                availableTerritories: .init(data: finalList.map { .init(id: $0) })
+          var territories: [String] = []
+          for try await page in client.pages(
+            Resources.v1.subscriptionAvailabilities.id(response.data.id).availableTerritories.get(limit: 200)
+          ) {
+            territories.append(contentsOf: page.data.map(\.id))
+          }
+          return (response.data.attributes?.isAvailableInNewTerritories, territories)
+        },
+        post: { availableInNew, territories in
+          _ = try await client.send(
+            Resources.v1.subscriptionAvailabilities.post(
+              SubscriptionAvailabilityCreateRequest(
+                data: .init(
+                  attributes: .init(isAvailableInNewTerritories: availableInNew),
+                  relationships: .init(
+                    subscription: .init(data: .init(id: sub.id)),
+                    availableTerritories: .init(data: territories.map { .init(id: $0) })
+                  )
+                )
               )
             )
           )
-        )
+        }
       )
-
-      print()
-      success("Updated", "availability for \(productID) (\(finalList.count) territories).")
-    }
-
-    private func printTerritories(_ codes: [String]) {
-      if verbose {
-        let en = Locale(identifier: "en")
-        for code in codes {
-          let name = en.localizedString(forRegionCode: code) ?? code
-          print("  \(code)  \(name)")
-        }
-      } else {
-        for i in stride(from: 0, to: codes.count, by: 10) {
-          let end = min(i + 10, codes.count)
-          let row = codes[i..<end].joined(separator: "  ")
-          print("  \(row)")
-        }
-      }
     }
   }
 
@@ -2018,9 +2000,7 @@ struct SubCommand: AsyncParsableCommand {
         let territoryForPriceLookup = (territory ?? "USA").uppercased()
 
         if let price = price {
-          guard let target = Double(price.trimmingCharacters(in: .whitespaces)) else {
-            throw ValidationError("Invalid price '\(price)'. Use a decimal number like 4.99.")
-          }
+          let target = try parseCustomerPrice(price)
           var tiers: [SubscriptionPricePoint] = []
           for try await page in client.pages(
             Resources.v1.subscriptions.id(sub.id).pricePoints.get(
@@ -2029,16 +2009,9 @@ struct SubCommand: AsyncParsableCommand {
           ) {
             tiers.append(contentsOf: page.data)
           }
-          guard !tiers.isEmpty else {
-            throw ValidationError("No price tiers available for territory \(territoryForPriceLookup).")
-          }
-          guard let match = tiers.first(where: {
-            guard let cp = $0.attributes?.customerPrice, let v = Double(cp) else { return false }
-            return abs(v - target) < 0.001
-          }) else {
-            let nearest = tiers.compactMap { $0.attributes?.customerPrice }.prefix(5).joined(separator: ", ")
-            throw ValidationError("No tier with customer price \(price) in \(territoryForPriceLookup). Nearby tiers: \(nearest)")
-          }
+          let match = try findPricePoint(
+            in: tiers, target: target, priceLabel: price, territoryID: territoryForPriceLookup,
+            currency: nil)
           pricePointID = match.id
           // If user explicitly set --territory, scope the offer to that territory.
           // Otherwise, leave territory unset → offer is global with this territory's price as the equalization base.
@@ -2134,6 +2107,8 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
+        try await SubCommand.validateOwnedOffer(
+          offerID, kind: .introOffer, bundleID: bundleID, productID: productID, client: client)
 
         print("Update introductory offer \(offerID):")
         print("  New End Date: \(endDate.isEmpty ? "(cleared)" : endDate)")
@@ -2144,19 +2119,45 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.send(
-          Resources.v1.subscriptionIntroductoryOffers.id(offerID).patch(
-            SubscriptionIntroductoryOfferUpdateRequest(
-              data: .init(
-                id: offerID,
-                attributes: .init(endDate: endDate.isEmpty ? nil : endDate)
+        if endDate.isEmpty {
+          // Clearing requires an explicit `"endDate": null` in the PATCH body —
+          // the generated update request omits nil keys, which would be a no-op.
+          _ = try await client.send(
+            Request<SubscriptionIntroductoryOfferResponse>(
+              path: "/v1/subscriptionIntroductoryOffers/\(offerID)",
+              method: "PATCH",
+              body: ClearEndDateBody(id: offerID)
+            )
+          )
+        } else {
+          _ = try await client.send(
+            Resources.v1.subscriptionIntroductoryOffers.id(offerID).patch(
+              SubscriptionIntroductoryOfferUpdateRequest(
+                data: .init(id: offerID, attributes: .init(endDate: endDate))
               )
             )
           )
-        )
+        }
 
         print()
         success("Updated", "introductory offer end date.")
+      }
+
+      private struct ClearEndDateBody: Encodable, Sendable {
+        let id: String
+
+        enum CodingKeys: String, CodingKey { case data }
+        enum DataKeys: String, CodingKey { case type, id, attributes }
+        enum AttrKeys: String, CodingKey { case endDate }
+
+        func encode(to encoder: Encoder) throws {
+          var container = encoder.container(keyedBy: CodingKeys.self)
+          var data = container.nestedContainer(keyedBy: DataKeys.self, forKey: .data)
+          try data.encode("subscriptionIntroductoryOffers", forKey: .type)
+          try data.encode(id, forKey: .id)
+          var attrs = data.nestedContainer(keyedBy: AttrKeys.self, forKey: .attributes)
+          try attrs.encodeNil(forKey: .endDate)
+        }
       }
     }
 
@@ -2183,6 +2184,8 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
+        try await SubCommand.validateOwnedOffer(
+          offerID, kind: .introOffer, bundleID: bundleID, productID: productID, client: client)
 
         guard confirm("Delete introductory offer \(offerID)? [y/N] ") else {
           cancelled()
@@ -2481,7 +2484,8 @@ struct SubCommand: AsyncParsableCommand {
           throw ValidationError("--active must be 'true' or 'false'.")
         }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        try await SubCommand.validateOwnedOffer(
+          offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
 
         guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
           cancelled()
@@ -2539,7 +2543,8 @@ struct SubCommand: AsyncParsableCommand {
           try parseEnum($0, name: "environment")
         }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        try await SubCommand.validateOwnedOffer(
+          offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
 
         print("Generate \(count) one-time-use code(s):")
         print("  Offer Code ID: \(offerCodeID)")
@@ -2614,7 +2619,8 @@ struct SubCommand: AsyncParsableCommand {
           throw ValidationError("--count must be greater than 0.")
         }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        try await SubCommand.validateOwnedOffer(
+          offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
 
         print("Add custom code:")
         print("  Offer Code ID: \(offerCodeID)")
@@ -2671,22 +2677,10 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
 
-        let raw = try await client.send(
-          Resources.v1.subscriptionOfferCodeOneTimeUseCodes.id(batchID).values.get
-        )
-
-        if raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-          print(yellow("⚠ No codes returned. Generation may still be in progress; retry in a few seconds."))
-          return
-        }
-
-        if let output {
-          let path = expandPath(confirmOutputPath(output, isDirectory: false))
-          try raw.write(toFile: path, atomically: true, encoding: .utf8)
-          let lineCount = raw.split(separator: "\n").count
-          success("Wrote", "\(lineCount) code(s) to \(path).")
-        } else {
-          print(raw)
+        try await runOfferCodeViewCodes(output: output) {
+          try await client.send(
+            Resources.v1.subscriptionOfferCodeOneTimeUseCodes.id(batchID).values.get
+          )
         }
       }
     }
@@ -2949,6 +2943,8 @@ struct SubCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
+        try await SubCommand.ensureOfferBelongs(
+          offerID, kind: .promoOffer, subID: sub.id, productID: productID, client: client)
 
         let territoryID = territory.uppercased()
         let resolved = try await SubCommand.resolveSubOfferPrices(
@@ -3023,6 +3019,8 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
+        try await SubCommand.validateOwnedOffer(
+          offerID, kind: .promoOffer, bundleID: bundleID, productID: productID, client: client)
 
         guard confirm("Delete promotional offer \(offerID)? [y/N] ") else {
           cancelled()
@@ -3116,21 +3114,14 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        var images: [SubscriptionImage] = []
-        for try await page in client.pages(
-          Resources.v1.subscriptions.id(sub.id).images.get(limit: 50)
-        ) {
-          images.append(contentsOf: page.data)
-        }
-
-        if images.isEmpty {
-          print("No images uploaded for \(productID).")
-          return
-        }
-
-        Table.print(
-          headers: ["ID", "File", "Size", "State"],
-          rows: images.map { img in
+        try await runProductImagesList(productID: productID) {
+          var images: [SubscriptionImage] = []
+          for try await page in client.pages(
+            Resources.v1.subscriptions.id(sub.id).images.get(limit: 50)
+          ) {
+            images.append(contentsOf: page.data)
+          }
+          return images.map { img in
             [
               img.id,
               img.attributes?.fileName ?? "—",
@@ -3138,7 +3129,7 @@ struct SubCommand: AsyncParsableCommand {
               img.attributes?.state.map { formatState($0) } ?? "—",
             ]
           }
-        )
+        }
       }
     }
 
@@ -3168,22 +3159,17 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let media = try MediaFile(readingFrom: file)
-
-        print("Upload image:")
-        print("  Subscription: \(productID)")
-        print("  File:         \(media.fileName)")
-        print("  Size:         \(formatBytes(media.fileSize))")
-        print()
-
-        guard confirm("Upload? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let imageID = try await uploadAsset(
-          filePath: media.path,
-          reserve: {
+        try await runProductAssetUpload(
+          file: file,
+          summary: { media in
+            [
+              "Upload image:",
+              "  Subscription: \(productID)",
+              "  File:         \(media.fileName)",
+              "  Size:         \(formatBytes(media.fileSize))",
+            ]
+          },
+          reserve: { media in
             let response = try await client.send(
               Resources.v1.subscriptionImages.post(
                 SubscriptionImageCreateRequest(
@@ -3207,11 +3193,9 @@ struct SubCommand: AsyncParsableCommand {
                 )
               )
             )
-          }
+          },
+          successDetail: { imageID, media in "\(media.fileName) (id: \(imageID))." }
         )
-
-        print()
-        success("Uploaded", "\(media.fileName) (id: \(imageID)).")
       }
     }
 
@@ -3238,16 +3222,11 @@ struct SubCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         _ = try await findApp(bundleID: bundleID, client: client)
 
-        guard confirm("Delete image \(imageID)? [y/N] ") else {
-          cancelled()
-          return
+        try await runProductImageDelete(imageID: imageID) {
+          _ = try await client.send(
+            Resources.v1.subscriptionImages.id(imageID).delete
+          )
         }
-
-        _ = try await client.send(
-          Resources.v1.subscriptionImages.id(imageID).delete
-        )
-        print()
-        success("Deleted", "image \(imageID).")
       }
     }
   }
@@ -3279,24 +3258,17 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        do {
+        try await runReviewScreenshotView(productID: productID) {
           let response = try await client.send(
             Resources.v1.subscriptions.id(sub.id).appStoreReviewScreenshot.get()
           )
           let attrs = response.data.attributes
-          print("Review Screenshot:")
-          print("  ID:    \(response.data.id)")
-          print("  File:  \(attrs?.fileName ?? "—")")
-          print("  Size:  \(attrs?.fileSize.map { formatBytes($0) } ?? "—")")
-          print("  State: \(attrs?.assetDeliveryState?.state.map { formatState($0) } ?? "—")")
-        } catch is DecodingError {
-          print("No review screenshot uploaded for \(productID).")
-        } catch let error as ResponseError {
-          if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-            print("No review screenshot uploaded for \(productID).")
-          } else {
-            throw error
-          }
+          return (
+            response.data.id,
+            attrs?.fileName,
+            attrs?.fileSize.map { formatBytes($0) },
+            attrs?.assetDeliveryState?.state.map { formatState($0) }
+          )
         }
       }
     }
@@ -3327,22 +3299,17 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let media = try MediaFile(readingFrom: file)
-
-        print("Upload review screenshot:")
-        print("  Subscription: \(productID)")
-        print("  File:         \(media.fileName)")
-        print("  Size:         \(formatBytes(media.fileSize))")
-        print()
-
-        guard confirm("Upload? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let screenshotID = try await uploadAsset(
-          filePath: media.path,
-          reserve: {
+        try await runProductAssetUpload(
+          file: file,
+          summary: { media in
+            [
+              "Upload review screenshot:",
+              "  Subscription: \(productID)",
+              "  File:         \(media.fileName)",
+              "  Size:         \(formatBytes(media.fileSize))",
+            ]
+          },
+          reserve: { media in
             let response = try await client.send(
               Resources.v1.subscriptionAppStoreReviewScreenshots.post(
                 SubscriptionAppStoreReviewScreenshotCreateRequest(
@@ -3366,11 +3333,9 @@ struct SubCommand: AsyncParsableCommand {
                 )
               )
             )
-          }
+          },
+          successDetail: { screenshotID, _ in "review screenshot (id: \(screenshotID))." }
         )
-
-        print()
-        success("Uploaded", "review screenshot (id: \(screenshotID)).")
       }
     }
 
@@ -3396,21 +3361,20 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let response = try await client.send(
-          Resources.v1.subscriptions.id(sub.id).appStoreReviewScreenshot.get()
+        try await runReviewScreenshotDelete(
+          productID: productID,
+          fetchID: {
+            let response = try await client.send(
+              Resources.v1.subscriptions.id(sub.id).appStoreReviewScreenshot.get()
+            )
+            return response.data.id
+          },
+          delete: { screenshotID in
+            _ = try await client.send(
+              Resources.v1.subscriptionAppStoreReviewScreenshots.id(screenshotID).delete
+            )
+          }
         )
-        let screenshotID = response.data.id
-
-        guard confirm("Delete review screenshot for \(productID)? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        _ = try await client.send(
-          Resources.v1.subscriptionAppStoreReviewScreenshots.id(screenshotID).delete
-        )
-        print()
-        success("Deleted", "review screenshot.")
       }
     }
   }

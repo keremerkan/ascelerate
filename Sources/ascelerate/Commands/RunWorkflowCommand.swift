@@ -26,13 +26,10 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     }
     let path = expandPath(resolvedFile)
 
-    // Resolve to absolute path for reliable cycle detection
-    let resolvedPath: String
-    if path.hasPrefix("/") {
-      resolvedPath = path
-    } else {
-      resolvedPath = FileManager.default.currentDirectoryPath + "/" + path
-    }
+    // Resolve to a canonical absolute path for reliable cycle detection —
+    // `a.workflow`, `./a.workflow`, and a symlink to it must all compare equal.
+    let resolvedPath = URL(fileURLWithPath: path).standardizedFileURL
+      .resolvingSymlinksInPath().path
 
     if activeWorkflows.contains(resolvedPath) {
       throw ValidationError("Circular workflow detected: '\((resolvedPath as NSString).lastPathComponent)' is already running.")
@@ -73,12 +70,18 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     activeWorkflows.append(resolvedPath)
     defer { activeWorkflows.removeAll { $0 == resolvedPath } }
 
+    // A step that passes its own -y (or a nested `run-workflow --yes`) sets the
+    // global autoConfirm — restore this workflow's own setting after each step
+    // so one -y step can't auto-accept every later prompt.
+    let workflowAutoConfirm = autoConfirm
+
     for (i, step) in steps.enumerated() {
       let label = "[\(i + 1)/\(steps.count)]"
       print("\(label) \(step)")
 
-      let args = splitArguments(step)
+      let args = try splitArguments(step)
       do {
+        defer { autoConfirm = workflowAutoConfirm }
         var command = try Ascelerate.parseAsRoot(args)
         if var async = command as? AsyncParsableCommand {
           try await async.run()
@@ -86,7 +89,7 @@ struct RunWorkflowCommand: AsyncParsableCommand {
           try command.run()
         }
       } catch {
-        print("\nError: \(error.localizedDescription)")
+        print("\nError: \(describeError(error))")
         print("\nWorkflow stopped at step \(i + 1) of \(steps.count).")
         throw ExitCode.failure
       }

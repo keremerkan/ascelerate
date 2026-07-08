@@ -145,6 +145,46 @@ func previewTypeForDisplayType(_ rawValue: String) -> PreviewType? {
   return PreviewType(rawValue: previewRaw)
 }
 
+/// The App Store version platform a screenshot display type belongs to.
+/// Watch and iMessage display types ride along iOS app versions.
+func platformForDisplayType(_ rawValue: String) -> Platform {
+  if rawValue == "APP_DESKTOP" { return .macOS }
+  if rawValue.hasPrefix("APP_APPLE_TV") { return .tvOS }
+  if rawValue.hasPrefix("APP_APPLE_VISION") { return .visionOS }
+  return .iOS
+}
+
+/// Filters an upload plan to the display types that belong to the target version's
+/// platform — ASC rejects foreign sets with HTTP 409 (e.g. APP_DESKTOP on an iOS
+/// version), so mixed exports must route cleanly per platform.
+/// Returns the filtered plan and the skipped display-type names.
+func filterPlan(_ plan: MediaUploadPlan, platform: Platform?) -> (plan: MediaUploadPlan, skippedTypes: [String]) {
+  guard let platform else { return (plan, []) }
+  var skipped = Set<String>()
+  var locales: [LocaleMedia] = []
+  var totalScreenshots = 0
+  var totalPreviews = 0
+  for localeMedia in plan.locales {
+    let kept = localeMedia.displayTypes.filter { dt in
+      guard platformForDisplayType(dt.folderName) == platform else {
+        skipped.insert(dt.folderName)
+        return false
+      }
+      return true
+    }
+    guard !kept.isEmpty else { continue }
+    totalScreenshots += kept.reduce(0) { $0 + $1.screenshots.count }
+    totalPreviews += kept.reduce(0) { $0 + $1.previews.count }
+    locales.append(LocaleMedia(locale: localeMedia.locale, displayTypes: kept))
+  }
+  return (
+    MediaUploadPlan(
+      locales: locales, warnings: plan.warnings,
+      totalScreenshots: totalScreenshots, totalPreviews: totalPreviews),
+    skipped.sorted()
+  )
+}
+
 // MARK: - Upload Helpers
 
 func uploadChunks(filePath: String, operations: [UploadOperation]) async throws {
@@ -216,8 +256,9 @@ extension MediaFile {
   }
 }
 
-/// Runs the App Store Connect 3-step asset upload protocol shared by IAP/subscription
-/// promotional images and App Review screenshots: reserve → upload chunks → commit with checksum.
+/// Runs the App Store Connect 3-step asset upload protocol shared by app screenshots/previews,
+/// IAP/subscription promotional images, and App Review screenshots:
+/// reserve → upload chunks → commit with checksum.
 ///
 /// - Parameters:
 ///   - reserve: performs the create POST; returns the new asset's ID and its upload operations.
@@ -297,7 +338,7 @@ extension AppsCommand {
     static let configuration = CommandConfiguration(
       commandName: "media",
       abstract: "Manage screenshots and app preview videos.",
-      subcommands: [Upload.self, Download.self, Verify.self]
+      subcommands: [Upload.self, Download.self, Verify.self, Prune.self]
     )
 
     // MARK: - Upload
@@ -318,6 +359,8 @@ extension AppsCommand {
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
 
+      @OptionGroup var platformOption: PlatformOption
+
       @Flag(name: .long, help: "Delete existing media in matching sets before uploading.")
       var replace = false
 
@@ -327,26 +370,40 @@ extension AppsCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let folderPath = try resolveFolder(folder, prompt: "Select media folder")
-        let plan = try scanMediaFolder(at: folderPath)
+        let rawPlan = try scanMediaFolder(at: folderPath)
 
-        if plan.locales.isEmpty {
+        if rawPlan.locales.isEmpty {
           print("No media files found in '\(expandPath(folderPath))'.")
           return
         }
 
         // Print warnings
-        for warning in plan.warnings {
+        for warning in rawPlan.warnings {
           print("Warning: \(warning)")
         }
-        if !plan.warnings.isEmpty { print() }
+        if !rawPlan.warnings.isEmpty { print() }
 
         // Resolve app and version
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let appVersion = try await findVersion(appID: app.id, versionString: version, client: client)
+        let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         let versionState = appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
+        let versionPlatform = appVersion.attributes?.platform
+
+        // Drop display types that belong to another platform (mixed exports)
+        let (plan, skippedTypes) = filterPlan(rawPlan, platform: versionPlatform)
+        for skippedType in skippedTypes {
+          let owner = formatState(platformForDisplayType(skippedType))
+          print(yellow("⚠ Skipping \(skippedType) — \(owner) display type, not applicable to this \(versionPlatform.map { formatState($0) } ?? "?") version."))
+        }
+        if !skippedTypes.isEmpty { print() }
+
+        guard !plan.locales.isEmpty else {
+          throw ValidationError(
+            "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0) } ?? "?") version's platform.")
+        }
 
         // Print confirmation summary
         print("App:     \(app.attributes?.name ?? bundleID)")
@@ -386,9 +443,10 @@ extension AppsCommand {
           Resources.v1.appStoreVersions.id(appVersion.id)
             .appStoreVersionLocalizations.get()
         )
+        // Keyed lowercased so a local `pt-br/` folder still matches ASC's `pt-BR`.
         let locByLocale = Dictionary(
           locsResponse.data.compactMap { loc in
-            loc.attributes?.locale.map { ($0, loc) }
+            loc.attributes?.locale.map { ($0.lowercased(), loc) }
           },
           uniquingKeysWith: { first, _ in first }
         )
@@ -403,7 +461,7 @@ extension AppsCommand {
         var results: [UploadResult] = []
 
         for localeMedia in plan.locales {
-          guard let localization = locByLocale[localeMedia.locale] else {
+          guard let localization = locByLocale[localeMedia.locale.lowercased()] else {
             print("[\(localeName(localeMedia.locale))] Skipped — locale not found on this version.")
             continue
           }
@@ -411,28 +469,38 @@ extension AppsCommand {
           print()
           print("[\(localeName(localeMedia.locale))]")
 
-          // Fetch existing screenshot sets for this localization
-          let screenshotSetsResponse = try await client.send(
-            Resources.v1.appStoreVersionLocalizations.id(localization.id)
-              .appScreenshotSets.get(limit: 50)
-          )
+          // Fetch existing screenshot and preview sets for this localization.
+          // A failure here must not abort the run — mark this locale failed and continue.
           var screenshotSetsByType: [String: AppScreenshotSet] = [:]
-          for set in screenshotSetsResponse.data {
-            if let rawType = set.attributes?.screenshotDisplayType?.rawValue {
-              screenshotSetsByType[rawType] = set
-            }
-          }
-
-          // Fetch existing preview sets for this localization
-          let previewSetsResponse = try await client.send(
-            Resources.v1.appStoreVersionLocalizations.id(localization.id)
-              .appPreviewSets.get(limit: 50)
-          )
           var previewSetsByType: [String: AppPreviewSet] = [:]
-          for set in previewSetsResponse.data {
-            if let rawType = set.attributes?.previewType?.rawValue {
-              previewSetsByType[rawType] = set
+          do {
+            let screenshotSetsResponse = try await client.send(
+              Resources.v1.appStoreVersionLocalizations.id(localization.id)
+                .appScreenshotSets.get(limit: 50)
+            )
+            for set in screenshotSetsResponse.data {
+              if let rawType = set.attributes?.screenshotDisplayType?.rawValue {
+                screenshotSetsByType[rawType] = set
+              }
             }
+
+            let previewSetsResponse = try await client.send(
+              Resources.v1.appStoreVersionLocalizations.id(localization.id)
+                .appPreviewSets.get(limit: 50)
+            )
+            for set in previewSetsResponse.data {
+              if let rawType = set.attributes?.previewType?.rawValue {
+                previewSetsByType[rawType] = set
+              }
+            }
+          } catch {
+            print("  Failed to fetch existing media sets: \(describeError(error))")
+            for dt in localeMedia.displayTypes {
+              results.append(UploadResult(
+                locale: localeMedia.locale, displayType: dt.folderName,
+                succeeded: 0, failed: dt.screenshots.count + dt.previews.count))
+            }
+            continue
           }
 
           for dt in localeMedia.displayTypes {
@@ -440,202 +508,201 @@ extension AppsCommand {
             var dtSucceeded = 0
             var dtFailed = 0
 
-            // Handle screenshots
-            if !dt.screenshots.isEmpty, let displayType = dt.screenshotDisplayType {
-              let screenshotSetID: String
-              if let existingSet = screenshotSetsByType[displayType.rawValue] {
-                screenshotSetID = existingSet.id
+            // Set-level failures (create/replace rejected, e.g. HTTP 409) must not
+            // abort the run — the catch below records them and moves to the next set.
+            do {
 
-                if replace {
-                  let existing = try await client.send(
-                    Resources.v1.appScreenshotSets.id(screenshotSetID)
-                      .appScreenshots.get()
-                  )
-                  for screenshot in existing.data {
-                    try await client.send(
-                      Resources.v1.appScreenshots.id(screenshot.id).delete
+              // Handle screenshots
+              if !dt.screenshots.isEmpty, let displayType = dt.screenshotDisplayType {
+                let screenshotSetID: String
+                if let existingSet = screenshotSetsByType[displayType.rawValue] {
+                  screenshotSetID = existingSet.id
+
+                  if replace {
+                    let existing = try await client.send(
+                      Resources.v1.appScreenshotSets.id(screenshotSetID)
+                        .appScreenshots.get()
                     )
-                  }
-                  if !existing.data.isEmpty {
-                    print(
-                      "    Deleted \(existing.data.count) existing screenshot\(existing.data.count == 1 ? "" : "s")."
-                    )
-                  }
-                }
-              } else {
-                let createResponse = try await client.send(
-                  Resources.v1.appScreenshotSets.post(
-                    AppScreenshotSetCreateRequest(
-                      data: .init(
-                        attributes: .init(screenshotDisplayType: displayType),
-                        relationships: .init(
-                          appStoreVersionLocalization: .init(
-                            data: .init(id: localization.id)
-                          )
-                        )
+                    for screenshot in existing.data {
+                      try await client.send(
+                        Resources.v1.appScreenshots.id(screenshot.id).delete
                       )
-                    )
-                  )
-                )
-                screenshotSetID = createResponse.data.id
-              }
-
-              for (i, file) in dt.screenshots.enumerated() {
-                print(
-                  "    Screenshot \(i + 1)/\(dt.screenshots.count): \(file.fileName)... ",
-                  terminator: "")
-                fflush(stdout)
-
-                do {
-                  // Reserve
-                  let reserveResponse = try await client.send(
-                    Resources.v1.appScreenshots.post(
-                      AppScreenshotCreateRequest(
+                    }
+                    if !existing.data.isEmpty {
+                      print(
+                        "    Deleted \(existing.data.count) existing screenshot\(existing.data.count == 1 ? "" : "s")."
+                      )
+                    }
+                  }
+                } else {
+                  let createResponse = try await client.send(
+                    Resources.v1.appScreenshotSets.post(
+                      AppScreenshotSetCreateRequest(
                         data: .init(
-                          attributes: .init(fileSize: file.fileSize, fileName: file.fileName),
+                          attributes: .init(screenshotDisplayType: displayType),
                           relationships: .init(
-                            appScreenshotSet: .init(data: .init(id: screenshotSetID))
+                            appStoreVersionLocalization: .init(
+                              data: .init(id: localization.id)
+                            )
                           )
                         )
                       )
                     )
                   )
+                  screenshotSetID = createResponse.data.id
+                }
 
-                  let screenshotID = reserveResponse.data.id
-                  guard let operations = reserveResponse.data.attributes?.uploadOperations,
-                    !operations.isEmpty
-                  else {
-                    throw MediaUploadError.noUploadOperations
+                for (i, file) in dt.screenshots.enumerated() {
+                  print(
+                    "    Screenshot \(i + 1)/\(dt.screenshots.count): \(file.fileName)... ",
+                    terminator: "")
+                  fflush(stdout)
+
+                  do {
+                    _ = try await uploadAsset(
+                      filePath: file.path,
+                      reserve: {
+                        let response = try await client.send(
+                          Resources.v1.appScreenshots.post(
+                            AppScreenshotCreateRequest(
+                              data: .init(
+                                attributes: .init(fileSize: file.fileSize, fileName: file.fileName),
+                                relationships: .init(
+                                  appScreenshotSet: .init(data: .init(id: screenshotSetID))
+                                )
+                              )
+                            )
+                          )
+                        )
+                        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+                      },
+                      commit: { id, md5 in
+                        _ = try await client.send(
+                          Resources.v1.appScreenshots.id(id).patch(
+                            AppScreenshotUpdateRequest(
+                              data: .init(
+                                id: id,
+                                attributes: .init(
+                                  sourceFileChecksum: md5,
+                                  isUploaded: true
+                                )
+                              )
+                            )
+                          )
+                        )
+                      }
+                    )
+
+                    print("Done.")
+                    dtSucceeded += 1
+                  } catch {
+                    print("Failed: \(describeError(error))")
+                    dtFailed += 1
                   }
-
-                  // Upload chunks
-                  try await uploadChunks(filePath: file.path, operations: operations)
-
-                  // Commit
-                  let checksum = try md5Hex(filePath: file.path)
-                  _ = try await client.send(
-                    Resources.v1.appScreenshots.id(screenshotID).patch(
-                      AppScreenshotUpdateRequest(
-                        data: .init(
-                          id: screenshotID,
-                          attributes: .init(
-                            sourceFileChecksum: checksum,
-                            isUploaded: true
-                          )
-                        )
-                      )
-                    )
-                  )
-
-                  print("Done.")
-                  dtSucceeded += 1
-                } catch {
-                  print("Failed: \(error.localizedDescription)")
-                  dtFailed += 1
                 }
               }
-            }
 
-            // Handle previews
-            if !dt.previews.isEmpty, let pvType = dt.previewType {
-              let previewSetID: String
-              if let existingSet = previewSetsByType[pvType.rawValue] {
-                previewSetID = existingSet.id
+              // Handle previews
+              if !dt.previews.isEmpty, let pvType = dt.previewType {
+                let previewSetID: String
+                if let existingSet = previewSetsByType[pvType.rawValue] {
+                  previewSetID = existingSet.id
 
-                if replace {
-                  let existing = try await client.send(
-                    Resources.v1.appPreviewSets.id(previewSetID)
-                      .appPreviews.get()
-                  )
-                  for preview in existing.data {
-                    try await client.send(
-                      Resources.v1.appPreviews.id(preview.id).delete
+                  if replace {
+                    let existing = try await client.send(
+                      Resources.v1.appPreviewSets.id(previewSetID)
+                        .appPreviews.get()
                     )
-                  }
-                  if !existing.data.isEmpty {
-                    print(
-                      "    Deleted \(existing.data.count) existing preview\(existing.data.count == 1 ? "" : "s")."
-                    )
-                  }
-                }
-              } else {
-                let createResponse = try await client.send(
-                  Resources.v1.appPreviewSets.post(
-                    AppPreviewSetCreateRequest(
-                      data: .init(
-                        attributes: .init(previewType: pvType),
-                        relationships: .init(
-                          appStoreVersionLocalization: .init(
-                            data: .init(id: localization.id)
-                          )
-                        )
+                    for preview in existing.data {
+                      try await client.send(
+                        Resources.v1.appPreviews.id(preview.id).delete
                       )
-                    )
-                  )
-                )
-                previewSetID = createResponse.data.id
-              }
-
-              for (i, file) in dt.previews.enumerated() {
-                print(
-                  "    Preview   \(i + 1)/\(dt.previews.count): \(file.fileName)... ",
-                  terminator: "")
-                fflush(stdout)
-
-                do {
-                  let mime = mediaMimeType(for: file.fileName)
-
-                  // Reserve
-                  let reserveResponse = try await client.send(
-                    Resources.v1.appPreviews.post(
-                      AppPreviewCreateRequest(
+                    }
+                    if !existing.data.isEmpty {
+                      print(
+                        "    Deleted \(existing.data.count) existing preview\(existing.data.count == 1 ? "" : "s")."
+                      )
+                    }
+                  }
+                } else {
+                  let createResponse = try await client.send(
+                    Resources.v1.appPreviewSets.post(
+                      AppPreviewSetCreateRequest(
                         data: .init(
-                          attributes: .init(
-                            fileSize: file.fileSize,
-                            fileName: file.fileName,
-                            mimeType: mime
-                          ),
+                          attributes: .init(previewType: pvType),
                           relationships: .init(
-                            appPreviewSet: .init(data: .init(id: previewSetID))
+                            appStoreVersionLocalization: .init(
+                              data: .init(id: localization.id)
+                            )
                           )
                         )
                       )
                     )
                   )
+                  previewSetID = createResponse.data.id
+                }
 
-                  let previewID = reserveResponse.data.id
-                  guard let operations = reserveResponse.data.attributes?.uploadOperations,
-                    !operations.isEmpty
-                  else {
-                    throw MediaUploadError.noUploadOperations
+                for (i, file) in dt.previews.enumerated() {
+                  print(
+                    "    Preview   \(i + 1)/\(dt.previews.count): \(file.fileName)... ",
+                    terminator: "")
+                  fflush(stdout)
+
+                  do {
+                    let mime = mediaMimeType(for: file.fileName)
+
+                    _ = try await uploadAsset(
+                      filePath: file.path,
+                      reserve: {
+                        let response = try await client.send(
+                          Resources.v1.appPreviews.post(
+                            AppPreviewCreateRequest(
+                              data: .init(
+                                attributes: .init(
+                                  fileSize: file.fileSize,
+                                  fileName: file.fileName,
+                                  mimeType: mime
+                                ),
+                                relationships: .init(
+                                  appPreviewSet: .init(data: .init(id: previewSetID))
+                                )
+                              )
+                            )
+                          )
+                        )
+                        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+                      },
+                      commit: { id, md5 in
+                        _ = try await client.send(
+                          Resources.v1.appPreviews.id(id).patch(
+                            AppPreviewUpdateRequest(
+                              data: .init(
+                                id: id,
+                                attributes: .init(
+                                  sourceFileChecksum: md5,
+                                  isUploaded: true
+                                )
+                              )
+                            )
+                          )
+                        )
+                      }
+                    )
+
+                    print("Done.")
+                    dtSucceeded += 1
+                  } catch {
+                    print("Failed: \(describeError(error))")
+                    dtFailed += 1
                   }
-
-                  // Upload chunks
-                  try await uploadChunks(filePath: file.path, operations: operations)
-
-                  // Commit
-                  let checksum = try md5Hex(filePath: file.path)
-                  _ = try await client.send(
-                    Resources.v1.appPreviews.id(previewID).patch(
-                      AppPreviewUpdateRequest(
-                        data: .init(
-                          id: previewID,
-                          attributes: .init(
-                            sourceFileChecksum: checksum,
-                            isUploaded: true
-                          )
-                        )
-                      )
-                    )
-                  )
-
-                  print("Done.")
-                  dtSucceeded += 1
-                } catch {
-                  print("Failed: \(error.localizedDescription)")
-                  dtFailed += 1
                 }
               }
+
+            } catch {
+              // One rejected set must not sink the rest — count this set's
+              // unattempted files as failed and continue with the next set.
+              print("    Failed: \(describeError(error))")
+              dtFailed = (dt.screenshots.count + dt.previews.count) - dtSucceeded
             }
 
             if dtSucceeded + dtFailed > 0 {
@@ -678,6 +745,9 @@ extension AppsCommand {
           rows.append([bold("Total"), "", totalStatus])
 
           Table.print(headers: ["Locale", "Display Type", "Result"], rows: rows)
+
+          // A partial upload must not look like success to scripts/workflows.
+          throw ExitCode.failure
         }
       }
     }
@@ -699,11 +769,13 @@ extension AppsCommand {
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
 
+      @OptionGroup var platformOption: PlatformOption
+
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
-          appID: app.id, versionString: version, client: client)
+          appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         let versionState = appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
@@ -750,7 +822,9 @@ extension AppsCommand {
             print("[\(localeName(locale))] \(displayType.rawValue):")
 
             for (i, screenshot) in screenshotsResponse.data.enumerated() {
-              let originalName = screenshot.attributes?.fileName ?? "\(screenshot.id).png"
+              // Server-supplied name — strip path separators before building a local path.
+              let originalName = (screenshot.attributes?.fileName ?? "\(screenshot.id).png")
+                .replacingOccurrences(of: "/", with: "_")
               let fileName = String(format: "%02d_%@", i + 1, originalName)
 
               print(
@@ -783,7 +857,7 @@ extension AppsCommand {
                 print("Done.")
                 screenshotCount += 1
               } catch {
-                print("Failed: \(error.localizedDescription)")
+                print("Failed: \(describeError(error))")
                 failureCount += 1
               }
             }
@@ -812,7 +886,9 @@ extension AppsCommand {
             print("[\(localeName(locale))] \(folderName):")
 
             for (i, preview) in previewsResponse.data.enumerated() {
-              let originalName = preview.attributes?.fileName ?? "\(preview.id).mp4"
+              // Server-supplied name — strip path separators before building a local path.
+              let originalName = (preview.attributes?.fileName ?? "\(preview.id).mp4")
+                .replacingOccurrences(of: "/", with: "_")
               let fileName = String(format: "%02d_%@", i + 1, originalName)
 
               print(
@@ -840,7 +916,7 @@ extension AppsCommand {
                 print("Done.")
                 previewCount += 1
               } catch {
-                print("Failed: \(error.localizedDescription)")
+                print("Failed: \(describeError(error))")
                 failureCount += 1
               }
             }
@@ -877,6 +953,8 @@ extension AppsCommand {
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
       var version: String?
 
+      @OptionGroup var platformOption: PlatformOption
+
       @Argument(help: "Path to the media folder or zip file for retrying stuck uploads.",
                 completion: .file(extensions: ["zip", "tar", "tgz", "tar.gz"]))
       var folder: String?
@@ -889,7 +967,7 @@ extension AppsCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
-          appID: app.id, versionString: version, client: client)
+          appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         print("App:     \(app.attributes?.name ?? bundleID)")
@@ -933,7 +1011,7 @@ extension AppsCommand {
 
         for item in stuckItems {
           let prefix = item.isScreenshot ? "screenshot" : "preview"
-          let key = "\(item.locale)/\(item.displayTypeName)/\(prefix)/\(item.position)"
+          let key = "\(item.locale.lowercased())/\(item.displayTypeName)/\(prefix)/\(item.position)"
           if let localPath = fileIndex[key] {
             matchedRetries.append((item, localPath))
           } else {
@@ -960,6 +1038,21 @@ extension AppsCommand {
         var successCount = 0
         var failureCount = 0
 
+        // Track each set's current ID order across retries — when a set has more
+        // than one stuck item, later reorders must reference the replacement IDs
+        // from earlier retries, not the deleted originals in the initial snapshot.
+        var orderBySet: [String: [String]] = [:]
+        func reorderedIDs(for item: MediaItemStatus, replacingWith newID: String) -> [String] {
+          var order = orderBySet[item.setID] ?? item.allIDsInSet
+          if let idx = order.firstIndex(of: item.mediaID) {
+            order[idx] = newID
+          } else {
+            order.append(newID)
+          }
+          orderBySet[item.setID] = order
+          return order
+        }
+
         for (item, localPath) in matchedRetries {
           print("[\(localeName(item.locale))] \(item.displayTypeName) #\(item.position): ", terminator: "")
           fflush(stdout)
@@ -984,113 +1077,97 @@ extension AppsCommand {
             let fileName = (localPath as NSString).lastPathComponent
 
             if item.isScreenshot {
-              let reserveResponse = try await client.send(
-                Resources.v1.appScreenshots.post(
-                  AppScreenshotCreateRequest(
-                    data: .init(
-                      attributes: .init(fileSize: fileSize, fileName: fileName),
-                      relationships: .init(
-                        appScreenshotSet: .init(data: .init(id: item.setID))
+              let newID = try await uploadAsset(
+                filePath: localPath,
+                reserve: {
+                  let response = try await client.send(
+                    Resources.v1.appScreenshots.post(
+                      AppScreenshotCreateRequest(
+                        data: .init(
+                          attributes: .init(fileSize: fileSize, fileName: fileName),
+                          relationships: .init(
+                            appScreenshotSet: .init(data: .init(id: item.setID))
+                          )
+                        )
                       )
                     )
                   )
-                )
-              )
-
-              let newID = reserveResponse.data.id
-              guard let operations = reserveResponse.data.attributes?.uploadOperations,
-                !operations.isEmpty
-              else {
-                throw MediaUploadError.noUploadOperations
-              }
-
-              try await uploadChunks(filePath: localPath, operations: operations)
-
-              let checksum = try md5Hex(filePath: localPath)
-              _ = try await client.send(
-                Resources.v1.appScreenshots.id(newID).patch(
-                  AppScreenshotUpdateRequest(
-                    data: .init(
-                      id: newID,
-                      attributes: .init(
-                        sourceFileChecksum: checksum,
-                        isUploaded: true
+                  return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+                },
+                commit: { id, md5 in
+                  _ = try await client.send(
+                    Resources.v1.appScreenshots.id(id).patch(
+                      AppScreenshotUpdateRequest(
+                        data: .init(
+                          id: id,
+                          attributes: .init(
+                            sourceFileChecksum: md5,
+                            isUploaded: true
+                          )
+                        )
                       )
                     )
                   )
-                )
+                }
               )
 
               // Reorder to restore original position
               print("Reordering... ", terminator: "")
               fflush(stdout)
-              var newOrder = item.allIDsInSet
-              if let idx = newOrder.firstIndex(of: item.mediaID) {
-                newOrder.remove(at: idx)
-                newOrder.insert(newID, at: idx)
-              }
               try await client.send(
                 Resources.v1.appScreenshotSets.id(item.setID).relationships.appScreenshots.patch(
                   AppScreenshotSetAppScreenshotsLinkagesRequest(
-                    data: newOrder.map { .init(id: $0) }
+                    data: reorderedIDs(for: item, replacingWith: newID).map { .init(id: $0) }
                   )
                 )
               )
             } else {
               let mime = mediaMimeType(for: fileName)
-              let reserveResponse = try await client.send(
-                Resources.v1.appPreviews.post(
-                  AppPreviewCreateRequest(
-                    data: .init(
-                      attributes: .init(
-                        fileSize: fileSize,
-                        fileName: fileName,
-                        mimeType: mime
-                      ),
-                      relationships: .init(
-                        appPreviewSet: .init(data: .init(id: item.setID))
+              let newID = try await uploadAsset(
+                filePath: localPath,
+                reserve: {
+                  let response = try await client.send(
+                    Resources.v1.appPreviews.post(
+                      AppPreviewCreateRequest(
+                        data: .init(
+                          attributes: .init(
+                            fileSize: fileSize,
+                            fileName: fileName,
+                            mimeType: mime
+                          ),
+                          relationships: .init(
+                            appPreviewSet: .init(data: .init(id: item.setID))
+                          )
+                        )
                       )
                     )
                   )
-                )
-              )
-
-              let newID = reserveResponse.data.id
-              guard let operations = reserveResponse.data.attributes?.uploadOperations,
-                !operations.isEmpty
-              else {
-                throw MediaUploadError.noUploadOperations
-              }
-
-              try await uploadChunks(filePath: localPath, operations: operations)
-
-              let checksum = try md5Hex(filePath: localPath)
-              _ = try await client.send(
-                Resources.v1.appPreviews.id(newID).patch(
-                  AppPreviewUpdateRequest(
-                    data: .init(
-                      id: newID,
-                      attributes: .init(
-                        sourceFileChecksum: checksum,
-                        isUploaded: true
+                  return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+                },
+                commit: { id, md5 in
+                  _ = try await client.send(
+                    Resources.v1.appPreviews.id(id).patch(
+                      AppPreviewUpdateRequest(
+                        data: .init(
+                          id: id,
+                          attributes: .init(
+                            sourceFileChecksum: md5,
+                            isUploaded: true
+                          )
+                        )
                       )
                     )
                   )
-                )
+                }
               )
 
               // Reorder to restore original position
               print("Reordering... ", terminator: "")
               fflush(stdout)
-              var newOrder = item.allIDsInSet
-              if let idx = newOrder.firstIndex(of: item.mediaID) {
-                newOrder.remove(at: idx)
-                newOrder.insert(newID, at: idx)
-              }
               try await client.send(
                 Resources.v1.appPreviewSets.id(item.setID).relationships.appPreviews.patch(
                   AppPreviewSetAppPreviewsLinkagesRequest(
-                    data: newOrder.map { .init(id: $0) }
+                    data: reorderedIDs(for: item, replacingWith: newID).map { .init(id: $0) }
                   )
                 )
               )
@@ -1099,7 +1176,7 @@ extension AppsCommand {
             print("Done.")
             successCount += 1
           } catch {
-            print("Failed: \(error.localizedDescription)")
+            print("Failed: \(describeError(error))")
             failureCount += 1
           }
         }
@@ -1121,6 +1198,178 @@ extension AppsCommand {
 
         if failureCount > 0 {
           print("\(successCount) retried successfully, \(failureCount) failed.")
+        }
+      }
+    }
+
+    // MARK: - Prune
+
+    struct Prune: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Delete server screenshot/preview sets that have no matching local folder.",
+        discussion: """
+          Compares the version's screenshot and app preview sets against a local media
+          folder and deletes the sets with no corresponding locale/display-type folder —
+          e.g. stale sets for screen sizes you no longer ship (`--replace` on upload
+          never touches those). Locales without a local folder are left untouched.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "Path to the media folder (same structure as upload).")
+      var folder: String?
+
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      var version: String?
+
+      @OptionGroup var platformOption: PlatformOption
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let folderPath = try resolveFolder(folder, prompt: "Select media folder")
+        let rawPlan = try scanMediaFolder(at: folderPath)
+
+        guard !rawPlan.locales.isEmpty else {
+          throw ValidationError(
+            "No media files found in '\(expandPath(folderPath))' — refusing to prune against an empty folder.")
+        }
+
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appVersion = try await findVersion(
+          appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
+        let versionString = appVersion.attributes?.versionString ?? "unknown"
+        let versionPlatform = appVersion.attributes?.platform
+
+        let (plan, _) = filterPlan(rawPlan, platform: versionPlatform)
+        guard !plan.locales.isEmpty else {
+          throw ValidationError(
+            "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0) } ?? "?") version's platform.")
+        }
+
+        // Which display types exist locally, per locale (lowercased for matching)
+        var localScreenshotTypes: [String: Set<String>] = [:]
+        var localPreviewTypes: [String: Set<String>] = [:]
+        for localeMedia in plan.locales {
+          let key = localeMedia.locale.lowercased()
+          for dt in localeMedia.displayTypes {
+            if !dt.screenshots.isEmpty {
+              localScreenshotTypes[key, default: []].insert(dt.folderName)
+            }
+            if !dt.previews.isEmpty, let pv = dt.previewType {
+              localPreviewTypes[key, default: []].insert(pv.rawValue)
+            }
+          }
+        }
+
+        struct OrphanSet {
+          let locale: String
+          let typeName: String
+          let kind: String
+          let setID: String
+          let isScreenshot: Bool
+          let assetCount: Int
+        }
+        var orphans: [OrphanSet] = []
+        var skippedLocales: [String] = []
+
+        let locsResponse = try await client.send(
+          Resources.v1.appStoreVersions.id(appVersion.id).appStoreVersionLocalizations.get()
+        )
+        for loc in locsResponse.data {
+          guard let locale = loc.attributes?.locale else { continue }
+          let key = locale.lowercased()
+          // A locale with no local folder is not managed by this folder — leave it alone.
+          guard localScreenshotTypes[key] != nil || localPreviewTypes[key] != nil else {
+            skippedLocales.append(locale)
+            continue
+          }
+
+          let screenshotSets = try await client.send(
+            Resources.v1.appStoreVersionLocalizations.id(loc.id).appScreenshotSets.get(limit: 50))
+          for set in screenshotSets.data {
+            guard let raw = set.attributes?.screenshotDisplayType?.rawValue else { continue }
+            if localScreenshotTypes[key]?.contains(raw) != true {
+              let assets = try await client.send(
+                Resources.v1.appScreenshotSets.id(set.id).appScreenshots.get())
+              orphans.append(OrphanSet(
+                locale: locale, typeName: raw, kind: "Screenshots",
+                setID: set.id, isScreenshot: true, assetCount: assets.data.count))
+            }
+          }
+
+          let previewSets = try await client.send(
+            Resources.v1.appStoreVersionLocalizations.id(loc.id).appPreviewSets.get(limit: 50))
+          for set in previewSets.data {
+            guard let raw = set.attributes?.previewType?.rawValue else { continue }
+            if localPreviewTypes[key]?.contains(raw) != true {
+              let assets = try await client.send(
+                Resources.v1.appPreviewSets.id(set.id).appPreviews.get())
+              orphans.append(OrphanSet(
+                locale: locale, typeName: raw, kind: "Previews",
+                setID: set.id, isScreenshot: false, assetCount: assets.data.count))
+            }
+          }
+        }
+
+        if !skippedLocales.isEmpty {
+          print("Skipping locale\(skippedLocales.count == 1 ? "" : "s") with no local folder: \(skippedLocales.sorted().joined(separator: ", "))")
+          print()
+        }
+
+        guard !orphans.isEmpty else {
+          print("Nothing to prune — every server set has a matching local folder.")
+          return
+        }
+
+        let totalAssets = orphans.reduce(0) { $0 + $1.assetCount }
+        print("App:     \(app.attributes?.name ?? bundleID)")
+        print("Version: \(versionString) (\(versionPlatform.map { formatState($0) } ?? "—"))")
+        print()
+        print("Server sets with no matching local folder:")
+        print()
+        Table.print(
+          headers: ["Locale", "Display Type", "Kind", "Assets"],
+          rows: orphans.map { [localeName($0.locale), $0.typeName, $0.kind, "\($0.assetCount)"] })
+        print()
+        print(yellow("⚠ Deleting a set permanently removes it and its assets from this version."))
+        print()
+        guard confirm(
+          "Delete \(orphans.count) set\(orphans.count == 1 ? "" : "s") (\(totalAssets) asset\(totalAssets == 1 ? "" : "s"))? [y/N] ")
+        else {
+          cancelled()
+          return
+        }
+        print()
+
+        var deleted = 0
+        var failed = 0
+        for orphan in orphans {
+          do {
+            if orphan.isScreenshot {
+              try await client.send(Resources.v1.appScreenshotSets.id(orphan.setID).delete)
+            } else {
+              try await client.send(Resources.v1.appPreviewSets.id(orphan.setID).delete)
+            }
+            print("  OK   [\(orphan.locale)] \(orphan.typeName) (\(orphan.kind.lowercased()))")
+            deleted += 1
+          } catch {
+            print("  FAIL [\(orphan.locale)] \(orphan.typeName) — \(describeError(error))")
+            failed += 1
+          }
+        }
+
+        print()
+        success("Pruned", "\(deleted) set\(deleted == 1 ? "" : "s").")
+        if failed > 0 {
+          print("\(failed) set\(failed == 1 ? "" : "s") failed to delete.")
+          throw ExitCode.failure
         }
       }
     }
@@ -1284,11 +1533,12 @@ private func buildLocalFileIndex(from plan: MediaUploadPlan) -> [String: String]
 
   for localeMedia in plan.locales {
     for dt in localeMedia.displayTypes {
+      // Locale lowercased so a local `pt-br/` folder still matches ASC's `pt-BR`.
       for (i, file) in dt.screenshots.enumerated() {
-        index["\(localeMedia.locale)/\(dt.folderName)/screenshot/\(i + 1)"] = file.path
+        index["\(localeMedia.locale.lowercased())/\(dt.folderName)/screenshot/\(i + 1)"] = file.path
       }
       for (i, file) in dt.previews.enumerated() {
-        index["\(localeMedia.locale)/\(dt.folderName)/preview/\(i + 1)"] = file.path
+        index["\(localeMedia.locale.lowercased())/\(dt.folderName)/preview/\(i + 1)"] = file.path
       }
     }
   }

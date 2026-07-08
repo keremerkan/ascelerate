@@ -1,5 +1,27 @@
+import AppStoreAPI
+import AppStoreConnect
 import ArgumentParser
 import Foundation
+
+/// A human-readable description for inline error reporting (per-item FAIL lines and
+/// similar catch sites). `ResponseError` has no `LocalizedError` conformance, so
+/// `localizedDescription` would hide the API's actual error details.
+func describeError(_ error: Error) -> String {
+  if let responseError = error as? ResponseError {
+    switch responseError {
+    case .rateLimitExceeded:
+      return "API rate limit exceeded (HTTP 429)"
+    case .requestFailure(let errorResponse, let statusCode, _):
+      if let errors = errorResponse?.errors, !errors.isEmpty {
+        return errors.map { "\($0.title): \($0.detail)" }.joined(separator: "; ") + " (HTTP \(statusCode))"
+      }
+      return "HTTP \(statusCode)"
+    case .dataAssertionFailed:
+      return "unexpected empty response"
+    }
+  }
+  return error.localizedDescription
+}
 
 // MARK: - ANSI Colors
 
@@ -117,33 +139,65 @@ func setupSignalHandler() {
 }
 
 /// Splits a string into arguments, respecting single and double quotes.
-func splitArguments(_ string: String) -> [String] {
+/// Quoted empty strings (`--body ""`) are preserved as empty arguments, and an
+/// unterminated quote throws instead of silently gluing the rest of the line.
+func splitArguments(_ string: String) throws -> [String] {
   var result: [String] = []
   var current = ""
+  var currentWasQuoted = false
   var inQuote: Character?
+
+  func flush() {
+    if !current.isEmpty || currentWasQuoted { result.append(current) }
+    current = ""
+    currentWasQuoted = false
+  }
 
   for char in string {
     if let quote = inQuote {
       if char == quote { inQuote = nil } else { current.append(char) }
     } else if char == "'" || char == "\"" {
       inQuote = char
+      currentWasQuoted = true
     } else if char == " " {
-      if !current.isEmpty { result.append(current); current = "" }
+      flush()
     } else {
       current.append(char)
     }
   }
 
-  if !current.isEmpty { result.append(current) }
+  if inQuote != nil {
+    throw ValidationError("Unterminated quote in: \(string)")
+  }
+  flush()
   return result
 }
 
 /// When true, all interactive confirmation prompts are automatically accepted.
 nonisolated(unsafe) var autoConfirm = false
 
-/// Set by `builds upload` after a successful upload so subsequent workflow steps
-/// (e.g. `await-processing`, `attach-latest-build`) can wait for this specific build.
-nonisolated(unsafe) var lastUploadedBuildVersion: String?
+/// Build numbers recorded by `builds upload` so subsequent workflow steps
+/// (`await-processing`, `build attach-latest`) can wait for this specific build.
+/// Tracked per platform — one workflow can upload iOS and macOS builds with
+/// different build numbers.
+nonisolated(unsafe) private var lastUploadedByPlatform: [Platform: String] = [:]
+nonisolated(unsafe) private var lastUploadedAnyPlatform: String?
+
+/// Records a successful upload's build number (platform nil when undetectable,
+/// e.g. a bare .ipa input).
+func recordUploadedBuild(_ buildNumber: String, platform: Platform?) {
+  if let platform { lastUploadedByPlatform[platform] = buildNumber }
+  lastUploadedAnyPlatform = buildNumber
+}
+
+/// The build number uploaded earlier in this process for `platform`; with no
+/// platform, the most recent upload of any platform. A platform-specific miss
+/// deliberately does NOT fall back to another platform's number — that's how a
+/// macOS await would end up polling for an iOS build number.
+func lastUploadedBuild(for platform: Platform?) -> String? {
+  guard let platform else { return lastUploadedAnyPlatform }
+  return lastUploadedByPlatform[platform]
+}
 
 /// Archive extensions recognized by `resolveFolder`.
 private let archiveExtensions = [".zip", ".tar.gz", ".tgz", ".tar"]
@@ -226,7 +280,7 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
   }
 
   // Manual path entry
-  let path = expandPath(promptText("Path to folder or archive: "))
+  let path = expandPath(try promptText("Path to folder or archive: "))
   if isArchive(path) {
     guard FileManager.default.fileExists(atPath: path) else {
       throw ValidationError("File not found at '\(path)'.")
@@ -240,8 +294,49 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
   return path
 }
 
+/// Runs an executable and returns its stdout. Reads the pipe before waiting so
+/// large output cannot deadlock against the pipe buffer.
+private func captureOutput(_ executable: String, _ arguments: [String]) throws -> String {
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: executable)
+  process.arguments = arguments
+  let pipe = Pipe()
+  process.standardOutput = pipe
+  process.standardError = Pipe()
+  try process.run()
+  let data = pipe.fileHandleForReading.readDataToEndOfFile()
+  process.waitUntilExit()
+  guard process.terminationStatus == 0 else {
+    throw ValidationError("Failed to inspect archive with \(executable) (exit \(process.terminationStatus)).")
+  }
+  return String(data: data, encoding: .utf8) ?? ""
+}
+
+/// Refuses archives with symlink entries or path-traversal names before extraction.
+/// Both /usr/bin/unzip and /usr/bin/tar create symlink entries and then write later
+/// entries *through* them, letting a crafted archive place files anywhere the user
+/// can write. Media archives have no legitimate use for either.
+private func ensureSafeArchiveEntries(paths: [String], hasLinkEntries: Bool, archivePath: String) throws {
+  if hasLinkEntries {
+    throw ValidationError("Archive '\(archivePath)' contains symbolic or hard link entries and cannot be used.")
+  }
+  for path in paths where !path.isEmpty {
+    if path.hasPrefix("/") || path.split(separator: "/").contains("..") {
+      throw ValidationError("Archive '\(archivePath)' contains an unsafe path ('\(path)').")
+    }
+  }
+}
+
 /// Extracts a zip file to a temporary directory and returns the media root.
 func extractZipToTemp(_ zipPath: String) throws -> String {
+  // Pre-scan: bare names for path checks, mode listing for symlink detection.
+  let names = try captureOutput("/usr/bin/zipinfo", ["-1", zipPath])
+    .components(separatedBy: .newlines)
+  let hasLinks = try captureOutput("/usr/bin/zipinfo", [zipPath])
+    .components(separatedBy: .newlines)
+    .contains { $0.hasPrefix("l") }
+  try ensureSafeArchiveEntries(paths: names, hasLinkEntries: hasLinks, archivePath: zipPath)
+
   let tempDir = NSTemporaryDirectory() + "ascelerate-media-\(UUID().uuidString)"
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
 
@@ -260,6 +355,14 @@ func extractZipToTemp(_ zipPath: String) throws -> String {
 
 /// Extracts a tar (or tar.gz/tgz) file to a temporary directory and returns the media root.
 func extractTarToTemp(_ tarPath: String) throws -> String {
+  // Pre-scan: bare names for path checks, verbose listing for link detection.
+  let names = try captureOutput("/usr/bin/tar", ["-tf", tarPath])
+    .components(separatedBy: .newlines)
+  let hasLinks = try captureOutput("/usr/bin/tar", ["-tvf", tarPath])
+    .components(separatedBy: .newlines)
+    .contains { $0.hasPrefix("l") || $0.hasPrefix("h") }
+  try ensureSafeArchiveEntries(paths: names, hasLinkEntries: hasLinks, archivePath: tarPath)
+
   let tempDir = NSTemporaryDirectory() + "ascelerate-media-\(UUID().uuidString)"
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
 
@@ -370,7 +473,7 @@ func resolveFile(_ file: String?, extension ext: String, prompt: String) throws 
   }
 
   // Manual path entry
-  let path = expandPath(promptText("Path to file: "))
+  let path = expandPath(try promptText("Path to file: "))
   guard FileManager.default.fileExists(atPath: path) else {
     throw ValidationError("File not found at '\(path)'.")
   }
@@ -379,14 +482,21 @@ func resolveFile(_ file: String?, extension ext: String, prompt: String) throws 
 
 /// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
 /// Prompts for non-empty text input; retries on empty.
-func promptText(_ message: String) -> String {
-  print(message, terminator: "")
-  guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        !line.isEmpty else {
-    print("Value cannot be empty. Try again.")
-    return promptText(message)
+func promptText(_ message: String) throws -> String {
+  if autoConfirm {
+    let label = message.trimmingCharacters(in: CharacterSet(charactersIn: ": "))
+    throw ValidationError("\(label) is required — cannot prompt with --yes.")
   }
-  return line
+  print(message, terminator: "")
+  guard let line = readLine() else {
+    throw ValidationError("No input available (stdin closed).")
+  }
+  let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+  guard !trimmed.isEmpty else {
+    print("Value cannot be empty. Try again.")
+    return try promptText(message)
+  }
+  return trimmed
 }
 
 /// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
@@ -561,82 +671,6 @@ func skillVersionDetail() -> String? {
 
 // MARK: - Legacy Migration (asc-client/asc → ascelerate)
 
-/// Migrates configuration, completions, and skill from legacy `asc-client` or `asc` paths to `ascelerate`.
-/// Runs once per process. Silently skips if nothing to migrate.
-func migrateFromLegacyName() {
-  struct Once { nonisolated(unsafe) static var migrated = false }
-  guard !Once.migrated else { return }
-  Once.migrated = true
-
-  let fm = FileManager.default
-  let home = fm.homeDirectoryForCurrentUser
-  let newConfigDir = home.appendingPathComponent(".ascelerate")
-
-  // 1. Migrate config directory: ~/.asc-client/ or ~/.asc/ → ~/.ascelerate/
-  if !fm.fileExists(atPath: newConfigDir.path) {
-    // Try ~/.asc first (more recent), then ~/.asc-client
-    for legacy in [".asc", ".asc-client"] {
-      let oldDir = home.appendingPathComponent(legacy)
-      if fm.fileExists(atPath: oldDir.path) {
-        do {
-          try fm.moveItem(at: oldDir, to: newConfigDir)
-          print("Migrated configuration from ~/\(legacy)/ to ~/.ascelerate/")
-        } catch {
-          print("Warning: could not migrate ~/\(legacy)/ to ~/.ascelerate/: \(error.localizedDescription)")
-        }
-        break
-      }
-    }
-  }
-
-  // Update privateKeyPath in config.json if it still references old directories
-  let configFile = newConfigDir.appendingPathComponent("config.json")
-  if let data = fm.contents(atPath: configFile.path),
-     var config = try? JSONDecoder().decode(Config.self, from: data),
-     (config.privateKeyPath.contains(".asc-client") || config.privateKeyPath.contains("/.asc/"))
-  {
-    var path = config.privateKeyPath
-    path = path.replacingOccurrences(of: ".asc-client/", with: ".ascelerate/")
-    path = path.replacingOccurrences(of: "/.asc/", with: "/.ascelerate/")
-    config = Config(keyId: config.keyId, issuerId: config.issuerId, privateKeyPath: path, vendorNumber: config.vendorNumber)
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-    if let updated = try? encoder.encode(config) {
-      try? updated.write(to: configFile)
-      try? fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: configFile.path)
-    }
-  }
-
-  // 2. Remove old completion files (user needs to run install-completions)
-  var completionsMigrated = false
-  for name in ["_asc-client", "_asc"] {
-    let old = home.appendingPathComponent(".zfunc/\(name)")
-    if fm.fileExists(atPath: old.path) {
-      try? fm.removeItem(at: old)
-      completionsMigrated = true
-    }
-  }
-  for name in ["asc-client.bash", "asc.bash"] {
-    let old = home.appendingPathComponent(".bash_completions/\(name)")
-    if fm.fileExists(atPath: old.path) {
-      try? fm.removeItem(at: old)
-      completionsMigrated = true
-    }
-  }
-  if completionsMigrated {
-    print("Removed old shell completions. Run 'ascelerate install-completions' to reinstall.")
-  }
-
-  // 3. Remove old skill directories
-  for name in ["asc-client", "asc"] {
-    let oldSkillDir = home.appendingPathComponent(".claude/skills/\(name)")
-    if fm.fileExists(atPath: oldSkillDir.path) {
-      try? fm.removeItem(at: oldSkillDir)
-      print("Removed old \(name) skill. Run 'ascelerate install-skill' to reinstall.")
-    }
-  }
-}
-
 /// Check for outdated completions and skill, print NOTE for non-interactive contexts.
 func checkForUpdates() {
   struct Once { nonisolated(unsafe) static var checked = false }
@@ -700,14 +734,23 @@ func checkForUpdatesInteractively() async -> Bool {
 }
 
 /// Prints a numbered list and reads a single selection.
+/// Under `--yes` (autoConfirm) an arbitrary auto-pick would be dangerous, so the
+/// prompt refuses instead — `nonInteractiveHint` tells the user how to disambiguate
+/// (e.g. "Pass --platform to disambiguate.").
 func promptSelection<T>(
   _ title: String,
   items: [T],
   display: (T) -> String,
-  prompt: String? = nil
+  prompt: String? = nil,
+  nonInteractiveHint: String? = nil
 ) throws -> T {
   guard !items.isEmpty else {
     throw ValidationError("No items to select from.")
+  }
+  if autoConfirm {
+    let listing = items.map { "  - \(display($0))" }.joined(separator: "\n")
+    let hint = nonInteractiveHint.map { " \($0)" } ?? ""
+    throw ValidationError("\(title) (\(items.count)) — cannot prompt with --yes.\(hint)\n\(listing)")
   }
   print("\(title):")
   for (i, item) in items.enumerated() {
@@ -716,8 +759,10 @@ func promptSelection<T>(
   print()
   let label = prompt ?? "Select"
   print("\(label) (1-\(items.count)): ", terminator: "")
-  guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
-        let choice = Int(input),
+  guard let line = readLine() else {
+    throw ValidationError("No input available (stdin closed).")
+  }
+  guard let choice = Int(line.trimmingCharacters(in: .whitespacesAndNewlines)),
         choice >= 1, choice <= items.count else {
     throw ValidationError("Invalid selection.")
   }
@@ -736,6 +781,9 @@ func promptMultiSelection<T>(
   guard !items.isEmpty else {
     throw ValidationError("No items to select from.")
   }
+  if autoConfirm {
+    throw ValidationError("\(title) (\(items.count)) — cannot prompt with --yes.")
+  }
   print("\(title):")
   for (i, item) in items.enumerated() {
     print("  [\(i + 1)] \(display(item))")
@@ -744,7 +792,10 @@ func promptMultiSelection<T>(
   let label = prompt ?? "Select"
   let defaultHint = defaultAll ? " [all]" : ""
   print("\(label) (comma-separated numbers, or 'all')\(defaultHint): ", terminator: "")
-  let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+  guard let line = readLine() else {
+    throw ValidationError("No input available (stdin closed).")
+  }
+  let input = line.trimmingCharacters(in: .whitespacesAndNewlines)
 
   if input.isEmpty && defaultAll {
     return items
@@ -788,6 +839,20 @@ func parseFilter<T: RawRepresentable & CaseIterable>(
 ) throws -> [T]? where T.RawValue == String {
   guard let value else { return nil }
   return [try parseEnum(value, name: name)]
+}
+
+/// Sends a GET for an optional to-one related resource. The API returns
+/// `{"data": null}` when no related object exists, which fails decoding because
+/// the generated response's `data` is non-optional — that case maps to nil,
+/// while real errors (network, auth, rate limit) still throw.
+func fetchOptionalResource<T: Decodable & Sendable>(
+  _ request: Request<T>, client: AppStoreConnectClient
+) async throws -> T? {
+  do {
+    return try await client.send(request)
+  } catch is DecodingError {
+    return nil
+  }
 }
 
 /// Collects all items from paginated API responses into a single sorted array.
@@ -875,11 +940,38 @@ func formatState<T>(_ value: T) -> String {
 
 /// Returns the visible length of a string, stripping ANSI escape sequences.
 private func visibleLength(_ str: String) -> Int {
-  str.replacingOccurrences(
+  let stripped = str.replacingOccurrences(
     of: "\u{1B}\\[[0-9;]*m",
     with: "",
     options: .regularExpression
-  ).count
+  )
+  // Terminal cells, not Characters: CJK and emoji glyphs occupy two cells each —
+  // counting them as one misaligns every column after a Japanese app title.
+  return stripped.reduce(0) { $0 + terminalWidth($1) }
+}
+
+/// Approximate terminal cell width of a character (wcwidth-style): East Asian
+/// wide/fullwidth ranges and emoji render as two cells, everything else as one.
+private func terminalWidth(_ char: Character) -> Int {
+  guard let scalar = char.unicodeScalars.first else { return 1 }
+  switch scalar.value {
+  case 0x1100...0x115F,        // Hangul Jamo
+       0x2E80...0x303E,        // CJK Radicals, Kangxi, CJK Symbols and Punctuation
+       0x3041...0x33FF,        // Hiragana, Katakana, CJK Compatibility
+       0x3400...0x4DBF,        // CJK Extension A
+       0x4E00...0x9FFF,        // CJK Unified Ideographs
+       0xA000...0xA4CF,        // Yi
+       0xAC00...0xD7A3,        // Hangul Syllables
+       0xF900...0xFAFF,        // CJK Compatibility Ideographs
+       0xFE30...0xFE4F,        // CJK Compatibility Forms
+       0xFF00...0xFF60,        // Fullwidth Forms
+       0xFFE0...0xFFE6,        // Fullwidth Signs
+       0x1F300...0x1FAFF,      // Emoji & pictographs
+       0x20000...0x3FFFD:      // CJK Extensions B+
+    return 2
+  default:
+    return 1
+  }
 }
 
 /// Pads a string to a target visible width, accounting for ANSI escape sequences.

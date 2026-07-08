@@ -37,6 +37,21 @@ struct IAPCommand: AsyncParsableCommand {
     return iap
   }
 
+  /// Resolves the IAP from bundle/product ID and verifies the offer code actually
+  /// belongs to it — a stale or mistyped ID from another product must not be mutated.
+  static func validateOwnedOfferCode(
+    _ offerCodeID: String, bundleID: String, productID: String, client: AppStoreConnectClient
+  ) async throws {
+    let app = try await findApp(bundleID: bundleID, client: client)
+    let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+    for try await page in client.pages(
+      Resources.v2.inAppPurchases.id(iap.id).offerCodes.get(limit: 200)
+    ) where page.data.contains(where: { $0.id == offerCodeID }) {
+      return
+    }
+    throw ValidationError("Offer code '\(offerCodeID)' does not belong to '\(productID)'.")
+  }
+
   /// Returns true if the IAP has a price schedule. Returns false if the API responds with
   /// 404 or null `data` (decoded as DecodingError) — both indicate no schedule.
   static func iapPriceScheduleExists(
@@ -61,9 +76,13 @@ struct IAPCommand: AsyncParsableCommand {
     "⚠ No price schedule set — product cannot be submitted. Use 'iap pricing set ...' to configure."
 
   /// One manual-price entry: the territory and the price point it references.
+  /// `customerPrice`/`currency` are display data captured from the schedule fetch's
+  /// included payload (write paths that build new entries don't need them).
   struct ManualPriceEntry: Sendable {
     let territoryID: String
     let pricePointID: String
+    var customerPrice: String?
+    var currency: String?
   }
 
   /// Snapshot of an existing IAP price schedule.
@@ -102,8 +121,11 @@ struct IAPCommand: AsyncParsableCommand {
       throw error
     }
 
+    // A schedule exists at this point (the GET succeeded) — failing to hydrate any
+    // part of it must throw, not degrade: every write path POSTs the schedule
+    // wholesale, so a silently dropped entry would be permanently deleted.
     guard let baseID = scheduleResponse.data.relationships?.baseTerritory?.data?.id else {
-      return nil
+      throw ValidationError("Could not resolve the price schedule's base territory. Retry, or inspect with 'iap pricing show'.")
     }
 
     // Fetch manual prices with relationships hydrated via the sub-resource endpoint.
@@ -115,11 +137,27 @@ struct IAPCommand: AsyncParsableCommand {
         limit: 200, include: [.inAppPurchasePricePoint, .territory]
       )
     ) {
+      // The included payload already carries each point's customer price and each
+      // territory's currency — capture them here instead of refetching per entry.
+      var pointPrices: [String: String] = [:]
+      var territoryCurrencies: [String: String] = [:]
+      for item in page.included ?? [] {
+        switch item {
+        case .inAppPurchasePricePoint(let p):
+          if let cp = p.attributes?.customerPrice { pointPrices[p.id] = cp }
+        case .territory(let t):
+          if let c = t.attributes?.currency { territoryCurrencies[t.id] = c }
+        }
+      }
       for price in page.data {
         guard let territoryID = price.relationships?.territory?.data?.id,
               let pricePointID = price.relationships?.inAppPurchasePricePoint?.data?.id
-        else { continue }
-        entries.append(ManualPriceEntry(territoryID: territoryID, pricePointID: pricePointID))
+        else {
+          throw ValidationError("Could not resolve territory/price point for a manual price entry. Retry, or inspect with 'iap pricing show'.")
+        }
+        entries.append(ManualPriceEntry(
+          territoryID: territoryID, pricePointID: pricePointID,
+          customerPrice: pointPrices[pricePointID], currency: territoryCurrencies[territoryID]))
       }
     }
     return ExistingSchedule(baseTerritoryID: baseID, manualPrices: entries)
@@ -203,24 +241,6 @@ struct IAPCommand: AsyncParsableCommand {
 
   /// Looks up the customer price string for a given price point ID in a given territory.
   /// Used for display purposes. Returns nil if not found.
-  static func customerPriceForPoint(
-    iapID: String, territoryID: String, pricePointID: String, client: AppStoreConnectClient
-  ) async throws -> (price: String?, currency: String?) {
-    var currency: String?
-    for try await page in client.pages(
-      Resources.v2.inAppPurchases.id(iapID).pricePoints.get(
-        filterTerritory: [territoryID], limit: 200, include: [.territory]
-      )
-    ) {
-      for t in page.included ?? [] {
-        if currency == nil { currency = t.attributes?.currency }
-      }
-      if let match = page.data.first(where: { $0.id == pricePointID }) {
-        return (match.attributes?.customerPrice, currency)
-      }
-    }
-    return (nil, currency)
-  }
 
   // MARK: - List
 
@@ -674,8 +694,8 @@ struct IAPCommand: AsyncParsableCommand {
         )
       }
 
-      let pid = productID ?? promptText("Product ID: ")
-      let refName = name ?? promptText("Reference Name: ")
+      let pid = try productID ?? promptText("Product ID: ")
+      let refName = try name ?? promptText("Reference Name: ")
 
       var note: String? = reviewNote
       if note == nil && !autoConfirm {
@@ -1086,11 +1106,8 @@ struct IAPCommand: AsyncParsableCommand {
 
         var rows: [[String]] = []
         for entry in ordered {
-          let info = try await IAPCommand.customerPriceForPoint(
-            iapID: iap.id, territoryID: entry.territoryID,
-            pricePointID: entry.pricePointID, client: client)
           let label = entry.territoryID == existing.baseTerritoryID ? "\(entry.territoryID) (base)" : entry.territoryID
-          let priceStr = info.price.map { "\($0) \(info.currency ?? "")" } ?? "(unknown tier)"
+          let priceStr = entry.customerPrice.map { "\($0) \(entry.currency ?? "")" } ?? "(unknown tier)"
           rows.append([label, priceStr])
         }
 
@@ -1206,13 +1223,9 @@ struct IAPCommand: AsyncParsableCommand {
             keptOverrides = []
             droppedOverrideTerritories = preservableOverrides.map(\.territoryID)
           } else if !autoConfirm {
-            // Resolve customer prices for each override (for display in the menu)
-            var labels: [String] = []
-            for entry in preservableOverrides {
-              let info = try await IAPCommand.customerPriceForPoint(
-                iapID: iap.id, territoryID: entry.territoryID,
-                pricePointID: entry.pricePointID, client: client)
-              labels.append("\(entry.territoryID) — \(info.price ?? "?") \(info.currency ?? "")")
+            // Customer prices for the menu come from the schedule fetch's included payload
+            let labels = preservableOverrides.map {
+              "\($0.territoryID) — \($0.customerPrice ?? "?") \($0.currency ?? "")"
             }
             print()
             print("This product currently has manual prices in \(preservableOverrides.count) other territor\(preservableOverrides.count == 1 ? "y" : "ies"):")
@@ -1507,137 +1520,45 @@ struct IAPCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-      // Fetch current availability
-      var currentAvailableInNew: Bool?
-      var currentTerritories: [String] = []
-      var hasAvailability = false
-      do {
-        let response = try await client.send(
-          Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseAvailability.get(
-            include: [.availableTerritories],
-            limitAvailableTerritories: 50
+      try await runProductAvailability(
+        productID: productID,
+        productNoun: "IAP",
+        add: add,
+        remove: remove,
+        availableInNewTerritories: availableInNewTerritories,
+        verbose: verbose,
+        fetchCurrent: {
+          let response = try await client.send(
+            Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseAvailability.get(
+              include: [.availableTerritories],
+              limitAvailableTerritories: 50
+            )
           )
-        )
-        currentAvailableInNew = response.data.attributes?.isAvailableInNewTerritories
-        hasAvailability = true
-        // Paginate for the full list
-        for try await page in client.pages(
-          Resources.v1.inAppPurchaseAvailabilities.id(response.data.id).availableTerritories.get(limit: 200)
-        ) {
-          currentTerritories.append(contentsOf: page.data.map(\.id))
-        }
-      } catch is DecodingError {
-        hasAvailability = false
-      } catch let error as ResponseError {
-        if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-          hasAvailability = false
-        } else {
-          throw error
-        }
-      }
-
-      let isEditMode = add != nil || remove != nil || availableInNewTerritories != nil
-
-      let newAvailableInNewFlag: Bool?
-      if let s = availableInNewTerritories {
-        guard let b = Bool(s.lowercased()) else {
-          throw ValidationError("Invalid value for --available-in-new-territories. Use 'true' or 'false'.")
-        }
-        newAvailableInNewFlag = b
-      } else {
-        newAvailableInNewFlag = nil
-      }
-
-      if !isEditMode {
-        // View mode
-        print("Product ID: \(productID)")
-        if !hasAvailability {
-          print(yellow("⚠ No per-IAP availability set — inherits the app's territories."))
-          return
-        }
-        print("Available in new territories: \(currentAvailableInNew == true ? "Yes" : currentAvailableInNew == false ? "No" : "—")")
-        print()
-        let sorted = currentTerritories.sorted()
-        print("Available (\(sorted.count)):")
-        printTerritories(sorted)
-        return
-      }
-
-      // Edit mode — compute the new territory list
-      let addCodes = Swift.Set(add?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
-      let removeCodes = Swift.Set(remove?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() } ?? [])
-
-      let overlap = addCodes.intersection(removeCodes)
-      if !overlap.isEmpty {
-        throw ValidationError("Territory codes in both --add and --remove: \(overlap.sorted().joined(separator: ", "))")
-      }
-
-      var newTerritories = Swift.Set(currentTerritories)
-      newTerritories.formUnion(addCodes)
-      newTerritories.subtract(removeCodes)
-
-      let effectiveAvailableInNew = newAvailableInNewFlag ?? currentAvailableInNew ?? true
-      let finalList = newTerritories.sorted()
-
-      if finalList.isEmpty {
-        throw ValidationError("Cannot have zero available territories — at least one is required.")
-      }
-
-      // Summary
-      print("Product ID: \(productID)")
-      print("Available in new territories: \(effectiveAvailableInNew ? "Yes" : "No")")
-      let addedCodes = addCodes.subtracting(currentTerritories).sorted()
-      let removedCodes = removeCodes.intersection(currentTerritories).sorted()
-      if !addedCodes.isEmpty {
-        print("Adding:    \(addedCodes.joined(separator: ", "))")
-      }
-      if !removedCodes.isEmpty {
-        print("Removing:  \(removedCodes.joined(separator: ", "))")
-      }
-      if addedCodes.isEmpty && removedCodes.isEmpty && newAvailableInNewFlag == nil {
-        print("No changes.")
-        return
-      }
-      print("New total available: \(finalList.count) territor\(finalList.count == 1 ? "y" : "ies")")
-      print()
-
-      guard confirm("Apply this availability? [y/N] ") else {
-        cancelled()
-        return
-      }
-
-      _ = try await client.send(
-        Resources.v1.inAppPurchaseAvailabilities.post(
-          InAppPurchaseAvailabilityCreateRequest(
-            data: .init(
-              attributes: .init(isAvailableInNewTerritories: effectiveAvailableInNew),
-              relationships: .init(
-                inAppPurchase: .init(data: .init(id: iap.id)),
-                availableTerritories: .init(data: finalList.map { .init(id: $0) })
+          // Paginate for the full list
+          var territories: [String] = []
+          for try await page in client.pages(
+            Resources.v1.inAppPurchaseAvailabilities.id(response.data.id).availableTerritories.get(limit: 200)
+          ) {
+            territories.append(contentsOf: page.data.map(\.id))
+          }
+          return (response.data.attributes?.isAvailableInNewTerritories, territories)
+        },
+        post: { availableInNew, territories in
+          _ = try await client.send(
+            Resources.v1.inAppPurchaseAvailabilities.post(
+              InAppPurchaseAvailabilityCreateRequest(
+                data: .init(
+                  attributes: .init(isAvailableInNewTerritories: availableInNew),
+                  relationships: .init(
+                    inAppPurchase: .init(data: .init(id: iap.id)),
+                    availableTerritories: .init(data: territories.map { .init(id: $0) })
+                  )
+                )
               )
             )
           )
-        )
+        }
       )
-
-      print()
-      success("Updated", "availability for \(productID) (\(finalList.count) territories).")
-    }
-
-    private func printTerritories(_ codes: [String]) {
-      if verbose {
-        let en = Locale(identifier: "en")
-        for code in codes {
-          let name = en.localizedString(forRegionCode: code) ?? code
-          print("  \(code)  \(name)")
-        }
-      } else {
-        for i in stride(from: 0, to: codes.count, by: 10) {
-          let end = min(i + 10, codes.count)
-          let row = codes[i..<end].joined(separator: "  ")
-          print("  \(row)")
-        }
-      }
     }
   }
 
@@ -1901,7 +1822,8 @@ struct IAPCommand: AsyncParsableCommand {
           throw ValidationError("--active must be 'true' or 'false'.")
         }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        try await IAPCommand.validateOwnedOfferCode(
+          offerCodeID, bundleID: bundleID, productID: productID, client: client)
 
         guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
           cancelled()
@@ -1959,7 +1881,8 @@ struct IAPCommand: AsyncParsableCommand {
           try parseEnum($0, name: "environment")
         }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        try await IAPCommand.validateOwnedOfferCode(
+          offerCodeID, bundleID: bundleID, productID: productID, client: client)
 
         print("Generate \(count) one-time-use code(s):")
         print("  Offer Code ID: \(offerCodeID)")
@@ -2034,7 +1957,8 @@ struct IAPCommand: AsyncParsableCommand {
           throw ValidationError("--count must be greater than 0.")
         }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        try await IAPCommand.validateOwnedOfferCode(
+          offerCodeID, bundleID: bundleID, productID: productID, client: client)
 
         print("Add custom code:")
         print("  Offer Code ID: \(offerCodeID)")
@@ -2091,22 +2015,10 @@ struct IAPCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
 
-        let raw = try await client.send(
-          Resources.v1.inAppPurchaseOfferCodeOneTimeUseCodes.id(batchID).values.get
-        )
-
-        if raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-          print(yellow("⚠ No codes returned. Generation may still be in progress; retry in a few seconds."))
-          return
-        }
-
-        if let output {
-          let path = expandPath(confirmOutputPath(output, isDirectory: false))
-          try raw.write(toFile: path, atomically: true, encoding: .utf8)
-          let lineCount = raw.split(separator: "\n").count
-          success("Wrote", "\(lineCount) code(s) to \(path).")
-        } else {
-          print(raw)
+        try await runOfferCodeViewCodes(output: output) {
+          try await client.send(
+            Resources.v1.inAppPurchaseOfferCodeOneTimeUseCodes.id(batchID).values.get
+          )
         }
       }
     }
@@ -2138,21 +2050,14 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        var images: [InAppPurchaseImage] = []
-        for try await page in client.pages(
-          Resources.v2.inAppPurchases.id(iap.id).images.get(limit: 50)
-        ) {
-          images.append(contentsOf: page.data)
-        }
-
-        if images.isEmpty {
-          print("No images uploaded for \(productID).")
-          return
-        }
-
-        Table.print(
-          headers: ["ID", "File", "Size", "State"],
-          rows: images.map { img in
+        try await runProductImagesList(productID: productID) {
+          var images: [InAppPurchaseImage] = []
+          for try await page in client.pages(
+            Resources.v2.inAppPurchases.id(iap.id).images.get(limit: 50)
+          ) {
+            images.append(contentsOf: page.data)
+          }
+          return images.map { img in
             [
               img.id,
               img.attributes?.fileName ?? "—",
@@ -2160,7 +2065,7 @@ struct IAPCommand: AsyncParsableCommand {
               img.attributes?.state.map { formatState($0) } ?? "—",
             ]
           }
-        )
+        }
       }
     }
 
@@ -2189,22 +2094,17 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let media = try MediaFile(readingFrom: file)
-
-        print("Upload image:")
-        print("  Product:  \(productID)")
-        print("  File:     \(media.fileName)")
-        print("  Size:     \(formatBytes(media.fileSize))")
-        print()
-
-        guard confirm("Upload? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let imageID = try await uploadAsset(
-          filePath: media.path,
-          reserve: {
+        try await runProductAssetUpload(
+          file: file,
+          summary: { media in
+            [
+              "Upload image:",
+              "  Product:  \(productID)",
+              "  File:     \(media.fileName)",
+              "  Size:     \(formatBytes(media.fileSize))",
+            ]
+          },
+          reserve: { media in
             let response = try await client.send(
               Resources.v1.inAppPurchaseImages.post(
                 InAppPurchaseImageCreateRequest(
@@ -2228,11 +2128,9 @@ struct IAPCommand: AsyncParsableCommand {
                 )
               )
             )
-          }
+          },
+          successDetail: { imageID, media in "\(media.fileName) (id: \(imageID))." }
         )
-
-        print()
-        success("Uploaded", "\(media.fileName) (id: \(imageID)).")
       }
     }
 
@@ -2259,16 +2157,11 @@ struct IAPCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         _ = try await findApp(bundleID: bundleID, client: client)
 
-        guard confirm("Delete image \(imageID)? [y/N] ") else {
-          cancelled()
-          return
+        try await runProductImageDelete(imageID: imageID) {
+          _ = try await client.send(
+            Resources.v1.inAppPurchaseImages.id(imageID).delete
+          )
         }
-
-        _ = try await client.send(
-          Resources.v1.inAppPurchaseImages.id(imageID).delete
-        )
-        print()
-        success("Deleted", "image \(imageID).")
       }
     }
   }
@@ -2299,24 +2192,17 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        do {
+        try await runReviewScreenshotView(productID: productID) {
           let response = try await client.send(
             Resources.v2.inAppPurchases.id(iap.id).appStoreReviewScreenshot.get()
           )
           let attrs = response.data.attributes
-          print("Review Screenshot:")
-          print("  ID:    \(response.data.id)")
-          print("  File:  \(attrs?.fileName ?? "—")")
-          print("  Size:  \(attrs?.fileSize.map { formatBytes($0) } ?? "—")")
-          print("  State: \(attrs?.assetDeliveryState?.state.map { formatState($0) } ?? "—")")
-        } catch is DecodingError {
-          print("No review screenshot uploaded for \(productID).")
-        } catch let error as ResponseError {
-          if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-            print("No review screenshot uploaded for \(productID).")
-          } else {
-            throw error
-          }
+          return (
+            response.data.id,
+            attrs?.fileName,
+            attrs?.fileSize.map { formatBytes($0) },
+            attrs?.assetDeliveryState?.state.map { formatState($0) }
+          )
         }
       }
     }
@@ -2346,22 +2232,17 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let media = try MediaFile(readingFrom: file)
-
-        print("Upload review screenshot:")
-        print("  Product: \(productID)")
-        print("  File:    \(media.fileName)")
-        print("  Size:    \(formatBytes(media.fileSize))")
-        print()
-
-        guard confirm("Upload? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let screenshotID = try await uploadAsset(
-          filePath: media.path,
-          reserve: {
+        try await runProductAssetUpload(
+          file: file,
+          summary: { media in
+            [
+              "Upload review screenshot:",
+              "  Product: \(productID)",
+              "  File:    \(media.fileName)",
+              "  Size:    \(formatBytes(media.fileSize))",
+            ]
+          },
+          reserve: { media in
             let response = try await client.send(
               Resources.v1.inAppPurchaseAppStoreReviewScreenshots.post(
                 InAppPurchaseAppStoreReviewScreenshotCreateRequest(
@@ -2385,11 +2266,9 @@ struct IAPCommand: AsyncParsableCommand {
                 )
               )
             )
-          }
+          },
+          successDetail: { screenshotID, _ in "review screenshot (id: \(screenshotID))." }
         )
-
-        print()
-        success("Uploaded", "review screenshot (id: \(screenshotID)).")
       }
     }
 
@@ -2414,21 +2293,20 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let response = try await client.send(
-          Resources.v2.inAppPurchases.id(iap.id).appStoreReviewScreenshot.get()
+        try await runReviewScreenshotDelete(
+          productID: productID,
+          fetchID: {
+            let response = try await client.send(
+              Resources.v2.inAppPurchases.id(iap.id).appStoreReviewScreenshot.get()
+            )
+            return response.data.id
+          },
+          delete: { screenshotID in
+            _ = try await client.send(
+              Resources.v1.inAppPurchaseAppStoreReviewScreenshots.id(screenshotID).delete
+            )
+          }
         )
-        let screenshotID = response.data.id
-
-        guard confirm("Delete review screenshot for \(productID)? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        _ = try await client.send(
-          Resources.v1.inAppPurchaseAppStoreReviewScreenshots.id(screenshotID).delete
-        )
-        print()
-        success("Deleted", "review screenshot.")
       }
     }
   }

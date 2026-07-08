@@ -20,7 +20,6 @@ struct Ascelerate: AsyncParsableCommand {
   )
 
   func run() async throws {
-    migrateFromLegacyName()
     print("ascelerate \(Self.appVersion)")
     let prompted = await checkForUpdatesInteractively()
     if prompted { print() }

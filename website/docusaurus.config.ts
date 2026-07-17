@@ -63,7 +63,8 @@ const config: Config = {
     navbar: {
       logo: {
         alt: 'ASCelerate',
-        src: 'img/favicon.svg',
+        src: 'img/icon.png',
+        srcDark: 'img/icon-dark.png',
       },
       items: [
         {

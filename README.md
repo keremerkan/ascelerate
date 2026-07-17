@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="website/static/img/icon-dark.png">
+    <img src="website/static/img/icon.png" width="128" alt="ascelerate icon">
+  </picture>
+</p>
+
 # ascelerate — A Swift CLI for App Store Connect
 
 A command-line tool for building, archiving, and publishing apps to the App Store — from Xcode archive to App Review submission. Built with Swift on the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi).

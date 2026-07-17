@@ -5,6 +5,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
+import ThemedImage from '@theme/ThemedImage';
 import Translate, {translate} from '@docusaurus/Translate';
 
 import styles from './index.module.css';
@@ -14,7 +15,11 @@ function HomepageHeader() {
   return (
     <header className={styles.heroBanner}>
       <div className="container">
-        <img src="/img/favicon.svg" alt="ASCelerate" className={styles.heroLogo} />
+        <ThemedImage
+          alt="ASCelerate"
+          className={styles.heroLogo}
+          sources={{light: '/img/icon.png', dark: '/img/icon-dark.png'}}
+        />
         <Heading as="h1" className="hero__title">
           {siteConfig.title}
         </Heading>

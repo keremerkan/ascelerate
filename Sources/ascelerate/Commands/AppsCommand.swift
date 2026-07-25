@@ -1819,9 +1819,12 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       private func submitBundledProducts(app: App, client: AppStoreConnectClient) async throws {
-        // Offer to submit IAPs/subscriptions alongside the app version
-        let submittableIAPStates: Set<InAppPurchaseState> = [.readyToSubmit, .approved]
-        let submittableSubStates: Set<Subscription.Attributes.State> = [.readyToSubmit, .approved]
+        // Offer to submit IAPs/subscriptions alongside the app version.
+        // APPROVED products keep that state even when they have pending edits — the
+        // pending version surfaces as non-approved child localization states. The API
+        // rejects submissions with no pending version (HTTP 409; used to be a no-op).
+        let candidateIAPStates: Set<InAppPurchaseState> = [.readyToSubmit, .approved]
+        let candidateSubStates: Set<Subscription.Attributes.State> = [.readyToSubmit, .approved]
 
         var fetchedIAPs: [InAppPurchaseV2] = []
         let iapRequest = Resources.v1.apps.id(app.id).inAppPurchasesV2.get(limit: 200)
@@ -1830,31 +1833,50 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
-        var fetchedSubs: [Subscription] = []
-        for group in groups {
-          fetchedSubs.append(contentsOf: group.subscriptions)
-        }
+        let fetchedSubs = groups.flatMap(\.subscriptions)
 
-        let submittableIAPs = fetchedIAPs.filter {
-          $0.attributes?.state.flatMap { submittableIAPStates.contains($0) } ?? false
-        }
         let skippedIAPs = fetchedIAPs.filter {
-          !($0.attributes?.state.flatMap { submittableIAPStates.contains($0) } ?? false)
-        }
-        let submittableSubs = fetchedSubs.filter {
-          $0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
+          !($0.attributes?.state.flatMap { candidateIAPStates.contains($0) } ?? false)
         }
         let skippedSubs = fetchedSubs.filter {
-          !($0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false)
+          !($0.attributes?.state.flatMap { candidateSubStates.contains($0) } ?? false)
         }
-        // Groups that contain at least one submittable subscription
-        let submittableGroups = groups.filter { group in
-          group.subscriptions.contains { sub in
-            sub.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
+
+        // Partition candidates by whether they actually have a pending version.
+        var submittableIAPs: [InAppPurchaseV2] = []
+        var unchangedIAPs: [InAppPurchaseV2] = []
+        for iap in fetchedIAPs where iap.attributes?.state.flatMap({ candidateIAPStates.contains($0) }) ?? false {
+          if try await iapHasPendingVersion(iap, client: client) {
+            submittableIAPs.append(iap)
+          } else {
+            unchangedIAPs.append(iap)
           }
         }
 
-        if !skippedIAPs.isEmpty || !skippedSubs.isEmpty {
+        var submittableSubIDs: Set<String> = []
+        var unchangedSubs: [Subscription] = []
+        for sub in fetchedSubs where sub.attributes?.state.flatMap({ candidateSubStates.contains($0) }) ?? false {
+          if try await subHasPendingVersion(sub, client: client) {
+            submittableSubIDs.insert(sub.id)
+          } else {
+            unchangedSubs.append(sub)
+          }
+        }
+
+        // A group is submitted for its pending subscriptions and/or its own
+        // pending group-level localizations.
+        var groupLocalizationsPending: [String: Bool] = [:]
+        var submittableGroups: [SubCommand.GroupInfo] = []
+        for group in groups {
+          let hasPendingSubs = group.subscriptions.contains { submittableSubIDs.contains($0.id) }
+          let hasPendingLocs = try await groupHasPendingLocalizations(group, client: client)
+          groupLocalizationsPending[group.id] = hasPendingLocs
+          if hasPendingSubs || hasPendingLocs {
+            submittableGroups.append(group)
+          }
+        }
+
+        if !skippedIAPs.isEmpty || !skippedSubs.isEmpty || !unchangedIAPs.isEmpty || !unchangedSubs.isEmpty {
           print()
           print("Skipping items not eligible for submission:")
           for iap in skippedIAPs {
@@ -1863,78 +1885,126 @@ struct AppsCommand: AsyncParsableCommand {
           for sub in skippedSubs {
             print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
           }
+          for iap in unchangedIAPs {
+            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — Approved (no pending changes)")
+          }
+          for sub in unchangedSubs {
+            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — Approved (no pending changes)")
+          }
         }
 
-        if !submittableIAPs.isEmpty || !submittableSubs.isEmpty {
+        if !submittableIAPs.isEmpty || !submittableGroups.isEmpty {
           print()
-          print(yellow("In-app purchases/subscriptions to submit:"))
+          print(yellow("In-app purchases/subscriptions with pending changes:"))
           for iap in submittableIAPs {
             print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
           }
           for group in submittableGroups {
-            let groupSubs = group.subscriptions.filter {
-              $0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
-            }
-            print("  Group: \(group.name)")
-            for sub in groupSubs {
+            let locsNote = groupLocalizationsPending[group.id] == true ? " (group localizations changed)" : ""
+            print("  Group: \(group.name)\(locsNote)")
+            for sub in group.subscriptions where submittableSubIDs.contains(sub.id) {
               print("    Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
             }
           }
           print()
-          print("Items with pending changes will be submitted for review.")
-          print("Items with no changes will be unaffected.")
-          print()
 
-          if confirm("Submit IAPs/subscriptions with the app version? [y/N] ") {
+          if confirm("Submit these with the app version? [y/N] ") {
             for iap in submittableIAPs {
-              _ = try await client.send(
-                Resources.v1.inAppPurchaseSubmissions.post(
-                  InAppPurchaseSubmissionCreateRequest(
-                    data: .init(
-                      relationships: .init(
-                        inAppPurchaseV2: .init(data: .init(id: iap.id))
-                      )
-                    )
-                  )
-                )
-              )
-              print("  \(green("Submitted")) IAP '\(iap.attributes?.name ?? "—")'")
-            }
-            for group in submittableGroups {
-              // Submit individual subscriptions
-              let groupSubs = group.subscriptions.filter {
-                $0.attributes?.state.flatMap { submittableSubStates.contains($0) } ?? false
-              }
-              for sub in groupSubs {
+              do {
                 _ = try await client.send(
-                  Resources.v1.subscriptionSubmissions.post(
-                    SubscriptionSubmissionCreateRequest(
+                  Resources.v1.inAppPurchaseSubmissions.post(
+                    InAppPurchaseSubmissionCreateRequest(
                       data: .init(
                         relationships: .init(
-                          subscription: .init(data: .init(id: sub.id))
+                          inAppPurchaseV2: .init(data: .init(id: iap.id))
                         )
                       )
                     )
                   )
                 )
-                print("  \(green("Submitted")) subscription '\(sub.attributes?.name ?? "—")'")
+                print("  \(green("Submitted")) IAP '\(iap.attributes?.name ?? "—")'")
+              } catch let error where isNoPendingVersionError(error) {
+                print("  Skipped IAP '\(iap.attributes?.name ?? "—")' — no pending version")
               }
-              // Submit the group itself (group-level localizations)
-              _ = try await client.send(
-                Resources.v1.subscriptionGroupSubmissions.post(
-                  SubscriptionGroupSubmissionCreateRequest(
-                    data: .init(
-                      relationships: .init(
-                        subscriptionGroup: .init(data: .init(id: group.id))
+            }
+            for group in submittableGroups {
+              // Submit individual subscriptions
+              for sub in group.subscriptions where submittableSubIDs.contains(sub.id) {
+                do {
+                  _ = try await client.send(
+                    Resources.v1.subscriptionSubmissions.post(
+                      SubscriptionSubmissionCreateRequest(
+                        data: .init(
+                          relationships: .init(
+                            subscription: .init(data: .init(id: sub.id))
+                          )
+                        )
+                      )
+                    )
+                  )
+                  print("  \(green("Submitted")) subscription '\(sub.attributes?.name ?? "—")'")
+                } catch let error where isNoPendingVersionError(error) {
+                  print("  Skipped subscription '\(sub.attributes?.name ?? "—")' — no pending version")
+                }
+              }
+              // Submit the group itself only when its localizations changed
+              guard groupLocalizationsPending[group.id] == true else { continue }
+              do {
+                _ = try await client.send(
+                  Resources.v1.subscriptionGroupSubmissions.post(
+                    SubscriptionGroupSubmissionCreateRequest(
+                      data: .init(
+                        relationships: .init(
+                          subscriptionGroup: .init(data: .init(id: group.id))
+                        )
                       )
                     )
                   )
                 )
-              )
-              print("  \(green("Submitted")) subscription group '\(group.name)'")
+                print("  \(green("Submitted")) subscription group '\(group.name)'")
+              } catch let error where isNoPendingVersionError(error) {
+                print("  Skipped subscription group '\(group.name)' — no pending version")
+              }
             }
           }
         }
+      }
+
+      // READY_TO_SUBMIT always has a pending (first or edited) version. APPROVED
+      // products need a localization check: any non-approved localization state
+      // (PREPARE_FOR_SUBMISSION, REJECTED) means edits are awaiting submission.
+      private func iapHasPendingVersion(_ iap: InAppPurchaseV2, client: AppStoreConnectClient) async throws -> Bool {
+        if iap.attributes?.state == .readyToSubmit { return true }
+        let locsResponse = try await client.send(
+          Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseLocalizations.get(limit: 50)
+        )
+        return locsResponse.data.contains { $0.attributes?.state != .approved }
+      }
+
+      private func subHasPendingVersion(_ sub: Subscription, client: AppStoreConnectClient) async throws -> Bool {
+        if sub.attributes?.state == .readyToSubmit { return true }
+        let locsResponse = try await client.send(
+          Resources.v1.subscriptions.id(sub.id).subscriptionLocalizations.get(limit: 50)
+        )
+        return locsResponse.data.contains { $0.attributes?.state != .approved }
+      }
+
+      private func groupHasPendingLocalizations(_ group: SubCommand.GroupInfo, client: AppStoreConnectClient) async throws -> Bool {
+        let locsResponse = try await client.send(
+          Resources.v1.subscriptionGroups.id(group.id).subscriptionGroupLocalizations.get(limit: 50)
+        )
+        return locsResponse.data.contains { $0.attributes?.state != .approved }
+      }
+
+      // Safety net for when the localization-based detection over-reports — treat
+      // the API's "no pending version" 409 as a per-item skip, not a hard failure.
+      private func isNoPendingVersionError(_ error: Error) -> Bool {
+        guard let responseError = error as? ResponseError,
+              case .requestFailure(let errorResponse, let statusCode, _) = responseError,
+              statusCode == 409 else { return false }
+        return errorResponse?.errors?.contains {
+          $0.detail.localizedCaseInsensitiveContains("no pending version")
+        } ?? false
       }
     }
 

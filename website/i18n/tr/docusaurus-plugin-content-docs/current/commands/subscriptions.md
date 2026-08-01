@@ -92,6 +92,20 @@ ascelerate sub pricing set myapp com.example.monthly \
   --preserve-current
 ```
 
+### Ürünler arasında fiyat kopyalama
+
+```bash
+# Her bölgenin mevcut fiyatını JSON olarak dışa aktar
+ascelerate sub pricing export <bundle-id> <product-id> --output prices.json
+
+# Başka bir aboneliğe uygula (aynı uygulamada veya farklı bir uygulamada)
+ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices.json
+```
+
+Dosya, bölge koduna göre anahtarlanmış müşteri fiyatlarını içerir (korunan eski fiyatlar ve gelecekte yürürlüğe girecek fiyatlar dışa aktarıma dahil edilmez). İçe aktarma sırasında her fiyat, müşteri fiyatı üzerinden *hedef* aboneliğin kendi fiyat kademeleriyle eşleştirilir; bu sayede aynı dosya farklı ürünlerde ve uygulamalarda kullanılabilir. İçe aktarma yalnızca dosyada listelenen bölgeleri değiştirir, zaten listelenen fiyatta olan bölgeleri atlar ve `set` komutuyla aynı artış/düşüş güvenlik kurallarını uygular (`--preserve-current`/`--no-preserve-current` ve `--confirm-decrease` dahil).
+
+Çok bölgeli yazma işlemleri sırasında App Store Connect'in geçici hataları (HTTP 429/5xx) otomatik olarak yeniden denenir: önce bekleme süresiyle yerinde, ardından çalıştırmanın sonunda ikinci bir turda. Yine de başarısız olan bölgeler son raporda listelenir ve komut sıfır olmayan bir çıkış koduyla sonlanır; aynı komutu yeniden çalıştırdığınızda güncellenmiş bölgeler değişmemiş sayılarak atlanır ve yalnızca başarısız olanlar yeniden denenir.
+
 ## Bölge erişilebilirliği
 
 Her aboneliğin uygulamadan bağımsız kendi bölge erişilebilirliği vardır. Varsayılan olarak abonelik, uygulamasının bölgelerini devralır; `sub availability` ile değişiklik yaptığınızda aboneliğe özel bir liste oluşur.

@@ -93,6 +93,18 @@ ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 
 アプリ内課金に価格スケジュールがない場合、`iap info` および `iap pricing show` の両方で警告が表示されます。同じ状態は `apps review preflight` でも提出を妨げる問題として表示されます。
 
+### 製品間で価格をコピー
+
+```bash
+# 価格スケジュール（ベース地域 + すべての手動価格）をJSONにエクスポート
+ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
+
+# 別のアプリ内課金に適用（同じアプリでも別のアプリでも可）
+ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
+```
+
+ファイルには地域コードをキーとした顧客価格が保存されます。インポート時には各価格が顧客価格に基づいて*適用先*製品自身の価格層と照合されるため、同じファイルを製品やアプリをまたいで使えます。インポートは価格スケジュール全体を置き換えます。ファイルに含まれない地域はベース地域からの自動均等化に戻り、現在のスケジュールがすでにファイルと一致している場合は何も変更されません。App Store Connect の一時的なエラー（HTTP 429/5xx）は自動的に再試行されます。
+
 ## 地域別の利用可否
 
 各アプリ内課金は、アプリとは独立した独自の地域別利用可否を持ちます。デフォルトではアプリ内課金はアプリの地域を継承しますが、`iap availability` で変更を加えると、アプリ内課金に明示的なリストが作成されます。

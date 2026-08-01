@@ -156,6 +156,8 @@ ascelerate iap pricing tiers <app> <product-id> --territory USA
 ascelerate iap pricing set <app> <product-id> --price 4.99 [--base-territory USA] [--remove-all-overrides]
 ascelerate iap pricing override <app> <product-id> --price 5.99 --territory FRA
 ascelerate iap pricing remove <app> <product-id> --territory FRA   # revert to auto-equalize
+ascelerate iap pricing export <app> <product-id> [--output prices.json]
+ascelerate iap pricing import <app> <product-id> [--file prices.json]   # copy schedule from another product/app
 
 # Per-IAP territory availability (independent of app's)
 ascelerate iap availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true]
@@ -179,6 +181,7 @@ IAP types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. Offer co
 Pricing notes:
 - `set` preserves per-territory overrides by default; interactive menu offers to drop them, or `--remove-all-overrides` for non-interactive wipe.
 - `override` and `remove` only operate on non-base territories.
+- `export`/`import` copy the schedule between products (any app): a JSON file of customer prices keyed by territory, matched to the target's own tiers by price on import. Import replaces the schedule wholesale — territories not in the file revert to auto-equalize; a schedule already matching the file is a no-op.
 - One-time-use offer codes generate asynchronously — `gen-codes` returns a batch ID; use `view-codes <batch-id>` to fetch values once ready.
 
 ### Subscriptions
@@ -212,6 +215,8 @@ ascelerate sub pricing tiers <app> <product-id> --territory USA
 ascelerate sub pricing set <app> <product-id> --price 4.99 [--territory USA] [--equalize-all-territories]
   [--preserve-current | --no-preserve-current]   # required on price increases
   [--confirm-decrease]                           # required on decreases in --yes mode
+ascelerate sub pricing export <app> <product-id> [--output prices.json]
+ascelerate sub pricing import <app> <product-id> [--file prices.json]   # copy prices from another product/app; same safety flags as set
 
 # Per-subscription territory availability (independent of app's)
 ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true]
@@ -245,6 +250,8 @@ Subscription pricing safety:
 - **Price increase** in any territory requires `--preserve-current` (grandfather existing subs at old price) OR `--no-preserve-current` (push new price after Apple's notification period). Errors if neither set.
 - **Price decrease** prompts interactively; under `--yes`, requires `--confirm-decrease` to acknowledge revenue impact.
 - **`--equalize-all-territories`** aggregates the analysis: if any territory in the fan-out is an increase, the preserve flag is required for all.
+- **`import`** applies the same aggregated rules; it only touches territories listed in the file and skips ones already at the listed price.
+- Transient ASC errors (429/5xx) during multi-territory writes are retried automatically (in-place backoff + end-of-run sweep). Remaining failures are listed with a re-run hint and exit non-zero — re-running retries only the failed territories.
 
 Offer code eligibilities for subs: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibility: `STACK_WITH_INTRO_OFFERS` or `REPLACE_INTRO_OFFERS`. Modes: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`.
 

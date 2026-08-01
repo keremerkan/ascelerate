@@ -831,6 +831,10 @@ ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territor
 ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territory FRA
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 
+# Pricing — copy the schedule between products (same app or another one)
+ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
+ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
+
 # Per-IAP territory availability (independent of the app's territories)
 ascelerate iap availability <bundle-id> <product-id>
 ascelerate iap availability <bundle-id> <product-id> --add CHN,RUS --remove ITA --available-in-new-territories true
@@ -855,6 +859,8 @@ ascelerate iap review-screenshot delete <bundle-id> <product-id>
 Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. States: `APPROVED`, `MISSING_METADATA`, `READY_TO_SUBMIT`, `WAITING_FOR_REVIEW`, `IN_REVIEW`, etc.
 
 `iap info` and `iap pricing show` warn when an IAP has no price schedule — the same condition surfaced in `apps review preflight`. When `set` changes the base territory price, existing per-territory manual overrides are preserved by default. If overrides exist, an interactive menu offers to revert any of them; pass `--remove-all-overrides` for a non-interactive wipe.
+
+`iap pricing export` writes the base territory and every manual price to a JSON file keyed by territory code; `iap pricing import` applies such a file to any IAP — prices are matched to the target product's own tiers by customer price, so the file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize. If the current schedule already matches the file, import is a no-op.
 
 Offer code one-time-use codes are generated asynchronously. After `gen-codes`, run `view-codes <batch-id>` to fetch the actual code values. If the response is empty, retry in a few seconds. Custom codes (`add-custom-codes`) are developer-supplied strings that don't need separate generation.
 
@@ -899,6 +905,10 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 # Standard global price raise: grandfather existing subscribers at the old price
 ascelerate sub pricing set <bundle-id> <product-id> --price 9.99 --equalize-all-territories --preserve-current
+
+# Pricing — copy per-territory prices between subscriptions (same app or another one)
+ascelerate sub pricing export <bundle-id> <product-id> --output prices.json
+ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices.json --preserve-current
 
 # Per-subscription territory availability (independent of the app's territories)
 ascelerate sub availability <bundle-id> <product-id>
@@ -955,6 +965,10 @@ Apple treats price changes differently for existing subscribers depending on dir
 - **Increase**: you must explicitly choose how to handle existing subscribers. Errors unless `--preserve-current` (grandfather them at the old price) or `--no-preserve-current` (push them to the new price after Apple's notification period) is set. Same rule applies aggregated across `--equalize-all-territories`.
 - **New territory** (no existing price): no existing subscribers to consider; flags optional.
 - **Unchanged**: skipped silently.
+
+`sub pricing export` writes every territory's current customer price to a JSON file (preserved/grandfathered and future-scheduled prices are excluded); `sub pricing import` applies such a file to any subscription — prices are matched to the target subscription's own tiers by customer price, so the file works across products and apps. Import only touches listed territories, skips ones already at the listed price, and enforces the same increase/decrease safety rules as `sub pricing set`.
+
+Multi-territory price writes retry transient App Store Connect errors (HTTP 429/5xx) automatically — first in place with backoff, then in a second sweep at the end of the run. Territories that still fail are listed in the final report and the command exits non-zero; re-running the same command retries just those, since already-updated territories are skipped as unchanged.
 
 ### Customer Reviews
 

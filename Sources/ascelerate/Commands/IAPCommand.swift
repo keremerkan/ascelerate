@@ -163,8 +163,9 @@ struct IAPCommand: AsyncParsableCommand {
     return ExistingSchedule(baseTerritoryID: baseID, manualPrices: entries)
   }
 
-  /// POSTs a new schedule that fully replaces any prior one. The first entry in
-  /// `manualPrices` must be the base territory's entry.
+  /// POSTs a new schedule that fully replaces any prior one, retrying transient API
+  /// errors. The first entry in `manualPrices` must be the base territory's entry.
+  /// The POST is atomic — on failure the existing schedule is untouched.
   static func postSchedule(
     iapID: String,
     baseTerritoryID: String,
@@ -189,7 +190,7 @@ struct IAPCommand: AsyncParsableCommand {
       refs.append(.init(id: localID))
     }
 
-    _ = try await client.send(
+    _ = try await withTransientRetry { try await client.send(
       Resources.v1.inAppPurchasePriceSchedules.post(
         InAppPurchasePriceScheduleCreateRequest(
           data: .init(
@@ -202,7 +203,7 @@ struct IAPCommand: AsyncParsableCommand {
           included: inlinePrices.map { .inAppPurchasePriceInlineCreate($0) }
         )
       )
-    )
+    ) }
   }
 
   /// Returns today's date in YYYY-MM-DD UTC.
@@ -237,6 +238,41 @@ struct IAPCommand: AsyncParsableCommand {
       in: tiers, target: target, priceLabel: customerPrice, territoryID: territoryID,
       currency: currency)
     return (point, currency)
+  }
+
+  /// Batch-resolves (territory, customer price) pairs to this IAP's price points,
+  /// fetching several territories' tier lists per request instead of one request per
+  /// territory. Prints one progress dot per chunk.
+  static func resolvePricePointsBatched(
+    iapID: String, prices: [(territoryID: String, price: String)],
+    client: AppStoreConnectClient
+  ) async throws -> [(territoryID: String, point: InAppPurchasePricePoint, currency: String?)] {
+    var results: [(territoryID: String, point: InAppPurchasePricePoint, currency: String?)] = []
+    for chunk in prices.chunked(into: 10) {
+      var tiersByTerritory: [String: [InAppPurchasePricePoint]] = [:]
+      var currencyByTerritory: [String: String] = [:]
+      for try await page in client.pages(
+        Resources.v2.inAppPurchases.id(iapID).pricePoints.get(
+          filterTerritory: chunk.map(\.territoryID),
+          fieldsInAppPurchasePricePoints: [.customerPrice, .territory],
+          limit: 8000, include: [.territory]
+        )
+      ) {
+        for point in page.data {
+          guard let t = point.relationships?.territory?.data?.id else { continue }
+          tiersByTerritory[t, default: []].append(point)
+        }
+        for t in page.included ?? [] {
+          if let cur = t.attributes?.currency { currencyByTerritory[t.id] = cur }
+        }
+      }
+      results.append(contentsOf: try matchPricePoints(
+        prices: chunk, tiersByTerritory: tiersByTerritory,
+        currencyByTerritory: currencyByTerritory))
+      print(".", terminator: "")
+      fflush(stdout)
+    }
+    return results
   }
 
   /// Looks up the customer price string for a given price point ID in a given territory.
@@ -1068,7 +1104,7 @@ struct IAPCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "pricing",
       abstract: "Manage in-app purchase pricing.",
-      subcommands: [Show.self, Tiers.self, Set.self, Override.self, Remove.self]
+      subcommands: [Show.self, Tiers.self, Set.self, Override.self, Remove.self, Export.self, Import.self]
     )
 
     // MARK: Show
@@ -1474,6 +1510,179 @@ struct IAPCommand: AsyncParsableCommand {
 
         print()
         success("Removed", "manual price for \(territoryID).")
+      }
+    }
+
+    // MARK: Export
+
+    struct Export: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Export the price schedule to a JSON file.",
+        discussion: """
+          Writes the base territory and every manual price to a JSON file that
+          'iap pricing import' can apply to another in-app purchase — in this app or
+          any other. Auto-equalized territories are not part of the schedule and are
+          not exported.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Option(name: .long, help: "Output file path.",
+              completion: .file(extensions: ["json"]))
+      var output: String?
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        guard let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client),
+              !existing.manualPrices.isEmpty else {
+          throw ValidationError("No price schedule exists for '\(productID)' — nothing to export.")
+        }
+
+        var prices: [String: String] = [:]
+        for entry in existing.manualPrices {
+          guard let cp = entry.customerPrice else {
+            throw ValidationError("Could not resolve the customer price for territory \(entry.territoryID). Retry, or inspect with 'iap pricing show'.")
+          }
+          prices[entry.territoryID] = cp
+        }
+
+        try exportProductPrices(
+          ProductPricesFile(baseTerritory: existing.baseTerritoryID, prices: prices),
+          productID: productID, output: output)
+      }
+    }
+
+    // MARK: Import
+
+    struct Import: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Import a price schedule from a JSON file.",
+        discussion: """
+          Applies a file produced by 'iap pricing export' (from this or any other
+          product): the base territory plus one manual price per listed territory.
+          Prices are matched to this product's own tiers by customer price. The
+          schedule is replaced wholesale — existing overrides in territories not
+          listed in the file revert to auto-equalize.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the in-app purchase.")
+      var productID: String
+
+      @Option(name: .long, help: "Path to JSON file.",
+              completion: .file(extensions: ["json"]))
+      var file: String?
+
+      @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: today).")
+      var startDate: String?
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+
+        let priceFile = try loadProductPricesFile(file)
+        let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client)
+        let base = priceFile.baseTerritory ?? existing?.baseTerritoryID ?? "USA"
+        guard priceFile.prices[base] != nil else {
+          throw ValidationError("The file has no price for the base territory \(base).")
+        }
+
+        // Resolve every listed price against this product's own tiers.
+        let sortedPrices = priceFile.prices.sorted { $0.key < $1.key }
+          .map { (territoryID: $0.key, price: $0.value) }
+        print("Resolving price points for \(sortedPrices.count) territor\(sortedPrices.count == 1 ? "y" : "ies")", terminator: "")
+        fflush(stdout)
+        let resolved = try await IAPCommand.resolvePricePointsBatched(
+          iapID: iap.id, prices: sortedPrices, client: client)
+        print(" done.")
+
+        let entries = resolved.map {
+          IAPCommand.ManualPriceEntry(
+            territoryID: $0.territoryID, pricePointID: $0.point.id,
+            customerPrice: $0.point.attributes?.customerPrice, currency: $0.currency)
+        }
+        guard let baseEntry = entries.first(where: { $0.territoryID == base }) else {
+          throw ValidationError("The file has no price for the base territory \(base).")
+        }
+        let overrides = entries.filter { $0.territoryID != base }
+
+        if let existing, existing.baseTerritoryID == base {
+          let existingByTerritory = Dictionary(
+            existing.manualPrices.map { ($0.territoryID, $0.pricePointID) },
+            uniquingKeysWith: { first, _ in first })
+          let newByTerritory = Dictionary(
+            entries.map { ($0.territoryID, $0.pricePointID) },
+            uniquingKeysWith: { first, _ in first })
+          if existingByTerritory == newByTerritory {
+            print("The current price schedule already matches the file. Nothing to do.")
+            return
+          }
+        }
+
+        let dateStr = startDate ?? IAPCommand.todayDateString()
+        let dropped = (existing?.nonBaseOverrides ?? [])
+          .map(\.territoryID)
+          .filter { $0 != base && priceFile.prices[$0] == nil }
+
+        print()
+        print("Import price schedule:")
+        print("  Product ID:     \(productID)")
+        print("  Base Territory: \(base) at \(baseEntry.customerPrice ?? "?") \(baseEntry.currency ?? "")")
+        if overrides.count <= 10 {
+          for entry in overrides {
+            print("  Override:       \(entry.territoryID) at \(entry.customerPrice ?? "?") \(entry.currency ?? "")")
+          }
+        } else if !overrides.isEmpty {
+          print("  Overrides:      \(overrides.count) territories")
+        }
+        if let existingBase = existing?.baseTerritoryID, existingBase != base {
+          print("  Old base:       \(existingBase) (will revert to auto-equalize)")
+        }
+        if !dropped.isEmpty {
+          print("  Drop overrides: \(dropped.sorted().joined(separator: ", ")) (not in file; revert to auto-equalize)")
+        }
+        print("  Start Date:     \(dateStr)")
+        print()
+
+        guard confirm("Apply this schedule? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        do {
+          try await IAPCommand.postSchedule(
+            iapID: iap.id,
+            baseTerritoryID: base,
+            manualPrices: [baseEntry] + overrides,
+            startDate: dateStr,
+            client: client
+          )
+        } catch {
+          print()
+          print(red("The schedule POST failed") + " — no changes were applied. Re-run the same command to retry.")
+          throw error
+        }
+
+        print()
+        success("Imported", "price schedule for '\(iap.attributes?.name ?? productID)'.")
       }
     }
 

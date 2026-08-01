@@ -23,6 +23,34 @@ func describeError(_ error: Error) -> String {
   return error.localizedDescription
 }
 
+/// Whether an API error is worth retrying: rate limiting or a server-side failure.
+/// Client-side errors (4xx validation, conflicts) won't fix themselves and are not transient.
+func isTransientAPIError(_ error: Error) -> Bool {
+  guard let responseError = error as? ResponseError else { return false }
+  switch responseError {
+  case .rateLimitExceeded:
+    return true
+  case .requestFailure(_, let statusCode, _):
+    return (500...599).contains(statusCode)
+  case .dataAssertionFailed:
+    return false
+  }
+}
+
+/// Runs an API call, retrying with backoff (2s, then 5s) when the error is transient
+/// (HTTP 429/5xx — see `isTransientAPIError`). Non-transient errors throw immediately;
+/// a transient error on the final attempt is thrown as-is.
+func withTransientRetry<T>(_ operation: () async throws -> T) async throws -> T {
+  for delay in [Duration.seconds(2), .seconds(5)] {
+    do {
+      return try await operation()
+    } catch where isTransientAPIError(error) {
+      try? await Task.sleep(for: delay)
+    }
+  }
+  return try await operation()
+}
+
 // MARK: - ANSI Colors
 
 private let isTerminal = isatty(STDOUT_FILENO) != 0
@@ -1090,6 +1118,68 @@ private func printLocalizationResponse(_ record: LocalizationRecord) {
   if let v = record.description {
     print("      Description: \(v.prefix(120))\(v.count > 120 ? "..." : "")")
   }
+}
+
+// MARK: - Shared Price Export/Import
+
+/// JSON schema for IAP/subscription price export files: customer prices keyed by territory
+/// code. `baseTerritory` is the auto-equalize anchor for IAP schedules; subscription exports
+/// omit it (every subscription territory is priced explicitly).
+struct ProductPricesFile: Codable {
+  var baseTerritory: String?
+  var prices: [String: String]
+}
+
+/// Writes a product's prices to a JSON file keyed by territory.
+func exportProductPrices(_ file: ProductPricesFile, productID: String, output: String?) throws {
+  let encoder = JSONEncoder()
+  encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+  let data = try encoder.encode(file)
+
+  let outputPath = expandPath(
+    confirmOutputPath(output ?? "\(productID)-prices.json", isDirectory: false))
+  try data.write(to: URL(fileURLWithPath: outputPath))
+
+  success("Exported", "prices for \(file.prices.count) territor\(file.prices.count == 1 ? "y" : "ies") to \(outputPath)")
+}
+
+extension Array {
+  /// Splits the array into consecutive chunks of at most `size` elements.
+  func chunked(into size: Int) -> [[Element]] {
+    stride(from: 0, to: count, by: size).map { Array(self[$0..<Swift.min($0 + size, count)]) }
+  }
+}
+
+/// Matches each (territory, customer price) pair against that territory's tier list.
+/// Used by the batched price-import resolvers; `currencyByTerritory` feeds display
+/// and error text.
+func matchPricePoints<P: ResolvablePricePoint>(
+  prices: [(territoryID: String, price: String)],
+  tiersByTerritory: [String: [P]],
+  currencyByTerritory: [String: String]
+) throws -> [(territoryID: String, point: P, currency: String?)] {
+  try prices.map { entry in
+    let point = try findPricePoint(
+      in: tiersByTerritory[entry.territoryID] ?? [],
+      target: try parseCustomerPrice(entry.price),
+      priceLabel: entry.price, territoryID: entry.territoryID,
+      currency: currencyByTerritory[entry.territoryID])
+    return (entry.territoryID, point, currencyByTerritory[entry.territoryID])
+  }
+}
+
+/// Loads and validates a price export file. Territory keys are normalized to uppercase.
+func loadProductPricesFile(_ file: String?) throws -> ProductPricesFile {
+  let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
+  let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
+  var parsed = try JSONDecoder().decode(ProductPricesFile.self, from: data)
+  parsed.baseTerritory = parsed.baseTerritory?.uppercased()
+  parsed.prices = Dictionary(
+    parsed.prices.map { ($0.key.uppercased(), $0.value) }, uniquingKeysWith: { first, _ in first })
+  guard !parsed.prices.isEmpty else {
+    throw ValidationError("JSON file contains no territory prices.")
+  }
+  return parsed
 }
 
 /// A price point reduced to the fields the shared tier renderer needs. Decouples the renderer

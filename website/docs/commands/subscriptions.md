@@ -92,6 +92,20 @@ ascelerate sub pricing set myapp com.example.monthly \
   --preserve-current
 ```
 
+### Copy prices between products
+
+```bash
+# Export every territory's current price to JSON
+ascelerate sub pricing export <bundle-id> <product-id> --output prices.json
+
+# Apply it to another subscription — in the same app or a different one
+ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices.json
+```
+
+The file stores customer prices keyed by territory code (preserved/grandfathered and future-scheduled prices are excluded from the export). On import, each price is matched against the *target* subscription's own tiers by customer price, so the same file works across products and apps. Import only touches territories listed in the file, skips ones already at the listed price, and enforces the same increase/decrease safety rules as `set` — including `--preserve-current`/`--no-preserve-current` and `--confirm-decrease`.
+
+Transient App Store Connect errors (HTTP 429/5xx) during multi-territory writes are retried automatically — first in place with backoff, then in a second sweep at the end of the run. Territories that still fail are listed in the final report and the command exits non-zero; re-running the same command retries just those, since already-updated territories are skipped as unchanged.
+
 ## Availability
 
 Each subscription has its own territory availability, independent of the app's. By default a subscription inherits its app's territories; once you call `sub availability` with changes, the subscription has an explicit list.

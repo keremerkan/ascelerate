@@ -93,6 +93,18 @@ ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 
 Lorsqu'un achat intégré n'a pas de calendrier de tarification, `iap info` et `iap pricing show` affichent tous deux un avertissement ; la même condition est signalée comme bloquante dans `apps review preflight`.
 
+### Copier les prix entre produits
+
+```bash
+# Exporter le calendrier (région de base + tous les prix manuels) en JSON
+ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
+
+# L'appliquer à un autre achat intégré — dans la même app ou une autre
+ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
+```
+
+Le fichier contient les prix client indexés par code de région. À l'import, chaque prix est mis en correspondance avec les paliers tarifaires du produit *cible* d'après le prix client ; le même fichier fonctionne donc d'un produit ou d'une app à l'autre. L'import remplace intégralement le calendrier : les régions absentes du fichier reviennent à l'alignement automatique, et si le calendrier actuel correspond déjà au fichier, la commande ne fait rien. Les erreurs transitoires d'App Store Connect (HTTP 429/5xx) sont automatiquement réessayées.
+
 ## Disponibilité territoriale
 
 Chaque achat intégré a sa propre disponibilité territoriale, indépendante de l'application. Par défaut, un IAP hérite des territoires de son application ; dès que vous appelez `iap availability` avec des modifications, l'IAP obtient une liste explicite.

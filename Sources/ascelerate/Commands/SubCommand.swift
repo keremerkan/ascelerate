@@ -293,6 +293,259 @@ struct SubCommand: AsyncParsableCommand {
     return msg
   }
 
+  /// Resolves `customerPrice` to this subscription's price point in a territory.
+  /// Returns the matched point and the territory's currency. Throws ValidationError
+  /// with nearest tiers when no exact match.
+  static func resolveSubPricePoint(
+    subID: String, territoryID: String, customerPrice: String, client: AppStoreConnectClient
+  ) async throws -> (point: SubscriptionPricePoint, currency: String?) {
+    let target = try parseCustomerPrice(customerPrice)
+    var tiers: [SubscriptionPricePoint] = []
+    var currency: String?
+    for try await page in client.pages(
+      Resources.v1.subscriptions.id(subID).pricePoints.get(
+        filterTerritory: [territoryID], limit: 200, include: [.territory]
+      )
+    ) {
+      tiers.append(contentsOf: page.data)
+      for t in page.included ?? [] where currency == nil {
+        currency = t.attributes?.currency
+      }
+    }
+    let point = try findPricePoint(
+      in: tiers, target: target, priceLabel: customerPrice, territoryID: territoryID,
+      currency: currency)
+    return (point, currency)
+  }
+
+  /// Batch-resolves (territory, customer price) pairs to this subscription's price
+  /// points, fetching several territories' tier lists per request instead of one
+  /// request per territory. Prints one progress dot per chunk.
+  static func resolveSubPricePointsBatched(
+    subID: String, prices: [(territoryID: String, price: String)],
+    client: AppStoreConnectClient
+  ) async throws -> [(territoryID: String, point: SubscriptionPricePoint, currency: String?)] {
+    var results: [(territoryID: String, point: SubscriptionPricePoint, currency: String?)] = []
+    for chunk in prices.chunked(into: 10) {
+      var tiersByTerritory: [String: [SubscriptionPricePoint]] = [:]
+      var currencyByTerritory: [String: String] = [:]
+      for try await page in client.pages(
+        Resources.v1.subscriptions.id(subID).pricePoints.get(
+          filterTerritory: chunk.map(\.territoryID),
+          fieldsSubscriptionPricePoints: [.customerPrice, .territory],
+          limit: 8000, include: [.territory]
+        )
+      ) {
+        for point in page.data {
+          guard let t = point.relationships?.territory?.data?.id else { continue }
+          tiersByTerritory[t, default: []].append(point)
+        }
+        for t in page.included ?? [] {
+          if let cur = t.attributes?.currency { currencyByTerritory[t.id] = cur }
+        }
+      }
+      results.append(contentsOf: try matchPricePoints(
+        prices: chunk, tiersByTerritory: tiersByTerritory,
+        currencyByTerritory: currencyByTerritory))
+      print(".", terminator: "")
+      fflush(stdout)
+    }
+    return results
+  }
+
+  /// Fetches the equalized price points of a source point across all territories,
+  /// making sure the source territory itself is included even if equalizations omit it.
+  static func fetchEqualizedPoints(
+    sourcePoint: SubscriptionPricePoint, sourceTerritory: String, client: AppStoreConnectClient
+  ) async throws -> [SubscriptionPricePoint] {
+    var equalized: [SubscriptionPricePoint] = []
+    for try await page in client.pages(
+      Resources.v1.subscriptionPricePoints.id(sourcePoint.id).equalizations.get(
+        limit: 200, include: [.territory]
+      )
+    ) {
+      equalized.append(contentsOf: page.data)
+    }
+    if !equalized.contains(where: { $0.relationships?.territory?.data?.id == sourceTerritory }) {
+      equalized.insert(sourcePoint, at: 0)
+    }
+    return equalized
+  }
+
+  /// One territory's proposed price change, categorized against the current price.
+  struct PriceChangeTarget: Sendable {
+    let territoryID: String
+    let pricePointID: String
+    let currentPrice: String?
+    let newPrice: String?
+    let direction: PriceDirection
+  }
+
+  /// Categorizes proposed (territory, price point, new price) entries against the
+  /// subscription's current prices.
+  static func categorizePriceChanges(
+    _ entries: [(territoryID: String, pricePointID: String, newPrice: String?)],
+    currentByTerritory: [String: String]
+  ) -> [PriceChangeTarget] {
+    entries.map { entry in
+      let current = currentByTerritory[entry.territoryID]
+      return PriceChangeTarget(
+        territoryID: entry.territoryID, pricePointID: entry.pricePointID,
+        currentPrice: current, newPrice: entry.newPrice,
+        direction: priceDirection(current: current, target: entry.newPrice))
+    }
+  }
+
+  /// Shared gate-confirm-apply driver for multi-territory price changes
+  /// ('sub pricing set --equalize-all-territories' and 'sub pricing import'):
+  /// enforces the increase/decrease safety flags, prints the change summary,
+  /// confirms, then POSTs one price record per territory that changed.
+  static func gateAndApplyPriceChanges(
+    _ targets: [PriceChangeTarget],
+    subID: String,
+    headerLines: [String],
+    confirmPrompt: String,
+    preserveCurrent: Bool?,
+    confirmDecrease: Bool,
+    startDate: String?,
+    client: AppStoreConnectClient
+  ) async throws {
+    let increases = targets.filter { $0.direction == .increase }
+    let decreases = targets.filter { $0.direction == .decrease }
+    let news = targets.filter { $0.direction == .new }
+    let unchanged = targets.filter { $0.direction == .unchanged }
+
+    if !increases.isEmpty && preserveCurrent == nil {
+      var msg = "\(increases.count) territor\(increases.count == 1 ? "y has" : "ies have") an existing price lower than the new price (i.e. price increases).\n"
+      msg += "You must explicitly choose how to handle existing subscribers across all increases:\n"
+      msg += "  --preserve-current        Grandfather existing subscribers at their old price\n"
+      msg += "  --no-preserve-current     Push the new price to existing subscribers (after Apple's notification period)\n"
+      msg += "\nExample increases (first 5):\n"
+      for t in increases.prefix(5) {
+        msg += "  \(t.territoryID): \(t.currentPrice ?? "?") → \(t.newPrice ?? "?")\n"
+      }
+      throw ValidationError(msg)
+    }
+
+    if !decreases.isEmpty && autoConfirm && !confirmDecrease {
+      var msg = "\(decreases.count) territor\(decreases.count == 1 ? "y" : "ies") will see a price decrease — existing subscribers will move to the lower price.\n"
+      msg += "Plain --yes is not enough for price decreases. Add --confirm-decrease to acknowledge the revenue impact.\n"
+      msg += "\nExample decreases (first 5):\n"
+      for t in decreases.prefix(5) {
+        msg += "  \(t.territoryID): \(t.currentPrice ?? "?") → \(t.newPrice ?? "?")\n"
+      }
+      throw ValidationError(msg)
+    }
+
+    let toApply = targets.filter { $0.direction != .unchanged }
+    guard !toApply.isEmpty else {
+      print()
+      print("All \(targets.count) territories are already at the listed prices. Nothing to do.")
+      return
+    }
+
+    print()
+    for line in headerLines { print(line) }
+    print("  Total territories: \(targets.count)")
+    print("    New:             \(news.count)")
+    print("    Increases:       \(increases.count)")
+    print("    Decreases:       \(decreases.count)")
+    print("    Unchanged:       \(unchanged.count) (skipped)")
+    if let startDate {
+      print("  Start Date:        \(startDate)")
+    } else {
+      print("  Start Date:        Immediate")
+    }
+    if let p = preserveCurrent {
+      print("  Preserve Current:  \(p ? "Yes" : "No")")
+    }
+    if !decreases.isEmpty {
+      print()
+      print(yellow("⚠ \(decreases.count) territor\(decreases.count == 1 ? "y" : "ies") will see a price decrease") + " — existing subscribers in those territories will move to the new lower price.")
+    }
+    print()
+    print(yellow("Note:") + " This will issue \(toApply.count) API call\(toApply.count == 1 ? "" : "s") (one per territory that needs updating).")
+    print()
+
+    guard confirm(confirmPrompt) else {
+      cancelled()
+      return
+    }
+    print()
+
+    var succeeded = 0
+    var failures: [(target: PriceChangeTarget, isTransient: Bool)] = []
+
+    func post(_ target: PriceChangeTarget) async throws {
+      try await postSubscriptionPrice(
+        subID: subID, territoryID: target.territoryID, pricePointID: target.pricePointID,
+        startDate: startDate, preserveCurrent: preserveCurrent, client: client)
+    }
+
+    for target in toApply {
+      do {
+        try await post(target)
+        succeeded += 1
+      } catch {
+        print("  FAIL \(target.territoryID) — \(describeError(error))")
+        failures.append((target, isTransientAPIError(error)))
+      }
+    }
+
+    // Second pass: a server-side blip can outlast the in-place backoff, but is
+    // usually over by the end of the run — sweep the transient failures once more.
+    let retriable = failures.filter(\.isTransient).map(\.target)
+    if !retriable.isEmpty {
+      failures.removeAll(where: \.isTransient)
+      print()
+      print("Retrying \(retriable.count) failed territor\(retriable.count == 1 ? "y" : "ies") after a pause...")
+      try? await Task.sleep(for: .seconds(5))
+      for target in retriable {
+        do {
+          try await post(target)
+          succeeded += 1
+        } catch {
+          print("  FAIL \(target.territoryID) — \(describeError(error))")
+          failures.append((target, isTransientAPIError(error)))
+        }
+      }
+    }
+
+    print()
+    print("Done. \(succeeded) territor\(succeeded == 1 ? "y" : "ies") updated, \(failures.count) failed, \(unchanged.count) unchanged (skipped).")
+    if !failures.isEmpty {
+      print()
+      print(red("Failed territories: ") + failures.map(\.target.territoryID).sorted().joined(separator: ", "))
+      print("Re-run the same command to retry — territories already updated will be skipped as unchanged.")
+      // A half-repriced subscription must not look like success to scripts/workflows.
+      throw ExitCode.failure
+    }
+  }
+
+  /// POSTs one SubscriptionPrice record for a territory, retrying transient API errors.
+  static func postSubscriptionPrice(
+    subID: String, territoryID: String, pricePointID: String,
+    startDate: String?, preserveCurrent: Bool?, client: AppStoreConnectClient
+  ) async throws {
+    _ = try await withTransientRetry { try await client.send(
+      Resources.v1.subscriptionPrices.post(
+        SubscriptionPriceCreateRequest(
+          data: .init(
+            attributes: .init(
+              startDate: startDate,
+              isPreserveCurrentPrice: preserveCurrent
+            ),
+            relationships: .init(
+              subscription: .init(data: .init(id: subID)),
+              territory: .init(data: .init(id: territoryID)),
+              subscriptionPricePoint: .init(data: .init(id: pricePointID))
+            )
+          )
+        )
+      )
+    ) }
+  }
+
   /// Resolved offer-pricing tuples for promo offers, offer codes, and win-back offers
   /// — they all need the same shape: a (territory, pricePointID) list, optionally
   /// equalized across all territories from a single source price.
@@ -310,22 +563,8 @@ struct SubCommand: AsyncParsableCommand {
     subID: String, sourceTerritory: String, customerPrice: String,
     equalize: Bool, client: AppStoreConnectClient
   ) async throws -> ResolvedOfferPrices {
-    let target = try parseCustomerPrice(customerPrice)
-    var sourceTiers: [SubscriptionPricePoint] = []
-    var sourceCurrency: String?
-    for try await page in client.pages(
-      Resources.v1.subscriptions.id(subID).pricePoints.get(
-        filterTerritory: [sourceTerritory], limit: 200, include: [.territory]
-      )
-    ) {
-      sourceTiers.append(contentsOf: page.data)
-      for t in page.included ?? [] where sourceCurrency == nil {
-        sourceCurrency = t.attributes?.currency
-      }
-    }
-    let sourcePoint = try findPricePoint(
-      in: sourceTiers, target: target, priceLabel: customerPrice, territoryID: sourceTerritory,
-      currency: sourceCurrency)
+    let (sourcePoint, sourceCurrency) = try await resolveSubPricePoint(
+      subID: subID, territoryID: sourceTerritory, customerPrice: customerPrice, client: client)
 
     if !equalize {
       return ResolvedOfferPrices(
@@ -336,17 +575,8 @@ struct SubCommand: AsyncParsableCommand {
       )
     }
 
-    var equalized: [SubscriptionPricePoint] = []
-    for try await page in client.pages(
-      Resources.v1.subscriptionPricePoints.id(sourcePoint.id).equalizations.get(
-        limit: 200, include: [.territory]
-      )
-    ) {
-      equalized.append(contentsOf: page.data)
-    }
-    if !equalized.contains(where: { $0.relationships?.territory?.data?.id == sourceTerritory }) {
-      equalized.insert(sourcePoint, at: 0)
-    }
+    let equalized = try await fetchEqualizedPoints(
+      sourcePoint: sourcePoint, sourceTerritory: sourceTerritory, client: client)
     var entries: [(territoryID: String, pricePointID: String)] = []
     for point in equalized {
       guard let t = point.relationships?.territory?.data?.id else { continue }
@@ -1349,7 +1579,7 @@ struct SubCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "pricing",
       abstract: "Manage subscription pricing.",
-      subcommands: [Show.self, Tiers.self, Set.self]
+      subcommands: [Show.self, Tiers.self, Set.self, Export.self, Import.self]
     )
 
     // MARK: Show
@@ -1520,29 +1750,9 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let targetPrice = try parseCustomerPrice(price)
-
         let territoryID = territory.uppercased()
-        var tiers: [SubscriptionPricePoint] = []
-        var currency: String?
-        for try await page in client.pages(
-          Resources.v1.subscriptions.id(sub.id).pricePoints.get(
-            filterTerritory: [territoryID],
-            limit: 200,
-            include: [.territory]
-          )
-        ) {
-          tiers.append(contentsOf: page.data)
-          for t in page.included ?? [] {
-            if currency == nil {
-              currency = t.attributes?.currency
-            }
-          }
-        }
-
-        let match = try findPricePoint(
-          in: tiers, target: targetPrice, priceLabel: price, territoryID: territoryID,
-          currency: currency)
+        let (match, currency) = try await SubCommand.resolveSubPricePoint(
+          subID: sub.id, territoryID: territoryID, customerPrice: price, client: client)
 
         if equalizeAllTerritories {
           try await runEqualizeAllTerritories(
@@ -1613,8 +1823,9 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        try await postSubscriptionPrice(
-          subID: sub.id, territoryID: territoryID, pricePointID: point.id, client: client)
+        try await SubCommand.postSubscriptionPrice(
+          subID: sub.id, territoryID: territoryID, pricePointID: point.id,
+          startDate: startDate, preserveCurrent: preserveCurrent, client: client)
 
         print()
         success("Updated", "price for '\(sub.attributes?.name ?? productID)' in \(territoryID).")
@@ -1626,146 +1837,187 @@ struct SubCommand: AsyncParsableCommand {
       ) async throws {
         // Fetch the equivalent price points for every territory by walking the
         // source point's equalizations. Each entry has its own territory + tier.
-        var equalized: [SubscriptionPricePoint] = []
-        for try await page in client.pages(
-          Resources.v1.subscriptionPricePoints.id(sourcePoint.id).equalizations.get(
-            limit: 200, include: [.territory]
-          )
-        ) {
-          equalized.append(contentsOf: page.data)
-        }
-
-        // Make sure the source territory itself is included even if equalizations omit it.
-        if !equalized.contains(where: {
-          $0.relationships?.territory?.data?.id == sourceTerritory
-        }) {
-          equalized.insert(sourcePoint, at: 0)
-        }
+        let equalized = try await SubCommand.fetchEqualizedPoints(
+          sourcePoint: sourcePoint, sourceTerritory: sourceTerritory, client: client)
 
         // Fetch all current prices for the subscription so we can categorize per territory.
         let currentByTerritory = try await SubCommand.fetchCurrentPricesByTerritory(
           subID: sub.id, client: client)
 
-        // Categorize each target territory
-        struct Target {
-          let territoryID: String
-          let pricePointID: String
-          let currentPrice: String?
-          let newPrice: String?
-          let direction: SubCommand.PriceDirection
+        let entries = equalized.compactMap {
+          point -> (territoryID: String, pricePointID: String, newPrice: String?)? in
+          guard let territoryID = point.relationships?.territory?.data?.id else { return nil }
+          return (territoryID, point.id, point.attributes?.customerPrice)
         }
-        var targets: [Target] = []
-        for point in equalized {
-          guard let territoryID = point.relationships?.territory?.data?.id else { continue }
-          let current = currentByTerritory[territoryID]
-          let newPrice = point.attributes?.customerPrice
-          let direction = SubCommand.priceDirection(current: current, target: newPrice)
-          targets.append(Target(
-            territoryID: territoryID, pricePointID: point.id,
-            currentPrice: current, newPrice: newPrice, direction: direction))
-        }
+        let targets = SubCommand.categorizePriceChanges(
+          entries, currentByTerritory: currentByTerritory)
 
-        let increases = targets.filter { $0.direction == .increase }
-        let decreases = targets.filter { $0.direction == .decrease }
-        let news = targets.filter { $0.direction == .new }
-        let unchanged = targets.filter { $0.direction == .unchanged }
-
-        if !increases.isEmpty && preserveCurrent == nil {
-          var msg = "\(increases.count) territor\(increases.count == 1 ? "y has" : "ies have") an existing price lower than the new equalized price (i.e. price increases).\n"
-          msg += "You must explicitly choose how to handle existing subscribers across all increases:\n"
-          msg += "  --preserve-current        Grandfather existing subscribers at their old price\n"
-          msg += "  --no-preserve-current     Push the new price to existing subscribers (after Apple's notification period)\n"
-          msg += "\nExample increases (first 5):\n"
-          for t in increases.prefix(5) {
-            msg += "  \(t.territoryID): \(t.currentPrice ?? "?") → \(t.newPrice ?? "?")\n"
-          }
-          throw ValidationError(msg)
-        }
-
-        if !decreases.isEmpty && autoConfirm && !confirmDecrease {
-          var msg = "\(decreases.count) territor\(decreases.count == 1 ? "y" : "ies") will see a price decrease — existing subscribers will move to the lower price.\n"
-          msg += "Plain --yes is not enough for price decreases. Add --confirm-decrease to acknowledge the revenue impact.\n"
-          msg += "\nExample decreases (first 5):\n"
-          for t in decreases.prefix(5) {
-            msg += "  \(t.territoryID): \(t.currentPrice ?? "?") → \(t.newPrice ?? "?")\n"
-          }
-          throw ValidationError(msg)
-        }
-
-        let toApply = targets.filter { $0.direction != .unchanged }
-
-        print()
-        print("Equalize across all territories:")
-        print("  Product ID:        \(productID)")
-        print("  Source Territory:  \(sourceTerritory) at \(sourcePoint.attributes?.customerPrice ?? "?") \(sourceCurrency ?? "")")
-        print("  Total territories: \(equalized.count)")
-        print("    New:             \(news.count)")
-        print("    Increases:       \(increases.count)")
-        print("    Decreases:       \(decreases.count)")
-        print("    Unchanged:       \(unchanged.count) (skipped)")
-        if let startDate {
-          print("  Start Date:        \(startDate)")
-        } else {
-          print("  Start Date:        Immediate")
-        }
-        if let p = preserveCurrent {
-          print("  Preserve Current:  \(p ? "Yes" : "No")")
-        }
-        if !decreases.isEmpty {
-          print()
-          print(yellow("⚠ \(decreases.count) territor\(decreases.count == 1 ? "y" : "ies") will see a price decrease") + " — existing subscribers in those territories will move to the new lower price.")
-        }
-        print()
-        print(yellow("Note:") + " This will issue \(toApply.count) API call\(toApply.count == 1 ? "" : "s") (one per territory that needs updating).")
-        print()
-
-        guard confirm("Apply equalized pricing? [y/N] ") else {
-          cancelled()
-          return
-        }
-        print()
-
-        var succeeded = 0
-        var failed = 0
-        for target in toApply {
-          do {
-            try await postSubscriptionPrice(
-              subID: sub.id, territoryID: target.territoryID,
-              pricePointID: target.pricePointID, client: client)
-            succeeded += 1
-          } catch {
-            print("  FAIL \(target.territoryID) — \(describeError(error))")
-            failed += 1
-          }
-        }
-
-        print()
-        print("Done. \(succeeded) territor\(succeeded == 1 ? "y" : "ies") updated, \(failed) failed, \(unchanged.count) unchanged (skipped).")
-        if failed > 0 {
-          // A half-repriced subscription must not look like success to scripts/workflows.
-          throw ExitCode.failure
-        }
+        try await SubCommand.gateAndApplyPriceChanges(
+          targets,
+          subID: sub.id,
+          headerLines: [
+            "Equalize across all territories:",
+            "  Product ID:        \(productID)",
+            "  Source Territory:  \(sourceTerritory) at \(sourcePoint.attributes?.customerPrice ?? "?") \(sourceCurrency ?? "")",
+          ],
+          confirmPrompt: "Apply equalized pricing? [y/N] ",
+          preserveCurrent: preserveCurrent,
+          confirmDecrease: confirmDecrease,
+          startDate: startDate,
+          client: client
+        )
       }
+    }
 
-      private func postSubscriptionPrice(
-        subID: String, territoryID: String, pricePointID: String, client: AppStoreConnectClient
-      ) async throws {
-        _ = try await client.send(
-          Resources.v1.subscriptionPrices.post(
-            SubscriptionPriceCreateRequest(
-              data: .init(
-                attributes: .init(
-                  startDate: startDate,
-                  isPreserveCurrentPrice: preserveCurrent
-                ),
-                relationships: .init(
-                  subscription: .init(data: .init(id: subID)),
-                  territory: .init(data: .init(id: territoryID)),
-                  subscriptionPricePoint: .init(data: .init(id: pricePointID))
-                )
-              )
-            )
-          )
+    // MARK: Export
+
+    struct Export: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Export subscription prices to a JSON file.",
+        discussion: """
+          Writes the current customer price of every territory to a JSON file that
+          'sub pricing import' can apply to another subscription — in this app or
+          any other. Preserved (grandfathered) and future-scheduled prices are not
+          exported.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the subscription.")
+      var productID: String
+
+      @Option(name: .long, help: "Output file path.",
+              completion: .file(extensions: ["json"]))
+      var output: String?
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let (sub, _) = try await SubCommand.findSubscription(
+          productID: productID, appID: app.id, client: client)
+
+        let prices = try await SubCommand.fetchCurrentPricesByTerritory(
+          subID: sub.id, client: client)
+        guard !prices.isEmpty else {
+          throw ValidationError("No prices set for '\(productID)' — nothing to export.")
+        }
+
+        try exportProductPrices(
+          ProductPricesFile(baseTerritory: nil, prices: prices),
+          productID: productID, output: output)
+      }
+    }
+
+    // MARK: Import
+
+    struct Import: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Import subscription prices from a JSON file.",
+        discussion: """
+          Applies a file produced by 'sub pricing export' (from this or any other
+          product): one price per listed territory, matched to this subscription's
+          own tiers by customer price. Territories not listed in the file are left
+          unchanged; territories already at the listed price are skipped. Price
+          increases require --preserve-current/--no-preserve-current; decreases
+          prompt interactively or require --confirm-decrease with --yes.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "The product identifier of the subscription.")
+      var productID: String
+
+      @Option(name: .long, help: "Path to JSON file.",
+              completion: .file(extensions: ["json"]))
+      var file: String?
+
+      @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: immediate).")
+      var startDate: String?
+
+      @Flag(name: .customLong("preserve-current"), inversion: .prefixedNo,
+            help: "Required for price increases. --preserve-current grandfathers existing subscribers at their old price; --no-preserve-current pushes the new price to them after Apple's notification period.")
+      var preserveCurrent: Bool?
+
+      @Flag(name: .customLong("confirm-decrease"), help: "Required with --yes when a listed price is lower than the current price in any territory. Plain -y is not enough — price decreases need explicit confirmation.")
+      var confirmDecrease = false
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let (sub, _) = try await SubCommand.findSubscription(
+          productID: productID, appID: app.id, client: client)
+
+        let priceFile = try loadProductPricesFile(file)
+        let sortedPrices = priceFile.prices.sorted { $0.key < $1.key }
+
+        // Resolve each listed price against this subscription's own tiers. Fetching
+        // every territory's tier list would be one paged call per territory, so first
+        // resolve one anchor territory and walk its equalizations — any territory
+        // whose file price matches the equalized tier resolves for free; only
+        // mismatches (manually overridden territories) fall back to an individual fetch.
+        let anchor = sortedPrices.first { $0.key == "USA" } ?? sortedPrices[0]
+        let anchorResolved = try await SubCommand.resolveSubPricePoint(
+          subID: sub.id, territoryID: anchor.key, customerPrice: anchor.value, client: client)
+        let equalized = try await SubCommand.fetchEqualizedPoints(
+          sourcePoint: anchorResolved.point, sourceTerritory: anchor.key, client: client)
+        var candidateByTerritory: [String: SubscriptionPricePoint] = [:]
+        for point in equalized {
+          if let t = point.relationships?.territory?.data?.id {
+            candidateByTerritory[t] = point
+          }
+        }
+
+        var entries: [(territoryID: String, pricePointID: String, newPrice: String?)] = []
+        var unmatched: [(territoryID: String, price: String)] = []
+        for (territoryID, priceStr) in sortedPrices {
+          let target = try parseCustomerPrice(priceStr)
+          if let candidate = candidateByTerritory[territoryID],
+             let candidatePrice = candidate.attributes?.customerPrice.flatMap({ Double($0) }),
+             abs(candidatePrice - target) < 0.001 {
+            entries.append((territoryID, candidate.id, candidate.attributes?.customerPrice))
+          } else {
+            unmatched.append((territoryID, priceStr))
+          }
+        }
+        if !unmatched.isEmpty {
+          print("Resolving price points for \(unmatched.count) territor\(unmatched.count == 1 ? "y" : "ies")", terminator: "")
+          fflush(stdout)
+          let resolved = try await SubCommand.resolveSubPricePointsBatched(
+            subID: sub.id, prices: unmatched, client: client)
+          entries.append(contentsOf: resolved.map {
+            ($0.territoryID, $0.point.id, $0.point.attributes?.customerPrice)
+          })
+          entries.sort { $0.territoryID < $1.territoryID }
+          print(" done.")
+        }
+
+        let currentByTerritory = try await SubCommand.fetchCurrentPricesByTerritory(
+          subID: sub.id, client: client)
+        let targets = SubCommand.categorizePriceChanges(
+          entries, currentByTerritory: currentByTerritory)
+
+        try await SubCommand.gateAndApplyPriceChanges(
+          targets,
+          subID: sub.id,
+          headerLines: [
+            "Import prices:",
+            "  Product ID:        \(productID)",
+          ],
+          confirmPrompt: "Apply imported pricing? [y/N] ",
+          preserveCurrent: preserveCurrent,
+          confirmDecrease: confirmDecrease,
+          startDate: startDate,
+          client: client
         )
       }
     }

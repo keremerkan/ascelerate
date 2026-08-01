@@ -93,6 +93,18 @@ ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 
 When an IAP has no price schedule, `iap info` and `iap pricing show` both surface a warning, and the `apps review preflight` command flags it as a blocker for submission.
 
+### Copy prices between products
+
+```bash
+# Export the schedule (base territory + every manual price) to JSON
+ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
+
+# Apply it to another IAP — in the same app or a different one
+ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
+```
+
+The file stores customer prices keyed by territory code. On import, each price is matched against the *target* product's own tiers by customer price, so the same file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize, and if the current schedule already matches the file the command is a no-op. Transient App Store Connect errors (HTTP 429/5xx) are retried automatically.
+
 ## Availability
 
 Each IAP has its own territory availability, independent of the app's. By default an IAP inherits its app's territories; once you call `iap availability` with changes, the IAP has an explicit list.

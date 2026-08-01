@@ -93,6 +93,18 @@ ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 
 Bir IAP'nin fiyat çizelgesi olmadığında, `iap info` ve `iap pricing show` komutları uyarı verir; aynı durum `apps review preflight` komutunda da gönderim için engelleyici olarak işaretlenir.
 
+### Ürünler arasında fiyat kopyalama
+
+```bash
+# Fiyat çizelgesini (temel bölge + tüm manuel fiyatlar) JSON olarak dışa aktar
+ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
+
+# Başka bir IAP'ye uygula (aynı uygulamada veya farklı bir uygulamada)
+ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
+```
+
+Dosya, bölge koduna göre anahtarlanmış müşteri fiyatlarını içerir. İçe aktarma sırasında her fiyat, müşteri fiyatı üzerinden *hedef* ürünün kendi fiyat kademeleriyle eşleştirilir; bu sayede aynı dosya farklı ürünlerde ve uygulamalarda kullanılabilir. İçe aktarma, fiyat çizelgesini bütünüyle değiştirir: dosyada yer almayan bölgeler otomatik eşitlemeye geri döner; mevcut çizelge dosyayla zaten eşleşiyorsa komut hiçbir değişiklik yapmaz. App Store Connect'in geçici hataları (HTTP 429/5xx) otomatik olarak yeniden denenir.
+
 ## Bölge erişilebilirliği
 
 Her IAP'nin uygulamadan bağımsız kendi bölge erişilebilirliği vardır. Varsayılan olarak bir IAP, uygulamasının bölgelerini devralır; `iap availability` ile değişiklik yaptığınızda IAP'ye özel bir liste oluşur.

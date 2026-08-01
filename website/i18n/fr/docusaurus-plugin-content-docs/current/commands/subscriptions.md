@@ -92,6 +92,20 @@ ascelerate sub pricing set myapp com.example.monthly \
   --preserve-current
 ```
 
+### Copier les prix entre produits
+
+```bash
+# Exporter le prix actuel de chaque région en JSON
+ascelerate sub pricing export <bundle-id> <product-id> --output prices.json
+
+# L'appliquer à un autre abonnement — dans la même app ou une autre
+ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices.json
+```
+
+Le fichier contient les prix client indexés par code de région (les prix préservés et les prix planifiés pour le futur sont exclus de l'export). À l'import, chaque prix est mis en correspondance avec les paliers tarifaires de l'abonnement *cible* d'après le prix client ; le même fichier fonctionne donc d'un produit ou d'une app à l'autre. L'import ne touche que les régions listées dans le fichier, ignore celles déjà au prix indiqué et applique les mêmes règles de sécurité pour les hausses et les baisses que `set` — y compris `--preserve-current`/`--no-preserve-current` et `--confirm-decrease`.
+
+Les erreurs transitoires d'App Store Connect (HTTP 429/5xx) lors des écritures multi-régions sont automatiquement réessayées — d'abord sur place avec temporisation, puis dans une seconde passe en fin d'exécution. Les régions qui échouent malgré tout sont listées dans le rapport final et la commande se termine avec un code d'erreur ; relancer la même commande ne réessaie que celles-ci, les régions déjà mises à jour étant ignorées comme inchangées.
+
 ## Disponibilité territoriale
 
 Chaque abonnement a sa propre disponibilité territoriale, indépendante de l'application. Par défaut, un abonnement hérite des territoires de son application ; dès que vous appelez `sub availability` avec des modifications, l'abonnement obtient une liste explicite.

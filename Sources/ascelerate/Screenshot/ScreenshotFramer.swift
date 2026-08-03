@@ -129,7 +129,16 @@ struct ScreenshotFramer: Sendable {
 
     // MARK: - Compositing
 
-    static func composite(screenshot: CGImage, bezel: CGImage) -> CGImage? {
+    static func composite(screenshot: CGImage, bezel bezelInput: CGImage) -> CGImage? {
+        // Landscape screenshots get a landscape frame: rotate the portrait
+        // bezel 90° CCW (Dynamic Island to the LEFT, matching landscapeLeft
+        // captures) instead of anamorphically squeezing the shot into a
+        // portrait cutout. Screen-area detection runs on the rotated pixels.
+        var bezel = bezelInput
+        if screenshot.width > screenshot.height, bezel.height > bezel.width,
+           let rotated = rotated90CCW(bezel) {
+            bezel = rotated
+        }
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
 
@@ -167,6 +176,26 @@ struct ScreenshotFramer: Sendable {
         // Draw the device bezel frame on top
         context.draw(bezel, in: bezelRect)
 
+        return context.makeImage()
+    }
+
+    /// The bezel rotated 90° counterclockwise (portrait art, landscape use).
+    static func rotated90CCW(_ image: CGImage) -> CGImage? {
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+        guard let context = CGContext(
+            data: nil,
+            width: image.height,
+            height: image.width,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else { return nil }
+        context.translateBy(x: CGFloat(image.height), y: 0)
+        context.rotate(by: .pi / 2)
+        context.draw(image, in: CGRect(x: 0, y: 0,
+                                       width: image.width, height: image.height))
         return context.makeImage()
     }
 

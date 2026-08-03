@@ -375,7 +375,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             print("Add this file to your UITest target.")
         }
 
-        static let helperVersion = "1.1"
+        static let helperVersion = "1.2"
 
         static let helperSource = """
         //
@@ -401,6 +401,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
         /// Copy this function to your AppDelegate or SceneDelegate and call it on launch
         /// to disable animations when running in screenshot mode.
         /// Pair with `disableAnimations: true` in screenshot.yml.
+        @MainActor
         func disableAnimationsIfNeeded() {
             if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
                 UIView.setAnimationsEnabled(false)
@@ -454,18 +455,20 @@ struct ScreenshotCommand: AsyncParsableCommand {
                     sleep(1)
                 }
 
-                // Use app.screenshot() rather than XCUIScreen.main.screenshot(): the
-                // former is an RPC into the target app, so if the app has already
-                // terminated (e.g. an iPad-only crash triggered by the last test tap),
-                // the call throws 'Lost connection to the application' and the test
-                // fails. XCUIScreen would silently fall back to the simulator's current
-                // framebuffer and save a home-screen PNG as a passing screenshot.
-                let screenshotImage = app.screenshot()
+                // Capture the key WINDOW, not the app or XCUIScreen:
+                // - XCUIScreen silently falls back to the simulator's current
+                //   framebuffer if the app already died (home-screen PNG saved
+                //   as a passing screenshot);
+                // - app.screenshot() composites a BROKEN buffer on rotated
+                //   simulators (portrait frame, landscape content pasted
+                //   un-rotated and cropped — unrecoverable);
+                // - windows.firstMatch.screenshot() is still an RPC into the
+                //   app (dead app -> loud failure) and returns the complete
+                //   rotated content, merely orientation-tagged.
+                let screenshotImage = app.windows.firstMatch.screenshot()
 
                 #if os(iOS) && !targetEnvironment(macCatalyst)
-                let image = XCUIDevice.shared.orientation.isLandscape
-                    ? fixLandscapeOrientation(image: screenshotImage.image)
-                    : screenshotImage.image
+                let image = normalizedOrientation(image: screenshotImage.image)
                 #else
                 let image = screenshotImage.image
                 #endif
@@ -541,12 +544,29 @@ struct ScreenshotCommand: AsyncParsableCommand {
             }
 
             #if os(iOS) && !targetEnvironment(macCatalyst)
-            private static func fixLandscapeOrientation(image: UIImage) -> UIImage {
+            /// PNG has no orientation metadata, so pngData() silently drops a
+            /// non-.up orientation tag — landscape captures arrive tagged
+            /// (landscape logical size over a portrait bitmap) and must be
+            /// BAKED by re-rendering. If a capture ever arrives as a raw
+            /// un-tagged portrait bitmap under a rotated device, wrap it in
+            /// the matching orientation first, then bake.
+            private static func normalizedOrientation(image: UIImage) -> UIImage {
+                var source = image
+                if source.imageOrientation == .up,
+                   XCUIDevice.shared.orientation.isLandscape,
+                   source.size.width < source.size.height,
+                   let cg = source.cgImage {
+                    source = UIImage(
+                        cgImage: cg, scale: source.scale,
+                        orientation: XCUIDevice.shared.orientation == .landscapeLeft
+                            ? .left : .right)
+                }
+                guard source.imageOrientation != .up else { return source }
                 let format = UIGraphicsImageRendererFormat()
-                format.scale = image.scale
-                let renderer = UIGraphicsImageRenderer(size: image.size, format: format)
+                format.scale = source.scale
+                let renderer = UIGraphicsImageRenderer(size: source.size, format: format)
                 return renderer.image { _ in
-                    image.draw(in: CGRect(origin: .zero, size: image.size))
+                    source.draw(in: CGRect(origin: .zero, size: source.size))
                 }
             }
             #endif

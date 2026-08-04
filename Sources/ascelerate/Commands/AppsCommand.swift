@@ -1276,6 +1276,16 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         // 3. Fetch version localizations
+        // What's New only exists for updates — if no earlier version of this platform
+        // was ever released, the field isn't required (or even settable).
+        let releasedResponse = try await client.send(
+          Resources.v1.apps.id(app.id).appStoreVersions.get(
+            filterPlatform: platformFilter(appVersion.attributes?.platform),
+            filterAppVersionState: [.readyForDistribution, .replacedWithNewVersion],
+            limit: 2
+          )
+        )
+        let hasReleasedVersion = releasedResponse.data.contains { $0.id != appVersion.id }
         print("Fetching localizations...")
         let locsResponse = try await client.send(
           Resources.v1.appStoreVersions.id(appVersion.id)
@@ -1340,7 +1350,7 @@ struct AppsCommand: AsyncParsableCommand {
         // 6. Build per-locale rows
         let localeCheck = buildLocaleRows(
           versionLocs: versionLocs, appInfoByLocale: appInfoByLocale,
-          screenshotsByLocale: screenshotsByLocale)
+          screenshotsByLocale: screenshotsByLocale, requireWhatsNew: hasReleasedVersion)
         rows += localeCheck.rows
         failCount += localeCheck.failures
 
@@ -1375,7 +1385,8 @@ struct AppsCommand: AsyncParsableCommand {
       private func buildLocaleRows(
         versionLocs: [AppStoreVersionLocalization],
         appInfoByLocale: [String: AppInfoLocalization],
-        screenshotsByLocale: [String: (sets: Int, count: Int)]
+        screenshotsByLocale: [String: (sets: Int, count: Int)],
+        requireWhatsNew: Bool
       ) -> (rows: [[String]], failures: Int) {
         var rows: [[String]] = []
         var failures = 0
@@ -1419,13 +1430,15 @@ struct AppsCommand: AsyncParsableCommand {
             } else if desc.count > 4000 {
               invalid.append("\(formatFieldName("description")) too long (>4000 chars)")
             }
-            let whatsNew = loc.attributes?.whatsNew ?? ""
-            if whatsNew.isEmpty {
-              missing.append(formatFieldName("whatsNew"))
-            } else if whatsNew.count < 7 {
-              invalid.append("\(formatFieldName("whatsNew")) too short (<7 chars)")
-            } else if whatsNew.count > 4000 {
-              invalid.append("\(formatFieldName("whatsNew")) too long (>4000 chars)")
+            if requireWhatsNew {
+              let whatsNew = loc.attributes?.whatsNew ?? ""
+              if whatsNew.isEmpty {
+                missing.append(formatFieldName("whatsNew"))
+              } else if whatsNew.count < 7 {
+                invalid.append("\(formatFieldName("whatsNew")) too short (<7 chars)")
+              } else if whatsNew.count > 4000 {
+                invalid.append("\(formatFieldName("whatsNew")) too long (>4000 chars)")
+              }
             }
             if loc.attributes?.keywords == nil || loc.attributes?.keywords?.isEmpty == true {
               missing.append(formatFieldName("keywords"))

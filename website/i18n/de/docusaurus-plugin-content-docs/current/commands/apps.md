@@ -127,6 +127,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+Die Prüfung der Neuigkeiten wird übersprungen, wenn die App noch keine veröffentlichte Version hat — dieses Feld gibt es nur bei Updates, nicht bei einer Erstveröffentlichung.
+
 Der Befehl gibt einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt — und ist damit geeignet für CI-Pipelines und Workflow-Dateien.
 
 ## Stufenweise Veröffentlichung

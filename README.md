@@ -221,6 +221,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+The What's New check is skipped when the app has no previously released version — that field only exists for updates, not for a first release.
+
 Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files.
 
 ### Build Management

@@ -127,6 +127,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+Uygulamanın daha önce yayınlanmış bir sürümü yoksa yenilikler denetimi atlanır; bu alan yalnızca güncellemelerde bulunur, ilk sürümde yer almaz.
+
 Herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu döndürür, bu da CI pipeline'larında ve workflow dosyalarında rahatlıkla kullanılmasını sağlar.
 
 ## Aşamalı yayınlama

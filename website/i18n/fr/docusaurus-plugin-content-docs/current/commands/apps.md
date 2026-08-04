@@ -127,6 +127,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+La vérification des nouveautés est ignorée lorsque l'application n'a pas encore de version publiée — ce champ n'existe que pour les mises à jour, pas pour une première version.
+
 La commande se termine avec un code de sortie non nul lorsqu'une vérification échoue, ce qui la rend adaptée aux pipelines CI et aux fichiers de workflow.
 
 ## Déploiement progressif

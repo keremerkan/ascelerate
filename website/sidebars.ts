@@ -19,6 +19,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'commands/apps',
         'commands/builds',
+        'commands/testflight',
         'commands/localizations',
         'commands/media',
         'commands/screenshots',

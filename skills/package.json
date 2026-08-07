@@ -1,7 +1,7 @@
 {
   "name": "ascelerate-skill",
-  "version": "0.15.2",
-  "description": "ascelerate skill for AI coding agents (Claude Code, Cursor, Windsurf, Copilot)",
+  "version": "0.16.0",
+  "description": "ascelerate skill for AI coding agents (Claude Code, Grok Build, Cursor, Windsurf, Copilot)",
   "keywords": [
     "ascelerate",
     "app-store-connect",

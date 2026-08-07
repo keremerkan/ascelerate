@@ -5,7 +5,7 @@ title: KI-Coding-Skill
 
 # KI-Coding-Skill
 
-ascelerate wird mit einer Skill-Datei ausgeliefert, die KI-Coding-Agenten (Claude Code, Cursor, Windsurf, GitHub Copilot) vollständiges Wissen über alle Befehle, JSON-Formate und Workflows vermittelt.
+ascelerate wird mit einer Skill-Datei ausgeliefert, die KI-Coding-Agenten (Claude Code, Grok Build, Cursor, Windsurf, GitHub Copilot) vollständiges Wissen über alle Befehle, JSON-Formate und Workflows vermittelt.
 
 ## Installation über die Binary
 
@@ -14,7 +14,7 @@ ascelerate install-skill          # für jeden erkannten Agenten installieren/ak
 ascelerate install-skill --all    # alle unterstützten Agenten einbeziehen (z. B. Copilot)
 ```
 
-Erkennt Claude Code, Cursor und Windsurf automatisch (und GitHub Copilot mit `--all`), installiert oder aktualisiert den Skill für jeden und prüft bei jedem Aufruf, ob der Skill veraltet ist. Zum Entfernen bei allen Agenten:
+Erkennt Claude Code, Grok Build (liest den Claude-Code-Skill-Pfad nativ), Cursor und Windsurf automatisch (und GitHub Copilot mit `--all`), installiert oder aktualisiert den Skill für jeden und prüft bei jedem Aufruf, ob der Skill veraltet ist. Zum Entfernen bei allen Agenten:
 
 ```bash
 ascelerate install-skill --uninstall

@@ -4,12 +4,12 @@ import Foundation
 
 @main
 struct Ascelerate: AsyncParsableCommand {
-  static let appVersion = "0.15.2"
+  static let appVersion = "0.16.0"
 
   static let configuration = CommandConfiguration(
     commandName: "ascelerate",
     abstract: "A Swift CLI for App Store Connect.",
-    subcommands: [AppsCommand.self, AppEventsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ProductPagesCommand.self, ScreenshotCommand.self],
+    subcommands: [AppsCommand.self, AppEventsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ProductPagesCommand.self, ScreenshotCommand.self, TestFlightCommand.self],
     groupedSubcommands: [
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
       CommandGroup(name: "Reporting", subcommands: [ReportsCommand.self]),

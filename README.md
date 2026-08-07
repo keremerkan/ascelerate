@@ -82,7 +82,7 @@ This detects your shell and configures everything automatically. Restart your sh
 
 ### AI coding skill
 
-ascelerate ships with a skill file that gives AI coding agents (Claude Code, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
+ascelerate ships with a skill file that gives AI coding agents (Claude Code, Grok Build, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
 
 **Via the binary** (detects your installed agents):
 
@@ -91,7 +91,7 @@ ascelerate install-skill          # install/update for every detected agent
 ascelerate install-skill --all    # include all supported agents (e.g. Copilot)
 ```
 
-It auto-detects Claude Code, Cursor, and Windsurf (and GitHub Copilot with `--all`), installs/updates the skill for each, and checks for outdated skills on each run to prompt you after upgrades.
+It auto-detects Claude Code, Grok Build (which reads the Claude Code skill path natively), Cursor, and Windsurf (and GitHub Copilot with `--all`), installs/updates the skill for each, and checks for outdated skills on each run to prompt you after upgrades.
 
 **Via npx** (any AI coding agent):
 
@@ -794,6 +794,65 @@ ascelerate builds await-processing <bundle-id> --build-version 903 --platform ma
 ```
 
 The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it detects the archive's platform and automatically exports to `.ipa` (iOS-family) or `.pkg` (macOS) before uploading, passing the matching platform to altool.
+
+### TestFlight
+
+```bash
+# Beta groups
+ascelerate testflight groups list <bundle-id>
+ascelerate testflight groups info <bundle-id> "External Testers"
+ascelerate testflight groups create <bundle-id> --name "Friends" --public-link --public-link-limit 100
+ascelerate testflight groups update <bundle-id> "Friends" --public-link false
+ascelerate testflight groups delete <bundle-id> "Friends"
+
+# Give a group access to a build (defaults to the latest)
+ascelerate testflight groups add-build <bundle-id> "Friends"
+ascelerate testflight groups add-build <bundle-id> "Friends" --build 123
+ascelerate testflight groups remove-build <bundle-id> "Friends" --build 123
+
+# Public-link recruitment criteria (device/OS filters)
+ascelerate testflight groups criteria view <bundle-id> "Friends" --options
+ascelerate testflight groups criteria set <bundle-id> "Friends" --filter IPHONE:18.0 --filter IPAD:17.0:26
+ascelerate testflight groups criteria clear <bundle-id> "Friends"
+
+# Testers
+ascelerate testflight testers list <bundle-id> --group "Friends"
+ascelerate testflight testers add <bundle-id> --email tester@example.com --group "Friends"
+ascelerate testflight testers remove <bundle-id> tester@example.com --group "Friends"
+ascelerate testflight testers remove <bundle-id> tester@example.com        # remove from the whole app
+ascelerate testflight testers invite <bundle-id> tester@example.com       # re-send the invitation email
+ascelerate testflight testers import <bundle-id> --file testers.csv --group "Friends"
+
+# Builds & distribution
+ascelerate testflight builds <bundle-id>                 # TestFlight states per build
+ascelerate testflight versions <bundle-id>               # pre-release version trains
+ascelerate testflight status <bundle-id> --build 123     # processing, testing, and beta review states
+ascelerate testflight expire <bundle-id> --build 123
+ascelerate testflight notify <bundle-id>                 # notify testers about the latest build
+ascelerate testflight auto-notify <bundle-id> --enabled true
+
+# What to Test (per build, per locale)
+ascelerate testflight whats-new view <bundle-id>
+ascelerate testflight whats-new set <bundle-id> --text "Bug fixes" --locale en-US
+ascelerate testflight whats-new set <bundle-id> --text "Bug fixes"         # all existing locales
+ascelerate testflight whats-new export <bundle-id> --output notes.json
+ascelerate testflight whats-new import <bundle-id> --file notes.json
+
+# Beta review (required for external testing)
+ascelerate testflight submit <bundle-id>
+ascelerate testflight app-info view <bundle-id>
+ascelerate testflight app-info update <bundle-id> --locale en-US --feedback-email me@example.com
+ascelerate testflight review-info <bundle-id>            # contact + demo account; pass flags to update
+ascelerate testflight eula <bundle-id> --file eula.txt   # custom beta license agreement
+
+# Tester feedback
+ascelerate testflight feedback crashes list <bundle-id>
+ascelerate testflight feedback crashes log <submission-id> --output crash.log
+ascelerate testflight feedback screenshots list <bundle-id>
+ascelerate testflight feedback screenshots download <bundle-id>    # picker; zips screenshots + comment
+```
+
+Build-scoped commands default to the latest non-expired build; pass `--build <number>` (and `--platform` for universal-purchase apps) to target a specific one. `testers import` reads one tester per line (`email[,first name[,last name]]`), skipping blank lines, `#` comments, and a leading header row.
 
 ### In-App Purchases
 

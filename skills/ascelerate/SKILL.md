@@ -418,6 +418,61 @@ ascelerate builds await-processing <app>             # Wait for processing
 ascelerate builds list --bundle-id <app>
 ```
 
+### TestFlight
+
+```bash
+# Beta groups
+ascelerate testflight groups list <app>
+ascelerate testflight groups info <app> "External Testers"        # details + testers + builds
+ascelerate testflight groups create <app> --name "Friends" --public-link --public-link-limit 100
+ascelerate testflight groups update <app> "Friends" --public-link false
+ascelerate testflight groups add-build <app> "Friends" --build 123 # omit --build for latest
+ascelerate testflight groups delete <app> "Friends"
+
+# Recruitment criteria (device/OS filters for public links)
+ascelerate testflight groups criteria view <app> "Friends" --options
+ascelerate testflight groups criteria set <app> "Friends" --filter IPHONE:18.0 --filter IPAD:17.0:26
+ascelerate testflight groups criteria clear <app> "Friends"
+
+# Testers
+ascelerate testflight testers list <app> [--group "Friends"]
+ascelerate testflight testers add <app> --email t@example.com --group "Friends"
+ascelerate testflight testers remove <app> t@example.com --group "Friends"  # omit --group to remove from whole app
+ascelerate testflight testers invite <app> t@example.com  # re-send invitation email
+ascelerate testflight testers import <app> --file testers.csv --group "Friends"  # CSV: email[,first[,last]]
+
+# Builds & distribution
+ascelerate testflight builds <app>                        # TestFlight states per build
+ascelerate testflight versions <app>                      # pre-release version trains
+ascelerate testflight status <app> [--build 123]          # processing/internal/external/beta review
+ascelerate testflight expire <app> --build 123
+ascelerate testflight notify <app>                        # notify testers of latest build
+ascelerate testflight auto-notify <app> --enabled true    # toggle automatic notification
+
+# Tester feedback
+ascelerate testflight feedback crashes list <app> [--build 123]
+ascelerate testflight feedback crashes log <submission-id> [--output crash.log]
+ascelerate testflight feedback screenshots list <app>
+ascelerate testflight feedback screenshots download <app> [submission-id] [--output X.zip]  # zip of screenshots + comment; picker if ID omitted
+ascelerate testflight feedback crashes|screenshots info <submission-id>    # full device details + comment
+ascelerate testflight feedback crashes|screenshots delete <submission-id>
+
+# What to Test (per build, per locale)
+ascelerate testflight whats-new view <app>
+ascelerate testflight whats-new set <app> --text "Bug fixes" [--locale en-US]  # all locales if omitted
+ascelerate testflight whats-new export <app> --output notes.json
+ascelerate testflight whats-new import <app> --file notes.json
+
+# Beta review (required for external testing)
+ascelerate testflight submit <app> [--build 123]
+ascelerate testflight app-info view <app>                 # beta description, feedback email per locale
+ascelerate testflight app-info update <app> --locale en-US --feedback-email me@example.com
+ascelerate testflight review-info <app>                   # contact + demo account; pass flags to update
+ascelerate testflight eula <app> [--file eula.txt | --text "..."]  # --text "" reverts to Apple's standard
+```
+
+Build-scoped commands default to the latest non-expired build; pass `--build <number>` (and `--platform` for universal-purchase apps) to target a specific one. What to Test JSON format: `{"en-US": {"whatsNew": "..."}}`.
+
 ### Provisioning
 
 All provisioning commands support interactive mode (run without arguments for guided prompts):

@@ -921,6 +921,10 @@ func formatFieldName(_ name: String) -> String {
     "tvOS": "tvOS",
     "visionOS": "visionOS",
     "CANCELED": "Cancelled",
+    "iphone": "iPhone",
+    "ipad": "iPad",
+    "appleTv": "Apple TV",
+    "vision": "Apple Vision",
   ]
   if let override = overrides[name] { return override }
 

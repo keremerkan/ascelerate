@@ -18,6 +18,13 @@ const agents = [
     detect: path.join(home, ".claude"),
   },
   {
+    // Grok Build reads the Claude Code skill path natively, so it shares the target.
+    name: "Grok Build",
+    dir: path.join(home, ".claude", "skills", "ascelerate"),
+    file: "SKILL.md",
+    detect: path.join(home, ".grok"),
+  },
+  {
     name: "Cursor",
     dir: path.join(home, ".cursor", "rules"),
     file: "ascelerate.md",
@@ -93,7 +100,7 @@ async function main() {
 
   if (available.length === 0) {
     console.log("No supported AI coding agents found.");
-    console.log("Supported: Claude Code, Cursor, Windsurf, GitHub Copilot");
+    console.log("Supported: Claude Code, Grok Build, Cursor, Windsurf, GitHub Copilot");
     process.exit(1);
   }
 

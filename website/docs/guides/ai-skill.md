@@ -5,7 +5,7 @@ title: AI Coding Skill
 
 # AI Coding Skill
 
-ascelerate ships with a skill file that gives AI coding agents (Claude Code, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
+ascelerate ships with a skill file that gives AI coding agents (Claude Code, Grok Build, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands, JSON formats, and workflows.
 
 ## Install via the binary
 
@@ -14,7 +14,7 @@ ascelerate install-skill          # install/update for every detected agent
 ascelerate install-skill --all    # include all supported agents (e.g. Copilot)
 ```
 
-Auto-detects Claude Code, Cursor, and Windsurf (and GitHub Copilot with `--all`), installs or updates the skill for each, and checks for outdated skills on each run to prompt you after upgrades. To remove from every agent:
+Auto-detects Claude Code, Grok Build (which reads the Claude Code skill path natively), Cursor, and Windsurf (and GitHub Copilot with `--all`), installs or updates the skill for each, and checks for outdated skills on each run to prompt you after upgrades. To remove from every agent:
 
 ```bash
 ascelerate install-skill --uninstall

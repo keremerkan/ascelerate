@@ -18,15 +18,17 @@ struct InstallSkillCommand: AsyncParsableCommand {
     let name: String
     let dir: String
     let file: String
-    /// Config directory whose presence marks the agent as installed; nil = not auto-detectable.
-    let detect: String?
+    /// Config directories whose presence marks the agent as installed; empty = not auto-detectable.
+    /// Grok Build reads the Claude Code skill path natively, so one entry serves both —
+    /// detected via either `~/.claude` or `~/.grok`.
+    let detects: [String]
   }
 
   static let agents: [Agent] = [
-    .init(name: "Claude Code", dir: ".claude/skills/ascelerate", file: "SKILL.md", detect: ".claude"),
-    .init(name: "Cursor", dir: ".cursor/rules", file: "ascelerate.md", detect: ".cursor"),
-    .init(name: "Windsurf", dir: ".windsurf/rules", file: "ascelerate.md", detect: ".windsurf"),
-    .init(name: "GitHub Copilot", dir: ".github/instructions", file: "ascelerate.md", detect: nil),
+    .init(name: "Claude Code / Grok Build", dir: ".claude/skills/ascelerate", file: "SKILL.md", detects: [".claude", ".grok"]),
+    .init(name: "Cursor", dir: ".cursor/rules", file: "ascelerate.md", detects: [".cursor"]),
+    .init(name: "Windsurf", dir: ".windsurf/rules", file: "ascelerate.md", detects: [".windsurf"]),
+    .init(name: "GitHub Copilot", dir: ".github/instructions", file: "ascelerate.md", detects: []),
   ]
 
   private static var home: URL { FileManager.default.homeDirectoryForCurrentUser }
@@ -37,8 +39,9 @@ struct InstallSkillCommand: AsyncParsableCommand {
     FileManager.default.fileExists(atPath: skillFileURL(a).path)
   }
   static func isDetected(_ a: Agent) -> Bool {
-    guard let detect = a.detect else { return false }
-    return FileManager.default.fileExists(atPath: home.appendingPathComponent(detect).path)
+    a.detects.contains {
+      FileManager.default.fileExists(atPath: home.appendingPathComponent($0).path)
+    }
   }
 
   /// Paths of every agent that currently has the skill installed (used by the update check).
@@ -65,7 +68,7 @@ struct InstallSkillCommand: AsyncParsableCommand {
     // Target every agent that's detected or already has the skill (or all four with --all).
     let targets = Self.agents.filter { all || Self.isInstalled($0) || Self.isDetected($0) }
     guard !targets.isEmpty else {
-      print("No supported AI coding agents detected (Claude Code, Cursor, Windsurf).")
+      print("No supported AI coding agents detected (Claude Code, Grok Build, Cursor, Windsurf).")
       print("Use --all to install for every agent, or run: npx ascelerate-skill")
       return
     }

@@ -5,7 +5,7 @@ title: Uygulama İçi Etkinlikler
 
 # Uygulama İçi Etkinlikler
 
-Uygulama içi etkinlikler oluşturun ve yönetin — App Store ürün sayfanızda ve aramada görünen, zamana duyarlı etkinlikler (canlı etkinlikler, galalar, yarışmalar, özel teklifler). Etkinliklere **referans adı** veya kimlikleriyle başvurulur.
+Uygulama içi etkinlikler oluşturun ve yönetin: App Store ürün sayfanızda ve aramada görünen, zamana duyarlı etkinlikler (canlı etkinlikler, galalar, yarışmalar, özel teklifler). Etkinliklere **referans adı** veya kimlikleriyle başvurulur.
 
 ## Listeleme ve inceleme
 

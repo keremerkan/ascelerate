@@ -1,6 +1,6 @@
 {
   "homepage.hero.description": {
-    "message": "Xcode arşivinden App Review'a gönderime kadar her şeyi terminalden yönetin. Sürümler, yerelleştirmeler, ekran görüntüleri, provisioning profilleri, uygulama içi satın almalar, abonelikler ve satış raporları — hepsi tek bir komut satırı aracında."
+    "message": "Xcode arşivinden App Review'a gönderime kadar her şeyi terminalden yönetin. Sürümler, yerelleştirmeler, ekran görüntüleri, provisioning profilleri, uygulama içi satın almalar, abonelikler ve satış raporları; hepsi tek bir komut satırı aracında."
   },
   "homepage.hero.getStarted": {
     "message": "Başlayın"
@@ -12,7 +12,7 @@
     "message": "Tam Yayınlama Hattı"
   },
   "homepage.features.pipeline.description": {
-    "message": "Arşivleyin, yükleyin, sürümleri ve yerelleştirmeleri yönetin, build'leri ekleyin, ön kontrolleri çalıştırın ve App Review'a gönderin — hepsi terminalden."
+    "message": "Arşivleyin, yükleyin, sürümleri ve yerelleştirmeleri yönetin, build'leri ekleyin, ön kontrolleri çalıştırın ve App Review'a gönderin; hepsi terminalden."
   },
   "homepage.features.provisioning.title": {
     "message": "Provisioning Yönetimi"
@@ -36,7 +36,7 @@
     "message": "Raporlar ve Analizler"
   },
   "homepage.features.reports.description": {
-    "message": "Satış, Finans ve App Analytics raporlarını indirin — birim sayıları, indirmeler ve gelirler. Terminalde özetlenir veya kendi analiziniz için ham veri olarak kaydedilir."
+    "message": "Satış, Finans ve App Analytics raporlarını indirin: birim sayıları, indirmeler ve gelirler. Terminalde özetlenir veya kendi analiziniz için ham veri olarak kaydedilir."
   },
   "homepage.features.workflows.title": {
     "message": "Workflow'lar ve Otomasyon"

@@ -5,7 +5,7 @@ title: Özel Ürün Sayfaları
 
 # Özel Ürün Sayfaları
 
-Özel ürün sayfaları oluşturun ve yönetin — App Store ürün sayfanızın, her biri benzersiz bir URL üzerinden erişilebilen, kendi tanıtım metnine ve ekran görüntülerine sahip alternatif sürümleri. Sayfalara **ad** veya kimlikleriyle başvurulur.
+Özel ürün sayfaları oluşturun ve yönetin: App Store ürün sayfanızın, her biri benzersiz bir URL üzerinden erişilebilen, kendi tanıtım metnine ve ekran görüntülerine sahip alternatif sürümleri. Sayfalara **ad** veya kimlikleriyle başvurulur.
 
 ## Listeleme ve inceleme
 

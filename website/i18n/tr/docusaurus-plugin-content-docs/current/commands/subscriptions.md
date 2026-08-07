@@ -55,7 +55,7 @@ ascelerate sub group-localizations import <bundle-id> --file group-de.json
 
 ## Fiyatlandırma
 
-Abonelik fiyatlandırması bölgeye özeldir. IAP'lerde olduğu gibi otomatik eşitleme kavramı yoktur — fiyatlamak istediğiniz her bölgenin kendi kaydı olmalıdır. CLI ya tek bir bölgeyi ayarlar ya da Apple'ın yerel para birimi kademe karşılıklarını kullanarak fiyatı tüm bölgelere yayar.
+Abonelik fiyatlandırması bölgeye özeldir. IAP'lerde olduğu gibi otomatik eşitleme kavramı yoktur; fiyatlamak istediğiniz her bölgenin kendi kaydı olmalıdır. CLI ya tek bir bölgeyi ayarlar ya da Apple'ın yerel para birimi kademe karşılıklarını kullanarak fiyatı tüm bölgelere yayar.
 
 ```bash
 # Mevcut bölgeye özel fiyatları göster (yoksa uyarır)
@@ -75,10 +75,10 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 Apple, fiyat değişikliklerini değişikliğin yönüne göre mevcut aboneler için farklı şekilde uygular. `sub pricing set` komutu her etkilenen bölgenin mevcut fiyatını alır, değişikliği sınıflandırır ve doğru davranışı uygular:
 
-- **Düşürme**: mevcut aboneler otomatik olarak düşük fiyata geçer. Etkileşimli çalıştırmalarda uyarı ile birlikte sorulur. `--yes` modunda, gelir etkisini onaylamak için `--confirm-decrease` eklemeniz gerekir — sadece `--yes` yeterli değildir.
+- **Düşürme**: mevcut aboneler otomatik olarak düşük fiyata geçer. Etkileşimli çalıştırmalarda uyarı ile birlikte sorulur. `--yes` modunda, gelir etkisini onaylamak için `--confirm-decrease` eklemeniz gerekir; sadece `--yes` yeterli değildir.
 - **Artış**: mevcut abonelerle nasıl başa çıkılacağını açıkça seçmeniz gerekir. Aşağıdakilerden biri ayarlanmadığı sürece komut hata verir:
-  - `--preserve-current` — mevcut aboneleri eski fiyatlarında tutar
-  - `--no-preserve-current` — Apple'ın bildirim süresinden sonra yeni fiyatı mevcut abonelere uygular
+  - `--preserve-current`: mevcut aboneleri eski fiyatlarında tutar
+  - `--no-preserve-current`: Apple'ın bildirim süresinden sonra yeni fiyatı mevcut abonelere uygular
 - **Yeni bölge** (mevcut fiyat yok): değerlendirilecek mevcut abone yok; bayraklar isteğe bağlıdır.
 - **Değişiklik yok**: sessizce atlanır.
 
@@ -119,7 +119,7 @@ ascelerate sub availability <bundle-id> <product-id> --available-in-new-territor
 
 ## Tanıtım teklifleri
 
-Tanıtım teklifleri **yeni aboneleri** hedefler — ücretsiz denemeler ve tanıtım indirimleri.
+Tanıtım teklifleri **yeni aboneleri** hedefler: ücretsiz denemeler ve tanıtım indirimleri.
 
 ```bash
 ascelerate sub intro-offer list <bundle-id> <product-id>
@@ -143,13 +143,13 @@ Modlar: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`. `--territory` belirtilmed
 
 ## Promosyon teklifleri
 
-Promosyon teklifleri **mevcut aboneleri** hedefler — genellikle uygulama içi yükseltme akışlarında kullanılır. `--code` değeri (teklif kodu), istemcilerin teklifi kullanabilmesi için sunucunuzun çalışma zamanında imzaladığı yüke gömülmelidir.
+Promosyon teklifleri **mevcut aboneleri** hedefler; genellikle uygulama içi yükseltme akışlarında kullanılır. `--code` değeri (teklif kodu), istemcilerin teklifi kullanabilmesi için sunucunuzun çalışma zamanında imzaladığı yüke gömülmelidir.
 
 ```bash
 ascelerate sub promo-offer list <bundle-id> <product-id>
 ascelerate sub promo-offer info <bundle-id> <product-id> <offer-id>
 
-# Oluştur — aynı tek bölge veya --equalize-all-territories deseni
+# Oluştur: aynı tek bölge veya --equalize-all-territories deseni
 ascelerate sub promo-offer create <bundle-id> <product-id> \
   --name "Loyalty 50%" --code LOYALTY50 \
   --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \

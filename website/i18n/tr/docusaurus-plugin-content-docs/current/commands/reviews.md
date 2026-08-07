@@ -5,7 +5,7 @@ title: Müşteri Değerlendirmeleri
 
 # Müşteri Değerlendirmeleri
 
-Müşteri değerlendirmelerini görüntüleyin ve geliştirici yanıtlarını yönetin. Değerlendirmelerin kendisi salt okunurdur — yalnızca **geliştirici yanıtını** yayımlayabilir, değiştirebilir veya silebilirsiniz.
+Müşteri değerlendirmelerini görüntüleyin ve geliştirici yanıtlarını yönetin. Değerlendirmelerin kendisi salt okunurdur; yalnızca **geliştirici yanıtını** yayımlayabilir, değiştirebilir veya silebilirsiniz.
 
 ## Listeleme
 
@@ -17,11 +17,11 @@ ascelerate reviews list <bundle-id> --territory USA
 
 Tablo; değerlendirme kimliğini, yıldız puanını, tarihi, bölgeyi, yanıt olup olmadığını ve başlığı gösterir.
 
-- `--rating` — yıldız puanına göre filtreler (1–5).
-- `--territory` — değerlendirme bölge koduna göre filtreler (örn. `USA`).
-- `--sort` — `recent` (varsayılan), `oldest`, `critical` (önce en düşük puan) veya `best` (önce en yüksek).
-- `--unanswered` — yalnızca yayımlanmış yanıtı olmayan değerlendirmeler.
-- `--limit` — gösterilecek en fazla değerlendirme sayısı (varsayılan 50, en fazla 200).
+- `--rating`: Yıldız puanına göre filtreler (1–5).
+- `--territory`: Değerlendirme bölge koduna göre filtreler (örn. `USA`).
+- `--sort`: `recent` (varsayılan), `oldest`, `critical` (önce en düşük puan) veya `best` (önce en yüksek).
+- `--unanswered`: Yalnızca yayımlanmış yanıtı olmayan değerlendirmeleri gösterir.
+- `--limit`: Gösterilecek en fazla değerlendirme sayısı (varsayılan 50, en fazla 200).
 
 ## Detaylar
 

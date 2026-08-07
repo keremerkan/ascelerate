@@ -140,7 +140,7 @@ override func setUp() {
 4. `numberOfRetries` ayarlıysa ve herhangi bir cihaz başarısız olursa: başarısız simülatörleri sıfırlar, yeniden yerelleştirir, yeniden başlatır ve tekrar dener
 5. Cihaz bazlı önbellekten çıktı dizinine ekran görüntülerini toplar
 6. Ekran görüntülerini cihaz çerçeveleri ile çerçeveler (`frameDevice` etkinse)
-7. Hatalar atlanır ve devam edilir — hata günlükleri çıktıya kaydedilir
+7. Hatalar atlanır ve devam edilir; hata günlükleri çıktıya kaydedilir
 
 ## Çıktı
 
@@ -159,7 +159,7 @@ screenshots/
 Apple cihaz çerçeveleri ile yakalanan ekran görüntülerini çerçeveleyin.
 
 :::info
-Cihaz çerçeveleri ascelerate ile birlikte gelmez — [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) sayfasından indirin (Apple Developer hesabı gereklidir). İndirme, tüm güncel cihazlar için PNG çerçeveler içeren bir DMG dosyasıdır.
+Cihaz çerçeveleri ascelerate ile birlikte gelmez; [Apple Product Bezels](https://developer.apple.com/design/resources/#product-bezels) sayfasından indirin (Apple Developer hesabı gereklidir). İndirme, tüm güncel cihazlar için PNG çerçeveler içeren bir DMG dosyasıdır.
 :::
 
 ### Kurulum
@@ -203,7 +203,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `darkMode` | Simülatörlerde karanlık modu etkinleştir |
 | `disableAnimations` | Testler sırasında animasyonları devre dışı bırak |
 | `waitAfterBoot` | Simülatör başlatıldıktan sonra beklenecek saniye (varsayılan: 0) |
-| `waitAfterEraseAndReboot` | Simülatör taze durumdayken — çalıştırmanın ilk dilinde veya simülatör silindiğinde (`eraseSimulator: true` veya yeniden deneme yoluyla) — beklenecek ek saniye. İlk açılış sistem uyarılarına ("Apple Intelligence is ready" gibi) ekran görüntüleri çekilmeden önce görünme zamanı verir. |
+| `waitAfterEraseAndReboot` | Simülatör taze durumdayken beklenecek ek saniye; çalıştırmanın ilk dilinde veya simülatör silindiğinde (`eraseSimulator: true` veya yeniden deneme yoluyla) geçerlidir. İlk açılış sistem uyarılarına ("Apple Intelligence is ready" gibi) ekran görüntüleri çekilmeden önce görünme zamanı verir. |
 | `testWithoutBuilding` | Derlemeyi atla, mevcut xctestrun dosyasını kullan |
 | `cleanBuild` | Derlemeden önce `clean` çalıştır |
 | `headless` | Simulator.app'i açma |
@@ -211,7 +211,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `launchArguments` | Uygulamaya aktarılan ek başlatma argümanları |
 | `configuration` | Derleme yapılandırması (örn. Debug, Release) |
 | `testplan` | Xcode test planı adı |
-| `numberOfRetries` | Başarısız diller için tekrar deneme sayısı — simülatörü sıfırlar, yeniden yerelleştirir, yeniden başlatır ve testleri tekrar çalıştırır. Yalnızca başarısız cihazları tekrar dener. Tekrar denenen sonuçlar özet tablosunda işaretlenir. |
+| `numberOfRetries` | Başarısız diller için tekrar deneme sayısı. Her deneme simülatörü sıfırlar, yeniden yerelleştirir, yeniden başlatır ve testleri tekrar çalıştırır. Yalnızca başarısız cihazları tekrar dener. Tekrar denenen sonuçlar özet tablosunda işaretlenir. |
 | `stopAfterFirstError` | İlk hatadan sonra tüm cihazları durdur |
 | `reinstallApp` | Testlerden önce uygulamayı silip yeniden yükle |
 | `xcargs` | `xcodebuild`'e aktarılan ek argümanlar |

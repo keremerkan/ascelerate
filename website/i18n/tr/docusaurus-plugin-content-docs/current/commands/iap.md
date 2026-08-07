@@ -60,7 +60,7 @@ ascelerate iap localizations import <bundle-id> <product-id> --file iap-de.json
 
 ## Fiyatlandırma
 
-`iap pricing` fiyat çizelgesini okur ve yazar. Çizelgenin tek bir temel bölgesi vardır — Apple'ın diğer tüm bölgelerdeki fiyatları otomatik eşitlemek için kullandığı bölge — ve isteğe bağlı olarak bölgeye özel manuel geçersiz kılmalar içerebilir.
+`iap pricing` fiyat çizelgesini okur ve yazar. Çizelgenin tek bir temel bölgesi (Apple'ın diğer tüm bölgelerdeki fiyatları otomatik eşitlemek için kullandığı bölge) vardır ve isteğe bağlı olarak bölgeye özel manuel geçersiz kılmalar içerebilir.
 
 ```bash
 # Mevcut fiyat çizelgesini göster (henüz ayarlanmamışsa uyarır)

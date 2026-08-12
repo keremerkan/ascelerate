@@ -40,7 +40,7 @@ function HomepageHeader() {
           </Link>
           <Link
             className="button button--secondary button--lg"
-            to="https://github.com/keremerkan/asc-cli">
+            to="https://github.com/keremerkan/ascelerate">
             GitHub
           </Link>
         </div>

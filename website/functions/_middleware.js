@@ -28,6 +28,13 @@ export async function onRequest({ request, env, next }) {
   if ((response.headers.get('content-type') || '').includes('text/html')) {
     const headers = new Headers(response.headers);
     headers.append('Vary', 'Accept');
+    // RFC 8288 discovery: the homepage advertises its machine-readable twin,
+    // so agents can find /index.md from a HEAD request alone.
+    const home = url.pathname.match(/^\/(?:(de|fr|ja|tr)\/)?$/);
+    if (home) {
+      const prefix = home[1] ? `/${home[1]}` : '';
+      headers.set('Link', `<${prefix}/index.md>; rel="describedby"; type="text/markdown"`);
+    }
     return new Response(response.body, { status: response.status, headers });
   }
   return response;

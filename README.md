@@ -139,6 +139,33 @@ ascelerate alias remove myapp
 
 Aliases are stored in `~/.ascelerate/aliases.json`. Any argument that doesn't contain a dot is looked up as an alias — real bundle IDs (which always contain dots) work unchanged.
 
+### JSON output
+
+Read commands support `--json` for machine-readable output, ready for `jq`, scripts, and AI agents:
+
+```bash
+ascelerate apps list --json
+ascelerate apps info <bundle-id> --json
+ascelerate apps versions <bundle-id> --json
+ascelerate apps review preflight <bundle-id> --json
+ascelerate apps review status <bundle-id> --json
+ascelerate builds list --bundle-id <bundle-id> --json
+ascelerate testflight builds <bundle-id> --json
+ascelerate testflight status <bundle-id> --json
+ascelerate reviews list <bundle-id> --json
+ascelerate reviews info <review-id> --json
+ascelerate iap list <bundle-id> --json
+ascelerate iap info <bundle-id> <product-id> --json
+ascelerate iap pricing show <bundle-id> <product-id> --json
+ascelerate sub groups <bundle-id> --json
+ascelerate sub list <bundle-id> --json
+ascelerate sub info <bundle-id> <product-id> --json
+ascelerate sub pricing show <bundle-id> <product-id> --json
+ascelerate rate-limit --json
+```
+
+List commands emit a top-level JSON array, detail commands a single object. Enum values are raw API constants (`WAITING_FOR_REVIEW`, `IOS`), dates are ISO 8601, every resource carries its `id`, null fields are omitted, and empty results emit `[]` — never prose. Warnings become booleans (`iap info`/`sub info` report `"hasPricing": false`). `--json` implies non-interactive mode, and errors go to stderr so stdout is always valid JSON.
+
 ### Apps
 
 ```bash
@@ -223,7 +250,7 @@ Result: 5 passed, 3 failed
 
 The What's New check is skipped when the app has no previously released version — that field only exists for updates, not for a first release.
 
-Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files.
+Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files. With `--json`, it emits a structured report — a `passed` boolean plus one entry per check — while keeping the same exit-code behavior.
 
 ### Build Management
 
@@ -1049,7 +1076,7 @@ ascelerate reviews respond <review-id> --body "Thanks for the feedback! ..."
 ascelerate reviews delete-response <review-id>
 ```
 
-Reviews are read-only — you can only manage the developer response. `--sort` accepts `recent`, `oldest`, `critical` (lowest rating first), or `best`. Review IDs come from `reviews list`.
+Reviews are read-only — you can only manage the developer response. `--sort` accepts `recent`, `oldest`, `critical` (lowest rating first), or `best`. Review IDs come from `reviews list`. With `--json`, `reviews list` includes full review bodies and developer responses, so no per-review `info` calls are needed.
 
 ### In-App Events
 

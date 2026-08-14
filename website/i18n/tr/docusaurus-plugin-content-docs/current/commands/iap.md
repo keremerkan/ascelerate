@@ -20,6 +20,8 @@ Filtre değerleri büyük/küçük harf duyarsızdır. Türler: `CONSUMABLE`, `N
 ascelerate iap info <bundle-id> <product-id>
 ```
 
+`iap list` ve `iap info`, makine tarafından okunabilir çıktı için `--json` seçeneğini kabul eder ([kurallar](../guides/automation.md#json-output)); `info`, eksik fiyatlandırma uyarısını `hasPricing` boolean'ı olarak raporlar.
+
 ## Tanıtılan satın almalar
 
 App Store ürün sayfanızda uygulama içi satın almaları veya abonelikleri tanıtın. Görüntülenme sırasına göre listelenir.
@@ -69,6 +71,8 @@ ascelerate iap pricing show <bundle-id> <product-id>
 # Bir bölgedeki tüm fiyat kademelerini listele
 ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```
+
+`pricing show` komutu `--json` seçeneğini kabul eder; temel bölgeyi ve her fiyatı, bölgesi ve para birimiyle birlikte verir.
 
 ### Temel bölge fiyatını ayarlama
 

@@ -20,6 +20,8 @@ Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_
 ascelerate iap info <bundle-id> <product-id>
 ```
 
+`iap list` and `iap info` accept `--json` for machine-readable output ([conventions](../guides/automation.md#json-output)); `info` reports the missing-pricing warning as a `hasPricing` boolean.
+
 ## Promoted purchases
 
 Promote in-app purchases or subscriptions on your App Store product page. They appear in display order.
@@ -69,6 +71,8 @@ ascelerate iap pricing show <bundle-id> <product-id>
 # List all price tiers available in a territory
 ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```
+
+`pricing show` accepts `--json` — it emits the base territory plus every price with its territory and currency.
 
 ### Set the base territory price
 

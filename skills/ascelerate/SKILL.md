@@ -20,6 +20,33 @@ ascelerate apps info myapp    # Use alias anywhere
 
 Any argument without a dot is treated as an alias. Real bundle IDs work unchanged.
 
+### JSON output
+
+Read commands support `--json` for machine-readable output — prefer it over parsing tables:
+
+```bash
+ascelerate apps list --json
+ascelerate apps info <app> --json
+ascelerate apps versions <app> --json
+ascelerate apps review preflight <app> --json     # {passed, checks: [{group?, name, passed, detail}]}; exits non-zero on failures
+ascelerate apps review status <app> --json        # submissions incl. per-item states
+ascelerate builds list --bundle-id <app> --json
+ascelerate testflight builds <app> --json
+ascelerate testflight status <app> --json
+ascelerate reviews list <app> --json              # includes full review bodies + developer responses (no per-review info calls needed)
+ascelerate reviews info <review-id> --json
+ascelerate iap list <app> --json
+ascelerate iap info <app> <product-id> --json     # includes "hasPricing" boolean
+ascelerate iap pricing show <app> <product-id> --json
+ascelerate sub groups <app> --json
+ascelerate sub list <app> --json
+ascelerate sub info <app> <product-id> --json     # includes "hasPricing" boolean
+ascelerate sub pricing show <app> <product-id> --json
+ascelerate rate-limit --json
+```
+
+Conventions: list commands emit a top-level JSON array, detail commands a single object; raw API enum values (`WAITING_FOR_REVIEW`, `IOS`); ISO 8601 dates; resource `id` always included; null fields omitted; empty results emit `[]`. `--json` implies non-interactive — ambiguity errors instead of prompting (disambiguate with `--platform` etc.). Errors go to stderr, so stdout is always valid JSON.
+
 ### Version management
 
 ```bash
@@ -123,7 +150,7 @@ ascelerate apps review attachment upload <app> [--version X] <file>   # reserve/
 ascelerate apps review attachment delete <attachment-id>
 ```
 
-`preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices). Exits non-zero on failures.
+`preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices). Exits non-zero on failures. With `--json` it emits the structured check list (same exit code) — ideal as a CI gate.
 
 When submitting, the tool detects IAPs and subscriptions and offers to submit them alongside the app version.
 
@@ -266,7 +293,7 @@ ascelerate reviews respond <review-id> --body "..."       # publish/replace deve
 ascelerate reviews delete-response <review-id>
 ```
 
-Reviews are read-only; only the developer response is writable. Review IDs come from `reviews list`.
+Reviews are read-only; only the developer response is writable. Review IDs come from `reviews list`. Use `reviews list --json` to get full review bodies and existing developer responses in one call — no per-review `info` calls needed.
 
 The App Store Connect API does **not** expose aggregate rating counts or the star-rating average/histogram — only individual reviews (above). For download/unit numbers and revenue, use `reports` (below).
 
@@ -575,6 +602,7 @@ When the user asks to add a new language/locale to an app, translate **all** of 
 ## Tips
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)
+- Add `--json` to read commands for machine-readable output (see JSON output above)
 - Use `ascelerate rate-limit` to check API quota (3600 requests/hour)
 - Run `ascelerate install-completions` after updates for tab completion
 - Only editable versions (Prepare for Submission / Waiting for Review) accept updates

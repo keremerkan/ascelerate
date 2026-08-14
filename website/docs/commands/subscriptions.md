@@ -13,6 +13,8 @@ ascelerate sub list <bundle-id>
 ascelerate sub info <bundle-id> <product-id>
 ```
 
+All three accept `--json` for machine-readable output ([conventions](../guides/automation.md#json-output)); `info` reports the missing-prices warning as a `hasPricing` boolean.
+
 ## Create, update, and delete subscriptions
 
 ```bash
@@ -60,6 +62,9 @@ Subscription pricing is per-territory. There is no auto-equalize concept like IA
 ```bash
 # Show current per-territory prices (warns if none)
 ascelerate sub pricing show <bundle-id> <product-id>
+
+# Show them as JSON (price, currency, start date, and preserved flag per territory)
+ascelerate sub pricing show <bundle-id> <product-id> --json
 
 # List available tiers for a territory
 ascelerate sub pricing tiers <bundle-id> <product-id> --territory USA

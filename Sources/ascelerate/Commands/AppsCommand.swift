@@ -20,23 +20,40 @@ struct AppsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "List all apps."
     )
-    
+
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Entry: Encodable {
+      let id: String
+      let bundleID: String?
+      let name: String?
+      let sku: String?
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
-      var allApps: [(String, String, String)] = []
-      
+      var allApps: [Entry] = []
+
       for try await page in client.pages(Resources.v1.apps.get()) {
         for app in page.data {
-          let name = app.attributes?.name ?? "—"
-          let bundleID = app.attributes?.bundleID ?? "—"
-          let sku = app.attributes?.sku ?? "—"
-          allApps.append((bundleID, name, sku))
+          allApps.append(Entry(
+            id: app.id,
+            bundleID: app.attributes?.bundleID,
+            name: app.attributes?.name,
+            sku: app.attributes?.sku
+          ))
         }
       }
-      
+
+      if jsonOption.json {
+        try printJSON(allApps)
+        return
+      }
+
       Table.print(
         headers: ["Bundle ID", "Name", "SKU"],
-        rows: allApps.map { [$0.0, $0.1, $0.2] }
+        rows: allApps.map { [$0.bundleID ?? "—", $0.name ?? "—", $0.sku ?? "—"] }
       )
     }
   }
@@ -49,30 +66,71 @@ struct AppsCommand: AsyncParsableCommand {
     @Argument(help: "The bundle identifier of the app.",
               completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
-    
+
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Detail: Encodable {
+      struct Version: Encodable {
+        let version: String?
+        let platform: String?
+        let state: String?
+        let releaseType: String?
+        let createdDate: Date?
+      }
+      let id: String
+      let name: String?
+      let bundleID: String?
+      let sku: String?
+      let primaryLocale: String?
+      let latestVersion: Version?
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-
-      let attrs = app.attributes
-      print("Name:            \(attrs?.name ?? "—")")
-      print("Bundle ID:       \(attrs?.bundleID ?? "—")")
-      print("SKU:             \(attrs?.sku ?? "—")")
-      print("Primary Locale:  \(attrs?.primaryLocale.map { localeName($0) } ?? "—")")
 
       let versions = try await client.send(
         Resources.v1.apps.id(app.id).appStoreVersions.get(
           filterAppVersionState: [.prepareForSubmission, .waitingForReview, .inReview, .pendingDeveloperRelease, .readyForDistribution]
         )
       )
-      if let latest = versions.data.first {
-        let v = latest.attributes
+      let attrs = app.attributes
+      let detail = Detail(
+        id: app.id,
+        name: attrs?.name,
+        bundleID: attrs?.bundleID,
+        sku: attrs?.sku,
+        primaryLocale: attrs?.primaryLocale,
+        latestVersion: versions.data.first.map { latest in
+          let v = latest.attributes
+          return Detail.Version(
+            version: v?.versionString,
+            platform: v?.platform?.rawValue,
+            state: v?.appVersionState?.rawValue,
+            releaseType: v?.releaseType?.rawValue,
+            createdDate: v?.createdDate
+          )
+        }
+      )
+
+      if jsonOption.json {
+        try printJSON(detail)
+        return
+      }
+
+      print("Name:            \(detail.name ?? "—")")
+      print("Bundle ID:       \(detail.bundleID ?? "—")")
+      print("SKU:             \(detail.sku ?? "—")")
+      print("Primary Locale:  \(detail.primaryLocale.map { localeName($0) } ?? "—")")
+
+      if let v = detail.latestVersion {
         print("")
-        print("Latest Version:  \(v?.versionString ?? "—")")
-        print("Platform:        \(v?.platform.map { formatState($0) } ?? "—")")
-        print("State:           \(v?.appVersionState.map { formatState($0) } ?? "—")")
-        print("Release Type:    \(v?.releaseType.map { formatState($0) } ?? "—")")
-        print("Created:         \(v?.createdDate.map { formatDate($0) } ?? "—")")
+        print("Latest Version:  \(v.version ?? "—")")
+        print("Platform:        \(v.platform.map { formatState($0) } ?? "—")")
+        print("State:           \(v.state.map { formatState($0) } ?? "—")")
+        print("Release Type:    \(v.releaseType.map { formatState($0) } ?? "—")")
+        print("Created:         \(v.createdDate.map { formatDate($0) } ?? "—")")
       }
     }
   }
@@ -81,33 +139,59 @@ struct AppsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "List App Store versions."
     )
-    
+
     @Argument(help: "The bundle identifier of the app.",
               completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
-    
+
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Entry: Encodable {
+      let id: String
+      let version: String?
+      let platform: String?
+      let state: String?
+      let releaseType: String?
+      let createdDate: Date?
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      
+
       let response = try await client.send(
         Resources.v1.apps.id(app.id).appStoreVersions.get()
       )
-      
-      var rows: [[String]] = []
-      for version in response.data {
+
+      let entries = response.data.map { version -> Entry in
         let attrs = version.attributes
-        let versionString = attrs?.versionString ?? "—"
-        let platform = attrs?.platform.map { formatState($0) } ?? "—"
-        let state = attrs?.appVersionState.map { formatState($0) } ?? "—"
-        let releaseType = attrs?.releaseType.map { formatState($0) } ?? "—"
-        let created = attrs?.createdDate.map { formatDate($0) } ?? "—"
-        rows.append([versionString, platform, state, releaseType, created])
+        return Entry(
+          id: version.id,
+          version: attrs?.versionString,
+          platform: attrs?.platform?.rawValue,
+          state: attrs?.appVersionState?.rawValue,
+          releaseType: attrs?.releaseType?.rawValue,
+          createdDate: attrs?.createdDate
+        )
       }
-      
+
+      if jsonOption.json {
+        try printJSON(entries)
+        return
+      }
+
       Table.print(
         headers: ["Version", "Platform", "State", "Release Type", "Created"],
-        rows: rows
+        rows: entries.map { e in
+          [
+            e.version ?? "—",
+            e.platform.map { formatState($0) } ?? "—",
+            e.state.map { formatState($0) } ?? "—",
+            e.releaseType.map { formatState($0) } ?? "—",
+            e.createdDate.map { formatDate($0) } ?? "—",
+          ]
+        }
       )
     }
   }
@@ -1236,7 +1320,28 @@ struct AppsCommand: AsyncParsableCommand {
 
       @OptionGroup var platformOption: PlatformOption
 
+      @OptionGroup var jsonOption: JSONOption
+
+      /// One preflight check. `group` is nil for top-level checks, a locale code for
+      /// per-locale checks, or the "inAppPurchases"/"subscriptions" section sentinels.
+      fileprivate struct Check: Encodable {
+        let group: String?
+        let name: String
+        let passed: Bool
+        let detail: String
+      }
+
+      private struct Report: Encodable {
+        let versionID: String
+        let version: String?
+        let platform: String?
+        let state: String?
+        let passed: Bool
+        let checks: [Check]
+      }
+
       func run() async throws {
+        jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -1246,33 +1351,34 @@ struct AppsCommand: AsyncParsableCommand {
         let stateStr = versionState.map { formatState($0) } ?? "unknown"
         let appName = app.attributes?.name ?? bundleID
 
-        print("Preflight checks for \(appName) v\(versionString) (\(stateStr))")
-        print()
-
-        var rows: [[String]] = []
-        var failCount = 0
-
-        // 1. Version state
-        print("Checking version state...")
-        let editable = versionState.map { Localizations.editableStates.contains($0) } ?? false
-        if editable {
-          rows.append(["Version state", green("✓") + " \(stateStr)"])
-        } else {
-          rows.append(["Version state", red("✗") + " \(stateStr) (not editable)"])
-          failCount += 1
+        // Progress messages would corrupt the JSON stream.
+        func progress(_ message: String) {
+          if !jsonOption.json { print(message) }
         }
 
+        progress("Preflight checks for \(appName) v\(versionString) (\(stateStr))")
+        progress("")
+
+        var checks: [Check] = []
+
+        // 1. Version state
+        progress("Checking version state...")
+        let editable = versionState.map { Localizations.editableStates.contains($0) } ?? false
+        checks.append(Check(
+          group: nil, name: "Version state", passed: editable,
+          detail: editable ? stateStr : "\(stateStr) (not editable)"
+        ))
+
         // 2. Build attached
-        print("Checking build...")
+        progress("Checking build...")
         do {
           let buildResponse = try await client.send(
             Resources.v1.appStoreVersions.id(appVersion.id).build.get()
           )
           let buildNumber = buildResponse.data.attributes?.version ?? "unknown"
-          rows.append(["Build attached", green("✓") + " Build \(buildNumber)"])
+          checks.append(Check(group: nil, name: "Build attached", passed: true, detail: "Build \(buildNumber)"))
         } catch is DecodingError {
-          rows.append(["Build attached", red("✗") + " No build attached"])
-          failCount += 1
+          checks.append(Check(group: nil, name: "Build attached", passed: false, detail: "No build attached"))
         }
 
         // 3. Fetch version localizations
@@ -1286,7 +1392,7 @@ struct AppsCommand: AsyncParsableCommand {
           )
         )
         let hasReleasedVersion = releasedResponse.data.contains { $0.id != appVersion.id }
-        print("Fetching localizations...")
+        progress("Fetching localizations...")
         let locsResponse = try await client.send(
           Resources.v1.appStoreVersions.id(appVersion.id)
             .appStoreVersionLocalizations.get()
@@ -1296,7 +1402,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         // 4. Fetch app-info localizations
-        print("Fetching app info...")
+        progress("Fetching app info...")
         let appInfoResponse = try await client.send(
           Resources.v1.apps.id(app.id).appInfos.get(
             include: [.appInfoLocalizations],
@@ -1322,7 +1428,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         // 5. Fetch screenshots per locale. Two bounded-concurrency phases (sets, then
         // screenshots) replace the sequential L + L×S call chain with identical counts.
-        print("Fetching screenshots...")
+        progress("Fetching screenshots...")
         let setsByLocale = try await boundedConcurrentMap(versionLocs) { loc in
           let setsResponse = try await client.send(
             Resources.v1.appStoreVersionLocalizations.id(loc.id)
@@ -1347,24 +1453,57 @@ struct AppsCommand: AsyncParsableCommand {
           screenshotsByLocale[locale] = (nonEmpty.count, nonEmpty.reduce(0, +))
         }
 
-        // 6. Build per-locale rows
-        let localeCheck = buildLocaleRows(
+        // 6. Per-locale checks
+        checks += buildLocaleChecks(
           versionLocs: versionLocs, appInfoByLocale: appInfoByLocale,
           screenshotsByLocale: screenshotsByLocale, requireWhatsNew: hasReleasedVersion)
-        rows += localeCheck.rows
-        failCount += localeCheck.failures
 
         // 7. In-app purchases
-        let iapCheck = try await checkInAppPurchases(appID: app.id, client: client)
-        rows += iapCheck.rows
-        failCount += iapCheck.failures
+        progress("Checking in-app purchases...")
+        checks += try await checkInAppPurchases(appID: app.id, client: client)
 
         // 8. Subscriptions
-        let subCheck = try await checkSubscriptions(appID: app.id, client: client)
-        rows += subCheck.rows
-        failCount += subCheck.failures
+        progress("Checking subscriptions...")
+        checks += try await checkSubscriptions(appID: app.id, client: client)
 
-        let passCount = rows.count(where: { $0[1].contains("✓") })
+        let failCount = checks.count(where: { !$0.passed })
+
+        if jsonOption.json {
+          try printJSON(Report(
+            versionID: appVersion.id,
+            version: appVersion.attributes?.versionString,
+            platform: appVersion.attributes?.platform?.rawValue,
+            state: versionState?.rawValue,
+            passed: failCount == 0,
+            checks: checks
+          ))
+          if failCount > 0 { throw ExitCode.failure }
+          return
+        }
+
+        // Render the table: a header row per group (locale or product section),
+        // grouped checks indented beneath it.
+        func groupTitle(_ group: String) -> String {
+          let count = checks.count(where: { $0.group == group })
+          switch group {
+          case "inAppPurchases": return "In-App Purchases (\(count))"
+          case "subscriptions": return "Subscriptions (\(count))"
+          default: return localeName(group)
+          }
+        }
+
+        var rows: [[String]] = []
+        var currentGroup: String?
+        for check in checks {
+          if let group = check.group, group != currentGroup {
+            currentGroup = group
+            rows.append(["", ""])
+            rows.append([groupTitle(group), ""])
+          }
+          let mark = check.passed ? green("✓") : red("✗")
+          rows.append([(check.group == nil ? "" : "  ") + check.name, "\(mark) \(check.detail)"])
+        }
+
         print()
 
         Table.print(
@@ -1373,6 +1512,7 @@ struct AppsCommand: AsyncParsableCommand {
         )
 
         print()
+        let passCount = checks.count - failCount
         let resultText = "\(green("\(passCount) passed")), \(failCount > 0 ? red("\(failCount) failed") : "\(failCount) failed")"
         print("Result: \(resultText)")
 
@@ -1381,23 +1521,19 @@ struct AppsCommand: AsyncParsableCommand {
         }
       }
 
-      /// Builds the per-locale app-info / localization / screenshot rows for the preflight table.
-      private func buildLocaleRows(
+      /// Builds the per-locale app-info / localization / screenshot checks.
+      private func buildLocaleChecks(
         versionLocs: [AppStoreVersionLocalization],
         appInfoByLocale: [String: AppInfoLocalization],
         screenshotsByLocale: [String: (sets: Int, count: Int)],
         requireWhatsNew: Bool
-      ) -> (rows: [[String]], failures: Int) {
-        var rows: [[String]] = []
-        var failures = 0
+      ) -> [Check] {
+        var checks: [Check] = []
         let allLocales = Set(versionLocs.compactMap { $0.attributes?.locale })
           .union(appInfoByLocale.keys)
           .sorted()
 
         for locale in allLocales {
-          rows.append(["", ""])
-          rows.append([localeName(locale), ""])
-
           // App info
           if let info = appInfoByLocale[locale] {
             var missing: [String] = []
@@ -1410,12 +1546,10 @@ struct AppsCommand: AsyncParsableCommand {
             if info.attributes?.privacyPolicyURL == nil || info.attributes?.privacyPolicyURL?.isEmpty == true {
               missing.append(formatFieldName("privacyPolicyURL"))
             }
-            if missing.isEmpty {
-              rows.append(["  App info", green("✓") + " All fields filled"])
-            } else {
-              rows.append(["  App info", red("✗") + " Missing: \(missing.joined(separator: ", "))"])
-              failures += 1
-            }
+            checks.append(Check(
+              group: locale, name: "App info", passed: missing.isEmpty,
+              detail: missing.isEmpty ? "All fields filled" : "Missing: \(missing.joined(separator: ", "))"
+            ))
           }
 
           // Version localizations
@@ -1446,37 +1580,32 @@ struct AppsCommand: AsyncParsableCommand {
             if loc.attributes?.supportURL == nil {
               missing.append(formatFieldName("supportURL"))
             }
-            if missing.isEmpty && invalid.isEmpty {
-              rows.append(["  Localizations", green("✓") + " All fields filled"])
-            } else {
-              var parts: [String] = []
-              if !missing.isEmpty { parts.append("Missing: \(missing.joined(separator: ", "))") }
-              if !invalid.isEmpty { parts.append(invalid.joined(separator: ", ")) }
-              rows.append(["  Localizations", red("✗") + " \(parts.joined(separator: "; "))"])
-              failures += 1
-            }
+            var parts: [String] = []
+            if !missing.isEmpty { parts.append("Missing: \(missing.joined(separator: ", "))") }
+            if !invalid.isEmpty { parts.append(invalid.joined(separator: ", ")) }
+            checks.append(Check(
+              group: locale, name: "Localizations", passed: parts.isEmpty,
+              detail: parts.isEmpty ? "All fields filled" : parts.joined(separator: "; ")
+            ))
           }
 
           // Screenshots
           if let ss = screenshotsByLocale[locale] {
-            if ss.count > 0 {
-              rows.append(["  Screenshots", green("✓") + " \(ss.sets) set\(ss.sets == 1 ? "" : "s"), \(ss.count) screenshot\(ss.count == 1 ? "" : "s")"])
-            } else {
-              rows.append(["  Screenshots", red("✗") + " No screenshots"])
-              failures += 1
-            }
+            checks.append(Check(
+              group: locale, name: "Screenshots", passed: ss.count > 0,
+              detail: ss.count > 0
+                ? "\(ss.sets) set\(ss.sets == 1 ? "" : "s"), \(ss.count) screenshot\(ss.count == 1 ? "" : "s")"
+                : "No screenshots"
+            ))
           }
         }
-        return (rows, failures)
+        return checks
       }
 
-      /// Checks each in-app purchase's price schedule and state, returning preflight rows.
+      /// Checks each in-app purchase's price schedule and state.
       private func checkInAppPurchases(
         appID: String, client: AppStoreConnectClient
-      ) async throws -> (rows: [[String]], failures: Int) {
-        print("Checking in-app purchases...")
-        var rows: [[String]] = []
-        var failures = 0
+      ) async throws -> [Check] {
         var iaps: [InAppPurchaseV2] = []
         for try await page in client.pages(
           Resources.v1.apps.id(appID).inAppPurchasesV2.get(limit: 200)
@@ -1484,68 +1613,51 @@ struct AppsCommand: AsyncParsableCommand {
           iaps.append(contentsOf: page.data)
         }
 
-        if !iaps.isEmpty {
-          rows.append(["", ""])
-          rows.append(["In-App Purchases (\(iaps.count))", ""])
-          let sortedIAPs = iaps.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
-          let schedules = try await boundedConcurrentMap(sortedIAPs.map(\.id)) { id in
-            try await IAPCommand.iapPriceScheduleExists(iapID: id, client: client)
-          }
-          for (iap, hasSchedule) in zip(sortedIAPs, schedules) {
-            let label = "  " + (iap.attributes?.productID ?? iap.attributes?.name ?? iap.id)
-            let state = iap.attributes?.state
-            let stateStr = state.map { formatState($0) } ?? "unknown"
-
-            if !hasSchedule {
-              rows.append([label, red("✗") + " No price schedule"])
-              failures += 1
-            } else if state == .readyToSubmit || state == .approved
-                      || state == .waitingForReview || state == .inReview {
-              rows.append([label, green("✓") + " \(stateStr)"])
-            } else {
-              rows.append([label, red("✗") + " \(stateStr)"])
-              failures += 1
-            }
-          }
+        var checks: [Check] = []
+        let sortedIAPs = iaps.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
+        let schedules = try await boundedConcurrentMap(sortedIAPs.map(\.id)) { id in
+          try await IAPCommand.iapPriceScheduleExists(iapID: id, client: client)
         }
-        return (rows, failures)
+        for (iap, hasSchedule) in zip(sortedIAPs, schedules) {
+          let name = iap.attributes?.productID ?? iap.attributes?.name ?? iap.id
+          let state = iap.attributes?.state
+          let stateStr = state.map { formatState($0) } ?? "unknown"
+          let submittable = state == .readyToSubmit || state == .approved
+            || state == .waitingForReview || state == .inReview
+
+          checks.append(Check(
+            group: "inAppPurchases", name: name, passed: hasSchedule && submittable,
+            detail: hasSchedule ? stateStr : "No price schedule"
+          ))
+        }
+        return checks
       }
 
-      /// Checks each subscription's prices and state, returning preflight rows.
+      /// Checks each subscription's prices and state.
       private func checkSubscriptions(
         appID: String, client: AppStoreConnectClient
-      ) async throws -> (rows: [[String]], failures: Int) {
-        print("Checking subscriptions...")
-        var rows: [[String]] = []
-        var failures = 0
+      ) async throws -> [Check] {
         let subGroups = try await SubCommand.fetchGroups(appID: appID, client: client)
         let allSubs = subGroups.flatMap(\.subscriptions)
 
-        if !allSubs.isEmpty {
-          rows.append(["", ""])
-          rows.append(["Subscriptions (\(allSubs.count))", ""])
-          let sortedSubs = allSubs.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
-          let priced = try await boundedConcurrentMap(sortedSubs.map(\.id)) { id in
-            try await SubCommand.subscriptionHasPrices(subscriptionID: id, client: client)
-          }
-          for (sub, hasPrices) in zip(sortedSubs, priced) {
-            let label = "  " + (sub.attributes?.productID ?? sub.attributes?.name ?? sub.id)
-            let state = sub.attributes?.state
-            let stateStr = state.map { formatState($0) } ?? "unknown"
-
-            if !hasPrices {
-              rows.append([label, red("✗") + " No prices set"])
-              failures += 1
-            } else if state == .readyToSubmit || state == .approved
-                      || state == .waitingForReview || state == .inReview {
-              rows.append([label, green("✓") + " \(stateStr)"])
-            } else {
-              rows.append([label, red("✗") + " \(stateStr)"])
-              failures += 1
-            }
-          }
+        var checks: [Check] = []
+        let sortedSubs = allSubs.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
+        let priced = try await boundedConcurrentMap(sortedSubs.map(\.id)) { id in
+          try await SubCommand.subscriptionHasPrices(subscriptionID: id, client: client)
         }
-        return (rows, failures)
+        for (sub, hasPrices) in zip(sortedSubs, priced) {
+          let name = sub.attributes?.productID ?? sub.attributes?.name ?? sub.id
+          let state = sub.attributes?.state
+          let stateStr = state.map { formatState($0) } ?? "unknown"
+          let submittable = state == .readyToSubmit || state == .approved
+            || state == .waitingForReview || state == .inReview
+
+          checks.append(Check(
+            group: "subscriptions", name: name, passed: hasPrices && submittable,
+            detail: hasPrices ? stateStr : "No prices set"
+          ))
+        }
+        return checks
       }
     }
 
@@ -1562,23 +1674,35 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Filter by version string (e.g. 14.3).")
       var version: String?
-      
+
+      @OptionGroup var jsonOption: JSONOption
+
+      private struct Entry: Encodable {
+        struct Item: Encodable {
+          let id: String
+          let state: String?
+        }
+        let id: String
+        let platform: String?
+        let version: String?
+        let versionState: String?
+        let state: String?
+        let submittedDate: Date?
+        let items: [Item]
+      }
+
       func run() async throws {
+        jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        
+
         let response = try await client.send(
           Resources.v1.apps.id(app.id).reviewSubmissions.get(
             fieldsAppStoreVersions: [.versionString, .appVersionState],
             include: [.appStoreVersionForReview, .items]
           )
         )
-        
-        if response.data.isEmpty {
-          print("No review submissions found.")
-          return
-        }
-        
+
         // Index included items for lookup
         var includedVersions: [String: AppStoreVersion] = [:]
         var includedItems: [String: ReviewSubmissionItem] = [:]
@@ -1589,67 +1713,70 @@ struct AppsCommand: AsyncParsableCommand {
             default: break
           }
         }
-        
-        // Resolve version string for each submission and filter if requested
-        func versionString(for submission: ReviewSubmission) -> String {
-          guard let versionRef = submission.relationships?.appStoreVersionForReview?.data,
-                let v = includedVersions[versionRef.id] else { return "—" }
-          return v.attributes?.versionString ?? "—"
+
+        let allEntries = response.data.map { submission -> Entry in
+          let attrs = submission.attributes
+          let reviewVersion = submission.relationships?.appStoreVersionForReview?.data
+            .flatMap { includedVersions[$0.id] }
+          let items = (submission.relationships?.items?.data ?? []).compactMap { ref in
+            includedItems[ref.id].map { Entry.Item(id: $0.id, state: $0.attributes?.state?.rawValue) }
+          }
+          return Entry(
+            id: submission.id,
+            platform: attrs?.platform?.rawValue,
+            version: reviewVersion?.attributes?.versionString,
+            versionState: reviewVersion?.attributes?.appVersionState?.rawValue,
+            state: attrs?.state?.rawValue,
+            submittedDate: attrs?.submittedDate,
+            items: items
+          )
         }
-        
-        let submissions = version != nil
-        ? response.data.filter { versionString(for: $0) == version }
-        : response.data
-        
-        if submissions.isEmpty {
-          print("No review submissions found for version \(version!).")
+        let entries = version != nil ? allEntries.filter { $0.version == version } : allEntries
+
+        if jsonOption.json {
+          try printJSON(entries)
           return
         }
-        
-        var rows: [[String]] = []
-        for submission in submissions {
-          let attrs = submission.attributes
-          let platform = attrs?.platform.map { formatState($0) } ?? "—"
-          let state = attrs?.state.map { formatState($0) } ?? "—"
-          let submitted = attrs?.submittedDate.map { formatDate($0) } ?? "—"
-          rows.append([platform, versionString(for: submission), state, submitted])
+
+        if allEntries.isEmpty {
+          print("No review submissions found.")
+          return
+        }
+        if entries.isEmpty {
+          print("No review submissions found for version \(version!).")
+          return
         }
 
         Table.print(
           headers: ["Platform", "Version", "State", "Submitted"],
-          rows: rows
+          rows: entries.map { e in
+            [
+              e.platform.map { formatState($0) } ?? "—",
+              e.version ?? "—",
+              e.state.map { formatState($0) } ?? "—",
+              e.submittedDate.map { formatDate($0) } ?? "—",
+            ]
+          }
         )
 
         // Show details for active submissions with issues
-        for submission in submissions {
-          guard let state = submission.attributes?.state,
-                state == .unresolvedIssues || state == .inReview || state == .waitingForReview
-          else { continue }
+        typealias SubmissionState = ReviewSubmission.Attributes.State
+        let activeStates = Set([SubmissionState.unresolvedIssues, .inReview, .waitingForReview].map(\.rawValue))
+        for e in entries {
+          guard let state = e.state, activeStates.contains(state) else { continue }
 
-          // Get version info
-          var versionInfo = ""
-          if let versionRef = submission.relationships?.appStoreVersionForReview?.data,
-             let v = includedVersions[versionRef.id] {
-            let vs = v.attributes?.versionString ?? "?"
-            let vState = v.attributes?.appVersionState.map { formatState($0) } ?? "?"
-            versionInfo = " — v\(vs) (\(vState))"
-          }
+          let versionInfo = e.version.map {
+            " — v\($0) (\(e.versionState.map { formatState($0) } ?? "?"))"
+          } ?? ""
 
           print()
-          print("--- Submission \(submission.id) (\(formatState(state)))\(versionInfo) ---")
+          print("--- Submission \(e.id) (\(formatState(state)))\(versionInfo) ---")
 
-          // Show items from included data
-          let itemRefs = submission.relationships?.items?.data ?? []
-          if !itemRefs.isEmpty {
-            for ref in itemRefs {
-              if let item = includedItems[ref.id] {
-                let itemState = item.attributes?.state.map { formatState($0) } ?? "—"
-                print("  Item: \(itemState)")
-              }
-            }
+          for item in e.items {
+            print("  Item: \(item.state.map { formatState($0) } ?? "—")")
           }
-          
-          if state == .unresolvedIssues {
+
+          if state == SubmissionState.unresolvedIssues.rawValue {
             print()
             print("  View rejection notes in App Store Connect Resolution Center.")
           }

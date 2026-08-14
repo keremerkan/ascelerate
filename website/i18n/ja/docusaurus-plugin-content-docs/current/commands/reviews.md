@@ -22,6 +22,7 @@ ascelerate reviews list <bundle-id> --territory USA
 - `--sort` — `recent`（デフォルト）、`oldest`、`critical`（評価の低い順）、`best`（評価の高い順）。
 - `--unanswered` — 公開済みの返信がないレビューのみ。
 - `--limit` — 表示するレビューの最大数（デフォルト50、最大200）。
+- `--json` — **レビューの全文とデベロッパ返信**を含む機械可読な出力。レビューごとに `info` を呼び出す必要がなくなります（[規約](../guides/automation.md#json-output)）。
 
 ## 詳細
 
@@ -29,7 +30,7 @@ ascelerate reviews list <bundle-id> --territory USA
 ascelerate reviews info <review-id>
 ```
 
-レビューの全文と、ある場合はデベロッパ返信を表示します。レビューIDは `reviews list` から取得できます。
+レビューの全文と、ある場合はデベロッパ返信を表示します。レビューIDは `reviews list` から取得できます。`--json` も受け付け、`reviews list --json` の1要素と同じ形式で出力します。
 
 ## 返信
 

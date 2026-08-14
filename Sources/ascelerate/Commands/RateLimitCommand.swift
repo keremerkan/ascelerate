@@ -8,7 +8,16 @@ struct RateLimitCommand: AsyncParsableCommand {
     abstract: "Show API rate limit status."
   )
 
+  @OptionGroup var jsonOption: JSONOption
+
+  private struct RateLimit: Encodable {
+    let limit: Int
+    let used: Int
+    let remaining: Int
+  }
+
   func run() async throws {
+    jsonOption.activate()
     let config = try Config.load()
     let keyPath = expandPath(config.privateKeyPath)
 
@@ -38,6 +47,7 @@ struct RateLimitCommand: AsyncParsableCommand {
     }
 
     guard let header = http.value(forHTTPHeaderField: "X-Rate-Limit") else {
+      if jsonOption.json { throw ValidationError("No rate limit header in response.") }
       print("No rate limit header in response.")
       return
     }
@@ -53,11 +63,18 @@ struct RateLimitCommand: AsyncParsableCommand {
 
     guard let limit = values["user-hour-lim"],
           let remaining = values["user-hour-rem"] else {
+      if jsonOption.json { throw ValidationError("Could not parse rate limit header: \(header)") }
       print("Could not parse rate limit header: \(header)")
       return
     }
 
     let used = limit - remaining
+
+    if jsonOption.json {
+      try printJSON(RateLimit(limit: limit, used: used, remaining: remaining))
+      return
+    }
+
     let pct = limit > 0 ? Int(Double(remaining) / Double(limit) * 100) : 0
 
     print("Hourly limit: \(limit) requests (rolling window)")

@@ -22,6 +22,7 @@ Die Tabelle zeigt die Rezensions-ID, die Sternebewertung, das Datum, die Region,
 - `--sort` — `recent` (Standard), `oldest`, `critical` (niedrigste Bewertung zuerst) oder `best` (höchste zuerst).
 - `--unanswered` — nur Rezensionen ohne veröffentlichte Antwort.
 - `--limit` — maximale Anzahl anzuzeigender Rezensionen (Standard 50, maximal 200).
+- `--json` — maschinenlesbare Ausgabe einschließlich der **vollständigen Rezensionstexte und Entwicklerantworten**, sodass keine `info`-Aufrufe pro Rezension nötig sind ([Konventionen](../guides/automation.md#json-output)).
 
 ## Details
 
@@ -29,7 +30,7 @@ Die Tabelle zeigt die Rezensions-ID, die Sternebewertung, das Datum, die Region,
 ascelerate reviews info <review-id>
 ```
 
-Zeigt den vollständigen Rezensionstext und ggf. die Entwicklerantwort. Rezensions-IDs stammen aus `reviews list`.
+Zeigt den vollständigen Rezensionstext und ggf. die Entwicklerantwort. Rezensions-IDs stammen aus `reviews list`. Auch hier wird `--json` akzeptiert; die Ausgabe hat dieselbe Form wie ein einzelnes Element von `reviews list --json`.
 
 ## Antworten
 

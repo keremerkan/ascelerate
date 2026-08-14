@@ -23,6 +23,8 @@ ascelerate apps info <bundle-id>
 ascelerate apps versions <bundle-id>
 ```
 
+`apps list`, `apps info` und `apps versions` akzeptieren alle `--json` für maschinenlesbare Ausgabe ([Konventionen](../guides/automation.md#json-output)).
+
 ## Version erstellen
 
 ```bash
@@ -53,6 +55,8 @@ Ohne `--set` wird der aktuelle Copyright-Hinweis angezeigt. Für die Aktualisier
 ascelerate apps review status <bundle-id>
 ascelerate apps review status <bundle-id> --version 2.1.0
 ```
+
+Mit `--json` erhalten Sie die Einreichungen — einschließlich der Status der einzelnen Elemente — als maschinenlesbares JSON.
 
 ### Zur Überprüfung einreichen
 
@@ -129,7 +133,7 @@ Result: 5 passed, 3 failed
 
 Die Prüfung der Neuigkeiten wird übersprungen, wenn die App noch keine veröffentlichte Version hat — dieses Feld gibt es nur bei Updates, nicht bei einer Erstveröffentlichung.
 
-Der Befehl gibt einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt — und ist damit geeignet für CI-Pipelines und Workflow-Dateien.
+Der Befehl gibt einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt — und ist damit geeignet für CI-Pipelines und Workflow-Dateien. Mit `--json` gibt der Befehl statt der Tabelle einen strukturierten Bericht aus — einen booleschen `passed`-Wert plus einen Eintrag pro Prüfung (`group`, `name`, `passed`, `detail`) — und behält dabei das gleiche Exit-Code-Verhalten bei, sodass CI-Gates genau melden können, welche Prüfung fehlgeschlagen ist.
 
 ## Stufenweise Veröffentlichung
 

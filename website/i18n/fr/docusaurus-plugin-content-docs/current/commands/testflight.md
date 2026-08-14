@@ -90,7 +90,7 @@ ascelerate testflight versions <bundle-id>
 ascelerate testflight status <bundle-id> --build 123
 ```
 
-`builds` liste pour chaque build son état de traitement, ses états de test interne et externe et sa date d'expiration. `status` y ajoute, pour un seul build, le réglage de notification automatique et l'état de l'examen bêta.
+`builds` liste pour chaque build son état de traitement, ses états de test interne et externe et sa date d'expiration. `status` y ajoute, pour un seul build, le réglage de notification automatique et l'état de l'examen bêta. Ces deux commandes acceptent `--json` pour une sortie lisible par machine ([conventions](../guides/automation.md#json-output)).
 
 ```bash
 # Faire expirer un build pour que les testeurs ne puissent plus l'installer

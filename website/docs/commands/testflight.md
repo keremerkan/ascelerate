@@ -90,7 +90,7 @@ ascelerate testflight versions <bundle-id>
 ascelerate testflight status <bundle-id> --build 123
 ```
 
-`builds` lists each build's processing state, internal and external testing states, and expiry date. `status` adds the auto-notify setting and the beta review state for a single build.
+`builds` lists each build's processing state, internal and external testing states, and expiry date. `status` adds the auto-notify setting and the beta review state for a single build. Both accept `--json` for machine-readable output ([conventions](../guides/automation.md#json-output)).
 
 ```bash
 # Expire a build so testers can no longer install it

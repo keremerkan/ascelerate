@@ -20,6 +20,8 @@ Les valeurs de filtre sont insensibles à la casse. Types : `CONSUMABLE`, `NON_C
 ascelerate iap info <bundle-id> <product-id>
 ```
 
+`iap list` et `iap info` acceptent `--json` pour une sortie lisible par machine ([conventions](../guides/automation.md#json-output)) ; `info` rapporte l'avertissement de tarification manquante sous la forme d'un booléen `hasPricing`.
+
 ## Achats promus
 
 Mettez en avant des achats intégrés ou des abonnements sur votre page produit App Store. Ils apparaissent dans l'ordre d'affichage.
@@ -69,6 +71,8 @@ ascelerate iap pricing show <bundle-id> <product-id>
 # Lister tous les paliers tarifaires disponibles dans une région
 ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```
+
+`pricing show` accepte `--json` — la commande émet la région de base ainsi que chaque prix avec sa région et sa devise.
 
 ### Définir le prix de la région de base
 

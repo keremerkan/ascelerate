@@ -13,6 +13,8 @@ ascelerate sub list <bundle-id>
 ascelerate sub info <bundle-id> <product-id>
 ```
 
+3つのコマンドはいずれも機械可読な出力のための `--json` を受け付けます（[規約](../guides/automation.md#json-output)）。`info` は価格未設定の警告を `hasPricing` ブール値として報告します。
+
 ## サブスクリプションの作成、更新、削除
 
 ```bash
@@ -60,6 +62,9 @@ ascelerate sub group-localizations import <bundle-id> --file group-de.json
 ```bash
 # 現在の地域別価格を表示（存在しない場合は警告）
 ascelerate sub pricing show <bundle-id> <product-id>
+
+# JSONとして表示（地域ごとの価格、通貨、開始日、保持フラグ）
+ascelerate sub pricing show <bundle-id> <product-id> --json
 
 # ある地域で利用可能な価格層を一覧表示
 ascelerate sub pricing tiers <bundle-id> <product-id> --territory USA

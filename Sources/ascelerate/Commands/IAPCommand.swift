@@ -295,7 +295,19 @@ struct IAPCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Filter by state (APPROVED, MISSING_METADATA, READY_TO_SUBMIT, etc.).")
     var state: String?
 
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Entry: Encodable {
+      let id: String
+      let productID: String?
+      let name: String?
+      let type: String?
+      let state: String?
+      let familySharable: Bool?
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
@@ -304,7 +316,7 @@ struct IAPCommand: AsyncParsableCommand {
       let filterType: [Params.FilterInAppPurchaseType]? = try parseFilter(type, name: "type")
       let filterState: [Params.FilterState]? = try parseFilter(state, name: "state")
 
-      var rows: [[String]] = []
+      var entries: [Entry] = []
       let request = Resources.v1.apps.id(app.id).inAppPurchasesV2.get(
         filterState: filterState,
         filterInAppPurchaseType: filterType,
@@ -314,22 +326,36 @@ struct IAPCommand: AsyncParsableCommand {
       for try await page in client.pages(request) {
         for iap in page.data {
           let attrs = iap.attributes
-          rows.append([
-            attrs?.name ?? "—",
-            attrs?.productID ?? "—",
-            attrs?.inAppPurchaseType.map { formatState($0) } ?? "—",
-            attrs?.state.map { formatState($0) } ?? "—",
-            attrs?.isFamilySharable == true ? "Yes" : "No",
-          ])
+          entries.append(Entry(
+            id: iap.id,
+            productID: attrs?.productID,
+            name: attrs?.name,
+            type: attrs?.inAppPurchaseType?.rawValue,
+            state: attrs?.state?.rawValue,
+            familySharable: attrs?.isFamilySharable
+          ))
         }
       }
 
-      if rows.isEmpty {
+      if jsonOption.json {
+        try printJSON(entries)
+        return
+      }
+
+      if entries.isEmpty {
         print("No in-app purchases found.")
       } else {
         Table.print(
           headers: ["Name", "Product ID", "Type", "State", "Family"],
-          rows: rows
+          rows: entries.map { e in
+            [
+              e.name ?? "—",
+              e.productID ?? "—",
+              e.type.map { formatState($0) } ?? "—",
+              e.state.map { formatState($0) } ?? "—",
+              e.familySharable == true ? "Yes" : "No",
+            ]
+          }
         )
       }
     }
@@ -349,7 +375,29 @@ struct IAPCommand: AsyncParsableCommand {
     @Argument(help: "The product identifier of the in-app purchase.")
     var productID: String
 
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Detail: Encodable {
+      struct Localization: Encodable {
+        let id: String
+        let locale: String?
+        let name: String?
+        let description: String?
+      }
+      let id: String
+      let productID: String?
+      let name: String?
+      let type: String?
+      let state: String?
+      let familySharable: Bool?
+      let contentHosting: Bool?
+      let reviewNote: String?
+      let localizations: [Localization]
+      let hasPricing: Bool
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
@@ -364,15 +412,6 @@ struct IAPCommand: AsyncParsableCommand {
         throw ValidationError("No in-app purchase found with product ID '\(productID)'.")
       }
 
-      let attrs = iap.attributes
-      print("Name:             \(attrs?.name ?? "—")")
-      print("Product ID:       \(attrs?.productID ?? "—")")
-      print("Type:             \(attrs?.inAppPurchaseType.map { formatState($0) } ?? "—")")
-      print("State:            \(attrs?.state.map { formatState($0) } ?? "—")")
-      print("Family Shareable: \(attrs?.isFamilySharable == true ? "Yes" : "No")")
-      print("Content Hosting:  \(attrs?.isContentHosting == true ? "Yes" : "No")")
-      print("Review Note:      \(attrs?.reviewNote ?? "—")")
-
       // Extract localizations from included items
       let locIDs = Set(
         iap.relationships?.inAppPurchaseLocalizations?.data?.map(\.id) ?? []
@@ -385,19 +424,53 @@ struct IAPCommand: AsyncParsableCommand {
         return nil
       }
 
-      if !localizations.isEmpty {
+      let hasSchedule = try await IAPCommand.iapPriceScheduleExists(iapID: iap.id, client: client)
+
+      let attrs = iap.attributes
+      let detail = Detail(
+        id: iap.id,
+        productID: attrs?.productID,
+        name: attrs?.name,
+        type: attrs?.inAppPurchaseType?.rawValue,
+        state: attrs?.state?.rawValue,
+        familySharable: attrs?.isFamilySharable,
+        contentHosting: attrs?.isContentHosting,
+        reviewNote: attrs?.reviewNote,
+        localizations: localizations
+          .sorted { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }
+          .map {
+            Detail.Localization(
+              id: $0.id,
+              locale: $0.attributes?.locale,
+              name: $0.attributes?.name,
+              description: $0.attributes?.description
+            )
+          },
+        hasPricing: hasSchedule
+      )
+
+      if jsonOption.json {
+        try printJSON(detail)
+        return
+      }
+
+      print("Name:             \(detail.name ?? "—")")
+      print("Product ID:       \(detail.productID ?? "—")")
+      print("Type:             \(detail.type.map { formatState($0) } ?? "—")")
+      print("State:            \(detail.state.map { formatState($0) } ?? "—")")
+      print("Family Shareable: \(detail.familySharable == true ? "Yes" : "No")")
+      print("Content Hosting:  \(detail.contentHosting == true ? "Yes" : "No")")
+      print("Review Note:      \(detail.reviewNote ?? "—")")
+
+      if !detail.localizations.isEmpty {
         print()
         print("Localizations:")
-        for loc in localizations.sorted(by: { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }) {
-          let locale = loc.attributes?.locale ?? "?"
-          let name = loc.attributes?.name ?? "—"
-          let desc = loc.attributes?.description ?? "—"
-          print("  [\(localeName(locale))] \(name) — \(desc)")
+        for loc in detail.localizations {
+          print("  [\(localeName(loc.locale ?? "?"))] \(loc.name ?? "—") — \(loc.description ?? "—")")
         }
       }
 
-      let hasSchedule = try await IAPCommand.iapPriceScheduleExists(iapID: iap.id, client: client)
-      if !hasSchedule {
+      if !detail.hasPricing {
         print()
         print(yellow(IAPCommand.missingScheduleWarning))
       }
@@ -1121,30 +1194,56 @@ struct IAPCommand: AsyncParsableCommand {
       @Argument(help: "The product identifier of the in-app purchase.")
       var productID: String
 
+      @OptionGroup var jsonOption: JSONOption
+
+      private struct Schedule: Encodable {
+        struct Price: Encodable {
+          let territory: String
+          let price: String?
+          let currency: String?
+        }
+        let baseTerritory: String?
+        let prices: [Price]
+      }
+
       func run() async throws {
+        jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         guard let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client),
               !existing.manualPrices.isEmpty else {
+          if jsonOption.json {
+            try printJSON(Schedule(baseTerritory: nil, prices: []))
+            return
+          }
           print(yellow(missingScheduleWarning))
+          return
+        }
+
+        // The base entry comes first; overrides follow.
+        let ordered: [IAPCommand.ManualPriceEntry] =
+          (existing.basePriceEntry.map { [$0] } ?? []) + existing.nonBaseOverrides
+        let schedule = Schedule(
+          baseTerritory: existing.baseTerritoryID,
+          prices: ordered.map {
+            Schedule.Price(territory: $0.territoryID, price: $0.customerPrice, currency: $0.currency)
+          }
+        )
+
+        if jsonOption.json {
+          try printJSON(schedule)
           return
         }
 
         print("Base region: \(existing.baseTerritoryID)")
         print()
 
-        // Resolve customer price for each entry. The base entry comes first; overrides follow.
-        let baseEntry = existing.basePriceEntry
-        let overrides = existing.nonBaseOverrides
-        let ordered: [IAPCommand.ManualPriceEntry] = (baseEntry.map { [$0] } ?? []) + overrides
-
-        var rows: [[String]] = []
-        for entry in ordered {
-          let label = entry.territoryID == existing.baseTerritoryID ? "\(entry.territoryID) (base)" : entry.territoryID
-          let priceStr = entry.customerPrice.map { "\($0) \(entry.currency ?? "")" } ?? "(unknown tier)"
-          rows.append([label, priceStr])
+        let rows = schedule.prices.map { entry -> [String] in
+          let label = entry.territory == schedule.baseTerritory ? "\(entry.territory) (base)" : entry.territory
+          let priceStr = entry.price.map { "\($0) \(entry.currency ?? "")" } ?? "(unknown tier)"
+          return [label, priceStr]
         }
 
         Table.print(headers: ["Territory", "Customer Price"], rows: rows)

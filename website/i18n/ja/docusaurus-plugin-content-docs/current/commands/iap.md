@@ -20,6 +20,8 @@ ascelerate iap list <bundle-id> --type consumable --state approved
 ascelerate iap info <bundle-id> <product-id>
 ```
 
+`iap list` と `iap info` は機械可読な出力のための `--json` を受け付けます（[規約](../guides/automation.md#json-output)）。`info` は価格未設定の警告を `hasPricing` ブール値として報告します。
+
 ## プロモートされた課金アイテム
 
 App Store の製品ページでアプリ内課金またはサブスクリプションをプロモートします。表示順に一覧表示されます。
@@ -69,6 +71,8 @@ ascelerate iap pricing show <bundle-id> <product-id>
 # ある地域で利用可能な価格層を一覧表示
 ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```
+
+`pricing show` は `--json` を受け付け、ベース地域に加えて、すべての価格をその地域と通貨とともに出力します。
 
 ### ベース地域の価格設定
 

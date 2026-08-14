@@ -90,7 +90,7 @@ ascelerate testflight versions <bundle-id>
 ascelerate testflight status <bundle-id> --build 123
 ```
 
-`builds` her build'in işlenme durumunu, dahili ve harici test durumlarını ve son kullanma tarihini listeler. `status` tek bir build için bunlara otomatik bildirim ayarını ve beta inceleme durumunu ekler.
+`builds` her build'in işlenme durumunu, dahili ve harici test durumlarını ve son kullanma tarihini listeler. `status` tek bir build için bunlara otomatik bildirim ayarını ve beta inceleme durumunu ekler. Her iki komut da makine tarafından okunabilir çıktı için `--json` seçeneğini kabul eder ([kurallar](../guides/automation.md#json-output)).
 
 ```bash
 # Bir build'in süresini doldurun; test kullanıcıları artık yükleyemez

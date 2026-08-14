@@ -14,7 +14,7 @@ ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
 ascelerate builds list --bundle-id <bundle-id> --platform macos
 ```
 
-Çıktı, her build'in uygulama sürümünü, platformunu, build numarasını, işlenme durumunu ve yükleme tarihini gösterir.
+Çıktı, her build'in uygulama sürümünü, platformunu, build numarasını, işlenme durumunu ve yükleme tarihini gösterir. Makine tarafından okunabilir çıktı için `--json` ekleyin ([kurallar](../guides/automation.md#json-output)).
 
 ## Arşivleme
 

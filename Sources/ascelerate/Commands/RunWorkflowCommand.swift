@@ -72,8 +72,9 @@ struct RunWorkflowCommand: AsyncParsableCommand {
 
     // A step that passes its own -y (or a nested `run-workflow --yes`) sets the
     // global autoConfirm — restore this workflow's own setting after each step
-    // so one -y step can't auto-accept every later prompt.
+    // so one -y step can't auto-accept every later prompt. Same for --json.
     let workflowAutoConfirm = autoConfirm
+    let workflowJSONMode = jsonMode
 
     for (i, step) in steps.enumerated() {
       let label = "[\(i + 1)/\(steps.count)]"
@@ -81,7 +82,10 @@ struct RunWorkflowCommand: AsyncParsableCommand {
 
       let args = try splitArguments(step)
       do {
-        defer { autoConfirm = workflowAutoConfirm }
+        defer {
+          autoConfirm = workflowAutoConfirm
+          jsonMode = workflowJSONMode
+        }
         var command = try Ascelerate.parseAsRoot(args)
         if var async = command as? AsyncParsableCommand {
           try await async.run()

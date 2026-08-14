@@ -23,6 +23,8 @@ ascelerate apps info <bundle-id>
 ascelerate apps versions <bundle-id>
 ```
 
+`apps list`、`apps info`、`apps versions` はいずれも、機械可読な出力のための `--json` を受け付けます（[規約](../guides/automation.md#json-output)）。
+
 ## バージョンの作成
 
 ```bash
@@ -53,6 +55,8 @@ ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --p
 ascelerate apps review status <bundle-id>
 ascelerate apps review status <bundle-id> --version 2.1.0
 ```
+
+`--json` を追加すると、提出内容を項目ごとの状態を含めて機械可読なJSONとして取得できます。
 
 ### 審査への提出
 
@@ -129,7 +133,7 @@ Result: 5 passed, 3 failed
 
 アプリにまだリリース済みのバージョンがない場合、新機能のチェックはスキップされます。このフィールドはアップデート時のみ存在し、初回リリースには存在しないためです。
 
-チェックが失敗するとゼロ以外の終了コードを返すため、CIパイプラインやワークフローファイルでの使用に適しています。
+チェックが失敗するとゼロ以外の終了コードを返すため、CIパイプラインやワークフローファイルでの使用に適しています。`--json` を指定すると、終了コードの動作はそのままに、テーブルの代わりに構造化されたレポート（`passed` ブール値と、チェックごとのエントリ：`group`、`name`、`passed`、`detail`）を出力するため、CIゲートでどのチェックが失敗したかを正確に報告できます。
 
 ## 段階的リリース
 

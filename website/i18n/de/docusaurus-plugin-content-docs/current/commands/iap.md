@@ -20,6 +20,8 @@ Bei Filterwerten wird nicht zwischen Groß- und Kleinschreibung unterschieden. T
 ascelerate iap info <bundle-id> <product-id>
 ```
 
+`iap list` und `iap info` akzeptieren `--json` für maschinenlesbare Ausgabe ([Konventionen](../guides/automation.md#json-output)); `info` meldet die Warnung zu fehlenden Preisen als booleschen `hasPricing`-Wert.
+
 ## Beworbene Käufe
 
 Bewerben Sie In-App-Käufe oder Abonnements auf Ihrer App-Store-Produktseite. Sie werden in der Anzeigereihenfolge aufgelistet.
@@ -69,6 +71,8 @@ ascelerate iap pricing show <bundle-id> <product-id>
 # Verfügbare Preisstufen für eine Region auflisten
 ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```
+
+`pricing show` akzeptiert `--json` und gibt die Basisregion sowie jeden Preis mit Region und Währung aus.
 
 ### Preis der Basisregion festlegen
 

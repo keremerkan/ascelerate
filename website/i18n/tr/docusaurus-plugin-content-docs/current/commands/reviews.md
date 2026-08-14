@@ -22,6 +22,7 @@ Tablo; değerlendirme kimliğini, yıldız puanını, tarihi, bölgeyi, yanıt o
 - `--sort`: `recent` (varsayılan), `oldest`, `critical` (önce en düşük puan) veya `best` (önce en yüksek).
 - `--unanswered`: Yalnızca yayımlanmış yanıtı olmayan değerlendirmeleri gösterir.
 - `--limit`: Gösterilecek en fazla değerlendirme sayısı (varsayılan 50, en fazla 200).
+- `--json`: **Tam değerlendirme metinlerini ve geliştirici yanıtlarını** da içeren, makine tarafından okunabilir çıktı üretir; böylece değerlendirme başına ayrı `info` çağrısı gerekmez ([kurallar](../guides/automation.md#json-output)).
 
 ## Detaylar
 
@@ -29,7 +30,7 @@ Tablo; değerlendirme kimliğini, yıldız puanını, tarihi, bölgeyi, yanıt o
 ascelerate reviews info <review-id>
 ```
 
-Değerlendirmenin tam metnini ve varsa geliştirici yanıtını gösterir. Değerlendirme kimlikleri `reviews list` komutundan alınır.
+Değerlendirmenin tam metnini ve varsa geliştirici yanıtını gösterir. Değerlendirme kimlikleri `reviews list` komutundan alınır. Bu komut da `--json` kabul eder ve tek bir `reviews list --json` öğesiyle aynı yapıda çıktı verir.
 
 ## Yanıtlama
 

@@ -24,7 +24,19 @@ struct BuildsCommand: AsyncParsableCommand {
 
     @OptionGroup var platformOption: PlatformOption
 
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Entry: Encodable {
+      let id: String
+      let buildNumber: String?
+      let version: String?
+      let platform: String?
+      let processingState: String?
+      let uploadedDate: Date?
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
 
       var filterApp: [String]?
@@ -33,7 +45,7 @@ struct BuildsCommand: AsyncParsableCommand {
         filterApp = [app.id]
       }
 
-      var allBuilds: [[String]] = []
+      var entries: [Entry] = []
 
       let request = Resources.v1.builds.get(
         filterPreReleaseVersionVersion: version.map { [$0] },
@@ -53,28 +65,35 @@ struct BuildsCommand: AsyncParsableCommand {
         }
 
         for build in page.data {
-          let buildNumber = build.attributes?.version ?? "—"
-          let state = build.attributes?.processingState
-            .map { formatState($0) } ?? "—"
-          let uploaded = build.attributes?.uploadedDate
-            .map { formatDate($0) } ?? "—"
-
-          // Look up app version and platform from included pre-release version
-          var appVersion = "—"
-          var platform = "—"
-          if let ref = build.relationships?.preReleaseVersion?.data,
-             let v = prereleaseVersions[ref.id] {
-            appVersion = v.attributes?.version ?? "—"
-            platform = v.attributes?.platform.map { formatState($0) } ?? "—"
-          }
-
-          allBuilds.append([appVersion, platform, buildNumber, state, uploaded])
+          let train = build.relationships?.preReleaseVersion?.data
+            .flatMap { prereleaseVersions[$0.id] }
+          entries.append(Entry(
+            id: build.id,
+            buildNumber: build.attributes?.version,
+            version: train?.attributes?.version,
+            platform: train?.attributes?.platform?.rawValue,
+            processingState: build.attributes?.processingState?.rawValue,
+            uploadedDate: build.attributes?.uploadedDate
+          ))
         }
+      }
+
+      if jsonOption.json {
+        try printJSON(entries)
+        return
       }
 
       Table.print(
         headers: ["Version", "Platform", "Build", "State", "Uploaded"],
-        rows: allBuilds
+        rows: entries.map { e in
+          [
+            e.version ?? "—",
+            e.platform.map { formatState($0) } ?? "—",
+            e.buildNumber ?? "—",
+            e.processingState.map { formatState($0) } ?? "—",
+            e.uploadedDate.map { formatDate($0) } ?? "—",
+          ]
+        }
       )
 
       print()

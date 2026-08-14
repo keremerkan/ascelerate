@@ -14,7 +14,7 @@ ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
 ascelerate builds list --bundle-id <bundle-id> --platform macos
 ```
 
-La sortie affiche, pour chaque build, la version de l'application, la plateforme, le numéro de build, l'état de traitement et la date de téléversement.
+La sortie affiche, pour chaque build, la version de l'application, la plateforme, le numéro de build, l'état de traitement et la date de téléversement. Ajoutez `--json` pour une sortie lisible par machine ([conventions](../guides/automation.md#json-output)).
 
 ## Archiver
 

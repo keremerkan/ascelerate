@@ -18,6 +18,41 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     return String(repeating: "★", count: r) + String(repeating: "☆", count: 5 - r)
   }
 
+  /// JSON shape shared by `reviews list` (array element) and `reviews info` (top-level object).
+  struct ReviewEntry: Encodable {
+    struct Response: Encodable {
+      let state: String?
+      let lastModifiedDate: Date?
+      let body: String?
+    }
+    let id: String
+    let rating: Int?
+    let title: String?
+    let body: String?
+    let reviewerNickname: String?
+    let territory: String?
+    let createdDate: Date?
+    let response: Response?
+
+    init(review: CustomerReview, response resp: CustomerReviewResponseV1?) {
+      let a = review.attributes
+      id = review.id
+      rating = a?.rating
+      title = a?.title
+      body = a?.body
+      reviewerNickname = a?.reviewerNickname
+      territory = a?.territory?.rawValue
+      createdDate = a?.createdDate
+      response = resp.map {
+        Response(
+          state: $0.attributes?.state?.rawValue,
+          lastModifiedDate: $0.attributes?.lastModifiedDate,
+          body: $0.attributes?.responseBody
+        )
+      }
+    }
+  }
+
   /// Fetches a review by ID along with its developer response (if any).
   static func fetchReview(
     reviewID: String, client: AppStoreConnectClient
@@ -83,7 +118,10 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Maximum number of reviews to show (default: 50, max: 200).")
     var limit: Int = 50
 
+    @OptionGroup var jsonOption: JSONOption
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
@@ -111,24 +149,39 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
           include: [.response]
         ))
 
-      if resp.data.isEmpty {
+      let responsesByID = Dictionary(
+        uniqueKeysWithValues: (resp.included ?? []).compactMap { item -> (String, CustomerReviewResponseV1)? in
+          if case .customerReviewResponseV1(let r) = item { return (r.id, r) }
+          return nil
+        })
+
+      let entries = resp.data.map { review in
+        ReviewEntry(
+          review: review,
+          response: review.relationships?.response?.data.flatMap { responsesByID[$0.id] }
+        )
+      }
+
+      if jsonOption.json {
+        try printJSON(entries)
+        return
+      }
+
+      if entries.isEmpty {
         print("No reviews found.")
         return
       }
 
-      var rows: [[String]] = []
-      for review in resp.data {
-        let a = review.attributes
-        let replied = review.relationships?.response?.data != nil ? green("✓") : red("✗")
-        let title = a?.title ?? "—"
-        rows.append([
-          review.id,
-          CustomerReviewsCommand.ratingStars(a?.rating),
-          a?.createdDate.map { formatDate($0) } ?? "—",
-          a?.territory?.rawValue ?? "—",
-          replied,
+      let rows = entries.map { e -> [String] in
+        let title = e.title ?? "—"
+        return [
+          e.id,
+          CustomerReviewsCommand.ratingStars(e.rating),
+          e.createdDate.map { formatDate($0) } ?? "—",
+          e.territory ?? "—",
+          e.response != nil ? green("✓") : red("✗"),
           title.count > 50 ? String(title.prefix(49)) + "…" : title,
-        ])
+        ]
       }
 
       Table.print(
@@ -136,7 +189,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         rows: rows
       )
       print()
-      print("\(resp.data.count) review(s). Use 'reviews info <review-id>' for full text.")
+      print("\(entries.count) review(s). Use 'reviews info <review-id>' for full text.")
     }
   }
 
@@ -150,10 +203,17 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     @Argument(help: "The review ID (from `reviews list`).")
     var reviewID: String
 
+    @OptionGroup var jsonOption: JSONOption
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let (review, response) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
+      if jsonOption.json {
+        try printJSON(ReviewEntry(review: review, response: response))
+        return
+      }
       CustomerReviewsCommand.printReview(review, response: response, full: true)
     }
   }

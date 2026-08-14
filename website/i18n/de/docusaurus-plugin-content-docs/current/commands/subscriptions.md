@@ -13,6 +13,8 @@ ascelerate sub list <bundle-id>
 ascelerate sub info <bundle-id> <product-id>
 ```
 
+Alle drei akzeptieren `--json` für maschinenlesbare Ausgabe ([Konventionen](../guides/automation.md#json-output)); `info` meldet die Warnung zu fehlenden Preisen als booleschen `hasPricing`-Wert.
+
 ## Abonnements erstellen, aktualisieren und löschen
 
 ```bash
@@ -60,6 +62,9 @@ Die Preisgestaltung von Abonnements ist regionsspezifisch. Es gibt kein automati
 ```bash
 # Aktuelle regionsspezifische Preise anzeigen (warnt, wenn keine vorhanden sind)
 ascelerate sub pricing show <bundle-id> <product-id>
+
+# Preise als JSON ausgeben (Preis, Währung, Startdatum und Beibehaltungs-Flag pro Region)
+ascelerate sub pricing show <bundle-id> <product-id> --json
 
 # Verfügbare Preisstufen für eine Region auflisten
 ascelerate sub pricing tiers <bundle-id> <product-id> --territory USA

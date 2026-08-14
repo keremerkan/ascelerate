@@ -23,6 +23,8 @@ ascelerate apps info <bundle-id>
 ascelerate apps versions <bundle-id>
 ```
 
+Les commandes `apps list`, `apps info` et `apps versions` acceptent toutes `--json` pour une sortie lisible par machine ([conventions](../guides/automation.md#json-output)).
+
 ## Créer une version
 
 ```bash
@@ -53,6 +55,8 @@ Sans `--set`, la mention de copyright actuelle est affichée. La mise à jour n�
 ascelerate apps review status <bundle-id>
 ascelerate apps review status <bundle-id> --version 2.1.0
 ```
+
+Ajoutez `--json` pour obtenir les soumissions — y compris l'état de chaque élément — au format JSON lisible par machine.
 
 ### Soumettre pour examen
 
@@ -129,7 +133,7 @@ Result: 5 passed, 3 failed
 
 La vérification des nouveautés est ignorée lorsque l'application n'a pas encore de version publiée — ce champ n'existe que pour les mises à jour, pas pour une première version.
 
-La commande se termine avec un code de sortie non nul lorsqu'une vérification échoue, ce qui la rend adaptée aux pipelines CI et aux fichiers de workflow.
+La commande se termine avec un code de sortie non nul lorsqu'une vérification échoue, ce qui la rend adaptée aux pipelines CI et aux fichiers de workflow. Avec `--json`, elle émet un rapport structuré au lieu du tableau — un booléen `passed` plus une entrée par vérification (`group`, `name`, `passed`, `detail`) — tout en conservant le même comportement de code de sortie, afin que les pipelines CI puissent signaler exactement quelle vérification a échoué.
 
 ## Déploiement progressif
 

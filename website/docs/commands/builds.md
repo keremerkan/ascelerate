@@ -14,7 +14,7 @@ ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
 ascelerate builds list --bundle-id <bundle-id> --platform macos
 ```
 
-The output shows each build's app version, platform, build number, processing state, and upload date.
+The output shows each build's app version, platform, build number, processing state, and upload date. Add `--json` for machine-readable output ([conventions](../guides/automation.md#json-output)).
 
 ## Archive
 

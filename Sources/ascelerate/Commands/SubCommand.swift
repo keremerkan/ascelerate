@@ -38,6 +38,34 @@ struct SubCommand: AsyncParsableCommand {
     let subscriptions: [Subscription]
   }
 
+  /// JSON shape for a subscription, shared by `sub groups` and `sub list`.
+  struct SubEntry: Encodable {
+    struct GroupRef: Encodable {
+      let id: String
+      let name: String
+    }
+    let id: String
+    let productID: String?
+    let name: String?
+    let period: String?
+    let state: String?
+    let groupLevel: Int?
+    let familySharable: Bool?
+    let group: GroupRef?
+
+    init(_ sub: Subscription, group: GroupInfo? = nil) {
+      let a = sub.attributes
+      id = sub.id
+      productID = a?.productID
+      name = a?.name
+      period = a?.subscriptionPeriod?.rawValue
+      state = a?.state?.rawValue
+      groupLevel = a?.groupLevel
+      familySharable = a?.isFamilySharable
+      self.group = group.map { GroupRef(id: $0.id, name: $0.name) }
+    }
+  }
+
   static func fetchGroups(
     appID: String, client: AppStoreConnectClient
   ) async throws -> [GroupInfo] {
@@ -616,34 +644,57 @@ struct SubCommand: AsyncParsableCommand {
               completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Entry: Encodable {
+      let id: String
+      let name: String
+      let subscriptions: [SubEntry]
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
 
-      if groups.isEmpty {
+      let entries = groups.map { group in
+        Entry(
+          id: group.id,
+          name: group.name,
+          subscriptions: group.subscriptions
+            .sorted { ($0.attributes?.groupLevel ?? 0) < ($1.attributes?.groupLevel ?? 0) }
+            .map { SubEntry($0) }
+        )
+      }
+
+      if jsonOption.json {
+        try printJSON(entries)
+        return
+      }
+
+      if entries.isEmpty {
         print("No subscription groups found.")
         return
       }
 
-      for group in groups {
-        let sorted = group.subscriptions.sorted { ($0.attributes?.groupLevel ?? 0) < ($1.attributes?.groupLevel ?? 0) }
-        print("\(group.name) (\(sorted.count) subscription\(sorted.count == 1 ? "" : "s"))")
+      for group in entries {
+        let subs = group.subscriptions
+        print("\(group.name) (\(subs.count) subscription\(subs.count == 1 ? "" : "s"))")
 
-        if sorted.isEmpty {
+        if subs.isEmpty {
           print("  (no subscriptions)")
         } else {
           Table.print(
             headers: ["Name", "Product ID", "Period", "State", "Level", "Family"],
-            rows: sorted.map { sub in
-              let attrs = sub.attributes
-              return [
-                attrs?.name ?? "—",
-                attrs?.productID ?? "—",
-                attrs?.subscriptionPeriod.map { formatState($0) } ?? "—",
-                attrs?.state.map { formatState($0) } ?? "—",
-                attrs?.groupLevel.map { "\($0)" } ?? "—",
-                attrs?.isFamilySharable == true ? "Yes" : "No",
+            rows: subs.map { sub in
+              [
+                sub.name ?? "—",
+                sub.productID ?? "—",
+                sub.period.map { formatState($0) } ?? "—",
+                sub.state.map { formatState($0) } ?? "—",
+                sub.groupLevel.map { "\($0)" } ?? "—",
+                sub.familySharable == true ? "Yes" : "No",
               ]
             }
           )
@@ -664,32 +715,40 @@ struct SubCommand: AsyncParsableCommand {
               completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
     var bundleID: String
 
+    @OptionGroup var jsonOption: JSONOption
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
 
-      var rows: [[String]] = []
-      for group in groups {
-        for sub in group.subscriptions.sorted(by: { ($0.attributes?.groupLevel ?? 0) < ($1.attributes?.groupLevel ?? 0) }) {
-          let attrs = sub.attributes
-          rows.append([
-            group.name,
-            attrs?.name ?? "—",
-            attrs?.productID ?? "—",
-            attrs?.subscriptionPeriod.map { formatState($0) } ?? "—",
-            attrs?.state.map { formatState($0) } ?? "—",
-            attrs?.groupLevel.map { "\($0)" } ?? "—",
-          ])
-        }
+      let entries = groups.flatMap { group in
+        group.subscriptions
+          .sorted { ($0.attributes?.groupLevel ?? 0) < ($1.attributes?.groupLevel ?? 0) }
+          .map { SubEntry($0, group: group) }
       }
 
-      if rows.isEmpty {
+      if jsonOption.json {
+        try printJSON(entries)
+        return
+      }
+
+      if entries.isEmpty {
         print("No subscriptions found.")
       } else {
         Table.print(
           headers: ["Group", "Name", "Product ID", "Period", "State", "Level"],
-          rows: rows
+          rows: entries.map { e in
+            [
+              e.group?.name ?? "—",
+              e.name ?? "—",
+              e.productID ?? "—",
+              e.period.map { formatState($0) } ?? "—",
+              e.state.map { formatState($0) } ?? "—",
+              e.groupLevel.map { "\($0)" } ?? "—",
+            ]
+          }
         )
       }
     }
@@ -709,7 +768,30 @@ struct SubCommand: AsyncParsableCommand {
     @Argument(help: "The product identifier of the subscription.")
     var productID: String
 
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Detail: Encodable {
+      struct Localization: Encodable {
+        let id: String
+        let locale: String?
+        let name: String?
+        let description: String?
+      }
+      let id: String
+      let productID: String?
+      let name: String?
+      let period: String?
+      let state: String?
+      let groupLevel: Int?
+      let familySharable: Bool?
+      let reviewNote: String?
+      let group: SubEntry.GroupRef
+      let localizations: [Localization]
+      let hasPricing: Bool
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let (sub, group) = try await SubCommand.findSubscription(
@@ -723,21 +805,11 @@ struct SubCommand: AsyncParsableCommand {
           limitSubscriptionLocalizations: 50
         )
       )
-      let detail = detailResponse.data
-      let attrs = detail.attributes
-
-      print("Name:             \(attrs?.name ?? "—")")
-      print("Product ID:       \(attrs?.productID ?? "—")")
-      print("Group:            \(group.name)")
-      print("Period:           \(attrs?.subscriptionPeriod.map { formatState($0) } ?? "—")")
-      print("State:            \(attrs?.state.map { formatState($0) } ?? "—")")
-      print("Group Level:      \(attrs?.groupLevel.map { "\($0)" } ?? "—")")
-      print("Family Shareable: \(attrs?.isFamilySharable == true ? "Yes" : "No")")
-      print("Review Note:      \(attrs?.reviewNote ?? "—")")
+      let data = detailResponse.data
 
       // Extract localizations from included items
       let locIDs = Set(
-        detail.relationships?.subscriptionLocalizations?.data?.map(\.id) ?? []
+        data.relationships?.subscriptionLocalizations?.data?.map(\.id) ?? []
       )
       let localizations: [SubscriptionLocalization] = (detailResponse.included ?? []).compactMap {
         if case .subscriptionLocalization(let loc) = $0,
@@ -747,19 +819,55 @@ struct SubCommand: AsyncParsableCommand {
         return nil
       }
 
-      if !localizations.isEmpty {
+      let hasPrices = try await SubCommand.subscriptionHasPrices(subscriptionID: sub.id, client: client)
+
+      let attrs = data.attributes
+      let detail = Detail(
+        id: data.id,
+        productID: attrs?.productID,
+        name: attrs?.name,
+        period: attrs?.subscriptionPeriod?.rawValue,
+        state: attrs?.state?.rawValue,
+        groupLevel: attrs?.groupLevel,
+        familySharable: attrs?.isFamilySharable,
+        reviewNote: attrs?.reviewNote,
+        group: SubEntry.GroupRef(id: group.id, name: group.name),
+        localizations: localizations
+          .sorted { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }
+          .map {
+            Detail.Localization(
+              id: $0.id,
+              locale: $0.attributes?.locale,
+              name: $0.attributes?.name,
+              description: $0.attributes?.description
+            )
+          },
+        hasPricing: hasPrices
+      )
+
+      if jsonOption.json {
+        try printJSON(detail)
+        return
+      }
+
+      print("Name:             \(detail.name ?? "—")")
+      print("Product ID:       \(detail.productID ?? "—")")
+      print("Group:            \(detail.group.name)")
+      print("Period:           \(detail.period.map { formatState($0) } ?? "—")")
+      print("State:            \(detail.state.map { formatState($0) } ?? "—")")
+      print("Group Level:      \(detail.groupLevel.map { "\($0)" } ?? "—")")
+      print("Family Shareable: \(detail.familySharable == true ? "Yes" : "No")")
+      print("Review Note:      \(detail.reviewNote ?? "—")")
+
+      if !detail.localizations.isEmpty {
         print()
         print("Localizations:")
-        for loc in localizations.sorted(by: { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }) {
-          let locale = loc.attributes?.locale ?? "?"
-          let name = loc.attributes?.name ?? "—"
-          let desc = loc.attributes?.description ?? "—"
-          print("  [\(localeName(locale))] \(name) — \(desc)")
+        for loc in detail.localizations {
+          print("  [\(localeName(loc.locale ?? "?"))] \(loc.name ?? "—") — \(loc.description ?? "—")")
         }
       }
 
-      let hasPrices = try await SubCommand.subscriptionHasPrices(subscriptionID: sub.id, client: client)
-      if !hasPrices {
+      if !detail.hasPricing {
         print()
         print(yellow(SubCommand.missingPricesWarning))
       }
@@ -1596,7 +1704,21 @@ struct SubCommand: AsyncParsableCommand {
       @Argument(help: "The product identifier of the subscription.")
       var productID: String
 
+      @OptionGroup var jsonOption: JSONOption
+
+      private struct PriceList: Encodable {
+        struct Price: Encodable {
+          let territory: String?
+          let price: String?
+          let currency: String?
+          let startDate: String?
+          let preserved: Bool?
+        }
+        let prices: [Price]
+      }
+
       func run() async throws {
+        jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
@@ -1624,30 +1746,42 @@ struct SubCommand: AsyncParsableCommand {
           }
         }
 
-        guard !prices.isEmpty else {
+        let sorted = prices.sorted {
+          ($0.relationships?.territory?.data?.id ?? "") < ($1.relationships?.territory?.data?.id ?? "")
+        }
+        let priceList = PriceList(
+          prices: sorted.map { price in
+            let territoryID = price.relationships?.territory?.data?.id
+            let pointID = price.relationships?.subscriptionPricePoint?.data?.id ?? ""
+            return PriceList.Price(
+              territory: territoryID,
+              price: pricePoints[pointID]?.attributes?.customerPrice,
+              currency: territoryID.flatMap { territoryCurrencies[$0] },
+              startDate: price.attributes?.startDate,
+              preserved: price.attributes?.isPreserved
+            )
+          }
+        )
+
+        if jsonOption.json {
+          try printJSON(priceList)
+          return
+        }
+
+        guard !priceList.prices.isEmpty else {
           print(yellow(missingPricesWarning))
           return
         }
 
-        let sorted = prices.sorted {
-          ($0.relationships?.territory?.data?.id ?? "") < ($1.relationships?.territory?.data?.id ?? "")
-        }
         Table.print(
           headers: ["Territory", "Customer Price", "Start Date", "Preserved"],
-          rows: sorted.map { price in
-            let territoryID = price.relationships?.territory?.data?.id ?? "—"
-            let pointID = price.relationships?.subscriptionPricePoint?.data?.id ?? ""
-            let priceStr: String
-            if let cp = pricePoints[pointID]?.attributes?.customerPrice {
-              priceStr = "\(cp) \(territoryCurrencies[territoryID] ?? "")"
-            } else {
-              priceStr = "(unknown tier)"
-            }
+          rows: priceList.prices.map { entry in
+            let priceStr = entry.price.map { "\($0) \(entry.currency ?? "")" } ?? "(unknown tier)"
             return [
-              territoryID,
+              entry.territory ?? "—",
               priceStr,
-              price.attributes?.startDate ?? "—",
-              price.attributes?.isPreserved == true ? "Yes" : "No",
+              entry.startDate ?? "—",
+              entry.preserved == true ? "Yes" : "No",
             ]
           }
         )

@@ -22,6 +22,7 @@ The table shows the review ID, star rating, date, territory, whether it has a re
 - `--sort` — `recent` (default), `oldest`, `critical` (lowest rating first), or `best` (highest first).
 - `--unanswered` — only reviews without a published response.
 - `--limit` — maximum number to show (default 50, max 200).
+- `--json` — machine-readable output including the **full review bodies and developer responses**, so no per-review `info` calls are needed ([conventions](../guides/automation.md#json-output)).
 
 ## Details
 
@@ -29,7 +30,7 @@ The table shows the review ID, star rating, date, territory, whether it has a re
 ascelerate reviews info <review-id>
 ```
 
-Shows the full review body and the developer response (if any). Review IDs come from `reviews list`.
+Shows the full review body and the developer response (if any). Review IDs come from `reviews list`. Accepts `--json` as well, emitting the same shape as one `reviews list --json` element.
 
 ## Respond
 

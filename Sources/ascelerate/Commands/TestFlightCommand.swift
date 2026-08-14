@@ -20,7 +20,12 @@ struct TestFlightCommand: AsyncParsableCommand {
   /// A build paired with its pre-release train description (e.g. "iOS 5.3").
   struct ResolvedBuild {
     let build: Build
-    let train: String
+    let platform: String?  // raw API value, e.g. "IOS"
+    let version: String?   // train version, e.g. "5.0"
+
+    var train: String {
+      "\(platform.map { formatState($0) } ?? "?") \(version ?? "?")"
+    }
 
     var label: String {
       "\(train) (\(build.attributes?.version ?? "?"))"
@@ -75,16 +80,15 @@ struct TestFlightCommand: AsyncParsableCommand {
         include: [.preReleaseVersion]
       ))
 
-    var trains: [String: String] = [:]
+    var trains: [String: (platform: String?, version: String?)] = [:]
     for item in response.included ?? [] {
       if case .prereleaseVersion(let v) = item {
-        let p = v.attributes?.platform.map { formatState($0) } ?? "?"
-        trains[v.id] = "\(p) \(v.attributes?.version ?? "?")"
+        trains[v.id] = (v.attributes?.platform?.rawValue, v.attributes?.version)
       }
     }
     func resolved(_ build: Build) -> ResolvedBuild {
-      let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] } ?? "?"
-      return ResolvedBuild(build: build, train: train)
+      let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] }
+      return ResolvedBuild(build: build, platform: train?.platform, version: train?.version)
     }
 
     let builds = response.data
@@ -1143,7 +1147,23 @@ struct TestFlightCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Maximum number of builds to show (default 20).")
     var limit: Int = 20
 
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Entry: Encodable {
+      let id: String
+      let buildNumber: String?
+      let version: String?
+      let platform: String?
+      let uploadedDate: Date?
+      let expirationDate: Date?
+      let isExpired: Bool?
+      let processingState: String?
+      let internalBuildState: String?
+      let externalBuildState: String?
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
@@ -1156,18 +1176,12 @@ struct TestFlightCommand: AsyncParsableCommand {
           include: [.preReleaseVersion, .buildBetaDetail]
         ))
 
-      if response.data.isEmpty {
-        print("No builds found.")
-        return
-      }
-
-      var trains: [String: String] = [:]
+      var trains: [String: (platform: String?, version: String?)] = [:]
       var details: [String: BuildBetaDetail] = [:]
       for item in response.included ?? [] {
         switch item {
           case .prereleaseVersion(let v):
-            let p = v.attributes?.platform.map { formatState($0) } ?? "?"
-            trains[v.id] = "\(p) \(v.attributes?.version ?? "?")"
+            trains[v.id] = (v.attributes?.platform?.rawValue, v.attributes?.version)
           case .buildBetaDetail(let d):
             details[d.id] = d
           default:
@@ -1175,20 +1189,45 @@ struct TestFlightCommand: AsyncParsableCommand {
         }
       }
 
-      var rows: [[String]] = []
-      for build in response.data {
+      let entries = response.data.map { build -> Entry in
         let a = build.attributes
-        let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] } ?? "—"
+        let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] }
         let detail = build.relationships?.buildBetaDetail?.data.flatMap { details[$0.id] }
-        rows.append([
-          a?.version ?? "—",
+        return Entry(
+          id: build.id,
+          buildNumber: a?.version,
+          version: train?.version,
+          platform: train?.platform,
+          uploadedDate: a?.uploadedDate,
+          expirationDate: a?.expirationDate,
+          isExpired: a?.isExpired,
+          processingState: a?.processingState?.rawValue,
+          internalBuildState: detail?.attributes?.internalBuildState?.rawValue,
+          externalBuildState: detail?.attributes?.externalBuildState?.rawValue
+        )
+      }
+
+      if jsonOption.json {
+        try printJSON(entries)
+        return
+      }
+
+      if entries.isEmpty {
+        print("No builds found.")
+        return
+      }
+
+      let rows = entries.map { e -> [String] in
+        let train = e.version.map { v in "\(e.platform.map { formatState($0) } ?? "?") \(v)" } ?? "—"
+        return [
+          e.buildNumber ?? "—",
           train,
-          a?.uploadedDate.map { formatDate($0) } ?? "—",
-          a?.processingState.map { formatState($0) } ?? "—",
-          detail?.attributes?.internalBuildState.map { formatState($0) } ?? "—",
-          detail?.attributes?.externalBuildState.map { formatState($0) } ?? "—",
-          a?.isExpired == true ? red("Expired") : a?.expirationDate.map { formatDate($0) } ?? "—",
-        ])
+          e.uploadedDate.map { formatDate($0) } ?? "—",
+          e.processingState.map { formatState($0) } ?? "—",
+          e.internalBuildState.map { formatState($0) } ?? "—",
+          e.externalBuildState.map { formatState($0) } ?? "—",
+          e.isExpired == true ? red("Expired") : e.expirationDate.map { formatDate($0) } ?? "—",
+        ]
       }
 
       Table.print(
@@ -1676,7 +1715,25 @@ struct TestFlightCommand: AsyncParsableCommand {
 
     @OptionGroup var buildOptions: BuildOptions
 
+    @OptionGroup var jsonOption: JSONOption
+
+    private struct Detail: Encodable {
+      let id: String
+      let buildNumber: String?
+      let version: String?
+      let platform: String?
+      let uploadedDate: Date?
+      let expirationDate: Date?
+      let isExpired: Bool?
+      let processingState: String?
+      let internalBuildState: String?
+      let externalBuildState: String?
+      let autoNotifyEnabled: Bool?
+      let betaReviewState: String?
+    }
+
     func run() async throws {
+      jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let resolved = try await buildOptions.resolve(appID: app.id, client: client)
@@ -1689,15 +1746,35 @@ struct TestFlightCommand: AsyncParsableCommand {
         Resources.v1.betaAppReviewSubmissions.get(filterBuild: [resolved.build.id])
       ).data.first
 
-      print("Build:            \(resolved.label)")
-      print("Uploaded:         \(a?.uploadedDate.map { formatDate($0) } ?? "—")")
-      print("Expires:          \(a?.isExpired == true ? red("Expired") : a?.expirationDate.map { formatDate($0) } ?? "—")")
-      print("Processing:       \(a?.processingState.map { formatState($0) } ?? "—")")
       let d = detail?.attributes
-      print("Internal Testing: \(d?.internalBuildState.map { formatState($0) } ?? "—")")
-      print("External Testing: \(d?.externalBuildState.map { formatState($0) } ?? "—")")
-      print("Auto-Notify:      \(d?.isAutoNotifyEnabled == true ? "Yes" : "No")")
-      print("Beta Review:      \(submission?.attributes?.betaReviewState.map { formatState($0) } ?? "Not submitted")")
+      let status = Detail(
+        id: resolved.build.id,
+        buildNumber: a?.version,
+        version: resolved.version,
+        platform: resolved.platform,
+        uploadedDate: a?.uploadedDate,
+        expirationDate: a?.expirationDate,
+        isExpired: a?.isExpired,
+        processingState: a?.processingState?.rawValue,
+        internalBuildState: d?.internalBuildState?.rawValue,
+        externalBuildState: d?.externalBuildState?.rawValue,
+        autoNotifyEnabled: d?.isAutoNotifyEnabled,
+        betaReviewState: submission?.attributes?.betaReviewState?.rawValue
+      )
+
+      if jsonOption.json {
+        try printJSON(status)
+        return
+      }
+
+      print("Build:            \(resolved.label)")
+      print("Uploaded:         \(status.uploadedDate.map { formatDate($0) } ?? "—")")
+      print("Expires:          \(status.isExpired == true ? red("Expired") : status.expirationDate.map { formatDate($0) } ?? "—")")
+      print("Processing:       \(status.processingState.map { formatState($0) } ?? "—")")
+      print("Internal Testing: \(status.internalBuildState.map { formatState($0) } ?? "—")")
+      print("External Testing: \(status.externalBuildState.map { formatState($0) } ?? "—")")
+      print("Auto-Notify:      \(status.autoNotifyEnabled == true ? "Yes" : "No")")
+      print("Beta Review:      \(status.betaReviewState.map { formatState($0) } ?? "Not submitted")")
     }
   }
 

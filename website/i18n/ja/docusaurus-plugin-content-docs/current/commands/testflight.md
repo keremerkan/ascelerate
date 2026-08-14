@@ -90,7 +90,7 @@ ascelerate testflight versions <bundle-id>
 ascelerate testflight status <bundle-id> --build 123
 ```
 
-`builds` は、各ビルドの処理状態、内部・外部テストの状態、有効期限を一覧表示します。`status` は、単一のビルドについて自動通知の設定とベータ審査の状態も表示します。
+`builds` は、各ビルドの処理状態、内部・外部テストの状態、有効期限を一覧表示します。`status` は、単一のビルドについて自動通知の設定とベータ審査の状態も表示します。どちらも機械可読な出力のための `--json` を受け付けます（[規約](../guides/automation.md#json-output)）。
 
 ```bash
 # ビルドを期限切れにする（テスターはインストールできなくなります）

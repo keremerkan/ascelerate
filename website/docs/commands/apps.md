@@ -23,6 +23,8 @@ ascelerate apps info <bundle-id>
 ascelerate apps versions <bundle-id>
 ```
 
+`apps list`, `apps info`, and `apps versions` all accept `--json` for machine-readable output ([conventions](../guides/automation.md#json-output)).
+
 ## Create a version
 
 ```bash
@@ -53,6 +55,8 @@ Without `--set`, prints the current copyright notice. Updating requires the vers
 ascelerate apps review status <bundle-id>
 ascelerate apps review status <bundle-id> --version 2.1.0
 ```
+
+Add `--json` to get the submissions — including per-item states — as machine-readable JSON.
 
 ### Submit for review
 
@@ -129,7 +133,7 @@ Result: 5 passed, 3 failed
 
 The What's New check is skipped when the app has no previously released version — that field only exists for updates, not for a first release.
 
-Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files.
+Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files. With `--json`, the command emits a structured report instead of the table — a `passed` boolean plus one entry per check (`group`, `name`, `passed`, `detail`) — while keeping the same exit-code behavior, so CI gates can report exactly which check failed.
 
 ## Phased release
 

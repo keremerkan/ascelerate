@@ -13,6 +13,8 @@ ascelerate sub list <bundle-id>
 ascelerate sub info <bundle-id> <product-id>
 ```
 
+Üç komut da makine tarafından okunabilir çıktı için `--json` seçeneğini kabul eder ([kurallar](../guides/automation.md#json-output)); `info`, eksik fiyat uyarısını `hasPricing` boolean'ı olarak raporlar.
+
 ## Abonelik oluşturma, güncelleme ve silme
 
 ```bash
@@ -60,6 +62,9 @@ Abonelik fiyatlandırması bölgeye özeldir. IAP'lerde olduğu gibi otomatik e�
 ```bash
 # Mevcut bölgeye özel fiyatları göster (yoksa uyarır)
 ascelerate sub pricing show <bundle-id> <product-id>
+
+# Fiyatları JSON olarak göster (bölge başına fiyat, para birimi, başlangıç tarihi ve koruma bayrağı)
+ascelerate sub pricing show <bundle-id> <product-id> --json
 
 # Bir bölgedeki mevcut fiyat kademelerini listele
 ascelerate sub pricing tiers <bundle-id> <product-id> --territory USA

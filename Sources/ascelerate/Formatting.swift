@@ -204,6 +204,31 @@ func splitArguments(_ string: String) throws -> [String] {
 /// When true, all interactive confirmation prompts are automatically accepted.
 nonisolated(unsafe) var autoConfirm = false
 
+/// When true, the running command was invoked with --json: results go to stdout
+/// as machine-readable JSON, and interactive input prompts refuse instead of
+/// asking (a prompt would corrupt the JSON stream).
+nonisolated(unsafe) var jsonMode = false
+
+/// The flag responsible for the current non-interactive mode, for error messages.
+var nonInteractiveFlag: String { jsonMode ? "--json" : "--yes" }
+
+/// Shared `--json` flag for read commands. Call `activate()` at the top of `run()`.
+struct JSONOption: ParsableArguments {
+  @Flag(name: .long, help: "Output machine-readable JSON instead of formatted text.")
+  var json = false
+
+  func activate() { if json { jsonMode = true } }
+}
+
+/// Prints a value as pretty-printed JSON (sorted keys, ISO 8601 dates).
+func printJSON(_ value: some Encodable) throws {
+  let encoder = JSONEncoder()
+  encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+  encoder.dateEncodingStrategy = .iso8601
+  let data = try encoder.encode(value)
+  print(String(decoding: data, as: UTF8.self))
+}
+
 /// Build numbers recorded by `builds upload` so subsequent workflow steps
 /// (`await-processing`, `build attach-latest`) can wait for this specific build.
 /// Tracked per platform — one workflow can upload iOS and macOS builds with
@@ -511,9 +536,9 @@ func resolveFile(_ file: String?, extension ext: String, prompt: String) throws 
 /// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
 /// Prompts for non-empty text input; retries on empty.
 func promptText(_ message: String) throws -> String {
-  if autoConfirm {
+  if autoConfirm || jsonMode {
     let label = message.trimmingCharacters(in: CharacterSet(charactersIn: ": "))
-    throw ValidationError("\(label) is required — cannot prompt with --yes.")
+    throw ValidationError("\(label) is required — cannot prompt with \(nonInteractiveFlag).")
   }
   print(message, terminator: "")
   guard let line = readLine() else {
@@ -775,10 +800,10 @@ func promptSelection<T>(
   guard !items.isEmpty else {
     throw ValidationError("No items to select from.")
   }
-  if autoConfirm {
+  if autoConfirm || jsonMode {
     let listing = items.map { "  - \(display($0))" }.joined(separator: "\n")
     let hint = nonInteractiveHint.map { " \($0)" } ?? ""
-    throw ValidationError("\(title) (\(items.count)) — cannot prompt with --yes.\(hint)\n\(listing)")
+    throw ValidationError("\(title) (\(items.count)) — cannot prompt with \(nonInteractiveFlag).\(hint)\n\(listing)")
   }
   print("\(title):")
   for (i, item) in items.enumerated() {
@@ -809,8 +834,8 @@ func promptMultiSelection<T>(
   guard !items.isEmpty else {
     throw ValidationError("No items to select from.")
   }
-  if autoConfirm {
-    throw ValidationError("\(title) (\(items.count)) — cannot prompt with --yes.")
+  if autoConfirm || jsonMode {
+    throw ValidationError("\(title) (\(items.count)) — cannot prompt with \(nonInteractiveFlag).")
   }
   print("\(title):")
   for (i, item) in items.enumerated() {
@@ -925,11 +950,17 @@ func formatFieldName(_ name: String) -> String {
     "ipad": "iPad",
     "appleTv": "Apple TV",
     "vision": "Apple Vision",
+    "IOS": "iOS",
+    "MAC_OS": "macOS",
+    "TV_OS": "tvOS",
+    "VISION_OS": "visionOS",
   ]
   if let override = overrides[name] { return override }
 
-  // SCREAMING_SNAKE_CASE (e.g. "PREPARE_FOR_SUBMISSION", "APP_IPHONE_67")
-  if name.contains("_") {
+  // SCREAMING_SNAKE_CASE (e.g. "PREPARE_FOR_SUBMISSION", "APP_IPHONE_67") — or a
+  // single all-caps word (e.g. "MANUAL"): raw API enum values land here too
+  let isAllCaps = name.count >= 2 && name.allSatisfy { $0.isUppercase || $0.isNumber || $0 == "_" }
+  if name.contains("_") || isAllCaps {
     return name.split(separator: "_")
       .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
       .joined(separator: " ")

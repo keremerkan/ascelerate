@@ -23,6 +23,8 @@ ascelerate apps info <bundle-id>
 ascelerate apps versions <bundle-id>
 ```
 
+`apps list`, `apps info` ve `apps versions` komutlarının tümü, makine tarafından okunabilir çıktı için `--json` seçeneğini kabul eder ([kurallar](../guides/automation.md#json-output)).
+
 ## Sürüm oluşturma
 
 ```bash
@@ -53,6 +55,8 @@ ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --p
 ascelerate apps review status <bundle-id>
 ascelerate apps review status <bundle-id> --version 2.1.0
 ```
+
+Gönderimleri (öğe başına durumlar dahil) makine tarafından okunabilir JSON olarak almak için `--json` ekleyin.
 
 ### İncelemeye gönderme
 
@@ -129,7 +133,7 @@ Result: 5 passed, 3 failed
 
 Uygulamanın daha önce yayınlanmış bir sürümü yoksa yenilikler denetimi atlanır; bu alan yalnızca güncellemelerde bulunur, ilk sürümde yer almaz.
 
-Herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu döndürür, bu da CI pipeline'larında ve workflow dosyalarında rahatlıkla kullanılmasını sağlar.
+Herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu döndürür, bu da CI pipeline'larında ve workflow dosyalarında rahatlıkla kullanılmasını sağlar. `--json` ile komut, tablo yerine yapılandırılmış bir rapor üretir: bir `passed` boolean'ı ve her kontrol için bir kayıt (`group`, `name`, `passed`, `detail`). Çıkış kodu davranışı aynı kaldığından, CI kapıları tam olarak hangi kontrolün başarısız olduğunu raporlayabilir.
 
 ## Aşamalı yayınlama
 

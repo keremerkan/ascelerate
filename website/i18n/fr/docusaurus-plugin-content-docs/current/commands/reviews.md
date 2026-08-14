@@ -22,6 +22,7 @@ Le tableau affiche l'identifiant de l'avis, la note en étoiles, la date, le ter
 - `--sort` — `recent` (par défaut), `oldest`, `critical` (note la plus basse en premier) ou `best` (la plus haute en premier).
 - `--unanswered` — uniquement les avis sans réponse publiée.
 - `--limit` — nombre maximal d'avis à afficher (50 par défaut, 200 au maximum).
+- `--json` — sortie lisible par machine incluant le **texte complet des avis et les réponses du développeur**, ce qui évite d'appeler `info` pour chaque avis ([conventions](../guides/automation.md#json-output)).
 
 ## Détails
 
@@ -29,7 +30,7 @@ Le tableau affiche l'identifiant de l'avis, la note en étoiles, la date, le ter
 ascelerate reviews info <review-id>
 ```
 
-Affiche le texte complet de l'avis et la réponse du développeur, le cas échéant. Les identifiants d'avis proviennent de `reviews list`.
+Affiche le texte complet de l'avis et la réponse du développeur, le cas échéant. Les identifiants d'avis proviennent de `reviews list`. La commande accepte aussi `--json` et émet alors la même structure qu'un élément de `reviews list --json`.
 
 ## Répondre
 

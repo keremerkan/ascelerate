@@ -90,7 +90,7 @@ ascelerate testflight versions <bundle-id>
 ascelerate testflight status <bundle-id> --build 123
 ```
 
-`builds` listet für jeden Build den Verarbeitungsstatus, die internen und externen Teststatus sowie das Ablaufdatum auf. `status` ergänzt für einen einzelnen Build die Auto-Notify-Einstellung und den Beta-Review-Status.
+`builds` listet für jeden Build den Verarbeitungsstatus, die internen und externen Teststatus sowie das Ablaufdatum auf. `status` ergänzt für einen einzelnen Build die Auto-Notify-Einstellung und den Beta-Review-Status. Beide akzeptieren `--json` für maschinenlesbare Ausgabe ([Konventionen](../guides/automation.md#json-output)).
 
 ```bash
 # Einen Build ablaufen lassen; Tester können ihn nicht mehr installieren

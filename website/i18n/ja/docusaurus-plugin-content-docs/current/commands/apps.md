@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 `--release-type` はオプションです。省略した場合、前のバージョンの設定が使用されます。
 
 :::note ユニバーサル購入
-ユニバーサル購入のアプリ（iOS、macOS、tvOS、visionOSにまたがる1つのApp Storeレコード）では、同じバージョン文字列がプラットフォームごとに1つずつ存在できます。`create-version` と `review submit` はデフォルトでiOSを対象とするため、別のプラットフォームを対象にするには `--platform macos`（または `tvos`、`visionos`）を指定してください。バージョンを対象とするその他のコマンド（ローカライゼーション、メディア、ビルドの添付、review preflight/info/attachments/resolve-issues/cancel-submission、段階的リリース）もオプションの `--platform` を受け付けます。省略した場合、バージョン（またはアクティブな審査提出）が複数のプラットフォームに該当するときに選択を求められます。`--yes` 指定時は選択を求める代わりに、ヒントを表示して中止します。
+ユニバーサル購入のアプリ（iOS、macOS、tvOS、visionOSにまたがる1つのApp Storeレコード）では、同じバージョン文字列がプラットフォームごとに1つずつ存在できます。`create-version` と `review submit` はデフォルトでiOSを対象とするため、別のプラットフォームを対象にするには `--platform macos`（または `tvos`、`visionos`）を指定してください。バージョンを対象とするその他のコマンド（ローカライゼーション、メディア、ビルドの添付、review preflight/info/attachments/resolve-issues/cancel-submission、段階的リリース、手動リリース）もオプションの `--platform` を受け付けます。省略した場合、バージョン（またはアクティブな審査提出）が複数のプラットフォームに該当するときに選択を求められます。`--yes` 指定時は選択を求める代わりに、ヒントを表示して中止します。
 :::
 
 ## 著作権表示
@@ -151,6 +151,18 @@ ascelerate apps phased-release <bundle-id> --complete
 
 # 段階的リリースを完全に削除
 ascelerate apps phased-release <bundle-id> --disable
+```
+
+## 手動リリース
+
+バージョンのリリースオプションが手動に設定されている場合、承認されたバージョンはリリースするまで「Pending Developer Release（デベロッパによるリリース待ち）」の状態のままになります：
+
+```bash
+# デベロッパによるリリース待ちのバージョンをリリース
+ascelerate apps release <bundle-id>
+
+# 特定のバージョンまたはプラットフォームを対象にする
+ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
 
 ## 販売地域の管理

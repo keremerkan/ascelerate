@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 Der `--release-type` ist optional — wird er weggelassen, wird die Einstellung der vorherigen Version verwendet.
 
 :::note Universalkauf
-Bei Apps mit Universalkauf (ein App Store-Eintrag, der iOS, macOS, tvOS und/oder visionOS umfasst) kann dieselbe Versionsnummer einmal pro Plattform existieren. `create-version` und `review submit` verwenden standardmäßig iOS — übergeben Sie `--platform macos` (oder `tvos`, `visionos`), um eine andere Plattform anzusprechen. Alle anderen versionsbezogenen Befehle (Lokalisierungen, Medien, Build-Zuordnung, Review-Preflight/-Informationen/-Anhänge, `resolve-issues`/`cancel-submission`, stufenweise Veröffentlichung) akzeptieren ebenfalls ein optionales `--platform`; ohne diese Option fragen sie nach, wenn eine Version (oder eine aktive Review-Einreichung) für mehr als eine Plattform existiert — mit `--yes` brechen sie stattdessen mit einem Hinweis ab.
+Bei Apps mit Universalkauf (ein App Store-Eintrag, der iOS, macOS, tvOS und/oder visionOS umfasst) kann dieselbe Versionsnummer einmal pro Plattform existieren. `create-version` und `review submit` verwenden standardmäßig iOS — übergeben Sie `--platform macos` (oder `tvos`, `visionos`), um eine andere Plattform anzusprechen. Alle anderen versionsbezogenen Befehle (Lokalisierungen, Medien, Build-Zuordnung, Review-Preflight/-Informationen/-Anhänge, `resolve-issues`/`cancel-submission`, stufenweise Veröffentlichung, manuelle Veröffentlichung) akzeptieren ebenfalls ein optionales `--platform`; ohne diese Option fragen sie nach, wenn eine Version (oder eine aktive Review-Einreichung) für mehr als eine Plattform existiert — mit `--yes` brechen sie stattdessen mit einem Hinweis ab.
 :::
 
 ## Copyright
@@ -151,6 +151,18 @@ ascelerate apps phased-release <bundle-id> --complete
 
 # Stufenweise Veröffentlichung vollständig entfernen
 ascelerate apps phased-release <bundle-id> --disable
+```
+
+## Manuelle Veröffentlichung
+
+Wenn die Veröffentlichungsoption einer Version auf manuell gesetzt ist, verbleibt die genehmigte Version im Status „Pending Developer Release", bis Sie sie veröffentlichen:
+
+```bash
+# Die Version veröffentlichen, die auf die Freigabe durch den Entwickler wartet
+ascelerate apps release <bundle-id>
+
+# Eine bestimmte Version oder Plattform ansteuern
+ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
 
 ## Länderverfügbarkeit

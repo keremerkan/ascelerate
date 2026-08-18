@@ -9,7 +9,7 @@ struct AppsCommand: AsyncParsableCommand {
     abstract: "Manage apps.",
     subcommands: [List.self, Info.self, Versions.self],
     groupedSubcommands: [
-      CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, RoutingCoverage.self]),
+      CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, Release.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
       CommandGroup(name: "Configuration", subcommands: [Availability.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
@@ -1163,7 +1163,76 @@ struct AppsCommand: AsyncParsableCommand {
       print("  Paused:       \(pauseDuration) day\(pauseDuration == 1 ? "" : "s")")
     }
   }
-  
+
+  struct Release: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "release",
+      abstract: "Release an approved version that is in Pending Developer Release."
+    )
+
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+    var bundleID: String
+
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version pending developer release.")
+    var version: String?
+
+    @OptionGroup var platformOption: PlatformOption
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let appName = app.attributes?.name ?? bundleID
+
+      let response = try await client.send(
+        Resources.v1.apps.id(app.id).appStoreVersions.get(
+          filterPlatform: platformFilter(try platformOption.parsed()),
+          filterVersionString: version.map { [$0] },
+          filterAppVersionState: [.pendingDeveloperRelease]
+        )
+      )
+      let candidates = response.data
+
+      guard !candidates.isEmpty else {
+        let scope = version.map { "Version \($0) of \(appName) is not" } ?? "No version of \(appName) is"
+        throw ValidationError("\(scope) in Pending Developer Release.")
+      }
+
+      func describe(_ v: AppStoreVersion) -> String {
+        let p = v.attributes?.platform.map { formatState($0) } ?? "?"
+        return "\(p) — \(v.attributes?.versionString ?? "?")"
+      }
+
+      let appVersion = candidates.count == 1
+        ? candidates[0]
+        : try promptSelection(
+            "Multiple versions pending developer release", items: candidates, display: describe,
+            nonInteractiveHint: "Pass --platform to disambiguate.")
+
+      guard confirm("Release \(appName) \(describe(appVersion)) to the App Store? [y/N] ") else {
+        cancelled()
+        return
+      }
+
+      _ = try await client.send(
+        Resources.v1.appStoreVersionReleaseRequests.post(
+          AppStoreVersionReleaseRequestCreateRequest(
+            data: .init(
+              relationships: .init(
+                appStoreVersion: .init(data: .init(id: appVersion.id))
+              )
+            )
+          )
+        )
+      )
+      success("Released", "\(appName) \(describe(appVersion)) — release request submitted.")
+    }
+  }
+
   struct RoutingCoverage: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "routing-coverage",

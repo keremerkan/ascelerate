@@ -211,7 +211,7 @@ ascelerate apps review attachment upload <bundle-id> demo.mp4
 ascelerate apps review attachment delete <attachment-id>
 ```
 
-For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` and `review submit` default to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release, routing coverage) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
+For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` and `review submit` default to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release, release, routing coverage) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
 
 #### Pre-submission preflight checks
 
@@ -285,6 +285,18 @@ ascelerate apps phased-release <bundle-id> --complete
 
 # Remove phased release entirely
 ascelerate apps phased-release <bundle-id> --disable
+```
+
+### Manual Release
+
+When a version's release option is set to manual, the approved version sits in Pending Developer Release until you release it:
+
+```bash
+# Release the version that is pending developer release
+ascelerate apps release <bundle-id>
+
+# Target a specific version or platform
+ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
 
 ### Age Rating

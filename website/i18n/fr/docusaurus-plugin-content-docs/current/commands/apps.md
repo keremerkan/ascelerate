@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 L'option `--release-type` est facultative -- son omission reprend le paramètre de la version précédente.
 
 :::note Achat universel
-Pour les applications en achat universel (une seule fiche App Store couvrant iOS, macOS, tvOS et/ou visionOS), la même chaîne de version peut exister une fois par plateforme. `create-version` et `review submit` ciblent iOS par défaut -- passez `--platform macos` (ou `tvos`, `visionos`) pour viser une autre plateforme. Toutes les autres commandes liées à une version (localisations, médias, association de build, vérifications préalables, informations et pièces jointes d'examen, `resolve-issues`/`cancel-submission`, déploiement progressif) acceptent elles aussi une option `--platform` facultative ; sans elle, elles demandent de choisir dès qu'une version (ou une soumission d'examen active) correspond à plusieurs plateformes -- avec `--yes`, elles refusent en affichant une indication au lieu de demander.
+Pour les applications en achat universel (une seule fiche App Store couvrant iOS, macOS, tvOS et/ou visionOS), la même chaîne de version peut exister une fois par plateforme. `create-version` et `review submit` ciblent iOS par défaut -- passez `--platform macos` (ou `tvos`, `visionos`) pour viser une autre plateforme. Toutes les autres commandes liées à une version (localisations, médias, association de build, vérifications préalables, informations et pièces jointes d'examen, `resolve-issues`/`cancel-submission`, déploiement progressif, publication manuelle) acceptent elles aussi une option `--platform` facultative ; sans elle, elles demandent de choisir dès qu'une version (ou une soumission d'examen active) correspond à plusieurs plateformes -- avec `--yes`, elles refusent en affichant une indication au lieu de demander.
 :::
 
 ## Copyright
@@ -151,6 +151,18 @@ ascelerate apps phased-release <bundle-id> --complete
 
 # Supprimer entièrement le déploiement progressif
 ascelerate apps phased-release <bundle-id> --disable
+```
+
+## Publication manuelle
+
+Lorsque l'option de publication d'une version est définie sur manuelle, la version approuvée reste en « Pending Developer Release » (en attente de publication par le développeur) jusqu'à ce que vous la publiiez :
+
+```bash
+# Publier la version en attente de publication par le développeur
+ascelerate apps release <bundle-id>
+
+# Cibler une version ou une plateforme spécifique
+ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
 
 ## Disponibilité territoriale

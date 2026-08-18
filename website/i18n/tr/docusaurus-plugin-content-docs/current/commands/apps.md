@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 `--release-type` isteğe bağlıdır -- belirtilmezse önceki sürümün ayarı kullanılır.
 
 :::note Evrensel Satın Alma
-Evrensel satın alma kullanan uygulamalarda (iOS, macOS, tvOS ve/veya visionOS'i kapsayan tek bir App Store kaydı) aynı sürüm numarası her platformda birer kez bulunabilir. `create-version` ve `review submit` varsayılan olarak iOS'i hedefler; başka bir platformu hedeflemek için `--platform macos` (veya `tvos`, `visionos`) verin. Sürüm kapsamındaki diğer tüm komutlar (yerelleştirmeler, medya, build ekleme, review preflight/info/attachments/resolve-issues/cancel-submission, aşamalı yayınlama) da isteğe bağlı bir `--platform` seçeneği kabul eder; seçenek verilmediğinde, bir sürüm (veya etkin bir inceleme gönderimi) birden fazla platformla eşleşiyorsa sizden platform seçmeniz istenir. `--yes` ile bu komutlar seçim istemek yerine yönlendirici bir hatayla durur.
+Evrensel satın alma kullanan uygulamalarda (iOS, macOS, tvOS ve/veya visionOS'i kapsayan tek bir App Store kaydı) aynı sürüm numarası her platformda birer kez bulunabilir. `create-version` ve `review submit` varsayılan olarak iOS'i hedefler; başka bir platformu hedeflemek için `--platform macos` (veya `tvos`, `visionos`) verin. Sürüm kapsamındaki diğer tüm komutlar (yerelleştirmeler, medya, build ekleme, review preflight/info/attachments/resolve-issues/cancel-submission, aşamalı yayınlama, manuel yayınlama) da isteğe bağlı bir `--platform` seçeneği kabul eder; seçenek verilmediğinde, bir sürüm (veya etkin bir inceleme gönderimi) birden fazla platformla eşleşiyorsa sizden platform seçmeniz istenir. `--yes` ile bu komutlar seçim istemek yerine yönlendirici bir hatayla durur.
 :::
 
 ## Telif Hakkı
@@ -151,6 +151,18 @@ ascelerate apps phased-release <bundle-id> --complete
 
 # Aşamalı yayınlamayı tamamen kaldırın
 ascelerate apps phased-release <bundle-id> --disable
+```
+
+## Manuel yayınlama
+
+Bir sürümün yayınlama seçeneği manuel olarak ayarlandığında, onaylanan sürüm siz yayınlayana kadar Pending Developer Release (geliştirici yayınlaması bekleniyor) durumunda bekler:
+
+```bash
+# Geliştirici yayınlaması bekleyen sürümü yayınlayın
+ascelerate apps release <bundle-id>
+
+# Belirli bir sürümü veya platformu hedefleyin
+ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
 
 ## Bölge erişilebilirliği

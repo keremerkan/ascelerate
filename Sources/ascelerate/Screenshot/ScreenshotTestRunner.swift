@@ -46,7 +46,70 @@ struct ScreenshotTestRunner: Sendable {
 
         let derivedDataPath = try config.derivedDataPath ?? resolveDerivedDataPath()
         let xctestrunFile = try findXctestrunFile(derivedDataPath: derivedDataPath)
-        return BuildResult(xctestrunFile: xctestrunFile)
+        return BuildResult(xctestrunFile: try repairXctestrunIfNeeded(xctestrunFile))
+    }
+
+    /// Xcode 27 resolves a UI test target's `TEST_TARGET_NAME` by name across the whole
+    /// workspace. When another project in the workspace has a same-named target with a
+    /// different PRODUCT_NAME, the generated xctestrun's `UITargetAppPath` points at an app
+    /// that was never built (e.g. a macOS target's "My App.app" instead of the iOS
+    /// "MyApp.app"). xcodebuild then fails the runner instantly, blocks on
+    /// `simctl diagnose --timeout=600` for ten minutes per run, and only afterwards runs
+    /// the tests with the correct app it already mapped from `DependentProductPaths`.
+    /// Detect the dangling path, point it at the one real app among the dependent
+    /// products, and write the repaired copy (with `__TESTROOT__` made absolute, since the
+    /// copy lives outside the Products dir) into the cache directory.
+    private func repairXctestrunIfNeeded(_ path: String) throws -> String {
+        let url = URL(fileURLWithPath: path)
+        let testRoot = url.deletingLastPathComponent().path
+        guard var plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil) as? [String: Any],
+              var configurations = plist["TestConfigurations"] as? [[String: Any]] else {
+            return path
+        }
+
+        func exists(_ product: String) -> Bool {
+            FileManager.default.fileExists(atPath: product.replacingOccurrences(of: "__TESTROOT__", with: testRoot))
+        }
+
+        var repaired = false
+        for c in configurations.indices {
+            guard var targets = configurations[c]["TestTargets"] as? [[String: Any]] else { continue }
+            for t in targets.indices {
+                guard let appPath = targets[t]["UITargetAppPath"] as? String, !exists(appPath) else { continue }
+                let host = targets[t]["TestHostPath"] as? String
+                let candidates = (targets[t]["DependentProductPaths"] as? [String] ?? [])
+                    .filter { $0.hasSuffix(".app") && $0 != host && exists($0) }
+                guard candidates.count == 1 else {
+                    throw ScreenshotError.uiTargetAppNotFound(appPath.replacingOccurrences(of: "__TESTROOT__", with: testRoot))
+                }
+                let wrong = URL(fileURLWithPath: appPath).lastPathComponent
+                let right = URL(fileURLWithPath: candidates[0]).lastPathComponent
+                print("  " + yellow("Warning:") + " xctestrun points to a target app that was not built ('\(wrong)'); using '\(right)' from the scheme's build products instead.")
+                print("  Xcode 27 resolves TEST_TARGET_NAME across the whole workspace: a same-named target in another project probably has a different PRODUCT_NAME.")
+                targets[t]["UITargetAppPath"] = candidates[0]
+                repaired = true
+            }
+            configurations[c]["TestTargets"] = targets
+        }
+        guard repaired else { return path }
+
+        plist["TestConfigurations"] = configurations
+        let absolute = replacingTestRoot(plist, with: testRoot)
+        let data = try PropertyListSerialization.data(fromPropertyList: absolute, format: .xml, options: 0)
+        let dir = ScreenshotCollector.cacheRoot.appendingPathComponent("xctestrun")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let repairedURL = dir.appendingPathComponent(url.lastPathComponent)
+        try data.write(to: repairedURL)
+        return repairedURL.path
+    }
+
+    private func replacingTestRoot(_ value: Any, with root: String) -> Any {
+        switch value {
+        case let string as String: string.replacingOccurrences(of: "__TESTROOT__", with: root)
+        case let array as [Any]: array.map { replacingTestRoot($0, with: root) }
+        case let dict as [String: Any]: dict.mapValues { replacingTestRoot($0, with: root) }
+        default: value
+        }
     }
 
     func test(device: ScreenshotConfig.Device, udid: String, language: String, buildResult: BuildResult) throws {

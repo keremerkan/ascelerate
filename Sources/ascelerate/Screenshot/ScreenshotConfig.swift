@@ -97,10 +97,11 @@ struct ScreenshotConfig: Codable, Sendable {
     # disableAnimations: false
     # waitAfterBoot: 0
     # Extra wait (in seconds) for first-run system alerts to appear and settle.
-    # A simulator may show alerts like "Apple Intelligence is ready for your
-    # device" the first time it boots or after an erase, and these can leak into
-    # screenshots. This wait gives those alerts time to appear so they can be
-    # dismissed (manually or by the test) before screenshots are captured.
+    # A simulator may show system alerts the first time it boots or after an
+    # erase, and these can leak into screenshots. This wait gives those alerts
+    # time to appear so they can be dismissed (manually or by the test) before
+    # screenshots are captured. (The iOS 26 "Ready for Apple Intelligence"
+    # banner is suppressed automatically and needs no wait.)
     # Triggers when:
     #   - It's the first language being processed in this run (regardless of
     #     other settings — the simulator state from prior runs is unknown)

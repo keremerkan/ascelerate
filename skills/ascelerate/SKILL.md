@@ -404,7 +404,7 @@ overrideStatusBar: true
 # darkMode: false
 # disableAnimations: true
 # waitAfterBoot: 5
-# waitAfterEraseAndReboot: 30   # extra wait for first-run system alerts (Apple Intelligence etc.); fires on first language and on retries
+# waitAfterEraseAndReboot: 30   # extra wait for first-run system alerts; fires on first language and on retries (the iOS 26 Apple Intelligence banner is suppressed automatically)
 # configuration: Debug
 # testplan: MyTestPlan
 # numberOfRetries: 1

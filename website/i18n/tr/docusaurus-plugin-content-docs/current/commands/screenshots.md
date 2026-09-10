@@ -81,7 +81,7 @@ overrideStatusBar: true
 darkMode: false
 disableAnimations: true
 waitAfterBoot: 0
-# waitAfterEraseAndReboot: 30           # İlk açılış sistem uyarıları için ek bekleme (örn. Apple Intelligence)
+# waitAfterEraseAndReboot: 30           # İlk açılış sistem uyarıları için ek bekleme
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
@@ -204,7 +204,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `darkMode` | Simülatörlerde karanlık modu etkinleştir |
 | `disableAnimations` | Testler sırasında animasyonları devre dışı bırak |
 | `waitAfterBoot` | Simülatör başlatıldıktan sonra beklenecek saniye (varsayılan: 0) |
-| `waitAfterEraseAndReboot` | Simülatör taze durumdayken beklenecek ek saniye; çalıştırmanın ilk dilinde veya simülatör silindiğinde (`eraseSimulator: true` veya yeniden deneme yoluyla) geçerlidir. İlk açılış sistem uyarılarına ("Apple Intelligence is ready" gibi) ekran görüntüleri çekilmeden önce görünme zamanı verir. |
+| `waitAfterEraseAndReboot` | Simülatör taze durumdayken beklenecek ek saniye; çalıştırmanın ilk dilinde veya simülatör silindiğinde (`eraseSimulator: true` veya yeniden deneme yoluyla) geçerlidir. İlk açılış sistem uyarılarına ekran görüntüleri çekilmeden önce görünme zamanı verir. (iOS 26'daki "Apple Intelligence için hazır" afişi otomatik olarak susturulur; bunun için beklemeye gerek yoktur.) |
 | `testWithoutBuilding` | Derlemeyi atla, mevcut xctestrun dosyasını kullan |
 | `cleanBuild` | Derlemeden önce `clean` çalıştır |
 | `headless` | Simulator.app'i açma |

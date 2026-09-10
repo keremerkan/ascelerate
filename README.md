@@ -582,6 +582,7 @@ overrideStatusBar: true
 # numberOfRetries: 0                    # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false
 # reinstallApp: false
+# disableAssetDownloads: false          # Disable mobileassetd (no Siri/keyboard/ML asset downloads; also blocks on-device ML assets)
 # xcargs: -maximum-parallel-testing-workers 2
 ```
 

@@ -593,6 +593,7 @@ overrideStatusBar: true
 # numberOfRetries: 0
 # stopAfterFirstError: false
 # reinstallApp: com.example.MyApp
+# disableAssetDownloads: true
 # xcargs: -resultBundlePath ./results
 ```
 
@@ -601,7 +602,7 @@ overrideStatusBar: true
 1. `build-for-testing` with `generic/platform=iOS Simulator` and `-configuration` (default Release)
 2. xcodebuild writes to project's actual derived data (custom `-derivedDataPath` is ignored by Xcode workspace settings)
 3. Resolve xctestrun file from `~/Library/Developer/Xcode/DerivedData/{ProjectName}[-hash]/Build/Products/`
-4. For each language: boot all simulators → wait (`waitAfterBoot`) → set dark mode → localize → override status bar → uninstall app (`reinstallApp`) → `test-without-building` concurrently per device → collect screenshots
+4. For each language: boot all simulators → silence system noise (see below) → wait (`waitAfterBoot`) → set dark mode → localize → override status bar → uninstall app (`reinstallApp`) → `test-without-building` concurrently per device → collect screenshots
 5. Each device gets isolated cache at `~/Library/Caches/tools.ascelerate/{UDID}/`
 6. ScreenshotHelper.swift uses `SIMULATOR_UDID` env var to find its cache directory
 7. Errors skip failing device/language, error logs saved as `{language}/{device}-error.log` (unless `stopAfterFirstError`)
@@ -610,6 +611,7 @@ overrideStatusBar: true
 ### Key decisions
 
 - `-parallel-testing-enabled NO` prevents simulator cloning (needed for status bar override)
+- **System noise suppression (`ScreenshotRunner.silenceSystemNoise`, right after the first boot in prep, both localize and plain branches).** Verified live on an iOS 26.5 probe 2026-09-10: (1) The iOS 26 "Ready for Apple Intelligence" banner is a `followupd` item (section `com.apple.Preferences`) that `generativeexperiencesd` posts as soon as the model catalog reports ready (1 s after boot when the host's models are ready, minutes later otherwise) and records in `com.apple.generativeexperiences.corefollowup` / `DateOfLastAppleIntelligenceReadinessCFU`; stamping that key with "now" via `simctl spawn defaults write … -date` before the real boot suppresses it (0 posts vs. 1 in control). Apple Intelligence itself can't be turned off on the simulator: `eligibilityd` force-answers eligible with `OS_ELIGIBILITY_CONTEXT_FORCE_REASON = Simulator`, so no input/region trick works. iOS 27 no longer posts the follow-up. Turning Siri off (`com.apple.assistant.support` / `Assistant Enabled`) does NOT stop the asset downloads. (2) `disableAssetDownloads` runs `launchctl disable user/<uid>/com.apple.mobileassetd` + `bootout` inside the simulator; the disable persists across reboots (erase resets it) and kept the MobileAsset store at 0 bytes where the control pulled ~1.2 GB (Siri Understanding) + ~460 MB (LinguisticData) per fresh simulator. The foundation models themselves are never downloaded into the simulator; it borrows the host's.
 - **Xcode 27 writes a dangling `UITargetAppPath` into the xctestrun** when another project in the workspace has a target with the same name as the UI test's `TEST_TARGET_NAME` but a different `PRODUCT_NAME` (e.g. an iOS `MyApp` target building "MyApp.app" and a macOS `MyApp` target with `PRODUCT_NAME = "My App"` → the xctestrun references "My App.app"). xcodebuild then fails the runner instantly, blocks on `simctl diagnose --timeout=600` (a silent 10-minute stall per run, during which SIGTERM is deferred, so Ctrl-C only lands after the wait), and only then runs the tests with the correct app it already mapped from `DependentProductPaths`. `ScreenshotTestRunner.repairXctestrunIfNeeded` detects the missing app, substitutes the single other `.app` in `DependentProductPaths`, and writes a repaired copy with `__TESTROOT__` made absolute to `~/Library/Caches/tools.ascelerate/xctestrun/` (kept out of Products so the newest-xctestrun discovery never picks it up). Not deterministic: of two clean Xcode 27.0 RC builds of the same workspace, the first wrote the wrong path and the second the right one; Xcode 26.6 always wrote the right one. Verified live 2026-09-10.
 - `xcrun simctl bootstatus` waits for full boot before applying status bar override
 - Test output goes to log files (not stdout) to prevent interleaved output from concurrent devices

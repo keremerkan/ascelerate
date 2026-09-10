@@ -29,6 +29,7 @@ struct ScreenshotConfig: Codable, Sendable {
     var numberOfRetries: Int?
     var stopAfterFirstError: Bool?
     var reinstallApp: String?
+    var disableAssetDownloads: Bool?
     var xcargs: String?
 
     var framedOutputDirectory: String?
@@ -133,6 +134,10 @@ struct ScreenshotConfig: Codable, Sendable {
     # testplan: MyTestPlan
     # stopAfterFirstError: false
     # reinstallApp: com.example.MyApp
+    # Keep mobileassetd from downloading gigabytes of Siri/keyboard/ML assets into
+    # freshly erased simulators. Also blocks on-device ML assets some apps need
+    # (e.g. text recognition), so leave it off if your screenshots depend on those.
+    # disableAssetDownloads: true
     # xcargs: -resultBundlePath ./results
     """
 }

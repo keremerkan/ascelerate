@@ -71,6 +71,37 @@ struct SimulatorManager: Sendable {
         ])
     }
 
+    /// iOS 26 posts a "Ready for Apple Intelligence" follow-up banner (followupd, delivered through
+    /// the Settings notification section) the moment generativeexperiencesd sees the models ready.
+    /// On the simulator that can be seconds after boot or minutes later, mid-capture. The daemon
+    /// records when it last posted the follow-up and never re-posts, so stamping "now" before the
+    /// first real boot suppresses it. iOS 27 no longer posts it; the write is harmless there.
+    func suppressAppleIntelligenceBanner(udid: String) throws {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss +0000"
+        try ScreenshotShell.run("/usr/bin/xcrun", arguments: [
+            "simctl", "spawn", udid, "defaults", "write",
+            "com.apple.generativeexperiences.corefollowup",
+            "DateOfLastAppleIntelligenceReadinessCFU", "-date", formatter.string(from: Date()),
+        ])
+    }
+
+    /// mobileassetd pulls gigabytes of Siri, keyboard, and ML assets into every freshly erased
+    /// simulator. Disabling it in the simulator's own launchd persists across reboots (an erase
+    /// resets it, which is why this runs during every prep). The service is usually already
+    /// running when this is called, so it is also booted out.
+    func disableAssetDownloads(udid: String) throws {
+        let service = "user/\(getuid())/com.apple.mobileassetd"
+        try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "spawn", udid, "launchctl", "disable", service])
+        do {
+            try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "spawn", udid, "launchctl", "bootout", service])
+        } catch {
+            // Not running yet: the disable alone keeps it from launching.
+        }
+    }
+
     func uninstallApp(udid: String, bundleID: String) throws {
         try ScreenshotShell.run("/usr/bin/xcrun", arguments: [
             "simctl", "uninstall", udid, bundleID,

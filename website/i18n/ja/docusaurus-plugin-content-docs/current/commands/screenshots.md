@@ -94,6 +94,7 @@ waitAfterBoot: 0
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
+# disableAssetDownloads: false           # mobileassetd を無効化（Siri/キーボード/ML アセットをダウンロードしない。オンデバイス ML アセットもブロック）
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
 
@@ -135,7 +136,7 @@ override func setUp() {
 ## 動作の仕組み
 
 1. `build-for-testing` で一度ビルド（`testWithoutBuilding: true` の場合はスキップ）
-2. 各言語ごとに：すべてのシミュレーターを起動、ローカライズ、ステータスバーをオーバーライド
+2. 各言語ごとに：すべてのシミュレーターを起動、iOS 26 の「Apple Intelligence の準備ができました」バナー（`disableAssetDownloads` が設定されていれば `mobileassetd` も）を抑止、ローカライズ、ステータスバーをオーバーライド
 3. 全デバイスで並行してテストを実行
 4. `numberOfRetries` が設定されていてデバイスが失敗した場合：失敗したシミュレーターをリセットし、再ローカライズ、再起動してテストを再実行
 5. デバイスごとのキャッシュから出力ディレクトリにスクリーンショットを収集
@@ -214,6 +215,7 @@ screenshots/framed/
 | `numberOfRetries` | 失敗した言語の再試行回数 — シミュレーターをリセットし、再ローカライズ、再起動してテストを再実行します。失敗したデバイスのみ再試行されます。再試行された結果はサマリーテーブルに表示されます。 |
 | `stopAfterFirstError` | 最初のエラー後にすべてのデバイスを停止 |
 | `reinstallApp` | テスト前にアプリを削除して再インストール |
+| `disableAssetDownloads` | シミュレーターの `mobileassetd` を無効化し、消去直後のシミュレーターに数 GB の Siri・キーボード・ML アセットがダウンロードされるのを止めます。一部のアプリが必要とするオンデバイス ML アセット（テキスト認識など）もブロックされるため、スクリーンショットがそれらに依存する場合はオフのままにしてください。消去でリセットされるため、準備のたびに適用されます。 |
 | `xcargs` | `xcodebuild` に渡す追加の引数 |
 | `frameDevice` | このデバイスのベゼルフレーミングを有効化（デバイスごと） |
 | `deviceBezel` | デバイスベゼルPNGファイルへのパス（デバイスごと） |

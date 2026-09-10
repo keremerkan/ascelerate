@@ -94,6 +94,7 @@ waitAfterBoot: 0
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
+# disableAssetDownloads: false           # Désactiver mobileassetd (aucun téléchargement d'assets Siri/clavier/ML ; bloque aussi les assets ML sur l'appareil)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
 
@@ -135,7 +136,7 @@ override func setUp() {
 ## Fonctionnement
 
 1. Build unique avec `build-for-testing` (ou ignoré si `testWithoutBuilding: true`)
-2. Pour chaque langue : démarre tous les simulateurs, localise, remplace la barre d'état
+2. Pour chaque langue : démarre tous les simulateurs, neutralise la bannière iOS 26 « Prêt pour Apple Intelligence » (et `mobileassetd` si `disableAssetDownloads` est défini), localise, remplace la barre d'état
 3. Exécute les tests en parallèle sur tous les appareils
 4. Si `numberOfRetries` est défini et qu'un appareil échoue : réinitialise les simulateurs en échec, re-localise, redémarre et relance les tests
 5. Collecte les screenshots du cache par appareil vers le répertoire de sortie
@@ -214,6 +215,7 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 | `numberOfRetries` | Nombre de tentatives pour les langues échouées — réinitialise le simulateur, re-localise, redémarre et relance les tests. Seuls les appareils en échec sont relancés. Les résultats relancés sont marqués dans le tableau récapitulatif. |
 | `stopAfterFirstError` | Arrêter tous les appareils après le premier échec |
 | `reinstallApp` | Supprimer et réinstaller l'application avant les tests |
+| `disableAssetDownloads` | Désactive `mobileassetd` dans le simulateur pour qu'il cesse de télécharger des gigaoctets d'assets Siri, clavier et ML dans les simulateurs fraîchement effacés. Bloque aussi les assets ML sur l'appareil dont certaines apps ont besoin (ex. reconnaissance de texte) ; laissez-le désactivé si vos captures en dépendent. Appliqué à chaque préparation, car un effacement le réinitialise. |
 | `xcargs` | Arguments supplémentaires passés à `xcodebuild` |
 | `frameDevice` | Activer l'encadrement pour cet appareil (par appareil) |
 | `deviceBezel` | Chemin vers le fichier PNG de contour d'appareil (par appareil) |

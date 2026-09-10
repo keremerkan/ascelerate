@@ -94,6 +94,7 @@ waitAfterBoot: 0
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
+# disableAssetDownloads: false           # mobileassetd deaktivieren (keine Siri-/Tastatur-/ML-Asset-Downloads; blockiert auch On-Device-ML-Assets)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
 
@@ -135,7 +136,7 @@ override func setUp() {
 ## Funktionsweise
 
 1. Baut einmal mit `build-for-testing` (oder überspringt, wenn `testWithoutBuilding: true`)
-2. Für jede Sprache: startet alle Simulatoren, lokalisiert, überschreibt die Statusleiste
+2. Für jede Sprache: startet alle Simulatoren, unterdrückt das iOS-26-Banner „Bereit für Apple Intelligence“ (und `mobileassetd`, wenn `disableAssetDownloads` gesetzt ist), lokalisiert, überschreibt die Statusleiste
 3. Führt Tests parallel auf allen Geräten aus
 4. Wenn `numberOfRetries` gesetzt ist und ein Gerät fehlschlägt: setzt fehlgeschlagene Simulatoren zurück, lokalisiert neu, startet neu und wiederholt die Tests
 5. Sammelt Screenshots aus dem gerätespezifischen Cache ins Ausgabeverzeichnis
@@ -214,6 +215,7 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 | `numberOfRetries` | Anzahl der Wiederholungsversuche bei fehlgeschlagenen Sprachen — setzt den Simulator zurück, lokalisiert neu, startet neu und führt Tests erneut aus. Nur fehlgeschlagene Geräte werden wiederholt. Wiederholte Ergebnisse werden in der Übersichtstabelle markiert. |
 | `stopAfterFirstError` | Alle Geräte nach dem ersten Fehler stoppen |
 | `reinstallApp` | App vor den Tests löschen und neu installieren |
+| `disableAssetDownloads` | Deaktiviert `mobileassetd` im Simulator, damit er keine Gigabytes an Siri-, Tastatur- und ML-Assets in frisch gelöschte Simulatoren lädt. Blockiert auch On-Device-ML-Assets, die manche Apps brauchen (z. B. Texterkennung); lassen Sie es daher ausgeschaltet, wenn Ihre Screenshots davon abhängen. Wird bei jeder Vorbereitung erneut angewendet, da ein Löschen die Einstellung zurücksetzt. |
 | `xcargs` | Zusätzliche Argumente für `xcodebuild` |
 | `frameDevice` | Geräterahmen für dieses Gerät aktivieren (pro Gerät) |
 | `deviceBezel` | Pfad zur Geräterahmen-PNG-Datei (pro Gerät) |

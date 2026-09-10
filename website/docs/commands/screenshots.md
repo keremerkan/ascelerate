@@ -94,6 +94,7 @@ waitAfterBoot: 0
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
+# disableAssetDownloads: false           # Disable mobileassetd (no Siri/keyboard/ML asset downloads; also blocks on-device ML assets)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
 
@@ -135,7 +136,7 @@ override func setUp() {
 ## How it works
 
 1. Builds once with `build-for-testing` (or skips if `testWithoutBuilding: true`)
-2. For each language: boots all simulators, localizes, overrides status bar
+2. For each language: boots all simulators, silences the iOS 26 "Ready for Apple Intelligence" banner (and `mobileassetd` if `disableAssetDownloads` is set), localizes, overrides status bar
 3. Runs tests concurrently across devices
 4. If `numberOfRetries` is set and any device fails: erases failed simulators, re-localizes, reboots, and retries
 5. Collects screenshots from per-device cache to output directory
@@ -214,6 +215,7 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `numberOfRetries` | Number of times to retry failed languages — erases the simulator, re-localizes, reboots, and reruns tests. Only retries failed devices. Retried results are marked in the summary table. |
 | `stopAfterFirstError` | Stop all devices after the first failure |
 | `reinstallApp` | Delete and reinstall the app before running tests |
+| `disableAssetDownloads` | Disable the simulator's `mobileassetd` so it stops downloading gigabytes of Siri, keyboard, and ML assets into freshly erased simulators. Also blocks on-device ML assets some apps need (e.g. text recognition), so leave it off if your screenshots depend on those. Applied on every prep, since an erase resets it. |
 | `xcargs` | Extra arguments passed to `xcodebuild` |
 | `frameDevice` | Enable device bezel framing for this device (per-device) |
 | `deviceBezel` | Path to the device bezel PNG file (per-device) |

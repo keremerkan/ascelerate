@@ -221,6 +221,7 @@ struct ScreenshotRunner: Sendable {
 
                     if config.localizeSimulator {
                         try simulatorManager.boot(udid: sim.udid, waitUntilReady: false)
+                        silenceSystemNoise(udid: sim.udid, tag: tag, simulatorManager: simulatorManager)
                         try simulatorManager.localize(udid: sim.udid, language: language, locale: locale)
                         print("  \(tag) Localized to \(language) (\(locale))")
                         try simulatorManager.shutdown(udid: sim.udid)
@@ -229,6 +230,7 @@ struct ScreenshotRunner: Sendable {
                     } else {
                         print("  \(tag) Booting and waiting for ready state...")
                         try simulatorManager.boot(udid: sim.udid)
+                        silenceSystemNoise(udid: sim.udid, tag: tag, simulatorManager: simulatorManager)
                     }
 
                     if let wait = config.waitAfterBoot, wait > 0 {
@@ -263,7 +265,24 @@ struct ScreenshotRunner: Sendable {
         }
     }
 
-    /// Evaluates test results and shuts down simulators. Does NOT collect screenshots yet.
+    /// Best-effort suppression of system chatter that leaks into screenshots: the iOS 26
+    /// "Ready for Apple Intelligence" banner always, background asset downloads when configured.
+    /// Failures only warn; neither is worth failing a run over.
+    private func silenceSystemNoise(udid: String, tag: String, simulatorManager: SimulatorManager) {
+        do {
+            try simulatorManager.suppressAppleIntelligenceBanner(udid: udid)
+        } catch {
+            print("  \(tag) " + yellow("Warning:") + " Could not suppress the Apple Intelligence banner: \(error)")
+        }
+        guard config.disableAssetDownloads == true else { return }
+        print("  \(tag) Disabling asset downloads...")
+        do {
+            try simulatorManager.disableAssetDownloads(udid: udid)
+        } catch {
+            print("  \(tag) " + yellow("Warning:") + " Could not disable asset downloads: \(error)")
+        }
+    }
+
     private func evaluateTestResults(
         _ deviceResults: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)],
         language: String,

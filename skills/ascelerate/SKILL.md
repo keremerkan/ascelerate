@@ -410,6 +410,7 @@ overrideStatusBar: true
 # numberOfRetries: 1
 # stopAfterFirstError: false
 # reinstallApp: false
+# disableAssetDownloads: false   # disable mobileassetd: no Siri/keyboard/ML asset downloads into erased simulators (also blocks on-device ML assets some apps need)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 # framedOutputDirectory: ./screenshots/framed
 ```

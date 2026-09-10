@@ -94,6 +94,7 @@ waitAfterBoot: 0
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false             # Stop all devices on first failure
 # reinstallApp: false                    # Delete and reinstall app before tests
+# disableAssetDownloads: false           # mobileassetd'yi devre dışı bırak (Siri/klavye/ML varlık indirmesi yok; cihaz üstü ML varlıklarını da engeller)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
 
@@ -135,7 +136,7 @@ override func setUp() {
 ## Nasıl çalışır
 
 1. `build-for-testing` ile bir kez derler (`testWithoutBuilding: true` ise atlar)
-2. Her dil için: tüm simülatörleri başlatır, yerelleştirir, durum çubuğunu değiştirir
+2. Her dil için: tüm simülatörleri başlatır, iOS 26'daki "Apple Intelligence için hazır" afişini (ve `disableAssetDownloads` ayarlıysa `mobileassetd` servisini) susturur, yerelleştirir, durum çubuğunu değiştirir
 3. Tüm cihazlarda testleri eş zamanlı çalıştırır
 4. `numberOfRetries` ayarlıysa ve herhangi bir cihaz başarısız olursa: başarısız simülatörleri sıfırlar, yeniden yerelleştirir, yeniden başlatır ve tekrar dener
 5. Cihaz bazlı önbellekten çıktı dizinine ekran görüntülerini toplar
@@ -214,6 +215,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `numberOfRetries` | Başarısız diller için tekrar deneme sayısı. Her deneme simülatörü sıfırlar, yeniden yerelleştirir, yeniden başlatır ve testleri tekrar çalıştırır. Yalnızca başarısız cihazları tekrar dener. Tekrar denenen sonuçlar özet tablosunda işaretlenir. |
 | `stopAfterFirstError` | İlk hatadan sonra tüm cihazları durdur |
 | `reinstallApp` | Testlerden önce uygulamayı silip yeniden yükle |
+| `disableAssetDownloads` | Simülatörün `mobileassetd` servisini devre dışı bırakır; böylece yeni silinmiş simülatörlere gigabaytlarca Siri, klavye ve ML varlığı indirilmez. Bazı uygulamaların ihtiyaç duyduğu cihaz üstü ML varlıklarını da (örn. metin tanıma) engeller; ekran görüntüleriniz bunlara bağlıysa kapalı bırakın. Silme işlemi ayarı sıfırladığından her hazırlıkta yeniden uygulanır. |
 | `xcargs` | `xcodebuild`'e aktarılan ek argümanlar |
 | `frameDevice` | Bu cihaz için çerçevelemeyi etkinleştir (cihaz başına) |
 | `deviceBezel` | Cihaz çerçeve PNG dosyasının yolu (cihaz başına) |

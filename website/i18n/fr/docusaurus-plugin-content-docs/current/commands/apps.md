@@ -66,7 +66,7 @@ ascelerate apps review submit <bundle-id> --version 2.1.0
 ascelerate apps review submit <bundle-id> --platform macos
 ```
 
-Lors de la soumission, la commande détecte automatiquement les achats intégrés et les abonnements avec des modifications en attente et propose de les soumettre en même temps que la version de l'application.
+Lors de la soumission, la commande détecte automatiquement les achats intégrés et les abonnements avec des modifications en attente et propose de les soumettre en même temps que la version de l'application. Les modifications en attente sont lues dans l'historique des versions de chaque produit (une version à l'état « Prepare for Submission », « Ready for Review » ou dans un état rejeté), ce qui permet de détecter aussi les modifications limitées aux captures d'écran. `apps review status` associe les éléments des soumissions actives à la version de l'application ou au produit auxquels ils se rapportent.
 
 ### Résoudre les éléments rejetés
 

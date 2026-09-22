@@ -37,6 +37,8 @@ ascelerate sub delete-group <bundle-id>
 ascelerate sub submit <bundle-id> <product-id>
 ```
 
+Un produit peut être soumis dès qu'il possède une version en attente, c'est-à-dire une version à l'état « Prepare for Submission », « Ready for Review » ou dans un état rejeté. Cela inclut les produits approuvés modifiés depuis leur dernière approbation. Sans version en attente, la commande s'arrête avant d'envoyer la moindre requête. `sub info` affiche la version en attente lorsqu'il y en a une.
+
 ## Localisations d'abonnements
 
 ```bash
@@ -209,6 +211,8 @@ Les groupes d'abonnements sont examinés en même temps que la prochaine version
 ```bash
 ascelerate sub submit-group <bundle-id>
 ```
+
+Le groupe doit avoir sa propre version en attente (par exemple des localisations de groupe modifiées) ; sinon la commande s'arrête avant d'envoyer la moindre requête.
 
 ## Images promotionnelles
 

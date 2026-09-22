@@ -12,6 +12,41 @@ struct SimulatorManager: Sendable {
         let devices: [String: [SimDevice]]
     }
 
+    /// The simulator window host inside the Xcode that `xcode-select` (or `DEVELOPER_DIR`) points
+    /// at: DeviceHub.app on Xcode 27+ (`Contents/Applications`, bundle ID `com.apple.dt.Devices`),
+    /// Simulator.app on Xcode 26 and earlier (`Contents/Developer/Applications`). Nil when the
+    /// developer directory isn't a full Xcode.
+    private func uiHostPath() throws -> String? {
+        let developerDir = try ScreenshotShell.run("/usr/bin/xcode-select", arguments: ["-p"])
+        let xcodeRoot = developerDir.replacingOccurrences(of: "/Contents/Developer", with: "")
+        return [
+            "\(xcodeRoot)/Contents/Applications/DeviceHub.app",
+            "\(xcodeRoot)/Contents/Developer/Applications/Simulator.app",
+        ].first { FileManager.default.fileExists(atPath: $0) }
+    }
+
+    /// Launches the simulator window host. `open -a Simulator` resolves by name through
+    /// LaunchServices and fails outright once no Simulator.app is registered anywhere on the
+    /// machine, so resolve the host by path and fall back to bundle IDs.
+    func launchUIHost() throws {
+        if let path = try uiHostPath() {
+            try ScreenshotShell.run("/usr/bin/open", arguments: ["-a", path])
+            return
+        }
+        for bundleID in ["com.apple.dt.Devices", "com.apple.iphonesimulator"] {
+            if (try? ScreenshotShell.run("/usr/bin/open", arguments: ["-b", bundleID])) != nil { return }
+        }
+        throw ScreenshotShellError.nonZeroExit(1, "No simulator UI host (DeviceHub.app or Simulator.app) found for the selected Xcode")
+    }
+
+    /// Shows the on-screen window of a booted device. Simulator.app opens a window for every
+    /// booted device on its own; DeviceHub only shows devices opened through its URL scheme
+    /// (`devices://device/open?id=<udid>`, verified on Xcode 27.1), so call this after each boot.
+    func showDeviceWindow(udid: String) throws {
+        guard let path = try uiHostPath(), path.hasSuffix("DeviceHub.app") else { return }
+        try ScreenshotShell.run("/usr/bin/open", arguments: ["-a", path, "devices://device/open?id=\(udid)"])
+    }
+
     func findDevice(name: String) throws -> SimDevice {
         let output = try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "list", "devices", "-j", "available"])
         let data = Data(output.utf8)

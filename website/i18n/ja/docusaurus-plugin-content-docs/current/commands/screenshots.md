@@ -85,7 +85,7 @@ waitAfterBoot: 0
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
-# headless: false                         # Don't open Simulator.app
+# headless: false                         # Don't open simulator windows (DeviceHub / Simulator.app)
 # helperPath: AppUITests/ScreenshotHelper.swift
 # launchArguments:
 #   - -ui_testing
@@ -207,7 +207,7 @@ screenshots/framed/
 | `waitAfterEraseAndReboot` | シミュレーターが新鮮な状態のときの追加待機秒数 — 実行の最初の言語のとき、またはシミュレーターが消去されたとき（`eraseSimulator: true` または再試行による）。スクリーンショット撮影前に初回起動システム通知が表示される時間を確保します。（iOS 26 の「Apple Intelligence の準備ができました」バナーは自動的に抑止されるため、待機は不要です。） |
 | `testWithoutBuilding` | ビルドをスキップし、既存のxctestrunファイルを使用 |
 | `cleanBuild` | ビルド前に `clean` を実行 |
-| `headless` | Simulator.appを開かない |
+| `headless` | シミュレータのウィンドウを開かない（Xcode 27ではDeviceHub、それ以前はSimulator.app） |
 | `helperPath` | バージョンチェック用のScreenshotHelper.swiftへのパス |
 | `launchArguments` | アプリに渡す追加の起動引数 |
 | `configuration` | ビルド構成（例: Debug、Release） |

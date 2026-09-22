@@ -85,7 +85,7 @@ waitAfterBoot: 0
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
-# headless: false                         # Don't open Simulator.app
+# headless: false                         # Don't open simulator windows (DeviceHub / Simulator.app)
 # helperPath: AppUITests/ScreenshotHelper.swift
 # launchArguments:
 #   - -ui_testing
@@ -207,7 +207,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `waitAfterEraseAndReboot` | Simülatör taze durumdayken beklenecek ek saniye; çalıştırmanın ilk dilinde veya simülatör silindiğinde (`eraseSimulator: true` veya yeniden deneme yoluyla) geçerlidir. İlk açılış sistem uyarılarına ekran görüntüleri çekilmeden önce görünme zamanı verir. (iOS 26'daki "Apple Intelligence için hazır" afişi otomatik olarak susturulur; bunun için beklemeye gerek yoktur.) |
 | `testWithoutBuilding` | Derlemeyi atla, mevcut xctestrun dosyasını kullan |
 | `cleanBuild` | Derlemeden önce `clean` çalıştır |
-| `headless` | Simulator.app'i açma |
+| `headless` | Simülatör pencerelerini açma (Xcode 27'de DeviceHub, öncesinde Simulator.app) |
 | `helperPath` | Versiyon kontrolü için ScreenshotHelper.swift yolu |
 | `launchArguments` | Uygulamaya aktarılan ek başlatma argümanları |
 | `configuration` | Derleme yapılandırması (örn. Debug, Release) |

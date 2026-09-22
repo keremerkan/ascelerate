@@ -66,7 +66,7 @@ ascelerate apps review submit <bundle-id> --version 2.1.0
 ascelerate apps review submit <bundle-id> --platform macos
 ```
 
-提出時に、保留中の変更があるIAPやサブスクリプションを自動検出し、アプリバージョンと一緒に提出するか確認します。
+提出時に、保留中の変更があるIAPやサブスクリプションを自動検出し、アプリバージョンと一緒に提出するか確認します。保留中の変更は各プロダクトのバージョン履歴（「Prepare for Submission」「Ready for Review」または却下状態のバージョン）から読み取るため、スクリーンショットのみの変更も検出されます。`apps review status` は、進行中の提出に含まれる項目を、対応するアプリバージョンまたはプロダクトに解決して表示します。
 
 ### リジェクトされた項目の解決
 

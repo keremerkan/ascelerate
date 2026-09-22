@@ -1048,7 +1048,7 @@ ascelerate sub review-screenshot upload <bundle-id> <product-id> ./review.png
 ascelerate sub review-screenshot delete <bundle-id> <product-id>
 ```
 
-When submitting an app version for review, `apps review submit` automatically detects IAPs and subscriptions that may have pending changes and offers to submit them alongside the app version.
+When submitting an app version for review, `apps review submit` automatically detects IAPs and subscriptions with pending changes and offers to submit them alongside the app version. Pending changes are read from each product's version history (a version in Prepare for Submission, Ready for Review, or a rejected state), so screenshot-only edits are detected too. The same check drives `iap submit`, `sub submit`, and `sub submit-group`: any product with a pending version can be submitted, including approved products with edits since their last approval, and without one the command stops before making any request. `iap info` and `sub info` show the pending version, and `apps review status` resolves the items of active submissions to the app version or product they refer to.
 
 The localization import commands create missing locales automatically with confirmation, so you can add new languages without visiting App Store Connect.
 

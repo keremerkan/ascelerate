@@ -85,7 +85,7 @@ waitAfterBoot: 0
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
-# headless: false                         # Don't open Simulator.app
+# headless: false                         # Don't open simulator windows (DeviceHub / Simulator.app)
 # helperPath: AppUITests/ScreenshotHelper.swift
 # launchArguments:
 #   - -ui_testing
@@ -207,7 +207,7 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `waitAfterEraseAndReboot` | Extra seconds to wait when the simulator is in a fresh state — first language of the run, or any time the simulator was erased (via `eraseSimulator: true` or a retry). Gives first-run system alerts time to appear before screenshots. (The iOS 26 "Ready for Apple Intelligence" banner is suppressed automatically and needs no wait.) |
 | `testWithoutBuilding` | Skip build, use existing xctestrun file |
 | `cleanBuild` | Run `clean` before building |
-| `headless` | Don't open Simulator.app |
+| `headless` | Don't open the simulator windows (DeviceHub in Xcode 27, Simulator.app before) |
 | `helperPath` | Path to ScreenshotHelper.swift for version checking |
 | `launchArguments` | Extra launch arguments passed to the app |
 | `configuration` | Build configuration (e.g. Debug, Release) |

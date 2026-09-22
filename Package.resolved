@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aaronsky/asc-swift",
       "state" : {
-        "revision" : "0d999ba30b2f07a29cc0481de7493feaa8b05030",
-        "version" : "1.7.0"
+        "revision" : "fc2961a14971bf98f83eb232bf77cb66b931a076",
+        "version" : "1.7.1"
       }
     },
     {

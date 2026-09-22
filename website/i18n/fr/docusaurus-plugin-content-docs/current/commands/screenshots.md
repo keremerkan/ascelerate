@@ -85,7 +85,7 @@ waitAfterBoot: 0
 # statusBarArguments: "--time '9:41' --dataNetwork wifi"
 # testWithoutBuilding: true               # Skip build, use existing xctestrun
 # cleanBuild: false
-# headless: false                         # Don't open Simulator.app
+# headless: false                         # Don't open simulator windows (DeviceHub / Simulator.app)
 # helperPath: AppUITests/ScreenshotHelper.swift
 # launchArguments:
 #   - -ui_testing
@@ -207,7 +207,7 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 | `waitAfterEraseAndReboot` | Secondes d'attente supplémentaires lorsque le simulateur est dans un état neuf — première langue de l'exécution, ou chaque fois que le simulateur a été effacé (via `eraseSimulator: true` ou un nouvel essai). Donne aux alertes système de premier lancement le temps d'apparaître avant les captures d'écran. (La bannière iOS 26 « Prêt pour Apple Intelligence » est neutralisée automatiquement et ne nécessite aucune attente.) |
 | `testWithoutBuilding` | Ignorer le build, utiliser le fichier xctestrun existant |
 | `cleanBuild` | Exécuter `clean` avant le build |
-| `headless` | Ne pas ouvrir Simulator.app |
+| `headless` | Ne pas ouvrir les fenêtres du simulateur (DeviceHub depuis Xcode 27, Simulator.app avant) |
 | `helperPath` | Chemin vers ScreenshotHelper.swift pour la vérification de version |
 | `launchArguments` | Arguments de lancement supplémentaires passés à l'application |
 | `configuration` | Configuration de build (ex. Debug, Release) |

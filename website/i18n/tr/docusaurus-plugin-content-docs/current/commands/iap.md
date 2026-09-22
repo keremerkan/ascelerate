@@ -50,6 +50,8 @@ ascelerate iap delete <bundle-id> <product-id>
 ascelerate iap submit <bundle-id> <product-id>
 ```
 
+Bir ürün, bekleyen bir sürümü olduğunda gönderilebilir; bu, Prepare for Submission, Ready for Review veya reddedilmiş durumdaki herhangi bir sürümdür. Son onayından sonra düzenlenen onaylı ürünler de buna dahildir. Bekleyen sürüm yoksa komut, herhangi bir istek göndermeden durur. `iap info`, varsa bekleyen sürümü gösterir.
+
 ## Yerelleştirmeler
 
 ```bash

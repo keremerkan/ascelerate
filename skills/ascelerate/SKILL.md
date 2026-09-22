@@ -140,7 +140,7 @@ Required display types: `APP_IPHONE_67` (iPhone) and `APP_IPAD_PRO_3GEN_129` (iP
 ```bash
 ascelerate apps review preflight <app>           # Pre-submission checks
 ascelerate apps review submit <app>              # Submit (offers to include IAPs/subs)
-ascelerate apps review status <app>              # Check status
+ascelerate apps review status <app>              # Check status (active submissions list app version + IAP/sub items)
 ascelerate apps review resolve-issues <app>      # After fixing rejection
 ascelerate apps review cancel-submission <app>   # Cancel active review
 ascelerate apps release <app>                    # Release an approved version in Pending Developer Release
@@ -171,7 +171,7 @@ ascelerate iap promoted toggle <app> <product-id> --enabled true|false
 ascelerate iap create <app> --name "Name" --product-id <id> --type CONSUMABLE
 ascelerate iap update <app> <product-id> --name "New Name"
 ascelerate iap delete <app> <product-id>
-ascelerate iap submit <app> <product-id>
+ascelerate iap submit <app> <product-id>                       # needs a pending version (any edit since last approval)
 
 # Localizations
 ascelerate iap localizations view <app> <product-id>
@@ -221,7 +221,7 @@ ascelerate sub info <app> <product-id>                         # warns if no pri
 ascelerate sub create <app> --name "Monthly" --product-id <id> --period ONE_MONTH --group-id <gid>
 ascelerate sub update <app> <product-id> --name "New Name"
 ascelerate sub delete <app> <product-id>
-ascelerate sub submit <app> <product-id>
+ascelerate sub submit <app> <product-id>                       # needs a pending version (any edit since last approval)
 ascelerate sub submit-group <app>                              # submit whole group for review
 
 # Subscription localizations

@@ -738,7 +738,8 @@ func checkForUpdates() {
     notes.append("ascelerate skill is outdated\(detail). Run 'ascelerate install-skill' to update.")
   }
   if !notes.isEmpty {
-    print("NOTE: " + notes.joined(separator: "\n      ") + "\n")
+    // stderr: API commands may be running under --json, and stdout must stay parseable.
+    FileHandle.standardError.write(Data(("NOTE: " + notes.joined(separator: "\n      ") + "\n\n").utf8))
   }
 }
 

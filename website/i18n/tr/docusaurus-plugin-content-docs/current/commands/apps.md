@@ -66,7 +66,7 @@ ascelerate apps review submit <bundle-id> --version 2.1.0
 ascelerate apps review submit <bundle-id> --platform macos
 ```
 
-Gönderim sırasında komut, bekleyen değişiklikleri olan IAP'leri ve abonelikleri otomatik olarak algılar ve bunları uygulama sürümüyle birlikte göndermeyi teklif eder.
+Gönderim sırasında komut, bekleyen değişiklikleri olan IAP'leri ve abonelikleri otomatik olarak algılar ve bunları uygulama sürümüyle birlikte göndermeyi teklif eder. Bekleyen değişiklikler her ürünün sürüm geçmişinden okunur (Prepare for Submission, Ready for Review veya reddedilmiş durumdaki bir sürüm); böylece yalnızca ekran görüntüsü değişen ürünler de algılanır. `apps review status`, etkin gönderimlerdeki öğeleri ilgili uygulama sürümüne veya ürüne çözümleyerek gösterir.
 
 ### Reddedilen öğeleri çözme
 

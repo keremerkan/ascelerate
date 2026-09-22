@@ -1750,6 +1750,14 @@ struct AppsCommand: AsyncParsableCommand {
         struct Item: Encodable {
           let id: String
           let state: String?
+          /// Resolved for active submissions only: APP_STORE_VERSION, IN_APP_PURCHASE,
+          /// SUBSCRIPTION, SUBSCRIPTION_GROUP.
+          let kind: String?
+          /// App version string, or the product's name.
+          let name: String?
+          /// Product version number and state (nil for app versions).
+          let version: Int?
+          let versionState: String?
         }
         let id: String
         let platform: String?
@@ -1783,14 +1791,30 @@ struct AppsCommand: AsyncParsableCommand {
           }
         }
 
-        let allEntries = response.data.map { submission -> Entry in
+        // Resolve what each item refers to, but only for active submissions — it
+        // costs extra requests per product item.
+        typealias SubmissionState = ReviewSubmission.Attributes.State
+        let activeStates: Set<SubmissionState> = [.unresolvedIssues, .inReview, .waitingForReview]
+
+        var allEntries: [Entry] = []
+        for submission in response.data {
           let attrs = submission.attributes
           let reviewVersion = submission.relationships?.appStoreVersionForReview?.data
             .flatMap { includedVersions[$0.id] }
+          let isActive = attrs?.state.map { activeStates.contains($0) } ?? false
+          let resolved = isActive
+            ? try await ProductVersions.reviewItems(submissionID: submission.id, client: client)
+            : [:]
           let items = (submission.relationships?.items?.data ?? []).compactMap { ref in
-            includedItems[ref.id].map { Entry.Item(id: $0.id, state: $0.attributes?.state?.rawValue) }
+            includedItems[ref.id].map {
+              let info = resolved[$0.id]
+              return Entry.Item(
+                id: $0.id, state: $0.attributes?.state?.rawValue,
+                kind: info?.kind, name: info?.name, version: info?.version, versionState: info?.versionState
+              )
+            }
           }
-          return Entry(
+          allEntries.append(Entry(
             id: submission.id,
             platform: attrs?.platform?.rawValue,
             version: reviewVersion?.attributes?.versionString,
@@ -1798,7 +1822,7 @@ struct AppsCommand: AsyncParsableCommand {
             state: attrs?.state?.rawValue,
             submittedDate: attrs?.submittedDate,
             items: items
-          )
+          ))
         }
         let entries = version != nil ? allEntries.filter { $0.version == version } : allEntries
 
@@ -1829,10 +1853,9 @@ struct AppsCommand: AsyncParsableCommand {
         )
 
         // Show details for active submissions with issues
-        typealias SubmissionState = ReviewSubmission.Attributes.State
-        let activeStates = Set([SubmissionState.unresolvedIssues, .inReview, .waitingForReview].map(\.rawValue))
+        let activeRawStates = Set(activeStates.map(\.rawValue))
         for e in entries {
-          guard let state = e.state, activeStates.contains(state) else { continue }
+          guard let state = e.state, activeRawStates.contains(state) else { continue }
 
           let versionInfo = e.version.map {
             " — v\($0) (\(e.versionState.map { formatState($0) } ?? "?"))"
@@ -1842,7 +1865,12 @@ struct AppsCommand: AsyncParsableCommand {
           print("--- Submission \(e.id) (\(formatState(state)))\(versionInfo) ---")
 
           for item in e.items {
-            print("  Item: \(item.state.map { formatState($0) } ?? "—")")
+            let target = item.kind.map { kind in
+              let versionLabel = item.version.map { " v\($0)" } ?? ""
+              let stateLabel = item.versionState.map { " (\(formatState($0)))" } ?? ""
+              return "\(formatState(kind)) \(item.name ?? "—")\(versionLabel)\(stateLabel) — "
+            } ?? ""
+            print("  Item: \(target)\(item.state.map { formatState($0) } ?? "—")")
           }
 
           if state == SubmissionState.unresolvedIssues.rawValue {
@@ -2029,9 +2057,9 @@ struct AppsCommand: AsyncParsableCommand {
 
       private func submitBundledProducts(app: App, client: AppStoreConnectClient) async throws {
         // Offer to submit IAPs/subscriptions alongside the app version.
-        // APPROVED products keep that state even when they have pending edits — the
-        // pending version surfaces as non-approved child localization states. The API
-        // rejects submissions with no pending version (HTTP 409; used to be a no-op).
+        // APPROVED products keep that state even when they have pending edits, so the
+        // product state alone can't tell. The version history can (ProductVersions);
+        // the API rejects submissions with no pending version (HTTP 409).
         let candidateIAPStates: Set<InAppPurchaseState> = [.readyToSubmit, .approved]
         let candidateSubStates: Set<Subscription.Attributes.State> = [.readyToSubmit, .approved]
 
@@ -2052,35 +2080,47 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         // Partition candidates by whether they actually have a pending version.
+        var pendingLabels: [String: String] = [:]  // product/group ID → "v2 (Prepare for Submission)"
+
+        let candidateIAPs = fetchedIAPs.filter { $0.attributes?.state.flatMap { candidateIAPStates.contains($0) } ?? false }
+        let iapPending = try await boundedConcurrentMap(candidateIAPs.map(\.id)) {
+          try await ProductVersions.pendingIAP($0, client: client)
+        }
         var submittableIAPs: [InAppPurchaseV2] = []
         var unchangedIAPs: [InAppPurchaseV2] = []
-        for iap in fetchedIAPs where iap.attributes?.state.flatMap({ candidateIAPStates.contains($0) }) ?? false {
-          if try await iapHasPendingVersion(iap, client: client) {
+        for (iap, pending) in zip(candidateIAPs, iapPending) {
+          if let pending {
             submittableIAPs.append(iap)
+            pendingLabels[iap.id] = pending.label
           } else {
             unchangedIAPs.append(iap)
           }
         }
 
+        let candidateSubs = fetchedSubs.filter { $0.attributes?.state.flatMap { candidateSubStates.contains($0) } ?? false }
+        let subPending = try await boundedConcurrentMap(candidateSubs.map(\.id)) {
+          try await ProductVersions.pendingSubscription($0, client: client)
+        }
         var submittableSubIDs: Set<String> = []
         var unchangedSubs: [Subscription] = []
-        for sub in fetchedSubs where sub.attributes?.state.flatMap({ candidateSubStates.contains($0) }) ?? false {
-          if try await subHasPendingVersion(sub, client: client) {
+        for (sub, pending) in zip(candidateSubs, subPending) {
+          if let pending {
             submittableSubIDs.insert(sub.id)
+            pendingLabels[sub.id] = pending.label
           } else {
             unchangedSubs.append(sub)
           }
         }
 
         // A group is submitted for its pending subscriptions and/or its own
-        // pending group-level localizations.
-        var groupLocalizationsPending: [String: Bool] = [:]
+        // pending version (group-level edits such as localizations).
         var submittableGroups: [SubCommand.GroupInfo] = []
         for group in groups {
           let hasPendingSubs = group.subscriptions.contains { submittableSubIDs.contains($0.id) }
-          let hasPendingLocs = try await groupHasPendingLocalizations(group, client: client)
-          groupLocalizationsPending[group.id] = hasPendingLocs
-          if hasPendingSubs || hasPendingLocs {
+          if let pending = try await ProductVersions.pendingGroup(group.id, client: client) {
+            pendingLabels[group.id] = pending.label
+          }
+          if hasPendingSubs || pendingLabels[group.id] != nil {
             submittableGroups.append(group)
           }
         }
@@ -2106,13 +2146,13 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           print(yellow("In-app purchases/subscriptions with pending changes:"))
           for iap in submittableIAPs {
-            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
+            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(pendingLabels[iap.id] ?? "—")")
           }
           for group in submittableGroups {
-            let locsNote = groupLocalizationsPending[group.id] == true ? " (group localizations changed)" : ""
-            print("  Group: \(group.name)\(locsNote)")
+            let groupNote = pendingLabels[group.id].map { " — group changes \($0)" } ?? ""
+            print("  Group: \(group.name)\(groupNote)")
             for sub in group.subscriptions where submittableSubIDs.contains(sub.id) {
-              print("    Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
+              print("    Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(pendingLabels[sub.id] ?? "—")")
             }
           }
           print()
@@ -2156,8 +2196,8 @@ struct AppsCommand: AsyncParsableCommand {
                   print("  Skipped subscription '\(sub.attributes?.name ?? "—")' — no pending version")
                 }
               }
-              // Submit the group itself only when its localizations changed
-              guard groupLocalizationsPending[group.id] == true else { continue }
+              // Submit the group itself only when it has its own pending version
+              guard pendingLabels[group.id] != nil else { continue }
               do {
                 _ = try await client.send(
                   Resources.v1.subscriptionGroupSubmissions.post(
@@ -2179,34 +2219,8 @@ struct AppsCommand: AsyncParsableCommand {
         }
       }
 
-      // READY_TO_SUBMIT always has a pending (first or edited) version. APPROVED
-      // products need a localization check: any non-approved localization state
-      // (PREPARE_FOR_SUBMISSION, REJECTED) means edits are awaiting submission.
-      private func iapHasPendingVersion(_ iap: InAppPurchaseV2, client: AppStoreConnectClient) async throws -> Bool {
-        if iap.attributes?.state == .readyToSubmit { return true }
-        let locsResponse = try await client.send(
-          Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseLocalizations.get(limit: 50)
-        )
-        return locsResponse.data.contains { $0.attributes?.state != .approved }
-      }
-
-      private func subHasPendingVersion(_ sub: Subscription, client: AppStoreConnectClient) async throws -> Bool {
-        if sub.attributes?.state == .readyToSubmit { return true }
-        let locsResponse = try await client.send(
-          Resources.v1.subscriptions.id(sub.id).subscriptionLocalizations.get(limit: 50)
-        )
-        return locsResponse.data.contains { $0.attributes?.state != .approved }
-      }
-
-      private func groupHasPendingLocalizations(_ group: SubCommand.GroupInfo, client: AppStoreConnectClient) async throws -> Bool {
-        let locsResponse = try await client.send(
-          Resources.v1.subscriptionGroups.id(group.id).subscriptionGroupLocalizations.get(limit: 50)
-        )
-        return locsResponse.data.contains { $0.attributes?.state != .approved }
-      }
-
-      // Safety net for when the localization-based detection over-reports — treat
-      // the API's "no pending version" 409 as a per-item skip, not a hard failure.
+      // Safety net in case the version-state mapping in ProductVersions over-reports —
+      // treat the API's "no pending version" 409 as a per-item skip, not a hard failure.
       private func isNoPendingVersionError(_ error: Error) -> Bool {
         guard let responseError = error as? ResponseError,
               case .requestFailure(let errorResponse, let statusCode, _) = responseError,
@@ -3224,6 +3238,8 @@ struct AppsCommand: AsyncParsableCommand {
           isHealthOrWellnessTopics: attrs?.isHealthOrWellnessTopics,
           isParentalControls: attrs?.isParentalControls,
           isAgeAssurance: attrs?.isAgeAssurance,
+          isSocialMedia: attrs?.isSocialMedia,
+          isSocialMediaAgeRestricted: attrs?.isSocialMediaAgeRestricted,
           kidsAgeBand: attrs?.kidsAgeBand?.rawValue,
           ageRatingOverride: attrs?.ageRatingOverride?.rawValue
         )
@@ -3291,6 +3307,8 @@ struct AppsCommand: AsyncParsableCommand {
           ("Health/Wellness Topics", boolLabel(attrs?.isHealthOrWellnessTopics)),
           ("Parental Controls", boolLabel(attrs?.isParentalControls)),
           ("Age Assurance", boolLabel(attrs?.isAgeAssurance)),
+          ("Social Media", boolLabel(attrs?.isSocialMedia)),
+          ("Social Media Age Restricted", boolLabel(attrs?.isSocialMediaAgeRestricted)),
         ]
       
         // Other
@@ -3409,6 +3427,8 @@ struct AppsCommand: AsyncParsableCommand {
           if let v = fields.isHealthOrWellnessTopics { print("  Health/Wellness Topics: \(v)"); changeCount += 1 }
           if let v = fields.isParentalControls { print("  Parental Controls: \(v)"); changeCount += 1 }
           if let v = fields.isAgeAssurance { print("  Age Assurance: \(v)"); changeCount += 1 }
+          if let v = fields.isSocialMedia { print("  Social Media: \(v)"); changeCount += 1 }
+          if let v = fields.isSocialMediaAgeRestricted { print("  Social Media Age Restricted: \(v)"); changeCount += 1 }
           if let v = fields.kidsAgeBand { print("  Kids Age Band: \(v)"); changeCount += 1 }
           if let v = fields.ageRatingOverride { print("  Age Rating Override: \(v)"); changeCount += 1 }
 
@@ -3449,6 +3469,8 @@ struct AppsCommand: AsyncParsableCommand {
                   isAgeAssurance: fields.isAgeAssurance,
                   sexualContentGraphicAndNudity: parseIntensity(fields.sexualContentGraphicAndNudity, type: Attrs.SexualContentGraphicAndNudity.self),
                   sexualContentOrNudity: parseIntensity(fields.sexualContentOrNudity, type: Attrs.SexualContentOrNudity.self),
+                  isSocialMedia: fields.isSocialMedia,
+                  isSocialMediaAgeRestricted: fields.isSocialMediaAgeRestricted,
                   horrorOrFearThemes: parseIntensity(fields.horrorOrFearThemes, type: Attrs.HorrorOrFearThemes.self),
                   matureOrSuggestiveThemes: parseIntensity(fields.matureOrSuggestiveThemes, type: Attrs.MatureOrSuggestiveThemes.self),
                   isUnrestrictedWebAccess: fields.isUnrestrictedWebAccess,
@@ -4071,6 +4093,8 @@ struct AgeRatingFields: Codable {
   var isHealthOrWellnessTopics: Bool?
   var isParentalControls: Bool?
   var isAgeAssurance: Bool?
+  var isSocialMedia: Bool?
+  var isSocialMediaAgeRestricted: Bool?
   
   // Other
   var kidsAgeBand: String?

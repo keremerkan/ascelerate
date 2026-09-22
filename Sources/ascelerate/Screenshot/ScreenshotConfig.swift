@@ -120,7 +120,7 @@ struct ScreenshotConfig: Codable, Sendable {
     # derivedDataPath: /path/to/DerivedData
     # testWithoutBuilding: true
     # cleanBuild: false
-    # headless: false
+    # headless: false                    # Don't open simulator windows (DeviceHub / Simulator.app)
     # numberOfRetries: 0
 
     # Path to ScreenshotHelper.swift (used for version checking)

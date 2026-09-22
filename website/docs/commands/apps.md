@@ -66,7 +66,7 @@ ascelerate apps review submit <bundle-id> --version 2.1.0
 ascelerate apps review submit <bundle-id> --platform macos
 ```
 
-When submitting, the command automatically detects IAPs and subscriptions with pending changes and offers to submit them alongside the app version.
+When submitting, the command automatically detects IAPs and subscriptions with pending changes and offers to submit them alongside the app version. Pending changes are read from each product's version history (a version in Prepare for Submission, Ready for Review, or a rejected state), so screenshot-only edits are detected too. `apps review status` resolves the items of active submissions to the app version or product they refer to.
 
 ### Resolve rejected items
 

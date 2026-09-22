@@ -788,6 +788,7 @@ struct SubCommand: AsyncParsableCommand {
       let group: SubEntry.GroupRef
       let localizations: [Localization]
       let hasPricing: Bool
+      let pendingVersion: ProductVersions.Pending?
     }
 
     func run() async throws {
@@ -820,6 +821,7 @@ struct SubCommand: AsyncParsableCommand {
       }
 
       let hasPrices = try await SubCommand.subscriptionHasPrices(subscriptionID: sub.id, client: client)
+      let pendingVersion = try await ProductVersions.pendingSubscription(sub.id, client: client)
 
       let attrs = data.attributes
       let detail = Detail(
@@ -842,7 +844,8 @@ struct SubCommand: AsyncParsableCommand {
               description: $0.attributes?.description
             )
           },
-        hasPricing: hasPrices
+        hasPricing: hasPrices,
+        pendingVersion: pendingVersion
       )
 
       if jsonOption.json {
@@ -855,6 +858,9 @@ struct SubCommand: AsyncParsableCommand {
       print("Group:            \(detail.group.name)")
       print("Period:           \(detail.period.map { formatState($0) } ?? "—")")
       print("State:            \(detail.state.map { formatState($0) } ?? "—")")
+      if let pending = detail.pendingVersion {
+        print("Pending Version:  \(pending.label)")
+      }
       print("Group Level:      \(detail.groupLevel.map { "\($0)" } ?? "—")")
       print("Family Shareable: \(detail.familySharable == true ? "Yes" : "No")")
       print("Review Note:      \(detail.reviewNote ?? "—")")
@@ -1263,15 +1269,16 @@ struct SubCommand: AsyncParsableCommand {
       )
 
       let state = sub.attributes?.state
-      guard state == .readyToSubmit else {
+      guard let pending = try await ProductVersions.pendingSubscription(sub.id, client: client) else {
         let stateStr = state.map { formatState($0) } ?? "unknown"
-        throw ValidationError("Subscription '\(sub.attributes?.name ?? productID)' is in state '\(stateStr)'. Only items in 'Ready to Submit' state can be submitted.")
+        throw ValidationError("Subscription '\(sub.attributes?.name ?? productID)' has no pending version to submit (state: \(stateStr)). Edit it first.")
       }
 
-      print("Subscription: \(sub.attributes?.name ?? productID)")
-      print("Product ID:   \(productID)")
-      print("Group:        \(group.name)")
-      print("State:        \(formatState(state!))")
+      print("Subscription:    \(sub.attributes?.name ?? productID)")
+      print("Product ID:      \(productID)")
+      print("Group:           \(group.name)")
+      print("State:           \(state.map { formatState($0) } ?? "—")")
+      print("Pending Version: \(pending.label)")
       print()
       print(yellow("Note:") + " Subscriptions are reviewed together with the app version.")
       print("Make sure you also submit a new app version for review.")
@@ -3442,11 +3449,15 @@ struct SubCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+      guard let pending = try await ProductVersions.pendingGroup(group.id, client: client) else {
+        throw ValidationError("Subscription group '\(group.name)' has no pending version to submit. Edit its localizations first.")
+      }
 
       print()
       print("Submit subscription group for review:")
-      print("  Group:         \(group.name)")
-      print("  Subscriptions: \(group.subscriptions.count)")
+      print("  Group:           \(group.name)")
+      print("  Subscriptions:   \(group.subscriptions.count)")
+      print("  Pending Version: \(pending.label)")
       print()
       print(yellow("Note:") + " Subscription groups are reviewed alongside the next app version.")
       print()

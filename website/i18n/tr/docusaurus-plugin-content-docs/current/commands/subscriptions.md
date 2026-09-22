@@ -37,6 +37,8 @@ ascelerate sub delete-group <bundle-id>
 ascelerate sub submit <bundle-id> <product-id>
 ```
 
+Bir ürün, bekleyen bir sürümü olduğunda gönderilebilir; bu, Prepare for Submission, Ready for Review veya reddedilmiş durumdaki herhangi bir sürümdür. Son onayından sonra düzenlenen onaylı ürünler de buna dahildir. Bekleyen sürüm yoksa komut, herhangi bir istek göndermeden durur. `sub info`, varsa bekleyen sürümü gösterir.
+
 ## Abonelik yerelleştirmeleri
 
 ```bash
@@ -209,6 +211,8 @@ Abonelik grupları, sonraki uygulama sürümüyle birlikte incelenir. `sub submi
 ```bash
 ascelerate sub submit-group <bundle-id>
 ```
+
+Grubun kendine ait bekleyen bir sürümü olmalıdır (örneğin düzenlenmiş grup yerelleştirmeleri); aksi halde komut, herhangi bir istek göndermeden durur.
 
 ## Tanıtım görselleri
 

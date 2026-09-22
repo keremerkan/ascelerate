@@ -50,6 +50,8 @@ ascelerate iap delete <bundle-id> <product-id>
 ascelerate iap submit <bundle-id> <product-id>
 ```
 
+プロダクトは保留中のバージョン（「Prepare for Submission」「Ready for Review」または却下状態のバージョン）がある場合に提出できます。前回の承認後に編集された承認済みプロダクトも含まれます。保留中のバージョンがない場合、コマンドはリクエストを送信する前に停止します。`iap info` は保留中のバージョンがあれば表示します。
+
 ## ローカライゼーション
 
 ```bash

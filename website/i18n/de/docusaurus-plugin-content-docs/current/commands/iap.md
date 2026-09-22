@@ -50,6 +50,8 @@ ascelerate iap delete <bundle-id> <product-id>
 ascelerate iap submit <bundle-id> <product-id>
 ```
 
+Ein Produkt kann eingereicht werden, sobald es eine ausstehende Version hat, also eine Version im Status „Prepare for Submission“, „Ready for Review“ oder einem abgelehnten Status. Das schließt genehmigte Produkte mit Änderungen seit der letzten Genehmigung ein. Ohne ausstehende Version bricht der Befehl ab, bevor eine Anfrage gesendet wird. `iap info` zeigt die ausstehende Version an, falls vorhanden.
+
 ## Lokalisierungen
 
 ```bash

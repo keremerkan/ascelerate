@@ -394,6 +394,7 @@ struct IAPCommand: AsyncParsableCommand {
       let reviewNote: String?
       let localizations: [Localization]
       let hasPricing: Bool
+      let pendingVersion: ProductVersions.Pending?
     }
 
     func run() async throws {
@@ -425,6 +426,7 @@ struct IAPCommand: AsyncParsableCommand {
       }
 
       let hasSchedule = try await IAPCommand.iapPriceScheduleExists(iapID: iap.id, client: client)
+      let pendingVersion = try await ProductVersions.pendingIAP(iap.id, client: client)
 
       let attrs = iap.attributes
       let detail = Detail(
@@ -446,7 +448,8 @@ struct IAPCommand: AsyncParsableCommand {
               description: $0.attributes?.description
             )
           },
-        hasPricing: hasSchedule
+        hasPricing: hasSchedule,
+        pendingVersion: pendingVersion
       )
 
       if jsonOption.json {
@@ -458,6 +461,9 @@ struct IAPCommand: AsyncParsableCommand {
       print("Product ID:       \(detail.productID ?? "—")")
       print("Type:             \(detail.type.map { formatState($0) } ?? "—")")
       print("State:            \(detail.state.map { formatState($0) } ?? "—")")
+      if let pending = detail.pendingVersion {
+        print("Pending Version:  \(pending.label)")
+      }
       print("Family Shareable: \(detail.familySharable == true ? "Yes" : "No")")
       print("Content Hosting:  \(detail.contentHosting == true ? "Yes" : "No")")
       print("Review Note:      \(detail.reviewNote ?? "—")")
@@ -982,14 +988,15 @@ struct IAPCommand: AsyncParsableCommand {
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
       let state = iap.attributes?.state
-      guard state == .readyToSubmit else {
+      guard let pending = try await ProductVersions.pendingIAP(iap.id, client: client) else {
         let stateStr = state.map { formatState($0) } ?? "unknown"
-        throw ValidationError("In-app purchase '\(iap.attributes?.name ?? productID)' is in state '\(stateStr)'. Only items in 'Ready to Submit' state can be submitted.")
+        throw ValidationError("In-app purchase '\(iap.attributes?.name ?? productID)' has no pending version to submit (state: \(stateStr)). Edit it first.")
       }
 
       print("In-app purchase: \(iap.attributes?.name ?? productID)")
       print("Product ID:      \(productID)")
-      print("State:           \(formatState(state!))")
+      print("State:           \(state.map { formatState($0) } ?? "—")")
+      print("Pending Version: \(pending.label)")
       print()
       print(yellow("Note:") + " In-app purchases are reviewed together with the app version.")
       print("Make sure you also submit a new app version for review.")

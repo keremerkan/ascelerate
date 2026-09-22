@@ -37,6 +37,8 @@ ascelerate sub delete-group <bundle-id>
 ascelerate sub submit <bundle-id> <product-id>
 ```
 
+Ein Produkt kann eingereicht werden, sobald es eine ausstehende Version hat, also eine Version im Status „Prepare for Submission“, „Ready for Review“ oder einem abgelehnten Status. Das schließt genehmigte Produkte mit Änderungen seit der letzten Genehmigung ein. Ohne ausstehende Version bricht der Befehl ab, bevor eine Anfrage gesendet wird. `sub info` zeigt die ausstehende Version an, falls vorhanden.
+
 ## Abonnement-Lokalisierungen
 
 ```bash
@@ -209,6 +211,8 @@ Abonnementgruppen werden zusammen mit der nächsten App-Version überprüft. `su
 ```bash
 ascelerate sub submit-group <bundle-id>
 ```
+
+Die Gruppe benötigt eine eigene ausstehende Version (zum Beispiel geänderte Gruppen-Lokalisierungen); andernfalls bricht der Befehl ab, bevor eine Anfrage gesendet wird.
 
 ## Werbebilder
 

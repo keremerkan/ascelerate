@@ -37,6 +37,8 @@ ascelerate sub delete-group <bundle-id>
 ascelerate sub submit <bundle-id> <product-id>
 ```
 
+A product can be submitted whenever it has a pending version: any version in Prepare for Submission, Ready for Review, or a rejected state. This includes approved products with edits since their last approval. Without a pending version the command stops before making any request. `sub info` shows the pending version when there is one.
+
 ## Subscription localizations
 
 ```bash
@@ -212,6 +214,8 @@ Subscription groups are reviewed alongside the next app version. `sub submit-gro
 ```bash
 ascelerate sub submit-group <bundle-id>
 ```
+
+The group needs a pending version of its own (for example edited group localizations); otherwise the command stops before making any request.
 
 ## Promotional images
 

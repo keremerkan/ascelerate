@@ -41,7 +41,12 @@ struct ScreenshotRunner: Sendable {
 
             do {
                 if config.headless != true {
-                    try ScreenshotShell.run("/usr/bin/open", arguments: ["-a", "Simulator"])
+                    do {
+                        try simulatorManager.launchUIHost()
+                    } catch {
+                        // Screenshots render off the framebuffer either way; windows are a nicety.
+                        print("  " + yellow("Warning:") + " Could not open the simulator UI, continuing headless: \(error)")
+                    }
                 }
 
                 try await prepareDevicesConcurrently(
@@ -231,6 +236,14 @@ struct ScreenshotRunner: Sendable {
                         print("  \(tag) Booting and waiting for ready state...")
                         try simulatorManager.boot(udid: sim.udid)
                         silenceSystemNoise(udid: sim.udid, tag: tag, simulatorManager: simulatorManager)
+                    }
+
+                    if config.headless != true {
+                        do {
+                            try simulatorManager.showDeviceWindow(udid: sim.udid)
+                        } catch {
+                            print("  \(tag) " + yellow("Warning:") + " Could not open the device window: \(error)")
+                        }
                     }
 
                     if let wait = config.waitAfterBoot, wait > 0 {

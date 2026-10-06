@@ -1,12 +1,20 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 /// A human-readable description for inline error reporting (per-item FAIL lines and
 /// similar catch sites). `ResponseError` has no `LocalizedError` conformance, so
 /// `localizedDescription` would hide the API's actual error details.
 func describeError(_ error: Error) -> String {
+  if let ascError = ASCError.from(error) {
+    if ascError.statusCode == 429 { return "API rate limit exceeded (HTTP 429)" }
+    if !ascError.errors.isEmpty {
+      return ascError.errors.map { "\($0.title): \($0.detail)" }.joined(separator: "; ") + " (HTTP \(ascError.statusCode))"
+    }
+    return "HTTP \(ascError.statusCode)"
+  }
   if let responseError = error as? ResponseError {
     switch responseError {
     case .rateLimitExceeded:
@@ -26,6 +34,9 @@ func describeError(_ error: Error) -> String {
 /// Whether an API error is worth retrying: rate limiting or a server-side failure.
 /// Client-side errors (4xx validation, conflicts) won't fix themselves and are not transient.
 func isTransientAPIError(_ error: Error) -> Bool {
+  if let ascError = ASCError.from(error) {
+    return ascError.statusCode == 429 || (500...599).contains(ascError.statusCode)
+  }
   guard let responseError = error as? ResponseError else { return false }
   switch responseError {
   case .rateLimitExceeded:

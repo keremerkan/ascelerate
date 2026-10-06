@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct AppsCommand: AsyncParsableCommand {
@@ -32,18 +33,12 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
-      var allApps: [Entry] = []
-
-      for try await page in client.pages(Resources.v1.apps.get()) {
-        for app in page.data {
-          allApps.append(Entry(
-            id: app.id,
-            bundleID: app.attributes?.bundleID,
-            name: app.attributes?.name,
-            sku: app.attributes?.sku
-          ))
-        }
+      let client = try ClientFactory.makeASCClient()
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsGetCollection().ok.body.json
+      }
+      let allApps = pages.flatMap(\.data).map { app in
+        Entry(id: app.id, bundleID: app.attributes?.bundleId, name: app.attributes?.name, sku: app.attributes?.sku)
       }
 
       if jsonOption.json {
@@ -87,28 +82,27 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let versions = try await client.send(
-        Resources.v1.apps.id(app.id).appStoreVersions.get(
-          filterAppVersionState: [.prepareForSubmission, .waitingForReview, .inReview, .pendingDeveloperRelease, .readyForDistribution]
-        )
-      )
+      let versions = try await client.appsAppStoreVersionsGetToManyRelated(
+        path: .init(id: app.id),
+        query: .init(filterAppVersionState: [.prepareForSubmission, .waitingForReview, .inReview, .pendingDeveloperRelease, .readyForDistribution])
+      ).ok.body.json
       let attrs = app.attributes
       let detail = Detail(
         id: app.id,
         name: attrs?.name,
-        bundleID: attrs?.bundleID,
+        bundleID: attrs?.bundleId,
         sku: attrs?.sku,
         primaryLocale: attrs?.primaryLocale,
         latestVersion: versions.data.first.map { latest in
           let v = latest.attributes
           return Detail.Version(
             version: v?.versionString,
-            platform: v?.platform?.rawValue,
-            state: v?.appVersionState?.rawValue,
-            releaseType: v?.releaseType?.rawValue,
+            platform: v?.platform,
+            state: v?.appVersionState,
+            releaseType: v?.releaseType,
             createdDate: v?.createdDate
           )
         }
@@ -157,21 +151,19 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let response = try await client.send(
-        Resources.v1.apps.id(app.id).appStoreVersions.get()
-      )
+      let response = try await client.appsAppStoreVersionsGetToManyRelated(path: .init(id: app.id)).ok.body.json
 
       let entries = response.data.map { version -> Entry in
         let attrs = version.attributes
         return Entry(
           id: version.id,
           version: attrs?.versionString,
-          platform: attrs?.platform?.rawValue,
-          state: attrs?.appVersionState?.rawValue,
-          releaseType: attrs?.releaseType?.rawValue,
+          platform: attrs?.platform,
+          state: attrs?.appVersionState,
+          releaseType: attrs?.releaseType,
           createdDate: attrs?.createdDate
         )
       }
@@ -4139,6 +4131,16 @@ private func describeDecodingError(_ error: DecodingError) -> String {
     @unknown default:
       return "\(error)"
   }
+}
+
+func findApp(bundleID: String, client: ASCClient) async throws -> Components.Schemas.App {
+  let bundleID = resolveAlias(bundleID)
+  let response = try await client.appsGetCollection(query: .init(filterBundleId: [bundleID])).ok.body.json
+  // filter[bundleId] can return prefix matches, so find the exact match
+  guard let app = response.data.first(where: { $0.attributes?.bundleId == bundleID }) else {
+    throw AppLookupError.notFound(bundleID)
+  }
+  return app
 }
 
 func findApp(bundleID: String, client: AppStoreConnectClient) async throws -> App {

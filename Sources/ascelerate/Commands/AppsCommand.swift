@@ -195,6 +195,7 @@ struct AppsCommand: AsyncParsableCommand {
     )
     
     static let editableStates: Set<AppVersionState> = [.prepareForSubmission, .waitingForReview]
+    static let editableStateValues: Set<String> = Set(editableStates.map(\.rawValue))
     
     static func checkEditable(_ version: AppStoreVersion, promotionalTextOnly: Bool) throws {
       guard let state = version.attributes?.appVersionState, !editableStates.contains(state) else {
@@ -1403,7 +1404,7 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         jsonOption.activate()
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
@@ -1424,7 +1425,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         // 1. Version state
         progress("Checking version state...")
-        let editable = versionState.map { Localizations.editableStates.contains($0) } ?? false
+        let editable = versionState.map { Localizations.editableStateValues.contains($0) } ?? false
         checks.append(Check(
           group: nil, name: "Version state", passed: editable,
           detail: editable ? stateStr : "\(stateStr) (not editable)"
@@ -1433,49 +1434,45 @@ struct AppsCommand: AsyncParsableCommand {
         // 2. Build attached
         progress("Checking build...")
         do {
-          let buildResponse = try await client.send(
-            Resources.v1.appStoreVersions.id(appVersion.id).build.get()
-          )
-          let buildNumber = buildResponse.data.attributes?.version ?? "unknown"
+          let build = try await client.appStoreVersionsBuildGetToOneRelated(path: .init(id: appVersion.id)).ok.body.json.data
+          let buildNumber = build.attributes?.version ?? "unknown"
           checks.append(Check(group: nil, name: "Build attached", passed: true, detail: "Build \(buildNumber)"))
-        } catch is DecodingError {
+        } catch where ASCError.isMissingRelated(error) {
           checks.append(Check(group: nil, name: "Build attached", passed: false, detail: "No build attached"))
         }
 
         // 3. Fetch version localizations
         // What's New only exists for updates — if no earlier version of this platform
         // was ever released, the field isn't required (or even settable).
-        let releasedResponse = try await client.send(
-          Resources.v1.apps.id(app.id).appStoreVersions.get(
-            filterPlatform: platformFilter(appVersion.attributes?.platform),
+        let releasedResponse = try await client.appsAppStoreVersionsGetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(
+            filterPlatform: appVersion.attributes?.platform.flatMap { .init(rawValue: $0) }.map { [$0] },
             filterAppVersionState: [.readyForDistribution, .replacedWithNewVersion],
             limit: 2
           )
-        )
+        ).ok.body.json
         let hasReleasedVersion = releasedResponse.data.contains { $0.id != appVersion.id }
         progress("Fetching localizations...")
-        let locsResponse = try await client.send(
-          Resources.v1.appStoreVersions.id(appVersion.id)
-            .appStoreVersionLocalizations.get()
-        )
+        let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: appVersion.id)
+        ).ok.body.json
         let versionLocs = locsResponse.data.sorted {
           ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
         }
 
         // 4. Fetch app-info localizations
         progress("Fetching app info...")
-        let appInfoResponse = try await client.send(
-          Resources.v1.apps.id(app.id).appInfos.get(
-            include: [.appInfoLocalizations],
-            limitAppInfoLocalizations: 50
-          )
-        )
-        var appInfoByLocale: [String: AppInfoLocalization] = [:]
-        if let appInfo = appInfoResponse.data.first(where: { $0.attributes?.state != .replacedWithNewInfo })
+        let appInfoResponse = try await client.appsAppInfosGetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(include: [.appInfoLocalizations], limitAppInfoLocalizations: 50)
+        ).ok.body.json
+        var appInfoByLocale: [String: Components.Schemas.AppInfoLocalization] = [:]
+        if let appInfo = appInfoResponse.data.first(where: { $0.attributes?.state != "REPLACED_WITH_NEW_INFO" })
             ?? appInfoResponse.data.first {
           let locIDs = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
-          let infoLocs = appInfoResponse.included?.compactMap { item -> AppInfoLocalization? in
-            if case .appInfoLocalization(let loc) = item, locIDs.contains(loc.id) {
+          let infoLocs = appInfoResponse.included?.compactMap { item -> Components.Schemas.AppInfoLocalization? in
+            if case .appInfoLocalizations(let loc) = item, locIDs.contains(loc.id) {
               return loc
             }
             return nil
@@ -1491,18 +1488,17 @@ struct AppsCommand: AsyncParsableCommand {
         // screenshots) replace the sequential L + L×S call chain with identical counts.
         progress("Fetching screenshots...")
         let setsByLocale = try await boundedConcurrentMap(versionLocs) { loc in
-          let setsResponse = try await client.send(
-            Resources.v1.appStoreVersionLocalizations.id(loc.id)
-              .appScreenshotSets.get(limit: 50)
-          )
+          let setsResponse = try await client.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
+            path: .init(id: loc.id), query: .init(limit: 50)
+          ).ok.body.json
           return (loc.attributes?.locale ?? "unknown", setsResponse.data.map(\.id))
         }
 
         let countsBySet = Dictionary(
           try await boundedConcurrentMap(setsByLocale.flatMap(\.1)) { setID in
-            let screenshotsResponse = try await client.send(
-              Resources.v1.appScreenshotSets.id(setID).appScreenshots.get()
-            )
+            let screenshotsResponse = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
+              path: .init(id: setID)
+            ).ok.body.json
             return (setID, screenshotsResponse.data.count)
           },
           uniquingKeysWith: { first, _ in first }
@@ -1533,8 +1529,8 @@ struct AppsCommand: AsyncParsableCommand {
           try printJSON(Report(
             versionID: appVersion.id,
             version: appVersion.attributes?.versionString,
-            platform: appVersion.attributes?.platform?.rawValue,
-            state: versionState?.rawValue,
+            platform: appVersion.attributes?.platform,
+            state: versionState,
             passed: failCount == 0,
             checks: checks
           ))
@@ -1584,8 +1580,8 @@ struct AppsCommand: AsyncParsableCommand {
 
       /// Builds the per-locale app-info / localization / screenshot checks.
       private func buildLocaleChecks(
-        versionLocs: [AppStoreVersionLocalization],
-        appInfoByLocale: [String: AppInfoLocalization],
+        versionLocs: [Components.Schemas.AppStoreVersionLocalization],
+        appInfoByLocale: [String: Components.Schemas.AppInfoLocalization],
         screenshotsByLocale: [String: (sets: Int, count: Int)],
         requireWhatsNew: Bool
       ) -> [Check] {
@@ -1604,7 +1600,7 @@ struct AppsCommand: AsyncParsableCommand {
             if info.attributes?.subtitle == nil || info.attributes?.subtitle?.isEmpty == true {
               missing.append(formatFieldName("subtitle"))
             }
-            if info.attributes?.privacyPolicyURL == nil || info.attributes?.privacyPolicyURL?.isEmpty == true {
+            if info.attributes?.privacyPolicyUrl == nil || info.attributes?.privacyPolicyUrl?.isEmpty == true {
               missing.append(formatFieldName("privacyPolicyURL"))
             }
             checks.append(Check(
@@ -1638,7 +1634,7 @@ struct AppsCommand: AsyncParsableCommand {
             if loc.attributes?.keywords == nil || loc.attributes?.keywords?.isEmpty == true {
               missing.append(formatFieldName("keywords"))
             }
-            if loc.attributes?.supportURL == nil {
+            if loc.attributes?.supportUrl == nil {
               missing.append(formatFieldName("supportURL"))
             }
             var parts: [String] = []
@@ -1663,28 +1659,25 @@ struct AppsCommand: AsyncParsableCommand {
         return checks
       }
 
+      /// IAP/subscription states that can ride along a submission.
+      private static let submittableProductStates: Set<String> = ["READY_TO_SUBMIT", "APPROVED", "WAITING_FOR_REVIEW", "IN_REVIEW"]
+
       /// Checks each in-app purchase's price schedule and state.
-      private func checkInAppPurchases(
-        appID: String, client: AppStoreConnectClient
-      ) async throws -> [Check] {
-        var iaps: [InAppPurchaseV2] = []
-        for try await page in client.pages(
-          Resources.v1.apps.id(appID).inAppPurchasesV2.get(limit: 200)
-        ) {
-          iaps.append(contentsOf: page.data)
-        }
+      private func checkInAppPurchases(appID: String, client: ASCClient) async throws -> [Check] {
+        let iaps = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.appsInAppPurchasesV2GetToManyRelated(path: .init(id: appID), query: .init(limit: 200)).ok.body.json
+        }.flatMap(\.data)
 
         var checks: [Check] = []
-        let sortedIAPs = iaps.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
+        let sortedIAPs = iaps.sorted(by: { ($0.attributes?.productId ?? "") < ($1.attributes?.productId ?? "") })
         let schedules = try await boundedConcurrentMap(sortedIAPs.map(\.id)) { id in
           try await IAPCommand.iapPriceScheduleExists(iapID: id, client: client)
         }
         for (iap, hasSchedule) in zip(sortedIAPs, schedules) {
-          let name = iap.attributes?.productID ?? iap.attributes?.name ?? iap.id
+          let name = iap.attributes?.productId ?? iap.attributes?.name ?? iap.id
           let state = iap.attributes?.state
           let stateStr = state.map { formatState($0) } ?? "unknown"
-          let submittable = state == .readyToSubmit || state == .approved
-            || state == .waitingForReview || state == .inReview
+          let submittable = state.map(Self.submittableProductStates.contains) ?? false
 
           checks.append(Check(
             group: "inAppPurchases", name: name, passed: hasSchedule && submittable,
@@ -1695,23 +1688,20 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       /// Checks each subscription's prices and state.
-      private func checkSubscriptions(
-        appID: String, client: AppStoreConnectClient
-      ) async throws -> [Check] {
+      private func checkSubscriptions(appID: String, client: ASCClient) async throws -> [Check] {
         let subGroups = try await SubCommand.fetchGroups(appID: appID, client: client)
         let allSubs = subGroups.flatMap(\.subscriptions)
 
         var checks: [Check] = []
-        let sortedSubs = allSubs.sorted(by: { ($0.attributes?.productID ?? "") < ($1.attributes?.productID ?? "") })
+        let sortedSubs = allSubs.sorted(by: { ($0.attributes?.productId ?? "") < ($1.attributes?.productId ?? "") })
         let priced = try await boundedConcurrentMap(sortedSubs.map(\.id)) { id in
           try await SubCommand.subscriptionHasPrices(subscriptionID: id, client: client)
         }
         for (sub, hasPrices) in zip(sortedSubs, priced) {
-          let name = sub.attributes?.productID ?? sub.attributes?.name ?? sub.id
+          let name = sub.attributes?.productId ?? sub.attributes?.name ?? sub.id
           let state = sub.attributes?.state
           let stateStr = state.map { formatState($0) } ?? "unknown"
-          let submittable = state == .readyToSubmit || state == .approved
-            || state == .waitingForReview || state == .inReview
+          let submittable = state.map(Self.submittableProductStates.contains) ?? false
 
           checks.append(Check(
             group: "subscriptions", name: name, passed: hasPrices && submittable,
@@ -1762,31 +1752,28 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         jsonOption.activate()
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
-        let response = try await client.send(
-          Resources.v1.apps.id(app.id).reviewSubmissions.get(
-            fieldsAppStoreVersions: [.versionString, .appVersionState],
-            include: [.appStoreVersionForReview, .items]
-          )
-        )
+        let response = try await client.appsReviewSubmissionsGetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(fieldsAppStoreVersions: [.versionString, .appVersionState], include: [.appStoreVersionForReview, .items])
+        ).ok.body.json
 
         // Index included items for lookup
-        var includedVersions: [String: AppStoreVersion] = [:]
-        var includedItems: [String: ReviewSubmissionItem] = [:]
+        var includedVersions: [String: Components.Schemas.AppStoreVersion] = [:]
+        var includedItems: [String: Components.Schemas.ReviewSubmissionItem] = [:]
         for item in response.included ?? [] {
           switch item {
-            case .appStoreVersion(let v): includedVersions[v.id] = v
-            case .reviewSubmissionItem(let i): includedItems[i.id] = i
+            case .appStoreVersions(let v): includedVersions[v.id] = v
+            case .reviewSubmissionItems(let i): includedItems[i.id] = i
             default: break
           }
         }
 
         // Resolve what each item refers to, but only for active submissions — it
         // costs extra requests per product item.
-        typealias SubmissionState = ReviewSubmission.Attributes.State
-        let activeStates: Set<SubmissionState> = [.unresolvedIssues, .inReview, .waitingForReview]
+        let activeStates: Set<String> = ["UNRESOLVED_ISSUES", "IN_REVIEW", "WAITING_FOR_REVIEW"]
 
         var allEntries: [Entry] = []
         for submission in response.data {
@@ -1801,17 +1788,17 @@ struct AppsCommand: AsyncParsableCommand {
             includedItems[ref.id].map {
               let info = resolved[$0.id]
               return Entry.Item(
-                id: $0.id, state: $0.attributes?.state?.rawValue,
+                id: $0.id, state: $0.attributes?.state,
                 kind: info?.kind, name: info?.name, version: info?.version, versionState: info?.versionState
               )
             }
           }
           allEntries.append(Entry(
             id: submission.id,
-            platform: attrs?.platform?.rawValue,
+            platform: attrs?.platform,
             version: reviewVersion?.attributes?.versionString,
-            versionState: reviewVersion?.attributes?.appVersionState?.rawValue,
-            state: attrs?.state?.rawValue,
+            versionState: reviewVersion?.attributes?.appVersionState,
+            state: attrs?.state,
             submittedDate: attrs?.submittedDate,
             items: items
           ))
@@ -1845,9 +1832,8 @@ struct AppsCommand: AsyncParsableCommand {
         )
 
         // Show details for active submissions with issues
-        let activeRawStates = Set(activeStates.map(\.rawValue))
         for e in entries {
-          guard let state = e.state, activeRawStates.contains(state) else { continue }
+          guard let state = e.state, activeStates.contains(state) else { continue }
 
           let versionInfo = e.version.map {
             " — v\($0) (\(e.versionState.map { formatState($0) } ?? "?"))"
@@ -1865,7 +1851,7 @@ struct AppsCommand: AsyncParsableCommand {
             print("  Item: \(target)\(item.state.map { formatState($0) } ?? "—")")
           }
 
-          if state == SubmissionState.unresolvedIssues.rawValue {
+          if state == "UNRESOLVED_ISSUES" {
             print()
             print("  View rejection notes in App Store Connect Resolution Center.")
           }
@@ -4187,6 +4173,60 @@ func platformFilter<F: RawRepresentable>(_ platform: Platform?) -> [F]? where F.
     }
     return [filter]
   }
+}
+
+func findVersion(appID: String, versionString: String?, platform: Platform? = nil, client: ASCClient) async throws -> Components.Schemas.AppStoreVersion {
+  func describe(_ v: Components.Schemas.AppStoreVersion) -> String {
+    let p = v.attributes?.platform.map { formatState($0) } ?? "?"
+    let ver = v.attributes?.versionString ?? "?"
+    let state = v.attributes?.appVersionState.map { formatState($0) } ?? "?"
+    return "\(p) — \(ver) (\(state))"
+  }
+
+  // When no specific version requested, prefer editable versions (prepareForSubmission/waitingForReview)
+  if versionString == nil {
+    var editable = try await client.appsAppStoreVersionsGetToManyRelated(
+      path: .init(id: appID), query: .init(filterAppVersionState: [.prepareForSubmission, .waitingForReview])
+    ).ok.body.json.data
+
+    // Filter by platform if specified
+    if let platform {
+      editable = editable.filter { $0.attributes?.platform == platform.rawValue }
+    }
+
+    if editable.count == 1 {
+      return editable[0]
+    } else if editable.count > 1 {
+      return try promptSelection(
+        "Multiple editable versions found", items: editable, display: describe,
+        nonInteractiveHint: "Pass --platform to disambiguate.")
+    }
+  }
+
+  // A universal-purchase app can hold the same version string on multiple
+  // platforms — filter by platform, and prompt if still ambiguous.
+  var candidates = try await client.appsAppStoreVersionsGetToManyRelated(
+    path: .init(id: appID),
+    query: .init(filterPlatform: platformFilter(platform), filterVersionString: versionString.map { [$0] })
+  ).ok.body.json.data
+  if versionString == nil {
+    // Fallback (no editable versions): reduce to the latest version per platform.
+    // The API returns versions newest-first, so keep the first one seen per platform.
+    var seenPlatforms = Set<String?>()
+    candidates = candidates.filter { seenPlatforms.insert($0.attributes?.platform).inserted }
+  }
+  if candidates.count > 1 {
+    return try promptSelection(
+      "Multiple matching versions found", items: candidates, display: describe,
+      nonInteractiveHint: "Pass --platform to disambiguate.")
+  }
+  guard let version = candidates.first else {
+    if let v = versionString {
+      throw AppLookupError.versionNotFound(v, platform)
+    }
+    throw AppLookupError.noVersions(platform)
+  }
+  return version
 }
 
 func findVersion(appID: String, versionString: String?, platform: Platform? = nil, client: AppStoreConnectClient) async throws -> AppStoreVersion {

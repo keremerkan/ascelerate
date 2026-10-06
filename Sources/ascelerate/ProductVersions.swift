@@ -1,5 +1,6 @@
 import AppStoreAPI
 import AppStoreConnect
+import ASCKit
 import Foundation
 
 /// Pending-version detection for in-app purchases, subscriptions, and subscription groups.
@@ -55,6 +56,30 @@ enum ProductVersions {
       )
     )
     return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state?.rawValue ?? "UNKNOWN") }
+  }
+
+  static func pendingIAP(_ iapID: String, client: ASCClient) async throws -> Pending? {
+    let response = try await client.inAppPurchasesV2VersionsGetToManyRelated(
+      path: .init(id: iapID),
+      query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
+    ).ok.body.json
+    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
+  }
+
+  static func pendingSubscription(_ subID: String, client: ASCClient) async throws -> Pending? {
+    let response = try await client.subscriptionsVersionsGetToManyRelated(
+      path: .init(id: subID),
+      query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
+    ).ok.body.json
+    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
+  }
+
+  static func pendingGroup(_ groupID: String, client: ASCClient) async throws -> Pending? {
+    let response = try await client.subscriptionGroupsVersionsGetToManyRelated(
+      path: .init(id: groupID),
+      query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
+    ).ok.body.json
+    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
   }
 
   // MARK: - Review submission items
@@ -118,6 +143,62 @@ enum ProductVersions {
       } else if let id = rels?.subscriptionGroupVersion?.data?.id {
         let name = try await groupName(versionID: id, client: client)
         result[item.id] = ReviewItemInfo(kind: "SUBSCRIPTION_GROUP", name: name, version: groupVersions[id]?.attributes?.version, versionState: groupVersions[id]?.attributes?.state?.rawValue)
+      }
+    }
+    return result
+  }
+
+  /// `reviewItems` for ASCKit-migrated commands.
+  static func reviewItems(submissionID: String, client: ASCClient) async throws -> [String: ReviewItemInfo] {
+    let response = try await client.reviewSubmissionsItemsGetToManyRelated(
+      path: .init(id: submissionID),
+      query: .init(
+        fieldsAppStoreVersions: [.versionString],
+        fieldsInAppPurchaseVersions: [.version, .state],
+        fieldsSubscriptionVersions: [.version, .state],
+        fieldsSubscriptionGroupVersions: [.version, .state],
+        include: [.appStoreVersion, .inAppPurchaseVersion, .subscriptionVersion, .subscriptionGroupVersion]
+      )
+    ).ok.body.json
+
+    var appVersions: [String: String] = [:]
+    var productVersions: [String: (version: Int?, state: String?)] = [:]
+    for included in response.included ?? [] {
+      switch included {
+        case .appStoreVersions(let v): appVersions[v.id] = v.attributes?.versionString
+        case .inAppPurchaseVersions(let v): productVersions[v.id] = (v.attributes?.version, v.attributes?.state)
+        case .subscriptionVersions(let v): productVersions[v.id] = (v.attributes?.version, v.attributes?.state)
+        case .subscriptionGroupVersions(let v): productVersions[v.id] = (v.attributes?.version, v.attributes?.state)
+        default: break
+      }
+    }
+
+    var result: [String: ReviewItemInfo] = [:]
+    for item in response.data {
+      let rels = item.relationships
+      func product(_ kind: String, _ id: String, name: String?) -> ReviewItemInfo {
+        ReviewItemInfo(kind: kind, name: name, version: productVersions[id]?.version, versionState: productVersions[id]?.state)
+      }
+      if let id = rels?.appStoreVersion?.data?.id {
+        result[item.id] = ReviewItemInfo(kind: "APP_STORE_VERSION", name: appVersions[id], version: nil, versionState: nil)
+      } else if let id = rels?.inAppPurchaseVersion?.data?.id {
+        let included = try await client.inAppPurchaseVersionsGetInstance(
+          path: .init(id: id), query: .init(fieldsInAppPurchases: [.name], include: [.inAppPurchase])
+        ).ok.body.json.included ?? []
+        let name = included.lazy.compactMap { if case .inAppPurchases(let iap) = $0 { return iap.attributes?.name } else { return nil } }.first
+        result[item.id] = product("IN_APP_PURCHASE", id, name: name)
+      } else if let id = rels?.subscriptionVersion?.data?.id {
+        let included = try await client.subscriptionVersionsGetInstance(
+          path: .init(id: id), query: .init(fieldsSubscriptions: [.name], include: [.subscription])
+        ).ok.body.json.included ?? []
+        let name = included.lazy.compactMap { if case .subscriptions(let sub) = $0 { return sub.attributes?.name } else { return nil } }.first
+        result[item.id] = product("SUBSCRIPTION", id, name: name)
+      } else if let id = rels?.subscriptionGroupVersion?.data?.id {
+        let included = try await client.subscriptionGroupVersionsGetInstance(
+          path: .init(id: id), query: .init(fieldsSubscriptionGroups: [.referenceName], include: [.subscriptionGroup])
+        ).ok.body.json.included ?? []
+        let name = included.lazy.compactMap { if case .subscriptionGroups(let group) = $0 { return group.attributes?.referenceName } else { return nil } }.first
+        result[item.id] = product("SUBSCRIPTION_GROUP", id, name: name)
       }
     }
     return result

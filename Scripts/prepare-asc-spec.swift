@@ -9,9 +9,10 @@
 // - String enums inside components/schemas become plain strings. The generator's enums are
 //   closed, so a value Apple's spec does not list (it has happened: placement state ACTIVE in
 //   4.5.1) would fail decoding of the whole response. Enums in query parameters stay typed:
-//   they only shape requests.
-// - Bracketed parameter names get readable Swift names (`filter[bundleId]` → `filterBundleId`
-//   instead of `filter_lbrack_bundleId_rbrack_`) through the config's nameOverrides.
+//   they only shape requests. Empty parameter enums (no cases, which wouldn't compile) are dropped.
+// - Bracketed parameter names and descending sort values get readable Swift names
+//   (`filter[bundleId]` → `filterBundleId`, `-uploadedDate` → `minusUploadedDate`) through the
+//   config's nameOverrides.
 import Foundation
 
 guard CommandLine.arguments.count == 2 else {
@@ -53,10 +54,30 @@ func openEnums(_ value: Any) -> Any {
 components["schemas"] = openEnums(schemas)
 spec["components"] = components
 
+// Parameters with an empty enum (e.g. `fields[appKeywords]`: AppKeyword has no attributes) would
+// generate an enum with no cases, which doesn't compile; make them plain strings.
+var emptyEnums = 0
+
+func dropEmptyEnums(_ value: Any) -> Any {
+  if var object = value as? [String: Any] {
+    if let values = object["enum"] as? [Any], values.isEmpty {
+      object["enum"] = nil
+      emptyEnums += 1
+    }
+    return object.mapValues(dropEmptyEnums)
+  }
+  if let array = value as? [Any] {
+    return array.map(dropEmptyEnums)
+  }
+  return value
+}
+
+spec["paths"] = dropEmptyEnums(spec["paths"] ?? [:])
+
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped)")
 
 // Every bracketed parameter name in the spec, e.g. `filter[appStoreVersions.platform]`.
 var bracketed = Set<String>()
@@ -64,13 +85,17 @@ for operations in (spec["paths"] as? [String: Any] ?? [:]).values {
   for operation in (operations as? [String: Any] ?? [:]).values {
     for parameter in (operation as? [String: Any])?["parameters"] as? [[String: Any]] ?? [] {
       if let name = parameter["name"] as? String, name.contains("[") { bracketed.insert(name) }
+      // Descending sort values, e.g. `-uploadedDate`.
+      let items = (parameter["schema"] as? [String: Any])?["items"] as? [String: Any]
+      for value in items?["enum"] as? [String] ?? [] where value.hasPrefix("-") { bracketed.insert(value) }
     }
   }
 }
 
-/// `filter[appStoreVersions.platform]` → `filterAppStoreVersionsPlatform`
+/// `filter[appStoreVersions.platform]` → `filterAppStoreVersionsPlatform`, `-uploadedDate` → `minusUploadedDate`
 func swiftName(_ name: String) -> String {
-  let words = name.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
+  let words = (name.hasPrefix("-") ? ["minus"] : [])
+    + name.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
   return words.enumerated().map { $0.offset == 0 ? $0.element : $0.element.prefix(1).uppercased() + $0.element.dropFirst() }.joined()
 }
 

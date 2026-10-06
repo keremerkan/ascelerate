@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 extension InAppPurchaseLocalization {
@@ -31,6 +32,18 @@ struct IAPCommand: AsyncParsableCommand {
     let response = try await client.send(
       Resources.v1.apps.id(appID).inAppPurchasesV2.get(filterProductID: [productID])
     )
+    guard let iap = response.data.first else {
+      throw ValidationError("No in-app purchase found with product ID '\(productID)'.")
+    }
+    return iap
+  }
+
+  static func findIAP(
+    productID: String, appID: String, client: ASCClient
+  ) async throws -> Components.Schemas.InAppPurchaseV2 {
+    let response = try await client.appsInAppPurchasesV2GetToManyRelated(
+      path: .init(id: appID), query: .init(filterProductId: [productID])
+    ).ok.body.json
     guard let iap = response.data.first else {
       throw ValidationError("No in-app purchase found with product ID '\(productID)'.")
     }
@@ -69,6 +82,16 @@ struct IAPCommand: AsyncParsableCommand {
         return false
       }
       throw error
+    }
+  }
+
+  /// Whether the IAP has a price schedule (ASCKit).
+  static func iapPriceScheduleExists(iapID: String, client: ASCClient) async throws -> Bool {
+    do {
+      _ = try await client.inAppPurchasesV2IapPriceScheduleGetToOneRelated(path: .init(id: iapID)).ok.body.json
+      return true
+    } catch where ASCError.isMissingRelated(error) {
+      return false
     }
   }
 
@@ -166,6 +189,58 @@ struct IAPCommand: AsyncParsableCommand {
   /// POSTs a new schedule that fully replaces any prior one, retrying transient API
   /// errors. The first entry in `manualPrices` must be the base territory's entry.
   /// The POST is atomic — on failure the existing schedule is untouched.
+  /// `fetchExistingSchedule` for ASCKit-migrated commands.
+  static func fetchExistingSchedule(iapID: String, client: ASCClient) async throws -> ExistingSchedule? {
+    let schedule: Components.Schemas.InAppPurchasePriceSchedule
+    do {
+      schedule = try await client.inAppPurchasesV2IapPriceScheduleGetToOneRelated(
+        path: .init(id: iapID),
+        query: .init(fieldsInAppPurchasePriceSchedules: [.baseTerritory, .manualPrices], include: [.baseTerritory])
+      ).ok.body.json.data
+    } catch where ASCError.isMissingRelated(error) {
+      return nil
+    }
+
+    // A schedule exists at this point (the GET succeeded) — failing to hydrate any
+    // part of it must throw, not degrade: every write path POSTs the schedule
+    // wholesale, so a silently dropped entry would be permanently deleted.
+    guard let baseID = schedule.relationships?.baseTerritory?.data?.id else {
+      throw ValidationError("Could not resolve the price schedule's base territory. Retry, or inspect with 'iap pricing show'.")
+    }
+
+    // Relationship `data` only populates with `include`; the included payload also carries
+    // each point's customer price and each territory's currency.
+    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.inAppPurchasePriceSchedulesManualPricesGetToManyRelated(
+        path: .init(id: schedule.id), query: .init(limit: 200, include: [.inAppPurchasePricePoint, .territory])
+      ).ok.body.json
+    }
+    var entries: [ManualPriceEntry] = []
+    for page in pages {
+      var pointPrices: [String: String] = [:]
+      var territoryCurrencies: [String: String] = [:]
+      for item in page.included ?? [] {
+        switch item {
+        case .inAppPurchasePricePoints(let p):
+          if let cp = p.attributes?.customerPrice { pointPrices[p.id] = cp }
+        case .territories(let t):
+          if let c = t.attributes?.currency { territoryCurrencies[t.id] = c }
+        }
+      }
+      for price in page.data {
+        guard let territoryID = price.relationships?.territory?.data?.id,
+              let pricePointID = price.relationships?.inAppPurchasePricePoint?.data?.id
+        else {
+          throw ValidationError("Could not resolve territory/price point for a manual price entry. Retry, or inspect with 'iap pricing show'.")
+        }
+        entries.append(ManualPriceEntry(
+          territoryID: territoryID, pricePointID: pricePointID,
+          customerPrice: pointPrices[pricePointID], currency: territoryCurrencies[territoryID]))
+      }
+    }
+    return ExistingSchedule(baseTerritoryID: baseID, manualPrices: entries)
+  }
+
   static func postSchedule(
     iapID: String,
     baseTerritoryID: String,
@@ -308,33 +383,30 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      typealias Params = Resources.V1.Apps.WithID.InAppPurchasesV2
+      typealias Query = Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query
 
-      let filterType: [Params.FilterInAppPurchaseType]? = try parseFilter(type, name: "type")
-      let filterState: [Params.FilterState]? = try parseFilter(state, name: "state")
+      let filterType: [Query.FilterInAppPurchaseTypePayloadPayload]? = try parseFilter(type, name: "type")
+      let filterState: [Query.FilterStatePayloadPayload]? = try parseFilter(state, name: "state")
 
-      var entries: [Entry] = []
-      let request = Resources.v1.apps.id(app.id).inAppPurchasesV2.get(
-        filterState: filterState,
-        filterInAppPurchaseType: filterType,
-        limit: 200
-      )
-
-      for try await page in client.pages(request) {
-        for iap in page.data {
-          let attrs = iap.attributes
-          entries.append(Entry(
-            id: iap.id,
-            productID: attrs?.productID,
-            name: attrs?.name,
-            type: attrs?.inAppPurchaseType?.rawValue,
-            state: attrs?.state?.rawValue,
-            familySharable: attrs?.isFamilySharable
-          ))
-        }
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsInAppPurchasesV2GetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(filterState: filterState, filterInAppPurchaseType: filterType, limit: 200)
+        ).ok.body.json
+      }
+      let entries = pages.flatMap(\.data).map { iap in
+        let attrs = iap.attributes
+        return Entry(
+          id: iap.id,
+          productID: attrs?.productId,
+          name: attrs?.name,
+          type: attrs?.inAppPurchaseType,
+          state: attrs?.state,
+          familySharable: attrs?.familySharable
+        )
       }
 
       if jsonOption.json {
@@ -399,15 +471,13 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let request = Resources.v1.apps.id(app.id).inAppPurchasesV2.get(
-        filterProductID: [productID],
-        include: [.inAppPurchaseLocalizations],
-        limitInAppPurchaseLocalizations: 50
-      )
-      let response = try await client.send(request)
+      let response = try await client.appsInAppPurchasesV2GetToManyRelated(
+        path: .init(id: app.id),
+        query: .init(filterProductId: [productID], include: [.inAppPurchaseLocalizations], limitInAppPurchaseLocalizations: 50)
+      ).ok.body.json
 
       guard let iap = response.data.first else {
         throw ValidationError("No in-app purchase found with product ID '\(productID)'.")
@@ -417,8 +487,8 @@ struct IAPCommand: AsyncParsableCommand {
       let locIDs = Set(
         iap.relationships?.inAppPurchaseLocalizations?.data?.map(\.id) ?? []
       )
-      let localizations: [InAppPurchaseLocalization] = (response.included ?? []).compactMap {
-        if case .inAppPurchaseLocalization(let loc) = $0,
+      let localizations: [Components.Schemas.InAppPurchaseLocalization] = (response.included ?? []).compactMap {
+        if case .inAppPurchaseLocalizations(let loc) = $0,
            locIDs.isEmpty || locIDs.contains(loc.id) {
           return loc
         }
@@ -431,12 +501,12 @@ struct IAPCommand: AsyncParsableCommand {
       let attrs = iap.attributes
       let detail = Detail(
         id: iap.id,
-        productID: attrs?.productID,
+        productID: attrs?.productId,
         name: attrs?.name,
-        type: attrs?.inAppPurchaseType?.rawValue,
-        state: attrs?.state?.rawValue,
-        familySharable: attrs?.isFamilySharable,
-        contentHosting: attrs?.isContentHosting,
+        type: attrs?.inAppPurchaseType,
+        state: attrs?.state,
+        familySharable: attrs?.familySharable,
+        contentHosting: attrs?.contentHosting,
         reviewNote: attrs?.reviewNote,
         localizations: localizations
           .sorted { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }
@@ -1215,7 +1285,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         jsonOption.activate()
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 

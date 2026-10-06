@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct CustomerReviewsCommand: AsyncParsableCommand {
@@ -51,6 +52,20 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         )
       }
     }
+
+    init(review: Components.Schemas.CustomerReview, response resp: Components.Schemas.CustomerReviewResponseV1?) {
+      let a = review.attributes
+      id = review.id
+      rating = a?.rating
+      title = a?.title
+      body = a?.body
+      reviewerNickname = a?.reviewerNickname
+      territory = a?.territory
+      createdDate = a?.createdDate
+      response = resp.map {
+        Response(state: $0.attributes?.state, lastModifiedDate: $0.attributes?.lastModifiedDate, body: $0.attributes?.responseBody)
+      }
+    }
   }
 
   /// Fetches a review by ID along with its developer response (if any).
@@ -66,26 +81,37 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     return (resp.data, response)
   }
 
+  /// Fetches a review by ID along with its developer response (if any).
+  static func fetchReview(
+    reviewID: String, client: ASCClient
+  ) async throws -> (review: Components.Schemas.CustomerReview, response: Components.Schemas.CustomerReviewResponseV1?) {
+    let resp = try await client.customerReviewsGetInstance(
+      path: .init(id: reviewID), query: .init(include: [.response])
+    ).ok.body.json
+    let response = resp.included?.compactMap { item -> Components.Schemas.CustomerReviewResponseV1? in
+      if case .customerReviewResponses(let r) = item { return r }
+      return nil
+    }.first
+    return (resp.data, response)
+  }
+
   /// Prints a review (and its response, if present). `full` shows the complete body.
-  static func printReview(
-    _ review: CustomerReview, response: CustomerReviewResponseV1?, full: Bool = false
-  ) {
-    let a = review.attributes
-    print("\(ratingStars(a?.rating))  \(a?.title ?? "—")")
-    print("  By:        \(a?.reviewerNickname ?? "—")")
-    print("  Territory: \(a?.territory?.rawValue ?? "—")")
-    print("  Date:      \(a?.createdDate.map { formatDate($0) } ?? "—")")
+  static func printReview(_ review: ReviewEntry, full: Bool = false) {
+    print("\(ratingStars(review.rating))  \(review.title ?? "—")")
+    print("  By:        \(review.reviewerNickname ?? "—")")
+    print("  Territory: \(review.territory ?? "—")")
+    print("  Date:      \(review.createdDate.map { formatDate($0) } ?? "—")")
     print("  Review ID: \(review.id)")
-    if let body = a?.body, !body.isEmpty {
+    if let body = review.body, !body.isEmpty {
       print()
       let text = full ? body : String(body.prefix(280)) + (body.count > 280 ? "…" : "")
       print("  " + text.replacingOccurrences(of: "\n", with: "\n  "))
     }
-    if let response, let attrs = response.attributes {
-      let meta = "\(attrs.state.map { formatState($0) } ?? "—"), \(attrs.lastModifiedDate.map { formatDate($0) } ?? "—")"
+    if let response = review.response {
+      let meta = "\(response.state.map { formatState($0) } ?? "—"), \(response.lastModifiedDate.map { formatDate($0) } ?? "—")"
       print()
       print("  \(green("Developer response")) (\(meta)):")
-      print("  " + (attrs.responseBody ?? "").replacingOccurrences(of: "\n", with: "\n  "))
+      print("  " + (response.body ?? "").replacingOccurrences(of: "\n", with: "\n  "))
     } else if full {
       print()
       print("  " + yellow("No developer response."))
@@ -122,10 +148,10 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let sortValue: [Resources.V1.Apps.WithID.CustomerReviews.Sort]
+      let sortValue: [Operations.AppsCustomerReviewsGetToManyRelated.Input.Query.SortPayloadPayload]
       switch sort.lowercased() {
       case "recent": sortValue = [.minusCreatedDate]
       case "oldest": sortValue = [.createdDate]
@@ -139,19 +165,21 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         throw ValidationError("--rating must be between 1 and 5.")
       }
 
-      let resp = try await client.send(
-        Resources.v1.apps.id(app.id).customerReviews.get(
+      let resp = try await client.appsCustomerReviewsGetToManyRelated(
+        path: .init(id: app.id),
+        query: .init(
           filterRating: rating.map { ["\($0)"] },
           filterReviewTerritory: territory.map { [$0.uppercased()] },
-          isExistsPublishedResponse: unanswered ? false : nil,
+          existsPublishedResponse: unanswered ? false : nil,
           sort: sortValue,
           limit: min(max(limit, 1), 200),
           include: [.response]
-        ))
+        )
+      ).ok.body.json
 
       let responsesByID = Dictionary(
-        uniqueKeysWithValues: (resp.included ?? []).compactMap { item -> (String, CustomerReviewResponseV1)? in
-          if case .customerReviewResponseV1(let r) = item { return (r.id, r) }
+        uniqueKeysWithValues: (resp.included ?? []).compactMap { item -> (String, Components.Schemas.CustomerReviewResponseV1)? in
+          if case .customerReviewResponses(let r) = item { return (r.id, r) }
           return nil
         })
 
@@ -207,14 +235,15 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let (review, response) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
+      let entry = ReviewEntry(review: review, response: response)
       if jsonOption.json {
-        try printJSON(ReviewEntry(review: review, response: response))
+        try printJSON(entry)
         return
       }
-      CustomerReviewsCommand.printReview(review, response: response, full: true)
+      CustomerReviewsCommand.printReview(entry, full: true)
     }
   }
 
@@ -242,7 +271,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let (review, existing) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
-      CustomerReviewsCommand.printReview(review, response: existing)
+      CustomerReviewsCommand.printReview(ReviewEntry(review: review, response: existing))
       print()
 
       let replacedBody = existing?.attributes?.responseBody
@@ -308,7 +337,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         return
       }
 
-      CustomerReviewsCommand.printReview(review, response: existing)
+      CustomerReviewsCommand.printReview(ReviewEntry(review: review, response: existing))
       print()
       guard confirm("Delete this response? [y/N] ") else {
         cancelled()

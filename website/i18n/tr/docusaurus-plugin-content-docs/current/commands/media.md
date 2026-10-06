@@ -82,6 +82,7 @@ App Store Connect, iPhone uygulamaları için **`APP_IPHONE_67`** ve iPad uygula
 | `APP_IPHONE_47` | iPhone 4.7" (iPhone SE 3. nesil, 8, 7, 6s) | Evet | Evet |
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1. nesil, 5s, 5c) | Evet | Evet |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s ve öncesi) | Evet | Evet |
+| `APP_IPHONE_DUO` | iPhone Duo ([aşağıya](#iphone-duo) bakın) | Evet | Hayır |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Evet | Evet |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1./2. nesil) | Evet | Evet |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3. nesil, iPad Pro 10.5") | Evet | Evet |
@@ -112,6 +113,12 @@ App Store Connect, iPhone uygulamaları için **`APP_IPHONE_67`** ve iPad uygula
 :::note
 Watch ve iMessage display type'lar yalnızca ekran görüntülerini destekler -- bu klasörlerdeki video dosyaları uyarıyla atlanır. `--replace` flag'i, yenilerini yüklemeden önce eşleşen her setteki tüm mevcut varlıkları siler.
 :::
+
+### iPhone Duo
+
+App Store Connect'te iPhone Duo için bir ekran görüntüsü seti yoktur. ascelerate, `APP_IPHONE_DUO` klasöründeki dosyaları uygulamanın varlık kitaplığına yükler ve dosya sırasıyla sürüm yerelleştirmesine yerleştirir. Kabul edilen boyutlar şunlardır: 2853×2007 veya 2007×2853 (iç ekran, açık konumda), 2034×1398 veya 1398×2034 (dış ekran). Diğer boyutlar, herhangi bir şey yüklenmeden önce reddedilir. `--replace` ile her locale'deki mevcut iPhone Duo ekran görüntüleri önce kaldırılır.
+
+iPhone Duo uygulama önizlemeleri henüz desteklenmez; `media download` ve `media verify` de iPhone Duo ekran görüntülerini kapsamaz. `media prune` bunları hiçbir zaman silmez.
 
 ## app-store-screenshots ile kullanım
 

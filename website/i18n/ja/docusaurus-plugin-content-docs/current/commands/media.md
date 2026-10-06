@@ -82,6 +82,7 @@ App Store Connectでは、iPhoneアプリには **`APP_IPHONE_67`** のスクリ
 | `APP_IPHONE_47` | iPhone 4.7"（iPhone SE 第3世代、8、7、6s） | 対応 | 対応 |
 | `APP_IPHONE_40` | iPhone 4"（iPhone SE 第1世代、5s、5c） | 対応 | 対応 |
 | `APP_IPHONE_35` | iPhone 3.5"（iPhone 4s以前） | 対応 | 対応 |
+| `APP_IPHONE_DUO` | iPhone Duo（[下記](#iphone-duo)参照） | 対応 | 非対応 |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | 対応 | 対応 |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9"（第1/2世代） | 対応 | 対応 |
 | `APP_IPAD_105` | iPad 10.5"（iPad Air 第3世代、iPad Pro 10.5"） | 対応 | 対応 |
@@ -112,6 +113,12 @@ App Store Connectでは、iPhoneアプリには **`APP_IPHONE_67`** のスクリ
 :::note
 WatchとiMessageのディスプレイタイプはスクリーンショットのみ対応しています。これらのフォルダ内の動画ファイルは警告とともにスキップされます。`--replace` フラグは、新しいファイルをアップロードする前にマッチする各セットの既存アセットをすべて削除します。
 :::
+
+### iPhone Duo
+
+App Store Connect には iPhone Duo 用のスクリーンショットセットがありません。ascelerate は `APP_IPHONE_DUO` フォルダ内のファイルをアプリのアセットライブラリにアップロードし、ファイル順にバージョンのローカライズ情報へ配置します。対応サイズは 2853×2007 または 2007×2853（内側ディスプレイ、開いた状態）と、2034×1398 または 1398×2034（外側ディスプレイ）です。それ以外のサイズは、アップロード前に拒否されます。`--replace` を指定すると、各ロケールの既存の iPhone Duo スクリーンショットが先に削除されます。
+
+iPhone Duo のアプリプレビューにはまだ対応していません。また、`media download` と `media verify` は iPhone Duo のスクリーンショットを対象としません。`media prune` がこれらを削除することはありません。
 
 ## app-store-screenshotsとの連携
 

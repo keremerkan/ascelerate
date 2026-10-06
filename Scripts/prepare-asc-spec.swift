@@ -13,6 +13,7 @@
 // - Bracketed parameter names and descending sort values get readable Swift names
 //   (`filter[bundleId]` → `filterBundleId`, `-uploadedDate` → `minusUploadedDate`) through the
 //   config's nameOverrides.
+// - `anyOf` blocks that only restate required properties are dropped (they generate empty types).
 import Foundation
 
 guard CommandLine.arguments.count == 2 else {
@@ -51,7 +52,35 @@ func openEnums(_ value: Any) -> Any {
   return value
 }
 
-components["schemas"] = openEnums(schemas)
+// An `anyOf` whose branches only restate which properties are required (the placement create
+// and ordering requests use it to say "image or video, plus one localization") makes the
+// generator emit one empty variant per branch instead of the object's properties. Drop it.
+var droppedConstraints = 0
+
+func isConstraintOnly(_ branch: Any) -> Bool {
+  guard let branch = branch as? [String: Any], Set(branch.keys).isSubset(of: ["required", "properties", "type"]) else {
+    return false
+  }
+  return (branch["properties"] as? [String: Any] ?? [:]).values.allSatisfy {
+    ($0 as? [String: Any]).map { Set($0.keys).isSubset(of: ["required", "type"]) } ?? false
+  }
+}
+
+func dropConstraintAnyOf(_ value: Any) -> Any {
+  if var object = value as? [String: Any] {
+    if object["properties"] != nil, let branches = object["anyOf"] as? [Any], branches.allSatisfy(isConstraintOnly) {
+      object["anyOf"] = nil
+      droppedConstraints += 1
+    }
+    return object.mapValues(dropConstraintAnyOf)
+  }
+  if let array = value as? [Any] {
+    return array.map(dropConstraintAnyOf)
+  }
+  return value
+}
+
+components["schemas"] = dropConstraintAnyOf(openEnums(schemas))
 spec["components"] = components
 
 // Parameters with an empty enum (e.g. `fields[appKeywords]`: AppKeyword has no attributes) would
@@ -77,7 +106,7 @@ spec["paths"] = dropEmptyEnums(spec["paths"] ?? [:])
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped)")
 
 // Every bracketed parameter name in the spec, e.g. `filter[appStoreVersions.platform]`.
 var bracketed = Set<String>()

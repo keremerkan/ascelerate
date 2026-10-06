@@ -4,8 +4,9 @@ import Foundation
 
 enum ClientFactory {
   /// The ASCKit client (generated from Apple's spec) that migrated commands use.
-  static func makeASCClient() throws -> ASCClient {
-    if !autoConfirm {
+  /// `checkUpdates: false` for commands that also create an asc-swift client, which already checks.
+  static func makeASCClient(checkUpdates: Bool = true) throws -> ASCClient {
+    if checkUpdates && !autoConfirm {
       checkForUpdates()
     }
     let config = try Config.load()

@@ -18,8 +18,14 @@ struct ScreenshotFramer: Sendable {
         printFramingSummary()
     }
 
+    struct Bezel {
+        let image: CGImage
+        /// Size of the transparent screen area (the whole image if none is found).
+        let screen: CGSize
+    }
+
     /// Frame screenshots for a single language. Used by the runner after each language completes.
-    func frameLanguage(_ language: String, bezels: [(device: ScreenshotConfig.Device, image: CGImage)]) {
+    func frameLanguage(_ language: String, bezels: [(device: ScreenshotConfig.Device, images: [Bezel])]) {
         let outputDir = URL(fileURLWithPath: config.outputDirectory)
         let framedDir = resolvedFramedDir()
         let langDir = outputDir.appendingPathComponent(language)
@@ -28,7 +34,7 @@ struct ScreenshotFramer: Sendable {
         guard FileManager.default.fileExists(atPath: langDir.path) else { return }
         try? FileManager.default.createDirectory(at: framedLangDir, withIntermediateDirectories: true)
 
-        for (device, bezelImage) in bezels {
+        for (device, deviceBezels) in bezels {
             let prefix = device.simulator + "-"
             guard let files = try? FileManager.default.contentsOfDirectory(
                 at: langDir, includingPropertiesForKeys: nil
@@ -48,7 +54,8 @@ struct ScreenshotFramer: Sendable {
                         guard let screenshotImage = Self.loadImage(from: file) else {
                             throw ScreenshotError.framingFailed("Failed to load: \(file.lastPathComponent)")
                         }
-                        guard let result = Self.composite(screenshot: screenshotImage, bezel: bezelImage) else {
+                        let bezel = Self.bestBezel(for: screenshotImage, among: deviceBezels)
+                        guard let result = Self.composite(screenshot: screenshotImage, bezel: bezel) else {
                             throw ScreenshotError.framingFailed("Compositing failed: \(file.lastPathComponent)")
                         }
                         try Self.writePNG(result, to: outputURL)
@@ -66,26 +73,33 @@ struct ScreenshotFramer: Sendable {
     }
 
     /// Load bezels for all devices with framing enabled. Prints errors for missing/invalid bezels.
-    func loadBezels() -> [(device: ScreenshotConfig.Device, image: CGImage)] {
+    func loadBezels() -> [(device: ScreenshotConfig.Device, images: [Bezel])] {
         let devices = config.devices.filter { $0.frameDevice == true }
         guard !devices.isEmpty else { return [] }
 
-        var loaded: [(device: ScreenshotConfig.Device, image: CGImage)] = []
+        var loaded: [(device: ScreenshotConfig.Device, images: [Bezel])] = []
         for device in devices {
-            guard let bezelPath = device.deviceBezel else {
+            guard !device.deviceBezels.isEmpty else {
                 print("  [\(device.simulator)] " + red("No deviceBezel path configured, skipping"))
                 continue
             }
-            let resolved = URL(fileURLWithPath: bezelPath).path
-            guard FileManager.default.fileExists(atPath: resolved) else {
-                print("  [\(device.simulator)] " + red("Bezel not found: \(bezelPath)"))
-                continue
+            var images: [Bezel] = []
+            for bezelPath in device.deviceBezels {
+                let resolved = URL(fileURLWithPath: bezelPath).path
+                guard FileManager.default.fileExists(atPath: resolved) else {
+                    print("  [\(device.simulator)] " + red("Bezel not found: \(bezelPath)"))
+                    continue
+                }
+                guard let image = Self.loadImage(from: URL(fileURLWithPath: resolved)) else {
+                    print("  [\(device.simulator)] " + red("Failed to load bezel: \(bezelPath)"))
+                    continue
+                }
+                let screen = Self.findScreenArea(in: image)?.size ?? CGSize(width: image.width, height: image.height)
+                images.append(Bezel(image: image, screen: screen))
             }
-            guard let image = Self.loadImage(from: URL(fileURLWithPath: resolved)) else {
-                print("  [\(device.simulator)] " + red("Failed to load bezel: \(bezelPath)"))
-                continue
+            if !images.isEmpty {
+                loaded.append((device, images))
             }
-            loaded.append((device, image))
         }
 
         if loaded.isEmpty {
@@ -128,6 +142,25 @@ struct ScreenshotFramer: Sendable {
     }
 
     // MARK: - Compositing
+
+    /// The bezel whose screen area is closest to the screenshot's size, e.g. an iPhone Duo's
+    /// folded frame for cover-display shots and its unfolded frame for inner-display shots.
+    /// `composite` turns a portrait bezel for a landscape shot (but not the reverse), so a portrait
+    /// bezel is compared rotated there, losing ties to a native landscape bezel.
+    static func bestBezel(for screenshot: CGImage, among bezels: [Bezel]) -> CGImage {
+        let width = Double(screenshot.width), height = Double(screenshot.height)
+        let shotIsLandscape = width > height
+        func mismatch(_ bezel: Bezel) -> Double {
+            let bezelIsLandscape = bezel.screen.width > bezel.screen.height
+            if bezelIsLandscape && !shotIsLandscape { return .infinity }
+            let rotated = shotIsLandscape && !bezelIsLandscape
+            let (screenWidth, screenHeight) = rotated
+                ? (bezel.screen.height, bezel.screen.width)
+                : (bezel.screen.width, bezel.screen.height)
+            return abs(screenWidth - width) / width + abs(screenHeight - height) / height + (rotated ? 0.001 : 0)
+        }
+        return bezels.min { mismatch($0) < mismatch($1) }!.image
+    }
 
     static func composite(screenshot: CGImage, bezel bezelInput: CGImage) -> CGImage? {
         // Landscape screenshots get a landscape frame: rotate the portrait

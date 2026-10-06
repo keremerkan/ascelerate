@@ -133,6 +133,24 @@ override func setUp() {
 }
 ```
 
+### iPhone Duo
+
+Sur le simulateur iPhone Duo (Xcode 27.1+), `setHinge(.open)` déplie l'appareil et `setHinge(.closed)` le replie. Le helper attend ensuite que le système déplace l'application vers l'écran correspondant, afin que le prochain appel à `screenshot()` capture cet écran. Le simulateur démarre toujours replié.
+
+```swift
+func testScreenshots() {
+    screenshot("01-folded")
+    setHinge(.open)
+    screenshot("02-unfolded")
+}
+```
+
+Déplié, de nombreuses applications adoptent la même disposition que sur iPad, mais `UIDevice.current.userInterfaceIdiom` renvoie toujours `.phone` dans le test runner. Pour adapter le comportement de vos tests, vérifiez plutôt `ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4"`.
+
+:::caution
+Il n'existe pas d'API officielle pour la charnière. Le helper envoie le même événement d'entrée que le curseur de charnière de Device Hub ; une future version de Xcode pourrait donc le rendre inopérant.
+:::
+
 ## Fonctionnement
 
 1. Build unique avec `build-for-testing` (ou ignoré si `testWithoutBuilding: true`)
@@ -178,6 +196,19 @@ devices:
     frameDevice: false
 ```
 
+Un appareil peut déclarer plusieurs contours. Chaque capture d'écran est encadrée avec le contour dont la zone d'écran correspond à sa taille. Ainsi, les captures repliées d'un iPhone Duo reçoivent le contour fermé, et les captures dépliées le contour ouvert :
+
+```yaml
+devices:
+  - simulator: iPhone Duo
+    frameDevice: true
+    deviceBezel:
+      - ./bezels/iPhone Duo - Outer Closed Portrait.png
+      - ./bezels/iPhone Duo - Inner Open Landscape.png
+```
+
+Les captures en paysage utilisent un contour paysage s'il figure dans la liste, sinon le contour portrait pivoté.
+
 ### Sortie
 
 Les captures d'écran encadrées sont enregistrées dans `framedOutputDirectory` (par défaut : `{outputDirectory}/framed`) :
@@ -218,5 +249,5 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 | `disableAssetDownloads` | Désactive `mobileassetd` dans le simulateur pour qu'il cesse de télécharger des gigaoctets d'assets Siri, clavier et ML dans les simulateurs fraîchement effacés. Bloque aussi les assets ML sur l'appareil dont certaines apps ont besoin (ex. reconnaissance de texte) ; laissez-le désactivé si vos captures en dépendent. Appliqué à chaque préparation, car un effacement le réinitialise. |
 | `xcargs` | Arguments supplémentaires passés à `xcodebuild` |
 | `frameDevice` | Activer l'encadrement pour cet appareil (par appareil) |
-| `deviceBezel` | Chemin vers le fichier PNG de contour d'appareil (par appareil) |
+| `deviceBezel` | Chemin vers le fichier PNG de contour d'appareil, ou liste de chemins ; chaque capture utilise le contour adapté à sa taille (par appareil) |
 | `framedOutputDirectory` | Répertoire de sortie pour les captures encadrées (défaut : `{outputDirectory}/framed`) |

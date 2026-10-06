@@ -438,6 +438,8 @@ func testScreenshots() {
 
 Builds once, runs tests concurrently across devices per language. Output: `screenshots/{language}/{device}-{name}.png`. Errors skip and continue with summary table.
 
+iPhone Duo simulator (Xcode 27.1+): `setHinge(.open)` / `setHinge(.closed)` unfold/fold mid-test (boots folded; no official API, so a future Xcode may break it). Unfolded apps often lay out like iPad while the runner's idiom stays `.phone`; detect with `ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4"`. `deviceBezel` accepts a list (e.g. the Duo's Outer Closed + Inner Open bezels); each screenshot uses the bezel whose screen area fits its size.
+
 ### Builds
 
 ```bash

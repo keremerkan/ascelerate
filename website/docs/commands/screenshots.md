@@ -133,6 +133,24 @@ override func setUp() {
 }
 ```
 
+### iPhone Duo
+
+On the iPhone Duo simulator (Xcode 27.1+), `setHinge(.open)` unfolds the device and `setHinge(.closed)` folds it, then waits for the system to move the app to the matching display, so the next `screenshot()` captures that display. The simulator always boots folded.
+
+```swift
+func testScreenshots() {
+    screenshot("01-folded")
+    setHinge(.open)
+    screenshot("02-unfolded")
+}
+```
+
+Unfolded, many apps lay out as they do on iPad, but `UIDevice.current.userInterfaceIdiom` in the test runner still reports `.phone`. To pick the right path in your tests, check `ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4"`.
+
+:::caution
+There is no official API for the hinge. The helper sends the same input event as Device Hub's hinge slider, so a future Xcode release may break it.
+:::
+
 ## How it works
 
 1. Builds once with `build-for-testing` (or skips if `testWithoutBuilding: true`)
@@ -178,6 +196,19 @@ devices:
     frameDevice: false
 ```
 
+A device can list several bezels. Each screenshot is framed with the bezel whose screen area matches its size, so an iPhone Duo's folded screenshots get the closed frame and its unfolded ones get the open frame:
+
+```yaml
+devices:
+  - simulator: iPhone Duo
+    frameDevice: true
+    deviceBezel:
+      - ./bezels/iPhone Duo - Outer Closed Portrait.png
+      - ./bezels/iPhone Duo - Inner Open Landscape.png
+```
+
+Landscape screenshots use a landscape bezel if one is listed, otherwise the portrait bezel rotated.
+
 ### Output
 
 Framed screenshots are saved to `framedOutputDirectory` (defaults to `{outputDirectory}/framed`):
@@ -218,5 +249,5 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `disableAssetDownloads` | Disable the simulator's `mobileassetd` so it stops downloading gigabytes of Siri, keyboard, and ML assets into freshly erased simulators. Also blocks on-device ML assets some apps need (e.g. text recognition), so leave it off if your screenshots depend on those. Applied on every prep, since an erase resets it. |
 | `xcargs` | Extra arguments passed to `xcodebuild` |
 | `frameDevice` | Enable device bezel framing for this device (per-device) |
-| `deviceBezel` | Path to the device bezel PNG file (per-device) |
+| `deviceBezel` | Path to the device bezel PNG file, or a list of paths; each screenshot uses the bezel that fits its size (per-device) |
 | `framedOutputDirectory` | Output directory for framed screenshots (default: `{outputDirectory}/framed`) |

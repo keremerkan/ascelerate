@@ -553,6 +553,8 @@ func testScreenshots() {
 }
 ```
 
+On the iPhone Duo simulator (Xcode 27.1+), `setHinge(.open)` / `setHinge(.closed)` unfold and fold the device mid-test (it always boots folded). `deviceBezel` also takes a list of bezels; each screenshot is framed with the one whose screen fits its size, so folded and unfolded shots each get the right frame.
+
 Configure via `ascelerate/screenshot.yml`:
 
 ```yaml

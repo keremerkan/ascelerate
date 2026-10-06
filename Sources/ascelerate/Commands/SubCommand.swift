@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 extension SubscriptionLocalization {
@@ -38,6 +39,13 @@ struct SubCommand: AsyncParsableCommand {
     let subscriptions: [Subscription]
   }
 
+  /// `GroupInfo` for ASCKit-migrated commands.
+  struct ASCGroupInfo: Sendable {
+    let id: String
+    let name: String
+    let subscriptions: [Components.Schemas.Subscription]
+  }
+
   /// JSON shape for a subscription, shared by `sub groups` and `sub list`.
   struct SubEntry: Encodable {
     struct GroupRef: Encodable {
@@ -64,6 +72,70 @@ struct SubCommand: AsyncParsableCommand {
       familySharable = a?.isFamilySharable
       self.group = group.map { GroupRef(id: $0.id, name: $0.name) }
     }
+
+    init(_ sub: Components.Schemas.Subscription, group: ASCGroupInfo? = nil) {
+      let a = sub.attributes
+      id = sub.id
+      productID = a?.productId
+      name = a?.name
+      period = a?.subscriptionPeriod
+      state = a?.state
+      groupLevel = a?.groupLevel
+      familySharable = a?.familySharable
+      self.group = group.map { GroupRef(id: $0.id, name: $0.name) }
+    }
+  }
+
+  static func fetchGroups(appID: String, client: ASCClient) async throws -> [ASCGroupInfo] {
+    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.appsSubscriptionGroupsGetToManyRelated(
+        path: .init(id: appID), query: .init(include: [.subscriptions], limitSubscriptions: 50)
+      ).ok.body.json
+    }
+    var result: [ASCGroupInfo] = []
+    for page in pages {
+      var subsByID: [String: Components.Schemas.Subscription] = [:]
+      for item in page.included ?? [] {
+        if case .subscriptions(let sub) = item {
+          subsByID[sub.id] = sub
+        }
+      }
+      for group in page.data {
+        let name = group.attributes?.referenceName ?? "—"
+        let subIDs = group.relationships?.subscriptions?.data?.map(\.id) ?? []
+        var subs = subIDs.compactMap { subsByID[$0] }
+        if subIDs.count >= 50 {
+          // The included relationship is capped at limitSubscriptions — a group at
+          // the cap may have more; fetch the full list via the sub-resource endpoint.
+          subs = try await ASCPaging.allPages(next: { $0.links.next }) {
+            try await client.subscriptionGroupsSubscriptionsGetToManyRelated(
+              path: .init(id: group.id), query: .init(limit: 50)
+            ).ok.body.json
+          }.flatMap(\.data)
+        }
+        result.append(ASCGroupInfo(id: group.id, name: name, subscriptions: subs))
+      }
+    }
+    return result
+  }
+
+  static func findSubscription(
+    productID: String, appID: String, client: ASCClient
+  ) async throws -> (subscription: Components.Schemas.Subscription, group: ASCGroupInfo) {
+    let groups = try await fetchGroups(appID: appID, client: client)
+    for group in groups {
+      if let match = group.subscriptions.first(where: { $0.attributes?.productId == productID }) {
+        return (match, group)
+      }
+    }
+    throw ValidationError("No subscription found with product ID '\(productID)'.")
+  }
+
+  static func subscriptionHasPrices(subscriptionID: String, client: ASCClient) async throws -> Bool {
+    let response = try await client.subscriptionsPricesGetToManyRelated(
+      path: .init(id: subscriptionID), query: .init(limit: 1)
+    ).ok.body.json
+    return !response.data.isEmpty
   }
 
   static func fetchGroups(
@@ -654,7 +726,7 @@ struct SubCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
 
@@ -719,7 +791,7 @@ struct SubCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
 
@@ -793,27 +865,25 @@ struct SubCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let (sub, group) = try await SubCommand.findSubscription(
         productID: productID, appID: app.id, client: client
       )
 
       // Fetch full details with localizations
-      let detailResponse = try await client.send(
-        Resources.v1.subscriptions.id(sub.id).get(
-          include: [.subscriptionLocalizations],
-          limitSubscriptionLocalizations: 50
-        )
-      )
+      let detailResponse = try await client.subscriptionsGetInstance(
+        path: .init(id: sub.id),
+        query: .init(include: [.subscriptionLocalizations], limitSubscriptionLocalizations: 50)
+      ).ok.body.json
       let data = detailResponse.data
 
       // Extract localizations from included items
       let locIDs = Set(
         data.relationships?.subscriptionLocalizations?.data?.map(\.id) ?? []
       )
-      let localizations: [SubscriptionLocalization] = (detailResponse.included ?? []).compactMap {
-        if case .subscriptionLocalization(let loc) = $0,
+      let localizations: [Components.Schemas.SubscriptionLocalization] = (detailResponse.included ?? []).compactMap {
+        if case .subscriptionLocalizations(let loc) = $0,
            locIDs.isEmpty || locIDs.contains(loc.id) {
           return loc
         }
@@ -826,12 +896,12 @@ struct SubCommand: AsyncParsableCommand {
       let attrs = data.attributes
       let detail = Detail(
         id: data.id,
-        productID: attrs?.productID,
+        productID: attrs?.productId,
         name: attrs?.name,
-        period: attrs?.subscriptionPeriod?.rawValue,
-        state: attrs?.state?.rawValue,
+        period: attrs?.subscriptionPeriod,
+        state: attrs?.state,
         groupLevel: attrs?.groupLevel,
-        familySharable: attrs?.isFamilySharable,
+        familySharable: attrs?.familySharable,
         reviewNote: attrs?.reviewNote,
         group: SubEntry.GroupRef(id: group.id, name: group.name),
         localizations: localizations
@@ -1726,29 +1796,26 @@ struct SubCommand: AsyncParsableCommand {
 
       func run() async throws {
         jsonOption.activate()
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        var prices: [SubscriptionPrice] = []
-        var pricePoints: [String: SubscriptionPricePoint] = [:]
+        let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.subscriptionsPricesGetToManyRelated(
+            path: .init(id: sub.id), query: .init(limit: 200, include: [.territory, .subscriptionPricePoint])
+          ).ok.body.json
+        }
+        let prices = pages.flatMap(\.data)
+        var pricePoints: [String: Components.Schemas.SubscriptionPricePoint] = [:]
         var territoryCurrencies: [String: String] = [:]
-        for try await page in client.pages(
-          Resources.v1.subscriptions.id(sub.id).prices.get(
-            limit: 200,
-            include: [.territory, .subscriptionPricePoint]
-          )
-        ) {
-          prices.append(contentsOf: page.data)
-          for item in page.included ?? [] {
-            switch item {
-            case .subscriptionPricePoint(let point):
-              pricePoints[point.id] = point
-            case .territory(let t):
-              if let cur = t.attributes?.currency {
-                territoryCurrencies[t.id] = cur
-              }
+        for item in pages.flatMap({ $0.included ?? [] }) {
+          switch item {
+          case .subscriptionPricePoints(let point):
+            pricePoints[point.id] = point
+          case .territories(let t):
+            if let cur = t.attributes?.currency {
+              territoryCurrencies[t.id] = cur
             }
           }
         }
@@ -1765,7 +1832,7 @@ struct SubCommand: AsyncParsableCommand {
               price: pricePoints[pointID]?.attributes?.customerPrice,
               currency: territoryID.flatMap { territoryCurrencies[$0] },
               startDate: price.attributes?.startDate,
-              preserved: price.attributes?.isPreserved
+              preserved: price.attributes?.preserved
             )
           }
         )

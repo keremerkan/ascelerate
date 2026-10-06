@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct TestFlightCommand: AsyncParsableCommand {
@@ -17,19 +18,27 @@ struct TestFlightCommand: AsyncParsableCommand {
 
   // MARK: - Shared helpers
 
-  /// A build paired with its pre-release train description (e.g. "iOS 5.3").
-  struct ResolvedBuild {
+  /// A build's pre-release train description (e.g. "iOS 5.3") and label (e.g. "iOS 5.3 (42)").
+  protocol BuildTrainDescribing {
+    var platform: String? { get }  // raw API value, e.g. "IOS"
+    var version: String? { get }   // train version, e.g. "5.0"
+    var buildNumber: String? { get }
+  }
+
+  /// A build paired with its pre-release train.
+  struct ResolvedBuild: BuildTrainDescribing {
     let build: Build
-    let platform: String?  // raw API value, e.g. "IOS"
-    let version: String?   // train version, e.g. "5.0"
+    let platform: String?
+    let version: String?
+    var buildNumber: String? { build.attributes?.version }
+  }
 
-    var train: String {
-      "\(platform.map { formatState($0) } ?? "?") \(version ?? "?")"
-    }
-
-    var label: String {
-      "\(train) (\(build.attributes?.version ?? "?"))"
-    }
+  /// `ResolvedBuild` for ASCKit-migrated commands.
+  struct ASCResolvedBuild: BuildTrainDescribing {
+    let build: Components.Schemas.Build
+    let platform: String?
+    let version: String?
+    var buildNumber: String? { build.attributes?.version }
   }
 
   /// Resolves a beta group by name (case-insensitive), or prompts with a picker when omitted.
@@ -114,6 +123,56 @@ struct TestFlightCommand: AsyncParsableCommand {
     return resolved(builds[0])
   }
 
+  /// Resolves a build by number, or the latest non-expired build when omitted (ASCKit).
+  static func findBuild(
+    appID: String, buildVersion: String?, platform: Platform?, client: ASCClient
+  ) async throws -> ASCResolvedBuild {
+    let response = try await client.buildsGetCollection(query: .init(
+      filterVersion: buildVersion.map { [$0] },
+      // Only skip expired builds when defaulting to the latest — an explicit
+      // build number should still resolve after expiry (e.g. for status).
+      filterExpired: buildVersion == nil ? ["false"] : nil,
+      filterPreReleaseVersionPlatform: platformFilter(platform),
+      filterApp: [appID],
+      sort: [.minusUploadedDate],
+      limit: 10,
+      include: [.preReleaseVersion]
+    )).ok.body.json
+
+    var trains: [String: (platform: String?, version: String?)] = [:]
+    for item in response.included ?? [] {
+      if case .preReleaseVersions(let v) = item {
+        trains[v.id] = (v.attributes?.platform, v.attributes?.version)
+      }
+    }
+    func resolved(_ build: Components.Schemas.Build) -> ASCResolvedBuild {
+      let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] }
+      return ASCResolvedBuild(build: build, platform: train?.platform, version: train?.version)
+    }
+
+    let builds = response.data
+    guard !builds.isEmpty else {
+      if let buildVersion {
+        throw ValidationError("No build '\(buildVersion)' found for this app.")
+      }
+      throw ValidationError("No builds found for this app. Upload a build first.")
+    }
+
+    // An explicit build number can match one build per platform.
+    if buildVersion != nil, builds.count > 1 {
+      let pick = try promptSelection(
+        "Multiple builds numbered \(buildVersion ?? "?") found", items: builds,
+        display: { b in
+          let r = resolved(b)
+          let uploaded = b.attributes?.uploadedDate.map { formatDate($0) } ?? "?"
+          return "\(r.label) — uploaded \(uploaded)"
+        },
+        nonInteractiveHint: "Pass --platform to disambiguate.")
+      return resolved(pick)
+    }
+    return resolved(builds[0])
+  }
+
   /// Shared `--build` / `--platform` options for build-scoped TestFlight commands.
   struct BuildOptions: ParsableArguments {
     @Option(name: .long, help: "Build number. Defaults to the latest non-expired build.")
@@ -122,6 +181,11 @@ struct TestFlightCommand: AsyncParsableCommand {
     @OptionGroup var platformOption: PlatformOption
 
     func resolve(appID: String, client: AppStoreConnectClient) async throws -> ResolvedBuild {
+      try await TestFlightCommand.findBuild(
+        appID: appID, buildVersion: build, platform: try platformOption.parsed(), client: client)
+    }
+
+    func resolve(appID: String, client: ASCClient) async throws -> ASCResolvedBuild {
       try await TestFlightCommand.findBuild(
         appID: appID, buildVersion: build, platform: try platformOption.parsed(), client: client)
     }
@@ -1164,25 +1228,24 @@ struct TestFlightCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let response = try await client.send(
-        Resources.v1.builds.get(
-          filterPreReleaseVersionPlatform: platformFilter(try platformOption.parsed()),
-          filterApp: [app.id],
-          sort: [.minusUploadedDate],
-          limit: min(limit, 200),
-          include: [.preReleaseVersion, .buildBetaDetail]
-        ))
+      let response = try await client.buildsGetCollection(query: .init(
+        filterPreReleaseVersionPlatform: platformFilter(try platformOption.parsed()),
+        filterApp: [app.id],
+        sort: [.minusUploadedDate],
+        limit: min(limit, 200),
+        include: [.preReleaseVersion, .buildBetaDetail]
+      )).ok.body.json
 
       var trains: [String: (platform: String?, version: String?)] = [:]
-      var details: [String: BuildBetaDetail] = [:]
+      var details: [String: Components.Schemas.BuildBetaDetail] = [:]
       for item in response.included ?? [] {
         switch item {
-          case .prereleaseVersion(let v):
-            trains[v.id] = (v.attributes?.platform?.rawValue, v.attributes?.version)
-          case .buildBetaDetail(let d):
+          case .preReleaseVersions(let v):
+            trains[v.id] = (v.attributes?.platform, v.attributes?.version)
+          case .buildBetaDetails(let d):
             details[d.id] = d
           default:
             break
@@ -1200,10 +1263,10 @@ struct TestFlightCommand: AsyncParsableCommand {
           platform: train?.platform,
           uploadedDate: a?.uploadedDate,
           expirationDate: a?.expirationDate,
-          isExpired: a?.isExpired,
-          processingState: a?.processingState?.rawValue,
-          internalBuildState: detail?.attributes?.internalBuildState?.rawValue,
-          externalBuildState: detail?.attributes?.externalBuildState?.rawValue
+          isExpired: a?.expired,
+          processingState: a?.processingState,
+          internalBuildState: detail?.attributes?.internalBuildState,
+          externalBuildState: detail?.attributes?.externalBuildState
         )
       }
 
@@ -1734,17 +1797,17 @@ struct TestFlightCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let resolved = try await buildOptions.resolve(appID: app.id, client: client)
       let a = resolved.build.attributes
 
-      let detail = try await client.send(
-        Resources.v1.buildBetaDetails.get(filterBuild: [resolved.build.id])
-      ).data.first
-      let submission = try await client.send(
-        Resources.v1.betaAppReviewSubmissions.get(filterBuild: [resolved.build.id])
-      ).data.first
+      let detail = try await client.buildBetaDetailsGetCollection(
+        query: .init(filterBuild: [resolved.build.id])
+      ).ok.body.json.data.first
+      let submission = try await client.betaAppReviewSubmissionsGetCollection(
+        query: .init(filterBuild: [resolved.build.id])
+      ).ok.body.json.data.first
 
       let d = detail?.attributes
       let status = Detail(
@@ -1754,12 +1817,12 @@ struct TestFlightCommand: AsyncParsableCommand {
         platform: resolved.platform,
         uploadedDate: a?.uploadedDate,
         expirationDate: a?.expirationDate,
-        isExpired: a?.isExpired,
-        processingState: a?.processingState?.rawValue,
-        internalBuildState: d?.internalBuildState?.rawValue,
-        externalBuildState: d?.externalBuildState?.rawValue,
-        autoNotifyEnabled: d?.isAutoNotifyEnabled,
-        betaReviewState: submission?.attributes?.betaReviewState?.rawValue
+        isExpired: a?.expired,
+        processingState: a?.processingState,
+        internalBuildState: d?.internalBuildState,
+        externalBuildState: d?.externalBuildState,
+        autoNotifyEnabled: d?.autoNotifyEnabled,
+        betaReviewState: submission?.attributes?.betaReviewState
       )
 
       if jsonOption.json {
@@ -2749,5 +2812,15 @@ struct TestFlightCommand: AsyncParsableCommand {
 private extension String {
   func truncated(_ maxLength: Int) -> String {
     count > maxLength ? "\(prefix(maxLength))…" : self
+  }
+}
+
+extension TestFlightCommand.BuildTrainDescribing {
+  var train: String {
+    "\(platform.map { formatState($0) } ?? "?") \(version ?? "?")"
+  }
+
+  var label: String {
+    "\(train) (\(buildNumber ?? "?"))"
   }
 }

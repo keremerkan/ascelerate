@@ -1,5 +1,5 @@
-import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct RateLimitCommand: AsyncParsableCommand {
@@ -18,35 +18,12 @@ struct RateLimitCommand: AsyncParsableCommand {
 
   func run() async throws {
     jsonOption.activate()
-    let config = try Config.load()
-    let keyPath = expandPath(config.privateKeyPath)
-
-    guard FileManager.default.fileExists(atPath: keyPath) else {
-      throw ConfigError.missingPrivateKey(keyPath)
+    let client = try ClientFactory.makeASCClient()
+    let rateLimitHeader = try await ASCRateLimit.header {
+      try await client.appsGetCollection(query: .init(limit: 1)).ok
     }
 
-    let privateKey = try JWT.PrivateKey(contentsOf: URL(fileURLWithPath: keyPath))
-    var jwt = JWT(
-      keyID: config.keyId,
-      issuerID: config.issuerId,
-      expiryDuration: 20 * 60,
-      privateKey: privateKey
-    )
-    let token = try jwt.token()
-
-    var request = URLRequest(url: URL(string: "https://api.appstoreconnect.apple.com/v1/apps?limit=1")!)
-    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-    let (_, response) = try await URLSession.shared.data(for: request)
-    guard let http = response as? HTTPURLResponse else {
-      throw ValidationError("Unexpected response.")
-    }
-
-    guard http.statusCode >= 200, http.statusCode < 300 else {
-      throw ValidationError("API returned HTTP \(http.statusCode).")
-    }
-
-    guard let header = http.value(forHTTPHeaderField: "X-Rate-Limit") else {
+    guard let header = rateLimitHeader else {
       if jsonOption.json { throw ValidationError("No rate limit header in response.") }
       print("No rate limit header in response.")
       return

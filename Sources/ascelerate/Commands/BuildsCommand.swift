@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct BuildsCommand: AsyncParsableCommand {
@@ -37,7 +38,7 @@ struct BuildsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       var filterApp: [String]?
       if let bundleID {
@@ -45,21 +46,23 @@ struct BuildsCommand: AsyncParsableCommand {
         filterApp = [app.id]
       }
 
+      let platform = try platformOption.parsed()
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.buildsGetCollection(query: .init(
+          filterPreReleaseVersionVersion: version.map { [$0] },
+          filterPreReleaseVersionPlatform: platformFilter(platform),
+          filterApp: filterApp,
+          sort: [.minusUploadedDate],
+          include: [.preReleaseVersion]
+        )).ok.body.json
+      }
+
       var entries: [Entry] = []
-
-      let request = Resources.v1.builds.get(
-        filterPreReleaseVersionVersion: version.map { [$0] },
-        filterPreReleaseVersionPlatform: platformFilter(try platformOption.parsed()),
-        filterApp: filterApp,
-        sort: [.minusUploadedDate],
-        include: [.preReleaseVersion]
-      )
-
-      for try await page in client.pages(request) {
+      for page in pages {
         // Index included pre-release versions
-        var prereleaseVersions: [String: PrereleaseVersion] = [:]
+        var prereleaseVersions: [String: Components.Schemas.PrereleaseVersion] = [:]
         for item in page.included ?? [] {
-          if case .prereleaseVersion(let v) = item {
+          if case .preReleaseVersions(let v) = item {
             prereleaseVersions[v.id] = v
           }
         }
@@ -71,8 +74,8 @@ struct BuildsCommand: AsyncParsableCommand {
             id: build.id,
             buildNumber: build.attributes?.version,
             version: train?.attributes?.version,
-            platform: train?.attributes?.platform?.rawValue,
-            processingState: build.attributes?.processingState?.rawValue,
+            platform: train?.attributes?.platform,
+            processingState: build.attributes?.processingState,
             uploadedDate: build.attributes?.uploadedDate
           ))
         }

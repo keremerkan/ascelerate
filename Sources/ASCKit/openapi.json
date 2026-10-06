@@ -86523,9 +86523,6 @@
             "name" : "fields[appKeywords]",
             "schema" : {
               "items" : {
-                "enum" : [
-
-                ],
                 "type" : "string"
               },
               "type" : "array"
@@ -87875,9 +87872,6 @@
             "name" : "fields[appKeywords]",
             "schema" : {
               "items" : {
-                "enum" : [
-
-                ],
                 "type" : "string"
               },
               "type" : "array"
@@ -113651,9 +113645,6 @@
             "name" : "fields[appKeywords]",
             "schema" : {
               "items" : {
-                "enum" : [
-
-                ],
                 "type" : "string"
               },
               "type" : "array"
@@ -121986,9 +121977,6 @@
             "name" : "fields[appKeywords]",
             "schema" : {
               "items" : {
-                "enum" : [
-
-                ],
                 "type" : "string"
               },
               "type" : "array"
@@ -124533,9 +124521,6 @@
             "name" : "fields[appKeywords]",
             "schema" : {
               "items" : {
-                "enum" : [
-
-                ],
                 "type" : "string"
               },
               "type" : "array"

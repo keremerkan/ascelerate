@@ -4,7 +4,8 @@
 #
 #   Scripts/compare-with-release.sh "apps list --json" "apps info qrafter --json" ...
 #
-# Timestamps are masked: asc-swift drops the UTC offset Apple sends (2026-09-02T12:36:17-07:00
+# Timestamps are masked and runs of spaces collapsed (a corrected date can change a table's
+# column widths): asc-swift drops the UTC offset Apple sends (2026-09-02T12:36:17-07:00
 # decodes as 12:36Z), so the released binary prints every date 7-8 hours early; ASCKit is right.
 # Only pass read-only commands: both binaries run each command against App Store Connect.
 set -u
@@ -16,7 +17,7 @@ OUT=$(mktemp -d)
 mask() {
   sed -E -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z/<date>/g' \
     -e 's/[0-9]{1,2} [A-Z][a-z]{2} [0-9]{4} at [0-9]{2}:[0-9]{2}/<date>/g' \
-    -e 's/ +$//'
+    -e 's/ +$//' -e 's/  +/  /g'
 }
 
 failed=0

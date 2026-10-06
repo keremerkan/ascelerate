@@ -60,6 +60,14 @@ public struct ASCError: Error, Sendable {
     if let error = error as? ASCError { return error }
     return (error as? ClientError)?.underlyingError as? ASCError
   }
+
+  /// Whether `error` is Apple saying a to-one related object doesn't exist, which some
+  /// endpoints answer with HTTP 404 and others with `{"data": null}` (failing to decode the
+  /// spec's non-optional `data`).
+  public static func isMissingRelated(_ error: Error) -> Bool {
+    if from(error)?.statusCode == 404 { return true }
+    return (error as? ClientError)?.underlyingError is DecodingError
+  }
 }
 
 struct ErrorMiddleware: ClientMiddleware {
@@ -72,6 +80,7 @@ struct ErrorMiddleware: ClientMiddleware {
     next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
     let (response, responseBody) = try await next(request, body, baseURL)
+    ASCRateLimit.recorder?.header = rateLimitHeader.flatMap { response.headerFields[$0] }
     guard response.status.code >= 400 else { return (response, responseBody) }
     var data = Data()
     if let responseBody {
@@ -82,8 +91,10 @@ struct ErrorMiddleware: ClientMiddleware {
     throw ASCError(
       statusCode: response.status.code,
       errors: document?.errors ?? [],
-      rateLimit: HTTPField.Name("X-Rate-Limit").flatMap { response.headerFields[$0] }.flatMap(parseRateLimit))
+      rateLimit: rateLimitHeader.flatMap { response.headerFields[$0] }.flatMap(parseRateLimit))
   }
+
+  private let rateLimitHeader = HTTPField.Name("X-Rate-Limit")
 
   /// `user-hour-lim:3600;user-hour-rem:3599;`
   private func parseRateLimit(_ header: String) -> (limit: Int, remaining: Int)? {
@@ -94,6 +105,31 @@ struct ErrorMiddleware: ClientMiddleware {
     }
     guard let limit = values["user-hour-lim"], let remaining = values["user-hour-rem"] else { return nil }
     return (limit, remaining)
+  }
+}
+
+// MARK: - Rate limit
+
+/// The `X-Rate-Limit` header (`user-hour-lim:3600;user-hour-rem:3599;`), which the spec doesn't
+/// document, so generated responses don't expose it.
+public enum ASCRateLimit {
+  final class Recorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: String?
+
+    var header: String? {
+      get { lock.withLock { value } }
+      set { lock.withLock { value = newValue } }
+    }
+  }
+
+  @TaskLocal static var recorder: Recorder?
+
+  /// Runs `operation` and returns the `X-Rate-Limit` header of its last response.
+  public static func header<T>(of operation: () async throws -> T) async throws -> String? {
+    let recorder = Recorder()
+    _ = try await $recorder.withValue(recorder) { try await operation() }
+    return recorder.header
   }
 }
 

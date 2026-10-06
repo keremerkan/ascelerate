@@ -118,6 +118,8 @@ ascelerate apps media verify <app> media/                     # Retry stuck item
 ascelerate apps media prune <app> media/                      # Delete server sets with no matching local folder
 ```
 
+iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media download`/`verify` skip them; `media prune` never deletes them.
+
 #### Folder structure
 
 ```

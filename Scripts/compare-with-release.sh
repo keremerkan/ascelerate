@@ -2,7 +2,7 @@
 # Runs read-only commands with the released ascelerate (asc-swift) and the debug build (ASCKit)
 # and diffs their output, to verify a command migrated to ASCKit behaves the same.
 #
-#   Scripts/compare-with-release.sh "apps list --json" "apps info qrafter --json" ...
+#   Scripts/compare-with-release.sh "apps list --json" "apps info myapp --json" ...
 #
 # Timestamps are masked and runs of spaces collapsed (a corrected date can change a table's
 # column widths): asc-swift drops the UTC offset Apple sends (2026-09-02T12:36:17-07:00

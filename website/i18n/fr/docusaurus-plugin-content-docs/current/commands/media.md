@@ -82,6 +82,7 @@ App Store Connect exige des captures d'écran **`APP_IPHONE_67`** pour les appli
 | `APP_IPHONE_47` | iPhone 4.7" (iPhone SE 3e gén., 8, 7, 6s) | Oui | Oui |
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1re gén., 5s, 5c) | Oui | Oui |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s et antérieurs) | Oui | Oui |
+| `APP_IPHONE_DUO` | iPhone Duo (voir [ci-dessous](#iphone-duo)) | Oui | Non |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Oui | Oui |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1re/2e gén.) | Oui | Oui |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3e gén., iPad Pro 10.5") | Oui | Oui |
@@ -112,6 +113,12 @@ App Store Connect exige des captures d'écran **`APP_IPHONE_67`** pour les appli
 :::note
 Les types d'affichage Watch et iMessage ne prennent en charge que les captures d'écran -- les fichiers vidéo dans ces dossiers sont ignorés avec un avertissement. L'option `--replace` supprime tous les éléments existants dans chaque ensemble correspondant avant le téléversement.
 :::
+
+### iPhone Duo
+
+App Store Connect ne propose pas d'ensemble de captures d'écran pour l'iPhone Duo. ascelerate téléverse les fichiers d'un dossier `APP_IPHONE_DUO` dans la bibliothèque de ressources de l'application, puis les place dans la localisation de la version, dans l'ordre des fichiers. Les tailles acceptées sont 2853×2007 ou 2007×2853 (écran intérieur, déplié) et 2034×1398 ou 1398×2034 (écran extérieur) ; les autres tailles sont refusées avant tout téléversement. Avec `--replace`, les captures iPhone Duo existantes de chaque locale sont d'abord supprimées.
+
+Les aperçus d'application pour l'iPhone Duo ne sont pas encore pris en charge, et `media download` et `media verify` n'incluent pas les captures iPhone Duo. `media prune` ne les supprime jamais.
 
 ## Utilisation avec app-store-screenshots
 

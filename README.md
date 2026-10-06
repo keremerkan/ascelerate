@@ -442,6 +442,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 | `APP_IPHONE_47` | iPhone 4.7" (iPhone SE 3rd gen, 8, 7, 6s) | Yes | Yes |
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1st gen, 5s, 5c) | Yes | Yes |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s and earlier) | Yes | Yes |
+| `APP_IPHONE_DUO` | iPhone Duo (uploaded through the asset library, see below) | Yes | No |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Yes | Yes |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1st/2nd gen) | Yes | Yes |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3rd gen, iPad Pro 10.5") | Yes | Yes |
@@ -470,6 +471,8 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 </details>
 
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
+>
+> App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. `media download` and `media verify` don't include iPhone Duo screenshots yet, and `media prune` never deletes them.
 >
 > `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
 

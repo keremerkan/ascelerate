@@ -16,6 +16,14 @@ filter:
     - /v1/appStoreVersions/{id}/appStoreVersionLocalizations
     - /v1/appStoreVersionLocalizations/{id}/appScreenshotSets
     - /v1/appScreenshotSets/{id}/appScreenshots
+    - /v1/appStoreVersionLocalizations/{id}/appPreviewSets
+    - /v1/appPreviewSets/{id}/appPreviews
+    - /v1/apps/{id}/assetLibrary
+    - /v1/appAssetLibraryImages
+    - /v1/appAssetLibraryImages/{id}
+    - /v1/appAssetLibraryPlacements
+    - /v1/appAssetLibraryPlacements/{id}
+    - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/builds
     - /v1/apps/{id}/customerReviews
     - /v1/customerReviews/{id}

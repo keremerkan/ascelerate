@@ -82,6 +82,7 @@ App Store Connect erfordert **`APP_IPHONE_67`**-Screenshots für iPhone-Apps und
 | `APP_IPHONE_47` | iPhone 4.7" (iPhone SE 3. Gen., 8, 7, 6s) | Ja | Ja |
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1. Gen., 5s, 5c) | Ja | Ja |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s und älter) | Ja | Ja |
+| `APP_IPHONE_DUO` | iPhone Duo (siehe [unten](#iphone-duo)) | Ja | Nein |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Ja | Ja |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1./2. Gen.) | Ja | Ja |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3. Gen., iPad Pro 10.5") | Ja | Ja |
@@ -112,6 +113,12 @@ App Store Connect erfordert **`APP_IPHONE_67`**-Screenshots für iPhone-Apps und
 :::note
 Watch- und iMessage-Anzeigetypen unterstützen nur Screenshots — Videodateien in diesen Ordnern werden mit einer Warnung übersprungen. Das `--replace`-Flag löscht alle bestehenden Assets in jedem passenden Set, bevor neue hochgeladen werden.
 :::
+
+### iPhone Duo
+
+App Store Connect bietet für das iPhone Duo kein Screenshot-Set. ascelerate lädt die Dateien eines `APP_IPHONE_DUO`-Ordners in die Asset-Bibliothek der App hoch und ordnet sie in der Reihenfolge der Dateinamen der Versionslokalisierung zu. Zulässig sind 2853×2007 oder 2007×2853 (inneres Display, aufgeklappt) sowie 2034×1398 oder 1398×2034 (äußeres Display); andere Größen werden abgelehnt, bevor etwas hochgeladen wird. Mit `--replace` werden die vorhandenen iPhone-Duo-Screenshots jeder Locale zuerst entfernt.
+
+App-Vorschauen für das iPhone Duo werden noch nicht unterstützt, und `media download` sowie `media verify` berücksichtigen iPhone-Duo-Screenshots nicht. `media prune` löscht sie nie.
 
 ## Verwendung mit app-store-screenshots
 

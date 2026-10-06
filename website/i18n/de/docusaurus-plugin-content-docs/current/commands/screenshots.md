@@ -133,6 +133,24 @@ override func setUp() {
 }
 ```
 
+### iPhone Duo
+
+Im iPhone-Duo-Simulator (Xcode 27.1+) klappt `setHinge(.open)` das Gerät auf und `setHinge(.closed)` zu. Anschließend wartet der Helper, bis das System die App auf das passende Display verschoben hat, sodass der nächste `screenshot()`-Aufruf dieses Display erfasst. Der Simulator startet immer zugeklappt.
+
+```swift
+func testScreenshots() {
+    screenshot("01-folded")
+    setHinge(.open)
+    screenshot("02-unfolded")
+}
+```
+
+Aufgeklappt verwenden viele Apps dasselbe Layout wie auf dem iPad, doch `UIDevice.current.userInterfaceIdiom` meldet im Test-Runner weiterhin `.phone`. Um in Ihren Tests den passenden Codepfad zu wählen, prüfen Sie stattdessen `ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4"`.
+
+:::caution
+Für das Scharnier gibt es keine offizielle API. Der Helper sendet dasselbe Eingabeereignis wie der Scharnier-Schieberegler in Device Hub, daher kann eine künftige Xcode-Version diese Funktion unbrauchbar machen.
+:::
+
 ## Funktionsweise
 
 1. Baut einmal mit `build-for-testing` (oder überspringt, wenn `testWithoutBuilding: true`)
@@ -178,6 +196,19 @@ devices:
     frameDevice: false
 ```
 
+Ein Gerät kann mehrere Geräterahmen auflisten. Jeder Screenshot erhält den Rahmen, dessen Bildschirmbereich zu seiner Größe passt. So bekommen die zugeklappten Screenshots eines iPhone Duo den geschlossenen Rahmen und die aufgeklappten den geöffneten:
+
+```yaml
+devices:
+  - simulator: iPhone Duo
+    frameDevice: true
+    deviceBezel:
+      - ./bezels/iPhone Duo - Outer Closed Portrait.png
+      - ./bezels/iPhone Duo - Inner Open Landscape.png
+```
+
+Querformat-Screenshots verwenden einen Querformat-Rahmen, sofern einer aufgeführt ist, andernfalls den gedrehten Hochformat-Rahmen.
+
 ### Ausgabe
 
 Gerahmte Screenshots werden im `framedOutputDirectory` gespeichert (Standard: `{outputDirectory}/framed`):
@@ -218,5 +249,5 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 | `disableAssetDownloads` | Deaktiviert `mobileassetd` im Simulator, damit er keine Gigabytes an Siri-, Tastatur- und ML-Assets in frisch gelöschte Simulatoren lädt. Blockiert auch On-Device-ML-Assets, die manche Apps brauchen (z. B. Texterkennung); lassen Sie es daher ausgeschaltet, wenn Ihre Screenshots davon abhängen. Wird bei jeder Vorbereitung erneut angewendet, da ein Löschen die Einstellung zurücksetzt. |
 | `xcargs` | Zusätzliche Argumente für `xcodebuild` |
 | `frameDevice` | Geräterahmen für dieses Gerät aktivieren (pro Gerät) |
-| `deviceBezel` | Pfad zur Geräterahmen-PNG-Datei (pro Gerät) |
+| `deviceBezel` | Pfad zur Geräterahmen-PNG-Datei oder eine Liste von Pfaden; jeder Screenshot verwendet den Rahmen, der zu seiner Größe passt (pro Gerät) |
 | `framedOutputDirectory` | Ausgabeverzeichnis für gerahmte Screenshots (Standard: `{outputDirectory}/framed`) |

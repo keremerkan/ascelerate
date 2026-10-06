@@ -282,15 +282,16 @@ struct ScreenshotCommand: AsyncParsableCommand {
             let framingDevices = config.devices.filter { $0.frameDevice == true }
             if !framingDevices.isEmpty {
                 for device in framingDevices {
-                    if let bezelPath = device.deviceBezel, !bezelPath.isEmpty {
+                    if device.deviceBezels.isEmpty {
+                        fail("Bezel", "\(device.simulator) has frameDevice enabled but no deviceBezel path")
+                    }
+                    for bezelPath in device.deviceBezels {
                         let resolved = URL(fileURLWithPath: bezelPath).path
                         if fm.fileExists(atPath: resolved) {
                             pass("Bezel", "\(device.simulator) → \(bezelPath)")
                         } else {
                             fail("Bezel", "\(device.simulator) → file not found: \(bezelPath)")
                         }
-                    } else {
-                        fail("Bezel", "\(device.simulator) has frameDevice enabled but no deviceBezel path")
                     }
                 }
 
@@ -375,7 +376,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             print("Add this file to your UITest target.")
         }
 
-        static let helperVersion = "1.2"
+        static let helperVersion = "1.3"
 
         static let helperSource = """
         //
@@ -412,6 +413,14 @@ struct ScreenshotCommand: AsyncParsableCommand {
         @MainActor
         func screenshot(_ name: String) {
             Screenshot.capture(name)
+        }
+
+        /// iPhone Duo simulator (Xcode 27.1+) only: folds or unfolds the device, then waits
+        /// for the system to settle on the matching display. Every boot starts closed.
+        /// Does nothing on devices without a hinge.
+        @MainActor
+        func setHinge(_ state: Screenshot.Hinge) {
+            Screenshot.setHinge(state)
         }
 
         // MARK: - Implementation
@@ -485,6 +494,80 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 } catch {
                     NSLog("ScreenshotHelper: Failed to write screenshot '\\(name)': \\(error.localizedDescription)")
                 }
+            }
+
+            enum Hinge {
+                case open, closed
+            }
+
+            /// There is no XCTest or simctl API for the hinge. DeviceHub's hinge slider sends a
+            /// vendor-defined HID event (usage page 0xFF61, usage 0x5B) into the simulator; any
+            /// process in it, this test runner included, can register a virtual HID service of
+            /// the same shape and dispatch the same event. 180° is fully open, 0° fully closed.
+            static func setHinge(_ state: Hinge) {
+                typealias CreateEvent = @convention(c) (CFAllocator?, UInt64, UInt32, UInt32, UInt32, UnsafePointer<UInt8>, CFIndex, UInt32) -> Unmanaged<CFTypeRef>?
+                typealias ServiceID = @convention(c) (AnyObject, Selector) -> UInt64
+                typealias Dispatch = @convention(c) (AnyObject, Selector, AnyObject) -> Bool
+
+                dlopen("/System/Library/PrivateFrameworks/HID.framework/HID", RTLD_NOW)
+                guard let iokit = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_NOW),
+                      let symbol = dlsym(iokit, "IOHIDEventCreateVendorDefinedEvent"),
+                      let serviceClass = NSClassFromString("HIDVirtualEventService") as? NSObject.Type else {
+                    XCTFail("ScreenshotHelper: The hinge HID API is not available in this simulator runtime")
+                    return
+                }
+
+                let delegate = HingeServiceDelegate()
+                let service = serviceClass.init()
+                service.perform(NSSelectorFromString("setDelegate:"), with: delegate)
+                service.perform(NSSelectorFromString("setDispatchQueue:"), with: DispatchQueue(label: "ScreenshotHelper.hinge"))
+                service.perform(NSSelectorFromString("activate"))
+                defer { service.perform(NSSelectorFromString("cancel")) }
+
+                let serviceIDSelector = NSSelectorFromString("serviceID")
+                guard unsafeBitCast(service.method(for: serviceIDSelector), to: ServiceID.self)(service, serviceIDSelector) != 0 else {
+                    XCTFail("ScreenshotHelper: The hinge HID service did not activate")
+                    return
+                }
+                usleep(300_000) // let the event system pick up the service
+
+                let payload = hingePayload(degrees: state == .open ? 180 : 0)
+                let createEvent = unsafeBitCast(symbol, to: CreateEvent.self)
+                guard let event = payload.withUnsafeBytes({
+                    createEvent(nil, mach_absolute_time(), 0xFF61, 0x5B, 0, $0.bindMemory(to: UInt8.self).baseAddress!, payload.count, 0)
+                })?.takeRetainedValue() else {
+                    XCTFail("ScreenshotHelper: Could not create the hinge event")
+                    return
+                }
+                let dispatchSelector = NSSelectorFromString("dispatchEvent:")
+                guard unsafeBitCast(service.method(for: dispatchSelector), to: Dispatch.self)(service, dispatchSelector, event) else {
+                    XCTFail("ScreenshotHelper: The hinge event was not delivered")
+                    return
+                }
+
+                // SpringBoard settles the fold in about 1.5 s, then moves the app to the other display.
+                sleep(2)
+            }
+
+            /// The event payload: `d3 00 00 00`, then items of [u24 aux][u8 type], the top bit of type
+            /// marking a container's last entry: 0x01 dictionary (aux = entries), 0x08 key
+            /// (NUL-terminated, aux = length incl. NUL), 0x09 string (aux = length), 0x04 double
+            /// (aux = 0x3f, 8 bytes LE). Every item is padded to 4 bytes.
+            private static func hingePayload(degrees: Double) -> Data {
+                var data = Data([0xD3, 0, 0, 0])
+                func header(_ aux: Int, _ type: UInt8) {
+                    data += [UInt8(aux & 0xFF), UInt8(aux >> 8 & 0xFF), UInt8(aux >> 16 & 0xFF), type]
+                }
+                func pad() { data += [UInt8](repeating: 0, count: (4 - data.count % 4) % 4) }
+                func key(_ key: String) { let bytes = Array(key.utf8) + [0]; header(bytes.count, 0x08); data += bytes; pad() }
+                func string(_ string: String) { let bytes = Array(string.utf8); header(bytes.count, 0x09); data += bytes; pad() }
+                header(4, 0x81)
+                key("provider"); string("com.apple.Virtualization.VirtualMachines")
+                key("source"); string("hinge-slider-control")
+                key("type"); string("range")
+                key("value"); header(0x3F, 0x84)
+                withUnsafeBytes(of: degrees.bitPattern.littleEndian) { data += $0 }
+                return data
             }
 
             // MARK: - Private
@@ -570,6 +653,33 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 }
             }
             #endif
+        }
+
+        /// Delegate of the virtual hinge HID service. The HID framework calls it on its own queue,
+        /// hence nonisolated (test targets may default to MainActor isolation).
+        final class HingeServiceDelegate: NSObject {
+            @objc(propertyForKey:forService:)
+            nonisolated func property(forKey key: String, service: Any) -> Any? {
+                let properties: [String: Any] = [
+                    "PrimaryUsagePage": 0xFF61, "PrimaryUsage": 0x5B,
+                    "DeviceUsagePairs": [["DeviceUsagePage": 0xFF61, "DeviceUsage": 0x5B]],
+                    "Transport": "CoreDevice", "Product": "ScreenshotHelper hinge",
+                    "VendorID": 0, "ProductID": 0, "VersionNumber": 0, "ReportInterval": 8000,
+                ]
+                return properties[key]
+            }
+
+            @objc(setProperty:forKey:forService:)
+            nonisolated func setProperty(_ value: Any?, forKey key: String, service: Any) -> Bool { true }
+
+            @objc(copyEventMatching:forService:)
+            nonisolated func copyEvent(matching: [AnyHashable: Any]?, service: Any) -> Any? { nil }
+
+            @objc(setOutputEvent:forService:)
+            nonisolated func setOutputEvent(_ event: Any, service: Any) -> Bool { true }
+
+            @objc(notification:withProperty:forService:)
+            nonisolated func notification(_ type: UInt32, property: [AnyHashable: Any]?, service: Any) {}
         }
 
         enum ScreenshotHelperError: Error, CustomDebugStringConvertible {

@@ -37,7 +37,25 @@ struct ScreenshotConfig: Codable, Sendable {
     struct Device: Codable, Sendable {
         var simulator: String
         var frameDevice: Bool?
-        var deviceBezel: String?
+        /// `deviceBezel` in YAML: one path, or a list (e.g. an iPhone Duo's folded and unfolded
+        /// frames). Each screenshot is framed with the bezel whose screen area fits it best.
+        var deviceBezels: [String]
+
+        enum CodingKeys: String, CodingKey {
+            case simulator, frameDevice
+            case deviceBezels = "deviceBezel"
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            simulator = try container.decode(String.self, forKey: .simulator)
+            frameDevice = try container.decodeIfPresent(Bool.self, forKey: .frameDevice)
+            if let single = try? container.decodeIfPresent(String.self, forKey: .deviceBezels) {
+                deviceBezels = [single]
+            } else {
+                deviceBezels = try container.decodeIfPresent([String].self, forKey: .deviceBezels) ?? []
+            }
+        }
     }
 
     static func load(from path: String) throws -> ScreenshotConfig {
@@ -76,6 +94,13 @@ struct ScreenshotConfig: Codable, Sendable {
       - simulator: iPad Pro 13-inch (M5)
         # frameDevice: true
         # deviceBezel: ./bezels/iPad Pro 13-inch (M5).png
+      # A list of bezels frames each screenshot with the one that fits its size,
+      # e.g. iPhone Duo folded and unfolded (setHinge in the UI test):
+      # - simulator: iPhone Duo
+      #   frameDevice: true
+      #   deviceBezel:
+      #     - ./bezels/iPhone Duo - Outer Closed Portrait.png
+      #     - ./bezels/iPhone Duo - Inner Open Landscape.png
 
     # Languages to capture
     languages:

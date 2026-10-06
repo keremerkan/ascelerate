@@ -133,6 +133,24 @@ override func setUp() {
 }
 ```
 
+### iPhone Duo
+
+iPhone Duo シミュレーター（Xcode 27.1 以降）では、`setHinge(.open)` でデバイスを開き、`setHinge(.closed)` で折りたたみます。その後、システムがアプリを対応するディスプレイへ移すまで待機するため、次の `screenshot()` はそのディスプレイをキャプチャします。シミュレーターは常に折りたたまれた状態で起動します。
+
+```swift
+func testScreenshots() {
+    screenshot("01-folded")
+    setHinge(.open)
+    screenshot("02-unfolded")
+}
+```
+
+開いた状態では多くのアプリが iPad と同じレイアウトになりますが、テストランナー内の `UIDevice.current.userInterfaceIdiom` は引き続き `.phone` を返します。テストで適切な処理を選ぶには、`ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4"` を確認してください。
+
+:::caution
+ヒンジを操作する公式 API はありません。ヘルパーは Device Hub のヒンジスライダーと同じ入力イベントを送信するため、今後の Xcode のリリースで動作しなくなる可能性があります。
+:::
+
 ## 動作の仕組み
 
 1. `build-for-testing` で一度ビルド（`testWithoutBuilding: true` の場合はスキップ）
@@ -178,6 +196,19 @@ devices:
     frameDevice: false
 ```
 
+1台のデバイスに複数のベゼルを指定できます。各スクリーンショットは、画面領域のサイズに該当するベゼルでフレーミングされます。たとえば iPhone Duo では、折りたたみ時のスクリーンショットには閉じた状態のベゼルが、開いた状態のスクリーンショットには開いた状態のベゼルが使われます：
+
+```yaml
+devices:
+  - simulator: iPhone Duo
+    frameDevice: true
+    deviceBezel:
+      - ./bezels/iPhone Duo - Outer Closed Portrait.png
+      - ./bezels/iPhone Duo - Inner Open Landscape.png
+```
+
+横向きのスクリーンショットには、横向きのベゼルがリストにあればそれが、なければ回転した縦向きのベゼルが使われます。
+
 ### 出力
 
 フレーミングされたスクリーンショットは `framedOutputDirectory` に保存されます（デフォルト：`{outputDirectory}/framed`）：
@@ -218,5 +249,5 @@ screenshots/framed/
 | `disableAssetDownloads` | シミュレーターの `mobileassetd` を無効化し、消去直後のシミュレーターに数 GB の Siri・キーボード・ML アセットがダウンロードされるのを止めます。一部のアプリが必要とするオンデバイス ML アセット（テキスト認識など）もブロックされるため、スクリーンショットがそれらに依存する場合はオフのままにしてください。消去でリセットされるため、準備のたびに適用されます。 |
 | `xcargs` | `xcodebuild` に渡す追加の引数 |
 | `frameDevice` | このデバイスのベゼルフレーミングを有効化（デバイスごと） |
-| `deviceBezel` | デバイスベゼルPNGファイルへのパス（デバイスごと） |
+| `deviceBezel` | デバイスベゼルPNGファイルへのパス、またはパスのリスト。各スクリーンショットにはサイズに合うベゼルが使われます（デバイスごと） |
 | `framedOutputDirectory` | フレーミングされたスクリーンショットの出力ディレクトリ（デフォルト：`{outputDirectory}/framed`） |

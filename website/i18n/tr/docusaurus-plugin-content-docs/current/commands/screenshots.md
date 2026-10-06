@@ -133,6 +133,24 @@ override func setUp() {
 }
 ```
 
+### iPhone Duo
+
+iPhone Duo simülatöründe (Xcode 27.1+) `setHinge(.open)` cihazı açık konuma, `setHinge(.closed)` ise katlı konuma getirir. Ardından sistemin uygulamayı ilgili ekrana taşımasını bekler; böylece sonraki `screenshot()` çağrısı o ekranı yakalar. Simülatör her zaman katlı konumda başlar.
+
+```swift
+func testScreenshots() {
+    screenshot("01-folded")
+    setHinge(.open)
+    screenshot("02-unfolded")
+}
+```
+
+Açık konumdayken birçok uygulama iPad'deki gibi bir yerleşim kullanır, ancak test runner'daki `UIDevice.current.userInterfaceIdiom` yine `.phone` döndürür. Testlerinizde doğru yolu seçmek için `ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4"` koşulunu kullanın.
+
+:::caution
+Menteşe için resmi bir API yoktur. Helper, Device Hub'daki menteşe kaydırıcısıyla aynı giriş olayını gönderir; bu nedenle gelecekteki bir Xcode sürümü bu özelliği bozabilir.
+:::
+
 ## Nasıl çalışır
 
 1. `build-for-testing` ile bir kez derler (`testWithoutBuilding: true` ise atlar)
@@ -178,6 +196,19 @@ devices:
     frameDevice: false
 ```
 
+Bir cihaz için birden fazla çerçeve listelenebilir. Her ekran görüntüsü, ekran alanı kendi boyutuyla eşleşen çerçeveye yerleştirilir; böylece iPhone Duo'nun katlı konumdaki ekran görüntüleri katlı çerçeveyi, açık konumdakiler ise açık çerçeveyi alır:
+
+```yaml
+devices:
+  - simulator: iPhone Duo
+    frameDevice: true
+    deviceBezel:
+      - ./bezels/iPhone Duo - Outer Closed Portrait.png
+      - ./bezels/iPhone Duo - Inner Open Landscape.png
+```
+
+Yatay ekran görüntüleri, listede yatay bir çerçeve varsa onu, yoksa döndürülmüş dikey çerçeveyi kullanır.
+
 ### Çıktı
 
 Çerçevelenmiş ekran görüntüleri `framedOutputDirectory` dizinine kaydedilir (varsayılan: `{outputDirectory}/framed`):
@@ -218,5 +249,5 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `disableAssetDownloads` | Simülatörün `mobileassetd` servisini devre dışı bırakır; böylece yeni silinmiş simülatörlere gigabaytlarca Siri, klavye ve ML varlığı indirilmez. Bazı uygulamaların ihtiyaç duyduğu cihaz üstü ML varlıklarını da (örn. metin tanıma) engeller; ekran görüntüleriniz bunlara bağlıysa kapalı bırakın. Silme işlemi ayarı sıfırladığından her hazırlıkta yeniden uygulanır. |
 | `xcargs` | `xcodebuild`'e aktarılan ek argümanlar |
 | `frameDevice` | Bu cihaz için çerçevelemeyi etkinleştir (cihaz başına) |
-| `deviceBezel` | Cihaz çerçeve PNG dosyasının yolu (cihaz başına) |
+| `deviceBezel` | Cihaz çerçeve PNG dosyasının yolu ya da yollardan oluşan bir liste; her ekran görüntüsü boyutuna uyan çerçeveyi kullanır (cihaz başına) |
 | `framedOutputDirectory` | Çerçevelenmiş ekran görüntüleri için çıktı dizini (varsayılan: `{outputDirectory}/framed`) |

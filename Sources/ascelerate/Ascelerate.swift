@@ -1,5 +1,6 @@
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 @main
@@ -82,6 +83,11 @@ struct Ascelerate: AsyncParsableCommand {
   }
 
   private static func formatError(_ error: Error) -> String? {
+    if let ascError = ASCError.from(error) {
+      return ascError.statusCode == 429
+        ? formatRateLimit(ascError.rateLimit)
+        : formatRequestFailure(statusCode: ascError.statusCode, errors: ascError.errors.map { ($0.title, $0.detail) })
+    }
     if let responseError = error as? ResponseError {
       return formatResponseError(responseError)
     }
@@ -95,33 +101,39 @@ struct Ascelerate: AsyncParsableCommand {
     let tag = stderrRed("Error:")
     switch error {
     case .rateLimitExceeded(_, let rate, _):
-      var msg = "\(tag) App Store Connect API rate limit exceeded (HTTP 429)."
-      if let rate {
-        msg += "\n  Hourly limit: \(rate.limit) requests"
-        msg += "\n  Remaining:    \(rate.remaining) requests"
-      }
-      msg += "\n  Wait a few minutes before retrying."
-      return msg
+      return formatRateLimit(rate.map { ($0.limit, $0.remaining) })
 
     case .requestFailure(let errorResponse, let statusCode, _):
-      var msg = "\(tag) App Store Connect API returned HTTP \(statusCode)."
-      if let errors = errorResponse?.errors {
-        for e in errors {
-          msg += "\n  \(e.title): \(e.detail)"
-        }
-      }
-      if statusCode == 401 {
-        msg += "\n  Check your API credentials (run 'ascelerate configure')."
-      } else if statusCode == 403 {
-        msg += "\n  Your API key may lack the required permissions."
-      } else if statusCode >= 500 {
-        msg += "\n  This is a server-side issue. Try again later."
-      }
-      return msg
+      return formatRequestFailure(statusCode: statusCode, errors: (errorResponse?.errors ?? []).map { ($0.title, $0.detail) })
 
     case .dataAssertionFailed:
       return "\(tag) Unexpected empty response from App Store Connect API."
     }
+  }
+
+  private static func formatRateLimit(_ rate: (limit: Int, remaining: Int)?) -> String {
+    var msg = "\(stderrRed("Error:")) App Store Connect API rate limit exceeded (HTTP 429)."
+    if let rate {
+      msg += "\n  Hourly limit: \(rate.limit) requests"
+      msg += "\n  Remaining:    \(rate.remaining) requests"
+    }
+    msg += "\n  Wait a few minutes before retrying."
+    return msg
+  }
+
+  private static func formatRequestFailure(statusCode: Int, errors: [(title: String, detail: String)]) -> String {
+    var msg = "\(stderrRed("Error:")) App Store Connect API returned HTTP \(statusCode)."
+    for e in errors {
+      msg += "\n  \(e.title): \(e.detail)"
+    }
+    if statusCode == 401 {
+      msg += "\n  Check your API credentials (run 'ascelerate configure')."
+    } else if statusCode == 403 {
+      msg += "\n  Your API key may lack the required permissions."
+    } else if statusCode >= 500 {
+      msg += "\n  This is a server-side issue. Try again later."
+    }
+    return msg
   }
 
   private static func formatURLError(_ error: URLError) -> String {

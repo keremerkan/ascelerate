@@ -13,6 +13,12 @@ extension InAppPurchaseLocalization {
   }
 }
 
+extension Components.Schemas.InAppPurchaseLocalization {
+  var localizationRecord: LocalizationRecord {
+    LocalizationRecord(id: id, locale: attributes?.locale ?? "", name: attributes?.name, description: attributes?.description)
+  }
+}
+
 extension InAppPurchasePricePoint: ResolvablePricePoint {
   var resolverCustomerPrice: String? { attributes?.customerPrice }
 }
@@ -574,6 +580,42 @@ struct IAPCommand: AsyncParsableCommand {
     }
 
     /// Fetches the app's promoted purchases in display order, resolved to their products.
+    static func fetchPromoted(appID: String, client: ASCClient) async throws -> [PromotedInfo] {
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsPromotedPurchasesGetToManyRelated(
+          path: .init(id: appID), query: .init(limit: 200, include: [.inAppPurchaseV2, .subscription])
+        ).ok.body.json
+      }
+      var result: [PromotedInfo] = []
+      for page in pages {
+        var iapInfo: [String: (productID: String, name: String)] = [:]
+        var subInfo: [String: (productID: String, name: String)] = [:]
+        for item in page.included ?? [] {
+          switch item {
+          case .inAppPurchases(let iap):
+            iapInfo[iap.id] = (iap.attributes?.productId ?? "—", iap.attributes?.name ?? "—")
+          case .subscriptions(let sub):
+            subInfo[sub.id] = (sub.attributes?.productId ?? "—", sub.attributes?.name ?? "—")
+          }
+        }
+        for promo in page.data {
+          let a = promo.attributes
+          var productID = "—", name = "—", kind = "—"
+          if let iapID = promo.relationships?.inAppPurchaseV2?.data?.id, let info = iapInfo[iapID] {
+            productID = info.productID; name = info.name; kind = "IAP"
+          } else if let subID = promo.relationships?.subscription?.data?.id, let info = subInfo[subID] {
+            productID = info.productID; name = info.name; kind = "Subscription"
+          }
+          result.append(
+            PromotedInfo(
+              promotedID: promo.id, productID: productID, name: name, kind: kind,
+              state: a?.state.map { formatState($0) } ?? "—",
+              isVisible: a?.visibleForAllUsers == true, isEnabled: a?.enabled == true))
+        }
+      }
+      return result
+    }
+
     static func fetchPromoted(
       appID: String, client: AppStoreConnectClient
     ) async throws -> [PromotedInfo] {
@@ -620,7 +662,7 @@ struct IAPCommand: AsyncParsableCommand {
       var bundleID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
 
@@ -1116,13 +1158,13 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let locsResponse = try await client.send(
-          Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseLocalizations.get(limit: 50)
-        )
+        let locsResponse = try await client.inAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated(
+          path: .init(id: iap.id), query: .init(limit: 50)
+        ).ok.body.json
 
         if locsResponse.data.isEmpty {
           print("No localizations found.")
@@ -1161,13 +1203,13 @@ struct IAPCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let locsResponse = try await client.send(
-          Resources.v2.inAppPurchases.id(iap.id).inAppPurchaseLocalizations.get(limit: 50)
-        )
+        let locsResponse = try await client.inAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated(
+          path: .init(id: iap.id), query: .init(limit: 50)
+        ).ok.body.json
         try exportProductLocalizations(
           locsResponse.data.map(\.localizationRecord), productID: productID, output: output)
       }
@@ -1345,20 +1387,19 @@ struct IAPCommand: AsyncParsableCommand {
       var territory: String = "USA"
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         let territoryID = territory.uppercased()
         var tiers: [PriceTier] = []
         var currency: String?
-        for try await page in client.pages(
-          Resources.v2.inAppPurchases.id(iap.id).pricePoints.get(
-            filterTerritory: [territoryID],
-            limit: 200,
-            include: [.territory]
-          )
-        ) {
+        let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.inAppPurchasesV2PricePointsGetToManyRelated(
+            path: .init(id: iap.id), query: .init(filterTerritory: [territoryID], limit: 200, include: [.territory])
+          ).ok.body.json
+        }
+        for page in pages {
           tiers.append(
             contentsOf: page.data.map {
               PriceTier(
@@ -1714,7 +1755,7 @@ struct IAPCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1971,16 +2012,13 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        var codes: [InAppPurchaseOfferCode] = []
-        for try await page in client.pages(
-          Resources.v2.inAppPurchases.id(iap.id).offerCodes.get(limit: 200)
-        ) {
-          codes.append(contentsOf: page.data)
-        }
+        let codes = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.inAppPurchasesV2OfferCodesGetToManyRelated(path: .init(id: iap.id), query: .init(limit: 200)).ok.body.json
+        }.flatMap(\.data)
 
         if codes.isEmpty {
           print("No offer codes for \(productID).")
@@ -1991,11 +2029,11 @@ struct IAPCommand: AsyncParsableCommand {
           headers: ["ID", "Name", "Active", "Eligibilities"],
           rows: codes.map { c in
             let attrs = c.attributes
-            let elig = attrs?.customerEligibilities?.map { $0.rawValue }.joined(separator: ", ") ?? "—"
+            let elig = attrs?.customerEligibilities?.joined(separator: ", ") ?? "—"
             return [
               c.id,
               attrs?.name ?? "—",
-              attrs?.isActive == true ? "Yes" : attrs?.isActive == false ? "No" : "—",
+              attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—",
               elig,
             ]
           }
@@ -2021,23 +2059,19 @@ struct IAPCommand: AsyncParsableCommand {
       var offerCodeID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         _ = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let response = try await client.send(
-          Resources.v1.inAppPurchaseOfferCodes.id(offerCodeID).get(
-            include: [.prices, .oneTimeUseCodes, .customCodes],
-            limitCustomCodes: 50,
-            limitOneTimeUseCodes: 50,
-            limitPrices: 200
-          )
-        )
+        let response = try await client.inAppPurchaseOfferCodesGetInstance(
+          path: .init(id: offerCodeID),
+          query: .init(include: [.prices, .oneTimeUseCodes, .customCodes], limitCustomCodes: 50, limitOneTimeUseCodes: 50, limitPrices: 200)
+        ).ok.body.json
         let attrs = response.data.attributes
         print("Offer Code:    \(attrs?.name ?? "—")")
         print("ID:            \(response.data.id)")
-        print("Active:        \(attrs?.isActive == true ? "Yes" : attrs?.isActive == false ? "No" : "—")")
-        print("Eligibilities: \(attrs?.customerEligibilities?.map { $0.rawValue }.joined(separator: ", ") ?? "—")")
+        print("Active:        \(attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—")")
+        print("Eligibilities: \(attrs?.customerEligibilities?.joined(separator: ", ") ?? "—")")
 
         let priceCount = response.data.relationships?.prices?.data?.count ?? 0
         let oneTimeCount = response.data.relationships?.oneTimeUseCodes?.data?.count ?? 0
@@ -2398,12 +2432,12 @@ struct IAPCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
 
         try await runOfferCodeViewCodes(output: output) {
-          try await client.send(
-            Resources.v1.inAppPurchaseOfferCodeOneTimeUseCodes.id(batchID).values.get
-          )
+          try await String(
+            collecting: client.inAppPurchaseOfferCodeOneTimeUseCodesValuesGetToOneRelated(path: .init(id: batchID)).ok.body.csv,
+            upTo: 50 << 20)
         }
       }
     }
@@ -2431,17 +2465,14 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         try await runProductImagesList(productID: productID) {
-          var images: [InAppPurchaseImage] = []
-          for try await page in client.pages(
-            Resources.v2.inAppPurchases.id(iap.id).images.get(limit: 50)
-          ) {
-            images.append(contentsOf: page.data)
-          }
+          let images = try await ASCPaging.allPages(next: { $0.links.next }) {
+            try await client.inAppPurchasesV2ImagesGetToManyRelated(path: .init(id: iap.id), query: .init(limit: 50)).ok.body.json
+          }.flatMap(\.data)
           return images.map { img in
             [
               img.id,
@@ -2573,14 +2604,14 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         try await runReviewScreenshotView(productID: productID) {
-          let response = try await client.send(
-            Resources.v2.inAppPurchases.id(iap.id).appStoreReviewScreenshot.get()
-          )
+          let response = try await client.inAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated(
+            path: .init(id: iap.id)
+          ).ok.body.json
           let attrs = response.data.attributes
           return (
             response.data.id,

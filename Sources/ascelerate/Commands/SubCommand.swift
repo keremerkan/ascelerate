@@ -2118,6 +2118,9 @@ struct SubCommand: AsyncParsableCommand {
       let (sub, _) = try await SubCommand.findSubscription(
         productID: productID, appID: app.id, client: client)
 
+      // The upfront plan is the subscription's regular availability (the deprecated
+      // subscriptionAvailabilities resource); MONTHLY is Apple's monthly-installment plan.
+      var upfrontPlanID: String?
       try await runProductAvailability(
         productID: productID,
         productNoun: "subscription",
@@ -2126,25 +2129,39 @@ struct SubCommand: AsyncParsableCommand {
         availableInNewTerritories: availableInNewTerritories,
         verbose: verbose,
         fetchCurrent: {
-          let availability = try await client.subscriptionsSubscriptionAvailabilityGetToOneRelated(
-            path: .init(id: sub.id), query: .init(include: [.availableTerritories], limitAvailableTerritories: 50)
-          ).ok.body.json.data
+          let plans = try await client.subscriptionsPlanAvailabilitiesGetToManyRelated(path: .init(id: sub.id)).ok.body.json.data
+          guard let plan = plans.first(where: { $0.attributes?.planType == ASCEnum.SubscriptionPlanType.upfront.rawValue }) else {
+            return nil
+          }
+          upfrontPlanID = plan.id
           let territories = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.subscriptionAvailabilitiesAvailableTerritoriesGetToManyRelated(
-              path: .init(id: availability.id), query: .init(limit: 200)
+            try await client.subscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated(
+              path: .init(id: plan.id), query: .init(limit: 200)
             ).ok.body.json
           }.flatMap { $0.data.map(\.id) }
-          return (availability.attributes?.availableInNewTerritories, territories)
+          return (plan.attributes?.availableInNewTerritories, territories)
         },
         post: { availableInNew, territories in
-          _ = try await client.subscriptionAvailabilitiesCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(availableInNewTerritories: availableInNew),
-            relationships: .init(
-              availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") }),
-              subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))
-            ),
-            _type: "subscriptionAvailabilities"
-          )))).created
+          if let upfrontPlanID {
+            _ = try await client.subscriptionPlanAvailabilitiesUpdateInstance(
+              path: .init(id: upfrontPlanID),
+              body: .json(.init(data: .init(
+                attributes: .init(availableInNewTerritories: availableInNew),
+                id: upfrontPlanID,
+                relationships: .init(availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") })),
+                _type: "subscriptionPlanAvailabilities"
+              )))
+            ).ok
+          } else {
+            _ = try await client.subscriptionPlanAvailabilitiesCreateInstance(body: .json(.init(data: .init(
+              attributes: .init(availableInNewTerritories: availableInNew, planType: ASCEnum.SubscriptionPlanType.upfront.rawValue),
+              relationships: .init(
+                availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") }),
+                subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))
+              ),
+              _type: "subscriptionPlanAvailabilities"
+            )))).created
+          }
         }
       )
     }

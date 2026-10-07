@@ -33,6 +33,9 @@ let package = Package(
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
             ],
+            // The generated client warns about every attribute and parameter Apple deprecated, from
+            // its own Codable and query code. Our use of them still warns in the ascelerate target.
+            swiftSettings: [.unsafeFlags(["-suppress-warnings"])],
             plugins: [.plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")]
         ),
     ]

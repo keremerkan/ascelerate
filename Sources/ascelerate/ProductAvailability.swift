@@ -3,7 +3,7 @@ import ArgumentParser
 import Foundation
 
 /// Shared driver for `iap availability` / `sub availability`. Fetches the current
-/// availability via `fetchCurrent` (treating DecodingError / 404 as "none set — inherits
+/// availability via `fetchCurrent` (treating nil, a 404 or null data as "none set — inherits
 /// the app's territories"), prints it in view mode, or computes the add/remove set math,
 /// prints a change summary, confirms, and hands the final list to `post` for the
 /// wholesale schedule replacement. `productNoun` names the product kind in the
@@ -15,7 +15,7 @@ func runProductAvailability(
   remove: String?,
   availableInNewTerritories: String?,
   verbose: Bool,
-  fetchCurrent: () async throws -> (availableInNew: Bool?, territories: [String]),
+  fetchCurrent: () async throws -> (availableInNew: Bool?, territories: [String])?,
   post: (_ availableInNew: Bool, _ territories: [String]) async throws -> Void
 ) async throws {
   // Fetch current availability
@@ -23,10 +23,11 @@ func runProductAvailability(
   var currentTerritories: [String] = []
   var hasAvailability = false
   do {
-    let current = try await fetchCurrent()
-    currentAvailableInNew = current.availableInNew
-    currentTerritories = current.territories
-    hasAvailability = true
+    if let current = try await fetchCurrent() {
+      currentAvailableInNew = current.availableInNew
+      currentTerritories = current.territories
+      hasAvailability = true
+    }
   } catch where ASCError.isMissingRelated(error) {
     hasAvailability = false
   }

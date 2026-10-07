@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -303,7 +301,7 @@ func promptDevice(client: ASCClient) async throws -> Components.Schemas.Device {
   )
 }
 
-/// Looks up a device by UDID first, then falls back to name (ASCKit).
+/// Looks up a device by UDID first, then falls back to name.
 func findDevice(nameOrUDID: String, client: ASCClient) async throws -> Components.Schemas.Device {
   let byUDID = try await client.devicesGetCollection(query: .init(filterUdid: [nameOrUDID], limit: 1)).ok.body.json
   if let device = byUDID.data.first {
@@ -318,46 +316,6 @@ func findDevice(nameOrUDID: String, client: ASCClient) async throws -> Component
   if byName.count == 1 {
     return byName[0]
   }
-  throw DeviceLookupError.notFound(nameOrUDID)
-}
-
-func promptDevice(client: AppStoreConnectClient) async throws -> Device {
-  let devices = try await fetchAll(
-    client.pages(Resources.v1.devices.get(limit: 200)),
-    data: \.data,
-    emptyMessage: "No devices found in your account.",
-    sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
-  )
-  return try promptSelection(
-    "Devices", items: devices,
-    display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.udid ?? "—")) — \($0.attributes?.status.map { formatState($0) } ?? "—")" },
-    prompt: "Select device"
-  )
-}
-
-/// Looks up a device by UDID first, then falls back to name.
-func findDevice(nameOrUDID: String, client: AppStoreConnectClient) async throws -> Device {
-  // Try UDID first
-  let byUDID = try await client.send(
-    Resources.v1.devices.get(filterUdid: [nameOrUDID], limit: 1)
-  )
-  if let device = byUDID.data.first {
-    return device
-  }
-
-  // Fall back to name
-  let byName = try await client.send(
-    Resources.v1.devices.get(filterName: [nameOrUDID], limit: 200)
-  )
-  // Name filter may return partial matches, find exact match
-  if let device = byName.data.first(where: { $0.attributes?.name == nameOrUDID }) {
-    return device
-  }
-  // If only one result, use it even if not exact (fuzzy match by API)
-  if byName.data.count == 1 {
-    return byName.data[0]
-  }
-
   throw DeviceLookupError.notFound(nameOrUDID)
 }
 

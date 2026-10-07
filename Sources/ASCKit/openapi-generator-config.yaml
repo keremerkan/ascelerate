@@ -76,8 +76,12 @@ filter:
     - /v1/certificates
     - /v1/certificates/{id}
     - /v1/bundleIds
+    - /v1/bundleIds/{id}
+    - /v1/bundleIdCapabilities
+    - /v1/bundleIdCapabilities/{id}
     - /v1/bundleIds/{id}/bundleIdCapabilities
     - /v1/profiles
+    - /v1/profiles/{id}
     - /v1/profiles/{id}/bundleId
     - /v1/profiles/{id}/certificates
     - /v1/profiles/{id}/devices

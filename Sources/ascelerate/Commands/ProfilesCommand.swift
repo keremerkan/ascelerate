@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -226,16 +224,16 @@ struct ProfilesCommand: AsyncParsableCommand {
 
     // MARK: - Interactive prompts
 
-    private func promptProfileType() throws -> ProfileCreateRequest.Data.Attributes.ProfileType {
+    private func promptProfileType() throws -> ASCEnum.ProfileCreateRequestProfileType {
       return try promptSelection(
         "Profile types",
-        items: Array(ProfileCreateRequest.Data.Attributes.ProfileType.allCases),
+        items: ASCEnum.ProfileCreateRequestProfileType.allCases,
         display: { $0.rawValue },
         prompt: "Select profile type"
       )
     }
 
-    private func promptCertificates(profileType: ProfileCreateRequest.Data.Attributes.ProfileType, client: AppStoreConnectClient) async throws -> [String] {
+    private func promptCertificates(profileType: ASCEnum.ProfileCreateRequestProfileType, client: ASCClient) async throws -> [String] {
       let neededFamily = certFamilyForProfileType(profileType.rawValue)
 
       let filtered = try await fetchCertificates(family: neededFamily, client: client).sorted {
@@ -258,11 +256,8 @@ struct ProfilesCommand: AsyncParsableCommand {
       return selected.map(\.id)
     }
 
-    private func promptDevices(client: AppStoreConnectClient) async throws -> [String] {
-      var allDevices: [Device] = []
-      for try await page in client.pages(Resources.v1.devices.get(filterStatus: [.enabled], limit: 200)) {
-        allDevices.append(contentsOf: page.data)
-      }
+    private func promptDevices(client: ASCClient) async throws -> [String] {
+      let allDevices = try await fetchEnabledDevices(client: client)
       guard !allDevices.isEmpty else {
         throw ValidationError("No enabled devices found. Register one first with 'devices register'.")
       }
@@ -297,7 +292,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         if certificates == nil { throw ValidationError("--certificates is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       // 1. Resolve name
       let profileName: String
@@ -308,7 +303,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       }
 
       // 2. Resolve type
-      let profileType: ProfileCreateRequest.Data.Attributes.ProfileType
+      let profileType: ASCEnum.ProfileCreateRequestProfileType
       if let type {
         profileType = try parseEnum(type, name: "type")
       } else {
@@ -316,7 +311,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       }
 
       // 3. Resolve bundle ID
-      let bundleID: BundleID
+      let bundleID: Components.Schemas.BundleId
       let bundleIDLabel: String
       if let bundleIdentifier {
         bundleID = try await findBundleID(identifier: bundleIdentifier, client: client)
@@ -341,9 +336,9 @@ struct ProfilesCommand: AsyncParsableCommand {
           let serials = certificates.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
           var resolved: [String] = []
           for serial in serials {
-            let response = try await client.send(
-              Resources.v1.certificates.get(filterSerialNumber: [serial], limit: 1)
-            )
+            let response = try await client.certificatesGetCollection(
+              query: .init(filterSerialNumber: [serial], limit: 1)
+            ).ok.body.json
             guard let cert = response.data.first else {
               throw ValidationError("No certificate found with serial number '\(serial)'.")
             }
@@ -357,18 +352,14 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       // 5. Resolve devices (if needed)
       let deviceIDs: [String]?
-      let needsDevices = profileType.rawValue.contains("DEVELOPMENT") || profileType.rawValue.contains("ADHOC")
       if let devices {
         if devices.lowercased() == "all" {
-          var allDevices: [Device] = []
-          for try await page in client.pages(Resources.v1.devices.get(filterStatus: [.enabled], limit: 200)) {
-            allDevices.append(contentsOf: page.data)
-          }
+          let allDevices = try await fetchEnabledDevices(client: client)
           guard !allDevices.isEmpty else {
             throw ValidationError("No enabled devices found in your account.")
           }
           deviceIDs = allDevices.map(\.id)
-          print("Using all \(deviceIDs!.count) enabled device(s).")
+          print("Using all \(allDevices.count) enabled device(s).")
         } else {
           let identifiers = devices.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
           var resolved: [String] = []
@@ -378,7 +369,7 @@ struct ProfilesCommand: AsyncParsableCommand {
           }
           deviceIDs = resolved
         }
-      } else if needsDevices {
+      } else if profileNeedsDevices(profileType.rawValue) {
         deviceIDs = try await promptDevices(client: client)
       } else {
         deviceIDs = nil
@@ -387,7 +378,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print()
       print("Create provisioning profile:")
       print("  Name:         \(profileName)")
-      print("  Type:         \(profileType)")
+      print("  Type:         \(formatState(profileType.rawValue))")
       print("  Bundle ID:    \(bundleIDLabel)")
       print("  Certificates: \(certIDs.count)")
       if let deviceIDs {
@@ -400,30 +391,12 @@ struct ProfilesCommand: AsyncParsableCommand {
         return
       }
 
-      let devicesRelationship: ProfileCreateRequest.Data.Relationships.Devices?
-      if let deviceIDs {
-        devicesRelationship = .init(data: deviceIDs.map { .init(id: $0) })
-      } else {
-        devicesRelationship = nil
-      }
-
-      let response = try await client.send(
-        Resources.v1.profiles.post(
-          ProfileCreateRequest(data: .init(
-            attributes: .init(
-              name: profileName,
-              profileType: profileType
-            ),
-            relationships: .init(
-              bundleID: .init(data: .init(id: bundleID.id)),
-              devices: devicesRelationship,
-              certificates: .init(data: certIDs.map { .init(id: $0) })
-            )
-          ))
-        )
+      let created = try await createProfile(
+        name: profileName, type: profileType, bundleIDResourceID: bundleID.id,
+        certificateIDs: certIDs, deviceIDs: deviceIDs ?? [], client: client
       )
 
-      let attrs = response.data.attributes
+      let attrs = created.attributes
       print()
       success("Created", "profile '\(attrs?.name ?? profileName)'.")
       print("  UUID:    \(attrs?.uuid ?? "—")")
@@ -483,26 +456,13 @@ struct ProfilesCommand: AsyncParsableCommand {
         throw ValidationError("Profile name, --all, or --all-invalid is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       // Fetch all profiles with their bundle ID relationship
-      var allProfiles: [Profile] = []
-      var includedBundleIDs: [String: BundleID] = [:]
-
-      let profileRequest = Resources.v1.profiles.get(
-        limit: 200,
-        include: [.bundleID]
-      )
-
-      for try await page in client.pages(profileRequest) {
-        allProfiles.append(contentsOf: page.data)
-        for item in page.included ?? [] {
-          if case .bundleID(let bid) = item { includedBundleIDs[bid.id] = bid }
-        }
-      }
+      let (allProfiles, includedBundleIDs) = try await fetchProfilesWithBundleIDs(client: client)
 
       // Determine which profiles to reissue
-      let targets: [Profile]
+      let targets: [Components.Schemas.Profile]
       if let name {
         guard let profile = allProfiles.first(where: { $0.attributes?.name == name }) else {
           throw ValidationError("No profile found with name '\(name)'.")
@@ -515,7 +475,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         }
         targets = allProfiles
       } else if allInvalid {
-        let invalid = allProfiles.filter { $0.attributes?.profileState?.rawValue == "INVALID" }
+        let invalid = allProfiles.filter { $0.attributes?.profileState == "INVALID" }
         guard !invalid.isEmpty else {
           print("No invalid profiles found.")
           return
@@ -535,8 +495,8 @@ struct ProfilesCommand: AsyncParsableCommand {
           display: { profile in
             let pName = profile.attributes?.name ?? "—"
             let pType = profile.attributes?.profileType.map { formatState($0) } ?? "—"
-            let pState = profile.attributes?.profileState?.rawValue ?? "—"
-            let bidID = profile.relationships?.bundleID?.data?.id ?? ""
+            let pState = profile.attributes?.profileState ?? "—"
+            let bidID = profile.relationships?.bundleId?.data?.id ?? ""
             let bidIdentifier = includedBundleIDs[bidID]?.attributes?.identifier ?? "—"
             return "\(pName) (\(pType)) — \(bidIdentifier) [\(pState)]"
           },
@@ -545,13 +505,13 @@ struct ProfilesCommand: AsyncParsableCommand {
       }
 
       // Resolve certificates
-      var explicitCerts: [AppStoreAPI.Certificate]?
-      var certsByFamily: [String: [AppStoreAPI.Certificate]] = [:]
+      var explicitCerts: [Components.Schemas.Certificate]?
+      var certsByFamily: [String: [Components.Schemas.Certificate]] = [:]
 
       if let toCerts {
         // Explicit certificates specified
         let identifiers = toCerts.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        var resolved: [AppStoreAPI.Certificate] = []
+        var resolved: [Components.Schemas.Certificate] = []
         for identifier in identifiers {
           let cert = try await findCertificate(serialOrName: identifier, client: client)
           resolved.append(cert)
@@ -560,26 +520,13 @@ struct ProfilesCommand: AsyncParsableCommand {
         print("Using \(resolved.count) specified certificate(s).")
       } else {
         // Auto-detect: group all certificates by family
-        for cert in try await fetchCertificates(client: client) {
-          guard let ct = cert.attributes?.certificateType else { continue }
-          certsByFamily[certFamily(ct), default: []].append(cert)
-        }
+        certsByFamily = try await fetchCertificatesByFamily(client: client)
       }
 
       // Fetch all enabled devices upfront if --all-devices
       var allEnabledDeviceIDs: [String]?
-      if allDevices {
-        let needsDevices = targets.contains { profile in
-          let typeRaw = profile.attributes?.profileType?.rawValue ?? ""
-          return typeRaw.contains("DEVELOPMENT") || typeRaw.contains("ADHOC")
-        }
-        if needsDevices {
-          var devices: [Device] = []
-          for try await page in client.pages(Resources.v1.devices.get(filterStatus: [.enabled], limit: 200)) {
-            devices.append(contentsOf: page.data)
-          }
-          allEnabledDeviceIDs = devices.map(\.id)
-        }
+      if allDevices, targets.contains(where: { profileNeedsDevices($0.attributes?.profileType ?? "") }) {
+        allEnabledDeviceIDs = try await fetchEnabledDevices(client: client).map(\.id)
       }
 
       // Display summary
@@ -590,8 +537,8 @@ struct ProfilesCommand: AsyncParsableCommand {
         headers: ["Name", "Type", "Bundle ID", "Certificates"],
         rows: targets.map { profile in
           let profileName = profile.attributes?.name ?? "—"
-          let profileTypeRaw = profile.attributes?.profileType?.rawValue ?? "—"
-          let bidID = profile.relationships?.bundleID?.data?.id ?? ""
+          let profileTypeRaw = profile.attributes?.profileType ?? "—"
+          let bidID = profile.relationships?.bundleId?.data?.id ?? ""
           let bidIdentifier = includedBundleIDs[bidID]?.attributes?.identifier ?? "—"
           let certInfo: String
           if let explicitCerts {
@@ -617,11 +564,11 @@ struct ProfilesCommand: AsyncParsableCommand {
       var failed = 0
 
       for profile in targets {
-        let certs: [AppStoreAPI.Certificate]
+        let certs: [Components.Schemas.Certificate]
         if let explicitCerts {
           certs = explicitCerts
         } else {
-          let neededFamily = certFamilyForProfileType(profile.attributes?.profileType?.rawValue ?? "")
+          let neededFamily = certFamilyForProfileType(profile.attributes?.profileType ?? "")
           let familyCerts = certsByFamily[neededFamily] ?? []
           guard !familyCerts.isEmpty else {
             print("  SKIP \(profile.attributes?.name ?? "—") — no \(neededFamily.lowercased()) certificate found")
@@ -631,7 +578,7 @@ struct ProfilesCommand: AsyncParsableCommand {
           certs = familyCerts
         }
 
-        let bundleIDResourceID = profile.relationships?.bundleID?.data?.id ?? ""
+        let bundleIDResourceID = profile.relationships?.bundleId?.data?.id ?? ""
         let bundleIDIdentifier = includedBundleIDs[bundleIDResourceID]?.attributes?.identifier ?? "—"
 
         if await reissueProfile(
@@ -671,14 +618,16 @@ struct ProfilesCommand: AsyncParsableCommand {
         throw ValidationError("Profile name argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let profiles: [Profile]
+      let profiles: [Components.Schemas.Profile]
       if let name {
         profiles = [try await findProfile(name: name, client: client)]
       } else {
-        let allProfiles = try await fetchAll(
-          client.pages(Resources.v1.profiles.get(limit: 200)),
+        let allProfiles = try fetchAll(
+          await ASCPaging.allPages(next: { $0.links.next }) {
+            try await client.profilesGetCollection(query: .init(limit: 200)).ok.body.json
+          },
           data: \.data,
           emptyMessage: "No provisioning profiles found in your account.",
           sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
@@ -718,7 +667,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       for profile in profiles {
         let pName = profile.attributes?.name ?? "—"
         do {
-          _ = try await client.send(Resources.v1.profiles.id(profile.id).delete)
+          _ = try await client.profilesDeleteInstance(path: .init(id: profile.id)).noContent
           print("  OK   \(pName)")
           succeeded += 1
         } catch {
@@ -750,7 +699,7 @@ func promptProfile(client: ASCClient) async throws -> Components.Schemas.Profile
   )
 }
 
-/// Looks up a profile by name (ASCKit). The collection includes each profile's content.
+/// Looks up a profile by name. The collection includes each profile's content.
 func findProfile(name: String, client: ASCClient) async throws -> Components.Schemas.Profile {
   let profiles = try await client.profilesGetCollection(query: .init(filterName: [name], limit: 200)).ok.body.json.data
   // Name filter may return partial matches
@@ -763,47 +712,67 @@ func findProfile(name: String, client: ASCClient) async throws -> Components.Sch
   throw ProfileLookupError.notFound(name)
 }
 
-func promptProfile(client: AppStoreConnectClient) async throws -> Profile {
-  let profiles = try await fetchAll(
-    client.pages(Resources.v1.profiles.get(limit: 200)),
-    data: \.data,
-    emptyMessage: "No provisioning profiles found in your account.",
-    sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
-  )
-  return try promptSelection(
-    "Provisioning profiles", items: profiles,
-    display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.profileType.map { formatState($0) } ?? "—"), \($0.attributes?.profileState.map { formatState($0) } ?? "—"))" },
-    prompt: "Select profile"
-  )
+/// Every profile in the account plus the bundle IDs they reference, keyed by resource ID.
+/// Relationship IDs are only populated when the bundle ID is included.
+func fetchProfilesWithBundleIDs(
+  client: ASCClient
+) async throws -> (profiles: [Components.Schemas.Profile], bundleIDs: [String: Components.Schemas.BundleId]) {
+  let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+    try await client.profilesGetCollection(query: .init(limit: 200, include: [.bundleId])).ok.body.json
+  }
+  var bundleIDs: [String: Components.Schemas.BundleId] = [:]
+  for item in pages.flatMap({ $0.included ?? [] }) {
+    if case .bundleIds(let bid) = item { bundleIDs[bid.id] = bid }
+  }
+  return (pages.flatMap(\.data), bundleIDs)
 }
 
-/// Looks up a profile by name. Fetches profile content for download.
-func findProfile(name: String, client: AppStoreConnectClient) async throws -> Profile {
-  let response = try await client.send(
-    Resources.v1.profiles.get(filterName: [name], limit: 200)
-  )
-  // Name filter may return partial matches
-  if let profile = response.data.first(where: { $0.attributes?.name == name }) {
-    return profile
-  }
-  if response.data.count == 1 {
-    return response.data[0]
-  }
-
-  throw ProfileLookupError.notFound(name)
+/// All enabled devices in the account.
+func fetchEnabledDevices(client: ASCClient) async throws -> [Components.Schemas.Device] {
+  try await ASCPaging.allPages(next: { $0.links.next }) {
+    try await client.devicesGetCollection(query: .init(filterStatus: [.enabled], limit: 200)).ok.body.json
+  }.flatMap(\.data)
 }
 
 /// Fetches all signing certificates in the account, filtered to `family` if given.
-func fetchCertificates(family: String? = nil, client: AppStoreConnectClient) async throws -> [AppStoreAPI.Certificate] {
-  var allCerts: [AppStoreAPI.Certificate] = []
-  for try await page in client.pages(Resources.v1.certificates.get(limit: 200)) {
-    allCerts.append(contentsOf: page.data)
-  }
+func fetchCertificates(family: String? = nil, client: ASCClient) async throws -> [Components.Schemas.Certificate] {
+  let allCerts = try await ASCPaging.allPages(next: { $0.links.next }) {
+    try await client.certificatesGetCollection(query: .init(limit: 200)).ok.body.json
+  }.flatMap(\.data)
   guard let family else { return allCerts }
-  return allCerts.filter { cert in
-    guard let ct = cert.attributes?.certificateType else { return false }
-    return certFamily(ct) == family
+  return allCerts.filter { $0.attributes?.certificateType.map(certFamily) == family }
+}
+
+/// All certificates in the account grouped by `certFamily`.
+func fetchCertificatesByFamily(client: ASCClient) async throws -> [String: [Components.Schemas.Certificate]] {
+  var certsByFamily: [String: [Components.Schemas.Certificate]] = [:]
+  for cert in try await fetchCertificates(client: client) {
+    guard let type = cert.attributes?.certificateType else { continue }
+    certsByFamily[certFamily(type), default: []].append(cert)
   }
+  return certsByFamily
+}
+
+/// Creates a provisioning profile; `deviceIDs` is only sent when non-empty.
+func createProfile(
+  name: String,
+  type: ASCEnum.ProfileCreateRequestProfileType,
+  bundleIDResourceID: String,
+  certificateIDs: [String],
+  deviceIDs: [String],
+  client: ASCClient
+) async throws -> Components.Schemas.Profile {
+  typealias Relationships = Components.Schemas.ProfileCreateRequest.DataPayload.RelationshipsPayload
+  let request = Components.Schemas.ProfileCreateRequest(data: .init(
+    attributes: .init(name: name, profileType: type.rawValue),
+    relationships: Relationships(
+      bundleId: .init(data: .init(id: bundleIDResourceID, _type: "bundleIds")),
+      certificates: .init(data: certificateIDs.map { .init(id: $0, _type: "certificates") }),
+      devices: deviceIDs.isEmpty ? nil : .init(data: deviceIDs.map { .init(id: $0, _type: "devices") })
+    ),
+    _type: "profiles"
+  ))
+  return try await client.profilesCreateInstance(body: .json(request)).created.body.json.data
 }
 
 /// Deletes `profile` and recreates it with the given certificates, preserving the
@@ -813,36 +782,36 @@ func fetchCertificates(family: String? = nil, client: AppStoreConnectClient) asy
 /// ad-hoc/development profiles. Prints an OK/FAIL/SKIP line (plus a recovery
 /// command on recreate failure) and returns true on success.
 func reissueProfile(
-  _ profile: Profile,
+  _ profile: Components.Schemas.Profile,
   bundleIDIdentifier: String,
-  certs: [AppStoreAPI.Certificate],
+  certs: [Components.Schemas.Certificate],
   overrideDeviceIDs: [String]? = nil,
   verb: String,
-  client: AppStoreConnectClient
+  client: ASCClient
 ) async -> Bool {
   let profileName = profile.attributes?.name ?? "—"
-  let profileTypeRaw = profile.attributes?.profileType?.rawValue ?? ""
-  guard let profileType = ProfileCreateRequest.Data.Attributes.ProfileType(rawValue: profileTypeRaw) else {
+  let profileTypeRaw = profile.attributes?.profileType ?? ""
+  guard let profileType = ASCEnum.ProfileCreateRequestProfileType(rawValue: profileTypeRaw) else {
     print("  SKIP \(profileName) — unknown profile type '\(profileTypeRaw)'")
     return false
   }
-  guard let bundleIDResourceID = profile.relationships?.bundleID?.data?.id else {
+  guard let bundleIDResourceID = profile.relationships?.bundleId?.data?.id else {
     print("  SKIP \(profileName) — could not resolve its bundle ID")
     return false
   }
-  let needsDevices = profileTypeRaw.contains("DEVELOPMENT") || profileTypeRaw.contains("ADHOC")
 
   var deviceIDs: [String] = []
   var deviceUDIDs: [String] = []
-  if needsDevices {
+  if profileNeedsDevices(profileTypeRaw) {
     if let overrideDeviceIDs {
       deviceIDs = overrideDeviceIDs
     } else {
       do {
-        for try await page in client.pages(Resources.v1.profiles.id(profile.id).devices.get(limit: 200)) {
-          deviceIDs.append(contentsOf: page.data.map(\.id))
-          deviceUDIDs.append(contentsOf: page.data.compactMap { $0.attributes?.udid })
-        }
+        let devices = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.profilesDevicesGetToManyRelated(path: .init(id: profile.id), query: .init(limit: 200)).ok.body.json
+        }.flatMap(\.data)
+        deviceIDs = devices.map(\.id)
+        deviceUDIDs = devices.compactMap { $0.attributes?.udid }
       } catch {
         print("  FAIL \(profileName) — could not fetch its devices: \(describeError(error))")
         return false
@@ -851,31 +820,18 @@ func reissueProfile(
   }
 
   do {
-    _ = try await client.send(Resources.v1.profiles.id(profile.id).delete)
+    _ = try await client.profilesDeleteInstance(path: .init(id: profile.id)).noContent
   } catch {
     print("  FAIL \(profileName) — delete failed: \(describeError(error))")
     return false
   }
 
   do {
-    let devicesRelationship: ProfileCreateRequest.Data.Relationships.Devices? =
-      deviceIDs.isEmpty ? nil : .init(data: deviceIDs.map { .init(id: $0) })
-    let response = try await client.send(
-      Resources.v1.profiles.post(
-        ProfileCreateRequest(data: .init(
-          attributes: .init(
-            name: profileName,
-            profileType: profileType
-          ),
-          relationships: .init(
-            bundleID: .init(data: .init(id: bundleIDResourceID)),
-            devices: devicesRelationship,
-            certificates: .init(data: certs.map { .init(id: $0.id) })
-          )
-        ))
-      )
+    let created = try await createProfile(
+      name: profileName, type: profileType, bundleIDResourceID: bundleIDResourceID,
+      certificateIDs: certs.map(\.id), deviceIDs: deviceIDs, client: client
     )
-    let newExpiry = response.data.attributes?.expirationDate.map { formatDate($0) } ?? "—"
+    let newExpiry = created.attributes?.expirationDate.map { formatDate($0) } ?? "—"
     print("  OK   \(profileName) — \(verb) with \(certs.count) cert(s) (expires \(newExpiry))")
     return true
   } catch {
@@ -890,23 +846,23 @@ func reissueProfile(
 /// Maps certificate types to a family name so equivalent types are grouped together.
 /// Apple replaced platform-specific types (IOS_DISTRIBUTION, MAC_APP_DISTRIBUTION)
 /// with universal ones (DISTRIBUTION), but old certs keep their original type.
-func certFamily(_ type: CertificateType) -> String {
-  switch type {
-  case .distribution, .iOSDistribution, .macAppDistribution, .macInstallerDistribution:
+func certFamily(_ rawType: String) -> String {
+  switch ASCEnum.CertificateType(rawValue: rawType) {
+  case .distribution, .iosDistribution, .macAppDistribution, .macInstallerDistribution:
     return "Distribution"
-  case .development, .iOSDevelopment, .macAppDevelopment:
+  case .development, .iosDevelopment, .macAppDevelopment:
     return "Development"
-  case .developerIDApplication, .developerIDApplicationG2:
+  case .developerIdApplication, .developerIdApplicationG2:
     return "Developer ID Application"
-  case .developerIDKext, .developerIDKextG2:
+  case .developerIdKext, .developerIdKextG2:
     return "Developer ID Kext"
   default:
-    return type.rawValue
+    return rawType
   }
 }
 
 /// Formats a certificate as "DisplayName (Serial)" for clear identification.
-func certLabel(_ cert: AppStoreAPI.Certificate) -> String {
+func certLabel(_ cert: Components.Schemas.Certificate) -> String {
   let name = cert.attributes?.displayName ?? "—"
   let serial = cert.attributes?.serialNumber ?? cert.id
   return "\(name) (\(serial))"
@@ -921,6 +877,11 @@ func certFamilyForProfileType(_ rawType: String) -> String {
     return "Distribution"
   }
   return "Development"
+}
+
+/// Development and ad hoc profiles list the devices they install on.
+func profileNeedsDevices(_ rawType: String) -> Bool {
+  rawType.contains("DEVELOPMENT") || rawType.contains("ADHOC")
 }
 
 enum ProfileLookupError: LocalizedError {

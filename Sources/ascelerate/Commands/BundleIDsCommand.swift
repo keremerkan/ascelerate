@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -82,15 +80,11 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print("Platform:   \(attrs?.platform.map { formatState($0) } ?? "—")")
       print("Seed ID:    \(attrs?.seedId ?? "—")")
 
-      // Fetch capabilities (this endpoint rejects `limit`)
-      let capsResponse = try await client.bundleIdsBundleIdCapabilitiesGetToManyRelated(
-        path: .init(id: bundleID.id)
-      ).ok.body.json
-
-      if !capsResponse.data.isEmpty {
+      let capabilities = try await fetchCapabilities(bundleID: bundleID, client: client)
+      if !capabilities.isEmpty {
         print()
         print("Capabilities:")
-        for cap in capsResponse.data {
+        for cap in capabilities {
           let capType = cap.attributes?.capabilityType.map { formatState($0) } ?? "—"
           print("  \(capType)")
         }
@@ -124,12 +118,12 @@ struct BundleIDsCommand: AsyncParsableCommand {
         if platform == nil { throw ValidationError("--platform is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       let bundleIDName = try name ?? promptText("Display name: ")
       let bundleIDIdentifier = try identifier ?? promptText("Bundle identifier (e.g. com.example.MyApp): ")
 
-      let platformValue: BundleIDPlatform
+      let platformValue: ASCEnum.BundleIdPlatform
       if let platform {
         platformValue = try parseEnum(platform, name: "platform")
       } else {
@@ -139,7 +133,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print("Register bundle identifier:")
       print("  Identifier: \(bundleIDIdentifier)")
       print("  Name:       \(bundleIDName)")
-      print("  Platform:   \(platformValue)")
+      print("  Platform:   \(formatState(platformValue.rawValue))")
       print()
 
       guard confirm("Register this bundle identifier? [y/N] ") else {
@@ -147,23 +141,16 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.send(
-        Resources.v1.bundleIDs.post(
-          BundleIDCreateRequest(data: .init(
-            attributes: .init(
-              name: bundleIDName,
-              platform: platformValue,
-              identifier: bundleIDIdentifier
-            )
-          ))
-        )
-      )
+      let response = try await client.bundleIdsCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(identifier: bundleIDIdentifier, name: bundleIDName, platform: platformValue.rawValue),
+        _type: "bundleIds"
+      )))).created.body.json
 
       let attrs = response.data.attributes
       print()
       success("Registered", "bundle identifier '\(attrs?.identifier ?? bundleIDIdentifier)'.")
       print("  Name:     \(attrs?.name ?? bundleIDName)")
-      print("  Seed ID:  \(attrs?.seedID ?? "—")")
+      print("  Seed ID:  \(attrs?.seedId ?? "—")")
     }
   }
 
@@ -185,9 +172,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
         throw ValidationError("Bundle identifier argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let bundleID: BundleID
+      let bundleID: Components.Schemas.BundleId
       if let identifier {
         bundleID = try await findBundleID(identifier: identifier, client: client)
       } else {
@@ -208,7 +195,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(Resources.v1.bundleIDs.id(bundleID.id).delete)
+      _ = try await client.bundleIdsDeleteInstance(path: .init(id: bundleID.id)).noContent
       print()
       success("Deleted", "bundle identifier '\(attrs?.identifier ?? identifier ?? "—")'.")
     }
@@ -235,9 +222,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
         if name == nil { throw ValidationError("--name is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let bundleID: BundleID
+      let bundleID: Components.Schemas.BundleId
       if let identifier {
         bundleID = try await findBundleID(identifier: identifier, client: client)
       } else {
@@ -258,14 +245,10 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.send(
-        Resources.v1.bundleIDs.id(bundleID.id).patch(
-          BundleIDUpdateRequest(data: .init(
-            id: bundleID.id,
-            attributes: .init(name: newName)
-          ))
-        )
-      )
+      let response = try await client.bundleIdsUpdateInstance(
+        path: .init(id: bundleID.id),
+        body: .json(.init(data: .init(attributes: .init(name: newName), id: bundleID.id, _type: "bundleIds")))
+      ).ok.body.json
 
       let attrs = response.data.attributes
       print()
@@ -293,8 +276,8 @@ struct BundleIDsCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
-    private func promptCapabilityType(excluding enabled: Set<String>) throws -> CapabilityType {
-      let available = CapabilityType.allCases.filter { !enabled.contains($0.rawValue) }
+    private func promptCapabilityType(excluding enabled: Set<String>) throws -> ASCEnum.CapabilityType {
+      let available = ASCEnum.CapabilityType.allCases.filter { !enabled.contains($0.rawValue) }
       guard !available.isEmpty else {
         throw ValidationError("All capabilities are already enabled on this bundle identifier.")
       }
@@ -319,9 +302,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
         if type == nil { throw ValidationError("--type is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let bundleID: BundleID
+      let bundleID: Components.Schemas.BundleId
       if let identifier {
         bundleID = try await findBundleID(identifier: identifier, client: client)
       } else {
@@ -329,14 +312,11 @@ struct BundleIDsCommand: AsyncParsableCommand {
       }
 
       // Fetch current capabilities to check for duplicates
-      let capsResponse = try await client.send(
-        Resources.v1.bundleIDs.id(bundleID.id).bundleIDCapabilities.get()
-      )
-      let enabledTypes = Set(capsResponse.data.compactMap { $0.attributes?.capabilityType?.rawValue })
+      let enabledTypes = Set(try await fetchCapabilities(bundleID: bundleID, client: client).compactMap { $0.attributes?.capabilityType })
 
-      let capabilityType: CapabilityType
+      let capabilityType: ASCEnum.CapabilityType
       if let type {
-        let ct: CapabilityType = try parseEnum(type, name: "capability type")
+        let ct: ASCEnum.CapabilityType = try parseEnum(type, name: "capability type")
         if enabledTypes.contains(ct.rawValue) {
           print("\(ct.rawValue) is already enabled on this bundle identifier.")
           return
@@ -349,7 +329,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       let bidIdentifier = bundleID.attributes?.identifier ?? identifier ?? bundleID.id
       print("Enable capability:")
       print("  Bundle ID:  \(bidIdentifier)")
-      print("  Capability: \(capabilityType)")
+      print("  Capability: \(formatState(capabilityType.rawValue))")
       print()
 
       guard confirm("Enable this capability? [y/N] ") else {
@@ -357,20 +337,15 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.send(
-        Resources.v1.bundleIDCapabilities.post(
-          BundleIDCapabilityCreateRequest(data: .init(
-            attributes: .init(capabilityType: capabilityType),
-            relationships: .init(
-              bundleID: .init(data: .init(id: bundleID.id))
-            )
-          ))
-        )
-      )
+      let response = try await client.bundleIdCapabilitiesCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(capabilityType: capabilityType.rawValue),
+        relationships: .init(bundleId: .init(data: .init(id: bundleID.id, _type: "bundleIds"))),
+        _type: "bundleIdCapabilities"
+      )))).created.body.json
 
       let attrs = response.data.attributes
       print()
-      success("Enabled", "\(attrs?.capabilityType.map { formatState($0) } ?? "\(capabilityType)") on '\(bidIdentifier)'.")
+      success("Enabled", "\(attrs?.capabilityType.map { formatState($0) } ?? formatState(capabilityType.rawValue)) on '\(bidIdentifier)'.")
 
       if Self.requiresPortalConfiguration.contains(capabilityType) {
         print()
@@ -382,7 +357,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
     }
 
     /// Capabilities that need extra configuration in the Apple Developer portal after enabling.
-    private static let requiresPortalConfiguration: Set<CapabilityType> = [
+    private static let requiresPortalConfiguration: Set<ASCEnum.CapabilityType> = [
       .appGroups, .icloud, .associatedDomains, .applePay, .pushNotifications,
       .wallet, .personalVpn, .networkExtensions,
     ]
@@ -400,11 +375,10 @@ struct BundleIDsCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
-    private func promptCapability(bundleID: BundleID, client: AppStoreConnectClient) async throws -> BundleIDCapability {
-      let capsResponse = try await client.send(
-        Resources.v1.bundleIDs.id(bundleID.id).bundleIDCapabilities.get()
-      )
-      let caps = capsResponse.data
+    private func promptCapability(
+      bundleID: Components.Schemas.BundleId, client: ASCClient
+    ) async throws -> Components.Schemas.BundleIdCapability {
+      let caps = try await fetchCapabilities(bundleID: bundleID, client: client)
       guard !caps.isEmpty else {
         throw ValidationError("No capabilities enabled on this bundle identifier.")
       }
@@ -424,9 +398,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
         throw ValidationError("Bundle identifier argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let bundleID: BundleID
+      let bundleID: Components.Schemas.BundleId
       if let identifier {
         bundleID = try await findBundleID(identifier: identifier, client: client)
       } else {
@@ -448,7 +422,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(Resources.v1.bundleIDCapabilities.id(capability.id).delete)
+      _ = try await client.bundleIdCapabilitiesDeleteInstance(path: .init(id: capability.id)).noContent
       print()
       success("Disabled", "\(capType) on '\(bidIdentifier)'.")
 
@@ -457,37 +431,28 @@ struct BundleIDsCommand: AsyncParsableCommand {
   }
 }
 
+/// The capabilities enabled on a bundle ID, sorted by display name (the API returns them in
+/// no stable order). The endpoint rejects `limit` and returns them all.
+private func fetchCapabilities(
+  bundleID: Components.Schemas.BundleId, client: ASCClient
+) async throws -> [Components.Schemas.BundleIdCapability] {
+  try await client.bundleIdsBundleIdCapabilitiesGetToManyRelated(path: .init(id: bundleID.id)).ok.body.json.data
+    .sorted { formatState($0.attributes?.capabilityType ?? "").localizedCaseInsensitiveCompare(formatState($1.attributes?.capabilityType ?? "")) == .orderedAscending }
+}
+
 /// After a capability change, checks for provisioning profiles referencing this bundle ID
 /// and offers to regenerate them (delete + recreate with the same settings).
-private func regenerateProfilesIfNeeded(bundleID: BundleID, client: AppStoreConnectClient) async throws {
+private func regenerateProfilesIfNeeded(bundleID: Components.Schemas.BundleId, client: ASCClient) async throws {
   let bidIdentifier = bundleID.attributes?.identifier ?? bundleID.id
 
   // Fetch all profiles that reference this bundle ID
-  var matchingProfiles: [Profile] = []
-
-  let profileRequest = Resources.v1.profiles.get(
-    limit: 200,
-    include: [.bundleID]
-  )
-
-  for try await page in client.pages(profileRequest) {
-    for profile in page.data {
-      if profile.relationships?.bundleID?.data?.id == bundleID.id {
-        matchingProfiles.append(profile)
-      }
-    }
-  }
+  let matchingProfiles = try await fetchProfilesWithBundleIDs(client: client).profiles
+    .filter { $0.relationships?.bundleId?.data?.id == bundleID.id }
+    .sorted { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
 
   guard !matchingProfiles.isEmpty else { return }
 
-  matchingProfiles.sort { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
-
-  // Fetch all certificates and group by family
-  var certsByFamily: [String: [AppStoreAPI.Certificate]] = [:]
-  for cert in try await fetchCertificates(client: client) {
-    guard let ct = cert.attributes?.certificateType else { continue }
-    certsByFamily[certFamily(ct), default: []].append(cert)
-  }
+  let certsByFamily = try await fetchCertificatesByFamily(client: client)
 
   print()
   print("Capability changes require provisioning profile regeneration.")
@@ -509,7 +474,7 @@ private func regenerateProfilesIfNeeded(bundleID: BundleID, client: AppStoreConn
   var failed = 0
 
   for profile in matchingProfiles {
-    let neededFamily = certFamilyForProfileType(profile.attributes?.profileType?.rawValue ?? "")
+    let neededFamily = certFamilyForProfileType(profile.attributes?.profileType ?? "")
     let certs = certsByFamily[neededFamily] ?? []
     guard !certs.isEmpty else {
       print("  SKIP \(profile.attributes?.name ?? "—") — no \(neededFamily.lowercased()) certificate found")
@@ -551,27 +516,13 @@ func promptBundleID(client: ASCClient) async throws -> Components.Schemas.Bundle
   )
 }
 
-/// Looks up a bundle ID by identifier, guarding against prefix matching (ASCKit).
+/// Looks up a bundle ID by identifier. `filter[identifier]` does prefix matching, so the exact match is picked.
 func findBundleID(identifier: String, client: ASCClient) async throws -> Components.Schemas.BundleId {
   let response = try await client.bundleIdsGetCollection(query: .init(filterIdentifier: [identifier], limit: 200)).ok.body.json
   guard let bundleID = response.data.first(where: { $0.attributes?.identifier == identifier }) else {
     throw BundleIDLookupError.notFound(identifier)
   }
   return bundleID
-}
-
-func promptBundleID(client: AppStoreConnectClient) async throws -> BundleID {
-  let bundleIDs = try await fetchAll(
-    client.pages(Resources.v1.bundleIDs.get(limit: 200)),
-    data: \.data,
-    emptyMessage: "No bundle identifiers found in your account.",
-    sort: { ($0.attributes?.identifier ?? "") < ($1.attributes?.identifier ?? "") }
-  )
-  return try promptSelection(
-    "Bundle identifiers", items: bundleIDs,
-    display: { "\($0.attributes?.identifier ?? "—") (\($0.attributes?.name ?? "—"), \($0.attributes?.platform.map { formatState($0) } ?? "—"))" },
-    prompt: "Select bundle identifier"
-  )
 }
 
 /// Prompts the user to select a platform from a numbered list.
@@ -582,18 +533,6 @@ func promptPlatform<Platform: RawRepresentable & CaseIterable>() throws -> Platf
     display: { $0.rawValue },
     prompt: "Select platform"
   )
-}
-
-/// Looks up a bundle ID by identifier. Guards against prefix matching.
-func findBundleID(identifier: String, client: AppStoreConnectClient) async throws -> BundleID {
-  let response = try await client.send(
-    Resources.v1.bundleIDs.get(filterIdentifier: [identifier], limit: 200)
-  )
-  // filterIdentifier does prefix matching — find exact match
-  guard let bundleID = response.data.first(where: { $0.attributes?.identifier == identifier }) else {
-    throw BundleIDLookupError.notFound(identifier)
-  }
-  return bundleID
 }
 
 enum BundleIDLookupError: LocalizedError {

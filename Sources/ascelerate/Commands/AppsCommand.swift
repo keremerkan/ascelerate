@@ -228,7 +228,7 @@ struct AppsCommand: AsyncParsableCommand {
       var locale: String?
       
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -236,12 +236,9 @@ struct AppsCommand: AsyncParsableCommand {
         print("Version: \(versionString)")
         print()
         
-        let request = Resources.v1.appStoreVersions.id(version.id)
-          .appStoreVersionLocalizations.get(
-            filterLocale: locale.map { [$0] }
-          )
-        
-        let response = try await client.send(request)
+        let response = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: version.id), query: .init(filterLocale: locale.map { [$0] })
+        ).ok.body.json
         
         for loc in response.data {
           let attrs = loc.attributes
@@ -259,10 +256,10 @@ struct AppsCommand: AsyncParsableCommand {
           if let promo = attrs?.promotionalText, !promo.isEmpty {
             print("  Promotional Text: \(promo.prefix(80))\(promo.count > 80 ? "..." : "")")
           }
-          if let url = attrs?.marketingURL {
+          if let url = attrs?.marketingUrl {
             print("  Marketing URL:    \(url)")
           }
-          if let url = attrs?.supportURL {
+          if let url = attrs?.supportUrl {
             print("  Support URL:      \(url)")
           }
           print()
@@ -573,14 +570,13 @@ struct AppsCommand: AsyncParsableCommand {
       var output: String?
       
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
-        let locsResponse = try await client.send(
-          Resources.v1.appStoreVersions.id(version.id)
-            .appStoreVersionLocalizations.get()
-        )
+        let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: version.id)
+        ).ok.body.json
         
         var result: [String: LocaleFields] = [:]
         for loc in locsResponse.data {
@@ -591,8 +587,8 @@ struct AppsCommand: AsyncParsableCommand {
             whatsNew: attrs?.whatsNew,
             keywords: attrs?.keywords,
             promotionalText: attrs?.promotionalText,
-            marketingURL: attrs?.marketingURL?.absoluteString,
-            supportURL: attrs?.supportURL?.absoluteString
+            marketingURL: attrs?.marketingUrl,
+            supportURL: attrs?.supportUrl
           )
         }
         
@@ -2523,6 +2519,15 @@ struct AppsCommand: AsyncParsableCommand {
         }
       }
 
+      /// `reviewDetail` for ASCKit-migrated commands.
+      static func reviewDetail(versionID: String, client: ASCClient) async throws -> Components.Schemas.AppStoreReviewDetail? {
+        do {
+          return try await client.appStoreVersionsAppStoreReviewDetailGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
+        } catch where ASCError.isMissingRelated(error) {
+          return nil
+        }
+      }
+
       /// Returns the version's App Review detail ID, creating an empty detail if needed.
       static func ensureReviewDetailID(
         versionID: String, client: AppStoreConnectClient
@@ -2555,7 +2560,7 @@ struct AppsCommand: AsyncParsableCommand {
         @OptionGroup var platformOption: PlatformOption
 
         func run() async throws {
-          let client = try ClientFactory.makeClient()
+          let client = try ClientFactory.makeASCClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let appVersion = try await findVersion(
             appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -2567,8 +2572,9 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
 
-          let resp = try await client.send(
-            Resources.v1.appStoreReviewDetails.id(detail.id).appStoreReviewAttachments.get(limit: 50))
+          let resp = try await client.appStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated(
+            path: .init(id: detail.id), query: .init(limit: 50)
+          ).ok.body.json
           if resp.data.isEmpty {
             print("No attachments found.")
             return
@@ -2714,6 +2720,21 @@ struct AppsCommand: AsyncParsableCommand {
     }
 
     private static let editableStates: Set<AppInfo.Attributes.State> = [.prepareForSubmission, .waitingForReview]
+
+    static func findActiveAppInfo(appID: String, client: ASCClient) async throws -> Components.Schemas.AppInfo {
+      try pickActiveAppInfo(from: await client.appsAppInfosGetToManyRelated(path: .init(id: appID)).ok.body.json.data)
+    }
+
+    /// `pickActiveAppInfo` for ASCKit types (states are raw strings).
+    static func pickActiveAppInfo(from appInfos: [Components.Schemas.AppInfo]) throws -> Components.Schemas.AppInfo {
+      let candidates = appInfos.filter { $0.attributes?.state != "REPLACED_WITH_NEW_INFO" }
+      guard let appInfo = candidates.first(where: { Set(editableStates.map(\.rawValue)).contains($0.attributes?.state ?? "") })
+              ?? candidates.first
+              ?? appInfos.first else {
+        throw ValidationError("No app info found.")
+      }
+      return appInfo
+    }
     
     static func checkEditable(_ appInfo: AppInfo) throws {
       guard let state = appInfo.attributes?.state, editableStates.contains(state) else {
@@ -2743,18 +2764,12 @@ struct AppsCommand: AsyncParsableCommand {
       }
       
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         
         if listCategories {
-          let response = try await client.send(
-            Resources.v1.appCategories.get(
-              filterPlatforms: [.iOS],
-              isExistsParent: false,
-              limit: 200,
-              include: [.subcategories],
-              limitSubcategories: 50
-            )
-          )
+          let response = try await client.appCategoriesGetCollection(query: .init(
+            filterPlatforms: [.ios], existsParent: false, limit: 200, include: [.subcategories], limitSubcategories: 50
+          )).ok.body.json
           
           print("Categories (iOS):")
           for cat in response.data.sorted(by: { $0.id < $1.id }) {
@@ -2774,12 +2789,10 @@ struct AppsCommand: AsyncParsableCommand {
         
         let app = try await findApp(bundleID: bundleID, client: client)
         
-        let response = try await client.send(
-          Resources.v1.apps.id(app.id).appInfos.get(
-            include: [.primaryCategory, .secondaryCategory, .appInfoLocalizations],
-            limitAppInfoLocalizations: 50
-          )
-        )
+        let response = try await client.appsAppInfosGetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(include: [.primaryCategory, .secondaryCategory, .appInfoLocalizations], limitAppInfoLocalizations: 50)
+        ).ok.body.json
         
         let appInfo = try AppInfoCommand.pickActiveAppInfo(from: response.data)
         
@@ -2798,8 +2811,8 @@ struct AppsCommand: AsyncParsableCommand {
         
         // Filter localizations to only those belonging to the selected AppInfo
         let locIDs = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
-        let localizations = response.included?.compactMap { item -> AppInfoLocalization? in
-          if case .appInfoLocalization(let loc) = item, locIDs.contains(loc.id) {
+        let localizations = response.included?.compactMap { item -> Components.Schemas.AppInfoLocalization? in
+          if case .appInfoLocalizations(let loc) = item, locIDs.contains(loc.id) {
             return loc
           }
           return nil
@@ -2819,10 +2832,10 @@ struct AppsCommand: AsyncParsableCommand {
               line += " — \(sub)"
             }
             print(line)
-            if let url = locAttrs?.privacyPolicyURL, !url.isEmpty {
+            if let url = locAttrs?.privacyPolicyUrl, !url.isEmpty {
               print("    Privacy Policy URL:  \(url)")
             }
-            if let url = locAttrs?.privacyChoicesURL, !url.isEmpty {
+            if let url = locAttrs?.privacyChoicesUrl, !url.isEmpty {
               print("    Privacy Choices URL: \(url)")
             }
           }
@@ -3143,14 +3156,13 @@ struct AppsCommand: AsyncParsableCommand {
       var output: String?
       
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: app.id, client: client)
         
-        let locsResponse = try await client.send(
-          Resources.v1.appInfos.id(appInfo.id)
-            .appInfoLocalizations.get()
-        )
+        let locsResponse = try await client.appInfosAppInfoLocalizationsGetToManyRelated(
+          path: .init(id: appInfo.id)
+        ).ok.body.json
         
         var result: [String: AppInfoLocaleFields] = [:]
         for loc in locsResponse.data {
@@ -3159,8 +3171,8 @@ struct AppsCommand: AsyncParsableCommand {
           result[locale] = AppInfoLocaleFields(
             name: attrs?.name,
             subtitle: attrs?.subtitle,
-            privacyPolicyURL: attrs?.privacyPolicyURL,
-            privacyChoicesURL: attrs?.privacyChoicesURL
+            privacyPolicyURL: attrs?.privacyPolicyUrl,
+            privacyChoicesURL: attrs?.privacyChoicesUrl
           )
         }
         
@@ -3190,6 +3202,42 @@ struct AppsCommand: AsyncParsableCommand {
           Resources.v1.appInfos.id(appInfo.id).ageRatingDeclaration.get()
         )
         return (response.data, appInfo)
+      }
+
+      static func fetchDeclaration(appID: String, client: ASCClient) async throws -> Components.Schemas.AgeRatingDeclaration {
+        let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: appID, client: client)
+        return try await client.appInfosAgeRatingDeclarationGetToOneRelated(path: .init(id: appInfo.id)).ok.body.json.data
+      }
+
+      static func toFields(attrs: Components.Schemas.AgeRatingDeclaration.AttributesPayload?) -> AgeRatingFields {
+        AgeRatingFields(
+          alcoholTobaccoOrDrugUseOrReferences: attrs?.alcoholTobaccoOrDrugUseOrReferences,
+          contests: attrs?.contests,
+          gamblingSimulated: attrs?.gamblingSimulated,
+          gunsOrOtherWeapons: attrs?.gunsOrOtherWeapons,
+          horrorOrFearThemes: attrs?.horrorOrFearThemes,
+          matureOrSuggestiveThemes: attrs?.matureOrSuggestiveThemes,
+          profanityOrCrudeHumor: attrs?.profanityOrCrudeHumor,
+          sexualContentOrNudity: attrs?.sexualContentOrNudity,
+          sexualContentGraphicAndNudity: attrs?.sexualContentGraphicAndNudity,
+          violenceCartoonOrFantasy: attrs?.violenceCartoonOrFantasy,
+          violenceRealistic: attrs?.violenceRealistic,
+          violenceRealisticProlongedGraphicOrSadistic: attrs?.violenceRealisticProlongedGraphicOrSadistic,
+          medicalOrTreatmentInformation: attrs?.medicalOrTreatmentInformation,
+          isAdvertising: attrs?.advertising,
+          isGambling: attrs?.gambling,
+          isUnrestrictedWebAccess: attrs?.unrestrictedWebAccess,
+          isUserGeneratedContent: attrs?.userGeneratedContent,
+          isMessagingAndChat: attrs?.messagingAndChat,
+          isLootBox: attrs?.lootBox,
+          isHealthOrWellnessTopics: attrs?.healthOrWellnessTopics,
+          isParentalControls: attrs?.parentalControls,
+          isAgeAssurance: attrs?.ageAssurance,
+          isSocialMedia: attrs?.socialMedia,
+          isSocialMediaAgeRestricted: attrs?.socialMediaAgeRestricted,
+          kidsAgeBand: attrs?.kidsAgeBand,
+          ageRatingOverride: attrs?.ageRatingOverride
+        )
       }
 
       static func toFields(attrs: AgeRatingDeclaration.Attributes?) -> AgeRatingFields {
@@ -3231,10 +3279,10 @@ struct AppsCommand: AsyncParsableCommand {
         var bundleID: String
 
         func run() async throws {
-          let client = try ClientFactory.makeClient()
+          let client = try ClientFactory.makeASCClient()
           let app = try await findApp(bundleID: bundleID, client: client)
-          let (declaration, _) = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
-          let attrs = declaration.attributes
+          let declaration = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
+          let attrs = AgeRating.toFields(attrs: declaration.attributes)
           let appName = app.attributes?.name ?? bundleID
 
           print("App: \(appName)")
@@ -3259,41 +3307,41 @@ struct AppsCommand: AsyncParsableCommand {
       
         // Intensity-based ratings
         let intensityRows: [(String, String)] = [
-          ("Alcohol, Tobacco, or Drug Use", intensityLabel(attrs?.alcoholTobaccoOrDrugUseOrReferences?.rawValue)),
-          ("Contests", intensityLabel(attrs?.contests?.rawValue)),
-          ("Gambling (simulated)", intensityLabel(attrs?.gamblingSimulated?.rawValue)),
-          ("Guns or Other Weapons", intensityLabel(attrs?.gunsOrOtherWeapons?.rawValue)),
-          ("Horror or Fear Themes", intensityLabel(attrs?.horrorOrFearThemes?.rawValue)),
-          ("Mature or Suggestive Themes", intensityLabel(attrs?.matureOrSuggestiveThemes?.rawValue)),
-          ("Profanity or Crude Humor", intensityLabel(attrs?.profanityOrCrudeHumor?.rawValue)),
-          ("Sexual Content or Nudity", intensityLabel(attrs?.sexualContentOrNudity?.rawValue)),
-          ("Sexual Content (graphic)", intensityLabel(attrs?.sexualContentGraphicAndNudity?.rawValue)),
-          ("Violence (cartoon/fantasy)", intensityLabel(attrs?.violenceCartoonOrFantasy?.rawValue)),
-          ("Violence (realistic)", intensityLabel(attrs?.violenceRealistic?.rawValue)),
-          ("Violence (graphic/sadistic)", intensityLabel(attrs?.violenceRealisticProlongedGraphicOrSadistic?.rawValue)),
-          ("Medical Information", intensityLabel(attrs?.medicalOrTreatmentInformation?.rawValue)),
+          ("Alcohol, Tobacco, or Drug Use", intensityLabel(attrs.alcoholTobaccoOrDrugUseOrReferences)),
+          ("Contests", intensityLabel(attrs.contests)),
+          ("Gambling (simulated)", intensityLabel(attrs.gamblingSimulated)),
+          ("Guns or Other Weapons", intensityLabel(attrs.gunsOrOtherWeapons)),
+          ("Horror or Fear Themes", intensityLabel(attrs.horrorOrFearThemes)),
+          ("Mature or Suggestive Themes", intensityLabel(attrs.matureOrSuggestiveThemes)),
+          ("Profanity or Crude Humor", intensityLabel(attrs.profanityOrCrudeHumor)),
+          ("Sexual Content or Nudity", intensityLabel(attrs.sexualContentOrNudity)),
+          ("Sexual Content (graphic)", intensityLabel(attrs.sexualContentGraphicAndNudity)),
+          ("Violence (cartoon/fantasy)", intensityLabel(attrs.violenceCartoonOrFantasy)),
+          ("Violence (realistic)", intensityLabel(attrs.violenceRealistic)),
+          ("Violence (graphic/sadistic)", intensityLabel(attrs.violenceRealisticProlongedGraphicOrSadistic)),
+          ("Medical Information", intensityLabel(attrs.medicalOrTreatmentInformation)),
         ]
       
         // Boolean ratings
         let boolRows: [(String, String)] = [
-          ("Advertising", boolLabel(attrs?.isAdvertising)),
-          ("Gambling", boolLabel(attrs?.isGambling)),
-          ("Unrestricted Web Access", boolLabel(attrs?.isUnrestrictedWebAccess)),
-          ("User-Generated Content", boolLabel(attrs?.isUserGeneratedContent)),
-          ("Messaging and Chat", boolLabel(attrs?.isMessagingAndChat)),
-          ("Loot Box", boolLabel(attrs?.isLootBox)),
-          ("Health/Wellness Topics", boolLabel(attrs?.isHealthOrWellnessTopics)),
-          ("Parental Controls", boolLabel(attrs?.isParentalControls)),
-          ("Age Assurance", boolLabel(attrs?.isAgeAssurance)),
-          ("Social Media", boolLabel(attrs?.isSocialMedia)),
-          ("Social Media Age Restricted", boolLabel(attrs?.isSocialMediaAgeRestricted)),
+          ("Advertising", boolLabel(attrs.isAdvertising)),
+          ("Gambling", boolLabel(attrs.isGambling)),
+          ("Unrestricted Web Access", boolLabel(attrs.isUnrestrictedWebAccess)),
+          ("User-Generated Content", boolLabel(attrs.isUserGeneratedContent)),
+          ("Messaging and Chat", boolLabel(attrs.isMessagingAndChat)),
+          ("Loot Box", boolLabel(attrs.isLootBox)),
+          ("Health/Wellness Topics", boolLabel(attrs.isHealthOrWellnessTopics)),
+          ("Parental Controls", boolLabel(attrs.isParentalControls)),
+          ("Age Assurance", boolLabel(attrs.isAgeAssurance)),
+          ("Social Media", boolLabel(attrs.isSocialMedia)),
+          ("Social Media Age Restricted", boolLabel(attrs.isSocialMediaAgeRestricted)),
         ]
       
         // Other
-        let kidsAgeBand = attrs?.kidsAgeBand?.rawValue
+        let kidsAgeBand = attrs.kidsAgeBand?
           .replacingOccurrences(of: "_", with: " ")
           .capitalized ?? "—"
-        let ageOverride = attrs?.ageRatingOverride?.rawValue
+        let ageOverride = attrs.ageRatingOverride?
           .replacingOccurrences(of: "_", with: " ")
           .capitalized ?? "—"
       
@@ -3327,9 +3375,9 @@ struct AppsCommand: AsyncParsableCommand {
         var output: String?
 
         func run() async throws {
-          let client = try ClientFactory.makeClient()
+          let client = try ClientFactory.makeASCClient()
           let app = try await findApp(bundleID: bundleID, client: client)
-          let (declaration, _) = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
+          let declaration = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
           let appName = app.attributes?.name ?? bundleID
 
           let exported = AgeRating.toFields(attrs: declaration.attributes)

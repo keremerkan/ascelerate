@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct AliasCommand: AsyncParsableCommand {
@@ -26,18 +27,13 @@ struct AliasCommand: AsyncParsableCommand {
           "Invalid alias name '\(name)'. Use only letters, numbers, dashes, and underscores.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       // Fetch all apps and show picker
-      var apps: [(id: String, bundleID: String, name: String)] = []
-      for try await page in client.pages(Resources.v1.apps.get(limit: 200)) {
-        for app in page.data {
-          apps.append((
-            id: app.id,
-            bundleID: app.attributes?.bundleID ?? "—",
-            name: app.attributes?.name ?? "—"
-          ))
-        }
+      var apps = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsGetCollection(query: .init(limit: 200)).ok.body.json
+      }.flatMap(\.data).map { app in
+        (id: app.id, bundleID: app.attributes?.bundleId ?? "—", name: app.attributes?.name ?? "—")
       }
 
       guard !apps.isEmpty else {

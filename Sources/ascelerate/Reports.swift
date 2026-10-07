@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 /// Shared plumbing for the `reports` commands (sales, finance, analytics).
@@ -62,13 +63,9 @@ enum Reports {
 
   // MARK: - Report download
 
-  /// Downloads a `Request<Data>` report endpoint and returns the decompressed TSV text.
-  static func fetchReportText(
-    _ request: Request<Data>, client: AppStoreConnectClient
-  ) async throws -> String {
-    let fileURL = try await client.download(request)
-    defer { try? FileManager.default.removeItem(at: fileURL) }
-    let decompressed = try gunzipFile(at: fileURL)
+  /// Decompresses a report download (an `application/a-gzip` body) into its TSV text.
+  static func reportText(_ gzipped: Data) throws -> String {
+    let decompressed = try gunzip(gzipped)
     guard let text = String(data: decompressed, encoding: .utf8) else {
       throw ValidationError("Report data was not valid UTF-8 text.")
     }
@@ -115,7 +112,7 @@ enum Reports {
 
   /// Default report date for the most recent completed period, in Apple's reporting time zone.
   /// DAILY → yesterday, WEEKLY → most recent Sunday, MONTHLY → last month, YEARLY → last year.
-  static func defaultSalesDate(frequency: Resources.V1.SalesReports.FilterFrequency) -> String {
+  static func defaultSalesDate(frequency: String) -> String {
     var cal = Calendar(identifier: .gregorian)
     cal.timeZone = TimeZone(identifier: "America/Los_Angeles") ?? cal.timeZone
     let formatter = DateFormatter()
@@ -124,28 +121,28 @@ enum Reports {
     let now = Date()
 
     switch frequency {
-    case .weekly:
+    case "WEEKLY":
       formatter.dateFormat = "yyyy-MM-dd"
       // Apple weekly reports are keyed by the Sunday that ends the week.
       let weekday = cal.component(.weekday, from: now)  // 1 = Sunday
       let daysSinceSunday = (weekday - 1 + 7) % 7
       let lastSunday = cal.date(byAdding: .day, value: -(daysSinceSunday == 0 ? 7 : daysSinceSunday), to: now)!
       return formatter.string(from: lastSunday)
-    case .monthly:
+    case "MONTHLY":
       formatter.dateFormat = "yyyy-MM"
       return formatter.string(from: cal.date(byAdding: .month, value: -1, to: now)!)
-    case .yearly:
+    case "YEARLY":
       formatter.dateFormat = "yyyy"
       return formatter.string(from: cal.date(byAdding: .year, value: -1, to: now)!)
-    case .daily:
+    default:  // DAILY
       formatter.dateFormat = "yyyy-MM-dd"
       return formatter.string(from: cal.date(byAdding: .day, value: -1, to: now)!)
     }
   }
 
   /// Turns a 404 from a report download into a friendlier hint (the body isn't parsed on downloads).
-  static func notFoundHint(_ error: ResponseError, date: String) -> Error {
-    if case .requestFailure(_, let status, _) = error, status == 404 {
+  static func notFoundHint(_ error: Error, date: String) -> Error {
+    if ASCError.from(error)?.statusCode == 404 {
       return ValidationError(
         """
         No report found for \(date). It may not be available yet (data lags ~1 day),

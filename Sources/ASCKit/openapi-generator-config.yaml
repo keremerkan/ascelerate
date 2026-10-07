@@ -25,6 +25,8 @@ filter:
     - /v1/appAssetLibraryPlacements/{id}
     - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/devices
+    - /v1/salesReports
+    - /v1/financeReports
     - /v1/apps/{id}/appEvents
     - /v1/appEvents/{id}/localizations
     - /v1/appEventLocalizations/{id}/appEventScreenshots

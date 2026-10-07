@@ -74,6 +74,7 @@ filter:
     - /v1/appInfos/{id}/appInfoLocalizations
     - /v1/appInfos/{id}/ageRatingDeclaration
     - /v1/certificates
+    - /v1/certificates/{id}
     - /v1/bundleIds
     - /v1/bundleIds/{id}/bundleIdCapabilities
     - /v1/profiles

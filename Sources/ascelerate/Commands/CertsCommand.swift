@@ -125,15 +125,15 @@ struct CertsCommand: AsyncParsableCommand {
     var yes = false
 
     // Certificate types that can be created via the API
-    private static let creatableTypes: [CertificateType] = [
+    private static let creatableTypes: [ASCEnum.CertificateType] = [
       .development, .distribution,
-      .developerIDApplication, .developerIDApplicationG2,
-      .developerIDKext, .developerIDKextG2,
+      .developerIdApplication, .developerIdApplicationG2,
+      .developerIdKext, .developerIdKextG2,
       .macInstallerDistribution,
-      .passTypeID, .passTypeIDWithNfc,
+      .passTypeId, .passTypeIdWithNfc,
     ]
 
-    private func promptCertType() throws -> CertificateType {
+    private func promptCertType() throws -> ASCEnum.CertificateType {
       return try promptSelection(
         "Certificate types",
         items: Self.creatableTypes,
@@ -149,9 +149,9 @@ struct CertsCommand: AsyncParsableCommand {
         throw ValidationError("--type is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let certType: CertificateType
+      let certType: ASCEnum.CertificateType
       if let type {
         certType = try parseEnum(type, name: "type")
       } else {
@@ -171,7 +171,7 @@ struct CertsCommand: AsyncParsableCommand {
         rsaKey = nil
 
         print("Create certificate:")
-        print("  Type: \(certType)")
+        print("  Type: \(formatState(certType.rawValue))")
         print("  CSR:  \(csrPath)")
       } else {
         // Auto-generate RSA 2048 key pair + CSR
@@ -188,7 +188,7 @@ struct CertsCommand: AsyncParsableCommand {
         rsaKey = key
 
         print("Create certificate:")
-        print("  Type: \(certType)")
+        print("  Type: \(formatState(certType.rawValue))")
         print("  CSR:  (auto-generated)")
       }
 
@@ -199,16 +199,10 @@ struct CertsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.send(
-        Resources.v1.certificates.post(
-          CertificateCreateRequest(data: .init(
-            attributes: .init(
-              csrContent: csrContent,
-              certificateType: certType
-            )
-          ))
-        )
-      )
+      let response = try await client.certificatesCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(certificateType: certType.rawValue, csrContent: csrContent),
+        _type: "certificates"
+      )))).created.body.json
 
       let attrs = response.data.attributes
       print()
@@ -328,21 +322,23 @@ struct CertsCommand: AsyncParsableCommand {
         throw ValidationError("Serial number argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let certs: [AppStoreAPI.Certificate]
+      let certs: [Components.Schemas.Certificate]
       if let serialNumber {
         // Exact-match guard: revoking a partial-filter match would destroy the wrong cert
-        let response = try await client.send(
-          Resources.v1.certificates.get(filterSerialNumber: [serialNumber], limit: 200)
-        )
+        let response = try await client.certificatesGetCollection(
+          query: .init(filterSerialNumber: [serialNumber], limit: 200)
+        ).ok.body.json
         guard let found = response.data.first(where: { $0.attributes?.serialNumber == serialNumber }) else {
           throw ValidationError("No certificate found with serial number '\(serialNumber)'.")
         }
         certs = [found]
       } else {
-        let allCerts = try await fetchAll(
-          client.pages(Resources.v1.certificates.get(limit: 200)),
+        let allCerts = try fetchAll(
+          await ASCPaging.allPages(next: { $0.links.next }) {
+            try await client.certificatesGetCollection(query: .init(limit: 200)).ok.body.json
+          },
           data: \.data,
           emptyMessage: "No certificates found in your account.",
           sort: { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
@@ -383,7 +379,7 @@ struct CertsCommand: AsyncParsableCommand {
       for cert in certs {
         let label = cert.attributes?.displayName ?? cert.attributes?.serialNumber ?? "—"
         do {
-          _ = try await client.send(Resources.v1.certificates.id(cert.id).delete)
+          _ = try await client.certificatesDeleteInstance(path: .init(id: cert.id)).noContent
           print("  OK   \(label)")
           succeeded += 1
         } catch {

@@ -198,6 +198,20 @@ nonisolated(unsafe) var autoConfirm = false
 /// asking (a prompt would corrupt the JSON stream).
 nonisolated(unsafe) var jsonMode = false
 
+/// Set by `--dry-run` (see `extractDryRunFlag`); `ASCELERATE_DRY_RUN=1` does the same.
+nonisolated(unsafe) var dryRunFlag = false
+
+/// Removes `--dry-run` from a command line and records it in `dryRunFlag`. ArgumentParser has
+/// no global options (a root option isn't accepted after a subcommand name), so it is taken out
+/// before parsing and accepted anywhere before a `--` terminator.
+func extractDryRunFlag(_ args: [String]) -> [String] {
+  let end = args.firstIndex(of: "--") ?? args.endIndex
+  let options = args[..<end]
+  guard options.contains("--dry-run") else { return args }
+  dryRunFlag = true
+  return options.filter { $0 != "--dry-run" } + args[end...]
+}
+
 /// The flag responsible for the current non-interactive mode, for error messages.
 var nonInteractiveFlag: String { jsonMode ? "--json" : "--yes" }
 

@@ -9,6 +9,10 @@ struct Ascelerate: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "ascelerate",
     abstract: "A Swift CLI for App Store Connect.",
+    discussion: """
+      Global option: --dry-run (anywhere on the command line, or ASCELERATE_DRY_RUN=1) sends \
+      reads as usual but prints every write instead of sending it.
+      """,
     subcommands: [AppsCommand.self, AppEventsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ProductPagesCommand.self, ScreenshotCommand.self, TestFlightCommand.self],
     groupedSubcommands: [
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
@@ -33,14 +37,14 @@ struct Ascelerate: AsyncParsableCommand {
     signal(SIGPIPE, SIG_IGN)
 
     // Catch --version before ArgumentParser rejects it as unknown flag
-    let args = Array(CommandLine.arguments.dropFirst())
+    let args = extractDryRunFlag(Array(CommandLine.arguments.dropFirst()))
     if args == ["--version"] || args == ["-v"] {
       print(appVersion)
       return
     }
 
     do {
-      var command = try parseAsRoot()
+      var command = try parseAsRoot(args)
       if var asyncCommand = command as? AsyncParsableCommand {
         try await asyncCommand.run()
       } else {

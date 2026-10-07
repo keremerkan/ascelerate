@@ -608,7 +608,7 @@ When the user asks to add a new language/locale to an app, translate **all** of 
 ## Tips
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)
-- Set `ASCELERATE_DRY_RUN=1` to try commands or a whole workflow without changing anything: reads run, every write is printed to stderr instead of sent, `builds upload` is skipped, and `run-workflow` continues past blocked steps
+- Add `--dry-run` (anywhere on the command line, or set `ASCELERATE_DRY_RUN=1`) to try commands or a whole workflow without changing anything: reads run, every write is printed to stderr instead of sent, `builds upload` is skipped, and `run-workflow` continues past blocked steps
 - Add `--json` to read commands for machine-readable output (see JSON output above)
 - Use `ascelerate rate-limit` to check API quota (3600 requests/hour)
 - Run `ascelerate install-completions` after updates for tab completion

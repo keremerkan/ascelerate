@@ -18,15 +18,17 @@ Bei Verwendung von `--yes` mit Provisioning-Befehlen müssen alle erforderlichen
 
 ## Probelauf {#dry-run}
 
-Setzen Sie `ASCELERATE_DRY_RUN=1`, um einen Befehl oder einen ganzen Workflow auszuprobieren, ohne etwas in App Store Connect zu ändern. Lesende Anfragen werden wie gewohnt gesendet, sodass Abfragen und Prüfungen mit Ihren echten Daten laufen. Jede schreibende Anfrage wird jedoch vor dem Senden angehalten: ascelerate gibt ihre Methode, ihren Pfad und ihren JSON-Body auf stderr aus und meldet, dass die Anfrage nicht gesendet wurde.
+Hängen Sie `--dry-run` an, um einen Befehl oder einen ganzen Workflow auszuprobieren, ohne etwas in App Store Connect zu ändern. Die Option funktioniert an jeder Stelle der Befehlszeile, und `ASCELERATE_DRY_RUN=1` bewirkt dasselbe. Lesende Anfragen werden wie gewohnt gesendet, sodass Abfragen und Prüfungen mit Ihren echten Daten laufen. Jede schreibende Anfrage wird jedoch vor dem Senden angehalten: ascelerate gibt ihre Methode, ihren Pfad und ihren JSON-Body auf stderr aus und meldet, dass die Anfrage nicht gesendet wurde.
 
 ```bash
-ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
-ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+ascelerate apps localizations import <bundle-id> --file localizations.json --yes --dry-run
+ascelerate run-workflow release.txt --yes --dry-run
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # dasselbe, etwa für einen ganzen CI-Job
 ```
 
 - Ein Befehl bricht bei der ersten angehaltenen Schreibanfrage ab oder meldet, wenn er Elemente einzeln abarbeitet, jede angehaltene Anfrage als fehlgeschlagen.
 - In `run-workflow` beendet ein Schritt, dessen Schreibanfragen angehalten wurden, den Workflow nicht, sodass ein einziger Durchlauf die Schreibanfragen aller Schritte zeigt. Ein Schritt, der auf etwas angewiesen ist, das ein früherer Schritt erstellt hätte (etwa eine neue Version oder einen hochgeladenen Build), kann trotzdem fehlschlagen.
+- In einer Workflow-Datei gilt `--dry-run` bei einem einzelnen Schritt nur für diesen Schritt.
 - `builds upload` überspringt den Upload. `builds archive` und `builds validate` laufen weiterhin, da sie in App Store Connect nichts ändern.
 
 ## Xcode-Signierung in CI

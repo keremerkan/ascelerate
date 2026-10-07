@@ -8,6 +8,16 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/apps/{id}/appAvailabilityV2
+    - /v2/appAvailabilities/{id}/territoryAvailabilities
+    - /v1/territoryAvailabilities/{id}
+    - /v1/appEncryptionDeclarations
+    - /v1/apps/{id}/endUserLicenseAgreement
+    - /v1/endUserLicenseAgreements
+    - /v1/endUserLicenseAgreements/{id}
+    - /v1/territories
+    - /v1/apps/{id}/subscriptionGracePeriod
+    - /v1/subscriptionGracePeriods/{id}
     - /v1/ageRatingDeclarations/{id}
     - /v1/appInfos/{id}
     - /v1/appInfoLocalizations

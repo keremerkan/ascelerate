@@ -976,6 +976,7 @@ func formatFieldName(_ name: String) -> String {
     "vision": "Apple Vision",
     "VISION": "Apple Vision",
     "IOS": "iOS",
+    "ios": "iOS",  // legacy encryption declarations report the platform in lowercase
     "MAC_OS": "macOS",
     "TV_OS": "tvOS",
     "VISION_OS": "visionOS",

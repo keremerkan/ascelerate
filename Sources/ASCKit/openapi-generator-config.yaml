@@ -25,6 +25,15 @@ filter:
     - /v1/appAssetLibraryPlacements/{id}
     - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/devices
+    - /v1/apps/{id}/appEvents
+    - /v1/appEvents/{id}/localizations
+    - /v1/appEventLocalizations/{id}/appEventScreenshots
+    - /v1/appEventLocalizations/{id}/appEventVideoClips
+    - /v1/apps/{id}/appCustomProductPages
+    - /v1/appCustomProductPages/{id}/appCustomProductPageVersions
+    - /v1/appCustomProductPageVersions/{id}/appCustomProductPageLocalizations
+    - /v1/appCustomProductPageLocalizations/{id}/appScreenshotSets
+    - /v1/appCustomProductPageLocalizations/{id}/appPreviewSets
     - /v1/apps/{id}/betaFeedbackCrashSubmissions
     - /v1/betaFeedbackCrashSubmissions/{id}
     - /v1/betaFeedbackCrashSubmissions/{id}/crashLog

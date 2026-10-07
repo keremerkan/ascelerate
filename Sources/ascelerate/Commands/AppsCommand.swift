@@ -4337,6 +4337,65 @@ func findVersion(appID: String, versionString: String?, platform: Platform? = ni
 
 /// Polls until a build finishes processing. Returns the final build.
 /// Throws on timeout or if the build ends in a non-valid state.
+/// `awaitBuildProcessing` for ASCKit-migrated commands.
+func awaitBuildProcessing(
+  appID: String,
+  buildVersion: String?,
+  platform: Platform? = nil,
+  client: ASCClient,
+  interval: Int = 30,
+  timeout: Int = 30
+) async throws -> Components.Schemas.Build {
+  let deadline = Date().addingTimeInterval(Double(timeout * 60))
+  var waitingElapsed = 0
+  var waitingStarted = false
+
+  while Date() < deadline {
+    let response = try await client.buildsGetCollection(query: .init(
+      filterVersion: buildVersion.map { [$0] },
+      filterPreReleaseVersionPlatform: platformFilter(platform),
+      filterApp: [appID],
+      sort: [.minusUploadedDate],
+      limit: 1
+    )).ok.body.json
+
+    if let build = response.data.first, let state = build.attributes?.processingState {
+      let version = build.attributes?.version ?? "?"
+
+      // End the "not found" line if we were waiting
+      if waitingStarted {
+        print()
+        waitingStarted = false
+      }
+
+      switch state {
+        case "VALID":
+          print("Build \(version) is ready (VALID).")
+          return build
+        case "PROCESSING":
+          print("Build \(version): still processing...")
+        default:  // FAILED, INVALID
+          print("Build \(version) processing ended with state: \(state.lowercased())")
+          throw ExitCode.failure
+      }
+    } else {
+      waitingElapsed += interval
+      if !waitingStarted {
+        print("Build not found yet", terminator: "")
+        waitingStarted = true
+      }
+      print("...\(waitingElapsed)s", terminator: "")
+      fflush(stdout)
+    }
+
+    try await Task.sleep(nanoseconds: UInt64(interval) * 1_000_000_000)
+  }
+
+  if waitingStarted { print() }
+  print("\nTimed out after \(timeout) minutes.")
+  throw ExitCode.failure
+}
+
 func awaitBuildProcessing(
   appID: String,
   buildVersion: String?,

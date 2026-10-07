@@ -126,7 +126,7 @@ struct BuildsCommand: AsyncParsableCommand {
     var timeout: Int = 30
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let platform = try platformOption.parsed()
 

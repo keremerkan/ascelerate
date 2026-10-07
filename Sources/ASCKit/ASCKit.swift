@@ -61,6 +61,23 @@ public struct ASCDryRunStop: Error, Sendable, CustomStringConvertible {
   }
 }
 
+/// How many writes dry-run clients have stopped in this process, so a caller can tell a
+/// failure caused only by dry run from a real one.
+public enum ASCDryRun {
+  private final class Counter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = 0
+
+    var count: Int { lock.withLock { value } }
+    func increment() { lock.withLock { value += 1 } }
+  }
+
+  private static let counter = Counter()
+
+  public static var blockedWrites: Int { counter.count }
+  static func recordBlockedWrite() { counter.increment() }
+}
+
 struct DryRunMiddleware: ClientMiddleware {
   func intercept(
     _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
@@ -79,6 +96,7 @@ struct DryRunMiddleware: ClientMiddleware {
       }
     }
     FileHandle.standardError.write(Data((report + "\n").utf8))
+    ASCDryRun.recordBlockedWrite()
     throw ASCDryRunStop(method: request.method.rawValue, path: path)
   }
 }

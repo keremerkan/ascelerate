@@ -1,4 +1,5 @@
 import ArgumentParser
+import ASCKit
 import Foundation
 
 /// Tracks workflow files currently being executed to detect circular references.
@@ -81,6 +82,7 @@ struct RunWorkflowCommand: AsyncParsableCommand {
       print("\(label) \(step)")
 
       let args = try splitArguments(step)
+      let blockedBefore = ASCDryRun.blockedWrites
       do {
         defer {
           autoConfirm = workflowAutoConfirm
@@ -92,6 +94,10 @@ struct RunWorkflowCommand: AsyncParsableCommand {
         } else {
           try command.run()
         }
+      } catch where ASCDryRun.blockedWrites > blockedBefore {
+        // Under ASCELERATE_DRY_RUN a step fails at its first stopped write; keep going so the
+        // run shows every step's writes. Later steps can still fail on what wasn't created.
+        print(yellow("\nDry run: this step's writes were not sent. Continuing."))
       } catch {
         print("\nError: \(describeError(error))")
         print("\nWorkflow stopped at step \(i + 1) of \(steps.count).")

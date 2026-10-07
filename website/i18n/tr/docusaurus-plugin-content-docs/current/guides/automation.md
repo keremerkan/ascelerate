@@ -18,15 +18,17 @@ Provisioning komutlarıyla `--yes` kullanırken, tüm gerekli argümanlar açık
 
 ## Deneme çalıştırması {#dry-run}
 
-`ASCELERATE_DRY_RUN=1` ayarlayarak bir komutu veya bütün bir workflow'u App Store Connect'te hiçbir şeyi değiştirmeden deneyebilirsiniz. Okuma istekleri her zamanki gibi gönderilir; bu sayede sorgular ve kontroller gerçek verilerinizle çalışır. Her yazma isteği ise gönderilmeden önce durdurulur; isteğin yöntemi, yolu ve JSON gövdesi stderr'e yazdırılır ve isteğin gönderilmediği bildirilir.
+`--dry-run` ekleyerek bir komutu veya bütün bir workflow'u App Store Connect'te hiçbir şeyi değiştirmeden deneyebilirsiniz. Bu flag komut satırının herhangi bir yerinde çalışır; `ASCELERATE_DRY_RUN=1` ayarlamak da aynı etkiyi yaratır. Okuma istekleri her zamanki gibi gönderilir; bu sayede sorgular ve kontroller gerçek verilerinizle çalışır. Her yazma isteği ise gönderilmeden önce durdurulur; isteğin yöntemi, yolu ve JSON gövdesi stderr'e yazdırılır ve isteğin gönderilmediği bildirilir.
 
 ```bash
-ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
-ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+ascelerate apps localizations import <bundle-id> --file localizations.json --yes --dry-run
+ascelerate run-workflow release.txt --yes --dry-run
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # aynı etki, örneğin bütün bir CI işi için
 ```
 
 - Bir komut ilk durdurulan yazma isteğinde sona erer; öğeleri tek tek işleyen komutlar ise durdurulan her isteği başarısız olarak bildirir.
 - `run-workflow` içinde, yazma istekleri durdurulan bir adım workflow'u sonlandırmaz; böylece tek bir çalıştırmada tüm adımların yazma isteklerini görebilirsiniz. Önceki bir adımın oluşturacağı bir şeye (yeni bir sürüm veya yüklenmiş bir build gibi) dayanan bir adım yine de başarısız olabilir.
+- Bir workflow dosyasında tek bir adıma eklenen `--dry-run` yalnızca o adım için geçerlidir.
 - `builds upload` yüklemeyi atlar. `builds archive` ve `builds validate`, App Store Connect'te hiçbir şeyi değiştirmedikleri için çalışmaya devam eder.
 
 ## CI'da Xcode imzalama

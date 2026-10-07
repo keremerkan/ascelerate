@@ -18,15 +18,17 @@ Lorsque vous utilisez `--yes` avec les commandes de provisionnement, tous les ar
 
 ## Exécution à blanc {#dry-run}
 
-Définissez `ASCELERATE_DRY_RUN=1` pour essayer une commande ou un workflow complet sans rien modifier dans App Store Connect. Les requêtes de lecture sont envoyées normalement, de sorte que les recherches et les vérifications portent sur vos données réelles, mais chaque requête d'écriture est bloquée avant son envoi : ascelerate affiche sa méthode, son chemin et son corps JSON sur stderr et indique que la requête n'a pas été envoyée.
+Ajoutez `--dry-run` pour essayer une commande ou un workflow complet sans rien modifier dans App Store Connect. L'option fonctionne n'importe où sur la ligne de commande, et `ASCELERATE_DRY_RUN=1` a le même effet. Les requêtes de lecture sont envoyées normalement, de sorte que les recherches et les vérifications portent sur vos données réelles, mais chaque requête d'écriture est bloquée avant son envoi : ascelerate affiche sa méthode, son chemin et son corps JSON sur stderr et indique que la requête n'a pas été envoyée.
 
 ```bash
-ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
-ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+ascelerate apps localizations import <bundle-id> --file localizations.json --yes --dry-run
+ascelerate run-workflow release.txt --yes --dry-run
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # même effet, par exemple pour toute une tâche de CI
 ```
 
 - Une commande s'arrête à sa première écriture bloquée ou, si elle traite les éléments un par un, signale chaque requête bloquée comme un échec.
 - Dans `run-workflow`, une étape dont les écritures ont été bloquées n'interrompt pas le workflow : une seule exécution montre ainsi les écritures de toutes les étapes. Une étape qui dépend d'un élément qu'une étape précédente aurait créé, comme une nouvelle version ou un build téléversé, peut tout de même échouer.
+- Dans un fichier de workflow, `--dry-run` sur une seule étape ne s'applique qu'à cette étape.
 - `builds upload` ignore le téléversement. `builds archive` et `builds validate` s'exécutent normalement, car ils ne modifient rien dans App Store Connect.
 
 ## Signature Xcode en CI

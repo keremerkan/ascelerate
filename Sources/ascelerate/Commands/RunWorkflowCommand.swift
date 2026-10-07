@@ -76,17 +76,19 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     // so one -y step can't auto-accept every later prompt. Same for --json.
     let workflowAutoConfirm = autoConfirm
     let workflowJSONMode = jsonMode
+    let workflowDryRun = dryRunFlag
 
     for (i, step) in steps.enumerated() {
       let label = "[\(i + 1)/\(steps.count)]"
       print("\(label) \(step)")
 
-      let args = try splitArguments(step)
+      let args = try extractDryRunFlag(splitArguments(step))
       let blockedBefore = ASCDryRun.blockedWrites
       do {
         defer {
           autoConfirm = workflowAutoConfirm
           jsonMode = workflowJSONMode
+          dryRunFlag = workflowDryRun
         }
         var command = try Ascelerate.parseAsRoot(args)
         if var async = command as? AsyncParsableCommand {
@@ -95,7 +97,7 @@ struct RunWorkflowCommand: AsyncParsableCommand {
           try command.run()
         }
       } catch where ASCDryRun.blockedWrites > blockedBefore {
-        // Under ASCELERATE_DRY_RUN a step fails at its first stopped write; keep going so the
+        // In a dry run a step fails at its first stopped write; keep going so the
         // run shows every step's writes. Later steps can still fail on what wasn't created.
         print(yellow("\nDry run: this step's writes were not sent. Continuing."))
       } catch {
@@ -107,7 +109,11 @@ struct RunWorkflowCommand: AsyncParsableCommand {
       print()
     }
 
-    print("Workflow complete. All \(steps.count) \(steps.count == 1 ? "step" : "steps") succeeded.")
+    if ClientFactory.isDryRun {
+      print("Dry run complete. All \(steps.count) \(steps.count == 1 ? "step" : "steps") ran; no writes were sent.")
+    } else {
+      print("Workflow complete. All \(steps.count) \(steps.count == 1 ? "step" : "steps") succeeded.")
+    }
   }
 }
 

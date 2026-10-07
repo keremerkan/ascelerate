@@ -1243,14 +1243,15 @@ On universal-purchase apps, also pass `--platform` so unattended runs never hit 
 
 ### Dry run
 
-Set `ASCELERATE_DRY_RUN=1` to try a command or a whole workflow without changing anything on App Store Connect. Reads go out as usual, so lookups and checks run against your real data, but every write is stopped before it is sent: ascelerate prints its method, path, and JSON body to stderr and reports that the request was not sent.
+Add `--dry-run` to try a command or a whole workflow without changing anything on App Store Connect. The option works anywhere on the command line, and setting `ASCELERATE_DRY_RUN=1` does the same. Reads go out as usual, so lookups and checks run against your real data, but every write is stopped before it is sent: ascelerate prints its method, path, and JSON body to stderr and reports that the request was not sent.
 
 ```bash
-ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
-ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+ascelerate apps localizations import <bundle-id> --file localizations.json --yes --dry-run
+ascelerate run-workflow release.txt --yes --dry-run
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # same, e.g. for a whole CI job
 ```
 
-A command stops at its first blocked write, or reports each blocked request as failed where it works through items one by one. In `run-workflow`, a step whose writes were blocked doesn't stop the workflow, so a single run shows every step's writes; a step that relies on something an earlier step would have created (a new version, an uploaded build) can still fail. `builds upload` skips the upload; `builds archive` and `builds validate` still run, since they don't change anything on App Store Connect.
+A command stops at its first blocked write, or reports each blocked request as failed where it works through items one by one. In `run-workflow`, a step whose writes were blocked doesn't stop the workflow, so a single run shows every step's writes (in a workflow file, `--dry-run` on a single step applies only to that step); a step that relies on something an earlier step would have created (a new version, an uploaded build) can still fail. `builds upload` skips the upload; `builds archive` and `builds validate` still run, since they don't change anything on App Store Connect.
 
 ### Version
 

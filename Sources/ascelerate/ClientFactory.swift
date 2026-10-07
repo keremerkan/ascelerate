@@ -2,8 +2,8 @@ import ASCKit
 import Foundation
 
 enum ClientFactory {
-  /// `ASCELERATE_DRY_RUN=1`: reads go out, every write is printed instead of sent.
-  static var isDryRun: Bool { ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] == "1" }
+  /// `--dry-run` or `ASCELERATE_DRY_RUN=1`: reads go out, every write is printed instead of sent.
+  static var isDryRun: Bool { dryRunFlag || ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] == "1" }
 
   /// An App Store Connect client (ASCKit, generated from Apple's spec).
   static func makeClient() throws -> ASCClient {

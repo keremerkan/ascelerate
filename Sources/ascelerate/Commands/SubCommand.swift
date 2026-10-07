@@ -13,6 +13,12 @@ extension SubscriptionLocalization {
   }
 }
 
+extension Components.Schemas.SubscriptionLocalization {
+  var localizationRecord: LocalizationRecord {
+    LocalizationRecord(id: id, locale: attributes?.locale ?? "", name: attributes?.name, description: attributes?.description)
+  }
+}
+
 extension SubscriptionPricePoint: ResolvablePricePoint {
   var resolverCustomerPrice: String? { attributes?.customerPrice }
 }
@@ -316,15 +322,53 @@ struct SubCommand: AsyncParsableCommand {
   /// increase/decrease gating must compare against the live price, not a scheduled one.
   /// A nil startDate means "active since the beginning".
   static func currentPriceRecord(_ prices: [SubscriptionPrice]) -> SubscriptionPrice? {
+    currentRecord(prices, preserved: { $0.attributes?.isPreserved }, startDate: { $0.attributes?.startDate })
+  }
+
+  static func currentPriceRecord(_ prices: [Components.Schemas.SubscriptionPrice]) -> Components.Schemas.SubscriptionPrice? {
+    currentRecord(prices, preserved: { $0.attributes?.preserved }, startDate: { $0.attributes?.startDate })
+  }
+
+  private static func currentRecord<Price>(
+    _ prices: [Price], preserved: (Price) -> Bool?, startDate: (Price) -> String?
+  ) -> Price? {
     let df = DateFormatter()
     df.dateFormat = "yyyy-MM-dd"
     df.locale = Locale(identifier: "en_US_POSIX")
     df.timeZone = TimeZone(identifier: "UTC")
     let today = df.string(from: Date())
     return prices
-      .filter { $0.attributes?.isPreserved != true }
-      .filter { ($0.attributes?.startDate ?? "") <= today }
-      .max { ($0.attributes?.startDate ?? "") < ($1.attributes?.startDate ?? "") }
+      .filter { preserved($0) != true }
+      .filter { (startDate($0) ?? "") <= today }
+      .max { (startDate($0) ?? "") < (startDate($1) ?? "") }
+  }
+
+  /// `fetchCurrentPricesByTerritory` for ASCKit-migrated commands.
+  static func fetchCurrentPricesByTerritory(subID: String, client: ASCClient) async throws -> [String: String] {
+    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.subscriptionsPricesGetToManyRelated(
+        path: .init(id: subID), query: .init(limit: 200, include: [.subscriptionPricePoint, .territory])
+      ).ok.body.json
+    }
+    var pointPrices: [String: String] = [:]
+    for case .subscriptionPricePoints(let p) in pages.flatMap({ $0.included ?? [] }) {
+      if let cp = p.attributes?.customerPrice { pointPrices[p.id] = cp }
+    }
+    // Group records by territory, then pick the live (non-preserved, non-future) one.
+    let recordsByTerritory = Dictionary(grouping: pages.flatMap(\.data).filter { $0.relationships?.territory?.data?.id != nil }) {
+      $0.relationships!.territory!.data!.id
+    }
+    var result: [String: String] = [:]
+    for (territoryID, records) in recordsByTerritory {
+      guard let current = currentPriceRecord(records) else { continue }
+      guard let cp = pointPrices[current.relationships?.subscriptionPricePoint?.data?.id ?? ""] else {
+        // A price record exists but couldn't be resolved — treating it as "no current price"
+        // would classify the territory as new and bypass the increase/decrease safety gates.
+        throw ValidationError("Could not resolve the current price for territory \(territoryID). Retry, or inspect with 'sub pricing show'.")
+      }
+      result[territoryID] = cp
+    }
+    return result
   }
 
   /// Fetches the current customer price for every territory the subscription is priced in.
@@ -687,6 +731,19 @@ struct SubCommand: AsyncParsableCommand {
       sourceCustomerPrice: sourcePoint.attributes?.customerPrice ?? customerPrice,
       sourceCurrency: sourceCurrency,
       isEqualized: true
+    )
+  }
+
+  static func pickGroup(appID: String, client: ASCClient) async throws -> ASCGroupInfo {
+    let groups = try await fetchGroups(appID: appID, client: client)
+    guard !groups.isEmpty else {
+      throw ValidationError("No subscription groups found. Create one first with 'sub create-group'.")
+    }
+    if groups.count == 1 { return groups[0] }
+    return try promptSelection(
+      "Subscription Groups",
+      items: groups,
+      display: { "\($0.name) (\($0.subscriptions.count) subscription\($0.subscriptions.count == 1 ? "" : "s"))" }
     )
   }
 
@@ -1398,15 +1455,15 @@ struct SubCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client
         )
 
-        let locsResponse = try await client.send(
-          Resources.v1.subscriptions.id(sub.id).subscriptionLocalizations.get(limit: 50)
-        )
+        let locsResponse = try await client.subscriptionsSubscriptionLocalizationsGetToManyRelated(
+          path: .init(id: sub.id), query: .init(limit: 50)
+        ).ok.body.json
 
         if locsResponse.data.isEmpty {
           print("No localizations found.")
@@ -1445,15 +1502,15 @@ struct SubCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client
         )
 
-        let locsResponse = try await client.send(
-          Resources.v1.subscriptions.id(sub.id).subscriptionLocalizations.get(limit: 50)
-        )
+        let locsResponse = try await client.subscriptionsSubscriptionLocalizationsGetToManyRelated(
+          path: .init(id: sub.id), query: .init(limit: 50)
+        ).ok.body.json
         try exportProductLocalizations(
           locsResponse.data.map(\.localizationRecord), productID: productID, output: output)
       }
@@ -1557,13 +1614,13 @@ struct SubCommand: AsyncParsableCommand {
       var bundleID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
-        let locsResponse = try await client.send(
-          Resources.v1.subscriptionGroups.id(group.id).subscriptionGroupLocalizations.get(limit: 50)
-        )
+        let locsResponse = try await client.subscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated(
+          path: .init(id: group.id), query: .init(limit: 50)
+        ).ok.body.json
 
         if locsResponse.data.isEmpty {
           print("No localizations found for group '\(group.name)'.")
@@ -1599,13 +1656,13 @@ struct SubCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
-        let locsResponse = try await client.send(
-          Resources.v1.subscriptionGroups.id(group.id).subscriptionGroupLocalizations.get(limit: 50)
-        )
+        let locsResponse = try await client.subscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated(
+          path: .init(id: group.id), query: .init(limit: 50)
+        ).ok.body.json
 
         var result: [String: GroupLocaleFields] = [:]
         for loc in locsResponse.data {
@@ -1880,7 +1937,7 @@ struct SubCommand: AsyncParsableCommand {
       var territory: String = "USA"
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
@@ -1888,13 +1945,12 @@ struct SubCommand: AsyncParsableCommand {
         let territoryID = territory.uppercased()
         var tiers: [PriceTier] = []
         var currency: String?
-        for try await page in client.pages(
-          Resources.v1.subscriptions.id(sub.id).pricePoints.get(
-            filterTerritory: [territoryID],
-            limit: 200,
-            include: [.territory]
-          )
-        ) {
+        let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.subscriptionsPricePointsGetToManyRelated(
+            path: .init(id: sub.id), query: .init(filterTerritory: [territoryID], limit: 200, include: [.territory])
+          ).ok.body.json
+        }
+        for page in pages {
           tiers.append(
             contentsOf: page.data.map {
               PriceTier(
@@ -2102,7 +2158,7 @@ struct SubCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
@@ -2338,24 +2394,20 @@ struct SubCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        var offers: [SubscriptionIntroductoryOffer] = []
-        var pricePoints: [String: SubscriptionPricePoint] = [:]
-        for try await page in client.pages(
-          Resources.v1.subscriptions.id(sub.id).introductoryOffers.get(
-            limit: 200, include: [.subscriptionPricePoint, .territory]
-          )
-        ) {
-          offers.append(contentsOf: page.data)
-          for item in page.included ?? [] {
-            if case .subscriptionPricePoint(let p) = item {
-              pricePoints[p.id] = p
-            }
-          }
+        let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.subscriptionsIntroductoryOffersGetToManyRelated(
+            path: .init(id: sub.id), query: .init(limit: 200, include: [.subscriptionPricePoint, .territory])
+          ).ok.body.json
+        }
+        let offers = pages.flatMap(\.data)
+        var pricePoints: [String: Components.Schemas.SubscriptionPricePoint] = [:]
+        for case .subscriptionPricePoints(let p) in pages.flatMap({ $0.included ?? [] }) {
+          pricePoints[p.id] = p
         }
 
         if offers.isEmpty {
@@ -2370,7 +2422,7 @@ struct SubCommand: AsyncParsableCommand {
             let territoryID = o.relationships?.territory?.data?.id ?? "Global"
             let pointID = o.relationships?.subscriptionPricePoint?.data?.id ?? ""
             let priceStr: String
-            if attrs?.offerMode == .freeTrial {
+            if attrs?.offerMode == "FREE_TRIAL" {
               priceStr = "Free"
             } else {
               priceStr = pricePoints[pointID]?.attributes?.customerPrice ?? "—"
@@ -2686,17 +2738,14 @@ struct SubCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        var codes: [SubscriptionOfferCode] = []
-        for try await page in client.pages(
-          Resources.v1.subscriptions.id(sub.id).offerCodes.get(limit: 200)
-        ) {
-          codes.append(contentsOf: page.data)
-        }
+        let codes = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.subscriptionsOfferCodesGetToManyRelated(path: .init(id: sub.id), query: .init(limit: 200)).ok.body.json
+        }.flatMap(\.data)
 
         if codes.isEmpty {
           print("No offer codes for \(productID).")
@@ -2707,11 +2756,11 @@ struct SubCommand: AsyncParsableCommand {
           headers: ["ID", "Name", "Active", "Mode", "Duration", "Periods", "Eligibilities"],
           rows: codes.map { c in
             let attrs = c.attributes
-            let elig = attrs?.customerEligibilities?.map { $0.rawValue }.joined(separator: ", ") ?? "—"
+            let elig = attrs?.customerEligibilities?.joined(separator: ", ") ?? "—"
             return [
               c.id,
               attrs?.name ?? "—",
-              attrs?.isActive == true ? "Yes" : attrs?.isActive == false ? "No" : "—",
+              attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—",
               attrs?.offerMode.map { formatState($0) } ?? "—",
               attrs?.duration.map { formatState($0) } ?? "—",
               attrs?.numberOfPeriods.map { "\($0)" } ?? "—",
@@ -2740,28 +2789,24 @@ struct SubCommand: AsyncParsableCommand {
       var offerCodeID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         _ = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let response = try await client.send(
-          Resources.v1.subscriptionOfferCodes.id(offerCodeID).get(
-            include: [.prices, .oneTimeUseCodes, .customCodes],
-            limitCustomCodes: 50,
-            limitOneTimeUseCodes: 50,
-            limitPrices: 200
-          )
-        )
+        let response = try await client.subscriptionOfferCodesGetInstance(
+          path: .init(id: offerCodeID),
+          query: .init(include: [.prices, .oneTimeUseCodes, .customCodes], limitCustomCodes: 50, limitOneTimeUseCodes: 50, limitPrices: 200)
+        ).ok.body.json
         let attrs = response.data.attributes
         print("Offer Code:    \(attrs?.name ?? "—")")
         print("ID:            \(response.data.id)")
-        print("Active:        \(attrs?.isActive == true ? "Yes" : attrs?.isActive == false ? "No" : "—")")
-        print("Eligibilities: \(attrs?.customerEligibilities?.map { $0.rawValue }.joined(separator: ", ") ?? "—")")
+        print("Active:        \(attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—")")
+        print("Eligibilities: \(attrs?.customerEligibilities?.joined(separator: ", ") ?? "—")")
         print("Offer Eligib:  \(attrs?.offerEligibility.map { formatState($0) } ?? "—")")
         print("Duration:      \(attrs?.numberOfPeriods.map { "\($0)" } ?? "—") × \(attrs?.duration.map { formatState($0) } ?? "—")")
         print("Mode:          \(attrs?.offerMode.map { formatState($0) } ?? "—")")
-        print("Auto-Renew:    \(attrs?.isAutoRenewEnabled == true ? "Yes" : attrs?.isAutoRenewEnabled == false ? "No" : "—")")
+        print("Auto-Renew:    \(attrs?.autoRenewEnabled == true ? "Yes" : attrs?.autoRenewEnabled == false ? "No" : "—")")
 
         let priceCount = response.data.relationships?.prices?.data?.count ?? 0
         let oneTimeCount = response.data.relationships?.oneTimeUseCodes?.data?.count ?? 0
@@ -3135,12 +3180,12 @@ struct SubCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
 
         try await runOfferCodeViewCodes(output: output) {
-          try await client.send(
-            Resources.v1.subscriptionOfferCodeOneTimeUseCodes.id(batchID).values.get
-          )
+          try await String(
+            collecting: client.subscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated(path: .init(id: batchID)).ok.body.csv,
+            upTo: 50 << 20)
         }
       }
     }
@@ -3170,17 +3215,14 @@ struct SubCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        var offers: [SubscriptionPromotionalOffer] = []
-        for try await page in client.pages(
-          Resources.v1.subscriptions.id(sub.id).promotionalOffers.get(limit: 200)
-        ) {
-          offers.append(contentsOf: page.data)
-        }
+        let offers = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.subscriptionsPromotionalOffersGetToManyRelated(path: .init(id: sub.id), query: .init(limit: 200)).ok.body.json
+        }.flatMap(\.data)
 
         if offers.isEmpty {
           print("No promotional offers for \(productID).")
@@ -3222,16 +3264,14 @@ struct SubCommand: AsyncParsableCommand {
       var offerID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         _ = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let response = try await client.send(
-          Resources.v1.subscriptionPromotionalOffers.id(offerID).get(
-            include: [.prices], limitPrices: 200
-          )
-        )
+        let response = try await client.subscriptionPromotionalOffersGetInstance(
+          path: .init(id: offerID), query: .init(include: [.prices], limitPrices: 200)
+        ).ok.body.json
         let attrs = response.data.attributes
         print("Promotional Offer: \(attrs?.name ?? "—")")
         print("ID:                \(response.data.id)")
@@ -3573,18 +3613,15 @@ struct SubCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
         try await runProductImagesList(productID: productID) {
-          var images: [SubscriptionImage] = []
-          for try await page in client.pages(
-            Resources.v1.subscriptions.id(sub.id).images.get(limit: 50)
-          ) {
-            images.append(contentsOf: page.data)
-          }
+          let images = try await ASCPaging.allPages(next: { $0.links.next }) {
+            try await client.subscriptionsImagesGetToManyRelated(path: .init(id: sub.id), query: .init(limit: 50)).ok.body.json
+          }.flatMap(\.data)
           return images.map { img in
             [
               img.id,
@@ -3717,15 +3754,15 @@ struct SubCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
         try await runReviewScreenshotView(productID: productID) {
-          let response = try await client.send(
-            Resources.v1.subscriptions.id(sub.id).appStoreReviewScreenshot.get()
-          )
+          let response = try await client.subscriptionsAppStoreReviewScreenshotGetToOneRelated(
+            path: .init(id: sub.id)
+          ).ok.body.json
           let attrs = response.data.attributes
           return (
             response.data.id,

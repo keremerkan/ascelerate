@@ -25,6 +25,17 @@ filter:
     - /v1/appAssetLibraryPlacements/{id}
     - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/devices
+    - /v1/subscriptions/{id}/subscriptionLocalizations
+    - /v1/subscriptionGroups/{id}/subscriptionGroupLocalizations
+    - /v1/subscriptions/{id}/pricePoints
+    - /v1/subscriptions/{id}/introductoryOffers
+    - /v1/subscriptions/{id}/offerCodes
+    - /v1/subscriptionOfferCodes/{id}
+    - /v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values
+    - /v1/subscriptions/{id}/promotionalOffers
+    - /v1/subscriptionPromotionalOffers/{id}
+    - /v1/subscriptions/{id}/images
+    - /v1/subscriptions/{id}/appStoreReviewScreenshot
     - /v1/apps/{id}/promotedPurchases
     - /v2/inAppPurchases/{id}/inAppPurchaseLocalizations
     - /v2/inAppPurchases/{id}/pricePoints

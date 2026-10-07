@@ -122,7 +122,10 @@ ascelerate sub availability <bundle-id> <product-id>
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true
+ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
+
+年間サブスクリプションは**12か月契約の月払い**としても提供できます（毎月請求。米国とシンガポールでは提供されません）。この課金プランには独自の地域リストがあり、`--plan monthly` を付けると表示・編集できます。`--plan` を省略すると、通常の前払いプランが対象になります。
 
 ## 導入オファー
 

@@ -1774,7 +1774,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       try await runProductAvailability(
         productID: productID,
-        productNoun: "IAP",
+        missingNote: "No per-IAP availability set — inherits the app's territories.",
         add: add,
         remove: remove,
         availableInNewTerritories: availableInNewTerritories,

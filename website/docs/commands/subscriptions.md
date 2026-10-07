@@ -121,11 +121,14 @@ Each subscription has its own territory availability, independent of the app's. 
 # View current per-subscription territories
 ascelerate sub availability <bundle-id> <product-id>
 
-# Edit the territory list (wholesale POST replaces the full list)
+# Edit the territory list (each edit replaces the full list)
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true
+ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
+
+Annual subscriptions can also be sold as **Monthly with 12-Month Commitment** (billed monthly; not offered in the United States and Singapore). That billing plan has its own territory list: add `--plan monthly` to view or edit it. Without `--plan`, the command manages the regular upfront plan.
 
 ## Introductory offers
 

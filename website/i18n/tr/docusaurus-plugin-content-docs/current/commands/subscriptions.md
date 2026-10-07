@@ -122,7 +122,10 @@ ascelerate sub availability <bundle-id> <product-id>
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true
+ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
+
+Yıllık abonelikler **12 ay taahhütlü aylık ödeme** olarak da sunulabilir (her ay faturalandırılır; ABD ve Singapur'da sunulmaz). Bu ödeme planının kendi bölge listesi vardır: Görüntülemek ya da düzenlemek için `--plan monthly` ekleyin. `--plan` olmadan komut normal peşin ödemeli planı yönetir.
 
 ## Tanıtım teklifleri
 

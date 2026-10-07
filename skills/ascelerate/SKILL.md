@@ -249,7 +249,7 @@ ascelerate sub pricing export <app> <product-id> [--output prices.json]
 ascelerate sub pricing import <app> <product-id> [--file prices.json]   # copy prices from another product/app; same safety flags as set
 
 # Per-subscription territory availability (independent of app's)
-ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true]
+ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true] [--plan upfront|monthly]   # monthly = "Monthly with 12-Month Commitment" plan (annual subs; not in USA/SGP); default upfront
 
 # Introductory offers (free trials + intro discounts for NEW subscribers)
 ascelerate sub intro-offer list <app> <product-id>

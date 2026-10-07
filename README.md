@@ -1019,6 +1019,7 @@ ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices
 # Per-subscription territory availability (independent of the app's territories)
 ascelerate sub availability <bundle-id> <product-id>
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS --remove ITA --available-in-new-territories true
+ascelerate sub availability <bundle-id> <product-id> --plan monthly   # the "Monthly with 12-Month Commitment" plan of an annual subscription
 
 # Introductory offers (free trials and intro discounts for new subscribers)
 ascelerate sub intro-offer list <bundle-id> <product-id>

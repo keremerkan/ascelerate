@@ -3295,32 +3295,23 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
       // Get availability info (without includes — territory limit is only 50)
-      let response = try await client.send(
-        Resources.v1.apps.id(app.id).appAvailabilityV2.get()
-      )
-      
-      let availableInNew = response.data.attributes?.isAvailableInNewTerritories
-      let availabilityID = response.data.id
+      let availability = try await client.appsAppAvailabilityV2GetToOneRelated(path: .init(id: app.id)).ok.body.json.data
+      let availableInNew = availability.attributes?.availableInNewTerritories
       
       // Paginate through all territory availabilities via the v2 sub-resource
-      var territoryMap: [(code: String, id: String, isAvailable: Bool)] = []
-      
-      for try await page in client.pages(
-        Resources.v2.appAvailabilities.id(availabilityID).territoryAvailabilities.get(
-          limit: 50,
-          include: [.territory]
-        )
-      ) {
-        for ta in page.data {
-          guard let code = ta.relationships?.territory?.data?.id else { continue }
-          let isAvail = ta.attributes?.isAvailable ?? false
-          territoryMap.append((code, ta.id, isAvail))
-        }
+      let territoryAvailabilities = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated(
+          path: .init(id: availability.id), query: .init(limit: 50, include: [.territory])
+        ).ok.body.json
+      }.flatMap(\.data)
+      let territoryMap: [(code: String, id: String, isAvailable: Bool)] = territoryAvailabilities.compactMap { ta in
+        guard let code = ta.relationships?.territory?.data?.id else { return nil }
+        return (code, ta.id, ta.attributes?.available ?? false)
       }
       
       // Edit mode
@@ -3388,13 +3379,11 @@ struct AppsCommand: AsyncParsableCommand {
         var failed: [String] = []
         for change in changes {
           do {
-            _ = try await client.send(
-              Resources.v1.territoryAvailabilities.id(change.id).patch(
-                TerritoryAvailabilityUpdateRequest(
-                  data: .init(id: change.id, attributes: .init(isAvailable: change.newValue))
-                )
-              )
-            )
+            _ = try await client.territoryAvailabilitiesUpdateInstance(
+              path: .init(id: change.id),
+              body: .json(.init(data: .init(
+                attributes: .init(available: change.newValue), id: change.id, _type: "territoryAvailabilities")))
+            ).ok
           } catch {
             failed.append(change.code)
             print("  Failed to update \(change.code): \(describeError(error))")
@@ -3489,7 +3478,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
@@ -3510,27 +3499,20 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        let response = try await client.send(
-          Resources.v1.appEncryptionDeclarations.post(
-            AppEncryptionDeclarationCreateRequest(
-              data: .init(
-                attributes: .init(
-                  appDescription: desc,
-                  containsProprietaryCryptography: proprietaryCrypto,
-                  containsThirdPartyCryptography: thirdPartyCrypto,
-                  isAvailableOnFrenchStore: availableOnFrenchStore
-                ),
-                relationships: .init(
-                  app: .init(data: .init(id: app.id))
-                )
-              )
-            )
-          )
-        )
+        let response = try await client.appEncryptionDeclarationsCreateInstance(body: .json(.init(data: .init(
+          attributes: .init(
+            appDescription: desc,
+            availableOnFrenchStore: availableOnFrenchStore,
+            containsProprietaryCryptography: proprietaryCrypto,
+            containsThirdPartyCryptography: thirdPartyCrypto
+          ),
+          relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
+          _type: "appEncryptionDeclarations"
+        )))).created.body.json
         
         let attrs = response.data.attributes
         let state = attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—"
-        let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
+        let exempt = attrs?.exempt.map { $0 ? "Yes" : "No" } ?? "—"
         print()
         success("Created", "encryption declaration.")
         print("  State:  \(state)")
@@ -3542,20 +3524,19 @@ struct AppsCommand: AsyncParsableCommand {
       print("App: \(appName)")
       print()
       
-      var rows: [[String]] = []
-      for try await page in client.pages(
-        Resources.v1.appEncryptionDeclarations.get(filterApp: [app.id])
-      ) {
-        for decl in page.data {
-          let attrs = decl.attributes
-          let state = attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—"
-          let platform = attrs?.platform.map { formatState($0) } ?? "—"
-          let proprietary = attrs?.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—"
-          let thirdParty = attrs?.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—"
-          let exempt = attrs?.isExempt.map { $0 ? "Yes" : "No" } ?? "—"
-          let created = attrs?.createdDate.map { formatDate($0) } ?? "—"
-          rows.append([state, platform, proprietary, thirdParty, exempt, created])
-        }
+      let declarations = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appEncryptionDeclarationsGetCollection(query: .init(filterApp: [app.id])).ok.body.json
+      }.flatMap(\.data)
+      let rows: [[String]] = declarations.map { decl in
+        let attrs = decl.attributes
+        return [
+          attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—",
+          attrs?.platform.map { formatState($0) } ?? "—",
+          attrs?.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—",
+          attrs?.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—",
+          attrs?.exempt.map { $0 ? "Yes" : "No" } ?? "—",
+          attrs?.createdDate.map { formatDate($0) } ?? "—",
+        ]
       }
       
       if rows.isEmpty {
@@ -3598,24 +3579,13 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
       // Try to get existing EULA (API returns 404 or null data when none exists)
-      let existing: EndUserLicenseAgreement?
-      do {
-        existing = try await client.send(
-          Resources.v1.apps.id(app.id).endUserLicenseAgreement.get()
-        ).data
-      } catch let error as ResponseError {
-        if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-          existing = nil
-        } else {
-          throw error
-        }
-      } catch is DecodingError {
-        existing = nil
+      let existing = try await optionalRelated {
+        try await client.appsEndUserLicenseAgreementGetToOneRelated(path: .init(id: app.id)).ok.body.json.data
       }
       
       if delete {
@@ -3634,9 +3604,7 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        try await client.send(
-          Resources.v1.endUserLicenseAgreements.id(eula.id).delete
-        )
+        _ = try await client.endUserLicenseAgreementsDeleteInstance(path: .init(id: eula.id)).noContent
         print()
         success("Deleted", "custom EULA.")
         return
@@ -3668,42 +3636,32 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
           
-          _ = try await client.send(
-            Resources.v1.endUserLicenseAgreements.id(eula.id).patch(
-              EndUserLicenseAgreementUpdateRequest(
-                data: .init(id: eula.id, attributes: .init(agreementText: text))
-              )
-            )
-          )
+          _ = try await client.endUserLicenseAgreementsUpdateInstance(
+            path: .init(id: eula.id),
+            body: .json(.init(data: .init(
+              attributes: .init(agreementText: text), id: eula.id, _type: "endUserLicenseAgreements")))
+          ).ok
           print()
           success("Updated", "EULA.")
         } else {
           // Create new — need all territory IDs
-          var allTerritoryIDs: [String] = []
-          for try await page in client.pages(Resources.v1.territories.get(limit: 200)) {
-            for territory in page.data {
-              allTerritoryIDs.append(territory.id)
-            }
-          }
+          let allTerritoryIDs = try await ASCPaging.allPages(next: { $0.links.next }) {
+            try await client.territoriesGetCollection(query: .init(limit: 200)).ok.body.json
+          }.flatMap { $0.data.map(\.id) }
           
           guard confirm("Create custom EULA for all \(allTerritoryIDs.count) territories? [y/N] ") else {
             cancelled()
             return
           }
           
-          _ = try await client.send(
-            Resources.v1.endUserLicenseAgreements.post(
-              EndUserLicenseAgreementCreateRequest(
-                data: .init(
-                  attributes: .init(agreementText: text),
-                  relationships: .init(
-                    app: .init(data: .init(id: app.id)),
-                    territories: .init(data: allTerritoryIDs.map { .init(id: $0) })
-                  )
-                )
-              )
-            )
-          )
+          _ = try await client.endUserLicenseAgreementsCreateInstance(body: .json(.init(data: .init(
+            attributes: .init(agreementText: text),
+            relationships: .init(
+              app: .init(data: .init(id: app.id, _type: "apps")),
+              territories: .init(data: allTerritoryIDs.map { .init(id: $0, _type: "territories") })
+            ),
+            _type: "endUserLicenseAgreements"
+          )))).created
           print()
           success("Created", "EULA for \(allTerritoryIDs.count) territories.")
         }
@@ -3760,22 +3718,13 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let current: AppStoreAPI.SubscriptionGracePeriod
-      do {
-        let response = try await client.send(
-          Resources.v1.apps.id(app.id).subscriptionGracePeriod.get()
-        )
-        current = response.data
-      } catch is DecodingError {
+      guard let current = try await optionalRelated({
+        try await client.appsSubscriptionGracePeriodGetToOneRelated(path: .init(id: app.id)).ok.body.json.data
+      }) else {
         throw ValidationError("No subscription grace period configuration exists for this app.")
-      } catch let error as ResponseError {
-        if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-          throw ValidationError("No subscription grace period configuration exists for this app.")
-        }
-        throw error
       }
 
       let isEdit = optIn != nil || sandboxOptIn != nil || duration != nil || renewalType != nil
@@ -3783,16 +3732,14 @@ struct AppsCommand: AsyncParsableCommand {
       if !isEdit {
         let attrs = current.attributes
         print("Subscription Grace Period:")
-        print("  Opt-in (production): \(attrs?.isOptIn == true ? "Yes" : attrs?.isOptIn == false ? "No" : "—")")
-        print("  Opt-in (sandbox):    \(attrs?.isSandboxOptIn == true ? "Yes" : attrs?.isSandboxOptIn == false ? "No" : "—")")
+        print("  Opt-in (production): \(attrs?.optIn == true ? "Yes" : attrs?.optIn == false ? "No" : "—")")
+        print("  Opt-in (sandbox):    \(attrs?.sandboxOptIn == true ? "Yes" : attrs?.sandboxOptIn == false ? "No" : "—")")
         print("  Duration:            \(attrs?.duration.map { formatState($0) } ?? "—")")
         print("  Renewal Type:        \(attrs?.renewalType.map { formatState($0) } ?? "—")")
         return
       }
 
       // Parse updates
-      typealias Attrs = SubscriptionGracePeriodUpdateRequest.Data.Attributes
-
       let newOptIn: Bool? = try optIn.map {
         guard let b = Bool($0.lowercased()) else {
           throw ValidationError("Invalid value for --opt-in. Use 'true' or 'false'.")
@@ -3805,18 +3752,18 @@ struct AppsCommand: AsyncParsableCommand {
         }
         return b
       }
-      let newDuration: SubscriptionGracePeriodDuration? = try duration.map {
+      let newDuration: ASCEnum.SubscriptionGracePeriodDuration? = try duration.map {
         try parseEnum($0, name: "duration")
       }
-      let newRenewalType: Attrs.RenewalType? = try renewalType.map {
+      let newRenewalType: ASCEnum.SubscriptionGracePeriodUpdateRequestRenewalType? = try renewalType.map {
         try parseEnum($0, name: "renewal-type")
       }
 
       print("Updates for subscription grace period:")
       if let v = newOptIn { print("  Opt-in (production): \(v ? "Yes" : "No")") }
       if let v = newSandboxOptIn { print("  Opt-in (sandbox):    \(v ? "Yes" : "No")") }
-      if let v = newDuration { print("  Duration:            \(formatState(v))") }
-      if let v = newRenewalType { print("  Renewal Type:        \(formatState(v))") }
+      if let v = newDuration { print("  Duration:            \(formatState(v.rawValue))") }
+      if let v = newRenewalType { print("  Renewal Type:        \(formatState(v.rawValue))") }
       print()
 
       guard confirm("Apply these changes? [y/N] ") else {
@@ -3824,21 +3771,19 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(
-        Resources.v1.subscriptionGracePeriods.id(current.id).patch(
-          SubscriptionGracePeriodUpdateRequest(
-            data: .init(
-              id: current.id,
-              attributes: .init(
-                isOptIn: newOptIn,
-                isSandboxOptIn: newSandboxOptIn,
-                duration: newDuration,
-                renewalType: newRenewalType
-              )
-            )
-          )
-        )
-      )
+      _ = try await client.subscriptionGracePeriodsUpdateInstance(
+        path: .init(id: current.id),
+        body: .json(.init(data: .init(
+          attributes: .init(
+            duration: newDuration?.rawValue,
+            optIn: newOptIn,
+            renewalType: newRenewalType?.rawValue,
+            sandboxOptIn: newSandboxOptIn
+          ),
+          id: current.id,
+          _type: "subscriptionGracePeriods"
+        )))
+      ).ok
 
       print()
       success("Updated", "subscription grace period.")

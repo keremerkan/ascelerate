@@ -8,6 +8,17 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/appStoreVersionPhasedReleases
+    - /v1/appStoreVersionPhasedReleases/{id}
+    - /v1/appStoreVersions/{id}/appStoreVersionPhasedRelease
+    - /v1/appStoreVersionReleaseRequests
+    - /v1/routingAppCoverages
+    - /v1/routingAppCoverages/{id}
+    - /v1/appStoreVersions/{id}/routingAppCoverage
+    - /v1/appStoreVersionLocalizations
+    - /v1/appStoreVersionLocalizations/{id}
+    - /v1/appStoreVersions
+    - /v1/appStoreVersions/{id}
     - /v1/appStoreVersions/{id}/relationships/build
     - /v1/reviewSubmissions
     - /v1/reviewSubmissions/{id}

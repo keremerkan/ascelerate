@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -33,13 +31,6 @@ struct SubCommand: AsyncParsableCommand {
   struct GroupInfo: Sendable {
     let id: String
     let name: String
-    let subscriptions: [Subscription]
-  }
-
-  /// `GroupInfo` for ASCKit-migrated commands.
-  struct ASCGroupInfo: Sendable {
-    let id: String
-    let name: String
     let subscriptions: [Components.Schemas.Subscription]
   }
 
@@ -58,7 +49,7 @@ struct SubCommand: AsyncParsableCommand {
     let familySharable: Bool?
     let group: GroupRef?
 
-    init(_ sub: Components.Schemas.Subscription, group: ASCGroupInfo? = nil) {
+    init(_ sub: Components.Schemas.Subscription, group: GroupInfo? = nil) {
       let a = sub.attributes
       id = sub.id
       productID = a?.productId
@@ -71,13 +62,13 @@ struct SubCommand: AsyncParsableCommand {
     }
   }
 
-  static func fetchGroups(appID: String, client: ASCClient) async throws -> [ASCGroupInfo] {
+  static func fetchGroups(appID: String, client: ASCClient) async throws -> [GroupInfo] {
     let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
       try await client.appsSubscriptionGroupsGetToManyRelated(
         path: .init(id: appID), query: .init(include: [.subscriptions], limitSubscriptions: 50)
       ).ok.body.json
     }
-    var result: [ASCGroupInfo] = []
+    var result: [GroupInfo] = []
     for page in pages {
       var subsByID: [String: Components.Schemas.Subscription] = [:]
       for item in page.included ?? [] {
@@ -98,7 +89,7 @@ struct SubCommand: AsyncParsableCommand {
             ).ok.body.json
           }.flatMap(\.data)
         }
-        result.append(ASCGroupInfo(id: group.id, name: name, subscriptions: subs))
+        result.append(GroupInfo(id: group.id, name: name, subscriptions: subs))
       }
     }
     return result
@@ -106,7 +97,7 @@ struct SubCommand: AsyncParsableCommand {
 
   static func findSubscription(
     productID: String, appID: String, client: ASCClient
-  ) async throws -> (subscription: Components.Schemas.Subscription, group: ASCGroupInfo) {
+  ) async throws -> (subscription: Components.Schemas.Subscription, group: GroupInfo) {
     let groups = try await fetchGroups(appID: appID, client: client)
     for group in groups {
       if let match = group.subscriptions.first(where: { $0.attributes?.productId == productID }) {
@@ -121,41 +112,6 @@ struct SubCommand: AsyncParsableCommand {
       path: .init(id: subscriptionID), query: .init(limit: 1)
     ).ok.body.json
     return !response.data.isEmpty
-  }
-
-  static func fetchGroups(
-    appID: String, client: AppStoreConnectClient
-  ) async throws -> [GroupInfo] {
-    var result: [GroupInfo] = []
-    let request = Resources.v1.apps.id(appID).subscriptionGroups.get(
-      include: [.subscriptions],
-      limitSubscriptions: 50
-    )
-    for try await page in client.pages(request) {
-      var subsByID: [String: Subscription] = [:]
-      for item in page.included ?? [] {
-        if case .subscription(let sub) = item {
-          subsByID[sub.id] = sub
-        }
-      }
-      for group in page.data {
-        let name = group.attributes?.referenceName ?? "—"
-        let subIDs = group.relationships?.subscriptions?.data?.map(\.id) ?? []
-        var subs = subIDs.compactMap { subsByID[$0] }
-        if subIDs.count >= 50 {
-          // The included relationship is capped at limitSubscriptions — a group at
-          // the cap may have more; fetch the full list via the sub-resource endpoint.
-          subs = []
-          for try await subPage in client.pages(
-            Resources.v1.subscriptionGroups.id(group.id).subscriptions.get(limit: 50)
-          ) {
-            subs.append(contentsOf: subPage.data)
-          }
-        }
-        result.append(GroupInfo(id: group.id, name: name, subscriptions: subs))
-      }
-    }
-    return result
   }
 
   enum OwnedOfferKind {
@@ -637,7 +593,7 @@ struct SubCommand: AsyncParsableCommand {
     return (localIDs, inlines)
   }
 
-  static func pickGroup(appID: String, client: ASCClient) async throws -> ASCGroupInfo {
+  static func pickGroup(appID: String, client: ASCClient) async throws -> GroupInfo {
     let groups = try await fetchGroups(appID: appID, client: client)
     guard !groups.isEmpty else {
       throw ValidationError("No subscription groups found. Create one first with 'sub create-group'.")

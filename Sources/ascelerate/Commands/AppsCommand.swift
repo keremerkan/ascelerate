@@ -786,7 +786,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -796,7 +796,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         let build = try await selectBuild(
           appID: app.id, versionID: appVersion.id, versionString: versionString,
-          platform: appVersion.attributes?.platform, client: client)
+          platform: versionPlatform(appVersion), client: client)
         let buildNumber = build.attributes?.version ?? "unknown"
         let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
         print()
@@ -826,7 +826,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -834,13 +834,13 @@ struct AppsCommand: AsyncParsableCommand {
         
         // If a build was just uploaded in this workflow for THIS version's platform,
         // wait for it to appear and process
-        if let pendingBuild = lastUploadedBuild(for: appVersion.attributes?.platform) {
+        if let pendingBuild = lastUploadedBuild(for: versionPlatform(appVersion)) {
           print("Waiting for uploaded build \(pendingBuild) to become available...")
           print()
           let awaitedBuild = try await awaitBuildProcessing(
             appID: app.id,
             buildVersion: pendingBuild,
-            platform: appVersion.attributes?.platform,
+            platform: versionPlatform(appVersion),
             client: client
           )
           let uploaded = awaitedBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
@@ -854,28 +854,20 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
           
-          try await client.send(
-            Resources.v1.appStoreVersions.id(appVersion.id).relationships.build.patch(
-              AppStoreVersionBuildLinkageRequest(
-                data: .init(id: awaitedBuild.id)
-              )
-            )
-          )
+          try await attachBuild(awaitedBuild.id, toVersion: appVersion.id, client: client)
           
           print()
           success("Attached", "build \(pendingBuild) (uploaded \(uploaded)) to version \(versionString).")
           return
         }
         
-        let buildsResponse = try await client.send(
-          Resources.v1.builds.get(
-            filterPreReleaseVersionVersion: [versionString],
-            filterPreReleaseVersionPlatform: platformFilter(appVersion.attributes?.platform),
-            filterApp: [app.id],
-            sort: [.minusUploadedDate],
-            limit: 1
-          )
-        )
+        let buildsResponse = try await client.buildsGetCollection(query: .init(
+          filterPreReleaseVersionVersion: [versionString],
+          filterPreReleaseVersionPlatform: platformFilter(versionPlatform(appVersion)),
+          filterApp: [app.id],
+          sort: [.minusUploadedDate],
+          limit: 1
+        )).ok.body.json
         
         guard let build = buildsResponse.data.first else {
           throw ValidationError("No builds found for version \(versionString). Upload a build first via Xcode or Transporter.")
@@ -890,13 +882,13 @@ struct AppsCommand: AsyncParsableCommand {
         print("Build:   \(buildNumber)  \(state.map { formatState($0) } ?? "—")  \(uploaded)")
         print()
         
-        if state == .processing {
+        if state == "PROCESSING" {
           if confirm("Build \(buildNumber) is still processing. Wait for it to finish? [y/N] ") {
             print()
             latestBuild = try await awaitBuildProcessing(
               appID: app.id,
               buildVersion: buildNumber,
-              platform: appVersion.attributes?.platform,
+              platform: versionPlatform(appVersion),
               client: client
             )
             print()
@@ -904,7 +896,7 @@ struct AppsCommand: AsyncParsableCommand {
             cancelled()
             return
           }
-        } else if state == .failed || state == .invalid {
+        } else if state == "FAILED" || state == "INVALID" {
           print("Build \(buildNumber) has state \(state.map { formatState($0) } ?? "—") and cannot be attached.")
           throw ExitCode.failure
         }
@@ -914,13 +906,7 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        try await client.send(
-          Resources.v1.appStoreVersions.id(appVersion.id).relationships.build.patch(
-            AppStoreVersionBuildLinkageRequest(
-              data: .init(id: latestBuild.id)
-            )
-          )
-        )
+        try await attachBuild(latestBuild.id, toVersion: appVersion.id, client: client)
 
         print()
         success("Attached", "build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
@@ -948,16 +934,16 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         
         // Check if a build is attached
-        let buildResponse = try await fetchOptionalResource(
-          Resources.v1.appStoreVersions.id(appVersion.id).build.get(), client: client)
-        guard let existingBuild = buildResponse?.data, existingBuild.attributes?.version != nil else {
+        guard let existingBuild = try await attachedBuild(versionID: appVersion.id, client: client),
+          existingBuild.attributes?.version != nil
+        else {
           print("No build attached to version \(versionString).")
           return
         }
@@ -974,14 +960,14 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        // The API uses PATCH with {"data": null} to detach a build.
-        // The typed AppStoreVersionBuildLinkageRequest requires non-null data,
-        // so we construct the request manually using Request<Void>.
-        let request = Request<Void>.patch(
-          "/v1/appStoreVersions/\(appVersion.id)/relationships/build",
-          body: NullRelationship()
-        )
-        try await client.send(request)
+        // Detaching is a PATCH with `{"data": null}`; the generated linkage request requires
+        // `data`, so the placeholder linkage is replaced with null on the way out.
+        _ = try await ASCNulls.sending([["data"]]) {
+          try await client.appStoreVersionsBuildUpdateToOneRelationship(
+            path: .init(id: appVersion.id),
+            body: .json(.init(data: .init(id: "none", _type: "builds")))
+          ).noContent
+        }
         
         print()
         success("Detached", "build \(buildNumber) from version \(versionString).")
@@ -1877,7 +1863,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let platformValue = try parsePlatform(platform)
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
@@ -1901,15 +1887,11 @@ struct AppsCommand: AsyncParsableCommand {
         try await submitBundledProducts(app: app, client: client)
 
         // Step 3: Submit for review
-        let submitRequest = Resources.v1.reviewSubmissions.id(submissionID).patch(
-          ReviewSubmissionUpdateRequest(
-            data: .init(
-              id: submissionID,
-              attributes: .init(isSubmitted: true)
-            )
-          )
-        )
-        let result = try await client.send(submitRequest)
+        let result = try await client.reviewSubmissionsUpdateInstance(
+          path: .init(id: submissionID),
+          body: .json(.init(data: .init(
+            attributes: .init(submitted: true), id: submissionID, _type: "reviewSubmissions")))
+        ).ok.body.json
         let state = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
         print()
         success("Submitted for review.")
@@ -1917,13 +1899,11 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       private func confirmBuildAttached(
-        app: App, appVersion: AppStoreVersion, versionString: String,
-        versionState: String, platformValue: Platform, client: AppStoreConnectClient
+        app: Components.Schemas.App, appVersion: Components.Schemas.AppStoreVersion, versionString: String,
+        versionState: String, platformValue: Platform, client: ASCClient
       ) async throws -> Bool {
         // Check if a build is already attached
-        let existingBuild: Build? = try await fetchOptionalResource(
-          Resources.v1.appStoreVersions.id(appVersion.id).build.get(), client: client
-        )?.data
+        let existingBuild = try await attachedBuild(versionID: appVersion.id, client: client)
         
         if let build = existingBuild, build.attributes?.version != nil {
           let buildNumber = build.attributes?.version ?? "unknown"
@@ -1963,30 +1943,29 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       private func resolveSubmission(
-        app: App, appVersion: AppStoreVersion, versionString: String,
-        platformValue: Platform, client: AppStoreConnectClient
+        app: Components.Schemas.App, appVersion: Components.Schemas.AppStoreVersion, versionString: String,
+        platformValue: Platform, client: ASCClient
       ) async throws -> String? {
         // Check for existing active review submissions
-        let existingSubmissions = try await client.send(
-          Resources.v1.apps.id(app.id).reviewSubmissions.get(
-            filterState: [.readyForReview, .waitingForReview, .inReview, .unresolvedIssues]
-          )
-        )
+        let existingSubmissions = try await client.appsReviewSubmissionsGetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(filterState: [.readyForReview, .waitingForReview, .inReview, .unresolvedIssues])
+        ).ok.body.json
         
         // A universal-purchase app can have one active submission per platform —
         // only an active submission for THIS platform counts.
         let submissionID: String
-        if let active = existingSubmissions.data.first(where: { $0.attributes?.platform == platformValue }) {
+        if let active = existingSubmissions.data.first(where: { $0.attributes?.platform == platformValue.rawValue }) {
           let activeState = active.attributes?.state
           
           switch activeState {
-            case .waitingForReview, .inReview:
+            case "WAITING_FOR_REVIEW", "IN_REVIEW":
               print("Version is already submitted for review (state: \(activeState.map { formatState($0) } ?? "—")).")
               return nil
-            case .readyForReview:
+            case "READY_FOR_REVIEW":
               print("Found existing review submission (state: readyForReview). Resubmitting...")
               submissionID = active.id
-            case .unresolvedIssues:
+            case "UNRESOLVED_ISSUES":
               print("Found existing review submission with unresolved issues from a previous review.")
               guard confirm("Resubmit for review? [y/N] ") else {
                 cancelled()
@@ -1998,70 +1977,53 @@ struct AppsCommand: AsyncParsableCommand {
           }
         } else {
           // Step 1: Create a review submission
-          let createSubmission = Resources.v1.reviewSubmissions.post(
-            ReviewSubmissionCreateRequest(
-              data: .init(
-                attributes: .init(platform: platformValue),
-                relationships: .init(
-                  app: .init(data: .init(id: app.id))
-                )
-              )
-            )
-          )
-          let submission = try await client.send(createSubmission)
+          let submission = try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
+            attributes: .init(platform: platformValue.rawValue),
+            relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
+            _type: "reviewSubmissions"
+          )))).created.body.json
           submissionID = submission.data.id
           print("Created review submission (\(submissionID))")
           
           // Step 2: Add the app store version as a review item
-          let createItem = Resources.v1.reviewSubmissionItems.post(
-            ReviewSubmissionItemCreateRequest(
-              data: .init(
-                relationships: .init(
-                  reviewSubmission: .init(data: .init(id: submissionID)),
-                  appStoreVersion: .init(data: .init(id: appVersion.id))
-                )
-              )
-            )
-          )
-          _ = try await client.send(createItem)
+          _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
+            relationships: .init(
+              appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions")),
+              reviewSubmission: .init(data: .init(id: submissionID, _type: "reviewSubmissions"))
+            ),
+            _type: "reviewSubmissionItems"
+          )))).created
           print("Added version \(versionString) to submission")
         }
         return submissionID
       }
 
-      private func submitBundledProducts(app: App, client: AppStoreConnectClient) async throws {
+      private func submitBundledProducts(app: Components.Schemas.App, client: ASCClient) async throws {
         // Offer to submit IAPs/subscriptions alongside the app version.
         // APPROVED products keep that state even when they have pending edits, so the
         // product state alone can't tell. The version history can (ProductVersions);
         // the API rejects submissions with no pending version (HTTP 409).
-        let candidateIAPStates: Set<InAppPurchaseState> = [.readyToSubmit, .approved]
-        let candidateSubStates: Set<Subscription.Attributes.State> = [.readyToSubmit, .approved]
+        let candidateStates: Set<String> = ["READY_TO_SUBMIT", "APPROVED"]
 
-        var fetchedIAPs: [InAppPurchaseV2] = []
-        let iapRequest = Resources.v1.apps.id(app.id).inAppPurchasesV2.get(limit: 200)
-        for try await page in client.pages(iapRequest) {
-          fetchedIAPs.append(contentsOf: page.data)
-        }
+        let fetchedIAPs = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await client.appsInAppPurchasesV2GetToManyRelated(path: .init(id: app.id), query: .init(limit: 200)).ok.body.json
+        }.flatMap(\.data)
 
         let groups = try await SubCommand.fetchGroups(appID: app.id, client: client)
         let fetchedSubs = groups.flatMap(\.subscriptions)
 
-        let skippedIAPs = fetchedIAPs.filter {
-          !($0.attributes?.state.flatMap { candidateIAPStates.contains($0) } ?? false)
-        }
-        let skippedSubs = fetchedSubs.filter {
-          !($0.attributes?.state.flatMap { candidateSubStates.contains($0) } ?? false)
-        }
+        let skippedIAPs = fetchedIAPs.filter { !candidateStates.contains($0.attributes?.state ?? "") }
+        let skippedSubs = fetchedSubs.filter { !candidateStates.contains($0.attributes?.state ?? "") }
 
         // Partition candidates by whether they actually have a pending version.
         var pendingLabels: [String: String] = [:]  // product/group ID → "v2 (Prepare for Submission)"
 
-        let candidateIAPs = fetchedIAPs.filter { $0.attributes?.state.flatMap { candidateIAPStates.contains($0) } ?? false }
+        let candidateIAPs = fetchedIAPs.filter { candidateStates.contains($0.attributes?.state ?? "") }
         let iapPending = try await boundedConcurrentMap(candidateIAPs.map(\.id)) {
           try await ProductVersions.pendingIAP($0, client: client)
         }
-        var submittableIAPs: [InAppPurchaseV2] = []
-        var unchangedIAPs: [InAppPurchaseV2] = []
+        var submittableIAPs: [Components.Schemas.InAppPurchaseV2] = []
+        var unchangedIAPs: [Components.Schemas.InAppPurchaseV2] = []
         for (iap, pending) in zip(candidateIAPs, iapPending) {
           if let pending {
             submittableIAPs.append(iap)
@@ -2071,12 +2033,12 @@ struct AppsCommand: AsyncParsableCommand {
           }
         }
 
-        let candidateSubs = fetchedSubs.filter { $0.attributes?.state.flatMap { candidateSubStates.contains($0) } ?? false }
+        let candidateSubs = fetchedSubs.filter { candidateStates.contains($0.attributes?.state ?? "") }
         let subPending = try await boundedConcurrentMap(candidateSubs.map(\.id)) {
           try await ProductVersions.pendingSubscription($0, client: client)
         }
         var submittableSubIDs: Set<String> = []
-        var unchangedSubs: [Subscription] = []
+        var unchangedSubs: [Components.Schemas.Subscription] = []
         for (sub, pending) in zip(candidateSubs, subPending) {
           if let pending {
             submittableSubIDs.insert(sub.id)
@@ -2103,16 +2065,16 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           print("Skipping items not eligible for submission:")
           for iap in skippedIAPs {
-            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
+            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productId ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
           }
           for sub in skippedSubs {
-            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
+            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productId ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
           }
           for iap in unchangedIAPs {
-            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — Approved (no pending changes)")
+            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productId ?? "—")) — Approved (no pending changes)")
           }
           for sub in unchangedSubs {
-            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — Approved (no pending changes)")
+            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productId ?? "—")) — Approved (no pending changes)")
           }
         }
 
@@ -2120,13 +2082,13 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           print(yellow("In-app purchases/subscriptions with pending changes:"))
           for iap in submittableIAPs {
-            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productID ?? "—")) — \(pendingLabels[iap.id] ?? "—")")
+            print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productId ?? "—")) — \(pendingLabels[iap.id] ?? "—")")
           }
           for group in submittableGroups {
             let groupNote = pendingLabels[group.id].map { " — group changes \($0)" } ?? ""
             print("  Group: \(group.name)\(groupNote)")
             for sub in group.subscriptions where submittableSubIDs.contains(sub.id) {
-              print("    Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productID ?? "—")) — \(pendingLabels[sub.id] ?? "—")")
+              print("    Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productId ?? "—")) — \(pendingLabels[sub.id] ?? "—")")
             }
           }
           print()
@@ -2134,17 +2096,10 @@ struct AppsCommand: AsyncParsableCommand {
           if confirm("Submit these with the app version? [y/N] ") {
             for iap in submittableIAPs {
               do {
-                _ = try await client.send(
-                  Resources.v1.inAppPurchaseSubmissions.post(
-                    InAppPurchaseSubmissionCreateRequest(
-                      data: .init(
-                        relationships: .init(
-                          inAppPurchaseV2: .init(data: .init(id: iap.id))
-                        )
-                      )
-                    )
-                  )
-                )
+                _ = try await client.inAppPurchaseSubmissionsCreateInstance(body: .json(.init(data: .init(
+                  relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id, _type: "inAppPurchases"))),
+                  _type: "inAppPurchaseSubmissions"
+                )))).created
                 print("  \(green("Submitted")) IAP '\(iap.attributes?.name ?? "—")'")
               } catch let error where isNoPendingVersionError(error) {
                 print("  Skipped IAP '\(iap.attributes?.name ?? "—")' — no pending version")
@@ -2154,17 +2109,10 @@ struct AppsCommand: AsyncParsableCommand {
               // Submit individual subscriptions
               for sub in group.subscriptions where submittableSubIDs.contains(sub.id) {
                 do {
-                  _ = try await client.send(
-                    Resources.v1.subscriptionSubmissions.post(
-                      SubscriptionSubmissionCreateRequest(
-                        data: .init(
-                          relationships: .init(
-                            subscription: .init(data: .init(id: sub.id))
-                          )
-                        )
-                      )
-                    )
-                  )
+                  _ = try await client.subscriptionSubmissionsCreateInstance(body: .json(.init(data: .init(
+                    relationships: .init(subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))),
+                    _type: "subscriptionSubmissions"
+                  )))).created
                   print("  \(green("Submitted")) subscription '\(sub.attributes?.name ?? "—")'")
                 } catch let error where isNoPendingVersionError(error) {
                   print("  Skipped subscription '\(sub.attributes?.name ?? "—")' — no pending version")
@@ -2173,17 +2121,10 @@ struct AppsCommand: AsyncParsableCommand {
               // Submit the group itself only when it has its own pending version
               guard pendingLabels[group.id] != nil else { continue }
               do {
-                _ = try await client.send(
-                  Resources.v1.subscriptionGroupSubmissions.post(
-                    SubscriptionGroupSubmissionCreateRequest(
-                      data: .init(
-                        relationships: .init(
-                          subscriptionGroup: .init(data: .init(id: group.id))
-                        )
-                      )
-                    )
-                  )
-                )
+                _ = try await client.subscriptionGroupSubmissionsCreateInstance(body: .json(.init(data: .init(
+                  relationships: .init(subscriptionGroup: .init(data: .init(id: group.id, _type: "subscriptionGroups"))),
+                  _type: "subscriptionGroupSubmissions"
+                )))).created
                 print("  \(green("Submitted")) subscription group '\(group.name)'")
               } catch let error where isNoPendingVersionError(error) {
                 print("  Skipped subscription group '\(group.name)' — no pending version")
@@ -2196,12 +2137,8 @@ struct AppsCommand: AsyncParsableCommand {
       // Safety net in case the version-state mapping in ProductVersions over-reports —
       // treat the API's "no pending version" 409 as a per-item skip, not a hard failure.
       private func isNoPendingVersionError(_ error: Error) -> Bool {
-        guard let responseError = error as? ResponseError,
-              case .requestFailure(let errorResponse, let statusCode, _) = responseError,
-              statusCode == 409 else { return false }
-        return errorResponse?.errors?.contains {
-          $0.detail.localizedCaseInsensitiveContains("no pending version")
-        } ?? false
+        guard let ascError = ASCError.from(error), ascError.statusCode == 409 else { return false }
+        return ascError.errors.contains { $0.detail.localizedCaseInsensitiveContains("no pending version") }
       }
     }
 
@@ -2223,17 +2160,17 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
         // Find submission with unresolved issues
-        let response = try await client.send(
-          Resources.v1.apps.id(app.id).reviewSubmissions.get(
+        let response = try await client.appsReviewSubmissionsGetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(
             filterState: [.unresolvedIssues],
             fieldsAppStoreVersions: [.versionString, .appVersionState],
-            include: [.appStoreVersionForReview, .items]
-          )
-        )
+            include: [.appStoreVersionForReview, .items])
+        ).ok.body.json
 
         guard let (submission, versionString) = try selectSubmission(
           from: response, platform: platformOption.parsed())
@@ -2244,13 +2181,13 @@ struct AppsCommand: AsyncParsableCommand {
 
         // Get rejected items from included data
         let itemRefs = submission.relationships?.items?.data ?? []
-        var rejectedItems: [ReviewSubmissionItem] = []
+        var rejectedItems: [Components.Schemas.ReviewSubmissionItem] = []
         if let included = response.included {
           for ref in itemRefs {
             for item in included {
-              if case .reviewSubmissionItem(let i) = item,
+              if case .reviewSubmissionItems(let i) = item,
                  i.id == ref.id,
-                 i.attributes?.state == .rejected {
+                 i.attributes?.state == "REJECTED" {
                 rejectedItems.append(i)
               }
             }
@@ -2283,16 +2220,11 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         for item in rejectedItems {
-          _ = try await client.send(
-            Resources.v1.reviewSubmissionItems.id(item.id).patch(
-              ReviewSubmissionItemUpdateRequest(
-                data: .init(
-                  id: item.id,
-                  attributes: .init(isResolved: true)
-                )
-              )
-            )
-          )
+          _ = try await client.reviewSubmissionItemsUpdateInstance(
+            path: .init(id: item.id),
+            body: .json(.init(data: .init(
+              attributes: .init(resolved: true), id: item.id, _type: "reviewSubmissionItems")))
+          ).ok
         }
         
         print()
@@ -2319,17 +2251,17 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
         // Find active submissions
-        let response = try await client.send(
-          Resources.v1.apps.id(app.id).reviewSubmissions.get(
+        let response = try await client.appsReviewSubmissionsGetToManyRelated(
+          path: .init(id: app.id),
+          query: .init(
             filterState: [.readyForReview, .waitingForReview, .inReview, .unresolvedIssues],
             fieldsAppStoreVersions: [.versionString],
-            include: [.appStoreVersionForReview]
-          )
-        )
+            include: [.appStoreVersionForReview])
+        ).ok.body.json
 
         guard let (submission, versionString) = try selectSubmission(
           from: response, platform: platformOption.parsed())
@@ -2350,16 +2282,11 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        let result = try await client.send(
-          Resources.v1.reviewSubmissions.id(submission.id).patch(
-            ReviewSubmissionUpdateRequest(
-              data: .init(
-                id: submission.id,
-                attributes: .init(isCanceled: true)
-              )
-            )
-          )
-        )
+        let result = try await client.reviewSubmissionsUpdateInstance(
+          path: .init(id: submission.id),
+          body: .json(.init(data: .init(
+            attributes: .init(canceled: true), id: submission.id, _type: "reviewSubmissions")))
+        ).ok.body.json
         
         let newState = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
         print()
@@ -4143,15 +4070,6 @@ struct AppInfoLocaleFields: Codable {
   var privacyChoicesURL: String?
 }
 
-/// Encodes as `{"data": null}` for clearing a to-one relationship.
-private struct NullRelationship: Encodable, Sendable {
-  enum CodingKeys: String, CodingKey { case data }
-  func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encodeNil(forKey: .data)
-  }
-}
-
 private func describeDecodingError(_ error: DecodingError) -> String {
   switch error {
     case .typeMismatch(let type, let context):
@@ -4461,16 +4379,16 @@ func awaitBuildProcessing(
 /// A `platform` filter narrows the candidates first.
 /// Returns nil when no submissions match.
 private func selectSubmission(
-  from response: ReviewSubmissionsResponse,
+  from response: Components.Schemas.ReviewSubmissionsResponse,
   platform: Platform? = nil
-) throws -> (submission: ReviewSubmission, versionString: String)? {
-  var includedVersions: [String: AppStoreVersion] = [:]
+) throws -> (submission: Components.Schemas.ReviewSubmission, versionString: String)? {
+  var includedVersions: [String: Components.Schemas.AppStoreVersion] = [:]
   for item in response.included ?? [] {
-    if case .appStoreVersion(let v) = item {
+    if case .appStoreVersions(let v) = item {
       includedVersions[v.id] = v
     }
   }
-  func versionString(_ submission: ReviewSubmission) -> String {
+  func versionString(_ submission: Components.Schemas.ReviewSubmission) -> String {
     guard let ref = submission.relationships?.appStoreVersionForReview?.data,
           let v = includedVersions[ref.id] else { return "unknown" }
     return v.attributes?.versionString ?? "unknown"
@@ -4478,11 +4396,11 @@ private func selectSubmission(
 
   var candidates = response.data
   if let platform {
-    candidates = candidates.filter { $0.attributes?.platform == platform }
+    candidates = candidates.filter { $0.attributes?.platform == platform.rawValue }
   }
 
   guard !candidates.isEmpty else { return nil }
-  let submission: ReviewSubmission
+  let submission: Components.Schemas.ReviewSubmission
   if candidates.count == 1 {
     submission = candidates[0]
   } else {
@@ -4498,19 +4416,39 @@ private func selectSubmission(
   return (submission, versionString(submission))
 }
 
+/// The build attached to an App Store version, or nil (Apple answers "none" with 404 or null data).
+func attachedBuild(versionID: String, client: ASCClient) async throws -> Components.Schemas.Build? {
+  do {
+    return try await client.appStoreVersionsBuildGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
+  } catch where ASCError.isMissingRelated(error) {
+    return nil
+  }
+}
+
+/// Attaches a build to an App Store version.
+func attachBuild(_ buildID: String, toVersion versionID: String, client: ASCClient) async throws {
+  _ = try await client.appStoreVersionsBuildUpdateToOneRelationship(
+    path: .init(id: versionID),
+    body: .json(.init(data: .init(id: buildID, _type: "builds")))
+  ).noContent
+}
+
+/// The platform of an App Store version as the `--platform` type.
+func versionPlatform(_ version: Components.Schemas.AppStoreVersion) -> Platform? {
+  version.attributes?.platform.flatMap(Platform.init(rawValue:))
+}
+
 /// Fetches builds for the app matching the given version, prompts the user to pick one, and attaches it.
 /// Returns the selected build.
 @discardableResult
-private func selectBuild(appID: String, versionID: String, versionString: String?, platform: Platform? = nil, client: AppStoreConnectClient) async throws -> Build {
-  let buildsResponse = try await client.send(
-    Resources.v1.builds.get(
-      filterPreReleaseVersionVersion: versionString.map { [$0] },
-      filterPreReleaseVersionPlatform: platformFilter(platform),
-      filterApp: [appID],
-      sort: [.minusUploadedDate],
-      limit: 10
-    )
-  )
+private func selectBuild(appID: String, versionID: String, versionString: String?, platform: Platform? = nil, client: ASCClient) async throws -> Components.Schemas.Build {
+  let buildsResponse = try await client.buildsGetCollection(query: .init(
+    filterPreReleaseVersionVersion: versionString.map { [$0] },
+    filterPreReleaseVersionPlatform: platformFilter(platform),
+    filterApp: [appID],
+    sort: [.minusUploadedDate],
+    limit: 10
+  )).ok.body.json
   
   let builds = buildsResponse.data
   guard !builds.isEmpty else {
@@ -4529,7 +4467,7 @@ private func selectBuild(appID: String, versionID: String, versionString: String
   }
   print()
   
-  let selected: Build
+  let selected: Components.Schemas.Build
   if autoConfirm {
     selected = builds[0]
     let number = selected.attributes?.version ?? "—"
@@ -4545,13 +4483,7 @@ private func selectBuild(appID: String, versionID: String, versionString: String
   }
   
   // Attach the build to the version
-  try await client.send(
-    Resources.v1.appStoreVersions.id(versionID).relationships.build.patch(
-      AppStoreVersionBuildLinkageRequest(
-        data: .init(id: selected.id)
-      )
-    )
-  )
+  try await attachBuild(selected.id, toVersion: versionID, client: client)
   
   return selected
 }

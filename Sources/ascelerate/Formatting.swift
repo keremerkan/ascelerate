@@ -8,6 +8,7 @@ import Foundation
 /// similar catch sites). `ResponseError` has no `LocalizedError` conformance, so
 /// `localizedDescription` would hide the API's actual error details.
 func describeError(_ error: Error) -> String {
+  if let stop = ASCDryRunStop.from(error) { return stop.description }
   if let ascError = ASCError.from(error) {
     if ascError.statusCode == 429 { return "API rate limit exceeded (HTTP 429)" }
     if !ascError.errors.isEmpty {

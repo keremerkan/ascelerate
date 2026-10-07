@@ -16,11 +16,15 @@ enum ClientFactory {
       throw ConfigError.missingPrivateKey(keyPath)
     }
 
-    return try .appStoreConnect(credentials: ASCCredentials(
-      keyID: config.keyId,
-      issuerID: config.issuerId,
-      privateKeyPEM: String(contentsOfFile: keyPath, encoding: .utf8)
-    ))
+    // ASCELERATE_DRY_RUN=1: reads go out, every write is printed instead of sent (testing aid).
+    return try .appStoreConnect(
+      credentials: ASCCredentials(
+        keyID: config.keyId,
+        issuerID: config.issuerId,
+        privateKeyPEM: String(contentsOfFile: keyPath, encoding: .utf8)
+      ),
+      dryRun: ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] == "1"
+    )
   }
 
   static func makeClient() throws -> AppStoreConnectClient {

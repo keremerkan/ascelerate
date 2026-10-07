@@ -83,6 +83,9 @@ struct Ascelerate: AsyncParsableCommand {
   }
 
   private static func formatError(_ error: Error) -> String? {
+    if let stop = ASCDryRunStop.from(error) {
+      return yellow(stop.description)
+    }
     if let ascError = ASCError.from(error) {
       return ascError.statusCode == 429
         ? formatRateLimit(ascError.rateLimit)

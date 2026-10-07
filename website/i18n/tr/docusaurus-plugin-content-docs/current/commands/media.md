@@ -118,7 +118,7 @@ Watch ve iMessage display type'lar yalnızca ekran görüntülerini destekler --
 
 App Store Connect'te iPhone Duo için bir ekran görüntüsü seti yoktur. ascelerate, `APP_IPHONE_DUO` klasöründeki dosyaları uygulamanın varlık kitaplığına yükler ve dosya sırasıyla sürüm yerelleştirmesine yerleştirir. Kabul edilen boyutlar şunlardır: 2853×2007 veya 2007×2853 (iç ekran, açık konumda), 2034×1398 veya 1398×2034 (dış ekran). Diğer boyutlar, herhangi bir şey yüklenmeden önce reddedilir. `--replace` ile her locale'deki mevcut iPhone Duo ekran görüntüleri önce kaldırılır.
 
-iPhone Duo uygulama önizlemeleri henüz desteklenmez; `media download` ve `media verify` de iPhone Duo ekran görüntülerini kapsamaz. `media prune` bunları hiçbir zaman silmez.
+Yeniden denemelere rağmen yüklenemeyen bir dosya olursa `media upload`, o locale'in iPhone Duo ekran görüntülerini çalışmanın sonunda yeniden yerleştirir; böylece dosya sırası korunur. `media verify`, iPhone Duo ekran görüntülerini dosya adları ve işlenme durumlarıyla listeler. Medya klasörü verildiğinde, iPhone Duo ekran görüntüleri dosyalar ya da sıra bakımından klasörden farklı olan locale'leri de bildirir (düzeltmek için `media upload` komutunu `--replace` ile çalıştırın). iPhone Duo uygulama önizlemeleri henüz desteklenmez, `media download` iPhone Duo ekran görüntülerini kapsamaz ve `media prune` bunları hiçbir zaman silmez.
 
 ## app-store-screenshots ile kullanım
 

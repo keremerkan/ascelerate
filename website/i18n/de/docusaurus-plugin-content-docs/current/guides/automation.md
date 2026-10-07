@@ -27,6 +27,7 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # dasselbe, etw
 ```
 
 - Ein Befehl bricht bei der ersten angehaltenen Schreibanfrage ab oder meldet, wenn er Elemente einzeln abarbeitet, jede angehaltene Anfrage als fehlgeschlagen.
+- `media upload` behandelt angehaltene Schreibanfragen als erledigt und macht weiter, sodass die Schreibanfragen jeder Datei angezeigt werden; am Ende nennt es, wie viele Dateien hochgeladen würden.
 - In `run-workflow` beendet ein Schritt, dessen Schreibanfragen angehalten wurden, den Workflow nicht, sodass ein einziger Durchlauf die Schreibanfragen aller Schritte zeigt. Ein Schritt, der auf etwas angewiesen ist, das ein früherer Schritt erstellt hätte (etwa eine neue Version oder einen hochgeladenen Build), kann trotzdem fehlschlagen.
 - In einer Workflow-Datei gilt `--dry-run` bei einem einzelnen Schritt nur für diesen Schritt.
 - `builds upload` überspringt den Upload. `builds archive` und `builds validate` laufen weiterhin, da sie in App Store Connect nichts ändern.

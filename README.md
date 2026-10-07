@@ -472,7 +472,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
 >
-> App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. `media download` and `media verify` don't include iPhone Duo screenshots yet, and `media prune` never deletes them.
+> App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ; `media download` doesn't include them yet, and `media prune` never deletes them.
 >
 > `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
 

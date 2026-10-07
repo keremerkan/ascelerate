@@ -118,7 +118,7 @@ Watch and iMessage display types support screenshots only — video files in tho
 
 App Store Connect has no screenshot set for iPhone Duo. ascelerate uploads the files in an `APP_IPHONE_DUO` folder to the app's asset library and places them on the version localization, in file order. Accepted sizes are 2853×2007 or 2007×2853 (inner display, unfolded) and 2034×1398 or 1398×2034 (cover display); other sizes are rejected before anything is uploaded. With `--replace`, each locale's existing iPhone Duo screenshots are removed first.
 
-iPhone Duo app previews are not supported yet, and `media download` and `media verify` don't include iPhone Duo screenshots. `media prune` never deletes them.
+If a file still fails after retries, `media upload` places that locale's iPhone Duo screenshots again at the end of the run, so they stay in file order. `media verify` lists iPhone Duo screenshots with their file names and processing state; given the media folder, it also flags locales whose iPhone Duo screenshots differ from the folder in files or order (run `media upload` with `--replace` to fix them). iPhone Duo app previews are not supported yet, `media download` doesn't include iPhone Duo screenshots, and `media prune` never deletes them.
 
 ## Using with app-store-screenshots
 

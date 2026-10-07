@@ -27,6 +27,7 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # same, e.g. fo
 ```
 
 - A command stops at its first blocked write, or reports each blocked request as failed where it works through items one by one.
+- `media upload` treats blocked writes as done and goes on, so every file's writes are shown; it ends with how many files would be uploaded.
 - In `run-workflow`, a step whose writes were blocked doesn't stop the workflow, so a single run shows every step's writes. A step that relies on something an earlier step would have created, such as a new version or an uploaded build, can still fail.
 - In a workflow file, `--dry-run` on a single step applies only to that step.
 - `builds upload` skips the upload. `builds archive` and `builds validate` still run: they don't change anything on App Store Connect.

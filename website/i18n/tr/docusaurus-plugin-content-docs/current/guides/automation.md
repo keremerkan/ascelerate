@@ -27,6 +27,7 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # aynı etki, �
 ```
 
 - Bir komut ilk durdurulan yazma isteğinde sona erer; öğeleri tek tek işleyen komutlar ise durdurulan her isteği başarısız olarak bildirir.
+- `media upload`, durdurulan yazma isteklerini tamamlanmış sayıp devam eder; böylece her dosyanın yazma isteklerini görebilirsiniz. Sonunda kaç dosyanın yükleneceğini bildirir.
 - `run-workflow` içinde, yazma istekleri durdurulan bir adım workflow'u sonlandırmaz; böylece tek bir çalıştırmada tüm adımların yazma isteklerini görebilirsiniz. Önceki bir adımın oluşturacağı bir şeye (yeni bir sürüm veya yüklenmiş bir build gibi) dayanan bir adım yine de başarısız olabilir.
 - Bir workflow dosyasında tek bir adıma eklenen `--dry-run` yalnızca o adım için geçerlidir.
 - `builds upload` yüklemeyi atlar. `builds archive` ve `builds validate`, App Store Connect'te hiçbir şeyi değiştirmedikleri için çalışmaya devam eder.

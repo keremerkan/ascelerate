@@ -194,18 +194,16 @@ struct AppsCommand: AsyncParsableCommand {
       subcommands: [View.self, Update.self, Import.self, Export.self]
     )
     
-    static let editableStates: Set<AppVersionState> = [.prepareForSubmission, .waitingForReview]
-    static let editableStateValues: Set<String> = Set(editableStates.map(\.rawValue))
+    static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW"]
     
-    static func checkEditable(_ version: AppStoreVersion, promotionalTextOnly: Bool) throws {
+    static func checkEditable(_ version: Components.Schemas.AppStoreVersion, promotionalTextOnly: Bool) throws {
       guard let state = version.attributes?.appVersionState, !editableStates.contains(state) else {
         return // editable — all fields allowed
       }
-      let stateStr = "\(state)"
       if promotionalTextOnly {
         return // promotional text can be updated in any state
       }
-      throw ValidationError("Version is in state '\(stateStr)' — only promotional text can be updated. Other fields require PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW.")
+      throw ValidationError("Version is in state '\(state)' — only promotional text can be updated. Other fields require PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW.")
     }
     
     // MARK: - View
@@ -307,7 +305,7 @@ struct AppsCommand: AsyncParsableCommand {
           throw ValidationError("Provide at least one field to update (--description, --whats-new, --keywords, --promotional-text, --marketing-url, --support-url).")
         }
         
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
         
@@ -316,34 +314,29 @@ struct AppsCommand: AsyncParsableCommand {
         try Localizations.checkEditable(version, promotionalTextOnly: onlyPromoText)
         
         // Find the localization
-        let locsResponse = try await client.send(
-          Resources.v1.appStoreVersions.id(version.id)
-            .appStoreVersionLocalizations.get(
-              filterLocale: locale.map { [$0] }
-            )
-        )
+        let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: version.id), query: .init(filterLocale: locale.map { [$0] })
+        ).ok.body.json
         guard let localization = locsResponse.data.first else {
           let localeDesc = locale ?? "primary"
           throw ValidationError("No localization found for locale '\(localeDesc)'.")
         }
         
-        let request = Resources.v1.appStoreVersionLocalizations.id(localization.id).patch(
-          AppStoreVersionLocalizationUpdateRequest(
-            data: .init(
-              id: localization.id,
-              attributes: .init(
-                description: description,
-                keywords: keywords,
-                marketingURL: marketingURL.flatMap { URL(string: $0) },
-                promotionalText: promotionalText,
-                supportURL: supportURL.flatMap { URL(string: $0) },
-                whatsNew: whatsNew
-              )
-            )
-          )
-        )
-        
-        let response = try await client.send(request)
+        let response = try await client.appStoreVersionLocalizationsUpdateInstance(
+          path: .init(id: localization.id),
+          body: .json(.init(data: .init(
+            attributes: .init(
+              description: description,
+              keywords: keywords,
+              marketingUrl: validURL(marketingURL),
+              promotionalText: promotionalText,
+              supportUrl: validURL(supportURL),
+              whatsNew: whatsNew
+            ),
+            id: localization.id,
+            _type: "appStoreVersionLocalizations"
+          )))
+        ).ok.body.json
         let attrs = response.data.attributes
         let versionString = version.attributes?.versionString ?? "unknown"
         success("Updated", "localization for version \(versionString) [\(attrs?.locale.map { localeName($0) } ?? "—")]")
@@ -352,8 +345,8 @@ struct AppsCommand: AsyncParsableCommand {
         if let w = attrs?.whatsNew, !w.isEmpty { print("  What's New:       \(w.prefix(80))\(w.count > 80 ? "..." : "")") }
         if let k = attrs?.keywords, !k.isEmpty { print("  Keywords:         \(k.prefix(80))\(k.count > 80 ? "..." : "")") }
         if let p = attrs?.promotionalText, !p.isEmpty { print("  Promotional Text: \(p.prefix(80))\(p.count > 80 ? "..." : "")") }
-        if let u = attrs?.marketingURL { print("  Marketing URL:    \(u)") }
-        if let u = attrs?.supportURL { print("  Support URL:      \(u)") }
+        if let u = attrs?.marketingUrl { print("  Marketing URL:    \(u)") }
+        if let u = attrs?.supportUrl { print("  Support URL:      \(u)") }
       }
     }
     
@@ -399,7 +392,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         // Show summary and confirm
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
         
@@ -431,10 +424,9 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         // Fetch all localizations for this version
-        let locsResponse = try await client.send(
-          Resources.v1.appStoreVersions.id(version.id)
-            .appStoreVersionLocalizations.get()
-        )
+        let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: version.id)
+        ).ok.body.json
         
         let locByLocale = Dictionary(
           locsResponse.data.compactMap { loc in
@@ -453,7 +445,7 @@ struct AppsCommand: AsyncParsableCommand {
       /// Computes which locale updates to send: when the version is no longer editable, keeps only
       /// promotional text (warning about ignored fields) and throws if nothing remains.
       private func resolveEffectiveUpdates(
-        version: AppStoreVersion, localeUpdates: [String: LocaleFields]
+        version: Components.Schemas.AppStoreVersion, localeUpdates: [String: LocaleFields]
       ) throws -> [String: LocaleFields] {
         guard let state = version.attributes?.appVersionState,
           !Localizations.editableStates.contains(state)
@@ -480,8 +472,8 @@ struct AppsCommand: AsyncParsableCommand {
       /// Sends each locale's update, creating the localization (after confirmation) when absent.
       private func sendLocaleUpdates(
         _ updates: [String: LocaleFields], versionID: String,
-        existing locByLocale: [String: AppStoreVersionLocalization],
-        client: AppStoreConnectClient
+        existing locByLocale: [String: Components.Schemas.AppStoreVersionLocalization],
+        client: ASCClient
       ) async throws {
         for (locale, fields) in updates.sorted(by: { $0.key < $1.key }) {
           guard let localization = locByLocale[locale] else {
@@ -489,63 +481,55 @@ struct AppsCommand: AsyncParsableCommand {
               print("  [\(localeName(locale))] Skipped.")
               continue
             }
-            let response = try await client.send(
-              Resources.v1.appStoreVersionLocalizations.post(
-                AppStoreVersionLocalizationCreateRequest(
-                  data: .init(
-                    attributes: .init(
-                      description: fields.description,
-                      locale: locale,
-                      keywords: fields.keywords,
-                      marketingURL: fields.marketingURL.flatMap { URL(string: $0) },
-                      promotionalText: fields.promotionalText,
-                      supportURL: fields.supportURL.flatMap { URL(string: $0) },
-                      whatsNew: fields.whatsNew
-                    ),
-                    relationships: .init(
-                      appStoreVersion: .init(data: .init(id: versionID))
-                    )
-                  )
-                )
-              )
-            )
+            let response = try await client.appStoreVersionLocalizationsCreateInstance(body: .json(.init(data: .init(
+              attributes: .init(
+                description: fields.description,
+                keywords: fields.keywords,
+                locale: locale,
+                marketingUrl: validURL(fields.marketingURL),
+                promotionalText: fields.promotionalText,
+                supportUrl: validURL(fields.supportURL),
+                whatsNew: fields.whatsNew
+              ),
+              relationships: .init(
+                appStoreVersion: .init(data: .init(id: versionID, _type: "appStoreVersions"))),
+              _type: "appStoreVersionLocalizations"
+            )))).created.body.json
             print("  [\(localeName(locale))] \(green("Created."))")
             if verbose { printLocaleResponse(response.data.attributes) }
             continue
           }
 
-          let response = try await client.send(
-            Resources.v1.appStoreVersionLocalizations.id(localization.id).patch(
-              AppStoreVersionLocalizationUpdateRequest(
-                data: .init(
-                  id: localization.id,
-                  attributes: .init(
-                    description: fields.description,
-                    keywords: fields.keywords,
-                    marketingURL: fields.marketingURL.flatMap { URL(string: $0) },
-                    promotionalText: fields.promotionalText,
-                    supportURL: fields.supportURL.flatMap { URL(string: $0) },
-                    whatsNew: fields.whatsNew
-                  )
-                )
-              )
-            )
-          )
+          let response = try await client.appStoreVersionLocalizationsUpdateInstance(
+            path: .init(id: localization.id),
+            body: .json(.init(data: .init(
+              attributes: .init(
+                description: fields.description,
+                keywords: fields.keywords,
+                marketingUrl: validURL(fields.marketingURL),
+                promotionalText: fields.promotionalText,
+                supportUrl: validURL(fields.supportURL),
+                whatsNew: fields.whatsNew
+              ),
+              id: localization.id,
+              _type: "appStoreVersionLocalizations"
+            )))
+          ).ok.body.json
           print("  [\(localeName(locale))] Updated.")
           if verbose { printLocaleResponse(response.data.attributes) }
         }
       }
 
       /// Prints the verbose API response for a single localization (shared by create and update).
-      private func printLocaleResponse(_ attrs: AppStoreVersionLocalization.Attributes?) {
+      private func printLocaleResponse(_ attrs: Components.Schemas.AppStoreVersionLocalization.AttributesPayload?) {
         print("    Response:")
         print("      Locale:           \(attrs?.locale.map { localeName($0) } ?? "—")")
         if let d = attrs?.description { print("      Description:      \(d.prefix(120))\(d.count > 120 ? "..." : "")") }
         if let w = attrs?.whatsNew { print("      What's New:       \(w.prefix(120))\(w.count > 120 ? "..." : "")") }
         if let k = attrs?.keywords { print("      Keywords:         \(k.prefix(120))\(k.count > 120 ? "..." : "")") }
         if let p = attrs?.promotionalText { print("      Promotional Text: \(p.prefix(120))\(p.count > 120 ? "..." : "")") }
-        if let u = attrs?.marketingURL { print("      Marketing URL:    \(u)") }
-        if let u = attrs?.supportURL { print("      Support URL:      \(u)") }
+        if let u = attrs?.marketingUrl { print("      Marketing URL:    \(u)") }
+        if let u = attrs?.supportUrl { print("      Support URL:      \(u)") }
       }
     }
     
@@ -629,30 +613,28 @@ struct AppsCommand: AsyncParsableCommand {
     var copyright: String?
     
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       
       let platformValue = try parsePlatform(platform)
 
       // Check if version already exists — for THIS platform: one app record
       // can hold the same version string per platform (universal purchase).
-      let existingVersions = try await client.send(
-        Resources.v1.apps.id(app.id).appStoreVersions.get(
-          filterVersionString: [versionString]
-        )
-      )
+      let existingVersions = try await client.appsAppStoreVersionsGetToManyRelated(
+        path: .init(id: app.id), query: .init(filterVersionString: [versionString])
+      ).ok.body.json
       if let existing = existingVersions.data.first(where: {
-        $0.attributes?.versionString == versionString && $0.attributes?.platform == platformValue
+        $0.attributes?.versionString == versionString && $0.attributes?.platform == platformValue.rawValue
       }) {
         let state = existing.attributes?.appVersionState
-        if state == .prepareForSubmission {
+        if state == "PREPARE_FOR_SUBMISSION" {
           print("Version \(versionString) already exists for \(platform) (PREPARE_FOR_SUBMISSION). Continuing.")
           return
         }
         throw ValidationError("Version \(versionString) already exists for \(platform) (state: \(state.map { formatState($0) } ?? "unknown")).")
       }
       
-      let releaseTypeValue: AppStoreVersionCreateRequest.Data.Attributes.ReleaseType?
+      let releaseTypeValue: ASCEnum.AppStoreVersionCreateRequestReleaseType?
       if let releaseType {
         releaseTypeValue = switch releaseType.lowercased() {
           case "manual": .manual
@@ -664,23 +646,16 @@ struct AppsCommand: AsyncParsableCommand {
         releaseTypeValue = nil
       }
       
-      let request = Resources.v1.appStoreVersions.post(
-        AppStoreVersionCreateRequest(
-          data: .init(
-            attributes: .init(
-              platform: platformValue,
-              versionString: versionString,
-              copyright: copyright,
-              releaseType: releaseTypeValue
-            ),
-            relationships: .init(
-              app: .init(data: .init(id: app.id))
-            )
-          )
-        )
-      )
-      
-      let response = try await client.send(request)
+      let response = try await client.appStoreVersionsCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(
+          copyright: copyright,
+          platform: platformValue.rawValue,
+          releaseType: releaseTypeValue?.rawValue,
+          versionString: versionString
+        ),
+        relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
+        _type: "appStoreVersions"
+      )))).created.body.json
       let attrs = response.data.attributes
       success("Created", "version \(attrs?.versionString ?? versionString)")
       print("  Platform:     \(attrs?.platform.map { formatState($0) } ?? "—")")
@@ -711,7 +686,7 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(
         appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -728,7 +703,7 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       let state = appVersion.attributes?.appVersionState
-      guard state == .prepareForSubmission || state == .waitingForReview else {
+      guard state == "PREPARE_FOR_SUBMISSION" || state == "WAITING_FOR_REVIEW" else {
         throw ValidationError(
           "Version \(versionString) (\(platformStr)) is in state '\(state.map { formatState($0) } ?? "unknown")' — copyright can only be updated on an editable version.")
       }
@@ -742,16 +717,11 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(
-        Resources.v1.appStoreVersions.id(appVersion.id).patch(
-          AppStoreVersionUpdateRequest(
-            data: .init(
-              id: appVersion.id,
-              attributes: .init(copyright: newCopyright)
-            )
-          )
-        )
-      )
+      _ = try await client.appStoreVersionsUpdateInstance(
+        path: .init(id: appVersion.id),
+        body: .json(.init(data: .init(
+          attributes: .init(copyright: newCopyright), id: appVersion.id, _type: "appStoreVersions")))
+      ).ok
 
       print()
       success("Updated", "copyright for version \(versionString) (\(platformStr)).")
@@ -1017,7 +987,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
       
@@ -1025,17 +995,11 @@ struct AppsCommand: AsyncParsableCommand {
       let appName = app.attributes?.name ?? bundleID
       
       if enable {
-        let request = Resources.v1.appStoreVersionPhasedReleases.post(
-          AppStoreVersionPhasedReleaseCreateRequest(
-            data: .init(
-              attributes: .init(phasedReleaseState: .inactive),
-              relationships: .init(
-                appStoreVersion: .init(data: .init(id: appVersion.id))
-              )
-            )
-          )
-        )
-        let response = try await client.send(request)
+        let response = try await client.appStoreVersionPhasedReleasesCreateInstance(body: .json(.init(data: .init(
+          attributes: .init(phasedReleaseState: ASCEnum.PhasedReleaseState.inactive.rawValue),
+          relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
+          _type: "appStoreVersionPhasedReleases"
+        )))).created.body.json
         let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
         success("Enabled", "phased release for version \(versionString).")
         print("  State: \(state)")
@@ -1043,22 +1007,17 @@ struct AppsCommand: AsyncParsableCommand {
       }
       
       // All other actions require an existing phased release
-      let existing: AppStoreVersionPhasedRelease? = try await fetchOptionalResource(
-        Resources.v1.appStoreVersions.id(appVersion.id).appStoreVersionPhasedRelease.get(),
-        client: client
-      )?.data
+      let existing = try await optionalRelated {
+        try await client.appStoreVersionsAppStoreVersionPhasedReleaseGetToOneRelated(
+          path: .init(id: appVersion.id)
+        ).ok.body.json.data
+      }
       
       if pause {
         guard let pr = existing else {
           throw ValidationError("No phased release configured for version \(versionString). Use --enable first.")
         }
-        let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
-          AppStoreVersionPhasedReleaseUpdateRequest(
-            data: .init(id: pr.id, attributes: .init(phasedReleaseState: .paused))
-          )
-        )
-        let response = try await client.send(request)
-        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        let state = try await setPhasedReleaseState(.paused, id: pr.id, client: client)
         success("Paused", "phased release for version \(versionString).")
         print("  State: \(state)")
         return
@@ -1068,13 +1027,7 @@ struct AppsCommand: AsyncParsableCommand {
         guard let pr = existing else {
           throw ValidationError("No phased release configured for version \(versionString). Use --enable first.")
         }
-        let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
-          AppStoreVersionPhasedReleaseUpdateRequest(
-            data: .init(id: pr.id, attributes: .init(phasedReleaseState: .active))
-          )
-        )
-        let response = try await client.send(request)
-        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        let state = try await setPhasedReleaseState(.active, id: pr.id, client: client)
         success("Resumed", "phased release for version \(versionString).")
         print("  State: \(state)")
         return
@@ -1088,13 +1041,7 @@ struct AppsCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        let request = Resources.v1.appStoreVersionPhasedReleases.id(pr.id).patch(
-          AppStoreVersionPhasedReleaseUpdateRequest(
-            data: .init(id: pr.id, attributes: .init(phasedReleaseState: .complete))
-          )
-        )
-        let response = try await client.send(request)
-        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        let state = try await setPhasedReleaseState(.complete, id: pr.id, client: client)
         success("Completed", "phased release for version \(versionString) — released to all users.")
         print("  State: \(state)")
         return
@@ -1109,9 +1056,7 @@ struct AppsCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        try await client.send(
-          Resources.v1.appStoreVersionPhasedReleases.id(pr.id).delete
-        )
+        _ = try await client.appStoreVersionPhasedReleasesDeleteInstance(path: .init(id: pr.id)).noContent
         success("Removed", "phased release for version \(versionString).")
         return
       }
@@ -1137,6 +1082,18 @@ struct AppsCommand: AsyncParsableCommand {
       print("  Day:          \(day) of 7")
       print("  Paused:       \(pauseDuration) day\(pauseDuration == 1 ? "" : "s")")
     }
+
+    /// PATCHes a phased release's state; returns the new state for display.
+    private func setPhasedReleaseState(
+      _ state: ASCEnum.PhasedReleaseState, id: String, client: ASCClient
+    ) async throws -> String {
+      let response = try await client.appStoreVersionPhasedReleasesUpdateInstance(
+        path: .init(id: id),
+        body: .json(.init(data: .init(
+          attributes: .init(phasedReleaseState: state.rawValue), id: id, _type: "appStoreVersionPhasedReleases")))
+      ).ok.body.json
+      return response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+    }
   }
 
   struct Release: AsyncParsableCommand {
@@ -1159,17 +1116,17 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
 
-      let response = try await client.send(
-        Resources.v1.apps.id(app.id).appStoreVersions.get(
+      let response = try await client.appsAppStoreVersionsGetToManyRelated(
+        path: .init(id: app.id),
+        query: .init(
           filterPlatform: platformFilter(try platformOption.parsed()),
           filterVersionString: version.map { [$0] },
-          filterAppVersionState: [.pendingDeveloperRelease]
-        )
-      )
+          filterAppVersionState: [.pendingDeveloperRelease])
+      ).ok.body.json
       let candidates = response.data
 
       guard !candidates.isEmpty else {
@@ -1177,7 +1134,7 @@ struct AppsCommand: AsyncParsableCommand {
         throw ValidationError("\(scope) in Pending Developer Release.")
       }
 
-      func describe(_ v: AppStoreVersion) -> String {
+      func describe(_ v: Components.Schemas.AppStoreVersion) -> String {
         let p = v.attributes?.platform.map { formatState($0) } ?? "?"
         return "\(p) — \(v.attributes?.versionString ?? "?")"
       }
@@ -1193,17 +1150,10 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(
-        Resources.v1.appStoreVersionReleaseRequests.post(
-          AppStoreVersionReleaseRequestCreateRequest(
-            data: .init(
-              relationships: .init(
-                appStoreVersion: .init(data: .init(id: appVersion.id))
-              )
-            )
-          )
-        )
-      )
+      _ = try await client.appStoreVersionReleaseRequestsCreateInstance(body: .json(.init(data: .init(
+        relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
+        _type: "appStoreVersionReleaseRequests"
+      )))).created
       success("Released", "\(appName) \(describe(appVersion)) — release request submitted.")
     }
   }
@@ -1232,7 +1182,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
       
@@ -1241,12 +1191,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       guard let filePath = file else {
         // View mode
-        let existing: RoutingAppCoverage? = try await fetchOptionalResource(
-          Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get(),
-          client: client
-        )?.data
-        
-        guard let coverage = existing else {
+        guard let coverage = try await fetchCoverage(versionID: appVersion.id, client: client) else {
           print("App:              \(appName)")
           print("Version:          \(versionString)")
           print("Routing Coverage: Not configured")
@@ -1279,21 +1224,14 @@ struct AppsCommand: AsyncParsableCommand {
       let fileName = (expandedPath as NSString).lastPathComponent
       
       // Check for existing coverage
-      let existing: RoutingAppCoverage? = try await fetchOptionalResource(
-        Resources.v1.appStoreVersions.id(appVersion.id).routingAppCoverage.get(),
-        client: client
-      )?.data
-      
-      if let existingCoverage = existing {
+      if let existingCoverage = try await fetchCoverage(versionID: appVersion.id, client: client) {
         let existingName = existingCoverage.attributes?.fileName ?? "unknown"
         print("Existing routing coverage: \(existingName)")
         guard confirm("Replace existing routing coverage with '\(fileName)'? [y/N] ") else {
           cancelled()
           return
         }
-        try await client.send(
-          Resources.v1.routingAppCoverages.id(existingCoverage.id).delete
-        )
+        _ = try await client.routingAppCoveragesDeleteInstance(path: .init(id: existingCoverage.id)).noContent
         success("Deleted", "existing coverage.")
         print()
       }
@@ -1302,18 +1240,11 @@ struct AppsCommand: AsyncParsableCommand {
       fflush(stdout)
       
       // Reserve
-      let reserveResponse = try await client.send(
-        Resources.v1.routingAppCoverages.post(
-          RoutingAppCoverageCreateRequest(
-            data: .init(
-              attributes: .init(fileSize: fileSize, fileName: fileName),
-              relationships: .init(
-                appStoreVersion: .init(data: .init(id: appVersion.id))
-              )
-            )
-          )
-        )
-      )
+      let reserveResponse = try await client.routingAppCoveragesCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(fileName: fileName, fileSize: fileSize),
+        relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
+        _type: "routingAppCoverages"
+      )))).created.body.json
       
       let coverageID = reserveResponse.data.id
       guard let operations = reserveResponse.data.attributes?.uploadOperations,
@@ -1326,18 +1257,21 @@ struct AppsCommand: AsyncParsableCommand {
       
       // Commit
       let checksum = try md5Hex(filePath: expandedPath)
-      _ = try await client.send(
-        Resources.v1.routingAppCoverages.id(coverageID).patch(
-          RoutingAppCoverageUpdateRequest(
-            data: .init(
-              id: coverageID,
-              attributes: .init(sourceFileChecksum: checksum, isUploaded: true)
-            )
-          )
-        )
-      )
+      _ = try await client.routingAppCoveragesUpdateInstance(
+        path: .init(id: coverageID),
+        body: .json(.init(data: .init(
+          attributes: .init(sourceFileChecksum: checksum, uploaded: true), id: coverageID, _type: "routingAppCoverages")))
+      ).ok
       
       success("Uploaded", "routing coverage '\(fileName)' for version \(versionString).")
+    }
+
+    private func fetchCoverage(
+      versionID: String, client: ASCClient
+    ) async throws -> Components.Schemas.RoutingAppCoverage? {
+      try await optionalRelated {
+        try await client.appStoreVersionsRoutingAppCoverageGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
+      }
     }
   }
   
@@ -1407,7 +1341,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         // 1. Version state
         progress("Checking version state...")
-        let editable = versionState.map { Localizations.editableStateValues.contains($0) } ?? false
+        let editable = versionState.map { Localizations.editableStates.contains($0) } ?? false
         checks.append(Check(
           group: nil, name: "Version state", passed: editable,
           detail: editable ? stateStr : "\(stateStr) (not editable)"
@@ -4416,12 +4350,20 @@ private func selectSubmission(
   return (submission, versionString(submission))
 }
 
-/// The build attached to an App Store version, or nil (Apple answers "none" with 404 or null data).
-func attachedBuild(versionID: String, client: ASCClient) async throws -> Components.Schemas.Build? {
+/// Runs a to-one related fetch, mapping Apple's "no related object" answers (HTTP 404 or
+/// `{"data": null}`) to nil.
+func optionalRelated<T>(_ fetch: () async throws -> T) async throws -> T? {
   do {
-    return try await client.appStoreVersionsBuildGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
+    return try await fetch()
   } catch where ASCError.isMissingRelated(error) {
     return nil
+  }
+}
+
+/// The build attached to an App Store version, or nil.
+func attachedBuild(versionID: String, client: ASCClient) async throws -> Components.Schemas.Build? {
+  try await optionalRelated {
+    try await client.appStoreVersionsBuildGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
   }
 }
 
@@ -4431,6 +4373,11 @@ func attachBuild(_ buildID: String, toVersion versionID: String, client: ASCClie
     path: .init(id: versionID),
     body: .json(.init(data: .init(id: buildID, _type: "builds")))
   ).noContent
+}
+
+/// A URL option as the API's string, dropping values that don't parse as a URL.
+func validURL(_ value: String?) -> String? {
+  value.flatMap { URL(string: $0)?.absoluteString }
 }
 
 /// The platform of an App Store version as the `--platform` type.

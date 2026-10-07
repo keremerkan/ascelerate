@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct DevicesCommand: AsyncParsableCommand {
@@ -25,20 +26,20 @@ struct DevicesCommand: AsyncParsableCommand {
     var status: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let filterPlatform: [Resources.V1.Devices.FilterPlatform]? = try parseFilter(platform, name: "platform")
-      let filterStatus: [Resources.V1.Devices.FilterStatus]? = try parseFilter(status, name: "status")
+      typealias Query = Operations.DevicesGetCollection.Input.Query
+      let filterPlatform: [Query.FilterPlatformPayloadPayload]? = try parseFilter(platform, name: "platform")
+      let filterStatus: [Query.FilterStatusPayloadPayload]? = try parseFilter(status, name: "status")
+
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.devicesGetCollection(query: .init(
+          filterName: name.map { [$0] }, filterPlatform: filterPlatform, filterStatus: filterStatus, limit: 200
+        )).ok.body.json
+      }
 
       var rows: [[String]] = []
-      let request = Resources.v1.devices.get(
-        filterName: name.map { [$0] },
-        filterPlatform: filterPlatform,
-        filterStatus: filterStatus,
-        limit: 200
-      )
-
-      for try await page in client.pages(request) {
+      for page in pages {
         for device in page.data {
           let attrs = device.attributes
           rows.append([
@@ -73,9 +74,9 @@ struct DevicesCommand: AsyncParsableCommand {
     var nameOrUDID: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let device: Device
+      let device: Components.Schemas.Device
       if let nameOrUDID {
         device = try await findDevice(nameOrUDID: nameOrUDID, client: client)
       } else {
@@ -296,6 +297,40 @@ struct DevicesCommand: AsyncParsableCommand {
 }
 
 /// Prompts the user to select a device from a numbered list.
+func promptDevice(client: ASCClient) async throws -> Components.Schemas.Device {
+  let devices = try fetchAll(
+    await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.devicesGetCollection(query: .init(limit: 200)).ok.body.json
+    },
+    data: \.data,
+    emptyMessage: "No devices found in your account.",
+    sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
+  )
+  return try promptSelection(
+    "Devices", items: devices,
+    display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.udid ?? "—")) — \($0.attributes?.status.map { formatState($0) } ?? "—")" },
+    prompt: "Select device"
+  )
+}
+
+/// Looks up a device by UDID first, then falls back to name (ASCKit).
+func findDevice(nameOrUDID: String, client: ASCClient) async throws -> Components.Schemas.Device {
+  let byUDID = try await client.devicesGetCollection(query: .init(filterUdid: [nameOrUDID], limit: 1)).ok.body.json
+  if let device = byUDID.data.first {
+    return device
+  }
+  let byName = try await client.devicesGetCollection(query: .init(filterName: [nameOrUDID], limit: 200)).ok.body.json.data
+  // Name filter may return partial matches, find exact match
+  if let device = byName.first(where: { $0.attributes?.name == nameOrUDID }) {
+    return device
+  }
+  // If only one result, use it even if not exact (fuzzy match by API)
+  if byName.count == 1 {
+    return byName[0]
+  }
+  throw DeviceLookupError.notFound(nameOrUDID)
+}
+
 func promptDevice(client: AppStoreConnectClient) async throws -> Device {
   let devices = try await fetchAll(
     client.pages(Resources.v1.devices.get(limit: 200)),

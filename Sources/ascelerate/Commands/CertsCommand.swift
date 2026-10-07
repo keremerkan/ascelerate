@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Crypto
 import _CryptoExtras
 import Foundation
@@ -33,18 +34,19 @@ struct CertsCommand: AsyncParsableCommand {
     var displayName: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let filterType: [Resources.V1.Certificates.FilterCertificateType]? = try parseFilter(type, name: "type")
+      let filterType: [Operations.CertificatesGetCollection.Input.Query.FilterCertificateTypePayloadPayload]? =
+        try parseFilter(type, name: "type")
+
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.certificatesGetCollection(query: .init(
+          filterDisplayName: displayName.map { [$0] }, filterCertificateType: filterType, limit: 200
+        )).ok.body.json
+      }
 
       var rows: [[String]] = []
-      let request = Resources.v1.certificates.get(
-        filterDisplayName: displayName.map { [$0] },
-        filterCertificateType: filterType,
-        limit: 200
-      )
-
-      for try await page in client.pages(request) {
+      for page in pages {
         for cert in page.data {
           let attrs = cert.attributes
           rows.append([
@@ -53,7 +55,7 @@ struct CertsCommand: AsyncParsableCommand {
             attrs?.serialNumber ?? "—",
             attrs?.platform.map { formatState($0) } ?? "—",
             attrs?.expirationDate.map { formatDate($0) } ?? "—",
-            attrs?.isActivated == true ? "Yes" : "No",
+            attrs?.activated == true ? "Yes" : "No",
           ])
         }
       }
@@ -78,9 +80,9 @@ struct CertsCommand: AsyncParsableCommand {
     var serialOrName: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let cert: AppStoreAPI.Certificate
+      let cert: Components.Schemas.Certificate
       if let serialOrName {
         cert = try await findCertificate(serialOrName: serialOrName, client: client)
       } else {
@@ -94,7 +96,7 @@ struct CertsCommand: AsyncParsableCommand {
       print("Serial Number: \(attrs?.serialNumber ?? "—")")
       print("Platform:      \(attrs?.platform.map { formatState($0) } ?? "—")")
       print("Expires:       \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
-      print("Active:        \(attrs?.isActivated == true ? "Yes" : "No")")
+      print("Active:        \(attrs?.activated == true ? "Yes" : "No")")
     }
   }
 
@@ -397,6 +399,39 @@ struct CertsCommand: AsyncParsableCommand {
 }
 
 /// Prompts the user to select a certificate from a numbered list.
+func promptCertificate(client: ASCClient) async throws -> Components.Schemas.Certificate {
+  let certs = try fetchAll(
+    await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.certificatesGetCollection(query: .init(limit: 200)).ok.body.json
+    },
+    data: \.data,
+    emptyMessage: "No certificates found in your account.",
+    sort: { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
+  )
+  return try promptSelection(
+    "Certificates", items: certs,
+    display: { "\($0.attributes?.displayName ?? "—") (\($0.attributes?.serialNumber ?? "—")) — \($0.attributes?.certificateType.map { formatState($0) } ?? "—"), expires \($0.attributes?.expirationDate.map { formatDate($0) } ?? "—")" },
+    prompt: "Select certificate"
+  )
+}
+
+/// Looks up a certificate by serial number first, then falls back to display name (ASCKit).
+func findCertificate(serialOrName: String, client: ASCClient) async throws -> Components.Schemas.Certificate {
+  // ASC filters can partial-match, so require an exact hit
+  let bySerial = try await client.certificatesGetCollection(query: .init(filterSerialNumber: [serialOrName], limit: 200)).ok.body.json.data
+  if let cert = bySerial.first(where: { $0.attributes?.serialNumber == serialOrName }) {
+    return cert
+  }
+  let byName = try await client.certificatesGetCollection(query: .init(filterDisplayName: [serialOrName], limit: 200)).ok.body.json.data
+  if let cert = byName.first(where: { $0.attributes?.displayName == serialOrName }) {
+    return cert
+  }
+  if byName.count == 1 {
+    return byName[0]
+  }
+  throw CertLookupError.notFound(serialOrName)
+}
+
 func promptCertificate(client: AppStoreConnectClient) async throws -> AppStoreAPI.Certificate {
   let certs = try await fetchAll(
     client.pages(Resources.v1.certificates.get(limit: 200)),

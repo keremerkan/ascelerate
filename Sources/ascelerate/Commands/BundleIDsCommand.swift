@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct BundleIDsCommand: AsyncParsableCommand {
@@ -22,25 +23,26 @@ struct BundleIDsCommand: AsyncParsableCommand {
     var identifier: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let filterPlatform: [Resources.V1.BundleIDs.FilterPlatform]? = try parseFilter(platform, name: "platform")
+      let filterPlatform: [Operations.BundleIdsGetCollection.Input.Query.FilterPlatformPayloadPayload]? =
+        try parseFilter(platform, name: "platform")
+
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.bundleIdsGetCollection(query: .init(
+          filterPlatform: filterPlatform, filterIdentifier: identifier.map { [$0] }, limit: 200
+        )).ok.body.json
+      }
 
       var rows: [[String]] = []
-      let request = Resources.v1.bundleIDs.get(
-        filterPlatform: filterPlatform,
-        filterIdentifier: identifier.map { [$0] },
-        limit: 200
-      )
-
-      for try await page in client.pages(request) {
+      for page in pages {
         for bundleID in page.data {
           let attrs = bundleID.attributes
           rows.append([
             attrs?.identifier ?? "—",
             attrs?.name ?? "—",
             attrs?.platform.map { formatState($0) } ?? "—",
-            attrs?.seedID ?? "—",
+            attrs?.seedId ?? "—",
           ])
         }
       }
@@ -65,9 +67,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
     var identifier: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let bundleID: BundleID
+      let bundleID: Components.Schemas.BundleId
       if let identifier {
         bundleID = try await findBundleID(identifier: identifier, client: client)
       } else {
@@ -78,12 +80,12 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print("Identifier: \(attrs?.identifier ?? "—")")
       print("Name:       \(attrs?.name ?? "—")")
       print("Platform:   \(attrs?.platform.map { formatState($0) } ?? "—")")
-      print("Seed ID:    \(attrs?.seedID ?? "—")")
+      print("Seed ID:    \(attrs?.seedId ?? "—")")
 
-      // Fetch capabilities
-      let capsResponse = try await client.send(
-        Resources.v1.bundleIDs.id(bundleID.id).bundleIDCapabilities.get()
-      )
+      // Fetch capabilities (this endpoint rejects `limit`)
+      let capsResponse = try await client.bundleIdsBundleIdCapabilitiesGetToManyRelated(
+        path: .init(id: bundleID.id)
+      ).ok.body.json
 
       if !capsResponse.data.isEmpty {
         print()
@@ -533,6 +535,31 @@ private func regenerateProfilesIfNeeded(bundleID: BundleID, client: AppStoreConn
 }
 
 /// Prompts the user to select a bundle identifier from a numbered list.
+func promptBundleID(client: ASCClient) async throws -> Components.Schemas.BundleId {
+  let bundleIDs = try fetchAll(
+    await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.bundleIdsGetCollection(query: .init(limit: 200)).ok.body.json
+    },
+    data: \.data,
+    emptyMessage: "No bundle identifiers found in your account.",
+    sort: { ($0.attributes?.identifier ?? "") < ($1.attributes?.identifier ?? "") }
+  )
+  return try promptSelection(
+    "Bundle identifiers", items: bundleIDs,
+    display: { "\($0.attributes?.identifier ?? "—") (\($0.attributes?.name ?? "—"), \($0.attributes?.platform.map { formatState($0) } ?? "—"))" },
+    prompt: "Select bundle identifier"
+  )
+}
+
+/// Looks up a bundle ID by identifier, guarding against prefix matching (ASCKit).
+func findBundleID(identifier: String, client: ASCClient) async throws -> Components.Schemas.BundleId {
+  let response = try await client.bundleIdsGetCollection(query: .init(filterIdentifier: [identifier], limit: 200)).ok.body.json
+  guard let bundleID = response.data.first(where: { $0.attributes?.identifier == identifier }) else {
+    throw BundleIDLookupError.notFound(identifier)
+  }
+  return bundleID
+}
+
 func promptBundleID(client: AppStoreConnectClient) async throws -> BundleID {
   let bundleIDs = try await fetchAll(
     client.pages(Resources.v1.bundleIDs.get(limit: 200)),

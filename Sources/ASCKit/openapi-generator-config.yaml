@@ -8,6 +8,26 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/inAppPurchasePricePoints/{id}/equalizations
+    - /v2/inAppPurchases/{id}/inAppPurchaseAvailability
+    - /v1/inAppPurchaseAvailabilities/{id}/availableTerritories
+    - /v1/promotedPurchases
+    - /v1/promotedPurchases/{id}
+    - /v1/apps/{id}/relationships/promotedPurchases
+    - /v2/inAppPurchases
+    - /v2/inAppPurchases/{id}
+    - /v1/inAppPurchaseSubmissions
+    - /v1/inAppPurchaseLocalizations
+    - /v1/inAppPurchaseLocalizations/{id}
+    - /v1/inAppPurchasePriceSchedules
+    - /v1/inAppPurchaseAvailabilities
+    - /v1/inAppPurchaseOfferCodes
+    - /v1/inAppPurchaseOfferCodeOneTimeUseCodes
+    - /v1/inAppPurchaseOfferCodeCustomCodes
+    - /v1/inAppPurchaseImages
+    - /v1/inAppPurchaseImages/{id}
+    - /v1/inAppPurchaseAppStoreReviewScreenshots
+    - /v1/inAppPurchaseAppStoreReviewScreenshots/{id}
     - /v1/apps
     - /v1/apps/{id}
     - /v1/apps/{id}/appStoreVersions

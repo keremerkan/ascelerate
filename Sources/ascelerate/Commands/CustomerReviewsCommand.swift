@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -35,24 +33,6 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     let createdDate: Date?
     let response: Response?
 
-    init(review: CustomerReview, response resp: CustomerReviewResponseV1?) {
-      let a = review.attributes
-      id = review.id
-      rating = a?.rating
-      title = a?.title
-      body = a?.body
-      reviewerNickname = a?.reviewerNickname
-      territory = a?.territory?.rawValue
-      createdDate = a?.createdDate
-      response = resp.map {
-        Response(
-          state: $0.attributes?.state?.rawValue,
-          lastModifiedDate: $0.attributes?.lastModifiedDate,
-          body: $0.attributes?.responseBody
-        )
-      }
-    }
-
     init(review: Components.Schemas.CustomerReview, response resp: Components.Schemas.CustomerReviewResponseV1?) {
       let a = review.attributes
       id = review.id
@@ -66,19 +46,6 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         Response(state: $0.attributes?.state, lastModifiedDate: $0.attributes?.lastModifiedDate, body: $0.attributes?.responseBody)
       }
     }
-  }
-
-  /// Fetches a review by ID along with its developer response (if any).
-  static func fetchReview(
-    reviewID: String, client: AppStoreConnectClient
-  ) async throws -> (review: CustomerReview, response: CustomerReviewResponseV1?) {
-    let resp = try await client.send(
-      Resources.v1.customerReviews.id(reviewID).get(include: [.response]))
-    let response = resp.included?.compactMap { item -> CustomerReviewResponseV1? in
-      if case .customerReviewResponseV1(let r) = item { return r }
-      return nil
-    }.first
-    return (resp.data, response)
   }
 
   /// Fetches a review by ID along with its developer response (if any).
@@ -268,7 +235,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
       let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !trimmed.isEmpty else { throw ValidationError("--body cannot be empty.") }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let (review, existing) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
       CustomerReviewsCommand.printReview(ReviewEntry(review: review, response: existing))
@@ -280,20 +247,16 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        _ = try await client.send(Resources.v1.customerReviewResponses.id(existing.id).delete)
+        _ = try await client.customerReviewResponsesDeleteInstance(path: .init(id: existing.id)).noContent
       }
 
-      let resp: CustomerReviewResponseV1Response
+      let resp: Components.Schemas.CustomerReviewResponseV1Response
       do {
-        resp = try await client.send(
-          Resources.v1.customerReviewResponses.post(
-            CustomerReviewResponseV1CreateRequest(
-              data: .init(
-                attributes: .init(responseBody: body),
-                relationships: .init(review: .init(data: .init(id: reviewID)))
-              )
-            )
-          ))
+        resp = try await client.customerReviewResponsesCreateInstance(body: .json(.init(data: .init(
+          attributes: .init(responseBody: body),
+          relationships: .init(review: .init(data: .init(id: reviewID, _type: "customerReviews"))),
+          _type: "customerReviewResponses"
+        )))).created.body.json
       } catch {
         // The old response is already deleted at this point — the API only allows
         // one response per review, so replace works as delete-then-create.
@@ -328,7 +291,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let (review, existing) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
 
@@ -344,7 +307,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(Resources.v1.customerReviewResponses.id(existing.id).delete)
+      _ = try await client.customerReviewResponsesDeleteInstance(path: .init(id: existing.id)).noContent
       print()
       success("Deleted", "developer response.")
     }

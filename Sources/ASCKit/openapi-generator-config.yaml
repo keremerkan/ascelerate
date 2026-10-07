@@ -84,6 +84,8 @@ filter:
     - /v1/builds
     - /v1/apps/{id}/customerReviews
     - /v1/customerReviews/{id}
+    - /v1/customerReviewResponses
+    - /v1/customerReviewResponses/{id}
     - /v1/buildBetaDetails
     - /v1/betaAppReviewSubmissions
     - /v1/apps/{id}/inAppPurchasesV2

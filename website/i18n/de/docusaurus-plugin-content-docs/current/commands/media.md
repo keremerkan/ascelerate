@@ -118,7 +118,7 @@ Watch- und iMessage-Anzeigetypen unterstützen nur Screenshots — Videodateien 
 
 App Store Connect bietet für das iPhone Duo kein Screenshot-Set. ascelerate lädt die Dateien eines `APP_IPHONE_DUO`-Ordners in die Asset-Bibliothek der App hoch und ordnet sie in der Reihenfolge der Dateinamen der Versionslokalisierung zu. Zulässig sind 2853×2007 oder 2007×2853 (inneres Display, aufgeklappt) sowie 2034×1398 oder 1398×2034 (äußeres Display); andere Größen werden abgelehnt, bevor etwas hochgeladen wird. Mit `--replace` werden die vorhandenen iPhone-Duo-Screenshots jeder Locale zuerst entfernt.
 
-App-Vorschauen für das iPhone Duo werden noch nicht unterstützt, und `media download` sowie `media verify` berücksichtigen iPhone-Duo-Screenshots nicht. `media prune` löscht sie nie.
+Scheitert eine Datei auch nach erneuten Versuchen, ordnet `media upload` die iPhone-Duo-Screenshots dieser Locale am Ende des Durchlaufs erneut zu, damit die Reihenfolge der Dateien erhalten bleibt. `media verify` listet iPhone-Duo-Screenshots mit Dateinamen und Verarbeitungsstatus auf; mit dem Medienordner meldet es außerdem Locales, deren iPhone-Duo-Screenshots in Dateien oder Reihenfolge vom Ordner abweichen (beheben Sie das mit `media upload` und `--replace`). App-Vorschauen für das iPhone Duo werden noch nicht unterstützt, `media download` berücksichtigt iPhone-Duo-Screenshots nicht, und `media prune` löscht sie nie.
 
 ## Verwendung mit app-store-screenshots
 

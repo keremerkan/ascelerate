@@ -14,6 +14,8 @@
 //   (`filter[bundleId]` → `filterBundleId`, `-uploadedDate` → `minusUploadedDate`) through the
 //   config's nameOverrides.
 // - `anyOf` blocks that only restate required properties are dropped (they generate empty types).
+// - A discriminated `oneOf` whose discriminator property no branch declares becomes an `anyOf`
+//   (the asset library placement's `relationships`, which could never decode).
 import Foundation
 
 guard CommandLine.arguments.count == 2 else {
@@ -107,7 +109,41 @@ func dropConstraintAnyOf(_ value: Any) -> Any {
   return value
 }
 
-components["schemas"] = dropConstraintAnyOf(openEnums(schemas))
+// A discriminated `oneOf` whose discriminator property none of its branches declares can never
+// decode: the placement's `relationships` is keyed on `mediaType`, which Apple sends in its
+// `attributes`. Make it a plain `anyOf`, which decodes whichever branches fit.
+var misplacedDiscriminators = 0
+
+/// The property names a schema declares, following `$ref`s and `allOf`.
+func declaredProperties(_ value: Any) -> Set<String> {
+  guard let object = value as? [String: Any] else { return [] }
+  if let ref = object["$ref"] as? String, let name = ref.split(separator: "/").last {
+    return declaredProperties(schemas[String(name)] ?? [:])
+  }
+  var names = Set((object["properties"] as? [String: Any] ?? [:]).keys)
+  for branch in object["allOf"] as? [Any] ?? [] { names.formUnion(declaredProperties(branch)) }
+  return names
+}
+
+func fixMisplacedDiscriminators(_ value: Any) -> Any {
+  if var object = value as? [String: Any] {
+    if let property = (object["discriminator"] as? [String: Any])?["propertyName"] as? String,
+      let branches = object["oneOf"] as? [Any],
+      !branches.contains(where: { declaredProperties($0).contains(property) }) {
+      object["discriminator"] = nil
+      object["oneOf"] = nil
+      object["anyOf"] = branches
+      misplacedDiscriminators += 1
+    }
+    return object.mapValues(fixMisplacedDiscriminators)
+  }
+  if let array = value as? [Any] {
+    return array.map(fixMisplacedDiscriminators)
+  }
+  return value
+}
+
+components["schemas"] = fixMisplacedDiscriminators(dropConstraintAnyOf(openEnums(schemas)))
 spec["components"] = components
 
 // Parameters with an empty enum (e.g. `fields[appKeywords]`: AppKeyword has no attributes) would
@@ -133,7 +169,7 @@ spec["paths"] = dropEmptyEnums(spec["paths"] ?? [:])
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf)")
 
 // ASCEnums.swift: the enum catalog as Swift enums, for validating input (`parseEnum`) and
 // naming values in code; requests and responses carry the raw strings.

@@ -19,7 +19,9 @@ enum AssetLibrary {
   static let acceptedSizes = ["IPHONE_DUO_PROFILE": [(2853, 2007), (2007, 2853), (2034, 1398), (1398, 2034)]]
 
   static func libraryID(appID: String, client: ASCClient) async throws -> String {
-    try await client.appsAssetLibraryGetToOneRelated(path: .init(id: appID)).ok.body.json.data.id
+    try await withTransientRetry {
+      try await client.appsAssetLibraryGetToOneRelated(path: .init(id: appID)).ok.body.json.data.id
+    }
   }
 
   /// Throws if the image's pixel size is not one the placement group accepts.
@@ -42,11 +44,15 @@ enum AssetLibrary {
     try await uploadAsset(
       filePath: file.path,
       reserve: {
-        let created = try await client.appAssetLibraryImagesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(category: "APP_SCREENSHOTS_AND_PREVIEWS", fileName: file.fileName, fileSize: Int64(file.fileSize)),
-          relationships: .init(assetLibrary: .init(data: .init(id: libraryID, _type: "appAssetLibraries"))),
-          _type: "appAssetLibraryImages"
-        )))).created.body.json.data
+        // Repeating a reserve whose connection dropped can at worst leave an unplaced image in
+        // the library, which nothing shows.
+        let created = try await withTransientRetry {
+          try await client.appAssetLibraryImagesCreateInstance(body: .json(.init(data: .init(
+            attributes: .init(category: "APP_SCREENSHOTS_AND_PREVIEWS", fileName: file.fileName, fileSize: Int64(file.fileSize)),
+            relationships: .init(assetLibrary: .init(data: .init(id: libraryID, _type: "appAssetLibraries"))),
+            _type: "appAssetLibraryImages"
+          )))).created.body.json.data
+        }
         guard case .awaitingUpload(let attributes) = created.attributes else {
           throw MediaUploadError.noUploadOperations
         }
@@ -62,27 +68,85 @@ enum AssetLibrary {
     )
   }
 
-  /// Places a library image on an App Store version localization as a screenshot in `group`.
-  static func placeScreenshot(imageID: String, localizationID: String, group: String, client: ASCClient) async throws {
-    _ = try await client.appAssetLibraryPlacementsCreateInstance(body: .json(.init(data: .init(
-      attributes: .init(placementGroup: group, placementType: "APP_SCREENSHOT"),
-      relationships: .init(
-        appStoreVersionLocalization: .init(data: .init(id: localizationID, _type: "appStoreVersionLocalizations")),
-        image: .init(data: .init(id: imageID, _type: "appAssetLibraryImages"))
-      ),
-      _type: "appAssetLibraryPlacements"
-    )))).created
+  /// Places a library image on an App Store version localization as a screenshot in `group`
+  /// and returns the placement's ID. Transient failures are retried, but a dropped connection
+  /// can hide a placement the server did create, and posting it again would show the screenshot
+  /// twice, so a retry first looks for a placement of the same image.
+  @discardableResult
+  static func placeScreenshot(imageID: String, localizationID: String, group: String, client: ASCClient) async throws -> String {
+    var isRetry = false
+    return try await withTransientRetry {
+      if isRetry,
+        let existing = try await screenshotPlacements(localizationID: localizationID, group: group, imageID: imageID, client: client).first {
+        return existing.id
+      }
+      isRetry = true
+      return try await client.appAssetLibraryPlacementsCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(placementGroup: group, placementType: "APP_SCREENSHOT"),
+        relationships: .init(
+          appStoreVersionLocalization: .init(data: .init(id: localizationID, _type: "appStoreVersionLocalizations")),
+          image: .init(data: .init(id: imageID, _type: "appAssetLibraryImages"))
+        ),
+        _type: "appAssetLibraryPlacements"
+      )))).created.body.json.data.id
+    }
   }
 
-  /// The localization's screenshot placement IDs in `group`, in display order.
-  static func screenshotPlacementIDs(localizationID: String, group: String, client: ASCClient) async throws -> [String] {
-    try await client.appStoreVersionLocalizationsPlacementsGetToManyRelated(
-      path: .init(id: localizationID),
-      query: .init(filterPlacementType: [.appScreenshot], filterPlacementGroup: [group], sort: [.placementGroupPosition], limit: 200)
-    ).ok.body.json.data.map(\.id)
+  /// The localization's screenshot placements in `group`, in display order, optionally only
+  /// those of one image.
+  static func screenshotPlacements(
+    localizationID: String, group: String, imageID: String? = nil, client: ASCClient
+  ) async throws -> [Components.Schemas.AppAssetLibraryPlacement] {
+    try await withTransientRetry {
+      try await client.appStoreVersionLocalizationsPlacementsGetToManyRelated(
+        path: .init(id: localizationID),
+        query: .init(
+          filterPlacementType: [.appScreenshot], filterPlacementGroup: [group], filterImage: imageID.map { [$0] },
+          sort: [.placementGroupPosition], limit: 200)
+      ).ok.body.json.data
+    }
   }
 
+  /// The file name of a placement's image. The placement list can't include images (HTTP 500
+  /// every time, seen live 2026-10-07) and placements carry no relationships, so this costs one
+  /// request per placement.
+  static func placementFileName(id: String, client: ASCClient) async throws -> String? {
+    let included = try await withTransientRetry {
+      try await client.appAssetLibraryPlacementsGetInstance(path: .init(id: id), query: .init(include: [.image])).ok.body.json.included
+    }
+    for case .appAssetLibraryImages(let image) in included ?? [] {
+      return image.attributes?.common.fileName
+    }
+    return nil
+  }
+
+  /// Deletes a placement. One that is already gone (a retried delete, or removed elsewhere)
+  /// counts as deleted.
   static func deletePlacement(id: String, client: ASCClient) async throws {
-    _ = try await client.appAssetLibraryPlacementsDeleteInstance(path: .init(id: id)).noContent
+    do {
+      _ = try await withTransientRetry {
+        try await client.appAssetLibraryPlacementsDeleteInstance(path: .init(id: id)).noContent
+      }
+    } catch where ASCError.from(error)?.statusCode == 404 {
+    }
+  }
+}
+
+extension Components.Schemas.AppAssetLibraryImage.AttributesPayload {
+  /// The attributes every image state shares (file name, size, …).
+  var common: Components.Schemas.AppAssetLibraryImageCommonAttributes {
+    switch self {
+      case .complete(let attributes), .prepareForSubmission(let attributes): attributes
+      case .accepted(let attributes): attributes.value1
+      case .approved(let attributes): attributes.value1
+      case .archived(let attributes): attributes.value1
+      case .awaitingUpload(let attributes): attributes.value1
+      case .failed(let attributes): attributes.value1
+      case .inReview(let attributes): attributes.value1
+      case .readyForReview(let attributes): attributes.value1
+      case .rejected(let attributes): attributes.value1
+      case .uploadComplete(let attributes): attributes.value1
+      case .waitingForReview(let attributes): attributes.value1
+    }
   }
 }

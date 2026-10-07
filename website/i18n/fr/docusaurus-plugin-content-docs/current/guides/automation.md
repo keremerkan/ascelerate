@@ -27,6 +27,7 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # même effet, 
 ```
 
 - Une commande s'arrête à sa première écriture bloquée ou, si elle traite les éléments un par un, signale chaque requête bloquée comme un échec.
+- `media upload` considère les écritures bloquées comme effectuées et continue : les écritures de chaque fichier sont ainsi affichées, et la commande indique à la fin combien de fichiers seraient téléversés.
 - Dans `run-workflow`, une étape dont les écritures ont été bloquées n'interrompt pas le workflow : une seule exécution montre ainsi les écritures de toutes les étapes. Une étape qui dépend d'un élément qu'une étape précédente aurait créé, comme une nouvelle version ou un build téléversé, peut tout de même échouer.
 - Dans un fichier de workflow, `--dry-run` sur une seule étape ne s'applique qu'à cette étape.
 - `builds upload` ignore le téléversement. `builds archive` et `builds validate` s'exécutent normalement, car ils ne modifient rien dans App Store Connect.

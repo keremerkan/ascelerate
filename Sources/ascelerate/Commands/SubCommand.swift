@@ -477,7 +477,7 @@ struct SubCommand: AsyncParsableCommand {
         succeeded += 1
       } catch {
         print("  FAIL \(target.territoryID) — \(describeError(error))")
-        failures.append((target, isTransientAPIError(error)))
+        failures.append((target, isTransientError(error)))
       }
     }
 
@@ -495,7 +495,7 @@ struct SubCommand: AsyncParsableCommand {
           succeeded += 1
         } catch {
           print("  FAIL \(target.territoryID) — \(describeError(error))")
-          failures.append((target, isTransientAPIError(error)))
+          failures.append((target, isTransientError(error)))
         }
       }
     }

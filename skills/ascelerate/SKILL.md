@@ -118,7 +118,7 @@ ascelerate apps media verify <app> media/                     # Retry stuck item
 ascelerate apps media prune <app> media/                      # Delete server sets with no matching local folder
 ```
 
-iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media download`/`verify` skip them; `media prune` never deletes them.
+iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media verify` lists them (file name + state) and, given the folder, flags locales whose Duo files or order differ (fix: `media upload --replace`); a file that still fails after retries makes `media upload` re-place that locale's Duo set at the end of the run. `media download` skips them; `media prune` never deletes them.
 
 #### Folder structure
 

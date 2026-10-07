@@ -4203,14 +4203,7 @@
             "$ref" : "#/components/schemas/ResourceLinks"
           },
           "relationships" : {
-            "discriminator" : {
-              "mapping" : {
-                "IMAGE" : "#/components/schemas/AppAssetLibraryPlacementImageRelationships",
-                "VIDEO" : "#/components/schemas/AppAssetLibraryPlacementVideoRelationships"
-              },
-              "propertyName" : "mediaType"
-            },
-            "oneOf" : [
+            "anyOf" : [
               {
                 "$ref" : "#/components/schemas/AppAssetLibraryPlacementImageRelationships"
               },

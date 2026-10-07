@@ -118,7 +118,7 @@ Les types d'affichage Watch et iMessage ne prennent en charge que les captures d
 
 App Store Connect ne propose pas d'ensemble de captures d'écran pour l'iPhone Duo. ascelerate téléverse les fichiers d'un dossier `APP_IPHONE_DUO` dans la bibliothèque de ressources de l'application, puis les place dans la localisation de la version, dans l'ordre des fichiers. Les tailles acceptées sont 2853×2007 ou 2007×2853 (écran intérieur, déplié) et 2034×1398 ou 1398×2034 (écran extérieur) ; les autres tailles sont refusées avant tout téléversement. Avec `--replace`, les captures iPhone Duo existantes de chaque locale sont d'abord supprimées.
 
-Les aperçus d'application pour l'iPhone Duo ne sont pas encore pris en charge, et `media download` et `media verify` n'incluent pas les captures iPhone Duo. `media prune` ne les supprime jamais.
+Si un fichier échoue encore après les nouvelles tentatives, `media upload` replace les captures iPhone Duo de cette localisation à la fin de l'exécution, afin de conserver l'ordre des fichiers. `media verify` liste les captures iPhone Duo avec leur nom de fichier et leur état de traitement ; avec le dossier de médias, il signale aussi les localisations dont les captures iPhone Duo diffèrent du dossier par leurs fichiers ou leur ordre (relancez `media upload` avec `--replace` pour les corriger). Les aperçus d'application pour l'iPhone Duo ne sont pas encore pris en charge, `media download` n'inclut pas les captures iPhone Duo et `media prune` ne les supprime jamais.
 
 ## Utilisation avec app-store-screenshots
 

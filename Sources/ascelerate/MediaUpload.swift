@@ -227,10 +227,17 @@ func uploadChunks<Operation: UploadOperationDescribing>(filePath: String, operat
     }
 
     // The storage host rate-limits bursts (HTTP 429 seen live after ~180 sequential uploads);
-    // retry 429/5xx with backoff, honoring Retry-After.
+    // retry 429/5xx with backoff, honoring Retry-After, and dropped or timed-out connections.
+    // A chunk PUT to its presigned URL is safe to repeat.
     var delays: [Double] = [2, 5, 15, 30]
     while true {
-      let (_, response) = try await URLSession.shared.upload(for: request, from: chunkData)
+      let response: URLResponse
+      do {
+        (_, response) = try await URLSession.shared.upload(for: request, from: chunkData)
+      } catch where isTransientError(error) && !delays.isEmpty {
+        try await Task.sleep(for: .seconds(delays.removeFirst()))
+        continue
+      }
       let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
       if (200...299).contains(statusCode) { break }
       guard statusCode == 429 || (500...599).contains(statusCode), !delays.isEmpty else {
@@ -292,7 +299,8 @@ func uploadAsset<Operation: UploadOperationDescribing>(
   }
   try await uploadChunks(filePath: filePath, operations: operations)
   let md5 = try md5Hex(filePath: filePath)
-  try await commit(id, md5)
+  // The commit PATCH only marks the asset uploaded, so it is safe to repeat.
+  try await withTransientRetry { try await commit(id, md5) }
   return id
 }
 
@@ -303,6 +311,74 @@ func mediaMimeType(for fileName: String) -> String {
   case "mov": return "video/quicktime"
   default: return "application/octet-stream"
   }
+}
+
+/// Per-set file counts for `media upload`.
+struct UploadTally {
+  var succeeded = 0
+  var failed = 0
+  /// Files whose first write dry run stopped.
+  var notSent = 0
+
+  var total: Int { succeeded + failed + notSent }
+
+  /// Runs one file's upload and counts it: done, failed, or not sent under dry run.
+  mutating func record(_ upload: () async throws -> Void) async {
+    do {
+      try await upload()
+      print("Done.")
+      succeeded += 1
+    } catch where ASCDryRunStop.from(error) != nil {
+      print("Not sent (dry run).")
+      notSent += 1
+    } catch {
+      print("Failed: \(describeError(error))")
+      failed += 1
+    }
+  }
+
+  mutating func add(_ other: UploadTally) {
+    succeeded += other.succeeded
+    failed += other.failed
+    notSent += other.notSent
+  }
+
+  var summary: String {
+    var parts: [String] = []
+    if succeeded > 0 || total == 0 { parts.append(green("\(succeeded) succeeded")) }
+    if notSent > 0 { parts.append("\(notSent) not sent") }
+    if failed > 0 { parts.append(red("\(failed) failed")) }
+    return parts.joined(separator: ", ")
+  }
+}
+
+/// Prints how many existing items a `--replace` removed (or, under dry run, would remove).
+func printDeleted(_ count: Int, _ noun: String) {
+  guard count > 0 else { return }
+  print("    \(ClientFactory.isDryRun ? "Would delete" : "Deleted") \(count) existing \(noun)\(count == 1 ? "" : "s").")
+}
+
+/// Uploads and places screenshots through the asset library in file order (placements keep
+/// their creation order). Returns the counts and the IDs of the placements created.
+func placeAssetLibraryScreenshots(
+  _ files: [MediaFile], localizationID: String, group: String, libraryID: String, client: ASCClient
+) async -> (tally: UploadTally, placementIDs: [String]) {
+  var tally = UploadTally()
+  var placementIDs: [String] = []
+  for (i, file) in files.enumerated() {
+    print("    Screenshot \(i + 1)/\(files.count): \(file.fileName)... ", terminator: "")
+    fflush(stdout)
+    await tally.record {
+      try AssetLibrary.validateSize(of: file, group: group)
+      // Under dry run the image is never reserved; a placeholder lets the placement be previewed.
+      let imageID = try await unlessDryRunStopped {
+        try await AssetLibrary.uploadImage(file, libraryID: libraryID, client: client)
+      } ?? "DRY-RUN-IMAGE"
+      placementIDs.append(try await AssetLibrary.placeScreenshot(
+        imageID: imageID, localizationID: localizationID, group: group, client: client))
+    }
+  }
+  return (tally, placementIDs)
 }
 
 // MARK: - Screenshot and Preview Writes
@@ -415,17 +491,19 @@ enum ClassicMedia {
     _ = try await client.appPreviewSetsDeleteInstance(path: .init(id: id)).noContent
   }
 
-  /// Deletes every screenshot in a set; returns how many there were.
+  /// Deletes every screenshot in a set; returns how many there were. Under dry run the
+  /// stopped deletes count as done.
   static func deleteAllScreenshots(inSet setID: String, client: ASCClient) async throws -> Int {
     let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
-    for screenshot in screenshots { try await deleteScreenshot(screenshot.id, client: client) }
+    for screenshot in screenshots { _ = try await unlessDryRunStopped { try await deleteScreenshot(screenshot.id, client: client) } }
     return screenshots.count
   }
 
-  /// Deletes every preview in a set; returns how many there were.
+  /// Deletes every preview in a set; returns how many there were. Under dry run the
+  /// stopped deletes count as done.
   static func deleteAllPreviews(inSet setID: String, client: ASCClient) async throws -> Int {
     let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
-    for preview in previews { try await deletePreview(preview.id, client: client) }
+    for preview in previews { _ = try await unlessDryRunStopped { try await deletePreview(preview.id, client: client) } }
     return previews.count
   }
 
@@ -614,11 +692,20 @@ extension AppsCommand {
         struct UploadResult {
           let locale: String
           let displayType: String
-          var succeeded: Int = 0
-          var failed: Int = 0
+          var tally: UploadTally
+        }
+        // iPhone Duo sets that ended with failed files, to place again in order after the run.
+        struct DuoRedo {
+          let resultIndex: Int
+          let locale: String
+          let files: [MediaFile]
+          let localizationID: String
+          let group: String
+          let placementIDs: [String]
         }
 
         var results: [UploadResult] = []
+        var duoRedos: [DuoRedo] = []
         var assetLibraryID: String?
 
         for localeMedia in plan.locales {
@@ -658,18 +745,18 @@ extension AppsCommand {
             for dt in localeMedia.displayTypes {
               results.append(UploadResult(
                 locale: localeMedia.locale, displayType: dt.folderName,
-                succeeded: 0, failed: dt.screenshots.count + dt.previews.count))
+                tally: UploadTally(failed: dt.screenshots.count + dt.previews.count)))
             }
             continue
           }
 
           for dt in localeMedia.displayTypes {
             print("  \(dt.folderName):")
-            var dtSucceeded = 0
-            var dtFailed = 0
+            var tally = UploadTally()
 
             // Set-level failures (create/replace rejected, e.g. HTTP 409) must not
             // abort the run — the catch below records them and moves to the next set.
+            // Under dry run, stopped writes count as done so the later ones are previewed too.
             do {
 
               // Display classes without a screenshot set (iPhone Duo) go through the asset library:
@@ -680,30 +767,24 @@ extension AppsCommand {
                   assetLibraryID = try await AssetLibrary.libraryID(appID: app.id, client: ascClient)
                 }
                 if replace {
-                  let existing = try await AssetLibrary.screenshotPlacementIDs(
+                  let existing = try await AssetLibrary.screenshotPlacements(
                     localizationID: localization.id, group: group, client: ascClient)
-                  for placementID in existing {
-                    try await AssetLibrary.deletePlacement(id: placementID, client: ascClient)
+                  for placement in existing {
+                    _ = try await unlessDryRunStopped {
+                      try await AssetLibrary.deletePlacement(id: placement.id, client: ascClient)
+                    }
                   }
-                  if !existing.isEmpty {
-                    print("    Deleted \(existing.count) existing screenshot\(existing.count == 1 ? "" : "s").")
-                  }
+                  printDeleted(existing.count, "screenshot")
                 }
 
-                for (i, file) in dt.screenshots.enumerated() {
-                  print("    Screenshot \(i + 1)/\(dt.screenshots.count): \(file.fileName)... ", terminator: "")
-                  fflush(stdout)
-                  do {
-                    try AssetLibrary.validateSize(of: file, group: group)
-                    let imageID = try await AssetLibrary.uploadImage(file, libraryID: assetLibraryID!, client: ascClient)
-                    try await AssetLibrary.placeScreenshot(
-                      imageID: imageID, localizationID: localization.id, group: group, client: ascClient)
-                    print("Done.")
-                    dtSucceeded += 1
-                  } catch {
-                    print("Failed: \(describeError(error))")
-                    dtFailed += 1
-                  }
+                let placed = await placeAssetLibraryScreenshots(
+                  dt.screenshots, localizationID: localization.id, group: group,
+                  libraryID: assetLibraryID!, client: ascClient)
+                tally = placed.tally
+                if placed.tally.failed > 0 && !ClientFactory.isDryRun {
+                  duoRedos.append(DuoRedo(
+                    resultIndex: results.count, locale: localeMedia.locale, files: dt.screenshots,
+                    localizationID: localization.id, group: group, placementIDs: placed.placementIDs))
                 }
               }
 
@@ -714,14 +795,13 @@ extension AppsCommand {
                   screenshotSetID = existingSetID
 
                   if replace {
-                    let deleted = try await ClassicMedia.deleteAllScreenshots(inSet: screenshotSetID, client: ascClient)
-                    if deleted > 0 {
-                      print("    Deleted \(deleted) existing screenshot\(deleted == 1 ? "" : "s").")
-                    }
+                    printDeleted(try await ClassicMedia.deleteAllScreenshots(inSet: screenshotSetID, client: ascClient), "screenshot")
                   }
                 } else {
-                  screenshotSetID = try await ClassicMedia.createScreenshotSet(
-                    displayType, owner: .versionLocalization(localization.id), client: ascClient)
+                  screenshotSetID = try await unlessDryRunStopped {
+                    try await ClassicMedia.createScreenshotSet(
+                      displayType, owner: .versionLocalization(localization.id), client: ascClient)
+                  } ?? "DRY-RUN-SET"
                 }
 
                 for (i, file) in dt.screenshots.enumerated() {
@@ -729,15 +809,8 @@ extension AppsCommand {
                     "    Screenshot \(i + 1)/\(dt.screenshots.count): \(file.fileName)... ",
                     terminator: "")
                   fflush(stdout)
-
-                  do {
+                  await tally.record {
                     _ = try await ClassicMedia.uploadScreenshot(file, setID: screenshotSetID, client: ascClient)
-
-                    print("Done.")
-                    dtSucceeded += 1
-                  } catch {
-                    print("Failed: \(describeError(error))")
-                    dtFailed += 1
                   }
                 }
               }
@@ -749,14 +822,13 @@ extension AppsCommand {
                   previewSetID = existingSetID
 
                   if replace {
-                    let deleted = try await ClassicMedia.deleteAllPreviews(inSet: previewSetID, client: ascClient)
-                    if deleted > 0 {
-                      print("    Deleted \(deleted) existing preview\(deleted == 1 ? "" : "s").")
-                    }
+                    printDeleted(try await ClassicMedia.deleteAllPreviews(inSet: previewSetID, client: ascClient), "preview")
                   }
                 } else {
-                  previewSetID = try await ClassicMedia.createPreviewSet(
-                    pvType, owner: .versionLocalization(localization.id), client: ascClient)
+                  previewSetID = try await unlessDryRunStopped {
+                    try await ClassicMedia.createPreviewSet(
+                      pvType, owner: .versionLocalization(localization.id), client: ascClient)
+                  } ?? "DRY-RUN-SET"
                 }
 
                 for (i, file) in dt.previews.enumerated() {
@@ -764,15 +836,8 @@ extension AppsCommand {
                     "    Preview   \(i + 1)/\(dt.previews.count): \(file.fileName)... ",
                     terminator: "")
                   fflush(stdout)
-
-                  do {
+                  await tally.record {
                     _ = try await ClassicMedia.uploadPreview(file, setID: previewSetID, client: ascClient)
-
-                    print("Done.")
-                    dtSucceeded += 1
-                  } catch {
-                    print("Failed: \(describeError(error))")
-                    dtFailed += 1
                   }
                 }
               }
@@ -781,47 +846,62 @@ extension AppsCommand {
               // One rejected set must not sink the rest — count this set's
               // unattempted files as failed and continue with the next set.
               print("    Failed: \(describeError(error))")
-              dtFailed = (dt.screenshots.count + dt.previews.count) - dtSucceeded
+              tally.failed = (dt.screenshots.count + dt.previews.count) - tally.succeeded - tally.notSent
             }
 
-            if dtSucceeded + dtFailed > 0 {
-              results.append(UploadResult(
-                locale: localeMedia.locale,
-                displayType: dt.folderName,
-                succeeded: dtSucceeded,
-                failed: dtFailed
-              ))
+            if tally.total > 0 {
+              results.append(UploadResult(locale: localeMedia.locale, displayType: dt.folderName, tally: tally))
             }
           }
         }
 
+        // A Duo file that failed even after retries leaves a gap, and placements keep their
+        // creation order, so the rest of the set sits out of order. Place such sets again once:
+        // remove this run's placements (earlier ones stay) and place every file in order.
+        if !duoRedos.isEmpty {
+          print()
+          print("Placing \(duoRedos.count) iPhone Duo set\(duoRedos.count == 1 ? "" : "s") with failed files again, in file order.")
+          for redo in duoRedos {
+            print()
+            print("[\(localeName(redo.locale))]")
+            print("  \(results[redo.resultIndex].displayType):")
+            do {
+              for id in redo.placementIDs {
+                try await AssetLibrary.deletePlacement(id: id, client: ascClient)
+              }
+            } catch {
+              print("    Failed to remove this run's placements: \(describeError(error))")
+              continue
+            }
+            printDeleted(redo.placementIDs.count, "screenshot")
+            results[redo.resultIndex].tally = await placeAssetLibraryScreenshots(
+              redo.files, localizationID: redo.localizationID, group: redo.group,
+              libraryID: assetLibraryID!, client: ascClient
+            ).tally
+          }
+        }
+
         // Results table
-        let totalSucceeded = results.reduce(0) { $0 + $1.succeeded }
-        let totalFailed = results.reduce(0) { $0 + $1.failed }
+        let total = results.reduce(into: UploadTally()) { $0.add($1.tally) }
 
         print()
-        if totalFailed == 0 {
-          print("Done. \(totalSucceeded) file\(totalSucceeded == 1 ? "" : "s") uploaded successfully.")
+        if total.failed == 0 {
+          if total.notSent > 0 {
+            print("Dry run complete. \(total.notSent) file\(total.notSent == 1 ? "" : "s") would be uploaded; no writes were sent.")
+          } else {
+            print("Done. \(total.succeeded) file\(total.succeeded == 1 ? "" : "s") uploaded successfully.")
+          }
         } else {
           var rows: [[String]] = []
           var lastLocale = ""
           for r in results {
             let localeLabel = r.locale == lastLocale ? "" : localeName(r.locale)
             lastLocale = r.locale
-            let status: String
-            if r.failed == 0 {
-              status = green("\(r.succeeded) succeeded")
-            } else if r.succeeded == 0 {
-              status = red("\(r.failed) failed")
-            } else {
-              status = "\(green("\(r.succeeded) succeeded")), \(red("\(r.failed) failed"))"
-            }
-            rows.append([localeLabel, r.displayType, status])
+            rows.append([localeLabel, r.displayType, r.tally.summary])
           }
           // Totals row
           rows.append(["", "", ""])
-          let totalStatus = "\(green("\(totalSucceeded) succeeded")), \(red("\(totalFailed) failed"))"
-          rows.append([bold("Total"), "", totalStatus])
+          rows.append([bold("Total"), "", total.summary])
 
           Table.print(headers: ["Locale", "Display Type", "Result"], rows: rows)
 
@@ -1060,6 +1140,20 @@ extension AppsCommand {
 
         // Print status and get counts
         let (total, stuck) = printMediaStatus(items)
+        let plan = try folder.map { try scanMediaFolder(at: $0) }
+
+        // Placements keep their creation order and can't be reordered or retried one by one,
+        // so check them against the folder: a set that differs needs `media upload --replace`.
+        if let plan {
+          let mismatched = placementSetsDifferingFromFolder(items, plan: plan)
+          if !mismatched.isEmpty {
+            print()
+            for label in mismatched {
+              print(yellow("⚠ \(label): files or order differ from the folder."))
+            }
+            print("Run `media upload` with --replace to place them again in file order.")
+          }
+        }
 
         if stuck == 0 {
           print()
@@ -1069,19 +1163,22 @@ extension AppsCommand {
 
         print()
         print("\(total - stuck) of \(total) complete, \(stuck) stuck.")
+        let stuckPlacements = items.filter { !$0.isComplete && $0.isPlacement }.count
+        if stuckPlacements > 0 {
+          print("\(stuckPlacements) stuck iPhone Duo screenshot\(stuckPlacements == 1 ? "" : "s") can't be retried here; run `media upload` with --replace for them.")
+        }
 
         // Without --folder, just show status
-        guard let folderPath = folder else {
+        guard let plan else {
           print("Use --folder to provide the media folder and retry stuck uploads.")
           return
         }
 
         // Build local file index from the folder
-        let plan = try scanMediaFolder(at: folderPath)
         let fileIndex = buildLocalFileIndex(from: plan)
 
         // Match stuck items to local files
-        let stuckItems = items.filter { !$0.isComplete }
+        let stuckItems = items.filter { !$0.isComplete && !$0.isPlacement }
         var matchedRetries: [(MediaItemStatus, String)] = []  // (item, localFilePath)
         var unmatchedCount = 0
 
@@ -1386,6 +1483,8 @@ private struct MediaItemStatus {
   let state: String
   let isComplete: Bool
   let isScreenshot: Bool
+  /// An asset library placement (iPhone Duo), which the classic retry can't redo.
+  var isPlacement = false
   let setID: String
   let mediaID: String
   let allIDsInSet: [String]
@@ -1417,13 +1516,39 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
   for loc in locsResponse.data {
     guard let locale = loc.attributes?.locale else { continue }
 
+    // Asset library placements (iPhone Duo): the classic API lists their set with no
+    // screenshots. A finished placement reads ACTIVE.
+    for (displayTypeName, placementGroup) in AssetLibrary.placementGroups {
+      let placements = try await AssetLibrary.screenshotPlacements(localizationID: loc.id, group: placementGroup, client: client)
+      let fileNames = try await withThrowingTaskGroup(of: (Int, String?).self) { tasks in
+        for (i, placement) in placements.enumerated() {
+          tasks.addTask { (i, try await AssetLibrary.placementFileName(id: placement.id, client: client)) }
+        }
+        var names = [String?](repeating: nil, count: placements.count)
+        for try await (i, name) in tasks { names[i] = name }
+        return names
+      }
+      for (i, placement) in placements.enumerated() {
+        let state = placement.attributes?.state
+        items.append(MediaItemStatus(
+          locale: locale, displayTypeName: displayTypeName, position: i + 1,
+          fileName: fileNames[i] ?? "unknown", state: state.map { formatState($0) } ?? "unknown",
+          isComplete: state == "ACTIVE", isScreenshot: true, isPlacement: true,
+          setID: "placements/\(loc.id)", mediaID: placement.id, allIDsInSet: placements.map(\.id)))
+      }
+    }
+
     // Screenshot sets
     let setsResponse = try await client.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
       path: .init(id: loc.id), query: .init(limit: 50)
     ).ok.body.json
 
     for set in setsResponse.data {
-      guard let displayType = set.attributes?.screenshotDisplayType else { continue }
+      // Placement groups are listed from their placements above; once those are active, the
+      // classic API lists the same screenshots in a set of its own (seen live 2026-10-07).
+      guard let displayType = set.attributes?.screenshotDisplayType,
+        AssetLibrary.placementGroups[displayType] == nil
+      else { continue }
       let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
         path: .init(id: set.id)
       ).ok.body.json.data
@@ -1503,6 +1628,23 @@ private func printMediaStatus(_ items: [MediaItemStatus]) -> (total: Int, stuck:
   }
 
   return (total, stuck)
+}
+
+/// The "[locale] displayType" labels of placement sets (iPhone Duo) whose file names, in
+/// display order, differ from the folder's files for that locale and display type.
+private func placementSetsDifferingFromFolder(_ items: [MediaItemStatus], plan: MediaUploadPlan) -> [String] {
+  var labels: [String] = []
+  for localeMedia in plan.locales {
+    for dt in localeMedia.displayTypes where AssetLibrary.placementGroups[dt.folderName] != nil {
+      let placed = items.filter {
+        $0.isPlacement && $0.locale.lowercased() == localeMedia.locale.lowercased() && $0.displayTypeName == dt.folderName
+      }.sorted { $0.position < $1.position }.map(\.fileName)
+      if placed != dt.screenshots.map(\.fileName) {
+        labels.append("[\(localeName(localeMedia.locale))] \(dt.folderName)")
+      }
+    }
+  }
+  return labels
 }
 
 /// Builds a lookup from "locale/displayType/screenshot|preview/position" to local file path.

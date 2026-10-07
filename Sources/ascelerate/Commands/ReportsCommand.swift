@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -193,12 +191,12 @@ extension ReportsCommand {
     func run() async throws {
       if yes { autoConfirm = true }
 
-      let cat: Resources.V1.AnalyticsReportRequests.WithID.Reports.FilterCategory = try parseEnum(
-        category, name: "category")
-      let gran: Resources.V1.AnalyticsReports.WithID.Instances.FilterGranularity = try parseEnum(
-        granularity, name: "granularity")
+      let cat: Operations.AnalyticsReportRequestsReportsGetToManyRelated.Input.Query.FilterCategoryPayloadPayload =
+        try parseEnum(category, name: "category")
+      let gran: Operations.AnalyticsReportsInstancesGetToManyRelated.Input.Query.FilterGranularityPayloadPayload =
+        try parseEnum(granularity, name: "granularity")
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
 
@@ -207,10 +205,9 @@ extension ReportsCommand {
       else { return }
 
       // 2. Pick the report within the requested category.
-      let reportsResp = try await client.send(
-        Resources.v1.analyticsReportRequests.id(requestID).reports.get(
-          filterCategory: [cat], limit: 200))
-      var reports = reportsResp.data
+      var reports = try await client.analyticsReportRequestsReportsGetToManyRelated(
+        path: .init(id: requestID), query: .init(filterCategory: [cat], limit: 200)
+      ).ok.body.json.data
       if let reportName {
         reports = reports.filter { $0.attributes?.name == reportName }
       }
@@ -221,7 +218,7 @@ extension ReportsCommand {
         return
       }
 
-      let report: AnalyticsReport
+      let report: Components.Schemas.AnalyticsReport
       if reports.count == 1 {
         report = reports[0]
       } else if autoConfirm {
@@ -238,13 +235,12 @@ extension ReportsCommand {
       let displayName = report.attributes?.name ?? report.id
 
       // 3. Pick the instance (processing date) at the requested granularity.
-      let instancesResp = try await client.send(
-        Resources.v1.analyticsReports.id(report.id).instances.get(
-          filterGranularity: [gran],
-          filterProcessingDate: processingDate.map { [$0] },
-          limit: 200))
+      let instances = try await client.analyticsReportsInstancesGetToManyRelated(
+        path: .init(id: report.id),
+        query: .init(filterGranularity: [gran], filterProcessingDate: processingDate.map { [$0] }, limit: 200)
+      ).ok.body.json.data
       guard
-        let instance = instancesResp.data.max(by: {
+        let instance = instances.max(by: {
           ($0.attributes?.processingDate ?? "") < ($1.attributes?.processingDate ?? "")
         })
       else {
@@ -256,12 +252,11 @@ extension ReportsCommand {
       let instanceDate = instance.attributes?.processingDate ?? "unknown"
 
       // 4. Collect the instance's segments.
-      var segments: [AnalyticsReportSegment] = []
-      for try await page in client.pages(
-        Resources.v1.analyticsReportInstances.id(instance.id).segments.get(limit: 200))
-      {
-        segments.append(contentsOf: page.data)
-      }
+      let segments = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.analyticsReportInstancesSegmentsGetToManyRelated(
+          path: .init(id: instance.id), query: .init(limit: 200)
+        ).ok.body.json
+      }.flatMap(\.data)
       guard !segments.isEmpty else {
         print("Instance \(instanceDate) has no segments yet — re-run later.")
         return
@@ -278,7 +273,7 @@ extension ReportsCommand {
       var totalRows = 0
       var savedFiles: [String] = []
       for (i, segment) in segments.enumerated() {
-        guard let url = segment.attributes?.url else { continue }
+        guard let url = segment.attributes?.url.flatMap(URL.init(string:)) else { continue }
         let (data, response) = try await URLSession.shared.data(from: url)
         if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
           throw ValidationError(
@@ -298,12 +293,13 @@ extension ReportsCommand {
     /// Returns the ID of an existing report request matching the requested access type, creating one
     /// (with confirmation) if none exists. Returns nil if the user declines creation.
     private func findOrCreateRequest(
-      appID: String, appName: String, client: AppStoreConnectClient
+      appID: String, appName: String, client: ASCClient
     ) async throws -> String? {
-      let existing = try await client.send(
-        Resources.v1.apps.id(appID).analyticsReportRequests.get(
-          filterAccessType: ongoing ? [.ongoing] : [.oneTimeSnapshot], limit: 50))
-      if let request = existing.data.first(where: { $0.attributes?.isStoppedDueToInactivity != true }) {
+      let existing = try await client.appsAnalyticsReportRequestsGetToManyRelated(
+        path: .init(id: appID),
+        query: .init(filterAccessType: ongoing ? [.ongoing] : [.oneTimeSnapshot], limit: 50)
+      ).ok.body.json.data
+      if let request = existing.first(where: { $0.attributes?.stoppedDueToInactivity != true }) {
         return request.id
       }
 
@@ -316,16 +312,12 @@ extension ReportsCommand {
         return nil
       }
 
-      typealias Body = AnalyticsReportRequestCreateRequest
-      let accessType: Body.Data.Attributes.AccessType = ongoing ? .ongoing : .oneTimeSnapshot
-      let created = try await client.send(
-        Resources.v1.analyticsReportRequests.post(
-          Body(
-            data: Body.Data(
-              attributes: Body.Data.Attributes(accessType: accessType),
-              relationships: Body.Data.Relationships(
-                app: Body.Data.Relationships.App(
-                  data: Body.Data.Relationships.App.Data(id: appID)))))))
+      let accessType: ASCEnum.AnalyticsReportRequestCreateRequestAccessType = ongoing ? .ongoing : .oneTimeSnapshot
+      let created = try await client.analyticsReportRequestsCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(accessType: accessType.rawValue),
+        relationships: .init(app: .init(data: .init(id: appID, _type: "apps"))),
+        _type: "analyticsReportRequests"
+      )))).created.body.json
       success("Created", "report request \(created.data.id).")
       print("Apple is now generating the report. This can take a while — re-run this command later to download it.")
       return created.data.id

@@ -15,6 +15,16 @@ filter:
     - /v1/appStoreVersions/{id}/build
     - /v1/appStoreVersions/{id}/appStoreVersionLocalizations
     - /v1/appStoreVersionLocalizations/{id}/appScreenshotSets
+    - /v1/appScreenshotSets
+    - /v1/appScreenshotSets/{id}
+    - /v1/appScreenshotSets/{id}/relationships/appScreenshots
+    - /v1/appScreenshots
+    - /v1/appScreenshots/{id}
+    - /v1/appPreviewSets
+    - /v1/appPreviewSets/{id}
+    - /v1/appPreviewSets/{id}/relationships/appPreviews
+    - /v1/appPreviews
+    - /v1/appPreviews/{id}
     - /v1/appScreenshotSets/{id}/appScreenshots
     - /v1/appStoreVersionLocalizations/{id}/appPreviewSets
     - /v1/appPreviewSets/{id}/appPreviews
@@ -29,10 +39,22 @@ filter:
     - /v1/salesReports
     - /v1/financeReports
     - /v1/apps/{id}/appEvents
+    - /v1/appEvents
+    - /v1/appEvents/{id}
+    - /v1/appEventLocalizations
+    - /v1/appEventLocalizations/{id}
+    - /v1/appEventScreenshots
+    - /v1/appEventScreenshots/{id}
+    - /v1/appEventVideoClips
+    - /v1/appEventVideoClips/{id}
     - /v1/appEvents/{id}/localizations
     - /v1/appEventLocalizations/{id}/appEventScreenshots
     - /v1/appEventLocalizations/{id}/appEventVideoClips
     - /v1/apps/{id}/appCustomProductPages
+    - /v1/appCustomProductPages
+    - /v1/appCustomProductPages/{id}
+    - /v1/appCustomProductPageLocalizations
+    - /v1/appCustomProductPageLocalizations/{id}
     - /v1/appCustomProductPages/{id}/appCustomProductPageVersions
     - /v1/appCustomProductPageVersions/{id}/appCustomProductPageLocalizations
     - /v1/appCustomProductPageLocalizations/{id}/appScreenshotSets
@@ -86,6 +108,11 @@ filter:
     - /v1/profiles/{id}/certificates
     - /v1/profiles/{id}/devices
     - /v1/builds
+    - /v1/apps/{id}/analyticsReportRequests
+    - /v1/analyticsReportRequests
+    - /v1/analyticsReportRequests/{id}/reports
+    - /v1/analyticsReports/{id}/instances
+    - /v1/analyticsReportInstances/{id}/segments
     - /v1/apps/{id}/customerReviews
     - /v1/customerReviews/{id}
     - /v1/customerReviewResponses

@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -24,7 +22,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
     throw ValidationError("No custom product page '\(ref)' found for this app.")
   }
 
-  /// `activeVersionID` for ASCKit-migrated commands.
+  /// Picks the editable version of a page (prefers prepareForSubmission, skips replaced).
   static func activeVersionID(pageID: String, client: ASCClient) async throws -> String {
     let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
       try await client.appCustomProductPagesAppCustomProductPageVersionsGetToManyRelated(
@@ -39,55 +37,14 @@ struct ProductPagesCommand: AsyncParsableCommand {
       ?? versions[0]).id
   }
 
-  static func findProductPage(
-    ref: String, appID: String, client: AppStoreConnectClient
-  ) async throws -> AppCustomProductPage {
-    var pages: [AppCustomProductPage] = []
-    for try await page in client.pages(
-      Resources.v1.apps.id(appID).appCustomProductPages.get(limit: 200)
-    ) {
-      pages.append(contentsOf: page.data)
-    }
-    if let match = pages.first(where: { $0.attributes?.name == ref || $0.id == ref }) {
-      return match
-    }
-    throw ValidationError("No custom product page '\(ref)' found for this app.")
-  }
-
-  /// Picks the editable version of a page (prefers prepareForSubmission, skips replaced).
-  static func activeVersionID(
-    pageID: String, client: AppStoreConnectClient
-  ) async throws -> String {
-    var versions: [AppCustomProductPageVersion] = []
-    for try await page in client.pages(
-      Resources.v1.appCustomProductPages.id(pageID).appCustomProductPageVersions.get(limit: 50)
-    ) {
-      versions.append(contentsOf: page.data)
-    }
-    guard !versions.isEmpty else {
-      throw ValidationError("This custom product page has no versions.")
-    }
-    if let editable = versions.first(where: {
-      $0.attributes?.state == .prepareForSubmission
-    }) {
-      return editable.id
-    }
-    if let live = versions.first(where: {
-      $0.attributes?.state != .replacedWithNewVersion
-    }) {
-      return live.id
-    }
-    return versions[0].id
-  }
-
   /// Resolves a locale to its localization ID on the page's editable version.
   static func localizationID(
-    forLocale locale: String, pageID: String, client: AppStoreConnectClient
+    forLocale locale: String, pageID: String, client: ASCClient
   ) async throws -> String {
     let versionID = try await activeVersionID(pageID: pageID, client: client)
-    let locs = try await client.send(
-      Resources.v1.appCustomProductPageVersions.id(versionID)
-        .appCustomProductPageLocalizations.get(limit: 50))
+    let locs = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
+      path: .init(id: versionID), query: .init(limit: 50)
+    ).ok.body.json
     guard let loc = locs.data.first(where: { $0.attributes?.locale == locale }) else {
       throw ValidationError(
         "No '\(locale)' localization on this page. Add it first with 'product-pages localizations import'.")
@@ -215,7 +172,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       print("Create custom product page:")
@@ -233,32 +190,31 @@ struct ProductPagesCommand: AsyncParsableCommand {
       let versionLID = "${ascelerate-version}"
       let localizationLID = "${ascelerate-localization}"
 
-      let response = try await client.send(
-        Resources.v1.appCustomProductPages.post(
-          AppCustomProductPageCreateRequest(
-            data: .init(
-              attributes: .init(name: name),
-              relationships: .init(
-                app: .init(data: .init(id: app.id)),
-                appCustomProductPageVersions: .init(data: [.init(id: versionLID)])
-              )
+      let response = try await client.appCustomProductPagesCreateInstance(body: .json(.init(
+        data: .init(
+          attributes: .init(name: name),
+          relationships: .init(
+            app: .init(data: .init(id: app.id, _type: "apps")),
+            appCustomProductPageVersions: .init(data: [.init(id: versionLID, _type: "appCustomProductPageVersions")])
+          ),
+          _type: "appCustomProductPages"
+        ),
+        included: [
+          .AppCustomProductPageVersionInlineCreate(.init(
+            id: versionLID,
+            relationships: .init(
+              appCustomProductPageLocalizations: .init(
+                data: [.init(id: localizationLID, _type: "appCustomProductPageLocalizations")])
             ),
-            included: [
-              .appCustomProductPageVersionInlineCreate(
-                .init(
-                  id: versionLID,
-                  relationships: .init(
-                    appCustomProductPageLocalizations: .init(data: [.init(id: localizationLID)])
-                  )
-                )),
-              .appCustomProductPageLocalizationInlineCreate(
-                .init(
-                  id: localizationLID,
-                  attributes: .init(locale: locale, promotionalText: promotionalText)
-                )),
-            ]
-          )
-        ))
+            _type: "appCustomProductPageVersions"
+          )),
+          .AppCustomProductPageLocalizationInlineCreate(.init(
+            attributes: .init(locale: locale, promotionalText: promotionalText),
+            id: localizationLID,
+            _type: "appCustomProductPageLocalizations"
+          )),
+        ]
+      ))).created.body.json
 
       print()
       success("Created", "custom product page '\(name)' (id: \(response.data.id)).")
@@ -294,7 +250,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
         throw ValidationError("Provide --name and/or --visible to update.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
@@ -304,15 +260,11 @@ struct ProductPagesCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(
-        Resources.v1.appCustomProductPages.id(productPage.id).patch(
-          AppCustomProductPageUpdateRequest(
-            data: .init(
-              id: productPage.id,
-              attributes: .init(name: name, isVisible: visible)
-            )
-          )
-        ))
+      _ = try await client.appCustomProductPagesUpdateInstance(
+        path: .init(id: productPage.id),
+        body: .json(.init(data: .init(
+          attributes: .init(name: name, visible: visible), id: productPage.id, _type: "appCustomProductPages")))
+      ).ok
 
       print()
       success("Updated", "custom product page '\(name ?? productPage.attributes?.name ?? page)'.")
@@ -338,7 +290,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
@@ -351,7 +303,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(Resources.v1.appCustomProductPages.id(productPage.id).delete)
+      _ = try await client.appCustomProductPagesDeleteInstance(path: .init(id: productPage.id)).noContent
       print()
       success("Deleted", "custom product page '\(name)'.")
     }
@@ -483,7 +435,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
@@ -511,23 +463,21 @@ struct ProductPagesCommand: AsyncParsableCommand {
         }
         print()
 
-        let existing = try await client.send(
-          Resources.v1.appCustomProductPageVersions.id(versionID)
-            .appCustomProductPageLocalizations.get(limit: 50))
+        let existing = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
+          path: .init(id: versionID), query: .init(limit: 50)
+        ).ok.body.json
         let byLocale = Dictionary(
           existing.data.compactMap { loc in loc.attributes?.locale.map { ($0, loc) } },
           uniquingKeysWith: { first, _ in first })
 
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
           if let loc = byLocale[locale] {
-            let response = try await client.send(
-              Resources.v1.appCustomProductPageLocalizations.id(loc.id).patch(
-                AppCustomProductPageLocalizationUpdateRequest(
-                  data: .init(
-                    id: loc.id,
-                    attributes: .init(promotionalText: fields.promotionalText)
-                  )
-                )))
+            let response = try await client.appCustomProductPageLocalizationsUpdateInstance(
+              path: .init(id: loc.id),
+              body: .json(.init(data: .init(
+                attributes: .init(promotionalText: fields.promotionalText), id: loc.id,
+                _type: "appCustomProductPageLocalizations")))
+            ).ok.body.json
             print("  [\(localeName(locale))] Updated.")
             if verbose {
               print("    Promotional Text: \(response.data.attributes?.promotionalText ?? "—")")
@@ -537,15 +487,12 @@ struct ProductPagesCommand: AsyncParsableCommand {
               print("  [\(localeName(locale))] Skipped.")
               continue
             }
-            let response = try await client.send(
-              Resources.v1.appCustomProductPageLocalizations.post(
-                AppCustomProductPageLocalizationCreateRequest(
-                  data: .init(
-                    attributes: .init(locale: locale, promotionalText: fields.promotionalText),
-                    relationships: .init(
-                      appCustomProductPageVersion: .init(data: .init(id: versionID)))
-                  )
-                )))
+            let response = try await client.appCustomProductPageLocalizationsCreateInstance(body: .json(.init(data: .init(
+              attributes: .init(locale: locale, promotionalText: fields.promotionalText),
+              relationships: .init(
+                appCustomProductPageVersion: .init(data: .init(id: versionID, _type: "appCustomProductPageVersions"))),
+              _type: "appCustomProductPageLocalizations"
+            )))).created.body.json
             print("  [\(localeName(locale))] \(green("Created."))")
             if verbose {
               print("    Promotional Text: \(response.data.attributes?.promotionalText ?? "—")")
@@ -671,7 +618,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
@@ -707,55 +654,15 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
         let mediaID: String
         if isImage {
-          let display: ScreenshotDisplayType = try parseEnum(displayType!, name: "display-type")
+          let display: ASCEnum.ScreenshotDisplayType = try parseEnum(displayType!, name: "display-type")
           let setID = try await Self.screenshotSetID(
             localizationID: locID, displayType: display, client: client)
-          mediaID = try await uploadAsset(
-            filePath: media.path,
-            reserve: {
-              let r = try await client.send(
-                Resources.v1.appScreenshots.post(
-                  AppScreenshotCreateRequest(
-                    data: .init(
-                      attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
-                      relationships: .init(appScreenshotSet: .init(data: .init(id: setID)))))))
-              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
-            },
-            commit: { id, md5 in
-              _ = try await client.send(
-                Resources.v1.appScreenshots.id(id).patch(
-                  AppScreenshotUpdateRequest(
-                    data: .init(
-                      id: id, attributes: .init(sourceFileChecksum: md5, isUploaded: true)))))
-            })
+          mediaID = try await ClassicMedia.uploadScreenshot(media, setID: setID, client: client)
         } else {
-          let preview: PreviewType = try parseEnum(previewType!, name: "preview-type")
+          let preview: ASCEnum.PreviewType = try parseEnum(previewType!, name: "preview-type")
           let setID = try await Self.previewSetID(
             localizationID: locID, previewType: preview, client: client)
-          mediaID = try await uploadAsset(
-            filePath: media.path,
-            reserve: {
-              let r = try await client.send(
-                Resources.v1.appPreviews.post(
-                  AppPreviewCreateRequest(
-                    data: .init(
-                      attributes: .init(
-                        fileSize: media.fileSize, fileName: media.fileName,
-                        previewFrameTimeCode: previewFrame,
-                        mimeType: mediaMimeType(for: media.fileName)),
-                      relationships: .init(appPreviewSet: .init(data: .init(id: setID)))))))
-              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
-            },
-            commit: { id, md5 in
-              _ = try await client.send(
-                Resources.v1.appPreviews.id(id).patch(
-                  AppPreviewUpdateRequest(
-                    data: .init(
-                      id: id,
-                      attributes: .init(
-                        sourceFileChecksum: md5, previewFrameTimeCode: previewFrame,
-                        isUploaded: true)))))
-            })
+          mediaID = try await ClassicMedia.uploadPreview(media, setID: setID, previewFrame: previewFrame, client: client)
         }
 
         print()
@@ -764,44 +671,32 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
       /// Finds the screenshot set with `displayType`, creating it under the localization if absent.
       private static func screenshotSetID(
-        localizationID: String, displayType: ScreenshotDisplayType, client: AppStoreConnectClient
+        localizationID: String, displayType: ASCEnum.ScreenshotDisplayType, client: ASCClient
       ) async throws -> String {
-        let sets = try await client.send(
-          Resources.v1.appCustomProductPageLocalizations.id(localizationID).appScreenshotSets.get(
-            limit: 50))
+        let sets = try await client.appCustomProductPageLocalizationsAppScreenshotSetsGetToManyRelated(
+          path: .init(id: localizationID), query: .init(limit: 50)
+        ).ok.body.json
         if let existing = sets.data.first(where: {
-          $0.attributes?.screenshotDisplayType == displayType
+          $0.attributes?.screenshotDisplayType == displayType.rawValue
         }) {
           return existing.id
         }
-        let created = try await client.send(
-          Resources.v1.appScreenshotSets.post(
-            AppScreenshotSetCreateRequest(
-              data: .init(
-                attributes: .init(screenshotDisplayType: displayType),
-                relationships: .init(
-                  appCustomProductPageLocalization: .init(data: .init(id: localizationID)))))))
-        return created.data.id
+        return try await ClassicMedia.createScreenshotSet(
+          displayType, owner: .productPageLocalization(localizationID), client: client)
       }
 
       /// Finds the preview set with `previewType`, creating it under the localization if absent.
       private static func previewSetID(
-        localizationID: String, previewType: PreviewType, client: AppStoreConnectClient
+        localizationID: String, previewType: ASCEnum.PreviewType, client: ASCClient
       ) async throws -> String {
-        let sets = try await client.send(
-          Resources.v1.appCustomProductPageLocalizations.id(localizationID).appPreviewSets.get(
-            limit: 50))
-        if let existing = sets.data.first(where: { $0.attributes?.previewType == previewType }) {
+        let sets = try await client.appCustomProductPageLocalizationsAppPreviewSetsGetToManyRelated(
+          path: .init(id: localizationID), query: .init(limit: 50)
+        ).ok.body.json
+        if let existing = sets.data.first(where: { $0.attributes?.previewType == previewType.rawValue }) {
           return existing.id
         }
-        let created = try await client.send(
-          Resources.v1.appPreviewSets.post(
-            AppPreviewSetCreateRequest(
-              data: .init(
-                attributes: .init(previewType: previewType),
-                relationships: .init(
-                  appCustomProductPageLocalization: .init(data: .init(id: localizationID)))))))
-        return created.data.id
+        return try await ClassicMedia.createPreviewSet(
+          previewType, owner: .productPageLocalization(localizationID), client: client)
       }
     }
 
@@ -825,31 +720,35 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
         let versionID = try await ProductPagesCommand.activeVersionID(
           pageID: productPage.id, client: client)
 
-        let locs = try await client.send(
-          Resources.v1.appCustomProductPageVersions.id(versionID)
-            .appCustomProductPageLocalizations.get(limit: 50))
+        let locs = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
+          path: .init(id: versionID), query: .init(limit: 50)
+        ).ok.body.json
 
         var kind: String?
         outer: for loc in locs.data {
-          let sets = try await client.send(
-            Resources.v1.appCustomProductPageLocalizations.id(loc.id).appScreenshotSets.get(limit: 50))
+          let sets = try await client.appCustomProductPageLocalizationsAppScreenshotSetsGetToManyRelated(
+            path: .init(id: loc.id), query: .init(limit: 50)
+          ).ok.body.json
           for set in sets.data {
-            let shots = try await client.send(
-              Resources.v1.appScreenshotSets.id(set.id).appScreenshots.get(limit: 50))
+            let shots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
+              path: .init(id: set.id), query: .init(limit: 50)
+            ).ok.body.json
             if shots.data.contains(where: { $0.id == mediaID }) { kind = "screenshot"; break outer }
           }
-          let previewSets = try await client.send(
-            Resources.v1.appCustomProductPageLocalizations.id(loc.id).appPreviewSets.get(limit: 50))
+          let previewSets = try await client.appCustomProductPageLocalizationsAppPreviewSetsGetToManyRelated(
+            path: .init(id: loc.id), query: .init(limit: 50)
+          ).ok.body.json
           for set in previewSets.data {
-            let previews = try await client.send(
-              Resources.v1.appPreviewSets.id(set.id).appPreviews.get(limit: 50))
+            let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(
+              path: .init(id: set.id), query: .init(limit: 50)
+            ).ok.body.json
             if previews.data.contains(where: { $0.id == mediaID }) { kind = "preview"; break outer }
           }
         }
@@ -864,9 +763,9 @@ struct ProductPagesCommand: AsyncParsableCommand {
         }
 
         if kind == "screenshot" {
-          _ = try await client.send(Resources.v1.appScreenshots.id(mediaID).delete)
+          try await ClassicMedia.deleteScreenshot(mediaID, client: client)
         } else {
-          _ = try await client.send(Resources.v1.appPreviews.id(mediaID).delete)
+          try await ClassicMedia.deletePreview(mediaID, client: client)
         }
         print()
         success("Deleted", "\(kind) \(mediaID).")

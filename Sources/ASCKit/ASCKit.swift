@@ -32,6 +32,7 @@ extension Client {
     var middlewares: [any ClientMiddleware] = [
       ErrorMiddleware(),
       PagingMiddleware(),
+      NullsMiddleware(),
       JWTMiddleware(tokens: TokenStore(credentials: credentials, key: key)),
     ]
     if dryRun { middlewares.append(DryRunMiddleware()) }
@@ -215,6 +216,54 @@ struct PagingMiddleware: ClientMiddleware {
     var request = request
     request.path = components.percentEncodedPath + (components.percentEncodedQuery.map { "?" + $0 } ?? "")
     return try await next(request, body, baseURL)
+  }
+}
+
+// MARK: - Explicit nulls
+
+/// The generated request types omit nil properties, but Apple clears some values only when they
+/// are sent as JSON `null` (an in-app event's badge, an introductory offer's end date, a
+/// version's build relationship). `sending` runs one generated operation with the given key
+/// paths of its JSON body set to null.
+public enum ASCNulls {
+  @TaskLocal static var paths: [[String]] = []
+
+  /// Runs `operation` with each key path (`["data", "attributes", "badge"]`) of its request
+  /// body set to `null`; missing intermediate objects are created.
+  public static func sending<T: Sendable>(_ paths: [[String]], _ operation: () async throws -> T) async throws -> T {
+    try await $paths.withValue(paths) { try await operation() }
+  }
+}
+
+struct NullsMiddleware: ClientMiddleware {
+  func intercept(
+    _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
+    next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+  ) async throws -> (HTTPResponse, HTTPBody?) {
+    let paths = ASCNulls.paths
+    guard !paths.isEmpty, let body else { return try await next(request, body, baseURL) }
+    let data = try await Data(collecting: body, upTo: 16 << 20)
+    guard var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+      return try await next(request, HTTPBody(data), baseURL)
+    }
+    for path in paths { setNull(&json, at: path[...]) }
+    let patched = try JSONSerialization.data(withJSONObject: json)
+    var request = request
+    if request.headerFields[.contentLength] != nil {
+      request.headerFields[.contentLength] = String(patched.count)
+    }
+    return try await next(request, HTTPBody(patched), baseURL)
+  }
+
+  private func setNull(_ object: inout [String: Any], at path: ArraySlice<String>) {
+    guard let key = path.first else { return }
+    if path.count == 1 {
+      object[key] = NSNull()
+    } else {
+      var child = object[key] as? [String: Any] ?? [:]
+      setNull(&child, at: path.dropFirst())
+      object[key] = child
+    }
   }
 }
 

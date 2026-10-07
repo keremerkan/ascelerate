@@ -403,6 +403,13 @@ struct BuildsCommand: AsyncParsableCommand {
       let (uploadPath, tempDir, archivePlatform) = try resolveUploadable(expandedPath)
       defer { if let dir = tempDir { try? FileManager.default.removeItem(atPath: dir) } }
 
+      // altool talks to Apple itself, outside the dry-run gate: skip the upload, and don't record
+      // a build number a later await-processing or attach-latest would wait for in vain.
+      if ClientFactory.isDryRun {
+        print(yellow("Dry run: \((uploadPath as NSString).lastPathComponent) was not uploaded."))
+        return
+      }
+
       print("Uploading \((uploadPath as NSString).lastPathComponent)...")
       print()
       fflush(stdout)

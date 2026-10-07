@@ -2,6 +2,9 @@ import ASCKit
 import Foundation
 
 enum ClientFactory {
+  /// `ASCELERATE_DRY_RUN=1`: reads go out, every write is printed instead of sent.
+  static var isDryRun: Bool { ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] == "1" }
+
   /// An App Store Connect client (ASCKit, generated from Apple's spec).
   static func makeClient() throws -> ASCClient {
     if !autoConfirm {
@@ -14,14 +17,13 @@ enum ClientFactory {
       throw ConfigError.missingPrivateKey(keyPath)
     }
 
-    // ASCELERATE_DRY_RUN=1: reads go out, every write is printed instead of sent (testing aid).
     return try .appStoreConnect(
       credentials: ASCCredentials(
         keyID: config.keyId,
         issuerID: config.issuerId,
         privateKeyPEM: String(contentsOfFile: keyPath, encoding: .utf8)
       ),
-      dryRun: ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] == "1"
+      dryRun: isDryRun
     )
   }
 }

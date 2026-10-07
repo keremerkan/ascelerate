@@ -14,6 +14,8 @@ func describeError(_ error: Error) -> String {
     }
     return "HTTP \(ascError.statusCode)"
   }
+  // ValidationError's localizedDescription is the generic "The operation couldn't be completed".
+  if let validation = error as? ValidationError { return validation.message }
   return (ascUnderlyingError(error) ?? error).localizedDescription
 }
 

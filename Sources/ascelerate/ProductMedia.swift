@@ -51,10 +51,10 @@ func runProductImagesList(
 /// Shared driver for the IAP/subscription image and review-screenshot uploads:
 /// reads the file, prints the `summary` lines, confirms, runs the 3-step upload
 /// protocol via `uploadAsset`, and prints the success message from `successDetail`.
-func runProductAssetUpload(
+func runProductAssetUpload<Operation: UploadOperationDescribing>(
   file: String,
   summary: (MediaFile) -> [String],
-  reserve: (MediaFile) async throws -> (id: String, operations: [UploadOperation]),
+  reserve: (MediaFile) async throws -> (id: String, operations: [Operation]),
   commit: (_ id: String, _ md5: String) async throws -> Void,
   successDetail: (_ id: String, _ media: MediaFile) -> String
 ) async throws {

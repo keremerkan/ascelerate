@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct ReportsCommand: AsyncParsableCommand {
@@ -57,13 +58,13 @@ extension ReportsCommand {
     func run() async throws {
       let config = try Config.load()
       let vendor = try Reports.resolveVendorNumber(vendorNumber, config: config)
-      let freq: Resources.V1.SalesReports.FilterFrequency = try parseEnum(frequency, name: "frequency")
-      let reportType: Resources.V1.SalesReports.FilterReportType = try parseEnum(type, name: "type")
-      let subTypeEnum: Resources.V1.SalesReports.FilterReportSubType = try parseEnum(
-        subType, name: "sub-type")
-      let reportDate = date ?? Reports.defaultSalesDate(frequency: freq)
+      typealias Query = Operations.SalesReportsGetCollection.Input.Query
+      let freq: Query.FilterFrequencyPayloadPayload = try parseEnum(frequency, name: "frequency")
+      let reportType: Query.FilterReportTypePayloadPayload = try parseEnum(type, name: "type")
+      let subTypeEnum: Query.FilterReportSubTypePayloadPayload = try parseEnum(subType, name: "sub-type")
+      let reportDate = date ?? Reports.defaultSalesDate(frequency: freq.rawValue)
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       var appleID: String?
       if let bundleID {
@@ -74,17 +75,12 @@ extension ReportsCommand {
 
       let text: String
       do {
-        text = try await Reports.fetchReportText(
-          Resources.v1.salesReports.get(
-            filterVendorNumber: [vendor],
-            filterReportType: [reportType],
-            filterReportSubType: [subTypeEnum],
-            filterFrequency: [freq],
-            filterReportDate: [reportDate]
-          ),
-          client: client
-        )
-      } catch let error as ResponseError {
+        let body = try await client.salesReportsGetCollection(query: .init(
+          filterVendorNumber: [vendor], filterReportType: [reportType], filterReportSubType: [subTypeEnum],
+          filterFrequency: [freq], filterReportDate: [reportDate]
+        )).ok.body.applicationAGzip
+        text = try Reports.reportText(try await Data(collecting: body, upTo: 512 << 20))
+      } catch {
         throw Reports.notFoundHint(error, date: reportDate)
       }
 
@@ -129,24 +125,20 @@ extension ReportsCommand {
     func run() async throws {
       let config = try Config.load()
       let vendor = try Reports.resolveVendorNumber(vendorNumber, config: config)
-      let reportType: Resources.V1.FinanceReports.FilterReportType = try parseEnum(type, name: "type")
+      let reportType: Operations.FinanceReportsGetCollection.Input.Query.FilterReportTypePayloadPayload =
+        try parseEnum(type, name: "type")
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       print("Fetching \(reportType.rawValue) report for \(date), region \(region.uppercased())…")
 
       let text: String
       do {
-        text = try await Reports.fetchReportText(
-          Resources.v1.financeReports.get(
-            filterVendorNumber: [vendor],
-            filterReportType: [reportType],
-            filterRegionCode: [region.uppercased()],
-            filterReportDate: [date]
-          ),
-          client: client
-        )
-      } catch let error as ResponseError {
+        let body = try await client.financeReportsGetCollection(query: .init(
+          filterVendorNumber: [vendor], filterReportType: [reportType], filterRegionCode: [region.uppercased()], filterReportDate: [date]
+        )).ok.body.applicationAGzip
+        text = try Reports.reportText(try await Data(collecting: body, upTo: 512 << 20))
+      } catch {
         throw Reports.notFoundHint(error, date: date)
       }
 

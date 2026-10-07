@@ -68,9 +68,10 @@ filter:
     - /v1/subscriptionGroupLocalizations
     - /v1/subscriptionGroupLocalizations/{id}
     - /v1/subscriptionPrices
-    - /v1/subscriptionAvailabilities
-    - /v1/subscriptions/{id}/subscriptionAvailability
-    - /v1/subscriptionAvailabilities/{id}/availableTerritories
+    - /v1/subscriptions/{id}/planAvailabilities
+    - /v1/subscriptionPlanAvailabilities
+    - /v1/subscriptionPlanAvailabilities/{id}
+    - /v1/subscriptionPlanAvailabilities/{id}/availableTerritories
     - /v1/subscriptionIntroductoryOffers
     - /v1/subscriptionIntroductoryOffers/{id}
     - /v1/subscriptionOfferCodes

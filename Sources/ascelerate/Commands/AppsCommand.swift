@@ -3010,7 +3010,7 @@ struct AppsCommand: AsyncParsableCommand {
           isSocialMedia: attrs?.socialMedia,
           isSocialMediaAgeRestricted: attrs?.socialMediaAgeRestricted,
           kidsAgeBand: attrs?.kidsAgeBand,
-          ageRatingOverride: attrs?.ageRatingOverride
+          ageRatingOverride: attrs?.ageRatingOverrideV2
         )
       }
 
@@ -3214,7 +3214,7 @@ struct AppsCommand: AsyncParsableCommand {
           let attributes = Components.Schemas.AgeRatingDeclarationUpdateRequest.DataPayload.AttributesPayload(
             advertising: fields.isAdvertising,
             ageAssurance: fields.isAgeAssurance,
-            ageRatingOverride: try value(fields.ageRatingOverride, "ageRatingOverride", E.AgeRatingDeclarationUpdateRequestAgeRatingOverride.self),
+            ageRatingOverrideV2: try value(fields.ageRatingOverride, "ageRatingOverride", E.AgeRatingDeclarationUpdateRequestAgeRatingOverrideV2.self),
             alcoholTobaccoOrDrugUseOrReferences: try value(
               fields.alcoholTobaccoOrDrugUseOrReferences, "alcoholTobaccoOrDrugUseOrReferences",
               E.AgeRatingDeclarationUpdateRequestAlcoholTobaccoOrDrugUseOrReferences.self),
@@ -3820,6 +3820,7 @@ struct AgeRatingFields: Codable {
   
   // Other
   var kidsAgeBand: String?
+  /// Apple's `ageRatingOverrideV2` (NINE_PLUS … EIGHTEEN_PLUS); the v1 field is deprecated.
   var ageRatingOverride: String?
 }
 

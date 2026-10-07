@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ASCKit
 import Foundation
 
@@ -8,10 +6,11 @@ import Foundation
 /// Since App Store Connect OpenAPI 4.4.1 every product carries a version history. A product has
 /// edits awaiting submission when one of its versions is in a `pendingStates` state — this
 /// mirrors the app-version convention (PREPARE_FOR_SUBMISSION = being edited, READY_FOR_REVIEW =
-/// attached to a submission, REJECTED/DEVELOPER_REJECTED = resubmittable after fixes). The mapping
-/// for products is inferred from app versions, not yet observed live (all products were APPROVED
-/// with a single version when this was written); adjust `pendingStates` if a real pending edit
-/// turns out to use a different state.
+/// attached to a submission, REJECTED/DEVELOPER_REJECTED = resubmittable after fixes). App Store
+/// Connect can also keep an unchanged PREPARE_FOR_SUBMISSION draft open (seen live on a
+/// subscription group, invisible in the web UI, and the version API has no DELETE), so
+/// `pendingGroup` compares a draft against the approved version; IAP and subscription drafts are
+/// still taken at face value, since their edits can be image or screenshot changes.
 ///
 /// The v1 `inAppPurchaseSubmissions`/`subscriptionSubmissions`/`subscriptionGroupSubmissions`
 /// POSTs return HTTP 409 for products without a pending version — checking here first turns that
@@ -31,33 +30,6 @@ enum ProductVersions {
     "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "REJECTED", "DEVELOPER_REJECTED",
   ]
 
-  static func pendingIAP(_ iapID: String, client: AppStoreConnectClient) async throws -> Pending? {
-    let response = try await client.send(
-      Resources.v2.inAppPurchases.id(iapID).versions.get(
-        filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected]
-      )
-    )
-    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state?.rawValue ?? "UNKNOWN") }
-  }
-
-  static func pendingSubscription(_ subID: String, client: AppStoreConnectClient) async throws -> Pending? {
-    let response = try await client.send(
-      Resources.v1.subscriptions.id(subID).versions.get(
-        filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected]
-      )
-    )
-    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state?.rawValue ?? "UNKNOWN") }
-  }
-
-  static func pendingGroup(_ groupID: String, client: AppStoreConnectClient) async throws -> Pending? {
-    let response = try await client.send(
-      Resources.v1.subscriptionGroups.id(groupID).versions.get(
-        filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected]
-      )
-    )
-    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state?.rawValue ?? "UNKNOWN") }
-  }
-
   static func pendingIAP(_ iapID: String, client: ASCClient) async throws -> Pending? {
     let response = try await client.inAppPurchasesV2VersionsGetToManyRelated(
       path: .init(id: iapID),
@@ -74,12 +46,43 @@ enum ProductVersions {
     return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
   }
 
+  /// A group's pending version. A PREPARE_FOR_SUBMISSION draft only counts when its
+  /// localizations (all a group version holds) differ from the latest APPROVED version:
+  /// App Store Connect keeps unchanged drafts open (seen live 2026-10-07: a v2 draft identical
+  /// to the approved v1, invisible in the web UI), and the version API has no DELETE to clear them.
   static func pendingGroup(_ groupID: String, client: ASCClient) async throws -> Pending? {
-    let response = try await client.subscriptionGroupsVersionsGetToManyRelated(
-      path: .init(id: groupID),
-      query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
-    ).ok.body.json
-    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
+    let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.subscriptionGroupsVersionsGetToManyRelated(path: .init(id: groupID)).ok.body.json
+    }.flatMap(\.data)
+    let newestFirst = versions.sorted { ($0.attributes?.version ?? 0) > ($1.attributes?.version ?? 0) }
+    guard let pending = newestFirst.first(where: { pendingStates.contains($0.attributes?.state ?? "") }) else {
+      return nil
+    }
+    if pending.attributes?.state == "PREPARE_FOR_SUBMISSION",
+      let approved = newestFirst.first(where: { $0.attributes?.state == "APPROVED" }),
+      try await groupLocalizations(pending.id, client: client) == groupLocalizations(approved.id, client: client) {
+      return nil
+    }
+    return Pending(id: pending.id, version: pending.attributes?.version, state: pending.attributes?.state ?? "UNKNOWN")
+  }
+
+  private struct GroupLocalization: Hashable {
+    let locale: String
+    let name: String
+    let customAppName: String
+  }
+
+  private static func groupLocalizations(_ versionID: String, client: ASCClient) async throws -> Set<GroupLocalization> {
+    let localizations = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.subscriptionGroupVersionsLocalizationsGetToManyRelated(
+        path: .init(id: versionID), query: .init(limit: 50)
+      ).ok.body.json
+    }.flatMap(\.data)
+    return Set(localizations.map {
+      GroupLocalization(
+        locale: $0.attributes?.locale ?? "", name: $0.attributes?.name ?? "",
+        customAppName: $0.attributes?.customAppName ?? "")
+    })
   }
 
   // MARK: - Review submission items
@@ -104,51 +107,6 @@ enum ProductVersions {
 
   /// Resolves every item of a review submission to its target (app version or product version),
   /// keyed by item ID. Product names cost one extra request per product item.
-  static func reviewItems(submissionID: String, client: AppStoreConnectClient) async throws -> [String: ReviewItemInfo] {
-    let response = try await client.send(
-      Resources.v1.reviewSubmissions.id(submissionID).items.get(
-        fieldsAppStoreVersions: [.versionString],
-        fieldsInAppPurchaseVersions: [.version, .state],
-        fieldsSubscriptionVersions: [.version, .state],
-        fieldsSubscriptionGroupVersions: [.version, .state],
-        include: [.appStoreVersion, .inAppPurchaseVersion, .subscriptionVersion, .subscriptionGroupVersion]
-      )
-    )
-
-    var appVersions: [String: String] = [:]
-    var iapVersions: [String: InAppPurchaseVersion] = [:]
-    var subVersions: [String: SubscriptionVersion] = [:]
-    var groupVersions: [String: SubscriptionGroupVersion] = [:]
-    for included in response.included ?? [] {
-      switch included {
-        case .appStoreVersion(let v): appVersions[v.id] = v.attributes?.versionString
-        case .inAppPurchaseVersion(let v): iapVersions[v.id] = v
-        case .subscriptionVersion(let v): subVersions[v.id] = v
-        case .subscriptionGroupVersion(let v): groupVersions[v.id] = v
-        default: break
-      }
-    }
-
-    var result: [String: ReviewItemInfo] = [:]
-    for item in response.data {
-      let rels = item.relationships
-      if let id = rels?.appStoreVersion?.data?.id {
-        result[item.id] = ReviewItemInfo(kind: "APP_STORE_VERSION", name: appVersions[id], version: nil, versionState: nil)
-      } else if let id = rels?.inAppPurchaseVersion?.data?.id {
-        let name = try await iapName(versionID: id, client: client)
-        result[item.id] = ReviewItemInfo(kind: "IN_APP_PURCHASE", name: name, version: iapVersions[id]?.attributes?.version, versionState: iapVersions[id]?.attributes?.state?.rawValue)
-      } else if let id = rels?.subscriptionVersion?.data?.id {
-        let name = try await subscriptionName(versionID: id, client: client)
-        result[item.id] = ReviewItemInfo(kind: "SUBSCRIPTION", name: name, version: subVersions[id]?.attributes?.version, versionState: subVersions[id]?.attributes?.state?.rawValue)
-      } else if let id = rels?.subscriptionGroupVersion?.data?.id {
-        let name = try await groupName(versionID: id, client: client)
-        result[item.id] = ReviewItemInfo(kind: "SUBSCRIPTION_GROUP", name: name, version: groupVersions[id]?.attributes?.version, versionState: groupVersions[id]?.attributes?.state?.rawValue)
-      }
-    }
-    return result
-  }
-
-  /// `reviewItems` for ASCKit-migrated commands.
   static func reviewItems(submissionID: String, client: ASCClient) async throws -> [String: ReviewItemInfo] {
     let response = try await client.reviewSubmissionsItemsGetToManyRelated(
       path: .init(id: submissionID),
@@ -202,35 +160,5 @@ enum ProductVersions {
       }
     }
     return result
-  }
-
-  private static func iapName(versionID: String, client: AppStoreConnectClient) async throws -> String? {
-    let response = try await client.send(
-      Resources.v1.inAppPurchaseVersions.id(versionID).get(fieldsInAppPurchases: [.name], include: [.inAppPurchase])
-    )
-    for included in response.included ?? [] {
-      if case .inAppPurchaseV2(let iap) = included { return iap.attributes?.name }
-    }
-    return nil
-  }
-
-  private static func subscriptionName(versionID: String, client: AppStoreConnectClient) async throws -> String? {
-    let response = try await client.send(
-      Resources.v1.subscriptionVersions.id(versionID).get(fieldsSubscriptions: [.name], include: [.subscription])
-    )
-    for included in response.included ?? [] {
-      if case .subscription(let sub) = included { return sub.attributes?.name }
-    }
-    return nil
-  }
-
-  private static func groupName(versionID: String, client: AppStoreConnectClient) async throws -> String? {
-    let response = try await client.send(
-      Resources.v1.subscriptionGroupVersions.id(versionID).get(fieldsSubscriptionGroups: [.referenceName], include: [.subscriptionGroup])
-    )
-    for included in response.included ?? [] {
-      if case .subscriptionGroup(let group) = included { return group.attributes?.referenceName }
-    }
-    return nil
   }
 }

@@ -8,6 +8,12 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/appStoreVersions/{id}/relationships/build
+    - /v1/reviewSubmissions
+    - /v1/reviewSubmissions/{id}
+    - /v1/reviewSubmissionItems
+    - /v1/reviewSubmissionItems/{id}
+    - /v1/subscriptionGroupVersions/{id}/localizations
     - /v1/subscriptionGroups
     - /v1/subscriptionGroups/{id}
     - /v1/subscriptions

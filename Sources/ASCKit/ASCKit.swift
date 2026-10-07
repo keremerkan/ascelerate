@@ -25,18 +25,60 @@ public struct ASCCredentials: Sendable {
 extension Client {
   /// A client for api.appstoreconnect.apple.com: every request is signed with a JWT, every error
   /// response is thrown as an `ASCError`, and `ASCPaging.allPages` can follow `links.next`.
-  public static func appStoreConnect(credentials: ASCCredentials) throws -> Client {
+  /// With `dryRun`, GETs go out as usual but every other request is stopped before it is sent
+  /// and reported on stderr (method, path, JSON body), surfacing as `ASCDryRunStop`.
+  public static func appStoreConnect(credentials: ASCCredentials, dryRun: Bool = false) throws -> Client {
     let key = try P256.Signing.PrivateKey(pemRepresentation: credentials.privateKeyPEM)
+    var middlewares: [any ClientMiddleware] = [
+      ErrorMiddleware(),
+      PagingMiddleware(),
+      JWTMiddleware(tokens: TokenStore(credentials: credentials, key: key)),
+    ]
+    if dryRun { middlewares.append(DryRunMiddleware()) }
     return Client(
       serverURL: try Servers.Server1.url(),
       configuration: Configuration(dateTranscoder: FlexibleISO8601DateTranscoder()),
       transport: URLSessionTransport(),
-      middlewares: [
-        ErrorMiddleware(),
-        PagingMiddleware(),
-        JWTMiddleware(tokens: TokenStore(credentials: credentials, key: key)),
-      ]
+      middlewares: middlewares
     )
+  }
+}
+
+// MARK: - Dry run
+
+/// A mutating request a dry-run client refused to send.
+public struct ASCDryRunStop: Error, Sendable, CustomStringConvertible {
+  public let method: String
+  public let path: String
+
+  public var description: String { "Dry run: \(method) \(path) was not sent." }
+
+  /// The `ASCDryRunStop` behind an error thrown by a generated operation, or nil.
+  public static func from(_ error: Error) -> ASCDryRunStop? {
+    if let stop = error as? ASCDryRunStop { return stop }
+    return (error as? ClientError)?.underlyingError as? ASCDryRunStop
+  }
+}
+
+struct DryRunMiddleware: ClientMiddleware {
+  func intercept(
+    _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
+    next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+  ) async throws -> (HTTPResponse, HTTPBody?) {
+    guard request.method != .get else { return try await next(request, body, baseURL) }
+    let path = request.path ?? "?"
+    var report = "[dry-run] \(request.method.rawValue) \(path)"
+    if let body {
+      let data = try await Data(collecting: body, upTo: 16 << 20)
+      if let json = try? JSONSerialization.jsonObject(with: data),
+        let pretty = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]) {
+        report += "\n" + String(decoding: pretty, as: UTF8.self)
+      } else if !data.isEmpty {
+        report += "\n" + String(decoding: data, as: UTF8.self)
+      }
+    }
+    FileHandle.standardError.write(Data((report + "\n").utf8))
+    throw ASCDryRunStop(method: request.method.rawValue, path: path)
   }
 }
 

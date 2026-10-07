@@ -6,14 +6,14 @@ A command-line tool for the App Store Connect API, built with Swift.
 
 ```bash
 swift build                           # Debug build
-swift build -c release                # Release build (slow — AppStoreAPI has ~2500 generated files)
+swift build -c release                # Release build (~7 min cold, mostly ASCKit's generated client)
 swift run ascelerate <command>        # Run directly
 swift run ascelerate --help           # Show all commands
 ```
 
 Install globally:
 ```bash
-strip .build/release/ascelerate              # Strip debug symbols (~175 MB → ~59 MB)
+strip .build/release/ascelerate              # Strip debug symbols (~156 MB → ~41 MB)
 cp .build/release/ascelerate /usr/local/bin/
 ```
 
@@ -696,7 +696,7 @@ Counts are approximate top-level resources from the 1.7.0 surface.
 
 ## Release build note
 
-`swift build -c release` is very slow due to whole-module optimization of AppStoreAPI's ~2500 generated files. Debug builds are fast for development.
+`swift build -c release` takes about 7 minutes from a cold cache (measured 2026-10-07, including the OpenAPI generator plugin and ASCKit's generated client), and the stripped binary is ~41 MB (0.21.0 with asc-swift: ~74 MB). Debug builds are fast for development; adding a path to `filter.paths` costs a ~70 s regeneration of ASCKit.
 
 
 <claude-mem-context>

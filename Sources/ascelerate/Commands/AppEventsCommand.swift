@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct AppEventsCommand: AsyncParsableCommand {
@@ -13,6 +14,16 @@ struct AppEventsCommand: AsyncParsableCommand {
   // MARK: - Shared helpers
 
   /// Resolves a reference name or event ID to an AppEvent for the given app.
+  static func findAppEvent(ref: String, appID: String, client: ASCClient) async throws -> Components.Schemas.AppEvent {
+    let events = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.appsAppEventsGetToManyRelated(path: .init(id: appID), query: .init(limit: 200)).ok.body.json
+    }.flatMap(\.data)
+    if let match = events.first(where: { $0.attributes?.referenceName == ref || $0.id == ref }) {
+      return match
+    }
+    throw ValidationError("No in-app event '\(ref)' found for this app.")
+  }
+
   static func findAppEvent(
     ref: String, appID: String, client: AppStoreConnectClient
   ) async throws -> AppEvent {
@@ -71,18 +82,17 @@ struct AppEventsCommand: AsyncParsableCommand {
     var state: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let stateFilter: [Resources.V1.Apps.WithID.AppEvents.FilterEventState]? =
+      let stateFilter: [Operations.AppsAppEventsGetToManyRelated.Input.Query.FilterEventStatePayloadPayload]? =
         try parseFilter(state, name: "state")
 
-      var events: [AppEvent] = []
-      for try await page in client.pages(
-        Resources.v1.apps.id(app.id).appEvents.get(filterEventState: stateFilter, limit: 200)
-      ) {
-        events.append(contentsOf: page.data)
-      }
+      let events = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsAppEventsGetToManyRelated(
+          path: .init(id: app.id), query: .init(filterEventState: stateFilter, limit: 200)
+        ).ok.body.json
+      }.flatMap(\.data)
 
       if events.isEmpty {
         print("No in-app events found.")
@@ -125,7 +135,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     var event: String
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appEvent = try await AppEventsCommand.findAppEvent(
         ref: event, appID: app.id, client: client)
@@ -152,8 +162,9 @@ struct AppEventsCommand: AsyncParsableCommand {
         }
       }
 
-      let locs = try await client.send(
-        Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+      let locs = try await client.appEventsLocalizationsGetToManyRelated(
+        path: .init(id: appEvent.id), query: .init(limit: 50)
+      ).ok.body.json
       if !locs.data.isEmpty {
         print()
         print("Localizations (\(locs.data.count)):")
@@ -497,13 +508,14 @@ struct AppEventsCommand: AsyncParsableCommand {
       var event: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
 
-        let resp = try await client.send(
-          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        let resp = try await client.appEventsLocalizationsGetToManyRelated(
+          path: .init(id: appEvent.id), query: .init(limit: 50)
+        ).ok.body.json
         if resp.data.isEmpty {
           print("No localizations found.")
           return
@@ -543,13 +555,14 @@ struct AppEventsCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
 
-        let resp = try await client.send(
-          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        let resp = try await client.appEventsLocalizationsGetToManyRelated(
+          path: .init(id: appEvent.id), query: .init(limit: 50)
+        ).ok.body.json
 
         var result: [String: EventLocaleFields] = [:]
         for loc in resp.data {
@@ -721,21 +734,23 @@ struct AppEventsCommand: AsyncParsableCommand {
       var event: String
 
       func run() async throws {
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
 
-        let locs = try await client.send(
-          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        let locs = try await client.appEventsLocalizationsGetToManyRelated(
+          path: .init(id: appEvent.id), query: .init(limit: 50)
+        ).ok.body.json
 
         var rows: [[String]] = []
         for loc in locs.data.sorted(by: {
           ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
         }) {
           let locale = loc.attributes?.locale ?? "?"
-          let shots = try await client.send(
-            Resources.v1.appEventLocalizations.id(loc.id).appEventScreenshots.get(limit: 50))
+          let shots = try await client.appEventLocalizationsAppEventScreenshotsGetToManyRelated(
+            path: .init(id: loc.id), query: .init(limit: 50)
+          ).ok.body.json
           for s in shots.data {
             rows.append([
               locale, "Screenshot",
@@ -744,8 +759,9 @@ struct AppEventsCommand: AsyncParsableCommand {
               s.id,
             ])
           }
-          let clips = try await client.send(
-            Resources.v1.appEventLocalizations.id(loc.id).appEventVideoClips.get(limit: 50))
+          let clips = try await client.appEventLocalizationsAppEventVideoClipsGetToManyRelated(
+            path: .init(id: loc.id), query: .init(limit: 50)
+          ).ok.body.json
           for c in clips.data {
             rows.append([
               locale, "Video",

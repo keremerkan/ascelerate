@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Crypto
@@ -411,7 +409,7 @@ func promptCertificate(client: ASCClient) async throws -> Components.Schemas.Cer
   )
 }
 
-/// Looks up a certificate by serial number first, then falls back to display name (ASCKit).
+/// Looks up a certificate by serial number first, then falls back to display name.
 func findCertificate(serialOrName: String, client: ASCClient) async throws -> Components.Schemas.Certificate {
   // ASC filters can partial-match, so require an exact hit
   let bySerial = try await client.certificatesGetCollection(query: .init(filterSerialNumber: [serialOrName], limit: 200)).ok.body.json.data
@@ -425,44 +423,6 @@ func findCertificate(serialOrName: String, client: ASCClient) async throws -> Co
   if byName.count == 1 {
     return byName[0]
   }
-  throw CertLookupError.notFound(serialOrName)
-}
-
-func promptCertificate(client: AppStoreConnectClient) async throws -> AppStoreAPI.Certificate {
-  let certs = try await fetchAll(
-    client.pages(Resources.v1.certificates.get(limit: 200)),
-    data: \.data,
-    emptyMessage: "No certificates found in your account.",
-    sort: { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
-  )
-  return try promptSelection(
-    "Certificates", items: certs,
-    display: { "\($0.attributes?.displayName ?? "—") (\($0.attributes?.serialNumber ?? "—")) — \($0.attributes?.certificateType.map { formatState($0) } ?? "—"), expires \($0.attributes?.expirationDate.map { formatDate($0) } ?? "—")" },
-    prompt: "Select certificate"
-  )
-}
-
-/// Looks up a certificate by serial number first, then falls back to display name.
-func findCertificate(serialOrName: String, client: AppStoreConnectClient) async throws -> AppStoreAPI.Certificate {
-  // Try serial number first — ASC filters can partial-match, so require an exact hit
-  let bySerial = try await client.send(
-    Resources.v1.certificates.get(filterSerialNumber: [serialOrName], limit: 200)
-  )
-  if let cert = bySerial.data.first(where: { $0.attributes?.serialNumber == serialOrName }) {
-    return cert
-  }
-
-  // Fall back to display name
-  let byName = try await client.send(
-    Resources.v1.certificates.get(filterDisplayName: [serialOrName], limit: 200)
-  )
-  if let cert = byName.data.first(where: { $0.attributes?.displayName == serialOrName }) {
-    return cert
-  }
-  if byName.data.count == 1 {
-    return byName.data[0]
-  }
-
   throw CertLookupError.notFound(serialOrName)
 }
 

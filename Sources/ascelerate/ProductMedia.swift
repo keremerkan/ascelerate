@@ -1,5 +1,6 @@
 import AppStoreAPI
 import AppStoreConnect
+import ASCKit
 import Foundation
 
 // Shared drivers for the IAP/subscription media command trios (promotional images,
@@ -109,6 +110,8 @@ func runReviewScreenshotView(
     print("  File:  \(shot.fileName ?? "—")")
     print("  Size:  \(shot.fileSizeText ?? "—")")
     print("  State: \(shot.stateText ?? "—")")
+  } catch where ASCError.isMissingRelated(error) {
+    print("No review screenshot uploaded for \(productID).")
   } catch is DecodingError {
     print("No review screenshot uploaded for \(productID).")
   } catch let error as ResponseError {

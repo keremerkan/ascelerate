@@ -25,6 +25,18 @@ filter:
     - /v1/appAssetLibraryPlacements/{id}
     - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/devices
+    - /v1/apps/{id}/betaFeedbackCrashSubmissions
+    - /v1/betaFeedbackCrashSubmissions/{id}
+    - /v1/betaFeedbackCrashSubmissions/{id}/crashLog
+    - /v1/apps/{id}/betaFeedbackScreenshotSubmissions
+    - /v1/betaFeedbackScreenshotSubmissions/{id}
+    - /v1/betaGroups
+    - /v1/betaTesters
+    - /v1/betaGroups/{id}/betaRecruitmentCriteria
+    - /v1/betaRecruitmentCriterionOptions
+    - /v1/preReleaseVersions
+    - /v1/betaBuildLocalizations
+    - /v1/betaAppLocalizations
     - /v1/subscriptions/{id}/subscriptionLocalizations
     - /v1/subscriptionGroups/{id}/subscriptionGroupLocalizations
     - /v1/subscriptions/{id}/pricePoints

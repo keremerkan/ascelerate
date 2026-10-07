@@ -973,6 +973,7 @@ func formatFieldName(_ name: String) -> String {
     "ipad": "iPad",
     "appleTv": "Apple TV",
     "vision": "Apple Vision",
+    "VISION": "Apple Vision",
     "IOS": "iOS",
     "MAC_OS": "macOS",
     "TV_OS": "tvOS",

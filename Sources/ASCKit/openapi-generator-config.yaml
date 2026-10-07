@@ -8,6 +8,31 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/subscriptionGroups
+    - /v1/subscriptionGroups/{id}
+    - /v1/subscriptions
+    - /v1/subscriptionSubmissions
+    - /v1/subscriptionLocalizations
+    - /v1/subscriptionLocalizations/{id}
+    - /v1/subscriptionGroupLocalizations
+    - /v1/subscriptionGroupLocalizations/{id}
+    - /v1/subscriptionPrices
+    - /v1/subscriptionAvailabilities
+    - /v1/subscriptions/{id}/subscriptionAvailability
+    - /v1/subscriptionAvailabilities/{id}/availableTerritories
+    - /v1/subscriptionIntroductoryOffers
+    - /v1/subscriptionIntroductoryOffers/{id}
+    - /v1/subscriptionOfferCodes
+    - /v1/subscriptionOfferCodeOneTimeUseCodes
+    - /v1/subscriptionOfferCodeCustomCodes
+    - /v1/subscriptionPromotionalOffers
+    - /v1/subscriptionGroupSubmissions
+    - /v1/subscriptionImages
+    - /v1/subscriptionImages/{id}
+    - /v1/subscriptionAppStoreReviewScreenshots
+    - /v1/subscriptionAppStoreReviewScreenshots/{id}
+    - /v1/subscriptionPricePoints/{id}/equalizations
+    - /v1/subscriptionPromotionalOffers/{id}/prices
     - /v1/inAppPurchasePricePoints/{id}/equalizations
     - /v2/inAppPurchases/{id}/inAppPurchaseAvailability
     - /v1/inAppPurchaseAvailabilities/{id}/availableTerritories

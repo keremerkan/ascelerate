@@ -146,10 +146,17 @@ public enum ASCPaging {
     next: (Page) -> String?, _ fetch: () async throws -> Page
   ) async throws -> [Page] {
     var pages = [try await fetch()]
-    while let link = next(pages[pages.count - 1]), let url = URL(string: link) {
-      pages.append(try await $nextPageURL.withValue(url) { try await fetch() })
+    while let link = next(pages[pages.count - 1]) {
+      pages.append(try await page(link, fetch))
     }
     return pages
+  }
+
+  /// Fetches the page a `links.next` URL points to by replaying `fetch` (the first page when
+  /// `link` is nil), for callers that load pages on demand.
+  public static func page<Page: Sendable>(_ link: String?, _ fetch: () async throws -> Page) async throws -> Page {
+    guard let link, let url = URL(string: link) else { return try await fetch() }
+    return try await $nextPageURL.withValue(url) { try await fetch() }
   }
 }
 

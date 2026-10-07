@@ -16,6 +16,19 @@ ascelerate apps review submit <bundle-id> --yes
 プロビジョニングコマンドで `--yes` を使用する場合、必要なすべての引数を明示的に指定する必要があります。インタラクティブモードは無効になります。
 :::
 
+## ドライラン {#dry-run}
+
+`ASCELERATE_DRY_RUN=1` を設定すると、App Store Connect 上で何も変更せずに、コマンドやワークフロー全体を試せます。読み取りリクエストは通常どおり送信されるため、検索やチェックは実際のデータに対して行われますが、書き込みリクエストはすべて送信前に停止されます。ascelerate はそのリクエストのメソッド、パス、JSON ボディを stderr に出力し、リクエストが送信されなかったことを報告します。
+
+```bash
+ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+```
+
+- コマンドは最初に停止された書き込みで終了します。項目を1つずつ処理するコマンドでは、停止された各リクエストを失敗として報告します。
+- `run-workflow` では、書き込みが停止されたステップでワークフローは止まらないため、1回の実行ですべてのステップの書き込みを確認できます。ただし、前のステップで作成されるはずだったもの（新しいバージョンやアップロードされたビルドなど）に依存するステップは失敗することがあります。
+- `builds upload` はアップロードをスキップします。`builds archive` と `builds validate` は App Store Connect 上で何も変更しないため、通常どおり実行されます。
+
 ## CIでのXcode署名
 
 `builds archive` とアーカイブからIPAへのエクスポートの両方で、`xcodebuild` に `-allowProvisioningUpdates` を渡します。これがないと、`xcodebuild` はローカルにキャッシュされたプロビジョニングプロファイルのみを使用し、Developer Portalから更新されたものを取得しません。

@@ -241,4 +241,4 @@ Image and screenshot uploads use Apple's 3-step file upload flow (reserve → PU
 
 ## Win-back offers (not yet implemented)
 
-Win-back offers (offers for churned subscribers) are intentionally not implemented yet. The `WinBackOfferPriceInlineCreate` type in our `asc-swift` dependency is missing the `territory` and `subscriptionPricePoint` relationships the API requires, so we can't construct a valid create request. Will revisit once the upstream library is updated.
+Win-back offers (offers for churned subscribers) are not implemented yet. In Apple's API specification, the price entries of a win-back offer (`WinBackOfferPriceInlineCreate`) lack the `territory` and `subscriptionPricePoint` relationships that the prices of every other offer type carry, so a valid create request can't be built. Will revisit when Apple updates the specification.

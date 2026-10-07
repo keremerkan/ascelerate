@@ -238,4 +238,4 @@ Les téléchargements d'images et de captures d'écran utilisent le flux en 3 é
 
 ## Offres de reconquête (pas encore implémentées)
 
-Les offres de reconquête (offres pour les abonnés perdus) ne sont intentionnellement pas encore implémentées. Le type `WinBackOfferPriceInlineCreate` dans notre dépendance `asc-swift` ne contient pas les relations `territory` et `subscriptionPricePoint` requises par l'API, donc nous ne pouvons pas construire une requête de création valide. À revoir lorsque la dépendance sera mise à jour.
+Les offres de reconquête (offres pour les abonnés perdus) ne sont pas encore implémentées. Dans la spécification de l'API d'Apple, les entrées de prix d'une offre de reconquête (`WinBackOfferPriceInlineCreate`) ne comportent pas les relations `territory` et `subscriptionPricePoint` que contiennent les prix de tous les autres types d'offres, de sorte qu'aucune requête de création valide ne peut être construite. À revoir lorsqu'Apple mettra à jour la spécification.

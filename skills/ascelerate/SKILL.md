@@ -285,7 +285,7 @@ Subscription pricing safety:
 
 Offer code eligibilities for subs: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibility: `STACK_WITH_INTRO_OFFERS` or `REPLACE_INTRO_OFFERS`. Modes: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`.
 
-NOT YET IMPLEMENTED: `sub win-back-offer` is blocked on asc-swift codegen (the inline price create type is missing required relationships). Custom product page search-keyword linkages are blocked by the same kind of codegen gap (the `AppKeyword` entity exposes no keyword text). `iap hosted-content` is intentionally skipped.
+NOT YET IMPLEMENTED: `sub win-back-offer` is blocked by Apple's API spec (win-back offer price entries have no territory or price point relationships). Custom product page search-keyword linkages are blocked the same way (the spec's `AppKeyword` exposes no keyword text). `iap hosted-content` is intentionally skipped.
 
 ### Customer reviews
 
@@ -608,6 +608,7 @@ When the user asks to add a new language/locale to an app, translate **all** of 
 ## Tips
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)
+- Set `ASCELERATE_DRY_RUN=1` to try commands or a whole workflow without changing anything: reads run, every write is printed to stderr instead of sent, `builds upload` is skipped, and `run-workflow` continues past blocked steps
 - Add `--json` to read commands for machine-readable output (see JSON output above)
 - Use `ascelerate rate-limit` to check API quota (3600 requests/hour)
 - Run `ascelerate install-completions` after updates for tab completion

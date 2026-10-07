@@ -68,7 +68,7 @@ strip .build/release/ascelerate
 cp .build/release/ascelerate /usr/local/bin/
 ```
 
-> **Note:** The release build takes a few minutes because the [asc-swift](https://github.com/aaronsky/asc-swift) dependency includes ~2500 generated source files covering the entire App Store Connect API surface. `strip` removes debug symbols, reducing the binary from ~175 MB to ~59 MB.
+> **Note:** The release build takes several minutes because it compiles the App Store Connect client that ascelerate generates from Apple's OpenAPI specification. `strip` removes debug symbols, reducing the binary from ~156 MB to ~41 MB.
 
 ### Shell completions
 
@@ -1061,7 +1061,7 @@ The localization import commands create missing locales automatically with confi
 
 Images and review screenshots use Apple's 3-step upload flow (reserve → PUT chunks → commit with MD5) — `upload` handles all three steps.
 
-**Win-back offers** are intentionally not yet implemented because asc-swift's generated `WinBackOfferPriceInlineCreate` is missing the territory and price-point relationships the API requires. Will revisit once the dependency is updated.
+**Win-back offers** are not yet implemented: in Apple's API specification, the price entries of a win-back offer (`WinBackOfferPriceInlineCreate`) lack the territory and price-point relationships that every other offer type's prices carry, so a valid create request can't be built. Will revisit when Apple updates the specification.
 
 Subscription pricing is per-territory. There is no auto-equalize concept like IAPs have, so `--equalize-all-territories` mirrors what the App Store Connect web UI does behind the scenes: looks up the equivalent local-currency tier in every territory and POSTs one price record per territory.
 
@@ -1241,6 +1241,17 @@ ascelerate apps review submit <bundle-id> --yes
 
 On universal-purchase apps, also pass `--platform` so unattended runs never hit the interactive platform-disambiguation prompt.
 
+### Dry run
+
+Set `ASCELERATE_DRY_RUN=1` to try a command or a whole workflow without changing anything on App Store Connect. Reads go out as usual, so lookups and checks run against your real data, but every write is stopped before it is sent: ascelerate prints its method, path, and JSON body to stderr and reports that the request was not sent.
+
+```bash
+ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+```
+
+A command stops at its first blocked write, or reports each blocked request as failed where it works through items one by one. In `run-workflow`, a step whose writes were blocked doesn't stop the workflow, so a single run shows every step's writes; a step that relies on something an earlier step would have created (a new version, an uploaded build) can still fail. `builds upload` skips the upload; `builds archive` and `builds validate` still run, since they don't change anything on App Store Connect.
+
 ### Version
 
 ```bash
@@ -1251,7 +1262,7 @@ ascelerate -v          # Same as above
 
 ## Acknowledgments
 
-Built on top of [asc-swift](https://github.com/aaronsky/asc-swift) by Aaron Sky.
+Versions up to 0.21 were built on top of [asc-swift](https://github.com/aaronsky/asc-swift) by Aaron Sky. Thank you!
 
 *"A Swift Client, App Store Connect"* — [@validatedev](https://x.com/validatedev/status/2026613415012118674)
 

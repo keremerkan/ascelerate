@@ -63,7 +63,7 @@ cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
-リリースビルドは数分かかります。これは依存ライブラリの [asc-swift](https://github.com/aaronsky/asc-swift) がApp Store Connect APIの全エンドポイントをカバーする約2500個の生成ソースファイルを含んでいるためです。`strip` でデバッグシンボルを削除すると、バイナリサイズが約175 MBから約59 MBに縮小されます。
+リリースビルドは数分かかります。これは ascelerate が Apple の OpenAPI 仕様から生成する App Store Connect クライアントをコンパイルするためです。`strip` でデバッグシンボルを削除すると、バイナリサイズが約156 MBから約41 MBに縮小されます。
 :::
 
 ## シェル補完

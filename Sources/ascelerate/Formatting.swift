@@ -61,7 +61,8 @@ func unlessDryRunStopped<T>(_ write: () async throws -> T) async throws -> T? {
 
 // MARK: - ANSI Colors
 
-private let isTerminal = isatty(STDOUT_FILENO) != 0
+/// Whether stdout is a terminal: colors and live progress only go there.
+let isTerminal = isatty(STDOUT_FILENO) != 0
 private let isStderrTerminal = isatty(STDERR_FILENO) != 0
 
 func red(_ text: String) -> String { isTerminal ? "\u{1B}[31m\(text)\u{1B}[0m" : text }

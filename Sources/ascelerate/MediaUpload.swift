@@ -201,11 +201,68 @@ extension Components.Schemas.UploadOperation: UploadOperationDescribing {
   }
 }
 
+/// Live byte progress for an upload, drawn in place after whatever the current line shows and
+/// erased when the upload ends, so the caller's "Done." lands where it would have. Bytes come
+/// from URLSession's task delegate, which reports them as they go out.
+final class UploadProgressLine: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+  private let lock = NSLock()
+  private let total: Int64
+  /// Bytes of the chunks already uploaded.
+  private var base: Int64 = 0
+  private var shownPercent = -1
+  private var isActive = true
+
+  init(totalBytes: Int64) {
+    total = totalBytes
+    super.init()
+    write("\u{1B}7")  // save the cursor position
+  }
+
+  /// Counts a finished chunk; a retried chunk starts again from its own beginning.
+  func chunkFinished(length: Int64) {
+    lock.withLock { base += length }
+  }
+
+  func urlSession(
+    _ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64,
+    totalBytesSent: Int64, totalBytesExpectedToSend: Int64
+  ) {
+    lock.withLock {
+      guard isActive, total > 0 else { return }
+      let sent = min(base + totalBytesSent, total)
+      let percent = Int(sent * 100 / total)
+      guard percent != shownPercent else { return }
+      shownPercent = percent
+      // Restore the cursor, clear to the end of the line, draw.
+      write("\u{1B}8\u{1B}[K\(percent)% (\(formatBytes(Int(sent))) of \(formatBytes(Int(total))))")
+    }
+  }
+
+  /// Erases the progress, leaving the cursor where the line's text ended.
+  func finish() {
+    lock.withLock {
+      isActive = false
+      write("\u{1B}8\u{1B}[K")
+    }
+  }
+
+  private func write(_ text: String) {
+    fputs(text, stdout)
+    fflush(stdout)
+  }
+}
+
 func uploadChunks<Operation: UploadOperationDescribing>(filePath: String, operations: [Operation]) async throws {
   guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
     throw MediaUploadError.cannotReadFile(filePath)
   }
   defer { try? fileHandle.close() }
+
+  fflush(stdout)
+  let progress = isTerminal
+    ? UploadProgressLine(totalBytes: operations.reduce(0) { $0 + Int64($1.length ?? 0) })
+    : nil
+  defer { progress?.finish() }
 
   for operation in operations {
     guard let urlString = operation.url,
@@ -233,13 +290,16 @@ func uploadChunks<Operation: UploadOperationDescribing>(filePath: String, operat
     while true {
       let response: URLResponse
       do {
-        (_, response) = try await URLSession.shared.upload(for: request, from: chunkData)
+        (_, response) = try await URLSession.shared.upload(for: request, from: chunkData, delegate: progress)
       } catch where isTransientError(error) && !delays.isEmpty {
         try await Task.sleep(for: .seconds(delays.removeFirst()))
         continue
       }
       let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-      if (200...299).contains(statusCode) { break }
+      if (200...299).contains(statusCode) {
+        progress?.chunkFinished(length: Int64(length))
+        break
+      }
       guard statusCode == 429 || (500...599).contains(statusCode), !delays.isEmpty else {
         throw MediaUploadError.chunkUploadFailed(statusCode)
       }
@@ -358,16 +418,33 @@ func printDeleted(_ count: Int, _ noun: String) {
   print("    \(ClientFactory.isDryRun ? "Would delete" : "Deleted") \(count) existing \(noun)\(count == 1 ? "" : "s").")
 }
 
+/// Numbers the files of a whole `media upload` run: each file's line starts with `[n/total]`.
+struct UploadCounter {
+  let total: Int
+  private var current = 0
+
+  init(total: Int) { self.total = total }
+
+  /// Prints the start of the next file's line, e.g. `    [ 57/203] Screenshot 1/7: 01_hero.png... `.
+  mutating func printLine(_ kind: String, _ index: Int, of count: Int, _ fileName: String) {
+    current += 1
+    let width = String(total).count
+    let position = String(repeating: " ", count: max(0, width - String(current).count)) + String(current)
+    print("    [\(position)/\(total)] \(kind) \(index + 1)/\(count): \(fileName)... ", terminator: "")
+    fflush(stdout)
+  }
+}
+
 /// Uploads and places screenshots through the asset library in file order (placements keep
 /// their creation order). Returns the counts and the IDs of the placements created.
 func placeAssetLibraryScreenshots(
-  _ files: [MediaFile], localizationID: String, group: String, libraryID: String, client: ASCClient
+  _ files: [MediaFile], localizationID: String, group: String, libraryID: String,
+  counter: inout UploadCounter, client: ASCClient
 ) async -> (tally: UploadTally, placementIDs: [String]) {
   var tally = UploadTally()
   var placementIDs: [String] = []
   for (i, file) in files.enumerated() {
-    print("    Screenshot \(i + 1)/\(files.count): \(file.fileName)... ", terminator: "")
-    fflush(stdout)
+    counter.printLine("Screenshot", i, of: files.count, file.fileName)
     await tally.record {
       try AssetLibrary.validateSize(of: file, group: group)
       // Under dry run the image is never reserved; a placeholder lets the placement be previewed.
@@ -707,6 +784,7 @@ extension AppsCommand {
         var results: [UploadResult] = []
         var duoRedos: [DuoRedo] = []
         var assetLibraryID: String?
+        var counter = UploadCounter(total: plan.totalScreenshots + plan.totalPreviews)
 
         for localeMedia in plan.locales {
           guard let localization = locByLocale[localeMedia.locale.lowercased()] else {
@@ -779,7 +857,7 @@ extension AppsCommand {
 
                 let placed = await placeAssetLibraryScreenshots(
                   dt.screenshots, localizationID: localization.id, group: group,
-                  libraryID: assetLibraryID!, client: ascClient)
+                  libraryID: assetLibraryID!, counter: &counter, client: ascClient)
                 tally = placed.tally
                 if placed.tally.failed > 0 && !ClientFactory.isDryRun {
                   duoRedos.append(DuoRedo(
@@ -805,10 +883,7 @@ extension AppsCommand {
                 }
 
                 for (i, file) in dt.screenshots.enumerated() {
-                  print(
-                    "    Screenshot \(i + 1)/\(dt.screenshots.count): \(file.fileName)... ",
-                    terminator: "")
-                  fflush(stdout)
+                  counter.printLine("Screenshot", i, of: dt.screenshots.count, file.fileName)
                   await tally.record {
                     _ = try await ClassicMedia.uploadScreenshot(file, setID: screenshotSetID, client: ascClient)
                   }
@@ -832,10 +907,7 @@ extension AppsCommand {
                 }
 
                 for (i, file) in dt.previews.enumerated() {
-                  print(
-                    "    Preview   \(i + 1)/\(dt.previews.count): \(file.fileName)... ",
-                    terminator: "")
-                  fflush(stdout)
+                  counter.printLine("Preview  ", i, of: dt.previews.count, file.fileName)
                   await tally.record {
                     _ = try await ClassicMedia.uploadPreview(file, setID: previewSetID, client: ascClient)
                   }
@@ -861,6 +933,7 @@ extension AppsCommand {
         if !duoRedos.isEmpty {
           print()
           print("Placing \(duoRedos.count) iPhone Duo set\(duoRedos.count == 1 ? "" : "s") with failed files again, in file order.")
+          var redoCounter = UploadCounter(total: duoRedos.reduce(0) { $0 + $1.files.count })
           for redo in duoRedos {
             print()
             print("[\(localeName(redo.locale))]")
@@ -876,7 +949,7 @@ extension AppsCommand {
             printDeleted(redo.placementIDs.count, "screenshot")
             results[redo.resultIndex].tally = await placeAssetLibraryScreenshots(
               redo.files, localizationID: redo.localizationID, group: redo.group,
-              libraryID: assetLibraryID!, client: ascClient
+              libraryID: assetLibraryID!, counter: &redoCounter, client: ascClient
             ).tally
           }
         }

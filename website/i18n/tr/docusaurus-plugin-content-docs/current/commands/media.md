@@ -36,6 +36,8 @@ ascelerate apps media upload <bundle-id>
 
 Klasör argümanı belirtilmediğinde, komut geçerli dizindeki tüm alt dizinleri ve arşiv dosyalarını numaralı seçici olarak listeler. Arşivler (zip, tar, tar.gz) yüklemeden önce otomatik olarak açılır.
 
+Her dosyanın satırı, çalıştırmadaki sırasıyla başlar (`[57/203]`). Terminalde satır, dosya gönderilirken ne kadarının yüklendiğini de gösterir.
+
 ## Klasör yapısı
 
 Medya klasörünü locale ve display type alt klasörleriyle düzenleyin:

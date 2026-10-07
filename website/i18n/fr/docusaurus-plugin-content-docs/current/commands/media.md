@@ -36,6 +36,8 @@ ascelerate apps media upload <bundle-id>
 
 Lorsque l'argument dossier est omis, la commande liste tous les sous-répertoires et fichiers d'archive du répertoire courant sous forme de sélecteur numéroté. Les archives (zip, tar, tar.gz) sont extraites automatiquement avant le téléversement.
 
+Chaque ligne de fichier commence par sa position dans l'exécution (`[57/203]`). Dans un terminal, la ligne indique aussi la part du fichier déjà téléversée pendant l'envoi.
+
 ## Structure des dossiers
 
 Organisez votre dossier de médias avec des sous-dossiers par langue et type d'affichage :

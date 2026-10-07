@@ -36,6 +36,8 @@ ascelerate apps media upload <bundle-id>
 
 Wenn das Ordner-Argument nicht angegeben wird, listet der Befehl alle Unterverzeichnisse und Archivdateien im aktuellen Verzeichnis als nummerierte Auswahl auf. Archive (zip, tar, tar.gz) werden vor dem Upload automatisch entpackt.
 
+Jede Dateizeile beginnt mit ihrer Position im Durchlauf (`[57/203]`). Im Terminal zeigt die Zeile außerdem an, wie viel der Datei bereits hochgeladen ist, während sie gesendet wird.
+
 ## Ordnerstruktur
 
 Organisieren Sie Ihren Medienordner mit Unterordnern für Sprache und Anzeigetyp:

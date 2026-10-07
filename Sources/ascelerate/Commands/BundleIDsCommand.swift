@@ -575,10 +575,10 @@ func promptBundleID(client: AppStoreConnectClient) async throws -> BundleID {
 }
 
 /// Prompts the user to select a platform from a numbered list.
-func promptPlatform() throws -> BundleIDPlatform {
+func promptPlatform<Platform: RawRepresentable & CaseIterable>() throws -> Platform where Platform.RawValue == String {
   return try promptSelection(
     "Platforms",
-    items: Array(BundleIDPlatform.allCases),
+    items: Array(Platform.allCases),
     display: { $0.rawValue },
     prompt: "Select platform"
   )

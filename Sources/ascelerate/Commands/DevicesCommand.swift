@@ -120,12 +120,12 @@ struct DevicesCommand: AsyncParsableCommand {
         if platform == nil { throw ValidationError("--platform is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
       let deviceName = try name ?? promptText("Device name: ")
       let deviceUDID = try udid ?? promptText("Device UDID: ")
 
-      let platformValue: BundleIDPlatform
+      let platformValue: ASCEnum.BundleIdPlatform
       if let platform {
         platformValue = try parseEnum(platform, name: "platform")
       } else {
@@ -135,7 +135,7 @@ struct DevicesCommand: AsyncParsableCommand {
       print("Register device:")
       print("  Name:     \(deviceName)")
       print("  UDID:     \(deviceUDID)")
-      print("  Platform: \(platformValue)")
+      print("  Platform: \(formatState(platformValue.rawValue))")
       print()
 
       guard confirm("Register this device? [y/N] ") else {
@@ -143,17 +143,10 @@ struct DevicesCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.send(
-        Resources.v1.devices.post(
-          DeviceCreateRequest(data: .init(
-            attributes: .init(
-              name: deviceName,
-              platform: platformValue,
-              udid: deviceUDID
-            )
-          ))
-        )
-      )
+      let response = try await client.devicesCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(name: deviceName, platform: platformValue.rawValue, udid: deviceUDID),
+        _type: "devices"
+      )))).created.body.json
 
       let attrs = response.data.attributes
       print()
@@ -186,8 +179,8 @@ struct DevicesCommand: AsyncParsableCommand {
       }
     }
 
-    private func promptUpdates(currentName: String, currentStatus: String) throws -> (newName: String?, newStatus: DeviceUpdateRequest.Data.Attributes.Status?) {
-      let statusTypes = DeviceUpdateRequest.Data.Attributes.Status.allCases
+    private func promptUpdates(currentName: String, currentStatus: String) throws -> (newName: String?, newStatus: ASCEnum.DeviceUpdateRequestStatus?) {
+      let statusTypes = ASCEnum.DeviceUpdateRequestStatus.allCases
       print("What would you like to update?")
       print("  [1] Name")
       print("  [2] Status")
@@ -201,7 +194,7 @@ struct DevicesCommand: AsyncParsableCommand {
       }
 
       var newName: String?
-      var newStatus: DeviceUpdateRequest.Data.Attributes.Status?
+      var newStatus: ASCEnum.DeviceUpdateRequestStatus?
 
       if choice == 1 || choice == 3 {
         print("New name [\(currentName)]: ", terminator: "")
@@ -237,9 +230,9 @@ struct DevicesCommand: AsyncParsableCommand {
         throw ValidationError("Device name or UDID argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let device: Device
+      let device: Components.Schemas.Device
       if let nameOrUDID {
         device = try await findDevice(nameOrUDID: nameOrUDID, client: client)
       } else {
@@ -247,7 +240,7 @@ struct DevicesCommand: AsyncParsableCommand {
       }
 
       let newName: String?
-      let statusValue: DeviceUpdateRequest.Data.Attributes.Status?
+      let statusValue: ASCEnum.DeviceUpdateRequestStatus?
 
       if name != nil || status != nil {
         // Flags provided explicitly
@@ -269,7 +262,7 @@ struct DevicesCommand: AsyncParsableCommand {
       let currentName = device.attributes?.name ?? "—"
       print("Device: \(currentName) (\(device.attributes?.udid ?? "—"))")
       if let newName { print("  Name:   \(currentName) → \(newName)") }
-      if let statusValue { print("  Status: \(device.attributes?.status.map { formatState($0) } ?? "—") → \(statusValue)") }
+      if let statusValue { print("  Status: \(device.attributes?.status.map { formatState($0) } ?? "—") → \(formatState(statusValue.rawValue))") }
       print()
 
       guard confirm("Update this device? [y/N] ") else {
@@ -277,17 +270,14 @@ struct DevicesCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.send(
-        Resources.v1.devices.id(device.id).patch(
-          DeviceUpdateRequest(data: .init(
-            id: device.id,
-            attributes: .init(
-              name: newName,
-              status: statusValue
-            )
-          ))
-        )
-      )
+      let response = try await client.devicesUpdateInstance(
+        path: .init(id: device.id),
+        body: .json(.init(data: .init(
+          attributes: .init(name: newName, status: statusValue?.rawValue),
+          id: device.id,
+          _type: "devices"
+        )))
+      ).ok.body.json
 
       let attrs = response.data.attributes
       print()

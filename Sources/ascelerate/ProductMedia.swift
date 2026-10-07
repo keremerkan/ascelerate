@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ASCKit
 import Foundation
 
@@ -112,14 +110,6 @@ func runReviewScreenshotView(
     print("  State: \(shot.stateText ?? "—")")
   } catch where ASCError.isMissingRelated(error) {
     print("No review screenshot uploaded for \(productID).")
-  } catch is DecodingError {
-    print("No review screenshot uploaded for \(productID).")
-  } catch let error as ResponseError {
-    if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-      print("No review screenshot uploaded for \(productID).")
-    } else {
-      throw error
-    }
   }
 }
 

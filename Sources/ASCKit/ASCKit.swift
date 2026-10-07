@@ -113,6 +113,13 @@ public struct ASCError: Error, Sendable {
   }
 }
 
+/// The error behind one a generated operation threw, or nil when `error` isn't the runtime's
+/// wrapper. The runtime wraps transport and decoding failures in `ClientError`, whose
+/// description dumps the operation input, request and response: no message for a user.
+public func ascUnderlyingError(_ error: Error) -> Error? {
+  (error as? ClientError)?.underlyingError
+}
+
 struct ErrorMiddleware: ClientMiddleware {
   private struct Document: Decodable {
     let errors: [ASCError.Entry]?

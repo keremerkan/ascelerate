@@ -1,15 +1,6 @@
 {
-  "originHash" : "f864ac179e184c5fbcced121b9ae8b0e90d309c2b9c69b0b4a811c8601092e93",
+  "originHash" : "24625dd6a1ce45321d13e33e82eb9b614fe98f2a66d582b990d7b0af2b7efd2b",
   "pins" : [
-    {
-      "identity" : "asc-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/aaronsky/asc-swift",
-      "state" : {
-        "revision" : "fc2961a14971bf98f83eb232bf77cb66b931a076",
-        "version" : "1.7.1"
-      }
-    },
     {
       "identity" : "openapikit",
       "kind" : "remoteSourceControl",
@@ -116,15 +107,6 @@
       "state" : {
         "revision" : "77effea09e780f6f3f119ffb8150ff25e31c78b1",
         "version" : "1.3.2"
-      }
-    },
-    {
-      "identity" : "urlqueryencoder",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CreateAPI/URLQueryEncoder.git",
-      "state" : {
-        "revision" : "4ce950479707ea109f229d7230ec074a133b15d7",
-        "version" : "0.2.1"
       }
     },
     {

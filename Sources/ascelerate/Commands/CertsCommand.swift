@@ -32,7 +32,7 @@ struct CertsCommand: AsyncParsableCommand {
     var displayName: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let filterType: [Operations.CertificatesGetCollection.Input.Query.FilterCertificateTypePayloadPayload]? =
         try parseFilter(type, name: "type")
@@ -78,7 +78,7 @@ struct CertsCommand: AsyncParsableCommand {
     var serialOrName: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let cert: Components.Schemas.Certificate
       if let serialOrName {
@@ -147,7 +147,7 @@ struct CertsCommand: AsyncParsableCommand {
         throw ValidationError("--type is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let certType: ASCEnum.CertificateType
       if let type {
@@ -320,7 +320,7 @@ struct CertsCommand: AsyncParsableCommand {
         throw ValidationError("Serial number argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let certs: [Components.Schemas.Certificate]
       if let serialNumber {

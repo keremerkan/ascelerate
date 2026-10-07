@@ -8,6 +8,22 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/betaGroups/{id}
+    - /v1/betaGroups/{id}/relationships/builds
+    - /v1/betaGroups/{id}/relationships/betaTesters
+    - /v1/betaRecruitmentCriteria
+    - /v1/betaRecruitmentCriteria/{id}
+    - /v1/betaTesters/{id}/relationships/apps
+    - /v1/betaTesterInvitations
+    - /v1/builds/{id}
+    - /v1/buildBetaNotifications
+    - /v1/buildBetaDetails/{id}
+    - /v1/betaBuildLocalizations/{id}
+    - /v1/betaAppLocalizations/{id}
+    - /v1/betaAppReviewDetails
+    - /v1/betaAppReviewDetails/{id}
+    - /v1/betaLicenseAgreements
+    - /v1/betaLicenseAgreements/{id}
     - /v1/apps/{id}/appAvailabilityV2
     - /v2/appAvailabilities/{id}/territoryAvailabilities
     - /v1/territoryAvailabilities/{id}

@@ -18,7 +18,7 @@ struct RateLimitCommand: AsyncParsableCommand {
 
   func run() async throws {
     jsonOption.activate()
-    let client = try ClientFactory.makeASCClient()
+    let client = try ClientFactory.makeClient()
     let rateLimitHeader = try await ASCRateLimit.header {
       try await client.appsGetCollection(query: .init(limit: 1)).ok
     }

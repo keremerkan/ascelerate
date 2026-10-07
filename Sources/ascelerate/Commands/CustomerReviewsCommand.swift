@@ -115,7 +115,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let sortValue: [Operations.AppsCustomerReviewsGetToManyRelated.Input.Query.SortPayloadPayload]
@@ -202,7 +202,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let (review, response) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
       let entry = ReviewEntry(review: review, response: response)
@@ -235,7 +235,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
       let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !trimmed.isEmpty else { throw ValidationError("--body cannot be empty.") }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let (review, existing) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
       CustomerReviewsCommand.printReview(ReviewEntry(review: review, response: existing))
@@ -291,7 +291,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let (review, existing) = try await CustomerReviewsCommand.fetchReview(
         reviewID: reviewID, client: client)
 

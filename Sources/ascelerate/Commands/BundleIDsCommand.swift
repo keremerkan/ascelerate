@@ -21,7 +21,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
     var identifier: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let filterPlatform: [Operations.BundleIdsGetCollection.Input.Query.FilterPlatformPayloadPayload]? =
         try parseFilter(platform, name: "platform")
@@ -65,7 +65,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
     var identifier: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let bundleID: Components.Schemas.BundleId
       if let identifier {
@@ -118,7 +118,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         if platform == nil { throw ValidationError("--platform is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let bundleIDName = try name ?? promptText("Display name: ")
       let bundleIDIdentifier = try identifier ?? promptText("Bundle identifier (e.g. com.example.MyApp): ")
@@ -172,7 +172,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         throw ValidationError("Bundle identifier argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let bundleID: Components.Schemas.BundleId
       if let identifier {
@@ -222,7 +222,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         if name == nil { throw ValidationError("--name is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let bundleID: Components.Schemas.BundleId
       if let identifier {
@@ -302,7 +302,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         if type == nil { throw ValidationError("--type is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let bundleID: Components.Schemas.BundleId
       if let identifier {
@@ -398,7 +398,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         throw ValidationError("Bundle identifier argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let bundleID: Components.Schemas.BundleId
       if let identifier {

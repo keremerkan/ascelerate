@@ -24,7 +24,7 @@ struct DevicesCommand: AsyncParsableCommand {
     var status: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       typealias Query = Operations.DevicesGetCollection.Input.Query
       let filterPlatform: [Query.FilterPlatformPayloadPayload]? = try parseFilter(platform, name: "platform")
@@ -72,7 +72,7 @@ struct DevicesCommand: AsyncParsableCommand {
     var nameOrUDID: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let device: Components.Schemas.Device
       if let nameOrUDID {
@@ -118,7 +118,7 @@ struct DevicesCommand: AsyncParsableCommand {
         if platform == nil { throw ValidationError("--platform is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let deviceName = try name ?? promptText("Device name: ")
       let deviceUDID = try udid ?? promptText("Device UDID: ")
@@ -228,7 +228,7 @@ struct DevicesCommand: AsyncParsableCommand {
         throw ValidationError("Device name or UDID argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let device: Components.Schemas.Device
       if let nameOrUDID {

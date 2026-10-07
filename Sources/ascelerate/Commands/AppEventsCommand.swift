@@ -76,7 +76,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     var state: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let stateFilter: [Operations.AppsAppEventsGetToManyRelated.Input.Query.FilterEventStatePayloadPayload]? =
@@ -129,7 +129,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     var event: String
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appEvent = try await AppEventsCommand.findAppEvent(
         ref: event, appID: app.id, client: client)
@@ -221,7 +221,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let badgeValue: ASCEnum.AppEventCreateRequestBadge? =
@@ -335,7 +335,7 @@ struct AppEventsCommand: AsyncParsableCommand {
         throw ValidationError("Provide at least one field to update.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appEvent = try await AppEventsCommand.findAppEvent(
         ref: event, appID: app.id, client: client)
@@ -419,7 +419,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appEvent = try await AppEventsCommand.findAppEvent(
         ref: event, appID: app.id, client: client)
@@ -467,7 +467,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       var event: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
@@ -514,7 +514,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
@@ -570,7 +570,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
@@ -687,7 +687,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       var event: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
@@ -764,7 +764,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
@@ -859,7 +859,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)

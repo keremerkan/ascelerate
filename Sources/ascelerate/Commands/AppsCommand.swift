@@ -2279,20 +2279,13 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
         // The endpoint returns {"data": null} when no review detail exists yet.
-        let existing: AppStoreReviewDetail?
-        do {
-          existing = try await client.send(
-            Resources.v1.appStoreVersions.id(appVersion.id).appStoreReviewDetail.get()
-          ).data
-        } catch is DecodingError {
-          existing = nil
-        }
+        let existing = try await Attachment.reviewDetail(versionID: appVersion.id, client: client)
 
         let hasUpdates =
           contactFirstName != nil || contactLastName != nil || contactPhone != nil
@@ -2311,7 +2304,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("  Contact:       \(name.isEmpty ? "—" : name)")
           print("  Phone:         \(a.contactPhone ?? "—")")
           print("  Email:         \(a.contactEmail ?? "—")")
-          print("  Demo Required: \(a.isDemoAccountRequired == true ? "Yes" : "No")")
+          print("  Demo Required: \(a.demoAccountRequired == true ? "Yes" : "No")")
           print("  Demo Account:  \(a.demoAccountName ?? "—")")
           print("  Demo Password: \(a.demoAccountPassword ?? "—")")
           print("  Notes:         \(a.notes ?? "—")")
@@ -2324,33 +2317,30 @@ struct AppsCommand: AsyncParsableCommand {
         }
 
         if let detail = existing {
-          _ = try await client.send(
-            Resources.v1.appStoreReviewDetails.id(detail.id).patch(
-              AppStoreReviewDetailUpdateRequest(
-                data: .init(
-                  id: detail.id,
-                  attributes: .init(
-                    contactFirstName: contactFirstName, contactLastName: contactLastName,
-                    contactPhone: contactPhone, contactEmail: contactEmail,
-                    demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
-                    isDemoAccountRequired: demoAccountRequired, notes: notes
-                  )
-                )
-              )))
+          _ = try await client.appStoreReviewDetailsUpdateInstance(
+            path: .init(id: detail.id),
+            body: .json(.init(data: .init(
+              attributes: .init(
+                contactEmail: contactEmail, contactFirstName: contactFirstName,
+                contactLastName: contactLastName, contactPhone: contactPhone,
+                demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
+                demoAccountRequired: demoAccountRequired, notes: notes
+              ),
+              id: detail.id,
+              _type: "appStoreReviewDetails"
+            )))
+          ).ok
         } else {
-          _ = try await client.send(
-            Resources.v1.appStoreReviewDetails.post(
-              AppStoreReviewDetailCreateRequest(
-                data: .init(
-                  attributes: .init(
-                    contactFirstName: contactFirstName, contactLastName: contactLastName,
-                    contactPhone: contactPhone, contactEmail: contactEmail,
-                    demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
-                    isDemoAccountRequired: demoAccountRequired, notes: notes
-                  ),
-                  relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id)))
-                )
-              )))
+          _ = try await client.appStoreReviewDetailsCreateInstance(body: .json(.init(data: .init(
+            attributes: .init(
+              contactEmail: contactEmail, contactFirstName: contactFirstName,
+              contactLastName: contactLastName, contactPhone: contactPhone,
+              demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
+              demoAccountRequired: demoAccountRequired, notes: notes
+            ),
+            relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
+            _type: "appStoreReviewDetails"
+          )))).created
         }
 
         print()
@@ -2368,42 +2358,24 @@ struct AppsCommand: AsyncParsableCommand {
       )
 
       /// Fetches the version's App Review detail (nil when none exists yet).
-      static func reviewDetail(
-        versionID: String, client: AppStoreConnectClient
-      ) async throws -> AppStoreReviewDetail? {
-        do {
-          return try await client.send(
-            Resources.v1.appStoreVersions.id(versionID).appStoreReviewDetail.get()
-          ).data
-        } catch is DecodingError {
-          return nil
-        }
-      }
-
-      /// `reviewDetail` for ASCKit-migrated commands.
       static func reviewDetail(versionID: String, client: ASCClient) async throws -> Components.Schemas.AppStoreReviewDetail? {
-        do {
-          return try await client.appStoreVersionsAppStoreReviewDetailGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
-        } catch where ASCError.isMissingRelated(error) {
-          return nil
+        try await optionalRelated {
+          try await client.appStoreVersionsAppStoreReviewDetailGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
         }
       }
 
       /// Returns the version's App Review detail ID, creating an empty detail if needed.
       static func ensureReviewDetailID(
-        versionID: String, client: AppStoreConnectClient
+        versionID: String, client: ASCClient
       ) async throws -> String {
         if let detail = try await reviewDetail(versionID: versionID, client: client) {
           return detail.id
         }
-        let created = try await client.send(
-          Resources.v1.appStoreReviewDetails.post(
-            AppStoreReviewDetailCreateRequest(
-              data: .init(
-                attributes: .init(),
-                relationships: .init(appStoreVersion: .init(data: .init(id: versionID)))
-              ))))
-        return created.data.id
+        return try await client.appStoreReviewDetailsCreateInstance(body: .json(.init(data: .init(
+          attributes: .init(),
+          relationships: .init(appStoreVersion: .init(data: .init(id: versionID, _type: "appStoreVersions"))),
+          _type: "appStoreReviewDetails"
+        )))).created.body.json.data.id
       }
 
       struct List: AsyncParsableCommand {
@@ -2476,7 +2448,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         func run() async throws {
           if yes { autoConfirm = true }
-          let client = try ClientFactory.makeClient()
+          let client = try ClientFactory.makeASCClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let appVersion = try await findVersion(
             appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -2497,21 +2469,21 @@ struct AppsCommand: AsyncParsableCommand {
           let attachmentID = try await uploadAsset(
             filePath: media.path,
             reserve: {
-              let r = try await client.send(
-                Resources.v1.appStoreReviewAttachments.post(
-                  AppStoreReviewAttachmentCreateRequest(
-                    data: .init(
-                      attributes: .init(fileSize: media.fileSize, fileName: media.fileName),
-                      relationships: .init(
-                        appStoreReviewDetail: .init(data: .init(id: detailID)))))))
+              let r = try await client.appStoreReviewAttachmentsCreateInstance(body: .json(.init(data: .init(
+                attributes: .init(fileName: media.fileName, fileSize: media.fileSize),
+                relationships: .init(
+                  appStoreReviewDetail: .init(data: .init(id: detailID, _type: "appStoreReviewDetails"))),
+                _type: "appStoreReviewAttachments"
+              )))).created.body.json
               return (r.data.id, r.data.attributes?.uploadOperations ?? [])
             },
             commit: { id, md5 in
-              _ = try await client.send(
-                Resources.v1.appStoreReviewAttachments.id(id).patch(
-                  AppStoreReviewAttachmentUpdateRequest(
-                    data: .init(
-                      id: id, attributes: .init(sourceFileChecksum: md5, isUploaded: true)))))
+              _ = try await client.appStoreReviewAttachmentsUpdateInstance(
+                path: .init(id: id),
+                body: .json(.init(data: .init(
+                  attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id,
+                  _type: "appStoreReviewAttachments")))
+              ).ok
             })
 
           print()
@@ -2532,12 +2504,13 @@ struct AppsCommand: AsyncParsableCommand {
 
         func run() async throws {
           if yes { autoConfirm = true }
-          let client = try ClientFactory.makeClient()
+          let client = try ClientFactory.makeASCClient()
 
+          // Only for display: a failed lookup falls back to the ID.
           let name =
-            (try? await client.send(
-              Resources.v1.appStoreReviewAttachments.id(attachmentID).get()
-            ).data.attributes?.fileName) ?? nil
+            (try? await client.appStoreReviewAttachmentsGetInstance(
+              path: .init(id: attachmentID)
+            ).ok.body.json.data.attributes?.fileName) ?? nil
           print("Attachment: \(name ?? attachmentID)")
           print()
           guard confirm("Delete this attachment? [y/N] ") else {
@@ -2545,7 +2518,7 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
 
-          _ = try await client.send(Resources.v1.appStoreReviewAttachments.id(attachmentID).delete)
+          _ = try await client.appStoreReviewAttachmentsDeleteInstance(path: .init(id: attachmentID)).noContent
           print()
           success("Deleted", "attachment \(name ?? attachmentID).")
         }
@@ -2562,34 +2535,16 @@ struct AppsCommand: AsyncParsableCommand {
       subcommands: [View.self, Update.self, Import.self, Export.self, AgeRating.self]
     )
     
-    static func findActiveAppInfo(appID: String, client: AppStoreConnectClient) async throws -> AppInfo {
-      let response = try await client.send(
-        Resources.v1.apps.id(appID).appInfos.get()
-      )
-      return try pickActiveAppInfo(from: response.data)
-    }
-
-    /// Picks the most relevant AppInfo: prefers editable (prepareForSubmission/waitingForReview) over live, skips replaced.
-    static func pickActiveAppInfo(from appInfos: [AppInfo]) throws -> AppInfo {
-      let candidates = appInfos.filter { $0.attributes?.state != .replacedWithNewInfo }
-      guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? .readyForDistribution) })
-              ?? candidates.first
-              ?? appInfos.first else {
-        throw ValidationError("No app info found.")
-      }
-      return appInfo
-    }
-
-    private static let editableStates: Set<AppInfo.Attributes.State> = [.prepareForSubmission, .waitingForReview]
+    private static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW"]
 
     static func findActiveAppInfo(appID: String, client: ASCClient) async throws -> Components.Schemas.AppInfo {
       try pickActiveAppInfo(from: await client.appsAppInfosGetToManyRelated(path: .init(id: appID)).ok.body.json.data)
     }
 
-    /// `pickActiveAppInfo` for ASCKit types (states are raw strings).
+    /// Picks the most relevant AppInfo: prefers editable (prepareForSubmission/waitingForReview) over live, skips replaced.
     static func pickActiveAppInfo(from appInfos: [Components.Schemas.AppInfo]) throws -> Components.Schemas.AppInfo {
       let candidates = appInfos.filter { $0.attributes?.state != "REPLACED_WITH_NEW_INFO" }
-      guard let appInfo = candidates.first(where: { Set(editableStates.map(\.rawValue)).contains($0.attributes?.state ?? "") })
+      guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? "") })
               ?? candidates.first
               ?? appInfos.first else {
         throw ValidationError("No app info found.")
@@ -2597,7 +2552,7 @@ struct AppsCommand: AsyncParsableCommand {
       return appInfo
     }
     
-    static func checkEditable(_ appInfo: AppInfo) throws {
+    static func checkEditable(_ appInfo: Components.Schemas.AppInfo) throws {
       guard let state = appInfo.attributes?.state, editableStates.contains(state) else {
         let stateStr = appInfo.attributes?.state.map { formatState($0) } ?? "unknown"
         throw ValidationError("App info is in state '\(stateStr)' — updates are only allowed in PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW.")
@@ -2749,7 +2704,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: app.id, client: client)
         try AppInfoCommand.checkEditable(appInfo)
@@ -2788,53 +2743,38 @@ struct AppsCommand: AsyncParsableCommand {
         
         // Update localization
         if hasLocalizationFields {
-          let locsResponse = try await client.send(
-            Resources.v1.appInfos.id(appInfo.id)
-              .appInfoLocalizations.get(
-                filterLocale: locale.map { [$0] }
-              )
-          )
+          let locsResponse = try await client.appInfosAppInfoLocalizationsGetToManyRelated(
+            path: .init(id: appInfo.id), query: .init(filterLocale: locale.map { [$0] })
+          ).ok.body.json
           guard let localization = locsResponse.data.first else {
             let localeDesc = locale ?? "primary"
             throw ValidationError("No localization found for locale '\(localeDesc)'.")
           }
           
-          let response = try await client.send(
-            Resources.v1.appInfoLocalizations.id(localization.id).patch(
-              AppInfoLocalizationUpdateRequest(
-                data: .init(
-                  id: localization.id,
-                  attributes: .init(
-                    name: name,
-                    subtitle: subtitle,
-                    privacyPolicyURL: privacyPolicyURL,
-                    privacyChoicesURL: privacyChoicesURL
-                  )
-                )
-              )
-            )
-          )
+          let response = try await client.appInfoLocalizationsUpdateInstance(
+            path: .init(id: localization.id),
+            body: .json(.init(data: .init(
+              attributes: .init(
+                name: name, privacyChoicesUrl: privacyChoicesURL, privacyPolicyUrl: privacyPolicyURL,
+                subtitle: subtitle),
+              id: localization.id,
+              _type: "appInfoLocalizations"
+            )))
+          ).ok.body.json
           let updatedLocale = response.data.attributes?.locale ?? locale ?? "primary"
           success("Updated", "localization [\(updatedLocale)].")
         }
         
         // Update categories
         if hasCategoryFields {
-          typealias Rels = AppInfoUpdateRequest.Data.Relationships
-          var relationships = Rels()
-          if let cat = primaryCategory {
-            relationships.primaryCategory = .init(data: .init(id: cat))
-          }
-          if let cat = secondaryCategory {
-            relationships.secondaryCategory = .init(data: .init(id: cat))
-          }
-          _ = try await client.send(
-            Resources.v1.appInfos.id(appInfo.id).patch(
-              AppInfoUpdateRequest(
-                data: .init(id: appInfo.id, relationships: relationships)
-              )
-            )
+          let relationships = Components.Schemas.AppInfoUpdateRequest.DataPayload.RelationshipsPayload(
+            primaryCategory: primaryCategory.map { .init(data: .init(id: $0, _type: "appCategories")) },
+            secondaryCategory: secondaryCategory.map { .init(data: .init(id: $0, _type: "appCategories")) }
           )
+          _ = try await client.appInfosUpdateInstance(
+            path: .init(id: appInfo.id),
+            body: .json(.init(data: .init(id: appInfo.id, relationships: relationships, _type: "appInfos")))
+          ).ok
           success("Updated", "categories.")
         }
         
@@ -2883,7 +2823,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         // Show summary and confirm
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: app.id, client: client)
         try AppInfoCommand.checkEditable(appInfo)
@@ -2910,10 +2850,9 @@ struct AppsCommand: AsyncParsableCommand {
         print()
         
         // Fetch all localizations for this app info
-        let locsResponse = try await client.send(
-          Resources.v1.appInfos.id(appInfo.id)
-            .appInfoLocalizations.get()
-        )
+        let locsResponse = try await client.appInfosAppInfoLocalizationsGetToManyRelated(
+          path: .init(id: appInfo.id)
+        ).ok.body.json
         
         let locByLocale = Dictionary(
           locsResponse.data.compactMap { loc in
@@ -2935,24 +2874,13 @@ struct AppsCommand: AsyncParsableCommand {
               continue
             }
 
-            let response = try await client.send(
-              Resources.v1.appInfoLocalizations.post(
-                AppInfoLocalizationCreateRequest(
-                  data: .init(
-                    attributes: .init(
-                      locale: locale,
-                      name: name,
-                      subtitle: fields.subtitle,
-                      privacyPolicyURL: fields.privacyPolicyURL,
-                      privacyChoicesURL: fields.privacyChoicesURL
-                    ),
-                    relationships: .init(
-                      appInfo: .init(data: .init(id: appInfo.id))
-                    )
-                  )
-                )
-              )
-            )
+            let response = try await client.appInfoLocalizationsCreateInstance(body: .json(.init(data: .init(
+              attributes: .init(
+                locale: locale, name: name, privacyChoicesUrl: fields.privacyChoicesURL,
+                privacyPolicyUrl: fields.privacyPolicyURL, subtitle: fields.subtitle),
+              relationships: .init(appInfo: .init(data: .init(id: appInfo.id, _type: "appInfos"))),
+              _type: "appInfoLocalizations"
+            )))).created.body.json
             print("  [\(localeName(locale))] \(green("Created."))")
 
             if verbose {
@@ -2961,27 +2889,22 @@ struct AppsCommand: AsyncParsableCommand {
               print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
               if let v = attrs?.name { print("      Name:               \(v)") }
               if let v = attrs?.subtitle { print("      Subtitle:           \(v)") }
-              if let v = attrs?.privacyPolicyURL { print("      Privacy Policy URL: \(v)") }
-              if let v = attrs?.privacyChoicesURL { print("      Privacy Choices URL: \(v)") }
+              if let v = attrs?.privacyPolicyUrl { print("      Privacy Policy URL: \(v)") }
+              if let v = attrs?.privacyChoicesUrl { print("      Privacy Choices URL: \(v)") }
             }
             continue
           }
 
-          let response = try await client.send(
-            Resources.v1.appInfoLocalizations.id(localization.id).patch(
-              AppInfoLocalizationUpdateRequest(
-                data: .init(
-                  id: localization.id,
-                  attributes: .init(
-                    name: fields.name,
-                    subtitle: fields.subtitle,
-                    privacyPolicyURL: fields.privacyPolicyURL,
-                    privacyChoicesURL: fields.privacyChoicesURL
-                  )
-                )
-              )
-            )
-          )
+          let response = try await client.appInfoLocalizationsUpdateInstance(
+            path: .init(id: localization.id),
+            body: .json(.init(data: .init(
+              attributes: .init(
+                name: fields.name, privacyChoicesUrl: fields.privacyChoicesURL,
+                privacyPolicyUrl: fields.privacyPolicyURL, subtitle: fields.subtitle),
+              id: localization.id,
+              _type: "appInfoLocalizations"
+            )))
+          ).ok.body.json
           print("  [\(localeName(locale))] Updated.")
 
           if verbose {
@@ -2990,8 +2913,8 @@ struct AppsCommand: AsyncParsableCommand {
             print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
             if let v = attrs?.name { print("      Name:               \(v)") }
             if let v = attrs?.subtitle { print("      Subtitle:           \(v)") }
-            if let v = attrs?.privacyPolicyURL { print("      Privacy Policy URL: \(v)") }
-            if let v = attrs?.privacyChoicesURL { print("      Privacy Choices URL: \(v)") }
+            if let v = attrs?.privacyPolicyUrl { print("      Privacy Policy URL: \(v)") }
+            if let v = attrs?.privacyChoicesUrl { print("      Privacy Choices URL: \(v)") }
           }
         }
         
@@ -3057,14 +2980,6 @@ struct AppsCommand: AsyncParsableCommand {
         defaultSubcommand: View.self
       )
 
-      static func fetchDeclaration(appID: String, client: AppStoreConnectClient) async throws -> (AgeRatingDeclaration, AppInfo) {
-        let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: appID, client: client)
-        let response = try await client.send(
-          Resources.v1.appInfos.id(appInfo.id).ageRatingDeclaration.get()
-        )
-        return (response.data, appInfo)
-      }
-
       static func fetchDeclaration(appID: String, client: ASCClient) async throws -> Components.Schemas.AgeRatingDeclaration {
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: appID, client: client)
         return try await client.appInfosAgeRatingDeclarationGetToOneRelated(path: .init(id: appInfo.id)).ok.body.json.data
@@ -3098,37 +3013,6 @@ struct AppsCommand: AsyncParsableCommand {
           isSocialMediaAgeRestricted: attrs?.socialMediaAgeRestricted,
           kidsAgeBand: attrs?.kidsAgeBand,
           ageRatingOverride: attrs?.ageRatingOverride
-        )
-      }
-
-      static func toFields(attrs: AgeRatingDeclaration.Attributes?) -> AgeRatingFields {
-        AgeRatingFields(
-          alcoholTobaccoOrDrugUseOrReferences: attrs?.alcoholTobaccoOrDrugUseOrReferences?.rawValue,
-          contests: attrs?.contests?.rawValue,
-          gamblingSimulated: attrs?.gamblingSimulated?.rawValue,
-          gunsOrOtherWeapons: attrs?.gunsOrOtherWeapons?.rawValue,
-          horrorOrFearThemes: attrs?.horrorOrFearThemes?.rawValue,
-          matureOrSuggestiveThemes: attrs?.matureOrSuggestiveThemes?.rawValue,
-          profanityOrCrudeHumor: attrs?.profanityOrCrudeHumor?.rawValue,
-          sexualContentOrNudity: attrs?.sexualContentOrNudity?.rawValue,
-          sexualContentGraphicAndNudity: attrs?.sexualContentGraphicAndNudity?.rawValue,
-          violenceCartoonOrFantasy: attrs?.violenceCartoonOrFantasy?.rawValue,
-          violenceRealistic: attrs?.violenceRealistic?.rawValue,
-          violenceRealisticProlongedGraphicOrSadistic: attrs?.violenceRealisticProlongedGraphicOrSadistic?.rawValue,
-          medicalOrTreatmentInformation: attrs?.medicalOrTreatmentInformation?.rawValue,
-          isAdvertising: attrs?.isAdvertising,
-          isGambling: attrs?.isGambling,
-          isUnrestrictedWebAccess: attrs?.isUnrestrictedWebAccess,
-          isUserGeneratedContent: attrs?.isUserGeneratedContent,
-          isMessagingAndChat: attrs?.isMessagingAndChat,
-          isLootBox: attrs?.isLootBox,
-          isHealthOrWellnessTopics: attrs?.isHealthOrWellnessTopics,
-          isParentalControls: attrs?.isParentalControls,
-          isAgeAssurance: attrs?.isAgeAssurance,
-          isSocialMedia: attrs?.isSocialMedia,
-          isSocialMediaAgeRestricted: attrs?.isSocialMediaAgeRestricted,
-          kidsAgeBand: attrs?.kidsAgeBand?.rawValue,
-          ageRatingOverride: attrs?.ageRatingOverride?.rawValue
         )
       }
 
@@ -3272,9 +3156,9 @@ struct AppsCommand: AsyncParsableCommand {
 
         func run() async throws {
           if yes { autoConfirm = true }
-          let client = try ClientFactory.makeClient()
+          let client = try ClientFactory.makeASCClient()
           let app = try await findApp(bundleID: bundleID, client: client)
-          let (declaration, _) = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
+          let declaration = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
           let appName = app.attributes?.name ?? bundleID
 
           let filePath = try resolveFile(file, extension: "json", prompt: "Select an age rating JSON file:")
@@ -3323,55 +3207,63 @@ struct AppsCommand: AsyncParsableCommand {
             throw ValidationError("JSON file contains no age rating fields.")
           }
 
+          // Validate every enum value up front: the request carries plain strings.
+          typealias E = ASCEnum
+          func value<T: RawRepresentable & CaseIterable>(_ raw: String?, _ name: String, _: T.Type) throws -> String?
+          where T.RawValue == String {
+            try raw.map { (try parseEnum($0, name: name) as T).rawValue }
+          }
+          let attributes = Components.Schemas.AgeRatingDeclarationUpdateRequest.DataPayload.AttributesPayload(
+            advertising: fields.isAdvertising,
+            ageAssurance: fields.isAgeAssurance,
+            ageRatingOverride: try value(fields.ageRatingOverride, "ageRatingOverride", E.AgeRatingDeclarationUpdateRequestAgeRatingOverride.self),
+            alcoholTobaccoOrDrugUseOrReferences: try value(
+              fields.alcoholTobaccoOrDrugUseOrReferences, "alcoholTobaccoOrDrugUseOrReferences",
+              E.AgeRatingDeclarationUpdateRequestAlcoholTobaccoOrDrugUseOrReferences.self),
+            contests: try value(fields.contests, "contests", E.AgeRatingDeclarationUpdateRequestContests.self),
+            gambling: fields.isGambling,
+            gamblingSimulated: try value(fields.gamblingSimulated, "gamblingSimulated", E.AgeRatingDeclarationUpdateRequestGamblingSimulated.self),
+            gunsOrOtherWeapons: try value(fields.gunsOrOtherWeapons, "gunsOrOtherWeapons", E.AgeRatingDeclarationUpdateRequestGunsOrOtherWeapons.self),
+            healthOrWellnessTopics: fields.isHealthOrWellnessTopics,
+            horrorOrFearThemes: try value(fields.horrorOrFearThemes, "horrorOrFearThemes", E.AgeRatingDeclarationUpdateRequestHorrorOrFearThemes.self),
+            kidsAgeBand: try value(fields.kidsAgeBand, "kidsAgeBand", E.KidsAgeBand.self),
+            lootBox: fields.isLootBox,
+            matureOrSuggestiveThemes: try value(
+              fields.matureOrSuggestiveThemes, "matureOrSuggestiveThemes", E.AgeRatingDeclarationUpdateRequestMatureOrSuggestiveThemes.self),
+            medicalOrTreatmentInformation: try value(
+              fields.medicalOrTreatmentInformation, "medicalOrTreatmentInformation",
+              E.AgeRatingDeclarationUpdateRequestMedicalOrTreatmentInformation.self),
+            messagingAndChat: fields.isMessagingAndChat,
+            parentalControls: fields.isParentalControls,
+            profanityOrCrudeHumor: try value(
+              fields.profanityOrCrudeHumor, "profanityOrCrudeHumor", E.AgeRatingDeclarationUpdateRequestProfanityOrCrudeHumor.self),
+            sexualContentGraphicAndNudity: try value(
+              fields.sexualContentGraphicAndNudity, "sexualContentGraphicAndNudity",
+              E.AgeRatingDeclarationUpdateRequestSexualContentGraphicAndNudity.self),
+            sexualContentOrNudity: try value(
+              fields.sexualContentOrNudity, "sexualContentOrNudity", E.AgeRatingDeclarationUpdateRequestSexualContentOrNudity.self),
+            socialMedia: fields.isSocialMedia,
+            socialMediaAgeRestricted: fields.isSocialMediaAgeRestricted,
+            unrestrictedWebAccess: fields.isUnrestrictedWebAccess,
+            userGeneratedContent: fields.isUserGeneratedContent,
+            violenceCartoonOrFantasy: try value(
+              fields.violenceCartoonOrFantasy, "violenceCartoonOrFantasy", E.AgeRatingDeclarationUpdateRequestViolenceCartoonOrFantasy.self),
+            violenceRealistic: try value(fields.violenceRealistic, "violenceRealistic", E.AgeRatingDeclarationUpdateRequestViolenceRealistic.self),
+            violenceRealisticProlongedGraphicOrSadistic: try value(
+              fields.violenceRealisticProlongedGraphicOrSadistic, "violenceRealisticProlongedGraphicOrSadistic",
+              E.AgeRatingDeclarationUpdateRequestViolenceRealisticProlongedGraphicOrSadistic.self)
+          )
+
           print()
           guard confirm("Update \(changeCount) age rating field\(changeCount == 1 ? "" : "s")? [y/N] ") else {
             cancelled()
             return
           }
 
-          func parseIntensity<T: RawRepresentable>(_ value: String?, type: T.Type) -> T? where T.RawValue == String {
-            guard let v = value else { return nil }
-            return T(rawValue: v)
-          }
-
-          typealias Attrs = AgeRatingDeclarationUpdateRequest.Data.Attributes
-          let updateRequest = Resources.v1.ageRatingDeclarations.id(declaration.id).patch(
-            AgeRatingDeclarationUpdateRequest(
-              data: .init(
-                id: declaration.id,
-                attributes: .init(
-                  isAdvertising: fields.isAdvertising,
-                  alcoholTobaccoOrDrugUseOrReferences: parseIntensity(fields.alcoholTobaccoOrDrugUseOrReferences, type: Attrs.AlcoholTobaccoOrDrugUseOrReferences.self),
-                  contests: parseIntensity(fields.contests, type: Attrs.Contests.self),
-                  isGambling: fields.isGambling,
-                  gamblingSimulated: parseIntensity(fields.gamblingSimulated, type: Attrs.GamblingSimulated.self),
-                  gunsOrOtherWeapons: parseIntensity(fields.gunsOrOtherWeapons, type: Attrs.GunsOrOtherWeapons.self),
-                  isHealthOrWellnessTopics: fields.isHealthOrWellnessTopics,
-                  kidsAgeBand: parseIntensity(fields.kidsAgeBand, type: KidsAgeBand.self),
-                  isLootBox: fields.isLootBox,
-                  medicalOrTreatmentInformation: parseIntensity(fields.medicalOrTreatmentInformation, type: Attrs.MedicalOrTreatmentInformation.self),
-                  isMessagingAndChat: fields.isMessagingAndChat,
-                  isParentalControls: fields.isParentalControls,
-                  profanityOrCrudeHumor: parseIntensity(fields.profanityOrCrudeHumor, type: Attrs.ProfanityOrCrudeHumor.self),
-                  isAgeAssurance: fields.isAgeAssurance,
-                  sexualContentGraphicAndNudity: parseIntensity(fields.sexualContentGraphicAndNudity, type: Attrs.SexualContentGraphicAndNudity.self),
-                  sexualContentOrNudity: parseIntensity(fields.sexualContentOrNudity, type: Attrs.SexualContentOrNudity.self),
-                  isSocialMedia: fields.isSocialMedia,
-                  isSocialMediaAgeRestricted: fields.isSocialMediaAgeRestricted,
-                  horrorOrFearThemes: parseIntensity(fields.horrorOrFearThemes, type: Attrs.HorrorOrFearThemes.self),
-                  matureOrSuggestiveThemes: parseIntensity(fields.matureOrSuggestiveThemes, type: Attrs.MatureOrSuggestiveThemes.self),
-                  isUnrestrictedWebAccess: fields.isUnrestrictedWebAccess,
-                  isUserGeneratedContent: fields.isUserGeneratedContent,
-                  violenceCartoonOrFantasy: parseIntensity(fields.violenceCartoonOrFantasy, type: Attrs.ViolenceCartoonOrFantasy.self),
-                  violenceRealisticProlongedGraphicOrSadistic: parseIntensity(fields.violenceRealisticProlongedGraphicOrSadistic, type: Attrs.ViolenceRealisticProlongedGraphicOrSadistic.self),
-                  violenceRealistic: parseIntensity(fields.violenceRealistic, type: Attrs.ViolenceRealistic.self),
-                  ageRatingOverride: parseIntensity(fields.ageRatingOverride, type: Attrs.AgeRatingOverride.self)
-                )
-              )
-            )
-          )
-
-          _ = try await client.send(updateRequest)
+          _ = try await client.ageRatingDeclarationsUpdateInstance(
+            path: .init(id: declaration.id),
+            body: .json(.init(data: .init(attributes: attributes, id: declaration.id, _type: "ageRatingDeclarations")))
+          ).ok
           print()
           success("Updated", "age rating declaration for \(appName).")
         }

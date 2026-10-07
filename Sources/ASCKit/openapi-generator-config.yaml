@@ -8,6 +8,14 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/ageRatingDeclarations/{id}
+    - /v1/appInfos/{id}
+    - /v1/appInfoLocalizations
+    - /v1/appInfoLocalizations/{id}
+    - /v1/appStoreReviewDetails
+    - /v1/appStoreReviewDetails/{id}
+    - /v1/appStoreReviewAttachments
+    - /v1/appStoreReviewAttachments/{id}
     - /v1/appStoreVersionPhasedReleases
     - /v1/appStoreVersionPhasedReleases/{id}
     - /v1/appStoreVersions/{id}/appStoreVersionPhasedRelease

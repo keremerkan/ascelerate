@@ -6,11 +6,11 @@ import Foundation
 /// availability via `fetchCurrent` (treating nil, a 404 or null data as "none set — inherits
 /// the app's territories"), prints it in view mode, or computes the add/remove set math,
 /// prints a change summary, confirms, and hands the final list to `post` for the
-/// wholesale schedule replacement. `productNoun` names the product kind in the
-/// no-availability message (e.g. "IAP", "subscription").
+/// wholesale schedule replacement. `missingNote` is the view-mode message when
+/// no availability is set.
 func runProductAvailability(
   productID: String,
-  productNoun: String,
+  missingNote: String,
   add: String?,
   remove: String?,
   availableInNewTerritories: String?,
@@ -48,7 +48,7 @@ func runProductAvailability(
     // View mode
     print("Product ID: \(productID)")
     if !hasAvailability {
-      print(yellow("⚠ No per-\(productNoun) availability set — inherits the app's territories."))
+      print(yellow("⚠ \(missingNote)"))
       return
     }
     print("Available in new territories: \(currentAvailableInNew == true ? "Yes" : currentAvailableInNew == false ? "No" : "—")")

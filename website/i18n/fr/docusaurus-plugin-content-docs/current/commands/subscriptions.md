@@ -122,7 +122,10 @@ ascelerate sub availability <bundle-id> <product-id>
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true
+ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
+
+Les abonnements annuels peuvent aussi être proposés en **mensuel avec engagement de 12 mois** (facturé chaque mois ; non proposé aux États-Unis ni à Singapour). Ce plan de facturation a sa propre liste de territoires : ajoutez `--plan monthly` pour l'afficher ou la modifier. Sans `--plan`, la commande gère le plan habituel payé d'avance.
 
 ## Offres d'introduction
 

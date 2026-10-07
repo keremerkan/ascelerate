@@ -2084,8 +2084,9 @@ struct SubCommand: AsyncParsableCommand {
       abstract: "View or update per-subscription territory availability.",
       discussion: """
         A subscription's availability is distinct from its app's. Use --add / --remove
-        to change the per-subscription territory list. Each edit replaces the full
-        availability schedule (wholesale POST).
+        to change the per-subscription territory list; each edit replaces the whole
+        list. --plan monthly manages the "Monthly with 12-Month Commitment" billing
+        plan of an annual subscription instead of its regular (upfront) one.
         """
     )
 
@@ -2105,6 +2106,9 @@ struct SubCommand: AsyncParsableCommand {
     @Option(name: .customLong("available-in-new-territories"), help: "Auto-enable new territories Apple adds (true/false). Defaults to keeping the current setting.")
     var availableInNewTerritories: String?
 
+    @Option(name: .long, help: "Billing plan: upfront or monthly (monthly with a 12-month commitment, annual subscriptions only).")
+    var plan = "upfront"
+
     @Flag(name: .long, help: "Show full country names.")
     var verbose = false
 
@@ -2113,27 +2117,31 @@ struct SubCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
+      let planType = try parseEnum(plan, name: "plan") as ASCEnum.SubscriptionPlanType
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let (sub, _) = try await SubCommand.findSubscription(
         productID: productID, appID: app.id, client: client)
 
       // The upfront plan is the subscription's regular availability (the deprecated
-      // subscriptionAvailabilities resource); MONTHLY is Apple's monthly-installment plan.
-      var upfrontPlanID: String?
+      // subscriptionAvailabilities resource); MONTHLY is the 12-month-commitment plan.
+      let isMonthly = planType == .monthly
+      var planID: String?
       try await runProductAvailability(
-        productID: productID,
-        productNoun: "subscription",
+        productID: isMonthly ? "\(productID) (monthly plan)" : productID,
+        missingNote: isMonthly
+          ? "No monthly plan availability set — the subscription isn't offered monthly with a 12-month commitment."
+          : "No per-subscription availability set — inherits the app's territories.",
         add: add,
         remove: remove,
         availableInNewTerritories: availableInNewTerritories,
         verbose: verbose,
         fetchCurrent: {
           let plans = try await client.subscriptionsPlanAvailabilitiesGetToManyRelated(path: .init(id: sub.id)).ok.body.json.data
-          guard let plan = plans.first(where: { $0.attributes?.planType == ASCEnum.SubscriptionPlanType.upfront.rawValue }) else {
+          guard let plan = plans.first(where: { $0.attributes?.planType == planType.rawValue }) else {
             return nil
           }
-          upfrontPlanID = plan.id
+          planID = plan.id
           let territories = try await ASCPaging.allPages(next: { $0.links.next }) {
             try await client.subscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated(
               path: .init(id: plan.id), query: .init(limit: 200)
@@ -2142,19 +2150,19 @@ struct SubCommand: AsyncParsableCommand {
           return (plan.attributes?.availableInNewTerritories, territories)
         },
         post: { availableInNew, territories in
-          if let upfrontPlanID {
+          if let planID {
             _ = try await client.subscriptionPlanAvailabilitiesUpdateInstance(
-              path: .init(id: upfrontPlanID),
+              path: .init(id: planID),
               body: .json(.init(data: .init(
                 attributes: .init(availableInNewTerritories: availableInNew),
-                id: upfrontPlanID,
+                id: planID,
                 relationships: .init(availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") })),
                 _type: "subscriptionPlanAvailabilities"
               )))
             ).ok
           } else {
             _ = try await client.subscriptionPlanAvailabilitiesCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(availableInNewTerritories: availableInNew, planType: ASCEnum.SubscriptionPlanType.upfront.rawValue),
+              attributes: .init(availableInNewTerritories: availableInNew, planType: planType.rawValue),
               relationships: .init(
                 availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") }),
                 subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))

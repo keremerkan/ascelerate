@@ -122,7 +122,10 @@ ascelerate sub availability <bundle-id> <product-id>
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true
+ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
+
+Jahresabonnements lassen sich auch **monatlich mit 12 Monaten Mindestlaufzeit** anbieten (monatliche Abrechnung; nicht in den USA und Singapur verfügbar). Dieser Abrechnungsplan hat eine eigene Regionsliste: Mit `--plan monthly` zeigen Sie sie an oder bearbeiten sie. Ohne `--plan` gilt der Befehl für den regulären Plan mit Vorauszahlung.
 
 ## Einführungsangebote
 

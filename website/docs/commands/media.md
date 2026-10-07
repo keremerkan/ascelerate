@@ -36,6 +36,8 @@ ascelerate apps media upload <bundle-id>
 
 When the folder argument is omitted, the command lists all subdirectories and archive files in the current directory as a numbered picker. Archives (zip, tar, tar.gz) are extracted automatically before upload.
 
+Each file's line starts with its position in the run (`[57/203]`). In a terminal, the line also shows how much of the file has been uploaded while it's being sent.
+
 ## Folder structure
 
 Organize your media folder with locale and display type subfolders:

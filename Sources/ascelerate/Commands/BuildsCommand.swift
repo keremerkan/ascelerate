@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -38,7 +36,7 @@ struct BuildsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       var filterApp: [String]?
       if let bundleID {
@@ -126,7 +124,7 @@ struct BuildsCommand: AsyncParsableCommand {
     var timeout: Int = 30
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let platform = try platformOption.parsed()
 
@@ -680,10 +678,10 @@ private enum ArchivePlatform {
   /// The corresponding App Store Connect API platform.
   var ascPlatform: Platform {
     switch self {
-    case .iOS: return .iOS
-    case .macOS: return .macOS
-    case .tvOS: return .tvOS
-    case .visionOS: return .visionOS
+    case .iOS: return .ios
+    case .macOS: return .macOs
+    case .tvOS: return .tvOs
+    case .visionOS: return .visionOs
     }
   }
 

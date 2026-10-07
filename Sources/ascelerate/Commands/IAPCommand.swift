@@ -277,7 +277,7 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       typealias Query = Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query
@@ -365,7 +365,7 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let response = try await client.appsInAppPurchasesV2GetToManyRelated(
@@ -514,7 +514,7 @@ struct IAPCommand: AsyncParsableCommand {
       var bundleID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
 
@@ -556,7 +556,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
         // Resolve the product to either an IAP or a subscription.
@@ -616,7 +616,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
         guard let target = promoted.first(where: { $0.productID == productID }) else {
@@ -653,7 +653,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
         guard let target = promoted.first(where: { $0.productID == productID }) else {
@@ -695,7 +695,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let promoted = try await Promoted.fetchPromoted(appID: app.id, client: client)
 
@@ -760,7 +760,7 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let iapType: ASCEnum.InAppPurchaseType
@@ -841,7 +841,7 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -901,7 +901,7 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -935,7 +935,7 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -991,7 +991,7 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1036,7 +1036,7 @@ struct IAPCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1074,7 +1074,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1153,7 +1153,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         jsonOption.activate()
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1213,7 +1213,7 @@ struct IAPCommand: AsyncParsableCommand {
       var territory: String = "USA"
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1277,7 +1277,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1414,7 +1414,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1504,7 +1504,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1581,7 +1581,7 @@ struct IAPCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1637,7 +1637,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1768,7 +1768,7 @@ struct IAPCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1829,7 +1829,7 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1876,7 +1876,7 @@ struct IAPCommand: AsyncParsableCommand {
       var offerCodeID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         _ = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -1939,7 +1939,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -2048,7 +2048,7 @@ struct IAPCommand: AsyncParsableCommand {
         guard let activeBool = Bool(active.lowercased()) else {
           throw ValidationError("--active must be 'true' or 'false'.")
         }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         try await IAPCommand.validateOwnedOfferCode(
           offerCodeID, bundleID: bundleID, productID: productID, client: client)
 
@@ -2105,7 +2105,7 @@ struct IAPCommand: AsyncParsableCommand {
         let env: ASCEnum.OfferCodeEnvironment? = try environment.map {
           try parseEnum($0, name: "environment")
         }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         try await IAPCommand.validateOwnedOfferCode(
           offerCodeID, bundleID: bundleID, productID: productID, client: client)
 
@@ -2170,7 +2170,7 @@ struct IAPCommand: AsyncParsableCommand {
         guard count > 0 else {
           throw ValidationError("--count must be greater than 0.")
         }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         try await IAPCommand.validateOwnedOfferCode(
           offerCodeID, bundleID: bundleID, productID: productID, client: client)
 
@@ -2216,7 +2216,7 @@ struct IAPCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
 
         try await runOfferCodeViewCodes(output: output) {
           try await String(
@@ -2249,7 +2249,7 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -2290,7 +2290,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -2344,7 +2344,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         _ = try await findApp(bundleID: bundleID, client: client)
 
         try await runProductImageDelete(imageID: imageID) {
@@ -2376,7 +2376,7 @@ struct IAPCommand: AsyncParsableCommand {
       var productID: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -2416,7 +2416,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
@@ -2468,7 +2468,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 

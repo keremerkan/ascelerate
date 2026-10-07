@@ -64,7 +64,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
     var bundleID: String
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
@@ -106,7 +106,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
     var page: String
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
@@ -172,7 +172,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       print("Create custom product page:")
@@ -250,7 +250,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
         throw ValidationError("Provide --name and/or --visible to update.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
@@ -290,7 +290,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
@@ -336,7 +336,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
       var page: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
@@ -380,7 +380,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
       var output: String?
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
@@ -435,7 +435,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
@@ -528,7 +528,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
       var page: String
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
@@ -618,7 +618,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
@@ -720,7 +720,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)

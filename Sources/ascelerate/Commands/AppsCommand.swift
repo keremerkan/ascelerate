@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -33,7 +31,7 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.appsGetCollection().ok.body.json
       }
@@ -82,7 +80,7 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let versions = try await client.appsAppStoreVersionsGetToManyRelated(
@@ -151,7 +149,7 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let response = try await client.appsAppStoreVersionsGetToManyRelated(path: .init(id: app.id)).ok.body.json
@@ -226,7 +224,7 @@ struct AppsCommand: AsyncParsableCommand {
       var locale: String?
       
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -305,7 +303,7 @@ struct AppsCommand: AsyncParsableCommand {
           throw ValidationError("Provide at least one field to update (--description, --whats-new, --keywords, --promotional-text, --marketing-url, --support-url).")
         }
         
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
         
@@ -392,7 +390,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         // Show summary and confirm
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
         
@@ -554,7 +552,7 @@ struct AppsCommand: AsyncParsableCommand {
       var output: String?
       
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let version = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -613,7 +611,7 @@ struct AppsCommand: AsyncParsableCommand {
     var copyright: String?
     
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       
       let platformValue = try parsePlatform(platform)
@@ -686,7 +684,7 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(
         appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -756,7 +754,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -796,7 +794,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -904,7 +902,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
         
@@ -987,7 +985,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
       
@@ -1116,7 +1114,7 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
 
@@ -1182,7 +1180,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
       
@@ -1320,7 +1318,7 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         jsonOption.activate()
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
@@ -1668,7 +1666,7 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         jsonOption.activate()
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
         let response = try await client.appsReviewSubmissionsGetToManyRelated(
@@ -1797,7 +1795,7 @@ struct AppsCommand: AsyncParsableCommand {
       
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let platformValue = try parsePlatform(platform)
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
@@ -1846,7 +1844,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("Version:  \(versionString)")
           print("Build:    \(buildNumber) (uploaded \(uploaded))")
           print("State:    \(versionState)")
-          print("Platform: \(platformValue)")
+          print("Platform: \(formatState(platformValue.rawValue))")
           print()
           guard confirm("Submit this version for App Review? [y/N] ") else {
             cancelled()
@@ -1856,7 +1854,7 @@ struct AppsCommand: AsyncParsableCommand {
           print("App:      \(app.attributes?.name ?? bundleID)")
           print("Version:  \(versionString)")
           print("State:    \(versionState)")
-          print("Platform: \(platformValue)")
+          print("Platform: \(formatState(platformValue.rawValue))")
           print()
           print("No build attached to this version. Select a build first:")
           print()
@@ -2094,7 +2092,7 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
         // Find submission with unresolved issues
@@ -2185,7 +2183,7 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
         // Find active submissions
@@ -2279,7 +2277,7 @@ struct AppsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -2393,7 +2391,7 @@ struct AppsCommand: AsyncParsableCommand {
         @OptionGroup var platformOption: PlatformOption
 
         func run() async throws {
-          let client = try ClientFactory.makeASCClient()
+          let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let appVersion = try await findVersion(
             appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -2448,7 +2446,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         func run() async throws {
           if yes { autoConfirm = true }
-          let client = try ClientFactory.makeASCClient()
+          let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let appVersion = try await findVersion(
             appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -2504,7 +2502,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         func run() async throws {
           if yes { autoConfirm = true }
-          let client = try ClientFactory.makeASCClient()
+          let client = try ClientFactory.makeClient()
 
           // Only for display: a failed lookup falls back to the ID.
           let name =
@@ -2580,7 +2578,7 @@ struct AppsCommand: AsyncParsableCommand {
       }
       
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         
         if listCategories {
           let response = try await client.appCategoriesGetCollection(query: .init(
@@ -2704,7 +2702,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: app.id, client: client)
         try AppInfoCommand.checkEditable(appInfo)
@@ -2823,7 +2821,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         // Show summary and confirm
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: app.id, client: client)
         try AppInfoCommand.checkEditable(appInfo)
@@ -2940,7 +2938,7 @@ struct AppsCommand: AsyncParsableCommand {
       var output: String?
       
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: app.id, client: client)
         
@@ -3024,7 +3022,7 @@ struct AppsCommand: AsyncParsableCommand {
         var bundleID: String
 
         func run() async throws {
-          let client = try ClientFactory.makeASCClient()
+          let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let declaration = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
           let attrs = AgeRating.toFields(attrs: declaration.attributes)
@@ -3120,7 +3118,7 @@ struct AppsCommand: AsyncParsableCommand {
         var output: String?
 
         func run() async throws {
-          let client = try ClientFactory.makeASCClient()
+          let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let declaration = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
           let appName = app.attributes?.name ?? bundleID
@@ -3156,7 +3154,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         func run() async throws {
           if yes { autoConfirm = true }
-          let client = try ClientFactory.makeASCClient()
+          let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let declaration = try await AgeRating.fetchDeclaration(appID: app.id, client: client)
           let appName = app.attributes?.name ?? bundleID
@@ -3295,7 +3293,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
@@ -3478,7 +3476,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
@@ -3579,7 +3577,7 @@ struct AppsCommand: AsyncParsableCommand {
     
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
@@ -3718,7 +3716,7 @@ struct AppsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
       guard let current = try await optionalRelated({
@@ -3866,24 +3864,15 @@ func findApp(bundleID: String, client: ASCClient) async throws -> Components.Sch
   return app
 }
 
-func findApp(bundleID: String, client: AppStoreConnectClient) async throws -> App {
-  let bundleID = resolveAlias(bundleID)
-  let response = try await client.send(
-    Resources.v1.apps.get(filterBundleID: [bundleID])
-  )
-  // filterBundleID can return prefix matches, so find the exact match
-  guard let app = response.data.first(where: { $0.attributes?.bundleID == bundleID }) else {
-    throw AppLookupError.notFound(bundleID)
-  }
-  return app
-}
+/// The `--platform` type: App Store version platforms as the spec names them.
+typealias Platform = ASCEnum.Platform
 
 func parsePlatform(_ raw: String) throws -> Platform {
   switch raw.lowercased() {
-    case "ios": return .iOS
-    case "macos": return .macOS
-    case "tvos": return .tvOS
-    case "visionos": return .visionOS
+    case "ios": return .ios
+    case "macos": return .macOs
+    case "tvos": return .tvOs
+    case "visionos": return .visionOs
     default: throw ValidationError("Invalid platform '\(raw)'. Use: ios, macos, tvos, visionos.")
   }
 }
@@ -3966,67 +3955,8 @@ func findVersion(appID: String, versionString: String?, platform: Platform? = ni
   return version
 }
 
-func findVersion(appID: String, versionString: String?, platform: Platform? = nil, client: AppStoreConnectClient) async throws -> AppStoreVersion {
-  func describe(_ v: AppStoreVersion) -> String {
-    let p = v.attributes?.platform.map { formatState($0) } ?? "?"
-    let ver = v.attributes?.versionString ?? "?"
-    let state = v.attributes?.appVersionState.map { formatState($0) } ?? "?"
-    return "\(p) — \(ver) (\(state))"
-  }
-
-  // When no specific version requested, prefer editable versions (prepareForSubmission/waitingForReview)
-  if versionString == nil {
-    let editableRequest = Resources.v1.apps.id(appID).appStoreVersions.get(
-      filterAppVersionState: [.prepareForSubmission, .waitingForReview]
-    )
-    let editableResponse = try await client.send(editableRequest)
-    var editable = editableResponse.data
-
-    // Filter by platform if specified
-    if let platform {
-      editable = editable.filter { $0.attributes?.platform == platform }
-    }
-
-    if editable.count == 1 {
-      return editable[0]
-    } else if editable.count > 1 {
-      return try promptSelection(
-        "Multiple editable versions found", items: editable, display: describe,
-        nonInteractiveHint: "Pass --platform to disambiguate.")
-    }
-  }
-
-  // A universal-purchase app can hold the same version string on multiple
-  // platforms — filter by platform, and prompt if still ambiguous.
-  let request = Resources.v1.apps.id(appID).appStoreVersions.get(
-    filterPlatform: platformFilter(platform),
-    filterVersionString: versionString.map { [$0] }
-  )
-  let response = try await client.send(request)
-  var candidates = response.data
-  if versionString == nil {
-    // Fallback (no editable versions): reduce to the latest version per platform.
-    // The API returns versions newest-first, so keep the first one seen per platform.
-    var seenPlatforms = Set<Platform?>()
-    candidates = candidates.filter { seenPlatforms.insert($0.attributes?.platform).inserted }
-  }
-  if candidates.count > 1 {
-    return try promptSelection(
-      "Multiple matching versions found", items: candidates, display: describe,
-      nonInteractiveHint: "Pass --platform to disambiguate.")
-  }
-  guard let version = candidates.first else {
-    if let v = versionString {
-      throw AppLookupError.versionNotFound(v, platform)
-    }
-    throw AppLookupError.noVersions(platform)
-  }
-  return version
-}
-
 /// Polls until a build finishes processing. Returns the final build.
 /// Throws on timeout or if the build ends in a non-valid state.
-/// `awaitBuildProcessing` for ASCKit-migrated commands.
 func awaitBuildProcessing(
   appID: String,
   buildVersion: String?,
@@ -4080,66 +4010,6 @@ func awaitBuildProcessing(
     try await Task.sleep(nanoseconds: UInt64(interval) * 1_000_000_000)
   }
 
-  if waitingStarted { print() }
-  print("\nTimed out after \(timeout) minutes.")
-  throw ExitCode.failure
-}
-
-func awaitBuildProcessing(
-  appID: String,
-  buildVersion: String?,
-  platform: Platform? = nil,
-  client: AppStoreConnectClient,
-  interval: Int = 30,
-  timeout: Int = 30
-) async throws -> Build {
-  let deadline = Date().addingTimeInterval(Double(timeout * 60))
-  var waitingElapsed = 0
-  var waitingStarted = false
-
-  while Date() < deadline {
-    let request = Resources.v1.builds.get(
-      filterVersion: buildVersion.map { [$0] },
-      filterPreReleaseVersionPlatform: platformFilter(platform),
-      filterApp: [appID],
-      sort: [.minusUploadedDate],
-      limit: 1
-    )
-    let response = try await client.send(request)
-    
-    if let build = response.data.first,
-       let state = build.attributes?.processingState {
-      let version = build.attributes?.version ?? "?"
-      
-      // End the "not found" line if we were waiting
-      if waitingStarted {
-        print()
-        waitingStarted = false
-      }
-      
-      switch state {
-        case .valid:
-          print("Build \(version) is ready (VALID).")
-          return build
-        case .failed, .invalid:
-          print("Build \(version) processing ended with state: \(state)")
-          throw ExitCode.failure
-        case .processing:
-          print("Build \(version): still processing...")
-      }
-    } else {
-      waitingElapsed += interval
-      if !waitingStarted {
-        print("Build not found yet", terminator: "")
-        waitingStarted = true
-      }
-      print("...\(waitingElapsed)s", terminator: "")
-      fflush(stdout)
-    }
-    
-    try await Task.sleep(nanoseconds: UInt64(interval) * 1_000_000_000)
-  }
-  
   if waitingStarted { print() }
   print("\nTimed out after \(timeout) minutes.")
   throw ExitCode.failure
@@ -4278,7 +4148,7 @@ enum AppLookupError: LocalizedError {
   case noVersions(Platform?)
 
   private static func platformSuffix(_ platform: Platform?) -> String {
-    platform.map { " for \(formatState($0))" } ?? ""
+    platform.map { " for \(formatState($0.rawValue))" } ?? ""
   }
 
   var errorDescription: String? {

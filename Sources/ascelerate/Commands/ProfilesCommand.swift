@@ -30,7 +30,7 @@ struct ProfilesCommand: AsyncParsableCommand {
     var state: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       typealias Query = Operations.ProfilesGetCollection.Input.Query
       let filterType: [Query.FilterProfileTypePayloadPayload]? = try parseFilter(type, name: "type")
@@ -93,7 +93,7 @@ struct ProfilesCommand: AsyncParsableCommand {
     var name: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let profile: Components.Schemas.Profile
       if let name {
@@ -161,7 +161,7 @@ struct ProfilesCommand: AsyncParsableCommand {
     var output: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let profile: Components.Schemas.Profile
       if let name {
@@ -292,7 +292,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         if certificates == nil { throw ValidationError("--certificates is required when using --yes.") }
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       // 1. Resolve name
       let profileName: String
@@ -456,7 +456,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         throw ValidationError("Profile name, --all, or --all-invalid is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       // Fetch all profiles with their bundle ID relationship
       let (allProfiles, includedBundleIDs) = try await fetchProfilesWithBundleIDs(client: client)
@@ -618,7 +618,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         throw ValidationError("Profile name argument is required when using --yes.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       let profiles: [Components.Schemas.Profile]
       if let name {

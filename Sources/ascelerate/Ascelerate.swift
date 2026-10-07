@@ -1,4 +1,3 @@
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -91,27 +90,19 @@ struct Ascelerate: AsyncParsableCommand {
         ? formatRateLimit(ascError.rateLimit)
         : formatRequestFailure(statusCode: ascError.statusCode, errors: ascError.errors.map { ($0.title, $0.detail) })
     }
-    if let responseError = error as? ResponseError {
-      return formatResponseError(responseError)
-    }
-    if let urlError = error as? URLError {
+    let wrapped = ascUnderlyingError(error)
+    let underlying = wrapped ?? error
+    if let urlError = underlying as? URLError {
       return formatURLError(urlError)
     }
-    return nil
-  }
-
-  private static func formatResponseError(_ error: ResponseError) -> String {
-    let tag = stderrRed("Error:")
-    switch error {
-    case .rateLimitExceeded(_, let rate, _):
-      return formatRateLimit(rate.map { ($0.limit, $0.remaining) })
-
-    case .requestFailure(let errorResponse, let statusCode, _):
-      return formatRequestFailure(statusCode: statusCode, errors: (errorResponse?.errors ?? []).map { ($0.title, $0.detail) })
-
-    case .dataAssertionFailed:
-      return "\(tag) Unexpected empty response from App Store Connect API."
+    if underlying is DecodingError {
+      return "\(stderrRed("Error:")) Unexpected response from App Store Connect API: \(underlying)"
     }
+    // Any other failure the runtime wrapped: report the cause, not the wrapper's request dump.
+    if let wrapped {
+      return "\(stderrRed("Error:")) \(wrapped.localizedDescription)"
+    }
+    return nil
   }
 
   private static func formatRateLimit(_ rate: (limit: Int, remaining: Int)?) -> String {

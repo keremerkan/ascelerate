@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import CryptoKit
@@ -149,10 +147,10 @@ func previewTypeForDisplayType(_ rawValue: String) -> ASCEnum.PreviewType? {
 /// The App Store version platform a screenshot display type belongs to.
 /// Watch and iMessage display types ride along iOS app versions.
 func platformForDisplayType(_ rawValue: String) -> Platform {
-  if rawValue == "APP_DESKTOP" { return .macOS }
-  if rawValue.hasPrefix("APP_APPLE_TV") { return .tvOS }
-  if rawValue.hasPrefix("APP_APPLE_VISION") { return .visionOS }
-  return .iOS
+  if rawValue == "APP_DESKTOP" { return .macOs }
+  if rawValue.hasPrefix("APP_APPLE_TV") { return .tvOs }
+  if rawValue.hasPrefix("APP_APPLE_VISION") { return .visionOs }
+  return .ios
 }
 
 /// Filters an upload plan to the display types that belong to the target version's
@@ -188,20 +186,13 @@ func filterPlan(_ plan: MediaUploadPlan, platform: Platform?) -> (plan: MediaUpl
 
 // MARK: - Upload Helpers
 
-/// An upload operation from either client: asc-swift's `UploadOperation` or ASCKit's
-/// `Components.Schemas.UploadOperation` (same fields).
+/// An upload operation's fields as `uploadChunks` reads them.
 protocol UploadOperationDescribing {
   var url: String? { get }
   var method: String? { get }
   var offset: Int? { get }
   var length: Int? { get }
   var headers: [(name: String, value: String)] { get }
-}
-
-extension UploadOperation: UploadOperationDescribing {
-  var headers: [(name: String, value: String)] {
-    (requestHeaders ?? []).compactMap { header in header.name.flatMap { name in header.value.map { (name, $0) } } }
-  }
 }
 
 extension Components.Schemas.UploadOperation: UploadOperationDescribing {
@@ -554,7 +545,7 @@ extension AppsCommand {
         }
         if !rawPlan.warnings.isEmpty { print() }
 
-        let ascClient = try ClientFactory.makeASCClient()
+        let ascClient = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: ascClient)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: ascClient)
 
@@ -565,14 +556,14 @@ extension AppsCommand {
         // Drop display types that belong to another platform (mixed exports)
         let (plan, skippedTypes) = filterPlan(rawPlan, platform: versionPlatform)
         for skippedType in skippedTypes {
-          let owner = formatState(platformForDisplayType(skippedType))
-          print(yellow("⚠ Skipping \(skippedType) — \(owner) display type, not applicable to this \(versionPlatform.map { formatState($0) } ?? "?") version."))
+          let owner = formatState(platformForDisplayType(skippedType).rawValue)
+          print(yellow("⚠ Skipping \(skippedType) — \(owner) display type, not applicable to this \(versionPlatform.map { formatState($0.rawValue) } ?? "?") version."))
         }
         if !skippedTypes.isEmpty { print() }
 
         guard !plan.locales.isEmpty else {
           throw ValidationError(
-            "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0) } ?? "?") version's platform.")
+            "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0.rawValue) } ?? "?") version's platform.")
         }
 
         // Print confirmation summary
@@ -860,7 +851,7 @@ extension AppsCommand {
       @OptionGroup var platformOption: PlatformOption
 
       func run() async throws {
-        let client = try ClientFactory.makeASCClient()
+        let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
@@ -1049,7 +1040,7 @@ extension AppsCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let ascClient = try ClientFactory.makeASCClient()
+        let ascClient = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: ascClient)
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: ascClient)
@@ -1242,7 +1233,7 @@ extension AppsCommand {
             "No media files found in '\(expandPath(folderPath))' — refusing to prune against an empty folder.")
         }
 
-        let ascClient = try ClientFactory.makeASCClient()
+        let ascClient = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: ascClient)
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: ascClient)
@@ -1252,7 +1243,7 @@ extension AppsCommand {
         let (plan, _) = filterPlan(rawPlan, platform: versionPlatform)
         guard !plan.locales.isEmpty else {
           throw ValidationError(
-            "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0) } ?? "?") version's platform.")
+            "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0.rawValue) } ?? "?") version's platform.")
         }
 
         // Which display types exist locally, per locale (lowercased for matching)
@@ -1339,7 +1330,7 @@ extension AppsCommand {
 
         let totalAssets = orphans.reduce(0) { $0 + $1.assetCount }
         print("App:     \(app.attributes?.name ?? bundleID)")
-        print("Version: \(versionString) (\(versionPlatform.map { formatState($0) } ?? "—"))")
+        print("Version: \(versionString) (\(versionPlatform.map { formatState($0.rawValue) } ?? "—"))")
         print()
         print("Server sets with no matching local folder:")
         print()

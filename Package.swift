@@ -6,8 +6,6 @@ let package = Package(
     name: "ascelerate",
     platforms: [.macOS(.v13)],
     dependencies: [
-        // Being replaced by ASCKit (generated from Apple's spec), one command at a time.
-        .package(url: "https://github.com/aaronsky/asc-swift", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-certificates", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-crypto", from: "4.2.0"),
@@ -22,7 +20,6 @@ let package = Package(
             name: "ascelerate",
             dependencies: [
                 "ASCKit",
-                .product(name: "AppStoreConnect", package: "asc-swift"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),

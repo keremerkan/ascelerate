@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -27,7 +25,7 @@ struct AliasCommand: AsyncParsableCommand {
           "Invalid alias name '\(name)'. Use only letters, numbers, dashes, and underscores.")
       }
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       // Fetch all apps and show picker
       var apps = try await ASCPaging.allPages(next: { $0.links.next }) {

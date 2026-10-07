@@ -62,7 +62,7 @@ extension ReportsCommand {
       let subTypeEnum: Query.FilterReportSubTypePayloadPayload = try parseEnum(subType, name: "sub-type")
       let reportDate = date ?? Reports.defaultSalesDate(frequency: freq.rawValue)
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       var appleID: String?
       if let bundleID {
@@ -126,7 +126,7 @@ extension ReportsCommand {
       let reportType: Operations.FinanceReportsGetCollection.Input.Query.FilterReportTypePayloadPayload =
         try parseEnum(type, name: "type")
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
 
       print("Fetching \(reportType.rawValue) report for \(date), region \(region.uppercased())…")
 
@@ -196,7 +196,7 @@ extension ReportsCommand {
       let gran: Operations.AnalyticsReportsInstancesGetToManyRelated.Input.Query.FilterGranularityPayloadPayload =
         try parseEnum(granularity, name: "granularity")
 
-      let client = try ClientFactory.makeASCClient()
+      let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
 

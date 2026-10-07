@@ -1,12 +1,10 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
 
 /// A human-readable description for inline error reporting (per-item FAIL lines and
-/// similar catch sites). `ResponseError` has no `LocalizedError` conformance, so
-/// `localizedDescription` would hide the API's actual error details.
+/// similar catch sites): Apple's error entries for API errors, and the underlying error
+/// rather than the runtime's verbose `ClientError` wrapper otherwise.
 func describeError(_ error: Error) -> String {
   if let stop = ASCDryRunStop.from(error) { return stop.description }
   if let ascError = ASCError.from(error) {
@@ -16,37 +14,14 @@ func describeError(_ error: Error) -> String {
     }
     return "HTTP \(ascError.statusCode)"
   }
-  if let responseError = error as? ResponseError {
-    switch responseError {
-    case .rateLimitExceeded:
-      return "API rate limit exceeded (HTTP 429)"
-    case .requestFailure(let errorResponse, let statusCode, _):
-      if let errors = errorResponse?.errors, !errors.isEmpty {
-        return errors.map { "\($0.title): \($0.detail)" }.joined(separator: "; ") + " (HTTP \(statusCode))"
-      }
-      return "HTTP \(statusCode)"
-    case .dataAssertionFailed:
-      return "unexpected empty response"
-    }
-  }
-  return error.localizedDescription
+  return (ascUnderlyingError(error) ?? error).localizedDescription
 }
 
 /// Whether an API error is worth retrying: rate limiting or a server-side failure.
 /// Client-side errors (4xx validation, conflicts) won't fix themselves and are not transient.
 func isTransientAPIError(_ error: Error) -> Bool {
-  if let ascError = ASCError.from(error) {
-    return ascError.statusCode == 429 || (500...599).contains(ascError.statusCode)
-  }
-  guard let responseError = error as? ResponseError else { return false }
-  switch responseError {
-  case .rateLimitExceeded:
-    return true
-  case .requestFailure(_, let statusCode, _):
-    return (500...599).contains(statusCode)
-  case .dataAssertionFailed:
-    return false
-  }
+  guard let ascError = ASCError.from(error) else { return false }
+  return ascError.statusCode == 429 || (500...599).contains(ascError.statusCode)
 }
 
 /// Runs an API call, retrying with backoff (2s, then 5s) when the error is transient
@@ -905,20 +880,6 @@ func parseFilter<T: RawRepresentable & CaseIterable>(
 ) throws -> [T]? where T.RawValue == String {
   guard let value else { return nil }
   return [try parseEnum(value, name: name)]
-}
-
-/// Sends a GET for an optional to-one related resource. The API returns
-/// `{"data": null}` when no related object exists, which fails decoding because
-/// the generated response's `data` is non-optional — that case maps to nil,
-/// while real errors (network, auth, rate limit) still throw.
-func fetchOptionalResource<T: Decodable & Sendable>(
-  _ request: Request<T>, client: AppStoreConnectClient
-) async throws -> T? {
-  do {
-    return try await client.send(request)
-  } catch is DecodingError {
-    return nil
-  }
 }
 
 /// Collects all items from paginated API responses into a single sorted array.

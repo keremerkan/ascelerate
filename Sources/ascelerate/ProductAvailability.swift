@@ -1,4 +1,4 @@
-import AppStoreConnect
+import ASCKit
 import ArgumentParser
 import Foundation
 
@@ -27,14 +27,8 @@ func runProductAvailability(
     currentAvailableInNew = current.availableInNew
     currentTerritories = current.territories
     hasAvailability = true
-  } catch is DecodingError {
+  } catch where ASCError.isMissingRelated(error) {
     hasAvailability = false
-  } catch let error as ResponseError {
-    if case .requestFailure(_, let statusCode, _) = error, statusCode == 404 {
-      hasAvailability = false
-    } else {
-      throw error
-    }
   }
 
   let isEditMode = add != nil || remove != nil || availableInNewTerritories != nil

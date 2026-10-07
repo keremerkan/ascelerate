@@ -928,10 +928,21 @@ func fetchAll<S: AsyncSequence, Item>(
   emptyMessage: String,
   sort: ((Item, Item) -> Bool)? = nil
 ) async throws -> [Item] {
-  var result: [Item] = []
+  var collected: [S.Element] = []
   for try await page in pages {
-    result.append(contentsOf: data(page))
+    collected.append(page)
   }
+  return try fetchAll(collected, data: data, emptyMessage: emptyMessage, sort: sort)
+}
+
+/// `fetchAll` for pages already fetched (e.g. by `ASCPaging.allPages`).
+func fetchAll<Page, Item>(
+  _ pages: [Page],
+  data: (Page) -> [Item],
+  emptyMessage: String,
+  sort: ((Item, Item) -> Bool)? = nil
+) throws -> [Item] {
+  var result = pages.flatMap(data)
   guard !result.isEmpty else {
     throw ValidationError(emptyMessage)
   }
@@ -973,8 +984,13 @@ func formatFieldName(_ name: String) -> String {
   // single all-caps word (e.g. "MANUAL"): raw API enum values land here too
   let isAllCaps = name.count >= 2 && name.allSatisfy { $0.isUppercase || $0.isNumber || $0 == "_" }
   if name.contains("_") || isAllCaps {
+    // Words whose casing isn't Title Case (raw values like DEVELOPER_ID_APPLICATION, IPAD).
+    let words: [Substring: String] = [
+      "ID": "ID", "IOS": "iOS", "TVOS": "tvOS", "IPAD": "iPad", "IPHONE": "iPhone", "IMESSAGE": "iMessage",
+      "ICLOUD": "iCloud", "TV": "TV", "URL": "URL", "NFC": "NFC", "RSA": "RSA", "PSP": "PSP",
+    ]
     return name.split(separator: "_")
-      .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+      .map { words[$0] ?? $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
       .joined(separator: " ")
   }
 

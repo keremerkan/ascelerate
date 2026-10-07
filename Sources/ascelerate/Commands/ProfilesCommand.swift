@@ -1,6 +1,7 @@
 import AppStoreAPI
 import AppStoreConnect
 import ArgumentParser
+import ASCKit
 import Foundation
 
 struct ProfilesCommand: AsyncParsableCommand {
@@ -31,25 +32,25 @@ struct ProfilesCommand: AsyncParsableCommand {
     var state: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let filterType: [Resources.V1.Profiles.FilterProfileType]? = try parseFilter(type, name: "type")
-      let filterState: [Resources.V1.Profiles.FilterProfileState]? = try parseFilter(state, name: "state")
+      typealias Query = Operations.ProfilesGetCollection.Input.Query
+      let filterType: [Query.FilterProfileTypePayloadPayload]? = try parseFilter(type, name: "type")
+      let filterState: [Query.FilterProfileStatePayloadPayload]? = try parseFilter(state, name: "state")
+
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.profilesGetCollection(query: .init(
+          filterName: name.map { [$0] }, filterProfileType: filterType, filterProfileState: filterState,
+          limit: 200, include: [.bundleId]
+        )).ok.body.json
+      }
 
       var rows: [[String]] = []
-      let request = Resources.v1.profiles.get(
-        filterName: name.map { [$0] },
-        filterProfileType: filterType,
-        filterProfileState: filterState,
-        limit: 200,
-        include: [.bundleID]
-      )
-
-      for try await page in client.pages(request) {
+      for page in pages {
         // Build bundle ID lookup from included
         var bundleIDInfo: [String: String] = [:]
         for item in page.included ?? [] {
-          if case .bundleID(let bid) = item {
+          if case .bundleIds(let bid) = item {
             bundleIDInfo[bid.id] = bid.attributes?.identifier ?? "—"
           }
         }
@@ -57,7 +58,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         for profile in page.data {
           let attrs = profile.attributes
           let bundleIDIdentifier: String
-          if let bidID = profile.relationships?.bundleID?.data?.id {
+          if let bidID = profile.relationships?.bundleId?.data?.id {
             bundleIDIdentifier = bundleIDInfo[bidID] ?? "—"
           } else {
             bundleIDIdentifier = "—"
@@ -94,9 +95,9 @@ struct ProfilesCommand: AsyncParsableCommand {
     var name: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let profile: Profile
+      let profile: Components.Schemas.Profile
       if let name {
         profile = try await findProfile(name: name, client: client)
       } else {
@@ -113,12 +114,9 @@ struct ProfilesCommand: AsyncParsableCommand {
       print("Expires:  \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
 
       // Fetch bundle ID
-      if let _ = profile.relationships?.bundleID?.data?.id {
+      if let _ = profile.relationships?.bundleId?.data?.id {
         do {
-          let bidResponse = try await client.send(
-            Resources.v1.profiles.id(profile.id).bundleID.get()
-          )
-          let bid = bidResponse.data
+          let bid = try await client.profilesBundleIdGetToOneRelated(path: .init(id: profile.id)).ok.body.json.data
           print("Bundle ID: \(bid.attributes?.identifier ?? "—") (\(bid.attributes?.name ?? "—"))")
         } catch {
           print("Warning: Could not fetch bundle ID: \(describeError(error))")
@@ -126,9 +124,9 @@ struct ProfilesCommand: AsyncParsableCommand {
       }
 
       // Fetch certificates
-      let certsResponse = try await client.send(
-        Resources.v1.profiles.id(profile.id).certificates.get(limit: 200)
-      )
+      let certsResponse = try await client.profilesCertificatesGetToManyRelated(
+        path: .init(id: profile.id), query: .init(limit: 200)
+      ).ok.body.json
       if !certsResponse.data.isEmpty {
         print()
         print("Certificates:")
@@ -139,9 +137,9 @@ struct ProfilesCommand: AsyncParsableCommand {
       }
 
       // Fetch devices
-      let devicesResponse = try await client.send(
-        Resources.v1.profiles.id(profile.id).devices.get(limit: 200)
-      )
+      let devicesResponse = try await client.profilesDevicesGetToManyRelated(
+        path: .init(id: profile.id), query: .init(limit: 200)
+      ).ok.body.json
       if !devicesResponse.data.isEmpty {
         print()
         print("Devices (\(devicesResponse.data.count)):")
@@ -165,9 +163,9 @@ struct ProfilesCommand: AsyncParsableCommand {
     var output: String?
 
     func run() async throws {
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
 
-      let profile: Profile
+      let profile: Components.Schemas.Profile
       if let name {
         profile = try await findProfile(name: name, client: client)
       } else {
@@ -736,6 +734,35 @@ struct ProfilesCommand: AsyncParsableCommand {
 }
 
 /// Prompts the user to select a provisioning profile from a numbered list.
+func promptProfile(client: ASCClient) async throws -> Components.Schemas.Profile {
+  let profiles = try fetchAll(
+    await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.profilesGetCollection(query: .init(limit: 200)).ok.body.json
+    },
+    data: \.data,
+    emptyMessage: "No provisioning profiles found in your account.",
+    sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
+  )
+  return try promptSelection(
+    "Provisioning profiles", items: profiles,
+    display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.profileType.map { formatState($0) } ?? "—"), \($0.attributes?.profileState.map { formatState($0) } ?? "—"))" },
+    prompt: "Select profile"
+  )
+}
+
+/// Looks up a profile by name (ASCKit). The collection includes each profile's content.
+func findProfile(name: String, client: ASCClient) async throws -> Components.Schemas.Profile {
+  let profiles = try await client.profilesGetCollection(query: .init(filterName: [name], limit: 200)).ok.body.json.data
+  // Name filter may return partial matches
+  if let profile = profiles.first(where: { $0.attributes?.name == name }) {
+    return profile
+  }
+  if profiles.count == 1 {
+    return profiles[0]
+  }
+  throw ProfileLookupError.notFound(name)
+}
+
 func promptProfile(client: AppStoreConnectClient) async throws -> Profile {
   let profiles = try await fetchAll(
     client.pages(Resources.v1.profiles.get(limit: 200)),

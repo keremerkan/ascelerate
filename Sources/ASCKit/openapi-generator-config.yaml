@@ -24,6 +24,14 @@ filter:
     - /v1/appAssetLibraryPlacements
     - /v1/appAssetLibraryPlacements/{id}
     - /v1/appStoreVersionLocalizations/{id}/placements
+    - /v1/devices
+    - /v1/certificates
+    - /v1/bundleIds
+    - /v1/bundleIds/{id}/bundleIdCapabilities
+    - /v1/profiles
+    - /v1/profiles/{id}/bundleId
+    - /v1/profiles/{id}/certificates
+    - /v1/profiles/{id}/devices
     - /v1/builds
     - /v1/apps/{id}/customerReviews
     - /v1/customerReviews/{id}

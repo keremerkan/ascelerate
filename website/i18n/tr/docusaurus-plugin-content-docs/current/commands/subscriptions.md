@@ -238,4 +238,4 @@ Görsel ve ekran görüntüsü yüklemeleri Apple'ın 3 adımlı akışını kul
 
 ## Win-back teklifleri (henüz uygulanmadı)
 
-Win-back teklifleri (kayıp aboneler için teklifler) henüz kasıtlı olarak uygulanmamıştır. `asc-swift` bağımlılığımızdaki `WinBackOfferPriceInlineCreate` türü, API'nin gerektirdiği `territory` ve `subscriptionPricePoint` ilişkilerini içermediğinden geçerli bir oluşturma isteği oluşturamıyoruz. Bağımlılık güncellendiğinde tekrar ele alınacak.
+Win-back teklifleri (kayıp aboneler için teklifler) henüz uygulanmamıştır. Apple'ın API spesifikasyonunda bir win-back teklifinin fiyat girişleri (`WinBackOfferPriceInlineCreate`), diğer tüm teklif türlerinin fiyatlarında bulunan `territory` ve `subscriptionPricePoint` ilişkilerini içermez; bu nedenle geçerli bir oluşturma isteği hazırlanamaz. Apple spesifikasyonu güncellediğinde tekrar ele alınacak.

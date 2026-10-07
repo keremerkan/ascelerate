@@ -16,6 +16,19 @@ ascelerate apps review submit <bundle-id> --yes
 Lorsque vous utilisez `--yes` avec les commandes de provisionnement, tous les arguments requis doivent être fournis explicitement -- le mode interactif est désactivé.
 :::
 
+## Exécution à blanc {#dry-run}
+
+Définissez `ASCELERATE_DRY_RUN=1` pour essayer une commande ou un workflow complet sans rien modifier dans App Store Connect. Les requêtes de lecture sont envoyées normalement, de sorte que les recherches et les vérifications portent sur vos données réelles, mais chaque requête d'écriture est bloquée avant son envoi : ascelerate affiche sa méthode, son chemin et son corps JSON sur stderr et indique que la requête n'a pas été envoyée.
+
+```bash
+ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+```
+
+- Une commande s'arrête à sa première écriture bloquée ou, si elle traite les éléments un par un, signale chaque requête bloquée comme un échec.
+- Dans `run-workflow`, une étape dont les écritures ont été bloquées n'interrompt pas le workflow : une seule exécution montre ainsi les écritures de toutes les étapes. Une étape qui dépend d'un élément qu'une étape précédente aurait créé, comme une nouvelle version ou un build téléversé, peut tout de même échouer.
+- `builds upload` ignore le téléversement. `builds archive` et `builds validate` s'exécutent normalement, car ils ne modifient rien dans App Store Connect.
+
 ## Signature Xcode en CI
 
 Les commandes `builds archive` et l'export d'archive vers IPA passent `-allowProvisioningUpdates` à `xcodebuild`. Sans cela, `xcodebuild` utilise uniquement les profils de provisionnement mis en cache localement et ne récupère pas les profils mis à jour depuis le portail développeur.

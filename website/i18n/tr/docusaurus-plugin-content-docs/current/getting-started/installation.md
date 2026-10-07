@@ -63,7 +63,7 @@ cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
-Release derlemesi birkaç dakika sürer çünkü [asc-swift](https://github.com/aaronsky/asc-swift) bağımlılığı, App Store Connect API yüzeyinin tamamını kapsayan ~2500 üretilmiş kaynak dosya içerir. `strip` debug sembollerini kaldırarak binary boyutunu ~175 MB'dan ~59 MB'a düşürür.
+Release derlemesi birkaç dakika sürer; çünkü bu sırada ascelerate'in Apple'ın OpenAPI spesifikasyonundan ürettiği App Store Connect istemcisi derlenir. `strip` debug sembollerini kaldırarak binary boyutunu ~156 MB'tan ~41 MB'a düşürür.
 :::
 
 ## Shell tamamlama

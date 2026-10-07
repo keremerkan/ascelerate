@@ -107,10 +107,6 @@ const config: Config = {
               label: 'GitHub',
               href: 'https://github.com/keremerkan/ascelerate',
             },
-            {
-              label: 'asc-swift',
-              href: 'https://github.com/aaronsky/asc-swift',
-            },
           ],
         },
       ],

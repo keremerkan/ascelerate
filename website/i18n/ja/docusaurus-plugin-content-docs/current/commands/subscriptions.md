@@ -238,4 +238,4 @@ ascelerate sub review-screenshot delete <bundle-id> <product-id>
 
 ## ウィンバックオファー（未実装）
 
-ウィンバックオファー（解約したサブスクライバー向けのオファー）は意図的にまだ実装されていません。`asc-swift` 依存関係の `WinBackOfferPriceInlineCreate` 型には、APIが必要とする `territory` および `subscriptionPricePoint` の関係が含まれていないため、有効な作成リクエストを構築できません。依存関係が更新されたら再検討します。
+ウィンバックオファー（解約したサブスクライバー向けのオファー）はまだ実装されていません。Apple の API 仕様では、ウィンバックオファーの価格エントリ（`WinBackOfferPriceInlineCreate`）に、他のすべてのオファー種別の価格が持つ `territory` および `subscriptionPricePoint` の関係が定義されていないため、有効な作成リクエストを構築できません。Apple が仕様を更新したら再検討します。

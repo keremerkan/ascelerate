@@ -238,4 +238,4 @@ Bild- und Screenshot-Uploads verwenden Apples 3-Schritt-Flow (reservieren → Ch
 
 ## Win-Back-Angebote (noch nicht implementiert)
 
-Win-Back-Angebote (Angebote für abgewanderte Abonnenten) sind absichtlich noch nicht implementiert. Der Typ `WinBackOfferPriceInlineCreate` in unserer `asc-swift`-Abhängigkeit enthält nicht die `territory`- und `subscriptionPricePoint`-Beziehungen, die die API benötigt, sodass wir keine gültige Erstellungsanfrage konstruieren können. Wird erneut geprüft, sobald die Abhängigkeit aktualisiert wird.
+Win-Back-Angebote (Angebote für abgewanderte Abonnenten) sind noch nicht implementiert. In Apples API-Spezifikation fehlen den Preiseinträgen eines Win-Back-Angebots (`WinBackOfferPriceInlineCreate`) die `territory`- und `subscriptionPricePoint`-Beziehungen, die bei den Preisen aller anderen Angebotsarten vorhanden sind, sodass sich keine gültige Erstellungsanfrage konstruieren lässt. Wird erneut geprüft, sobald Apple die Spezifikation aktualisiert.

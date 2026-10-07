@@ -63,7 +63,7 @@ cp .build/release/ascelerate /usr/local/bin/
 ```
 
 :::note
-The release build takes a few minutes because the [asc-swift](https://github.com/aaronsky/asc-swift) dependency includes ~2500 generated source files covering the entire App Store Connect API surface. `strip` removes debug symbols, reducing the binary from ~175 MB to ~59 MB.
+The release build takes several minutes because it compiles the App Store Connect client that ascelerate generates from Apple's OpenAPI specification. `strip` removes debug symbols, reducing the binary from ~156 MB to ~41 MB.
 :::
 
 ## Shell completions

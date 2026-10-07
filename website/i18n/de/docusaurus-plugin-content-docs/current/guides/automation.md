@@ -16,6 +16,19 @@ ascelerate apps review submit <bundle-id> --yes
 Bei Verwendung von `--yes` mit Provisioning-Befehlen müssen alle erforderlichen Argumente explizit angegeben werden — der interaktive Modus ist deaktiviert.
 :::
 
+## Probelauf {#dry-run}
+
+Setzen Sie `ASCELERATE_DRY_RUN=1`, um einen Befehl oder einen ganzen Workflow auszuprobieren, ohne etwas in App Store Connect zu ändern. Lesende Anfragen werden wie gewohnt gesendet, sodass Abfragen und Prüfungen mit Ihren echten Daten laufen. Jede schreibende Anfrage wird jedoch vor dem Senden angehalten: ascelerate gibt ihre Methode, ihren Pfad und ihren JSON-Body auf stderr aus und meldet, dass die Anfrage nicht gesendet wurde.
+
+```bash
+ASCELERATE_DRY_RUN=1 ascelerate apps localizations import <bundle-id> --file localizations.json --yes
+ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes
+```
+
+- Ein Befehl bricht bei der ersten angehaltenen Schreibanfrage ab oder meldet, wenn er Elemente einzeln abarbeitet, jede angehaltene Anfrage als fehlgeschlagen.
+- In `run-workflow` beendet ein Schritt, dessen Schreibanfragen angehalten wurden, den Workflow nicht, sodass ein einziger Durchlauf die Schreibanfragen aller Schritte zeigt. Ein Schritt, der auf etwas angewiesen ist, das ein früherer Schritt erstellt hätte (etwa eine neue Version oder einen hochgeladenen Build), kann trotzdem fehlschlagen.
+- `builds upload` überspringt den Upload. `builds archive` und `builds validate` laufen weiterhin, da sie in App Store Connect nichts ändern.
+
 ## Xcode-Signierung in CI
 
 Sowohl `builds archive` als auch der Export von Archiv zu IPA übergeben `-allowProvisioningUpdates` an `xcodebuild`. Ohne dieses Flag verwendet `xcodebuild` nur lokal zwischengespeicherte Provisioning-Profile und lädt keine aktualisierten Profile aus dem Developer Portal herunter.

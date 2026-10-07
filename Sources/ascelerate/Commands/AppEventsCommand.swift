@@ -1,5 +1,3 @@
-import AppStoreAPI
-import AppStoreConnect
 import ArgumentParser
 import ASCKit
 import Foundation
@@ -24,21 +22,6 @@ struct AppEventsCommand: AsyncParsableCommand {
     throw ValidationError("No in-app event '\(ref)' found for this app.")
   }
 
-  static func findAppEvent(
-    ref: String, appID: String, client: AppStoreConnectClient
-  ) async throws -> AppEvent {
-    var events: [AppEvent] = []
-    for try await page in client.pages(
-      Resources.v1.apps.id(appID).appEvents.get(limit: 200)
-    ) {
-      events.append(contentsOf: page.data)
-    }
-    if let match = events.first(where: { $0.attributes?.referenceName == ref || $0.id == ref }) {
-      return match
-    }
-    throw ValidationError("No in-app event '\(ref)' found for this app.")
-  }
-
   /// Parses an event schedule date — ISO8601 (`2026-07-01T09:00:00Z`) or `yyyy-MM-dd` (UTC midnight).
   static func parseEventDate(_ value: String, field: String) throws -> Date {
     if let d = ISO8601DateFormatter().date(from: value) { return d }
@@ -51,13 +34,24 @@ struct AppEventsCommand: AsyncParsableCommand {
       "Invalid \(field) date '\(value)'. Use ISO8601 (2026-07-01T09:00:00Z) or yyyy-MM-dd.")
   }
 
+  /// Parses the `--publish-start`/`--event-start`/`--event-end` options.
+  static func scheduleDates(
+    publishStart: String?, eventStart: String?, eventEnd: String?
+  ) throws -> (publishStart: Date?, eventStart: Date?, eventEnd: Date?) {
+    (
+      try publishStart.map { try parseEventDate($0, field: "--publish-start") },
+      try eventStart.map { try parseEventDate($0, field: "--event-start") },
+      try eventEnd.map { try parseEventDate($0, field: "--event-end") }
+    )
+  }
+
   /// Validates a `--deep-link` value; a typo'd URL must throw, not silently drop the field.
-  static func parseDeepLink(_ value: String?) throws -> URL? {
+  static func parseDeepLink(_ value: String?) throws -> String? {
     guard let value else { return nil }
     guard let url = URL(string: value), url.scheme != nil else {
       throw ValidationError("Invalid --deep-link URL: '\(value)'.")
     }
-    return url
+    return url.absoluteString
   }
 
   /// Splits a comma-separated territory list into uppercased codes.
@@ -227,33 +221,31 @@ struct AppEventsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let badgeValue: AppEventCreateRequest.Data.Attributes.Badge? =
+      let badgeValue: ASCEnum.AppEventCreateRequestBadge? =
         try badge.map { try parseEnum($0, name: "badge") }
-      let priorityValue: AppEventCreateRequest.Data.Attributes.Priority? =
+      let priorityValue: ASCEnum.AppEventCreateRequestPriority? =
         try priority.map { try parseEnum($0, name: "priority") }
-      let purposeValue: AppEventCreateRequest.Data.Attributes.Purpose? =
+      let purposeValue: ASCEnum.AppEventCreateRequestPurpose? =
         try purpose.map { try parseEnum($0, name: "purpose") }
 
-      var schedules: [AppEventCreateRequest.Data.Attributes.TerritorySchedule]?
+      var schedules: [Components.Schemas.AppEventCreateRequest.DataPayload.AttributesPayload.TerritorySchedulesPayloadPayload]?
       if territories != nil || publishStart != nil || eventStart != nil || eventEnd != nil {
+        let dates = try AppEventsCommand.scheduleDates(
+          publishStart: publishStart, eventStart: eventStart, eventEnd: eventEnd)
         schedules = [
           .init(
-            territories: AppEventsCommand.territoryList(territories),
-            publishStart: try publishStart.map {
-              try AppEventsCommand.parseEventDate($0, field: "--publish-start")
-            },
-            eventStart: try eventStart.map {
-              try AppEventsCommand.parseEventDate($0, field: "--event-start")
-            },
-            eventEnd: try eventEnd.map {
-              try AppEventsCommand.parseEventDate($0, field: "--event-end")
-            }
+            eventEnd: dates.eventEnd,
+            eventStart: dates.eventStart,
+            publishStart: dates.publishStart,
+            territories: AppEventsCommand.territoryList(territories)
           )
         ]
       }
+
+      let deepLinkValue = try AppEventsCommand.parseDeepLink(deepLink)
 
       print("Create in-app event:")
       print("  Reference Name: \(referenceName)")
@@ -267,24 +259,20 @@ struct AppEventsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.send(
-        Resources.v1.appEvents.post(
-          AppEventCreateRequest(
-            data: .init(
-              attributes: .init(
-                referenceName: referenceName,
-                badge: badgeValue,
-                deepLink: try AppEventsCommand.parseDeepLink(deepLink),
-                purchaseRequirement: purchaseRequirement,
-                primaryLocale: primaryLocale,
-                priority: priorityValue,
-                purpose: purposeValue,
-                territorySchedules: schedules
-              ),
-              relationships: .init(app: .init(data: .init(id: app.id)))
-            )
-          )
-        ))
+      let response = try await client.appEventsCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(
+          badge: badgeValue?.rawValue,
+          deepLink: deepLinkValue,
+          primaryLocale: primaryLocale,
+          priority: priorityValue?.rawValue,
+          purchaseRequirement: purchaseRequirement,
+          purpose: purposeValue?.rawValue,
+          referenceName: referenceName,
+          territorySchedules: schedules
+        ),
+        relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
+        _type: "appEvents"
+      )))).created.body.json
 
       print()
       success("Created", "in-app event '\(referenceName)' (id: \(response.data.id)).")
@@ -347,20 +335,20 @@ struct AppEventsCommand: AsyncParsableCommand {
         throw ValidationError("Provide at least one field to update.")
       }
 
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appEvent = try await AppEventsCommand.findAppEvent(
         ref: event, appID: app.id, client: client)
 
-      let priorityValue: AppEventUpdateRequest.Data.Attributes.Priority? =
+      let priorityValue: ASCEnum.AppEventUpdateRequestPriority? =
         try priority.map { try parseEnum($0, name: "priority") }
-      let purposeValue: AppEventUpdateRequest.Data.Attributes.Purpose? =
+      let purposeValue: ASCEnum.AppEventUpdateRequestPurpose? =
         try purpose.map { try parseEnum($0, name: "purpose") }
       let clearBadge = badge?.uppercased() == "NONE"
-      let badgeValue: AppEventUpdateRequest.Data.Attributes.Badge? =
+      let badgeValue: ASCEnum.AppEventUpdateRequestBadge? =
         try badge.flatMap { $0.uppercased() == "NONE" ? nil : try parseEnum($0, name: "badge") }
 
-      var schedules: [AppEventUpdateRequest.Data.Attributes.TerritorySchedule]?
+      var schedules: [Components.Schemas.AppEventUpdateRequest.DataPayload.AttributesPayload.TerritorySchedulesPayloadPayload]?
       if territories != nil || publishStart != nil || eventStart != nil || eventEnd != nil {
         // The PATCH replaces the whole territorySchedules array — merge omitted
         // fields from the existing schedule instead of clearing them.
@@ -368,76 +356,47 @@ struct AppEventsCommand: AsyncParsableCommand {
         if (appEvent.attributes?.territorySchedules?.count ?? 0) > 1 {
           print(yellow("⚠ This event has multiple territory schedules — the update replaces them with a single schedule."))
         }
+        let dates = try AppEventsCommand.scheduleDates(
+          publishStart: publishStart, eventStart: eventStart, eventEnd: eventEnd)
         schedules = [
           .init(
-            territories: AppEventsCommand.territoryList(territories) ?? existing?.territories,
-            publishStart: try publishStart.map {
-              try AppEventsCommand.parseEventDate($0, field: "--publish-start")
-            } ?? existing?.publishStart,
-            eventStart: try eventStart.map {
-              try AppEventsCommand.parseEventDate($0, field: "--event-start")
-            } ?? existing?.eventStart,
-            eventEnd: try eventEnd.map {
-              try AppEventsCommand.parseEventDate($0, field: "--event-end")
-            } ?? existing?.eventEnd
+            eventEnd: dates.eventEnd ?? existing?.eventEnd,
+            eventStart: dates.eventStart ?? existing?.eventStart,
+            publishStart: dates.publishStart ?? existing?.publishStart,
+            territories: AppEventsCommand.territoryList(territories) ?? existing?.territories
           )
         ]
       }
+
+      let deepLinkValue = try AppEventsCommand.parseDeepLink(deepLink)
 
       guard confirm("Update event '\(appEvent.attributes?.referenceName ?? event)'? [y/N] ") else {
         cancelled()
         return
       }
 
-      _ = try await client.send(
-        Resources.v1.appEvents.id(appEvent.id).patch(
-          AppEventUpdateRequest(
-            data: .init(
-              id: appEvent.id,
-              attributes: .init(
-                referenceName: referenceName,
-                badge: badgeValue,
-                deepLink: try AppEventsCommand.parseDeepLink(deepLink),
-                purchaseRequirement: purchaseRequirement,
-                priority: priorityValue,
-                purpose: purposeValue,
-                territorySchedules: schedules
-              )
-            )
-          )
-        ))
-
-      if clearBadge {
-        // Clearing requires an explicit `"badge": null` in the PATCH body — the
-        // generated update request omits nil keys, which would be a no-op.
-        _ = try await client.send(
-          Request<AppEventResponse>(
-            path: "/v1/appEvents/\(appEvent.id)",
-            method: "PATCH",
-            body: ClearBadgeBody(id: appEvent.id)
-          )
-        )
+      // Clearing the badge needs an explicit `"badge": null`: the generated request omits nil.
+      _ = try await ASCNulls.sending(clearBadge ? [["data", "attributes", "badge"]] : []) {
+        try await client.appEventsUpdateInstance(
+          path: .init(id: appEvent.id),
+          body: .json(.init(data: .init(
+            attributes: .init(
+              badge: badgeValue?.rawValue,
+              deepLink: deepLinkValue,
+              priority: priorityValue?.rawValue,
+              purchaseRequirement: purchaseRequirement,
+              purpose: purposeValue?.rawValue,
+              referenceName: referenceName,
+              territorySchedules: schedules
+            ),
+            id: appEvent.id,
+            _type: "appEvents"
+          )))
+        ).ok
       }
 
       print()
       success("Updated", "in-app event '\(appEvent.attributes?.referenceName ?? event)'.")
-    }
-
-    private struct ClearBadgeBody: Encodable, Sendable {
-      let id: String
-
-      enum CodingKeys: String, CodingKey { case data }
-      enum DataKeys: String, CodingKey { case type, id, attributes }
-      enum AttrKeys: String, CodingKey { case badge }
-
-      func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        var data = container.nestedContainer(keyedBy: DataKeys.self, forKey: .data)
-        try data.encode("appEvents", forKey: .type)
-        try data.encode(id, forKey: .id)
-        var attrs = data.nestedContainer(keyedBy: AttrKeys.self, forKey: .attributes)
-        try attrs.encodeNil(forKey: .badge)
-      }
     }
   }
 
@@ -460,7 +419,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let client = try ClientFactory.makeClient()
+      let client = try ClientFactory.makeASCClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let appEvent = try await AppEventsCommand.findAppEvent(
         ref: event, appID: app.id, client: client)
@@ -473,7 +432,7 @@ struct AppEventsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.send(Resources.v1.appEvents.id(appEvent.id).delete)
+      _ = try await client.appEventsDeleteInstance(path: .init(id: appEvent.id)).noContent
       print()
       success("Deleted", "in-app event '\(name)'.")
     }
@@ -611,7 +570,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
@@ -636,27 +595,26 @@ struct AppEventsCommand: AsyncParsableCommand {
         }
         print()
 
-        let existing = try await client.send(
-          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        let existing = try await client.appEventsLocalizationsGetToManyRelated(
+          path: .init(id: appEvent.id), query: .init(limit: 50)
+        ).ok.body.json
         let byLocale = Dictionary(
           existing.data.compactMap { loc in loc.attributes?.locale.map { ($0, loc) } },
           uniquingKeysWith: { first, _ in first })
 
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
           if let loc = byLocale[locale] {
-            let response = try await client.send(
-              Resources.v1.appEventLocalizations.id(loc.id).patch(
-                AppEventLocalizationUpdateRequest(
-                  data: .init(
-                    id: loc.id,
-                    attributes: .init(
-                      name: fields.name,
-                      shortDescription: fields.shortDescription,
-                      longDescription: fields.longDescription
-                    )
-                  )
-                )
-              ))
+            let response = try await client.appEventLocalizationsUpdateInstance(
+              path: .init(id: loc.id),
+              body: .json(.init(data: .init(
+                attributes: .init(
+                  longDescription: fields.longDescription, name: fields.name,
+                  shortDescription: fields.shortDescription
+                ),
+                id: loc.id,
+                _type: "appEventLocalizations"
+              )))
+            ).ok.body.json
             print("  [\(localeName(locale))] Updated.")
             if verbose { Self.printResponse(response.data.attributes) }
           } else {
@@ -664,20 +622,14 @@ struct AppEventsCommand: AsyncParsableCommand {
               print("  [\(localeName(locale))] Skipped.")
               continue
             }
-            let response = try await client.send(
-              Resources.v1.appEventLocalizations.post(
-                AppEventLocalizationCreateRequest(
-                  data: .init(
-                    attributes: .init(
-                      locale: locale,
-                      name: fields.name,
-                      shortDescription: fields.shortDescription,
-                      longDescription: fields.longDescription
-                    ),
-                    relationships: .init(appEvent: .init(data: .init(id: appEvent.id)))
-                  )
-                )
-              ))
+            let response = try await client.appEventLocalizationsCreateInstance(body: .json(.init(data: .init(
+              attributes: .init(
+                locale: locale, longDescription: fields.longDescription, name: fields.name,
+                shortDescription: fields.shortDescription
+              ),
+              relationships: .init(appEvent: .init(data: .init(id: appEvent.id, _type: "appEvents"))),
+              _type: "appEventLocalizations"
+            )))).created.body.json
             print("  [\(localeName(locale))] \(green("Created."))")
             if verbose { Self.printResponse(response.data.attributes) }
           }
@@ -687,7 +639,7 @@ struct AppEventsCommand: AsyncParsableCommand {
         print("Done.")
       }
 
-      private static func printResponse(_ attrs: AppEventLocalization.Attributes?) {
+      private static func printResponse(_ attrs: Components.Schemas.AppEventLocalization.AttributesPayload?) {
         print("    Response:")
         print("      Locale:            \(attrs?.locale.map { localeName($0) } ?? "—")")
         if let v = attrs?.name { print("      Name:              \(v)") }
@@ -710,11 +662,12 @@ struct AppEventsCommand: AsyncParsableCommand {
 
     /// Resolves a locale to its localization ID on the event.
     static func localizationID(
-      forLocale locale: String, eventID: String, client: AppStoreConnectClient
+      forLocale locale: String, eventID: String, client: ASCClient
     ) async throws -> String {
-      let resp = try await client.send(
-        Resources.v1.appEvents.id(eventID).localizations.get(limit: 50))
-      guard let loc = resp.data.first(where: { $0.attributes?.locale == locale }) else {
+      let localizations = try await client.appEventsLocalizationsGetToManyRelated(
+        path: .init(id: eventID), query: .init(limit: 50)
+      ).ok.body.json.data
+      guard let loc = localizations.first(where: { $0.attributes?.locale == locale }) else {
         throw ValidationError(
           "No '\(locale)' localization on this event. Create it first with 'events localizations import'.")
       }
@@ -811,11 +764,11 @@ struct AppEventsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
-        let assetTypeValue: AppEventAssetType = try parseEnum(assetType, name: "asset-type")
+        let assetTypeValue: ASCEnum.AppEventAssetType = try parseEnum(assetType, name: "asset-type")
         let locID = try await Media.localizationID(
           forLocale: locale, eventID: appEvent.id, client: client)
 
@@ -844,45 +797,40 @@ struct AppEventsCommand: AsyncParsableCommand {
           mediaID = try await uploadAsset(
             filePath: media.path,
             reserve: {
-              let r = try await client.send(
-                Resources.v1.appEventScreenshots.post(
-                  AppEventScreenshotCreateRequest(
-                    data: .init(
-                      attributes: .init(
-                        fileSize: media.fileSize, fileName: media.fileName,
-                        appEventAssetType: assetTypeValue),
-                      relationships: .init(appEventLocalization: .init(data: .init(id: locID)))
-                    ))))
+              let r = try await client.appEventScreenshotsCreateInstance(body: .json(.init(data: .init(
+                attributes: .init(
+                  appEventAssetType: assetTypeValue.rawValue, fileName: media.fileName, fileSize: media.fileSize),
+                relationships: .init(appEventLocalization: .init(data: .init(id: locID, _type: "appEventLocalizations"))),
+                _type: "appEventScreenshots"
+              )))).created.body.json
               return (r.data.id, r.data.attributes?.uploadOperations ?? [])
             },
             commit: { id, _ in
-              _ = try await client.send(
-                Resources.v1.appEventScreenshots.id(id).patch(
-                  AppEventScreenshotUpdateRequest(
-                    data: .init(id: id, attributes: .init(isUploaded: true)))))
+              _ = try await client.appEventScreenshotsUpdateInstance(
+                path: .init(id: id),
+                body: .json(.init(data: .init(attributes: .init(uploaded: true), id: id, _type: "appEventScreenshots")))
+              ).ok
             })
         } else {
           mediaID = try await uploadAsset(
             filePath: media.path,
             reserve: {
-              let r = try await client.send(
-                Resources.v1.appEventVideoClips.post(
-                  AppEventVideoClipCreateRequest(
-                    data: .init(
-                      attributes: .init(
-                        fileSize: media.fileSize, fileName: media.fileName,
-                        previewFrameTimeCode: previewFrame, appEventAssetType: assetTypeValue),
-                      relationships: .init(appEventLocalization: .init(data: .init(id: locID)))
-                    ))))
+              let r = try await client.appEventVideoClipsCreateInstance(body: .json(.init(data: .init(
+                attributes: .init(
+                  appEventAssetType: assetTypeValue.rawValue, fileName: media.fileName, fileSize: media.fileSize,
+                  previewFrameTimeCode: previewFrame),
+                relationships: .init(appEventLocalization: .init(data: .init(id: locID, _type: "appEventLocalizations"))),
+                _type: "appEventVideoClips"
+              )))).created.body.json
               return (r.data.id, r.data.attributes?.uploadOperations ?? [])
             },
             commit: { id, _ in
-              _ = try await client.send(
-                Resources.v1.appEventVideoClips.id(id).patch(
-                  AppEventVideoClipUpdateRequest(
-                    data: .init(
-                      id: id,
-                      attributes: .init(previewFrameTimeCode: previewFrame, isUploaded: true)))))
+              _ = try await client.appEventVideoClipsUpdateInstance(
+                path: .init(id: id),
+                body: .json(.init(data: .init(
+                  attributes: .init(previewFrameTimeCode: previewFrame, uploaded: true), id: id, _type: "appEventVideoClips"
+                )))
+              ).ok
             })
         }
 
@@ -911,21 +859,24 @@ struct AppEventsCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
+        let client = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
 
         // Locate the media across the event's localizations to pick the right endpoint.
-        let locs = try await client.send(
-          Resources.v1.appEvents.id(appEvent.id).localizations.get(limit: 50))
+        let locs = try await client.appEventsLocalizationsGetToManyRelated(
+          path: .init(id: appEvent.id), query: .init(limit: 50)
+        ).ok.body.json
         var kind: String?
         for loc in locs.data {
-          let shots = try await client.send(
-            Resources.v1.appEventLocalizations.id(loc.id).appEventScreenshots.get(limit: 50))
+          let shots = try await client.appEventLocalizationsAppEventScreenshotsGetToManyRelated(
+            path: .init(id: loc.id), query: .init(limit: 50)
+          ).ok.body.json
           if shots.data.contains(where: { $0.id == mediaID }) { kind = "screenshot"; break }
-          let clips = try await client.send(
-            Resources.v1.appEventLocalizations.id(loc.id).appEventVideoClips.get(limit: 50))
+          let clips = try await client.appEventLocalizationsAppEventVideoClipsGetToManyRelated(
+            path: .init(id: loc.id), query: .init(limit: 50)
+          ).ok.body.json
           if clips.data.contains(where: { $0.id == mediaID }) { kind = "video"; break }
         }
 
@@ -939,9 +890,9 @@ struct AppEventsCommand: AsyncParsableCommand {
         }
 
         if kind == "screenshot" {
-          _ = try await client.send(Resources.v1.appEventScreenshots.id(mediaID).delete)
+          _ = try await client.appEventScreenshotsDeleteInstance(path: .init(id: mediaID)).noContent
         } else {
-          _ = try await client.send(Resources.v1.appEventVideoClips.id(mediaID).delete)
+          _ = try await client.appEventVideoClipsDeleteInstance(path: .init(id: mediaID)).noContent
         }
         print()
         success("Deleted", "\(kind) \(mediaID).")

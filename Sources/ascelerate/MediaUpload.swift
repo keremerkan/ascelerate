@@ -15,8 +15,8 @@ struct MediaFile {
 
 struct DisplayTypeMedia {
   let folderName: String
-  let screenshotDisplayType: ScreenshotDisplayType?
-  let previewType: PreviewType?
+  let screenshotDisplayType: ASCEnum.ScreenshotDisplayType?
+  let previewType: ASCEnum.PreviewType?
   let screenshots: [MediaFile]
   let previews: [MediaFile]
 }
@@ -71,7 +71,7 @@ func scanMediaFolder(at path: String) throws -> MediaUploadPlan {
         continue
       }
 
-      let screenshotType = ScreenshotDisplayType(rawValue: displayTypeName)
+      let screenshotType = ASCEnum.ScreenshotDisplayType(rawValue: displayTypeName)
       let pvType = previewTypeForDisplayType(displayTypeName)
 
       if screenshotType == nil && AssetLibrary.placementGroups[displayTypeName] == nil {
@@ -137,13 +137,13 @@ func scanMediaFolder(at path: String) throws -> MediaUploadPlan {
   )
 }
 
-func previewTypeForDisplayType(_ rawValue: String) -> PreviewType? {
+func previewTypeForDisplayType(_ rawValue: String) -> ASCEnum.PreviewType? {
   if rawValue.hasPrefix("APP_WATCH_") || rawValue.hasPrefix("IMESSAGE_") {
     return nil
   }
   guard rawValue.hasPrefix("APP_") else { return nil }
   let previewRaw = String(rawValue.dropFirst(4))
-  return PreviewType(rawValue: previewRaw)
+  return ASCEnum.PreviewType(rawValue: previewRaw)
 }
 
 /// The App Store version platform a screenshot display type belongs to.
@@ -314,6 +314,147 @@ func mediaMimeType(for fileName: String) -> String {
   }
 }
 
+// MARK: - Screenshot and Preview Writes
+
+/// Writes to classic screenshot and preview sets, shared by `apps media` (version
+/// localizations) and `product-pages media` (custom product page localizations).
+enum ClassicMedia {
+  /// The localization a new set is created under.
+  enum Owner {
+    case versionLocalization(String)
+    case productPageLocalization(String)
+  }
+
+  static func createScreenshotSet(
+    _ displayType: ASCEnum.ScreenshotDisplayType, owner: Owner, client: ASCClient
+  ) async throws -> String {
+    typealias Relationships = Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload
+    let relationships: Relationships
+    switch owner {
+    case .versionLocalization(let id):
+      relationships = .init(appStoreVersionLocalization: .init(data: .init(id: id, _type: "appStoreVersionLocalizations")))
+    case .productPageLocalization(let id):
+      relationships = .init(appCustomProductPageLocalization: .init(data: .init(id: id, _type: "appCustomProductPageLocalizations")))
+    }
+    return try await client.appScreenshotSetsCreateInstance(body: .json(.init(data: .init(
+      attributes: .init(screenshotDisplayType: displayType.rawValue),
+      relationships: relationships,
+      _type: "appScreenshotSets"
+    )))).created.body.json.data.id
+  }
+
+  static func createPreviewSet(
+    _ previewType: ASCEnum.PreviewType, owner: Owner, client: ASCClient
+  ) async throws -> String {
+    typealias Relationships = Components.Schemas.AppPreviewSetCreateRequest.DataPayload.RelationshipsPayload
+    let relationships: Relationships
+    switch owner {
+    case .versionLocalization(let id):
+      relationships = .init(appStoreVersionLocalization: .init(data: .init(id: id, _type: "appStoreVersionLocalizations")))
+    case .productPageLocalization(let id):
+      relationships = .init(appCustomProductPageLocalization: .init(data: .init(id: id, _type: "appCustomProductPageLocalizations")))
+    }
+    return try await client.appPreviewSetsCreateInstance(body: .json(.init(data: .init(
+      attributes: .init(previewType: previewType.rawValue),
+      relationships: relationships,
+      _type: "appPreviewSets"
+    )))).created.body.json.data.id
+  }
+
+  /// Reserves, uploads and commits a screenshot in `setID`; returns its ID.
+  static func uploadScreenshot(_ file: MediaFile, setID: String, client: ASCClient) async throws -> String {
+    try await uploadAsset(
+      filePath: file.path,
+      reserve: {
+        let response = try await client.appScreenshotsCreateInstance(body: .json(.init(data: .init(
+          attributes: .init(fileName: file.fileName, fileSize: file.fileSize),
+          relationships: .init(appScreenshotSet: .init(data: .init(id: setID, _type: "appScreenshotSets"))),
+          _type: "appScreenshots"
+        )))).created.body.json
+        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+      },
+      commit: { id, md5 in
+        _ = try await client.appScreenshotsUpdateInstance(
+          path: .init(id: id),
+          body: .json(.init(data: .init(
+            attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id, _type: "appScreenshots")))
+        ).ok
+      })
+  }
+
+  /// Reserves, uploads and commits an app preview in `setID`; returns its ID.
+  static func uploadPreview(
+    _ file: MediaFile, setID: String, previewFrame: String? = nil, client: ASCClient
+  ) async throws -> String {
+    try await uploadAsset(
+      filePath: file.path,
+      reserve: {
+        let response = try await client.appPreviewsCreateInstance(body: .json(.init(data: .init(
+          attributes: .init(
+            fileName: file.fileName, fileSize: file.fileSize, mimeType: mediaMimeType(for: file.fileName),
+            previewFrameTimeCode: previewFrame),
+          relationships: .init(appPreviewSet: .init(data: .init(id: setID, _type: "appPreviewSets"))),
+          _type: "appPreviews"
+        )))).created.body.json
+        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
+      },
+      commit: { id, md5 in
+        _ = try await client.appPreviewsUpdateInstance(
+          path: .init(id: id),
+          body: .json(.init(data: .init(
+            attributes: .init(previewFrameTimeCode: previewFrame, sourceFileChecksum: md5, uploaded: true),
+            id: id, _type: "appPreviews")))
+        ).ok
+      })
+  }
+
+  static func deleteScreenshot(_ id: String, client: ASCClient) async throws {
+    _ = try await client.appScreenshotsDeleteInstance(path: .init(id: id)).noContent
+  }
+
+  static func deletePreview(_ id: String, client: ASCClient) async throws {
+    _ = try await client.appPreviewsDeleteInstance(path: .init(id: id)).noContent
+  }
+
+  static func deleteScreenshotSet(_ id: String, client: ASCClient) async throws {
+    _ = try await client.appScreenshotSetsDeleteInstance(path: .init(id: id)).noContent
+  }
+
+  static func deletePreviewSet(_ id: String, client: ASCClient) async throws {
+    _ = try await client.appPreviewSetsDeleteInstance(path: .init(id: id)).noContent
+  }
+
+  /// Deletes every screenshot in a set; returns how many there were.
+  static func deleteAllScreenshots(inSet setID: String, client: ASCClient) async throws -> Int {
+    let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
+    for screenshot in screenshots { try await deleteScreenshot(screenshot.id, client: client) }
+    return screenshots.count
+  }
+
+  /// Deletes every preview in a set; returns how many there were.
+  static func deleteAllPreviews(inSet setID: String, client: ASCClient) async throws -> Int {
+    let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
+    for preview in previews { try await deletePreview(preview.id, client: client) }
+    return previews.count
+  }
+
+  /// Sets the order of a screenshot set's screenshots.
+  static func reorderScreenshots(setID: String, ids: [String], client: ASCClient) async throws {
+    _ = try await client.appScreenshotSetsAppScreenshotsReplaceToManyRelationship(
+      path: .init(id: setID),
+      body: .json(.init(data: ids.map { .init(id: $0, _type: "appScreenshots") }))
+    ).noContent
+  }
+
+  /// Sets the order of a preview set's previews.
+  static func reorderPreviews(setID: String, ids: [String], client: ASCClient) async throws {
+    _ = try await client.appPreviewSetsAppPreviewsReplaceToManyRelationship(
+      path: .init(id: setID),
+      body: .json(.init(data: ids.map { .init(id: $0, _type: "appPreviews") }))
+    ).noContent
+  }
+}
+
 enum MediaUploadError: LocalizedError {
   case cannotReadFile(String)
   case invalidUploadOperation
@@ -413,10 +554,7 @@ extension AppsCommand {
         }
         if !rawPlan.warnings.isEmpty { print() }
 
-        // Resolve app and version. Reads and the asset library go through ASCKit; the classic
-        // screenshot/preview writes still use asc-swift.
-        let client = try ClientFactory.makeClient()
-        let ascClient = try ClientFactory.makeASCClient(checkUpdates: false)
+        let ascClient = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: ascClient)
         let appVersion = try await findVersion(appID: app.id, versionString: version, platform: try platformOption.parsed(), client: ascClient)
 
@@ -585,37 +723,14 @@ extension AppsCommand {
                   screenshotSetID = existingSetID
 
                   if replace {
-                    let existing = try await client.send(
-                      Resources.v1.appScreenshotSets.id(screenshotSetID)
-                        .appScreenshots.get()
-                    )
-                    for screenshot in existing.data {
-                      try await client.send(
-                        Resources.v1.appScreenshots.id(screenshot.id).delete
-                      )
-                    }
-                    if !existing.data.isEmpty {
-                      print(
-                        "    Deleted \(existing.data.count) existing screenshot\(existing.data.count == 1 ? "" : "s")."
-                      )
+                    let deleted = try await ClassicMedia.deleteAllScreenshots(inSet: screenshotSetID, client: ascClient)
+                    if deleted > 0 {
+                      print("    Deleted \(deleted) existing screenshot\(deleted == 1 ? "" : "s").")
                     }
                   }
                 } else {
-                  let createResponse = try await client.send(
-                    Resources.v1.appScreenshotSets.post(
-                      AppScreenshotSetCreateRequest(
-                        data: .init(
-                          attributes: .init(screenshotDisplayType: displayType),
-                          relationships: .init(
-                            appStoreVersionLocalization: .init(
-                              data: .init(id: localization.id)
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                  screenshotSetID = createResponse.data.id
+                  screenshotSetID = try await ClassicMedia.createScreenshotSet(
+                    displayType, owner: .versionLocalization(localization.id), client: ascClient)
                 }
 
                 for (i, file) in dt.screenshots.enumerated() {
@@ -625,39 +740,7 @@ extension AppsCommand {
                   fflush(stdout)
 
                   do {
-                    _ = try await uploadAsset(
-                      filePath: file.path,
-                      reserve: {
-                        let response = try await client.send(
-                          Resources.v1.appScreenshots.post(
-                            AppScreenshotCreateRequest(
-                              data: .init(
-                                attributes: .init(fileSize: file.fileSize, fileName: file.fileName),
-                                relationships: .init(
-                                  appScreenshotSet: .init(data: .init(id: screenshotSetID))
-                                )
-                              )
-                            )
-                          )
-                        )
-                        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-                      },
-                      commit: { id, md5 in
-                        _ = try await client.send(
-                          Resources.v1.appScreenshots.id(id).patch(
-                            AppScreenshotUpdateRequest(
-                              data: .init(
-                                id: id,
-                                attributes: .init(
-                                  sourceFileChecksum: md5,
-                                  isUploaded: true
-                                )
-                              )
-                            )
-                          )
-                        )
-                      }
-                    )
+                    _ = try await ClassicMedia.uploadScreenshot(file, setID: screenshotSetID, client: ascClient)
 
                     print("Done.")
                     dtSucceeded += 1
@@ -675,37 +758,14 @@ extension AppsCommand {
                   previewSetID = existingSetID
 
                   if replace {
-                    let existing = try await client.send(
-                      Resources.v1.appPreviewSets.id(previewSetID)
-                        .appPreviews.get()
-                    )
-                    for preview in existing.data {
-                      try await client.send(
-                        Resources.v1.appPreviews.id(preview.id).delete
-                      )
-                    }
-                    if !existing.data.isEmpty {
-                      print(
-                        "    Deleted \(existing.data.count) existing preview\(existing.data.count == 1 ? "" : "s")."
-                      )
+                    let deleted = try await ClassicMedia.deleteAllPreviews(inSet: previewSetID, client: ascClient)
+                    if deleted > 0 {
+                      print("    Deleted \(deleted) existing preview\(deleted == 1 ? "" : "s").")
                     }
                   }
                 } else {
-                  let createResponse = try await client.send(
-                    Resources.v1.appPreviewSets.post(
-                      AppPreviewSetCreateRequest(
-                        data: .init(
-                          attributes: .init(previewType: pvType),
-                          relationships: .init(
-                            appStoreVersionLocalization: .init(
-                              data: .init(id: localization.id)
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                  previewSetID = createResponse.data.id
+                  previewSetID = try await ClassicMedia.createPreviewSet(
+                    pvType, owner: .versionLocalization(localization.id), client: ascClient)
                 }
 
                 for (i, file) in dt.previews.enumerated() {
@@ -715,45 +775,7 @@ extension AppsCommand {
                   fflush(stdout)
 
                   do {
-                    let mime = mediaMimeType(for: file.fileName)
-
-                    _ = try await uploadAsset(
-                      filePath: file.path,
-                      reserve: {
-                        let response = try await client.send(
-                          Resources.v1.appPreviews.post(
-                            AppPreviewCreateRequest(
-                              data: .init(
-                                attributes: .init(
-                                  fileSize: file.fileSize,
-                                  fileName: file.fileName,
-                                  mimeType: mime
-                                ),
-                                relationships: .init(
-                                  appPreviewSet: .init(data: .init(id: previewSetID))
-                                )
-                              )
-                            )
-                          )
-                        )
-                        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-                      },
-                      commit: { id, md5 in
-                        _ = try await client.send(
-                          Resources.v1.appPreviews.id(id).patch(
-                            AppPreviewUpdateRequest(
-                              data: .init(
-                                id: id,
-                                attributes: .init(
-                                  sourceFileChecksum: md5,
-                                  isUploaded: true
-                                )
-                              )
-                            )
-                          )
-                        )
-                      }
-                    )
+                    _ = try await ClassicMedia.uploadPreview(file, setID: previewSetID, client: ascClient)
 
                     print("Done.")
                     dtSucceeded += 1
@@ -1027,9 +1049,7 @@ extension AppsCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        // Reads go through ASCKit; the retry writes still use asc-swift.
-        let client = try ClientFactory.makeClient()
-        let ascClient = try ClientFactory.makeASCClient(checkUpdates: false)
+        let ascClient = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: ascClient)
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: ascClient)
@@ -1127,115 +1147,32 @@ extension AppsCommand {
             print("Deleting... ", terminator: "")
             fflush(stdout)
             if item.isScreenshot {
-              try await client.send(Resources.v1.appScreenshots.id(item.mediaID).delete)
+              try await ClassicMedia.deleteScreenshot(item.mediaID, client: ascClient)
             } else {
-              try await client.send(Resources.v1.appPreviews.id(item.mediaID).delete)
+              try await ClassicMedia.deletePreview(item.mediaID, client: ascClient)
             }
 
             // Upload replacement
             print("Uploading... ", terminator: "")
             fflush(stdout)
 
-            let fm = FileManager.default
-            let attrs = try fm.attributesOfItem(atPath: localPath)
-            let fileSize = (attrs[.size] as? Int) ?? 0
-            let fileName = (localPath as NSString).lastPathComponent
-
+            let file = try MediaFile(readingFrom: localPath)
             if item.isScreenshot {
-              let newID = try await uploadAsset(
-                filePath: localPath,
-                reserve: {
-                  let response = try await client.send(
-                    Resources.v1.appScreenshots.post(
-                      AppScreenshotCreateRequest(
-                        data: .init(
-                          attributes: .init(fileSize: fileSize, fileName: fileName),
-                          relationships: .init(
-                            appScreenshotSet: .init(data: .init(id: item.setID))
-                          )
-                        )
-                      )
-                    )
-                  )
-                  return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-                },
-                commit: { id, md5 in
-                  _ = try await client.send(
-                    Resources.v1.appScreenshots.id(id).patch(
-                      AppScreenshotUpdateRequest(
-                        data: .init(
-                          id: id,
-                          attributes: .init(
-                            sourceFileChecksum: md5,
-                            isUploaded: true
-                          )
-                        )
-                      )
-                    )
-                  )
-                }
-              )
+              let newID = try await ClassicMedia.uploadScreenshot(file, setID: item.setID, client: ascClient)
 
               // Reorder to restore original position
               print("Reordering... ", terminator: "")
               fflush(stdout)
-              try await client.send(
-                Resources.v1.appScreenshotSets.id(item.setID).relationships.appScreenshots.patch(
-                  AppScreenshotSetAppScreenshotsLinkagesRequest(
-                    data: reorderedIDs(for: item, replacingWith: newID).map { .init(id: $0) }
-                  )
-                )
-              )
+              try await ClassicMedia.reorderScreenshots(
+                setID: item.setID, ids: reorderedIDs(for: item, replacingWith: newID), client: ascClient)
             } else {
-              let mime = mediaMimeType(for: fileName)
-              let newID = try await uploadAsset(
-                filePath: localPath,
-                reserve: {
-                  let response = try await client.send(
-                    Resources.v1.appPreviews.post(
-                      AppPreviewCreateRequest(
-                        data: .init(
-                          attributes: .init(
-                            fileSize: fileSize,
-                            fileName: fileName,
-                            mimeType: mime
-                          ),
-                          relationships: .init(
-                            appPreviewSet: .init(data: .init(id: item.setID))
-                          )
-                        )
-                      )
-                    )
-                  )
-                  return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-                },
-                commit: { id, md5 in
-                  _ = try await client.send(
-                    Resources.v1.appPreviews.id(id).patch(
-                      AppPreviewUpdateRequest(
-                        data: .init(
-                          id: id,
-                          attributes: .init(
-                            sourceFileChecksum: md5,
-                            isUploaded: true
-                          )
-                        )
-                      )
-                    )
-                  )
-                }
-              )
+              let newID = try await ClassicMedia.uploadPreview(file, setID: item.setID, client: ascClient)
 
               // Reorder to restore original position
               print("Reordering... ", terminator: "")
               fflush(stdout)
-              try await client.send(
-                Resources.v1.appPreviewSets.id(item.setID).relationships.appPreviews.patch(
-                  AppPreviewSetAppPreviewsLinkagesRequest(
-                    data: reorderedIDs(for: item, replacingWith: newID).map { .init(id: $0) }
-                  )
-                )
-              )
+              try await ClassicMedia.reorderPreviews(
+                setID: item.setID, ids: reorderedIDs(for: item, replacingWith: newID), client: ascClient)
             }
 
             print("Done.")
@@ -1305,9 +1242,7 @@ extension AppsCommand {
             "No media files found in '\(expandPath(folderPath))' — refusing to prune against an empty folder.")
         }
 
-        // Reads go through ASCKit; the deletes still use asc-swift.
-        let client = try ClientFactory.makeClient()
-        let ascClient = try ClientFactory.makeASCClient(checkUpdates: false)
+        let ascClient = try ClientFactory.makeASCClient()
         let app = try await findApp(bundleID: bundleID, client: ascClient)
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: ascClient)
@@ -1365,7 +1300,7 @@ extension AppsCommand {
             // Display types the classic API can't create (APP_IPHONE_DUO, placed through the asset
             // library) are not managed by a media folder — never offer to delete them.
             guard let raw = set.attributes?.screenshotDisplayType,
-                  ScreenshotDisplayType(rawValue: raw) != nil else { continue }
+                  ASCEnum.ScreenshotDisplayType(rawValue: raw) != nil else { continue }
             if localScreenshotTypes[key]?.contains(raw) != true {
               let assets = try await ascClient.appScreenshotSetsAppScreenshotsGetToManyRelated(
                 path: .init(id: set.id)
@@ -1380,7 +1315,7 @@ extension AppsCommand {
             path: .init(id: loc.id), query: .init(limit: 50)
           ).ok.body.json
           for set in previewSets.data {
-            guard let raw = set.attributes?.previewType, PreviewType(rawValue: raw) != nil else { continue }
+            guard let raw = set.attributes?.previewType, ASCEnum.PreviewType(rawValue: raw) != nil else { continue }
             if localPreviewTypes[key]?.contains(raw) != true {
               let assets = try await ascClient.appPreviewSetsAppPreviewsGetToManyRelated(
                 path: .init(id: set.id)
@@ -1427,9 +1362,9 @@ extension AppsCommand {
         for orphan in orphans {
           do {
             if orphan.isScreenshot {
-              try await client.send(Resources.v1.appScreenshotSets.id(orphan.setID).delete)
+              try await ClassicMedia.deleteScreenshotSet(orphan.setID, client: ascClient)
             } else {
-              try await client.send(Resources.v1.appPreviewSets.id(orphan.setID).delete)
+              try await ClassicMedia.deletePreviewSet(orphan.setID, client: ascClient)
             }
             print("  OK   [\(orphan.locale)] \(orphan.typeName) (\(orphan.kind.lowercased()))")
             deleted += 1

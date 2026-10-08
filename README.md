@@ -530,6 +530,29 @@ ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 
 Locales that have no local folder at all are skipped entirely — the command only prunes within locales the folder actually manages.
 
+#### Remove asset library images
+
+`media remove` takes one kind of asset library image off a version (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` or `APP_IPHONE_DUO`), for the locales given with `--locale` or all of them, after listing what it found and asking:
+
+```bash
+ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+```
+
+#### Clean up the asset library
+
+Versions share the app's asset library images (a new version's screenshots are the previous version's images, and old versions keep theirs), so an image stays in use as long as any version, custom product page or event places it. When ascelerate removes a placement (`media remove`, `media upload --replace`, or replacing a header or search results image), it also deletes the image if nothing uses it any more and it never went through App Review. Replacing classic screenshot sets, and earlier uploads, can still leave unused images; `media library` counts the images and lists the unused ones, and `--delete-unused` deletes them after asking:
+
+```bash
+ascelerate apps media library <bundle-id>
+ascelerate apps media library <bundle-id> --delete-unused
+ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
+```
+
+`--only` narrows it to images that fit `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` and/or `APP_IPHONE_DUO` (by asset category and pixel size), leaving other leftovers such as 6.9-inch iPhone screenshots alone.
+
+Images that went through App Review are never deleted, and each one is checked again right before it is deleted.
+
 ### Capturing Screenshots
 
 Capture App Store screenshots directly from iOS/iPadOS simulators using UI tests. Replaces [fastlane snapshot](https://docs.fastlane.tools/actions/snapshot/).

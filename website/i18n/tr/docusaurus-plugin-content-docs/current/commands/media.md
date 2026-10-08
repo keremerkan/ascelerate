@@ -182,3 +182,29 @@ ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
 Yerel klasörü olmayan locale'ler tamamen atlanır; komut yalnızca klasörün gerçekten yönettiği locale'ler içinde temizlik yapar.
+
+## Varlık kitaplığı görsellerini kaldırma
+
+`media remove`, varlık kitaplığı görsellerinden bir türü sürümden kaldırır: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` veya `APP_IPHONE_DUO`. Komut, `--locale` ile verilen locale'lerde ya da hepsinde çalışır ve onay istemeden önce bulduklarını listeler:
+
+```bash
+ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
+ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+```
+
+## Varlık kitaplığını temizleme
+
+Her uygulamanın yüklenen görselleri tutan bir varlık kitaplığı vardır ve sürümler bu görselleri paylaşır: Yeni bir sürümün ekran görüntüleri önceki sürümün görselleridir ve eski sürümler kendi görsellerini korur. Bu nedenle bir görsel, herhangi bir sürüm (eskiler dahil), özel ürün sayfası veya etkinlik onu kullandığı sürece kullanımda kalır. ascelerate bir yerleşimi kaldırdığında (`media remove`, `media upload --replace` ya da bir başlık veya arama sonuçları görselinin değiştirilmesi), görseli artık hiçbir şey kullanmıyorsa ve görsel hiç App Review'dan geçmemişse görseli de siler.
+
+Klasik ekran görüntüsü setlerinin değiştirilmesi ve önceki yüklemeler kitaplıkta yine de kullanılmayan görseller bırakabilir. `media library` görselleri sayar ve kullanılmayanları listeler; `--delete-unused` ile bunları onay aldıktan sonra siler:
+
+```bash
+ascelerate apps media library <bundle-id>
+ascelerate apps media library <bundle-id> --delete-unused
+ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
+```
+
+`--only`, listeyi varlık kategorisine ve piksel boyutuna bakarak verilen türlere (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`) uyan görsellerle sınırlar; böylece 6,9 inç iPhone ekran görüntüleri gibi diğer artıklar yerinde kalır.
+
+App Review'dan geçmiş görseller, yerleştirilmiş olsun ya da olmasın hiçbir zaman silinmez ve her görsel silinmeden hemen önce yeniden denetlenir.

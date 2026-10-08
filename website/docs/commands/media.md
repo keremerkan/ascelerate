@@ -182,3 +182,29 @@ ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
 Locales without a local folder are skipped entirely — the command only prunes within locales the folder actually manages.
+
+## Remove asset library images
+
+`media remove` takes one kind of asset library image off the version: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` or `APP_IPHONE_DUO`. It works on the locales given with `--locale` or on all of them, and lists what it found before asking:
+
+```bash
+ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
+ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+```
+
+## Clean up the asset library
+
+Every app has an asset library holding its uploaded images, and versions share them: a new version's screenshots are the previous version's images, and old versions keep theirs. An image therefore stays in use as long as any version (old ones included), custom product page or event places it. When ascelerate removes a placement (`media remove`, `media upload --replace`, or replacing a header or search results image), it also deletes the image if nothing uses it any more and it never went through App Review.
+
+Replacing classic screenshot sets, and earlier uploads, can still leave unused images in the library. `media library` counts the images and lists the unused ones; with `--delete-unused` it deletes them after asking:
+
+```bash
+ascelerate apps media library <bundle-id>
+ascelerate apps media library <bundle-id> --delete-unused
+ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
+```
+
+`--only` narrows the list to images that fit the given kinds (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`), judged by asset category and pixel size, so other leftovers such as 6.9-inch iPhone screenshots stay.
+
+Images that went through App Review are never deleted, whether placed or not, and each image is checked again right before it is deleted.

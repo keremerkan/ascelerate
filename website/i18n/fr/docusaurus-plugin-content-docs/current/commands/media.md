@@ -205,6 +205,6 @@ ascelerate apps media library <bundle-id> --delete-unused
 ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
 ```
 
-`--only` limite la liste aux images qui correspondent aux types indiqués (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`), d'après leur catégorie de ressource et leur taille en pixels ; les autres restes, comme les captures d'iPhone 6,9 pouces, sont ainsi conservés.
+`--only` limite la liste aux images qui correspondent aux types indiqués, d'après leur catégorie de ressource et leur taille en pixels : `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`, un type d'affichage de captures comme `APP_IPHONE_67` (les tailles viennent d'App Store Connect) ou `UNFINISHED_UPLOADS` pour les téléversements dont le fichier n'est jamais arrivé. La bibliothèque peut ainsi être nettoyée type d'appareil par type d'appareil. Les images de moins d'une heure sont toujours conservées, car un téléversement en cours peut être sur le point de les placer, et une exécution qui atteint la limite horaire de l'API d'App Store Connect s'arrête et vous invite à la relancer plus tard.
 
 Les images passées par l'App Review ne sont jamais supprimées, qu'elles soient placées ou non, et chaque image est revérifiée juste avant sa suppression.

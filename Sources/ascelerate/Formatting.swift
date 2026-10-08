@@ -19,12 +19,14 @@ func describeError(_ error: Error) -> String {
   return (ascUnderlyingError(error) ?? error).localizedDescription
 }
 
-/// Whether an error is worth retrying: rate limiting, a server-side failure, or a dropped,
-/// timed-out or failed connection (seen live mid-upload: lost connection, timeout, TLS failure).
-/// Client-side errors (4xx validation, conflicts) won't fix themselves and are not transient.
+/// Whether an error is worth retrying: a server-side failure, or a dropped, timed-out or failed
+/// connection (seen live mid-upload: lost connection, timeout, TLS failure). Client-side errors
+/// (4xx validation, conflicts) won't fix themselves. HTTP 429 isn't retried here: the client
+/// already waited out the hourly limit as long as allowed (`ASCRateLimitWait`), so a 429 that
+/// gets this far means waiting was capped.
 func isTransientError(_ error: Error) -> Bool {
   if let ascError = ASCError.from(error) {
-    return ascError.statusCode == 429 || (500...599).contains(ascError.statusCode)
+    return (500...599).contains(ascError.statusCode)
   }
   guard let urlError = (ascUnderlyingError(error) ?? error) as? URLError else { return false }
   let transientCodes: Set<URLError.Code> = [

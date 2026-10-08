@@ -117,7 +117,7 @@ ascelerate apps media verify <app>                            # Check processing
 ascelerate apps media verify <app> media/                     # Retry stuck items
 ascelerate apps media prune <app> media/                      # Delete server sets with no matching local folder
 ascelerate apps media remove <app> PRODUCT_PAGE_HEADER [--locale en-US,tr]   # Remove header/search/Duo images from a version (APP_STORE_SEARCH_RESULTS, APP_IPHONE_DUO)
-ascelerate apps media library <app> [--only APP_IPHONE_DUO,PRODUCT_PAGE_HEADER,APP_STORE_SEARCH_RESULTS] [--delete-unused]  # Count library images, list (and delete) unused never-reviewed ones; --only matches kinds by category + pixel size
+ascelerate apps media library <app> [--only APP_IPHONE_DUO,PRODUCT_PAGE_HEADER,APP_STORE_SEARCH_RESULTS] [--delete-unused]  # Count library images, list (and delete) unused never-reviewed ones; --only also takes screenshot display types (APP_IPHONE_67, ...) and UNFINISHED_UPLOADS; images <1 h old are kept
 ```
 
 iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media verify` lists them (file name + state) and, given the folder, flags locales whose Duo files or order differ (fix: `media upload --replace`); a file that still fails after retries makes `media upload` re-place that locale's Duo set at the end of the run. `media download` skips them; `media prune` never deletes them. Product page header and search results images work the same way: `PRODUCT_PAGE_HEADER/` (PNG 3840×1646 or 5244×2950) and `APP_STORE_SEARCH_RESULTS/` (3:2 JPG/PNG from 1920×1280 to 3840×2560, or PNG 5244×2950), one image per locale shown on every device (not per display type), any platform; an upload replaces the current image. Videos for them aren't supported yet. Removing a placement (`media remove`, `--replace`, replacing a header/search image) also deletes its library image when no placement anywhere uses it and it was never reviewed; versions share images and old versions keep theirs, so never delete library images by other means. Classic set replacement still leaves unused images: clean up with `media library --delete-unused`.
@@ -610,6 +610,7 @@ When the user asks to add a new language/locale to an app, translate **all** of 
 ## Tips
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)
+- Hitting App Store Connect's hourly API limit (3,600/key, rolling): ascelerate waits the `Retry-After` time with a notice on stderr and continues; set `ASCELERATE_MAX_RATE_LIMIT_WAIT=<seconds>` (total per run, `0` = fail at once) for CI. `rate-limit` shows the remaining quota and never waits
 - Add `--dry-run` (anywhere on the command line, or set `ASCELERATE_DRY_RUN=1`) to try commands or a whole workflow without changing anything: reads run, every write is printed to stderr instead of sent, `builds upload` is skipped, and `run-workflow` continues past blocked steps
 - Add `--json` to read commands for machine-readable output (see JSON output above)
 - Use `ascelerate rate-limit` to check API quota (3600 requests/hour)

@@ -32,6 +32,18 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # 同じ効果�
 - ワークフローファイルで1つのステップに `--dry-run` を付けた場合は、そのステップにのみ適用されます。
 - `builds upload` はアップロードをスキップします。`builds archive` と `builds validate` は App Store Connect 上で何も変更しないため、通常どおり実行されます。
 
+## API レート制限 {#rate-limit}
+
+App Store Connect では、API キーごとに1時間あたり 3,600 件の API リクエストが許可され、直近1時間の移動枠で数えられます。長いコマンド（大量のメディアのアップロード、ライブラリの整理、価格のインポートなど）がこれを使い切ると、ascelerate は App Store Connect が再びリクエストを受け付けるまで待ち、再開する時刻を表示してから処理を続けます。止めたいときは Ctrl-C を押してください。
+
+CI では待つより失敗させたい場合があります。`ASCELERATE_MAX_RATE_LIMIT_WAIT` に、1回の実行で待ってよい合計秒数を設定してください（`0` にすると、最初に制限されたリクエストで失敗します）。
+
+```bash
+ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes
+```
+
+`ascelerate rate-limit` は残りのリクエスト数を表示します。このコマンドは待ちません。
+
 ## CIでのXcode署名
 
 `builds archive` とアーカイブからIPAへのエクスポートの両方で、`xcodebuild` に `-allowProvisioningUpdates` を渡します。これがないと、`xcodebuild` はローカルにキャッシュされたプロビジョニングプロファイルのみを使用し、Developer Portalから更新されたものを取得しません。

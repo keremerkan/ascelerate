@@ -32,6 +32,18 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # aynı etki, �
 - Bir workflow dosyasında tek bir adıma eklenen `--dry-run` yalnızca o adım için geçerlidir.
 - `builds upload` yüklemeyi atlar. `builds archive` ve `builds validate`, App Store Connect'te hiçbir şeyi değiştirmedikleri için çalışmaya devam eder.
 
+## API istek sınırı {#rate-limit}
+
+App Store Connect, API anahtarınız için saatte 3.600 API isteğine izin verir ve bunları kayan bir saat içinde sayar. Uzun bir komut (büyük bir medya yüklemesi, kitaplık temizliği, fiyat içe aktarma) bu sınırı doldurduğunda ascelerate, App Store Connect yeniden istek kabul edene kadar bekler, ne zaman devam edeceğini gösterir ve ardından kaldığı yerden sürdürür. Bunun yerine durdurmak için Ctrl-C'ye basın.
+
+CI'da beklemek yerine başarısız olmak daha uygun olabilir: `ASCELERATE_MAX_RATE_LIMIT_WAIT` değişkenini bir çalıştırmanın toplamda en fazla bekleyebileceği saniyeye ayarlayın (`0`, sınıra takılan ilk istekte başarısız olur).
+
+```bash
+ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes
+```
+
+`ascelerate rate-limit` kalan istek sayısını gösterir; bu komut hiçbir zaman beklemez.
+
 ## CI'da Xcode imzalama
 
 Hem `builds archive` hem de arşivden IPA'ya dışa aktarma, `xcodebuild`'e `-allowProvisioningUpdates` geçirir. Bu olmadan `xcodebuild` yalnızca yerel olarak önbelleğe alınmış provisioning profillerini kullanır ve Developer Portal'dan güncellenmiş olanları almaz.

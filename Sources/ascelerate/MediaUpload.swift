@@ -1508,6 +1508,8 @@ extension AppsCommand {
     // MARK: - Library
 
     struct Library: AsyncParsableCommand {
+      static let unfinished = "UNFINISHED_UPLOADS"
+
       static let configuration = CommandConfiguration(
         abstract: "Show the app's asset library images and delete the ones nothing uses.",
         discussion: """
@@ -1519,9 +1521,12 @@ extension AppsCommand {
           listed and, after confirmation, deleted. Images that were ever reviewed are
           never deleted.
 
-          --only narrows the list to images that fit PRODUCT_PAGE_HEADER,
-          APP_STORE_SEARCH_RESULTS and/or APP_IPHONE_DUO, by asset category and pixel
-          size, leaving e.g. 6.9-inch iPhone screenshots alone.
+          --only narrows the list to images that fit the given kinds, judged by asset
+          category and pixel size: PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS,
+          APP_IPHONE_DUO, screenshot display types such as APP_IPHONE_67 and
+          APP_IPAD_PRO_3GEN_129 (sizes from App Store Connect's asset library specs), or
+          UNFINISHED_UPLOADS for images whose file never arrived. Images less than an
+          hour old are always kept, since an upload in progress may be placing them.
           """
       )
 
@@ -1529,7 +1534,7 @@ extension AppsCommand {
                 completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
       var bundleID: String
 
-      @Option(name: .long, help: "Only images that fit these kinds (comma-separated): PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS, APP_IPHONE_DUO.")
+      @Option(name: .long, help: "Only images that fit these kinds (comma-separated): PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS, APP_IPHONE_DUO, UNFINISHED_UPLOADS or a screenshot display type (APP_IPHONE_67, ...).")
       var only: String?
 
       @Flag(name: .long, help: "Delete the unused, never-reviewed images after listing them.")
@@ -1540,16 +1545,37 @@ extension AppsCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let onlySlots = try only.map { list in
+        let onlyKinds = try only.map { list in
           try list.split(separator: ",").map { name in
             let kind = name.trimmingCharacters(in: .whitespaces).uppercased()
-            guard let slot = AssetLibrary.slots[kind] else {
-              throw ValidationError("Unknown kind '\(kind)'. Valid values: \(AssetLibrary.slots.keys.sorted().joined(separator: ", "))")
+            guard AssetLibrary.slots[kind] != nil || AssetLibrary.displayTypeGroups[kind] != nil || kind == Self.unfinished else {
+              let valid = AssetLibrary.slots.keys.sorted() + [Self.unfinished] + AssetLibrary.displayTypeGroups.keys.sorted()
+              throw ValidationError("Unknown kind '\(kind)'. Valid values: \(valid.joined(separator: ", "))")
             }
-            return slot
+            return kind
           }
         }
         let client = try ClientFactory.makeClient()
+        // What each --only kind accepts: a slot's own specs, or a display type's placement group
+        // sizes as App Store Connect lists them.
+        var onlyMatchers: [@Sendable (Components.Schemas.AppAssetLibraryImage) -> Bool]?
+        if let onlyKinds {
+          let groupSpecs = onlyKinds.contains { AssetLibrary.displayTypeGroups[$0] != nil }
+            ? try await AssetLibrary.screenshotSpecs(client: client) : [:]
+          onlyMatchers = try onlyKinds.map { kind in
+            if kind == Self.unfinished {
+              // Never finished uploading: no file arrived, so there's no size.
+              return { $0.attributes?.common.imageAsset == nil }
+            }
+            if let slot = AssetLibrary.slots[kind] {
+              return { AssetLibrary.image($0, fits: slot.imageSpecs, category: slot.category) }
+            }
+            guard let specs = AssetLibrary.displayTypeGroups[kind].flatMap({ groupSpecs[$0] }), !specs.isEmpty else {
+              throw ValidationError("App Store Connect lists no screenshot sizes for \(kind).")
+            }
+            return { AssetLibrary.image($0, fits: specs, category: "APP_SCREENSHOTS_AND_PREVIEWS") }
+          }
+        }
         let app = try await findApp(bundleID: bundleID, client: client)
         let libraryID = try await AssetLibrary.libraryID(appID: app.id, client: client)
         let images = try await ASCPaging.allPages(next: { $0.links.next }) {
@@ -1563,16 +1589,24 @@ extension AppsCommand {
         // An image whose placements didn't come back counts as placed.
         let placed = images.filter { $0.relationships?.placements?.data?.isEmpty != true }
         let unplaced = images.filter { $0.relationships?.placements?.data?.isEmpty == true }
-        let allUnused = unplaced.filter(AssetLibrary.isUnused)
+        // An upload in progress reserves its images before placing them, so recent images can look
+        // unused for a moment; leave anything younger than an hour alone.
+        let cutoff = Date().addingTimeInterval(-3600)
+        let unplacedUnused = unplaced.filter(AssetLibrary.isUnused)
+        let allUnused = unplacedUnused.filter { ($0.attributes?.common.createdDate ?? .distantFuture) < cutoff }
         let unused = allUnused
-          .filter { image in onlySlots.map { $0.contains { AssetLibrary.image(image, fits: $0) } } ?? true }
+          .filter { image in onlyMatchers.map { $0.contains { $0(image) } } ?? true }
           .sorted { ($0.attributes?.common.createdDate ?? .distantPast) < ($1.attributes?.common.createdDate ?? .distantPast) }
 
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Images:  \(images.count) (\(placed.count) placed, \(unplaced.count) unplaced)")
-        let reviewed = unplaced.count - allUnused.count
+        let reviewed = unplaced.count - unplacedUnused.count
         if reviewed > 0 {
           print("         \(reviewed) unplaced image\(reviewed == 1 ? " was" : "s were") reviewed and \(reviewed == 1 ? "is" : "are") kept.")
+        }
+        let recent = unplacedUnused.count - allUnused.count
+        if recent > 0 {
+          print("         \(recent) unplaced image\(recent == 1 ? " is" : "s are") less than an hour old and \(recent == 1 ? "is" : "are") kept (an upload may be placing \(recent == 1 ? "it" : "them")).")
         }
         if let only, allUnused.count > unused.count {
           print("         \(allUnused.count - unused.count) unused image\(allUnused.count - unused.count == 1 ? "" : "s") left out by --only \(only.uppercased()).")
@@ -1613,10 +1647,11 @@ extension AppsCommand {
         var deleted = 0
         var failures = 0
         var finished = 0
+        var rateLimited = false
         var remaining = unused.makeIterator()
         await withTaskGroup(of: (name: String, outcome: Result<Bool?, any Error>).self) { group in
           func addNext() {
-            guard let image = remaining.next() else { return }
+            guard !rateLimited, let image = remaining.next() else { return }
             group.addTask {
               let name = image.attributes?.common.fileName ?? image.id
               do {
@@ -1636,7 +1671,14 @@ extension AppsCommand {
               case .failure(let error):
                 failures += 1
                 if showsCounter { print("\r\u{1B}[K", terminator: "") }
-                print("\(name): \(describeError(error))")
+                // A 429 gets here only when waiting for the hourly limit was capped: stop
+                // starting new deletes instead of failing the rest one by one.
+                if ASCError.from(error)?.statusCode == 429 {
+                  if !rateLimited { print("Hourly API limit reached; stopping.") }
+                  rateLimited = true
+                } else {
+                  print("\(name): \(describeError(error))")
+                }
             }
             if showsCounter {
               print("\r\u{1B}[KDeleting... \(finished)/\(unused.count)", terminator: "")
@@ -1651,6 +1693,10 @@ extension AppsCommand {
           print("Dry run complete. \(unused.count) image\(unused.count == 1 ? "" : "s") would be deleted; no writes were sent.")
         } else {
           success("Deleted", "\(deleted) unused image\(deleted == 1 ? "" : "s") from the asset library.")
+        }
+        if rateLimited {
+          let left = unused.count - deleted
+          print("\(left) image\(left == 1 ? " was" : "s were") not deleted because of App Store Connect's hourly API limit; run the command again later.")
         }
         if failures > 0 {
           throw ExitCode.failure

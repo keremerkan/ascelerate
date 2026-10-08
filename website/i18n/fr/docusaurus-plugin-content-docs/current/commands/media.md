@@ -179,6 +179,8 @@ ascelerate apps media verify <bundle-id> media/
 
 Sans argument dossier, la commande affiche un rapport de statut en lecture seule. Les ensembles dont tous les éléments sont complets affichent une ligne compacte ; les ensembles avec des éléments bloqués s'étendent pour montrer chaque fichier et son état. Avec un argument dossier, elle propose de retenter les éléments bloqués en les supprimant et en les re-téléversant depuis les fichiers locaux correspondants, en préservant l'ordre de position d'origine.
 
+Une capture compte aussi comme bloquée quand elle apparaît complète mais que son placement dans la bibliothèque de ressources est encore en traitement. App Review refuse une version dans cet état (« Asset is being processed »), et une nouvelle tentative avec le dossier téléverse de nouveau cette capture.
+
 ## Purger les ensembles obsolètes
 
 `--replace` lors du téléversement ne vide que les ensembles correspondant à un dossier local -- les ensembles côté serveur pour des tailles d'écran que vous ne fournissez plus conservent leurs captures d'écran obsolètes. `media prune` supprime les ensembles sans dossier local correspondant (locale/type d'affichage), après les avoir listés avec le nombre d'éléments et demandé confirmation :

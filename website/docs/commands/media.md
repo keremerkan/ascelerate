@@ -179,6 +179,8 @@ ascelerate apps media verify <bundle-id> media/
 
 Without a folder argument, the command shows a read-only status report. Sets where all items are complete show a compact one-liner; sets with stuck items expand to show each file and its state. With a folder argument, it prompts to retry stuck items by deleting them and re-uploading from the matching local files, preserving the original position order.
 
+A screenshot also counts as stuck when it reads complete but its asset library placement is still processing. App Review refuses a version in that state ("Asset is being processed"), and retrying with the folder uploads that screenshot again.
+
 ## Prune stale sets
 
 `--replace` on upload only clears sets that match a local folder — server sets for screen sizes you no longer ship keep their outdated screenshots. `media prune` deletes the sets with no matching local locale/display-type folder, after listing them with asset counts and confirming:

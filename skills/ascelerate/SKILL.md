@@ -115,7 +115,7 @@ ascelerate apps media upload <app> screenshots.zip            # Zip/tar/tar.gz s
 ascelerate apps media upload <app>                            # Interactive picker
 ascelerate apps media upload <app> media/ --replace           # Replace existing
 ascelerate apps media verify <app>                            # Check processing status
-ascelerate apps media verify <app> media/                     # Retry stuck items
+ascelerate apps media verify <app> media/                     # Retry stuck items (incl. screenshots whose asset library placement is stuck processing, which App Review refuses with ASSET_IN_POST_PROCESSING)
 ascelerate apps media prune <app> media/                      # Delete server sets with no matching local folder
 ascelerate apps media remove <app> PRODUCT_PAGE_HEADER [--locale en-US,tr]   # Remove a header/search image or video, or Duo screenshots (APP_IPHONE_DUO; --previews for Duo previews)
 ascelerate apps media library <app> [--only APP_IPHONE_DUO,PRODUCT_PAGE_HEADER,APP_STORE_SEARCH_RESULTS] [--delete-unused]  # Count library images, list (and delete) unused never-reviewed ones; --only also takes screenshot display types (APP_IPHONE_67, ...) and UNFINISHED_UPLOADS; images <1 h old are kept

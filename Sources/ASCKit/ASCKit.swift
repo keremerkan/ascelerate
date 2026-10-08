@@ -113,6 +113,28 @@ public struct ASCError: Error, Sendable {
   public struct Entry: Sendable, Decodable {
     public let title: String
     public let detail: String
+    /// The reasons behind a state error, keyed by the resource they concern
+    /// (`meta.associatedErrors`): a 409 like "appStoreVersions … is not in valid state" only
+    /// says what is missing here.
+    public let associatedErrors: [String: [Entry]]
+
+    private enum CodingKeys: String, CodingKey { case title, detail, meta }
+    private struct Meta: Decodable { let associatedErrors: [String: [Entry]]? }
+
+    public init(from decoder: any Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+      detail = try container.decodeIfPresent(String.self, forKey: .detail) ?? ""
+      associatedErrors = (try? container.decodeIfPresent(Meta.self, forKey: .meta))??.associatedErrors ?? [:]
+    }
+
+    /// Every associated reason, in a stable order, without repeats.
+    public var reasons: [Entry] {
+      var seen = Set<String>()
+      return associatedErrors.keys.sorted().flatMap { associatedErrors[$0] ?? [] }.filter {
+        seen.insert("\($0.title)|\($0.detail)").inserted
+      }
+    }
   }
 
   public let statusCode: Int

@@ -10,7 +10,9 @@ func describeError(_ error: Error) -> String {
   if let ascError = ASCError.from(error) {
     if ascError.statusCode == 429 { return "API rate limit exceeded (HTTP 429)" }
     if !ascError.errors.isEmpty {
+      let reasons = ascError.errors.flatMap(\.reasons).map { [$0.title, $0.detail].filter { !$0.isEmpty }.joined(separator: ": ") }
       return ascError.errors.map { "\($0.title): \($0.detail)" }.joined(separator: "; ") + " (HTTP \(ascError.statusCode))"
+        + reasons.map { "\n  - \($0)" }.joined()
     }
     return "HTTP \(ascError.statusCode)"
   }

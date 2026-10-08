@@ -92,7 +92,7 @@ struct Ascelerate: AsyncParsableCommand {
     if let ascError = ASCError.from(error) {
       return ascError.statusCode == 429
         ? formatRateLimit(ascError.rateLimit)
-        : formatRequestFailure(statusCode: ascError.statusCode, errors: ascError.errors.map { ($0.title, $0.detail) })
+        : formatRequestFailure(statusCode: ascError.statusCode, errors: ascError.errors)
     }
     let wrapped = ascUnderlyingError(error)
     let underlying = wrapped ?? error
@@ -123,10 +123,13 @@ struct Ascelerate: AsyncParsableCommand {
     return msg
   }
 
-  private static func formatRequestFailure(statusCode: Int, errors: [(title: String, detail: String)]) -> String {
+  private static func formatRequestFailure(statusCode: Int, errors: [ASCError.Entry]) -> String {
     var msg = "\(stderrRed("Error:")) App Store Connect API returned HTTP \(statusCode)."
     for e in errors {
       msg += "\n  \(e.title): \(e.detail)"
+      for reason in e.reasons {
+        msg += "\n    - " + [reason.title, reason.detail].filter { !$0.isEmpty }.joined(separator: ": ")
+      }
     }
     if statusCode == 401 {
       msg += "\n  Check your API credentials (run 'ascelerate configure')."

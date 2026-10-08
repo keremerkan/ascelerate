@@ -461,7 +461,7 @@ func placeAssetLibraryImages(
         try await AssetLibrary.uploadImage(file, category: slot.category, libraryID: libraryID, client: client)
       } ?? "DRY-RUN-IMAGE"
       for placementID in current {
-        _ = try await unlessDryRunStopped { try await AssetLibrary.deletePlacement(id: placementID, client: client) }
+        try await AssetLibrary.removePlacement(id: placementID, client: client)
       }
       placementIDs.append(try await AssetLibrary.placeImage(
         imageID: imageID, localizationID: localizationID, slot: slot, client: client))
@@ -666,14 +666,27 @@ extension AppsCommand {
     static let configuration = CommandConfiguration(
       commandName: "media",
       abstract: "Manage screenshots and app preview videos.",
-      subcommands: [Upload.self, Download.self, Verify.self, Prune.self]
+      subcommands: [Upload.self, Download.self, Verify.self, Prune.self, Remove.self, Library.self]
     )
 
     // MARK: - Upload
 
     struct Upload: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
-        abstract: "Upload screenshots and app preview videos from a folder."
+        abstract: "Upload screenshots and app preview videos from a folder.",
+        discussion: """
+          The folder holds one folder per locale (en-US, tr, ...), each with one folder
+          per display type named after App Store Connect's display types (APP_IPHONE_67,
+          APP_IPAD_PRO_3GEN_129, ...). Images become screenshots and videos app
+          previews, uploaded in file name order.
+
+          These folders go through the app's asset library instead:
+            APP_IPHONE_DUO            iPhone Duo screenshots
+            PRODUCT_PAGE_HEADER       one product page header image per locale
+            APP_STORE_SEARCH_RESULTS  one App Store search results image per locale
+          A header or search results image replaces the current one, with or without
+          --replace.
+          """
       )
 
       @Argument(help: "The bundle identifier of the app.",
@@ -863,9 +876,7 @@ extension AppsCommand {
                 }
                 if !slot.isSingle {
                   for placementID in current {
-                    _ = try await unlessDryRunStopped {
-                      try await AssetLibrary.deletePlacement(id: placementID, client: ascClient)
-                    }
+                    try await AssetLibrary.removePlacement(id: placementID, client: ascClient)
                   }
                   printDeleted(current.count, "screenshot")
                 } else if !current.isEmpty {
@@ -957,7 +968,7 @@ extension AppsCommand {
             print("  \(results[redo.resultIndex].displayType):")
             do {
               for id in redo.placementIDs {
-                try await AssetLibrary.deletePlacement(id: id, client: ascClient)
+                try await AssetLibrary.removePlacement(id: id, client: ascClient)
               }
             } catch {
               print("    Failed to remove this run's placements: \(describeError(error))")
@@ -1378,6 +1389,271 @@ extension AppsCommand {
 
         if failureCount > 0 {
           print("\(successCount) retried successfully, \(failureCount) failed.")
+        }
+      }
+    }
+
+    // MARK: - Remove
+
+    struct Remove: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Remove asset library images (header, search results, iPhone Duo) from a version.",
+        discussion: """
+          Removes one kind of asset library image from the version's localizations:
+          PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS or APP_IPHONE_DUO. A removed
+          image is also deleted from the app's asset library when nothing uses it any
+          more: no placement on any version (old ones included), custom product page or
+          event, and never reviewed.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Argument(help: "What to remove: PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS or APP_IPHONE_DUO.",
+                completion: .list(AssetLibrary.slots.keys.sorted()))
+      var kind: String
+
+      @Option(name: .long, help: "Comma-separated locales (e.g. en-US,tr). Defaults to all of the version's locales.")
+      var locale: String?
+
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      var version: String?
+
+      @OptionGroup var platformOption: PlatformOption
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        guard let slot = AssetLibrary.slots[kind.uppercased()] else {
+          throw ValidationError("Unknown kind '\(kind)'. Valid values: \(AssetLibrary.slots.keys.sorted().joined(separator: ", "))")
+        }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let appVersion = try await findVersion(
+          appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
+
+        let wanted = locale.map { Set($0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }) }
+        let localizations = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: appVersion.id)
+        ).ok.body.json.data
+          .compactMap { loc in loc.attributes?.locale.map { (locale: $0, id: loc.id) } }
+          .sorted { $0.locale < $1.locale }
+        if let wanted {
+          let missing = wanted.subtracting(localizations.map { $0.locale.lowercased() })
+          if !missing.isEmpty {
+            throw ValidationError("Locale not on this version: \(missing.sorted().joined(separator: ", ")).")
+          }
+        }
+
+        print("App:     \(app.attributes?.name ?? bundleID)")
+        print("Version: \(appVersion.attributes?.versionString ?? "unknown")")
+        print()
+
+        var targets: [(locale: String, placementIDs: [String])] = []
+        for loc in localizations where wanted?.contains(loc.locale.lowercased()) ?? true {
+          let ids = try await AssetLibrary.placements(localizationID: loc.id, slot: slot, client: client).map(\.id)
+          if !ids.isEmpty { targets.append((loc.locale, ids)) }
+        }
+        guard !targets.isEmpty else {
+          print("No \(kind.uppercased()) images on this version\(wanted == nil ? "" : " for those locales").")
+          return
+        }
+        for target in targets {
+          print("[\(localeName(target.locale))] \(target.placementIDs.count) image\(target.placementIDs.count == 1 ? "" : "s")")
+        }
+        let total = targets.reduce(0) { $0 + $1.placementIDs.count }
+        print()
+        guard confirm("Remove \(total) \(kind.uppercased()) image\(total == 1 ? "" : "s") from \(targets.count) locale\(targets.count == 1 ? "" : "s")? [y/N] ") else {
+          cancelled()
+          return
+        }
+        print()
+
+        var removed = 0
+        var deletedImages = 0
+        var failures = 0
+        for target in targets {
+          print("[\(localeName(target.locale))] ", terminator: "")
+          fflush(stdout)
+          var localeRemoved = 0
+          do {
+            for placementID in target.placementIDs {
+              if try await AssetLibrary.removePlacement(id: placementID, client: client) { deletedImages += 1 }
+              localeRemoved += 1
+            }
+            print(ClientFactory.isDryRun ? "Not sent (dry run)." : "Removed \(localeRemoved).")
+          } catch {
+            print("Failed: \(describeError(error))")
+            failures += target.placementIDs.count - localeRemoved
+          }
+          removed += localeRemoved
+        }
+
+        print()
+        if ClientFactory.isDryRun {
+          print("Dry run complete. \(removed) image\(removed == 1 ? "" : "s") would be removed; no writes were sent.")
+        } else {
+          success("Removed", "\(removed) image\(removed == 1 ? "" : "s"); deleted \(deletedImages) unused from the asset library.")
+        }
+        if failures > 0 {
+          throw ExitCode.failure
+        }
+      }
+    }
+
+    // MARK: - Library
+
+    struct Library: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Show the app's asset library images and delete the ones nothing uses.",
+        discussion: """
+          Versions share asset library images, and old versions keep theirs, so most
+          images stay placed somewhere. An image is unused when it has no placement on
+          any version (old ones included), custom product page or event, which happens
+          when a placement is removed (e.g. by replacing classic screenshot sets). With
+          --delete-unused, the unused images that never went through App Review are
+          listed and, after confirmation, deleted. Images that were ever reviewed are
+          never deleted.
+
+          --only narrows the list to images that fit PRODUCT_PAGE_HEADER,
+          APP_STORE_SEARCH_RESULTS and/or APP_IPHONE_DUO, by asset category and pixel
+          size, leaving e.g. 6.9-inch iPhone screenshots alone.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+      var bundleID: String
+
+      @Option(name: .long, help: "Only images that fit these kinds (comma-separated): PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS, APP_IPHONE_DUO.")
+      var only: String?
+
+      @Flag(name: .long, help: "Delete the unused, never-reviewed images after listing them.")
+      var deleteUnused = false
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let onlySlots = try only.map { list in
+          try list.split(separator: ",").map { name in
+            let kind = name.trimmingCharacters(in: .whitespaces).uppercased()
+            guard let slot = AssetLibrary.slots[kind] else {
+              throw ValidationError("Unknown kind '\(kind)'. Valid values: \(AssetLibrary.slots.keys.sorted().joined(separator: ", "))")
+            }
+            return slot
+          }
+        }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let libraryID = try await AssetLibrary.libraryID(appID: app.id, client: client)
+        let images = try await ASCPaging.allPages(next: { $0.links.next }) {
+          try await withTransientRetry {
+            try await client.appAssetLibrariesImagesGetToManyRelated(
+              path: .init(id: libraryID), query: .init(limit: 200, include: [.placements], limitPlacements: 1)
+            ).ok.body.json
+          }
+        }.flatMap(\.data)
+
+        // An image whose placements didn't come back counts as placed.
+        let placed = images.filter { $0.relationships?.placements?.data?.isEmpty != true }
+        let unplaced = images.filter { $0.relationships?.placements?.data?.isEmpty == true }
+        let allUnused = unplaced.filter(AssetLibrary.isUnused)
+        let unused = allUnused
+          .filter { image in onlySlots.map { $0.contains { AssetLibrary.image(image, fits: $0) } } ?? true }
+          .sorted { ($0.attributes?.common.createdDate ?? .distantPast) < ($1.attributes?.common.createdDate ?? .distantPast) }
+
+        print("App:     \(app.attributes?.name ?? bundleID)")
+        print("Images:  \(images.count) (\(placed.count) placed, \(unplaced.count) unplaced)")
+        let reviewed = unplaced.count - allUnused.count
+        if reviewed > 0 {
+          print("         \(reviewed) unplaced image\(reviewed == 1 ? " was" : "s were") reviewed and \(reviewed == 1 ? "is" : "are") kept.")
+        }
+        if let only, allUnused.count > unused.count {
+          print("         \(allUnused.count - unused.count) unused image\(allUnused.count - unused.count == 1 ? "" : "s") left out by --only \(only.uppercased()).")
+        }
+        guard !unused.isEmpty else {
+          print()
+          print("No unused images\(only == nil ? "" : " of those kinds").")
+          return
+        }
+        print()
+        print("Unused (no placement, never reviewed):")
+        Table.print(
+          headers: ["File", "Size", "State", "Category", "Created"],
+          rows: unused.map { image in
+            let common = image.attributes?.common
+            let size = common?.imageAsset.flatMap { asset in asset.width.flatMap { w in asset.height.map { "\(w)×\($0)" } } }
+            return [
+              common?.fileName ?? "—", size ?? "—", formatState(image.attributes?.stateName ?? ""),
+              common?.category.map { formatState($0) } ?? "—", common?.createdDate.map(formatDate) ?? "—",
+            ]
+          })
+
+        guard deleteUnused else {
+          print()
+          print("Run with --delete-unused to delete them.")
+          return
+        }
+        print()
+        guard confirm("Delete \(unused.count) unused image\(unused.count == 1 ? "" : "s")? [y/N] ") else {
+          cancelled()
+          return
+        }
+
+        // Each image is checked again right before its delete, eight at a time. On a terminal a
+        // counter shows progress (not under dry run, whose stopped requests show it and would
+        // interleave with it); failures are listed as they happen.
+        let showsCounter = isTerminal && !ClientFactory.isDryRun
+        var deleted = 0
+        var failures = 0
+        var finished = 0
+        var remaining = unused.makeIterator()
+        await withTaskGroup(of: (name: String, outcome: Result<Bool?, any Error>).self) { group in
+          func addNext() {
+            guard let image = remaining.next() else { return }
+            group.addTask {
+              let name = image.attributes?.common.fileName ?? image.id
+              do {
+                return (name, .success(try await unlessDryRunStopped {
+                  try await AssetLibrary.deleteImageIfUnused(id: image.id, client: client)
+                }))
+              } catch {
+                return (name, .failure(error))
+              }
+            }
+          }
+          for _ in 0..<8 { addNext() }
+          for await (name, outcome) in group {
+            finished += 1
+            switch outcome {
+              case .success(let wasDeleted): if wasDeleted == true { deleted += 1 }
+              case .failure(let error):
+                failures += 1
+                if showsCounter { print("\r\u{1B}[K", terminator: "") }
+                print("\(name): \(describeError(error))")
+            }
+            if showsCounter {
+              print("\r\u{1B}[KDeleting... \(finished)/\(unused.count)", terminator: "")
+              fflush(stdout)
+            }
+            addNext()
+          }
+        }
+        if showsCounter { print("\r\u{1B}[K", terminator: "") }
+        print()
+        if ClientFactory.isDryRun {
+          print("Dry run complete. \(unused.count) image\(unused.count == 1 ? "" : "s") would be deleted; no writes were sent.")
+        } else {
+          success("Deleted", "\(deleted) unused image\(deleted == 1 ? "" : "s") from the asset library.")
+        }
+        if failures > 0 {
+          throw ExitCode.failure
         }
       }
     }

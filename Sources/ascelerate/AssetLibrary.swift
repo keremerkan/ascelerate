@@ -27,8 +27,11 @@ enum AssetLibrary {
     }
 
     func accepts(width: Int, height: Int, fileExtension: String) -> Bool {
-      extensions.contains(fileExtension) && widths.contains(width) && heights.contains(height)
-        && aspect.map { width * $0.height == height * $0.width } ?? true
+      extensions.contains(fileExtension) && fits(width: width, height: height)
+    }
+
+    func fits(width: Int, height: Int) -> Bool {
+      widths.contains(width) && heights.contains(height) && aspect.map { width * $0.height == height * $0.width } ?? true
     }
 
     var description: String {
@@ -51,6 +54,17 @@ enum AssetLibrary {
     let isSingle: Bool
     /// Placed on every platform's versions, not only iOS.
     let isPlatformIndependent: Bool
+  }
+
+  /// Whether a library image could belong to `slot`: same asset category and a size the slot
+  /// accepts. An unplaced image has no placement to tell, so this is how `media library --only`
+  /// tells a Duo screenshot (2853×2007) from a 6.9" one (1320×2868); an image with no size yet
+  /// (an unfinished upload) matches no slot.
+  static func image(_ image: Components.Schemas.AppAssetLibraryImage, fits slot: Slot) -> Bool {
+    guard let common = image.attributes?.common, common.category == slot.category,
+      let width = common.imageAsset?.width, let height = common.imageAsset?.height
+    else { return false }
+    return slot.imageSpecs.contains { $0.fits(width: width, height: height) }
   }
 
   /// Media folders uploaded through the library, by folder name. Specs from
@@ -167,17 +181,70 @@ enum AssetLibrary {
     }
   }
 
-  /// The file name of a placement's image. The placement list can't include images (HTTP 500
-  /// every time, seen live 2026-10-07) and placements carry no relationships, so this costs one
-  /// request per placement.
+  /// The ID and file name of a placement's image. The placement list can't include images
+  /// (HTTP 500 every time, seen live 2026-10-07), so this costs one request per placement.
+  static func placedImage(placementID: String, client: ASCClient) async throws -> (id: String?, fileName: String?) {
+    let response = try await withTransientRetry {
+      try await client.appAssetLibraryPlacementsGetInstance(path: .init(id: placementID), query: .init(include: [.image])).ok.body.json
+    }
+    var fileName: String?
+    for case .appAssetLibraryImages(let image) in response.included ?? [] {
+      fileName = image.attributes?.common.fileName
+    }
+    return (response.data.relationships?.value1?.value2.image?.data?.id, fileName)
+  }
+
   static func placementFileName(id: String, client: ASCClient) async throws -> String? {
-    let included = try await withTransientRetry {
-      try await client.appAssetLibraryPlacementsGetInstance(path: .init(id: id), query: .init(include: [.image])).ok.body.json.included
+    try await placedImage(placementID: id, client: client).fileName
+  }
+
+  // MARK: - Removing images
+
+  /// Image states before App Review. Images in any other state (in review, approved, rejected,
+  /// archived) were reviewed and are never deleted by ascelerate.
+  static let unreviewedStates: Set<String> = [
+    "AWAITING_UPLOAD", "UPLOAD_COMPLETE", "COMPLETE", "FAILED", "PREPARE_FOR_SUBMISSION",
+  ]
+
+  /// Whether ascelerate may delete a library image: it has no placement anywhere and never went
+  /// through review. Versions share images (a new version's screenshots are placements of the
+  /// previous version's images), and old versions keep theirs as INACTIVE placements of ARCHIVED
+  /// images (verified back to a 2011 version, 2026-10-08), so an image no placement uses was only
+  /// ever on a placement someone deleted. `image` must come with its placements included: a
+  /// missing placements list counts as in use.
+  static func isUnused(_ image: Components.Schemas.AppAssetLibraryImage) -> Bool {
+    guard let placements = image.relationships?.placements?.data else { return false }
+    return placements.isEmpty && unreviewedStates.contains(image.attributes?.stateName ?? "")
+  }
+
+  /// Deletes a library image if `isUnused` allows it, checked against a fresh read. Returns
+  /// whether it was deleted.
+  static func deleteImageIfUnused(id: String, client: ASCClient) async throws -> Bool {
+    let image = try await withTransientRetry {
+      try await client.appAssetLibraryImagesGetInstance(
+        path: .init(id: id), query: .init(include: [.placements], limitPlacements: 1)
+      ).ok.body.json.data
     }
-    for case .appAssetLibraryImages(let image) in included ?? [] {
-      return image.attributes?.common.fileName
+    guard isUnused(image) else { return false }
+    do {
+      _ = try await withTransientRetry {
+        try await client.appAssetLibraryImagesDeleteInstance(path: .init(id: id)).noContent
+      }
+    } catch where ASCError.from(error)?.statusCode == 404 {
     }
-    return nil
+    return true
+  }
+
+  /// Removes a placement, then deletes its library image when nothing uses it any more: a removed
+  /// placement leaves its image in the library otherwise (seen live). Returns whether the image
+  /// was deleted. Under dry run the delete is shown and not sent, and the image is kept.
+  @discardableResult
+  static func removePlacement(id: String, client: ASCClient) async throws -> Bool {
+    let imageID = try await placedImage(placementID: id, client: client).id
+    guard try await unlessDryRunStopped({ try await deletePlacement(id: id, client: client) }) != nil,
+      let imageID
+    else { return false }
+    return try await deleteImageIfUnused(id: imageID, client: client)
   }
 
   /// Deletes a placement. One that is already gone (a retried delete, or removed elsewhere)
@@ -193,6 +260,24 @@ enum AssetLibrary {
 }
 
 extension Components.Schemas.AppAssetLibraryImage.AttributesPayload {
+  /// The image's raw state (the payload is discriminated by it).
+  var stateName: String {
+    switch self {
+      case .accepted: "ACCEPTED"
+      case .approved: "APPROVED"
+      case .archived: "ARCHIVED"
+      case .awaitingUpload: "AWAITING_UPLOAD"
+      case .complete: "COMPLETE"
+      case .failed: "FAILED"
+      case .inReview: "IN_REVIEW"
+      case .prepareForSubmission: "PREPARE_FOR_SUBMISSION"
+      case .readyForReview: "READY_FOR_REVIEW"
+      case .rejected: "REJECTED"
+      case .uploadComplete: "UPLOAD_COMPLETE"
+      case .waitingForReview: "WAITING_FOR_REVIEW"
+    }
+  }
+
   /// The attributes every image state shares (file name, size, …).
   var common: Components.Schemas.AppAssetLibraryImageCommonAttributes {
     switch self {

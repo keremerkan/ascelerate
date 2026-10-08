@@ -182,3 +182,29 @@ ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
 Les locales sans dossier local sont entièrement ignorées -- la commande ne purge qu'au sein des locales réellement gérées par le dossier.
+
+## Retirer des images de la bibliothèque de ressources
+
+`media remove` retire de la version un type d'image de la bibliothèque de ressources : `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` ou `APP_IPHONE_DUO`. La commande agit sur les localisations indiquées avec `--locale` ou sur toutes, et liste ce qu'elle a trouvé avant de demander confirmation :
+
+```bash
+ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
+ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+```
+
+## Nettoyer la bibliothèque de ressources
+
+Chaque application a une bibliothèque de ressources qui contient ses images téléversées, et les versions les partagent : les captures d'une nouvelle version sont les images de la version précédente, et les anciennes versions conservent les leurs. Une image reste donc utilisée tant qu'une version (ancienne comprise), une page produit personnalisée ou un événement la place. Quand ascelerate retire un placement (`media remove`, `media upload --replace` ou le remplacement d'une image d'en-tête ou de résultats de recherche), il supprime aussi l'image si plus rien ne l'utilise et qu'elle n'est jamais passée par l'App Review.
+
+Le remplacement des ensembles de captures classiques et les téléversements antérieurs peuvent malgré tout laisser des images inutilisées dans la bibliothèque. `media library` compte les images et liste celles qui sont inutilisées ; avec `--delete-unused`, il les supprime après confirmation :
+
+```bash
+ascelerate apps media library <bundle-id>
+ascelerate apps media library <bundle-id> --delete-unused
+ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
+```
+
+`--only` limite la liste aux images qui correspondent aux types indiqués (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`), d'après leur catégorie de ressource et leur taille en pixels ; les autres restes, comme les captures d'iPhone 6,9 pouces, sont ainsi conservés.
+
+Les images passées par l'App Review ne sont jamais supprimées, qu'elles soient placées ou non, et chaque image est revérifiée juste avant sa suppression.

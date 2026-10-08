@@ -182,3 +182,29 @@ ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
 ローカルフォルダのないロケールは完全にスキップされます。このコマンドは、フォルダが実際に管理しているロケール内のみを削除対象とします。
+
+## アセットライブラリの画像を削除する
+
+`media remove` は、アセットライブラリの画像のうち1種類（`PRODUCT_PAGE_HEADER`、`APP_STORE_SEARCH_RESULTS`、`APP_IPHONE_DUO`）をバージョンから外します。`--locale` で指定したロケール、または全ロケールが対象で、見つかったものを一覧表示してから確認します。
+
+```bash
+ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
+ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+```
+
+## アセットライブラリを整理する
+
+各アプリには、アップロードした画像を保持するアセットライブラリがあり、画像はバージョン間で共有されます。新しいバージョンのスクリーンショットは前のバージョンの画像で、古いバージョンも自分の画像を保持しています。そのため、どこかのバージョン（古いものを含む）、カスタムプロダクトページ、イベントに配置されている限り、画像は使用中です。ascelerate が配置を外すとき（`media remove`、`media upload --replace`、ヘッダーや検索結果の画像の置き換え）、その画像がどこにも使われておらず、App Review を一度も経ていなければ、画像も削除します。
+
+従来のスクリーンショットセットの置き換えや以前のアップロードによって、未使用の画像がライブラリに残ることがあります。`media library` は画像を数えて未使用のものを一覧表示し、`--delete-unused` を付けると確認のうえ削除します。
+
+```bash
+ascelerate apps media library <bundle-id>
+ascelerate apps media library <bundle-id> --delete-unused
+ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
+```
+
+`--only` を付けると、指定した種類（`PRODUCT_PAGE_HEADER`、`APP_STORE_SEARCH_RESULTS`、`APP_IPHONE_DUO`）に合う画像だけを、アセットカテゴリとピクセルサイズで判定して一覧に含めます。6.9インチ iPhone のスクリーンショットなど、ほかの残った画像はそのまま残ります。
+
+App Review を経た画像は、配置の有無にかかわらず削除されません。また、各画像は削除の直前にもう一度確認されます。

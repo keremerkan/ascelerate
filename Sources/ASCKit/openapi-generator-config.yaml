@@ -130,6 +130,7 @@ filter:
     - /v1/appAssetLibraryImages/{id}
     - /v1/appAssetLibraryPlacements
     - /v1/appAssetLibraryPlacements/{id}
+    - /v1/appAssetLibraries/{id}/images
     - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/devices
     - /v1/devices/{id}

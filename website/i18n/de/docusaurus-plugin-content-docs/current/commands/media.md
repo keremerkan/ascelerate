@@ -182,3 +182,29 @@ ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
 Locales ohne lokalen Ordner werden vollständig übersprungen — der Befehl bereinigt nur innerhalb der Locales, die der Ordner tatsächlich verwaltet.
+
+## Bilder aus der Asset-Bibliothek entfernen
+
+`media remove` entfernt eine Art von Asset-Bibliotheksbild aus der Version: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` oder `APP_IPHONE_DUO`. Der Befehl wirkt auf die mit `--locale` angegebenen Locales oder auf alle und listet vor der Rückfrage auf, was er gefunden hat:
+
+```bash
+ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
+ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+```
+
+## Asset-Bibliothek aufräumen
+
+Jede App hat eine Asset-Bibliothek mit ihren hochgeladenen Bildern, und Versionen teilen sie: Die Screenshots einer neuen Version sind die Bilder der vorherigen Version, und alte Versionen behalten ihre. Ein Bild bleibt daher in Gebrauch, solange eine Version (auch eine alte), eine eigene Produktseite oder ein Event es verwendet. Wenn ascelerate eine Platzierung entfernt (`media remove`, `media upload --replace` oder beim Ersetzen eines Header- oder Suchergebnisbilds), löscht es auch das Bild, sofern es nichts mehr verwendet und es nie den App Review durchlaufen hat.
+
+Das Ersetzen klassischer Screenshot-Sets und frühere Uploads können dennoch ungenutzte Bilder in der Bibliothek hinterlassen. `media library` zählt die Bilder und listet die ungenutzten auf; mit `--delete-unused` löscht es sie nach einer Rückfrage:
+
+```bash
+ascelerate apps media library <bundle-id>
+ascelerate apps media library <bundle-id> --delete-unused
+ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
+```
+
+`--only` beschränkt die Liste auf Bilder, die zu den angegebenen Arten passen (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`), beurteilt nach Asset-Kategorie und Pixelgröße; andere Überbleibsel wie 6,9-Zoll-iPhone-Screenshots bleiben so erhalten.
+
+Bilder, die den App Review durchlaufen haben, werden nie gelöscht, ob platziert oder nicht, und jedes Bild wird unmittelbar vor dem Löschen erneut geprüft.

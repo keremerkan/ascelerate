@@ -85,6 +85,8 @@ App Store Connect erfordert **`APP_IPHONE_67`**-Screenshots für iPhone-Apps und
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1. Gen., 5s, 5c) | Ja | Ja |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s und älter) | Ja | Ja |
 | `APP_IPHONE_DUO` | iPhone Duo (siehe [unten](#iphone-duo)) | Ja | Nein |
+| `PRODUCT_PAGE_HEADER` | Produktseiten-Header (siehe [unten](#header-and-search-results)) | Ja | Nein |
+| `APP_STORE_SEARCH_RESULTS` | App Store-Suchergebnisse (siehe [unten](#header-and-search-results)) | Ja | Nein |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Ja | Ja |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1./2. Gen.) | Ja | Ja |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3. Gen., iPad Pro 10.5") | Ja | Ja |
@@ -121,6 +123,15 @@ Watch- und iMessage-Anzeigetypen unterstützen nur Screenshots — Videodateien 
 App Store Connect bietet für das iPhone Duo kein Screenshot-Set. ascelerate lädt die Dateien eines `APP_IPHONE_DUO`-Ordners in die Asset-Bibliothek der App hoch und ordnet sie in der Reihenfolge der Dateinamen der Versionslokalisierung zu. Zulässig sind 2853×2007 oder 2007×2853 (inneres Display, aufgeklappt) sowie 2034×1398 oder 1398×2034 (äußeres Display); andere Größen werden abgelehnt, bevor etwas hochgeladen wird. Mit `--replace` werden die vorhandenen iPhone-Duo-Screenshots jeder Locale zuerst entfernt.
 
 Scheitert eine Datei auch nach erneuten Versuchen, ordnet `media upload` die iPhone-Duo-Screenshots dieser Locale am Ende des Durchlaufs erneut zu, damit die Reihenfolge der Dateien erhalten bleibt. `media verify` listet iPhone-Duo-Screenshots mit Dateinamen und Verarbeitungsstatus auf; mit dem Medienordner meldet es außerdem Locales, deren iPhone-Duo-Screenshots in Dateien oder Reihenfolge vom Ordner abweichen (beheben Sie das mit `media upload` und `--replace`). App-Vorschauen für das iPhone Duo werden noch nicht unterstützt, `media download` berücksichtigt iPhone-Duo-Screenshots nicht, und `media prune` löscht sie nie.
+
+### Produktseiten-Header und Suchergebnisse {#header-and-search-results}
+
+Zwei weitere Ordner werden über die Asset-Bibliothek hochgeladen. Jeder enthält ein Bild pro Locale, das an keine Geräteklasse gebunden ist: Die Version zeigt es auf jedem Gerät (iPhone, iPad, iPhone Duo), und beide funktionieren für Versionen aller Plattformen.
+
+- `PRODUCT_PAGE_HEADER`: das Bild oben auf der Produktseite. PNG mit 3840×1646 oder 5244×2950.
+- `APP_STORE_SEARCH_RESULTS`: das Bild, das in den App Store-Suchergebnissen mit der App erscheint. JPG oder PNG im Format 3:2, von 1920×1280 bis 3840×2560, oder ein PNG mit 5244×2950.
+
+Ein Upload ersetzt das aktuelle Bild der Locale, mit oder ohne `--replace`; das alte wird erst entfernt, nachdem das neue hochgeladen ist. Videos für diese Plätze werden noch nicht unterstützt. `media verify` prüft sie wie iPhone-Duo-Screenshots.
 
 ## Verwendung mit app-store-screenshots
 

@@ -72,7 +72,8 @@ func scanMediaFolder(at path: String) throws -> MediaUploadPlan {
       let screenshotType = ASCEnum.ScreenshotDisplayType(rawValue: displayTypeName)
       let pvType = previewTypeForDisplayType(displayTypeName)
 
-      if screenshotType == nil && AssetLibrary.placementGroups[displayTypeName] == nil {
+      let slot = AssetLibrary.slots[displayTypeName]
+      if screenshotType == nil && slot == nil {
         warnings.append("[\(localeName)] Skipping unknown display type '\(displayTypeName)'.")
         continue
       }
@@ -108,6 +109,10 @@ func scanMediaFolder(at path: String) throws -> MediaUploadPlan {
         }
       }
 
+      if slot?.isSingle == true && screenshots.count > 1 {
+        throw ValidationError(
+          "\(localeName)/\(displayTypeName) holds one image per locale, but the folder has \(screenshots.count).")
+      }
       if !screenshots.isEmpty || !previews.isEmpty {
         totalScreenshots += screenshots.count
         totalPreviews += previews.count
@@ -165,7 +170,9 @@ func filterPlan(_ plan: MediaUploadPlan, platform: Platform?) -> (plan: MediaUpl
   var totalPreviews = 0
   for localeMedia in plan.locales {
     let kept = localeMedia.displayTypes.filter { dt in
-      guard platformForDisplayType(dt.folderName) == platform else {
+      guard AssetLibrary.slots[dt.folderName]?.isPlatformIndependent == true
+        || platformForDisplayType(dt.folderName) == platform
+      else {
         skipped.insert(dt.folderName)
         return false
       }
@@ -435,24 +442,29 @@ struct UploadCounter {
   }
 }
 
-/// Uploads and places screenshots through the asset library in file order (placements keep
-/// their creation order). Returns the counts and the IDs of the placements created.
-func placeAssetLibraryScreenshots(
-  _ files: [MediaFile], localizationID: String, group: String, libraryID: String,
-  counter: inout UploadCounter, client: ASCClient
+/// Uploads images through the asset library and places them in `slot`, in file order
+/// (placements keep their creation order). A single-image slot's current placements are removed
+/// once the new image is uploaded, so a failed upload leaves the slot as it was. Returns the
+/// counts and the IDs of the placements created.
+func placeAssetLibraryImages(
+  _ files: [MediaFile], slot: AssetLibrary.Slot, localizationID: String, libraryID: String,
+  replacing current: [String] = [], counter: inout UploadCounter, client: ASCClient
 ) async -> (tally: UploadTally, placementIDs: [String]) {
   var tally = UploadTally()
   var placementIDs: [String] = []
   for (i, file) in files.enumerated() {
-    counter.printLine("Screenshot", i, of: files.count, file.fileName)
+    counter.printLine(slot.fileLabel, i, of: files.count, file.fileName)
     await tally.record {
-      try AssetLibrary.validateSize(of: file, group: group)
+      try AssetLibrary.validateSize(of: file, slot: slot)
       // Under dry run the image is never reserved; a placeholder lets the placement be previewed.
       let imageID = try await unlessDryRunStopped {
-        try await AssetLibrary.uploadImage(file, libraryID: libraryID, client: client)
+        try await AssetLibrary.uploadImage(file, category: slot.category, libraryID: libraryID, client: client)
       } ?? "DRY-RUN-IMAGE"
-      placementIDs.append(try await AssetLibrary.placeScreenshot(
-        imageID: imageID, localizationID: localizationID, group: group, client: client))
+      for placementID in current {
+        _ = try await unlessDryRunStopped { try await AssetLibrary.deletePlacement(id: placementID, client: client) }
+      }
+      placementIDs.append(try await AssetLibrary.placeImage(
+        imageID: imageID, localizationID: localizationID, slot: slot, client: client))
     }
   }
   return (tally, placementIDs)
@@ -606,13 +618,12 @@ enum MediaUploadError: LocalizedError {
   case invalidUploadOperation
   case chunkUploadFailed(Int)
   case noUploadOperations
-  case unsupportedSize(width: Int, height: Int, accepted: [(Int, Int)])
+  case unsupportedImage(String, accepted: [String])
 
   var errorDescription: String? {
     switch self {
-    case .unsupportedSize(let width, let height, let accepted):
-      let sizes = accepted.map { "\($0.0)×\($0.1)" }.joined(separator: ", ")
-      return "\(width)×\(height) is not an accepted size; use \(sizes)."
+    case .unsupportedImage(let image, let accepted):
+      return "A \(image) image is not accepted here; use \(accepted.joined(separator: ", "))."
     case .cannotReadFile(let path):
       return "Cannot read file at '\(path)'."
     case .invalidUploadOperation:
@@ -734,8 +745,8 @@ extension AppsCommand {
           for dt in localeMedia.displayTypes {
             var parts: [String] = []
             if !dt.screenshots.isEmpty {
-              parts.append(
-                "\(dt.screenshots.count) screenshot\(dt.screenshots.count == 1 ? "" : "s")")
+              let noun = AssetLibrary.slots[dt.folderName]?.isSingle == true ? "image" : "screenshot"
+              parts.append("\(dt.screenshots.count) \(noun)\(dt.screenshots.count == 1 ? "" : "s")")
             }
             if !dt.previews.isEmpty {
               parts.append("\(dt.previews.count) preview\(dt.previews.count == 1 ? "" : "s")")
@@ -777,7 +788,7 @@ extension AppsCommand {
           let locale: String
           let files: [MediaFile]
           let localizationID: String
-          let group: String
+          let slot: AssetLibrary.Slot
           let placementIDs: [String]
         }
 
@@ -837,32 +848,38 @@ extension AppsCommand {
             // Under dry run, stopped writes count as done so the later ones are previewed too.
             do {
 
-              // Display classes without a screenshot set (iPhone Duo) go through the asset library:
-              // upload each image, then place it on the localization in the display class's group.
-              if !dt.screenshots.isEmpty, dt.screenshotDisplayType == nil,
-                let group = AssetLibrary.placementGroups[dt.folderName] {
+              // Folders without a screenshot set (iPhone Duo, product page header, search results)
+              // go through the asset library: upload each image, then place it on the localization.
+              if !dt.screenshots.isEmpty, dt.screenshotDisplayType == nil, let slot = AssetLibrary.slots[dt.folderName] {
                 if assetLibraryID == nil {
                   assetLibraryID = try await AssetLibrary.libraryID(appID: app.id, client: ascClient)
                 }
-                if replace {
-                  let existing = try await AssetLibrary.screenshotPlacements(
-                    localizationID: localization.id, group: group, client: ascClient)
-                  for placement in existing {
+                // A single-image slot is always replaced; a set only with --replace.
+                var current: [String] = []
+                if slot.isSingle || replace {
+                  current = try await AssetLibrary.placements(
+                    localizationID: localization.id, slot: slot, client: ascClient
+                  ).map(\.id)
+                }
+                if !slot.isSingle {
+                  for placementID in current {
                     _ = try await unlessDryRunStopped {
-                      try await AssetLibrary.deletePlacement(id: placement.id, client: ascClient)
+                      try await AssetLibrary.deletePlacement(id: placementID, client: ascClient)
                     }
                   }
-                  printDeleted(existing.count, "screenshot")
+                  printDeleted(current.count, "screenshot")
+                } else if !current.isEmpty {
+                  print("    \(ClientFactory.isDryRun ? "Would replace" : "Replacing") the current image.")
                 }
 
-                let placed = await placeAssetLibraryScreenshots(
-                  dt.screenshots, localizationID: localization.id, group: group,
-                  libraryID: assetLibraryID!, counter: &counter, client: ascClient)
+                let placed = await placeAssetLibraryImages(
+                  dt.screenshots, slot: slot, localizationID: localization.id, libraryID: assetLibraryID!,
+                  replacing: slot.isSingle ? current : [], counter: &counter, client: ascClient)
                 tally = placed.tally
-                if placed.tally.failed > 0 && !ClientFactory.isDryRun {
+                if !slot.isSingle && placed.tally.failed > 0 && !ClientFactory.isDryRun {
                   duoRedos.append(DuoRedo(
                     resultIndex: results.count, locale: localeMedia.locale, files: dt.screenshots,
-                    localizationID: localization.id, group: group, placementIDs: placed.placementIDs))
+                    localizationID: localization.id, slot: slot, placementIDs: placed.placementIDs))
                 }
               }
 
@@ -947,8 +964,8 @@ extension AppsCommand {
               continue
             }
             printDeleted(redo.placementIDs.count, "screenshot")
-            results[redo.resultIndex].tally = await placeAssetLibraryScreenshots(
-              redo.files, localizationID: redo.localizationID, group: redo.group,
+            results[redo.resultIndex].tally = await placeAssetLibraryImages(
+              redo.files, slot: redo.slot, localizationID: redo.localizationID,
               libraryID: assetLibraryID!, counter: &redoCounter, client: ascClient
             ).tally
           }
@@ -1556,7 +1573,8 @@ private struct MediaItemStatus {
   let state: String
   let isComplete: Bool
   let isScreenshot: Bool
-  /// An asset library placement (iPhone Duo), which the classic retry can't redo.
+  /// An asset library placement (iPhone Duo, header, search results), which the classic retry
+  /// can't redo.
   var isPlacement = false
   let setID: String
   let mediaID: String
@@ -1589,10 +1607,10 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
   for loc in locsResponse.data {
     guard let locale = loc.attributes?.locale else { continue }
 
-    // Asset library placements (iPhone Duo): the classic API lists their set with no
-    // screenshots. A finished placement reads ACTIVE.
-    for (displayTypeName, placementGroup) in AssetLibrary.placementGroups {
-      let placements = try await AssetLibrary.screenshotPlacements(localizationID: loc.id, group: placementGroup, client: client)
+    // Asset library placements. A placement still processing reads ASSET_PROCESSING, a
+    // finished one ACTIVE (seen live), and the spec also lists FAILED and PARENT_* states.
+    for (displayTypeName, slot) in AssetLibrary.slots.sorted(by: { $0.key < $1.key }) {
+      let placements = try await AssetLibrary.placements(localizationID: loc.id, slot: slot, client: client)
       let fileNames = try await withThrowingTaskGroup(of: (Int, String?).self) { tasks in
         for (i, placement) in placements.enumerated() {
           tasks.addTask { (i, try await AssetLibrary.placementFileName(id: placement.id, client: client)) }
@@ -1606,7 +1624,8 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
         items.append(MediaItemStatus(
           locale: locale, displayTypeName: displayTypeName, position: i + 1,
           fileName: fileNames[i] ?? "unknown", state: state.map { formatState($0) } ?? "unknown",
-          isComplete: state == "ACTIVE", isScreenshot: true, isPlacement: true,
+          isComplete: state.map { $0 != "ASSET_PROCESSING" && $0 != "FAILED" } ?? false,
+          isScreenshot: true, isPlacement: true,
           setID: "placements/\(loc.id)", mediaID: placement.id, allIDsInSet: placements.map(\.id)))
       }
     }
@@ -1620,7 +1639,7 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
       // Placement groups are listed from their placements above; once those are active, the
       // classic API lists the same screenshots in a set of its own (seen live 2026-10-07).
       guard let displayType = set.attributes?.screenshotDisplayType,
-        AssetLibrary.placementGroups[displayType] == nil
+        AssetLibrary.slots[displayType] == nil
       else { continue }
       let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
         path: .init(id: set.id)
@@ -1708,7 +1727,7 @@ private func printMediaStatus(_ items: [MediaItemStatus]) -> (total: Int, stuck:
 private func placementSetsDifferingFromFolder(_ items: [MediaItemStatus], plan: MediaUploadPlan) -> [String] {
   var labels: [String] = []
   for localeMedia in plan.locales {
-    for dt in localeMedia.displayTypes where AssetLibrary.placementGroups[dt.folderName] != nil {
+    for dt in localeMedia.displayTypes where AssetLibrary.slots[dt.folderName] != nil {
       let placed = items.filter {
         $0.isPlacement && $0.locale.lowercased() == localeMedia.locale.lowercased() && $0.displayTypeName == dt.folderName
       }.sorted { $0.position < $1.position }.map(\.fileName)

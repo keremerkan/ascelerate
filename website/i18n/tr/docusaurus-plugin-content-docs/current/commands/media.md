@@ -85,6 +85,8 @@ App Store Connect, iPhone uygulamaları için **`APP_IPHONE_67`** ve iPad uygula
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1. nesil, 5s, 5c) | Evet | Evet |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s ve öncesi) | Evet | Evet |
 | `APP_IPHONE_DUO` | iPhone Duo ([aşağıya](#iphone-duo) bakın) | Evet | Hayır |
+| `PRODUCT_PAGE_HEADER` | Ürün sayfası başlığı ([aşağıya](#header-and-search-results) bakın) | Evet | Hayır |
+| `APP_STORE_SEARCH_RESULTS` | App Store arama sonuçları ([aşağıya](#header-and-search-results) bakın) | Evet | Hayır |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Evet | Evet |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1./2. nesil) | Evet | Evet |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3. nesil, iPad Pro 10.5") | Evet | Evet |
@@ -121,6 +123,15 @@ Watch ve iMessage display type'lar yalnızca ekran görüntülerini destekler --
 App Store Connect'te iPhone Duo için bir ekran görüntüsü seti yoktur. ascelerate, `APP_IPHONE_DUO` klasöründeki dosyaları uygulamanın varlık kitaplığına yükler ve dosya sırasıyla sürüm yerelleştirmesine yerleştirir. Kabul edilen boyutlar şunlardır: 2853×2007 veya 2007×2853 (iç ekran, açık konumda), 2034×1398 veya 1398×2034 (dış ekran). Diğer boyutlar, herhangi bir şey yüklenmeden önce reddedilir. `--replace` ile her locale'deki mevcut iPhone Duo ekran görüntüleri önce kaldırılır.
 
 Yeniden denemelere rağmen yüklenemeyen bir dosya olursa `media upload`, o locale'in iPhone Duo ekran görüntülerini çalışmanın sonunda yeniden yerleştirir; böylece dosya sırası korunur. `media verify`, iPhone Duo ekran görüntülerini dosya adları ve işlenme durumlarıyla listeler. Medya klasörü verildiğinde, iPhone Duo ekran görüntüleri dosyalar ya da sıra bakımından klasörden farklı olan locale'leri de bildirir (düzeltmek için `media upload` komutunu `--replace` ile çalıştırın). iPhone Duo uygulama önizlemeleri henüz desteklenmez, `media download` iPhone Duo ekran görüntülerini kapsamaz ve `media prune` bunları hiçbir zaman silmez.
+
+### Ürün sayfası başlığı ve arama sonuçları {#header-and-search-results}
+
+İki klasör daha varlık kitaplığı üzerinden yüklenir. Her biri locale başına, bir cihaz sınıfına bağlı olmayan tek bir görsel tutar: Sürüm bu görseli her cihazda (iPhone, iPad, iPhone Duo) gösterir ve klasörler tüm platformların sürümlerinde kullanılabilir.
+
+- `PRODUCT_PAGE_HEADER`: ürün sayfasının üst kısmındaki görsel. 3840×1646 veya 5244×2950 PNG.
+- `APP_STORE_SEARCH_RESULTS`: App Store arama sonuçlarında uygulamayla birlikte gösterilen görsel. 1920×1280 ile 3840×2560 arasında 3:2 oranlı JPG veya PNG ya da 5244×2950 PNG.
+
+Yükleme, `--replace` kullanılsın ya da kullanılmasın, locale'in mevcut görselini değiştirir; eskisi ancak yenisi yüklendikten sonra kaldırılır. Bu alanlar için videolar henüz desteklenmez. `media verify` bunları iPhone Duo ekran görüntüleri gibi denetler.
 
 ## app-store-screenshots ile kullanım
 

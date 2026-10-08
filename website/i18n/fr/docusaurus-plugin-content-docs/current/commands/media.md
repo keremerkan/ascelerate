@@ -85,6 +85,8 @@ App Store Connect exige des captures d'écran **`APP_IPHONE_67`** pour les appli
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1re gén., 5s, 5c) | Oui | Oui |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s et antérieurs) | Oui | Oui |
 | `APP_IPHONE_DUO` | iPhone Duo (voir [ci-dessous](#iphone-duo)) | Oui | Non |
+| `PRODUCT_PAGE_HEADER` | En-tête de la page produit (voir [ci-dessous](#header-and-search-results)) | Oui | Non |
+| `APP_STORE_SEARCH_RESULTS` | Résultats de recherche de l'App Store (voir [ci-dessous](#header-and-search-results)) | Oui | Non |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Oui | Oui |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1re/2e gén.) | Oui | Oui |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3e gén., iPad Pro 10.5") | Oui | Oui |
@@ -121,6 +123,15 @@ Les types d'affichage Watch et iMessage ne prennent en charge que les captures d
 App Store Connect ne propose pas d'ensemble de captures d'écran pour l'iPhone Duo. ascelerate téléverse les fichiers d'un dossier `APP_IPHONE_DUO` dans la bibliothèque de ressources de l'application, puis les place dans la localisation de la version, dans l'ordre des fichiers. Les tailles acceptées sont 2853×2007 ou 2007×2853 (écran intérieur, déplié) et 2034×1398 ou 1398×2034 (écran extérieur) ; les autres tailles sont refusées avant tout téléversement. Avec `--replace`, les captures iPhone Duo existantes de chaque locale sont d'abord supprimées.
 
 Si un fichier échoue encore après les nouvelles tentatives, `media upload` replace les captures iPhone Duo de cette localisation à la fin de l'exécution, afin de conserver l'ordre des fichiers. `media verify` liste les captures iPhone Duo avec leur nom de fichier et leur état de traitement ; avec le dossier de médias, il signale aussi les localisations dont les captures iPhone Duo diffèrent du dossier par leurs fichiers ou leur ordre (relancez `media upload` avec `--replace` pour les corriger). Les aperçus d'application pour l'iPhone Duo ne sont pas encore pris en charge, `media download` n'inclut pas les captures iPhone Duo et `media prune` ne les supprime jamais.
+
+### En-tête de la page produit et résultats de recherche {#header-and-search-results}
+
+Deux autres dossiers sont téléversés via la bibliothèque de ressources. Chacun contient une image par localisation, qui n'est liée à aucune classe d'appareil : la version l'affiche sur tous les appareils (iPhone, iPad, iPhone Duo), et les deux fonctionnent pour les versions de toutes les plateformes.
+
+- `PRODUCT_PAGE_HEADER` : l'image en haut de la page produit. PNG en 3840×1646 ou 5244×2950.
+- `APP_STORE_SEARCH_RESULTS` : l'image affichée avec l'application dans les résultats de recherche de l'App Store. JPG ou PNG au format 3:2, de 1920×1280 à 3840×2560, ou PNG en 5244×2950.
+
+Un téléversement remplace l'image actuelle de la localisation, avec ou sans `--replace` ; l'ancienne n'est supprimée qu'une fois la nouvelle téléversée. Les vidéos pour ces emplacements ne sont pas encore prises en charge. `media verify` les vérifie comme les captures iPhone Duo.
 
 ## Utilisation avec app-store-screenshots
 

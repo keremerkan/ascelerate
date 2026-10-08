@@ -85,6 +85,8 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1st gen, 5s, 5c) | Yes | Yes |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s and earlier) | Yes | Yes |
 | `APP_IPHONE_DUO` | iPhone Duo (see [below](#iphone-duo)) | Yes | No |
+| `PRODUCT_PAGE_HEADER` | Product page header (see [below](#header-and-search-results)) | Yes | No |
+| `APP_STORE_SEARCH_RESULTS` | App Store search results (see [below](#header-and-search-results)) | Yes | No |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Yes | Yes |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1st/2nd gen) | Yes | Yes |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3rd gen, iPad Pro 10.5") | Yes | Yes |
@@ -121,6 +123,15 @@ Watch and iMessage display types support screenshots only — video files in tho
 App Store Connect has no screenshot set for iPhone Duo. ascelerate uploads the files in an `APP_IPHONE_DUO` folder to the app's asset library and places them on the version localization, in file order. Accepted sizes are 2853×2007 or 2007×2853 (inner display, unfolded) and 2034×1398 or 1398×2034 (cover display); other sizes are rejected before anything is uploaded. With `--replace`, each locale's existing iPhone Duo screenshots are removed first.
 
 If a file still fails after retries, `media upload` places that locale's iPhone Duo screenshots again at the end of the run, so they stay in file order. `media verify` lists iPhone Duo screenshots with their file names and processing state; given the media folder, it also flags locales whose iPhone Duo screenshots differ from the folder in files or order (run `media upload` with `--replace` to fix them). iPhone Duo app previews are not supported yet, `media download` doesn't include iPhone Duo screenshots, and `media prune` never deletes them.
+
+### Product page header and search results {#header-and-search-results}
+
+Two more folders upload through the asset library. Each holds one image per locale, which isn't tied to a device class: the version shows it on every device (iPhone, iPad, iPhone Duo), and they work for every platform's versions.
+
+- `PRODUCT_PAGE_HEADER`: the image at the top of the product page. PNG at 3840×1646 or 5244×2950.
+- `APP_STORE_SEARCH_RESULTS`: the image shown with the app in App Store search results. JPG or PNG at 3:2, from 1920×1280 to 3840×2560, or a 5244×2950 PNG.
+
+Uploading replaces the locale's current image, with or without `--replace`; the old one is removed only after the new one has been uploaded. Videos for these slots are not supported yet. `media verify` checks them the same way as iPhone Duo screenshots.
 
 ## Using with app-store-screenshots
 

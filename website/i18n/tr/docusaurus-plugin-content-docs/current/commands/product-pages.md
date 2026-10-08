@@ -62,3 +62,5 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 
 Dosya türü, içeriğin ekran görüntüsü mü yoksa uygulama önizlemesi olarak mı yükleneceğini belirler. Görüntü ve önizleme türleri standart App Store cihaz tanımlayıcılarını kullanır (örn. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).
+
+`--display-type`, varlık kitaplığı alanlarını da kabul eder: `PRODUCT_PAGE_HEADER` ve `APP_STORE_SEARCH_RESULTS` (mevcut olanın yerine geçen bir görsel veya video) ile `APP_IPHONE_DUO` (mevcutların ardına eklenen bir ekran görüntüsü veya uygulama önizlemesi). Boyutlar için [Medya](media.md#header-and-search-results) sayfasına bakın. `media list` bunları gösterir, `media delete` ise kimliğiyle kaldırır.

@@ -10,9 +10,12 @@ title: Ekran Görüntüleri ve Önizlemeler
 ```bash
 ascelerate apps media download <bundle-id>
 ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id> --locale en-US,tr
 ```
 
 Varsayılan olarak `<bundle-id>-media/` dizinine indirir, yükleme tarafından beklenen aynı klasör yapısını kullanır.
+
+`--locale`, indirmeyi verilen locale'lerle sınırlar (örn. `--locale en-US,tr`). iPhone Duo ekran görüntüleri ile başlık ve arama sonuçları görselleri de kaydedilir.
 
 ## Yükleme
 
@@ -122,16 +125,20 @@ Watch ve iMessage display type'lar yalnızca ekran görüntülerini destekler --
 
 App Store Connect'te iPhone Duo için bir ekran görüntüsü seti yoktur. ascelerate, `APP_IPHONE_DUO` klasöründeki dosyaları uygulamanın varlık kitaplığına yükler ve dosya sırasıyla sürüm yerelleştirmesine yerleştirir. Kabul edilen boyutlar şunlardır: 2853×2007 veya 2007×2853 (iç ekran, açık konumda), 2034×1398 veya 1398×2034 (dış ekran). Diğer boyutlar, herhangi bir şey yüklenmeden önce reddedilir. `--replace` ile her locale'deki mevcut iPhone Duo ekran görüntüleri önce kaldırılır.
 
-Yeniden denemelere rağmen yüklenemeyen bir dosya olursa `media upload`, o locale'in iPhone Duo ekran görüntülerini çalışmanın sonunda yeniden yerleştirir; böylece dosya sırası korunur. `media verify`, iPhone Duo ekran görüntülerini dosya adları ve işlenme durumlarıyla listeler. Medya klasörü verildiğinde, iPhone Duo ekran görüntüleri dosyalar ya da sıra bakımından klasörden farklı olan locale'leri de bildirir (düzeltmek için `media upload` komutunu `--replace` ile çalıştırın). iPhone Duo uygulama önizlemeleri henüz desteklenmez, `media download` iPhone Duo ekran görüntülerini kapsamaz ve `media prune` bunları hiçbir zaman silmez.
+Klasör, iPhone Duo uygulama önizlemelerini de (`.mp4`, `.m4v` veya `.mov`) içerebilir: 1920×886 veya 886×1920, 23–30 fps'de 15–30 saniye, ses kanalıyla. Önizlemeler locale'in mevcut önizlemelerinin ardına eklenir; `--replace` ile mevcut olanlar önce kaldırılır. Ekran görüntüleri ve önizlemeler ayrı ayrı ve yalnızca klasörde o türden dosya olduğunda değiştirilir.
+
+Yeniden denemelere rağmen yüklenemeyen bir dosya olursa `media upload`, o locale'in iPhone Duo ekran görüntülerini veya önizlemelerini çalışmanın sonunda yeniden yerleştirir; böylece dosya sırası korunur. `media verify` bunları dosya adları ve işlenme durumlarıyla listeler. Medya klasörü verildiğinde, dosyaları ya da sırası klasörden farklı olan locale'leri de bildirir (düzeltmek için `media upload` komutunu `--replace` ile çalıştırın). `media download` ekran görüntülerini kendi dosya adlarıyla kaydeder; `media prune` ise bunları hiçbir zaman silmez.
 
 ### Ürün sayfası başlığı ve arama sonuçları {#header-and-search-results}
 
-İki klasör daha varlık kitaplığı üzerinden yüklenir. Her biri locale başına, bir cihaz sınıfına bağlı olmayan tek bir görsel tutar: Sürüm bu görseli her cihazda (iPhone, iPad, iPhone Duo) gösterir ve klasörler tüm platformların sürümlerinde kullanılabilir.
+İki klasör daha varlık kitaplığı üzerinden yüklenir. Her biri locale başına, bir cihaz sınıfına bağlı olmayan tek bir görsel veya video tutar: Sürüm bunu her cihazda (iPhone, iPad, iPhone Duo) gösterir ve klasörler tüm platformların sürümlerinde kullanılabilir.
 
-- `PRODUCT_PAGE_HEADER`: ürün sayfasının üst kısmındaki görsel. 3840×1646 veya 5244×2950 PNG.
-- `APP_STORE_SEARCH_RESULTS`: App Store arama sonuçlarında uygulamayla birlikte gösterilen görsel. 1920×1280 ile 3840×2560 arasında 3:2 oranlı JPG veya PNG ya da 5244×2950 PNG.
+- `PRODUCT_PAGE_HEADER`: ürün sayfasının üst kısmındaki görsel veya video. 3840×1646 veya 5244×2950 PNG ya da 30 veya 60 fps'de 5–30 saniyelik 3840×1646 video.
+- `APP_STORE_SEARCH_RESULTS`: App Store arama sonuçlarında uygulamayla birlikte gösterilir. 1920×1280 ile 3840×2560 arasında 3:2 oranlı JPG veya PNG ya da 5244×2950 PNG; veya aynı boyut aralığında, 30 veya 60 fps'de 5–30 saniyelik 3:2 oranlı video.
 
-Yükleme, `--replace` kullanılsın ya da kullanılmasın, locale'in mevcut görselini değiştirir; eskisi ancak yenisi yüklendikten sonra kaldırılır. Bu alanlar için videolar henüz desteklenmez. `media verify` bunları iPhone Duo ekran görüntüleri gibi denetler.
+Yükleme, `--replace` kullanılsın ya da kullanılmasın, locale'in mevcut görselini veya videosunu değiştirir; eskisi ancak yenisi yüklendikten sonra kaldırılır. Yeni bir video birkaç dakika işlenir; `media verify` bunu gösterir. `media download` görselleri kaydeder; App Store Connect bu videolar için indirme bağlantısı vermez.
+
+Özel ürün sayfaları aynı dosyaları `product-pages media upload` ile `--display-type PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` veya `APP_IPHONE_DUO` vererek kabul eder.
 
 ## app-store-screenshots ile kullanım
 
@@ -185,19 +192,20 @@ Yerel klasörü olmayan locale'ler tamamen atlanır; komut yalnızca klasörün 
 
 ## Varlık kitaplığı görsellerini kaldırma
 
-`media remove`, varlık kitaplığı görsellerinden bir türü sürümden kaldırır: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` veya `APP_IPHONE_DUO`. Komut, `--locale` ile verilen locale'lerde ya da hepsinde çalışır ve onay istemeden önce bulduklarını listeler:
+`media remove`, varlık kitaplığı öğelerinden bir türü sürümden kaldırır: `PRODUCT_PAGE_HEADER` veya `APP_STORE_SEARCH_RESULTS` görseli ya da videosu veya `APP_IPHONE_DUO` ekran görüntüleri (uygulama önizlemeleri için `--previews`). Komut, `--locale` ile verilen locale'lerde ya da hepsinde çalışır ve onay istemeden önce bulduklarını listeler:
 
 ```bash
 ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
 ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
 ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --previews --locale en-US
 ```
 
 ## Varlık kitaplığını temizleme
 
-Her uygulamanın yüklenen görselleri tutan bir varlık kitaplığı vardır ve sürümler bu görselleri paylaşır: Yeni bir sürümün ekran görüntüleri önceki sürümün görselleridir ve eski sürümler kendi görsellerini korur. Bu nedenle bir görsel, herhangi bir sürüm (eskiler dahil), özel ürün sayfası veya etkinlik onu kullandığı sürece kullanımda kalır. ascelerate bir yerleşimi kaldırdığında (`media remove`, `media upload --replace` ya da bir başlık veya arama sonuçları görselinin değiştirilmesi), görseli artık hiçbir şey kullanmıyorsa ve görsel hiç App Review'dan geçmemişse görseli de siler.
+Her uygulamanın yüklenen görselleri ve videoları tutan bir varlık kitaplığı vardır ve sürümler bu görselleri paylaşır: Yeni bir sürümün ekran görüntüleri önceki sürümün görselleridir ve eski sürümler kendi görsellerini korur. Bu nedenle bir görsel, herhangi bir sürüm (eskiler dahil), özel ürün sayfası veya etkinlik onu kullandığı sürece kullanımda kalır. ascelerate bir yerleşimi kaldırdığında (`media remove`, `media upload --replace` ya da bir başlık veya arama sonuçları görselinin değiştirilmesi), görseli artık hiçbir şey kullanmıyorsa ve görsel hiç App Review'dan geçmemişse görseli veya videoyu da siler.
 
-Önceki yüklemeler kitaplıkta yine de kullanılmayan görseller bırakmış olabilir. `media library` görselleri sayar ve kullanılmayanları listeler; `--delete-unused` ile bunları onay aldıktan sonra siler:
+Önceki yüklemeler kitaplıkta yine de kullanılmayan görseller ve videolar bırakmış olabilir. `media library` görselleri ve videoları sayar ve kullanılmayanları listeler; `--delete-unused` ile bunları onay aldıktan sonra siler:
 
 ```bash
 ascelerate apps media library <bundle-id>

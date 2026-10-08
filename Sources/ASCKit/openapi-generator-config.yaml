@@ -132,7 +132,11 @@ filter:
     - /v1/appAssetLibraryPlacements/{id}
     - /v1/appAssetLibraries/{id}/images
     - /v1/appAssetLibraryRefData
+    - /v1/appAssetLibraryVideos
+    - /v1/appAssetLibraryVideos/{id}
+    - /v1/appAssetLibraries/{id}/videos
     - /v1/appStoreVersionLocalizations/{id}/placements
+    - /v1/appCustomProductPageLocalizations/{id}/placements
     - /v1/devices
     - /v1/devices/{id}
     - /v1/salesReports

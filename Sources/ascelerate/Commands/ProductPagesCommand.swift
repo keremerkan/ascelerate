@@ -575,6 +575,13 @@ struct ProductPagesCommand: AsyncParsableCommand {
               ])
             }
           }
+          // Asset library placements: header, search results, iPhone Duo.
+          for (kind, placement) in try await AssetLibrary.slotPlacements(on: .productPageLocalization(loc.id), client: client) {
+            rows.append([
+              locale, placement.attributes?.mediaType == "VIDEO" ? "Video" : "Image", kind,
+              placement.attributes?.state.map { formatState($0) } ?? "—", placement.id,
+            ])
+          }
         }
 
         if rows.isEmpty {
@@ -587,7 +594,13 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
     struct Upload: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
-        abstract: "Upload a screenshot (.png/.jpg) or app preview (.mp4/.mov) to a localization."
+        abstract: "Upload a screenshot (.png/.jpg) or app preview (.mp4/.mov) to a localization.",
+        discussion: """
+          --display-type or --preview-type can also name an asset library slot:
+          PRODUCT_PAGE_HEADER or APP_STORE_SEARCH_RESULTS (one image or video, replacing
+          the current one) or APP_IPHONE_DUO (a screenshot or app preview, added after the
+          existing ones). Sizes are checked against Apple's specs before uploading.
+          """
       )
 
       @Argument(help: "The bundle identifier of the app.",
@@ -628,7 +641,13 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let media = try MediaFile(readingFrom: file)
         let ext = (media.fileName as NSString).pathExtension.lowercased()
         let isImage = ["png", "jpg", "jpeg"].contains(ext)
-        let isVideo = ["mp4", "mov"].contains(ext)
+        let isVideo = videoExtensions.contains(ext)
+
+        if let slotName = [displayType, previewType].compactMap({ $0?.uppercased() }).first(where: { AssetLibrary.slots[$0] != nil }),
+          let slot = AssetLibrary.slots[slotName] {
+          try await uploadToLibrary(media, slot: slot, slotName: slotName, isVideo: isVideo, page: productPage, localizationID: locID, appID: app.id, client: client)
+          return
+        }
         guard isImage || isVideo else {
           throw ValidationError(
             "Unsupported file type '.\(ext)'. Use png/jpg for screenshots or mp4/mov for previews.")
@@ -667,6 +686,36 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
         print()
         success("Uploaded", "\(isImage ? "screenshot" : "app preview") (id: \(mediaID)).")
+      }
+
+      /// Uploads to an asset library slot: a single slot's current image or video is replaced, an
+      /// iPhone Duo screenshot or preview is added after the existing ones.
+      private func uploadToLibrary(
+        _ media: MediaFile, slot: AssetLibrary.Slot, slotName: String, isVideo: Bool,
+        page productPage: Components.Schemas.AppCustomProductPage, localizationID: String, appID: String, client: ASCClient
+      ) async throws {
+        guard !isVideo || slot.videoPlacementType != nil else {
+          throw ValidationError("\(slotName) takes images only.")
+        }
+        let owner = AssetLibrary.Owner.productPageLocalization(localizationID)
+        let current = slot.isSingle
+          ? try await AssetLibrary.placements(on: owner, type: slot.placementType, group: slot.group, client: client).map(\.id)
+          : []
+        print("Upload \(isVideo ? "video" : "image") to the asset library:")
+        print("  Page:   \(productPage.attributes?.name ?? page)")
+        print("  Locale: \(localeName(locale))")
+        print("  Slot:   \(slotName)\(current.isEmpty ? "" : " (replaces the current one)")")
+        print("  File:   \(media.fileName) (\(formatBytes(media.fileSize)))")
+        print()
+        guard confirm("Upload? [y/N] ") else {
+          cancelled()
+          return
+        }
+        let libraryID = try await AssetLibrary.libraryID(appID: appID, client: client)
+        let placementID = try await AssetLibrary.uploadAndPlace(
+          media, slot: slot, on: owner, libraryID: libraryID, replacing: current, client: client)
+        print()
+        success("Uploaded", "\(isVideo ? "video" : "image") (placement id: \(placementID)).")
       }
 
       /// Finds the screenshot set with `displayType`, creating it under the localization if absent.
@@ -753,6 +802,22 @@ struct ProductPagesCommand: AsyncParsableCommand {
           }
         }
 
+        if kind == nil {
+          // An asset library placement: removing it also deletes its image or video from the
+          // library when nothing else uses it.
+          for loc in locs.data {
+            let placements = try await AssetLibrary.slotPlacements(on: .productPageLocalization(loc.id), client: client)
+            guard let match = placements.first(where: { $0.placement.id == mediaID }) else { continue }
+            guard confirm("Remove this \(match.kind) placement? [y/N] ") else {
+              cancelled()
+              return
+            }
+            let deleted = try await AssetLibrary.removePlacement(id: mediaID, client: client)
+            print()
+            success("Removed", "\(match.kind) placement \(mediaID)\(deleted ? " and its unused library file" : "").")
+            return
+          }
+        }
         guard let kind else {
           throw ValidationError("Media '\(mediaID)' not found on this page.")
         }

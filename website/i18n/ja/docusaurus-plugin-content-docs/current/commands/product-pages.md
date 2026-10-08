@@ -62,3 +62,5 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 
 ファイルの種類によって、スクリーンショットとしてアップロードされるかアプリプレビューとしてアップロードされるかが決まります。表示タイプとプレビュータイプは、標準の App Store デバイス識別子（例：`APP_IPHONE_67`、`APP_IPAD_PRO_3GEN_129`）を使用します。
+
+`--display-type` にはアセットライブラリの枠も指定できます。`PRODUCT_PAGE_HEADER` と `APP_STORE_SEARCH_RESULTS`（現在のものを置き換える画像またはビデオ）、`APP_IPHONE_DUO`（既存のものの後に追加されるスクリーンショットまたはアプリプレビュー）です。サイズは[メディア](media.md#header-and-search-results)を参照してください。`media list` で表示され、`media delete` で ID を指定して削除できます。

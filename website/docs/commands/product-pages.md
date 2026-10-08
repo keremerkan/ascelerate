@@ -62,3 +62,5 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 
 The file type determines whether it's uploaded as a screenshot or an app preview. Display and preview types use the standard App Store device identifiers (e.g. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).
+
+`--display-type` also takes the asset library slots `PRODUCT_PAGE_HEADER` and `APP_STORE_SEARCH_RESULTS` (an image or video that replaces the current one) and `APP_IPHONE_DUO` (a screenshot or app preview, added after the existing ones); [Media](media.md#header-and-search-results) lists their sizes. `media list` shows them, and `media delete` removes them by ID.

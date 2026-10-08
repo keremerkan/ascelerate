@@ -10,9 +10,12 @@ title: スクリーンショットとプレビュー
 ```bash
 ascelerate apps media download <bundle-id>
 ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id> --locale en-US,tr
 ```
 
 デフォルトでは `<bundle-id>-media/` にダウンロードされ、アップロードで使用されるのと同じフォルダ構造が使用されます。
+
+`--locale` を指定すると、そのロケールだけをダウンロードします（例：`--locale en-US,tr`）。iPhone Duo のスクリーンショットや、ヘッダーと検索結果の画像も保存されます。
 
 ## アップロード
 
@@ -122,16 +125,20 @@ WatchとiMessageのディスプレイタイプはスクリーンショットの�
 
 App Store Connect には iPhone Duo 用のスクリーンショットセットがありません。ascelerate は `APP_IPHONE_DUO` フォルダ内のファイルをアプリのアセットライブラリにアップロードし、ファイル順にバージョンのローカライズ情報へ配置します。対応サイズは 2853×2007 または 2007×2853（内側ディスプレイ、開いた状態）と、2034×1398 または 1398×2034（外側ディスプレイ）です。それ以外のサイズは、アップロード前に拒否されます。`--replace` を指定すると、各ロケールの既存の iPhone Duo スクリーンショットが先に削除されます。
 
-再試行しても失敗したファイルがある場合、`media upload` は実行の最後にそのロケールの iPhone Duo スクリーンショットを配置し直し、ファイル順を保ちます。`media verify` は iPhone Duo のスクリーンショットをファイル名と処理状況つきで一覧表示します。メディアフォルダを指定すると、ファイルや順序がフォルダと異なるロケールも報告します（`--replace` を付けて `media upload` を実行すると直せます）。iPhone Duo のアプリプレビューにはまだ対応しておらず、`media download` は iPhone Duo のスクリーンショットを対象としません。`media prune` がこれらを削除することはありません。
+このフォルダには iPhone Duo のアプリプレビュー（`.mp4`、`.m4v`、`.mov`）も入れられます。サイズは 1920×886 または 886×1920、長さは 15〜30 秒、フレームレートは 23〜30 fps で、音声トラックが必要です。プレビューはロケールの既存のプレビューの後に追加され、`--replace` を指定すると既存のものが先に削除されます。スクリーンショットとプレビューは別々に置き換えられ、フォルダにその種類のファイルがある場合にのみ置き換えられます。
+
+再試行しても失敗したファイルがある場合、`media upload` は実行の最後にそのロケールの iPhone Duo のスクリーンショットまたはプレビューを配置し直し、ファイル順を保ちます。`media verify` はファイル名と処理状況つきで一覧表示し、メディアフォルダを指定すると、ファイルや順序がフォルダと異なるロケールも報告します（`--replace` を付けて `media upload` を実行すると直せます）。`media download` はスクリーンショットを元のファイル名で保存し、`media prune` がこれらを削除することはありません。
 
 ### プロダクトページのヘッダーと検索結果 {#header-and-search-results}
 
-さらに2つのフォルダがアセットライブラリ経由でアップロードされます。どちらもロケールごとに画像1枚で、デバイスクラスには結び付きません。バージョンはその画像をすべてのデバイス（iPhone、iPad、iPhone Duo）で表示し、すべてのプラットフォームのバージョンで使えます。
+さらに2つのフォルダがアセットライブラリ経由でアップロードされます。どちらもロケールごとに画像またはビデオ1点で、デバイスクラスには結び付きません。バージョンはそれをすべてのデバイス（iPhone、iPad、iPhone Duo）で表示し、すべてのプラットフォームのバージョンで使えます。
 
-- `PRODUCT_PAGE_HEADER`：プロダクトページ上部の画像。3840×1646 または 5244×2950 の PNG。
-- `APP_STORE_SEARCH_RESULTS`：App Store の検索結果でアプリと一緒に表示される画像。1920×1280 から 3840×2560 までの 3:2 の JPG または PNG、または 5244×2950 の PNG。
+- `PRODUCT_PAGE_HEADER`：プロダクトページ上部の画像またはビデオ。3840×1646 または 5244×2950 の PNG、または 3840×1646 で長さ 5〜30 秒、30 または 60 fps のビデオ。
+- `APP_STORE_SEARCH_RESULTS`：App Store の検索結果でアプリと一緒に表示されます。1920×1280 から 3840×2560 までの 3:2 の JPG または PNG、または 5244×2950 の PNG。あるいは同じサイズ範囲の 3:2 のビデオで、長さ 5〜30 秒、30 または 60 fps。
 
-アップロードすると、`--replace` の有無にかかわらず、そのロケールの現在の画像が置き換えられます。古い画像は、新しい画像のアップロードが終わってから削除されます。これらの枠のビデオにはまだ対応していません。`media verify` は iPhone Duo のスクリーンショットと同じように確認します。
+アップロードすると、`--replace` の有無にかかわらず、そのロケールの現在の画像またはビデオが置き換えられます。古いものは、新しいもののアップロードが終わってから削除されます。新しいビデオは数分間処理中になり、`media verify` にそのように表示されます。`media download` は画像を保存します。これらのビデオには App Store Connect がダウンロードリンクを提供していません。
+
+カスタムプロダクトページにも、`product-pages media upload` に `--display-type PRODUCT_PAGE_HEADER`、`APP_STORE_SEARCH_RESULTS`、`APP_IPHONE_DUO` を指定して同じファイルをアップロードできます。
 
 ## app-store-screenshotsとの連携
 
@@ -185,19 +192,20 @@ ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 
 ## アセットライブラリの画像を削除する
 
-`media remove` は、アセットライブラリの画像のうち1種類（`PRODUCT_PAGE_HEADER`、`APP_STORE_SEARCH_RESULTS`、`APP_IPHONE_DUO`）をバージョンから外します。`--locale` で指定したロケール、または全ロケールが対象で、見つかったものを一覧表示してから確認します。
+`media remove` は、アセットライブラリの項目のうち1種類をバージョンから外します。`PRODUCT_PAGE_HEADER` または `APP_STORE_SEARCH_RESULTS` の画像やビデオ、あるいは `APP_IPHONE_DUO` のスクリーンショット（`--previews` でアプリプレビュー）です。`--locale` で指定したロケール、または全ロケールが対象で、見つかったものを一覧表示してから確認します。
 
 ```bash
 ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
 ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
 ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --previews --locale en-US
 ```
 
 ## アセットライブラリを整理する
 
-各アプリには、アップロードした画像を保持するアセットライブラリがあり、画像はバージョン間で共有されます。新しいバージョンのスクリーンショットは前のバージョンの画像で、古いバージョンも自分の画像を保持しています。そのため、どこかのバージョン（古いものを含む）、カスタムプロダクトページ、イベントに配置されている限り、画像は使用中です。ascelerate が配置を外すとき（`media remove`、`media upload --replace`、ヘッダーや検索結果の画像の置き換え）、その画像がどこにも使われておらず、App Review を一度も経ていなければ、画像も削除します。
+各アプリには、アップロードした画像とビデオを保持するアセットライブラリがあり、画像はバージョン間で共有されます。新しいバージョンのスクリーンショットは前のバージョンの画像で、古いバージョンも自分の画像を保持しています。そのため、どこかのバージョン（古いものを含む）、カスタムプロダクトページ、イベントに配置されている限り、画像は使用中です。ascelerate が配置を外すとき（`media remove`、`media upload --replace`、ヘッダーや検索結果の画像の置き換え）、その画像がどこにも使われておらず、App Review を一度も経ていなければ、画像やビデオも削除します。
 
-以前のアップロードによって、未使用の画像がライブラリに残っていることがあります。`media library` は画像を数えて未使用のものを一覧表示し、`--delete-unused` を付けると確認のうえ削除します。
+以前のアップロードによって、未使用の画像やビデオがライブラリに残っていることがあります。`media library` は画像とビデオを数えて未使用のものを一覧表示し、`--delete-unused` を付けると確認のうえ削除します。
 
 ```bash
 ascelerate apps media library <bundle-id>

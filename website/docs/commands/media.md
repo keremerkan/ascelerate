@@ -10,9 +10,12 @@ title: Screenshots & Previews
 ```bash
 ascelerate apps media download <bundle-id>
 ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id> --locale en-US,tr
 ```
 
 Downloads to `<bundle-id>-media/` by default, using the same folder structure expected by upload.
+
+`--locale` limits the download to the given locales (e.g. `--locale en-US,tr`). iPhone Duo screenshots and header and search results images are saved too.
 
 ## Upload
 
@@ -122,16 +125,20 @@ Watch and iMessage display types support screenshots only — video files in tho
 
 App Store Connect has no screenshot set for iPhone Duo. ascelerate uploads the files in an `APP_IPHONE_DUO` folder to the app's asset library and places them on the version localization, in file order. Accepted sizes are 2853×2007 or 2007×2853 (inner display, unfolded) and 2034×1398 or 1398×2034 (cover display); other sizes are rejected before anything is uploaded. With `--replace`, each locale's existing iPhone Duo screenshots are removed first.
 
-If a file still fails after retries, `media upload` places that locale's iPhone Duo screenshots again at the end of the run, so they stay in file order. `media verify` lists iPhone Duo screenshots with their file names and processing state; given the media folder, it also flags locales whose iPhone Duo screenshots differ from the folder in files or order (run `media upload` with `--replace` to fix them). iPhone Duo app previews are not supported yet, `media download` doesn't include iPhone Duo screenshots, and `media prune` never deletes them.
+The folder can also hold iPhone Duo app previews (`.mp4`, `.m4v` or `.mov`): 1920×886 or 886×1920, 15–30 seconds at 23–30 fps, with an audio track. They're added after the locale's existing previews; with `--replace`, those are removed first. Screenshots and previews are replaced separately, and only when the folder has files of that kind.
+
+If a file still fails after retries, `media upload` places that locale's iPhone Duo screenshots or previews again at the end of the run, so they stay in file order. `media verify` lists them with their file names and processing state; given the media folder, it also flags locales whose files or order differ from the folder (run `media upload` with `--replace` to fix them). `media download` saves the screenshots under their own file names, and `media prune` never deletes them.
 
 ### Product page header and search results {#header-and-search-results}
 
-Two more folders upload through the asset library. Each holds one image per locale, which isn't tied to a device class: the version shows it on every device (iPhone, iPad, iPhone Duo), and they work for every platform's versions.
+Two more folders upload through the asset library. Each holds one image or video per locale, which isn't tied to a device class: the version shows it on every device (iPhone, iPad, iPhone Duo), and they work for every platform's versions.
 
-- `PRODUCT_PAGE_HEADER`: the image at the top of the product page. PNG at 3840×1646 or 5244×2950.
-- `APP_STORE_SEARCH_RESULTS`: the image shown with the app in App Store search results. JPG or PNG at 3:2, from 1920×1280 to 3840×2560, or a 5244×2950 PNG.
+- `PRODUCT_PAGE_HEADER`: the image or video at the top of the product page. A PNG at 3840×1646 or 5244×2950, or a 3840×1646 video of 5–30 seconds at 30 or 60 fps.
+- `APP_STORE_SEARCH_RESULTS`: shown with the app in App Store search results. A JPG or PNG at 3:2, from 1920×1280 to 3840×2560, or a 5244×2950 PNG; or a 3:2 video in the same size range, 5–30 seconds at 30 or 60 fps.
 
-Uploading replaces the locale's current image, with or without `--replace`; the old one is removed only after the new one has been uploaded. Videos for these slots are not supported yet. `media verify` checks them the same way as iPhone Duo screenshots.
+Uploading replaces the locale's current image or video, with or without `--replace`; the old one is removed only after the new one has been uploaded. A new video stays in processing for a few minutes, which `media verify` shows. `media download` saves the images; App Store Connect gives no download link for these videos.
+
+Custom product pages take the same files through `product-pages media upload` with `--display-type PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` or `APP_IPHONE_DUO`.
 
 ## Using with app-store-screenshots
 
@@ -185,19 +192,20 @@ Locales without a local folder are skipped entirely — the command only prunes 
 
 ## Remove asset library images
 
-`media remove` takes one kind of asset library image off the version: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` or `APP_IPHONE_DUO`. It works on the locales given with `--locale` or on all of them, and lists what it found before asking:
+`media remove` takes one kind of asset library item off the version: the `PRODUCT_PAGE_HEADER` or `APP_STORE_SEARCH_RESULTS` image or video, or `APP_IPHONE_DUO` screenshots (`--previews` for its app previews). It works on the locales given with `--locale` or on all of them, and lists what it found before asking:
 
 ```bash
 ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
 ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
 ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --previews --locale en-US
 ```
 
 ## Clean up the asset library
 
-Every app has an asset library holding its uploaded images, and versions share them: a new version's screenshots are the previous version's images, and old versions keep theirs. An image therefore stays in use as long as any version (old ones included), custom product page or event places it. When ascelerate removes a placement (`media remove`, `media upload --replace`, or replacing a header or search results image), it also deletes the image if nothing uses it any more and it never went through App Review.
+Every app has an asset library holding its uploaded images and videos, and versions share them: a new version's screenshots are the previous version's images, and old versions keep theirs. An image or video therefore stays in use as long as any version (old ones included), custom product page or event places it. When ascelerate removes a placement (`media remove`, `media upload --replace`, or replacing a header or search results image), it also deletes the image or video if nothing uses it any more and it never went through App Review.
 
-Earlier uploads can still have left unused images in the library. `media library` counts the images and lists the unused ones; with `--delete-unused` it deletes them after asking:
+Earlier uploads can still have left unused images and videos in the library. `media library` counts the images and videos and lists the unused ones; with `--delete-unused` it deletes them after asking:
 
 ```bash
 ascelerate apps media library <bundle-id>
@@ -207,4 +215,4 @@ ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
 
 `--only` narrows the list to images that fit the given kinds, judged by asset category and pixel size: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`, a screenshot display type such as `APP_IPHONE_67` (sizes come from App Store Connect), or `UNFINISHED_UPLOADS` for uploads whose file never arrived. That way the library can be cleaned one device type at a time. Images less than an hour old are always kept, since an upload running at the same time may be about to place them, and a run that reaches App Store Connect's hourly API limit stops and tells you to run it again later.
 
-Images that went through App Review are never deleted, whether placed or not, and each image is checked again right before it is deleted.
+Images and videos that went through App Review are never deleted, whether placed or not, and each one is checked again right before it is deleted.

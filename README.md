@@ -549,7 +549,7 @@ ascelerate apps media library <bundle-id> --delete-unused
 ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
 ```
 
-`--only` narrows it to images that fit `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` and/or `APP_IPHONE_DUO` (by asset category and pixel size), leaving other leftovers such as 6.9-inch iPhone screenshots alone.
+`--only` narrows it to images that fit the given kinds, by asset category and pixel size: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`, a screenshot display type such as `APP_IPHONE_67`, or `UNFINISHED_UPLOADS` for uploads whose file never arrived, so the library can be cleaned one device type at a time. Images less than an hour old are always kept (an upload running at the same time may be about to place them), and a run that hits App Store Connect's hourly API limit stops and says how many are left.
 
 Images that went through App Review are never deleted, and each one is checked again right before it is deleted.
 
@@ -1280,6 +1280,10 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # same, e.g. fo
 ```
 
 A command stops at its first blocked write, or reports each blocked request as failed where it works through items one by one. In `run-workflow`, a step whose writes were blocked doesn't stop the workflow, so a single run shows every step's writes (in a workflow file, `--dry-run` on a single step applies only to that step); a step that relies on something an earlier step would have created (a new version, an uploaded build) can still fail. `builds upload` skips the upload; `builds archive` and `builds validate` still run, since they don't change anything on App Store Connect.
+
+### API rate limit
+
+App Store Connect allows 3,600 API requests per hour for your key, counted over a rolling hour. When a long command uses them up, ascelerate waits until App Store Connect allows requests again, shows when it will continue, and carries on (Ctrl-C stops it). To fail instead, e.g. in CI, set `ASCELERATE_MAX_RATE_LIMIT_WAIT` to the most seconds a run may wait in total (`0` fails at the first rate-limited request). `ascelerate rate-limit` shows what's left and never waits.
 
 ### Version
 

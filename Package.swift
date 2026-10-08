@@ -38,5 +38,9 @@ let package = Package(
             swiftSettings: [.unsafeFlags(["-suppress-warnings"])],
             plugins: [.plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")]
         ),
+        .testTarget(
+            name: "ASCKitTests",
+            dependencies: ["ASCKit"]
+        ),
     ]
 )

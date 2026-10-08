@@ -205,6 +205,6 @@ ascelerate apps media library <bundle-id> --delete-unused
 ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
 ```
 
-`--only`, listeyi varlık kategorisine ve piksel boyutuna bakarak verilen türlere (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`) uyan görsellerle sınırlar; böylece 6,9 inç iPhone ekran görüntüleri gibi diğer artıklar yerinde kalır.
+`--only`, listeyi varlık kategorisine ve piksel boyutuna bakarak verilen türlere uyan görsellerle sınırlar: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`, `APP_IPHONE_67` gibi bir ekran görüntüsü görüntüleme türü (boyutlar App Store Connect'ten alınır) ya da dosyası hiç gelmemiş yüklemeler için `UNFINISHED_UPLOADS`. Böylece kitaplık cihaz türü cihaz türü temizlenebilir. Bir saatten yeni görseller her zaman korunur, çünkü aynı anda çalışan bir yükleme onları yerleştirmek üzere olabilir; App Store Connect'in saatlik API sınırına ulaşan bir çalıştırma durur ve daha sonra yeniden çalıştırmanızı ister.
 
 App Review'dan geçmiş görseller, yerleştirilmiş olsun ya da olmasın hiçbir zaman silinmez ve her görsel silinmeden hemen önce yeniden denetlenir.

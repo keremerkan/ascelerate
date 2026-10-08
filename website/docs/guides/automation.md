@@ -32,6 +32,18 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # same, e.g. fo
 - In a workflow file, `--dry-run` on a single step applies only to that step.
 - `builds upload` skips the upload. `builds archive` and `builds validate` still run: they don't change anything on App Store Connect.
 
+## API rate limit {#rate-limit}
+
+App Store Connect allows 3,600 API requests per hour for your API key, counted over a rolling hour. When a long command (a large media upload, a library cleanup, a price import) uses them up, ascelerate waits until App Store Connect says requests are allowed again, shows the time it will continue at, and then carries on. Press Ctrl-C to stop instead.
+
+In CI you may prefer to fail rather than wait: set `ASCELERATE_MAX_RATE_LIMIT_WAIT` to the most seconds a run may wait in total (`0` fails at the first rate-limited request).
+
+```bash
+ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes
+```
+
+`ascelerate rate-limit` shows how many requests are left; it never waits.
+
 ## Xcode signing in CI
 
 Both `builds archive` and the archive-to-IPA export pass `-allowProvisioningUpdates` to `xcodebuild`. Without this, `xcodebuild` only uses locally cached provisioning profiles and won't fetch updated ones from the Developer Portal.

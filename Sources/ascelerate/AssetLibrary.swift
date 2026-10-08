@@ -56,15 +56,70 @@ enum AssetLibrary {
     let isPlatformIndependent: Bool
   }
 
-  /// Whether a library image could belong to `slot`: same asset category and a size the slot
-  /// accepts. An unplaced image has no placement to tell, so this is how `media library --only`
-  /// tells a Duo screenshot (2853×2007) from a 6.9" one (1320×2868); an image with no size yet
-  /// (an unfinished upload) matches no slot.
-  static func image(_ image: Components.Schemas.AppAssetLibraryImage, fits slot: Slot) -> Bool {
-    guard let common = image.attributes?.common, common.category == slot.category,
+  /// Whether a library image could belong to a placement: same asset category and a size its
+  /// specs accept. An unplaced image has no placement to tell, so this is how `media library
+  /// --only` tells a Duo screenshot (2853×2007) from a 6.9" one (1320×2868); an image with no
+  /// size yet (an unfinished upload) matches nothing.
+  static func image(_ image: Components.Schemas.AppAssetLibraryImage, fits specs: [ImageSpec], category: String) -> Bool {
+    guard let common = image.attributes?.common, common.category == category,
       let width = common.imageAsset?.width, let height = common.imageAsset?.height
     else { return false }
-    return slot.imageSpecs.contains { $0.fits(width: width, height: height) }
+    return specs.contains { $0.fits(width: width, height: height) }
+  }
+
+  /// The placement group (`appAssetLibraryRefData` placementProfileGroups) each classic
+  /// screenshot display type's screenshots land in. Only used to recognize unplaced screenshots
+  /// by size, which can't put a placed image at risk.
+  static let displayTypeGroups: [String: String] = [
+    "APP_IPHONE_67": "IPHONE_DYNAMIC_ISLAND_LARGE_PROFILE",
+    "APP_IPHONE_65": "IPHONE_FACE_ID_LARGE_PROFILE",
+    "APP_IPHONE_61": "IPHONE_DYNAMIC_ISLAND_MEDIUM_PROFILE",
+    "APP_IPHONE_58": "IPHONE_FACE_ID_MEDIUM_PROFILE",
+    "APP_IPHONE_55": "IPHONE_HOME_BUTTON_LARGE_PROFILE",
+    "APP_IPHONE_47": "IPHONE_HOME_BUTTON_MEDIUM_PROFILE",
+    "APP_IPHONE_40": "IPHONE_HOME_BUTTON_40_PROFILE",
+    "APP_IPHONE_35": "IPHONE_HOME_BUTTON_35_PROFILE",
+    "APP_IPAD_PRO_3GEN_129": "IPAD_13_PROFILE",
+    "APP_IPAD_PRO_129": "IPAD_129_PROFILE",
+    "APP_IPAD_PRO_3GEN_11": "IPAD_11_PROFILE",
+    "APP_IPAD_105": "IPAD_105_PROFILE",
+    "APP_IPAD_97": "IPAD_97_PROFILE",
+    "APP_DESKTOP": "MAC_PROFILE",
+    "APP_APPLE_TV": "TV_PROFILE",
+    "APP_APPLE_VISION_PRO": "VISION_PRO_PROFILE",
+    "APP_WATCH_ULTRA": "WATCH_ULTRA_PROFILE",
+    "APP_WATCH_SERIES_10": "WATCH_SERIES_10_PROFILE",
+    "APP_WATCH_SERIES_7": "WATCH_SERIES_7_PROFILE",
+    "APP_WATCH_SERIES_4": "WATCH_SERIES_4_PROFILE",
+    "APP_WATCH_SERIES_3": "WATCH_SERIES_3_PROFILE",
+  ]
+
+  /// The screenshot sizes each placement group accepts, read from `appAssetLibraryRefData`.
+  static func screenshotSpecs(client: ASCClient) async throws -> [String: [ImageSpec]] {
+    let data = try await withTransientRetry {
+      try await client.appAssetLibraryRefDataGetCollection(query: .init(filterPlacementTypes: ["APP_SCREENSHOT"])).ok.body.json.data
+    }
+    var specsByGroup: [String: [ImageSpec]] = [:]
+    for datum in data {
+      var specsByID: [String: ImageSpec] = [:]
+      for spec in datum.attributes?.imageSpecs ?? [] {
+        guard let id = spec.specId, let size = spec.dimensions,
+          let minWidth = size.minWidth, let maxWidth = size.maxWidth, let minHeight = size.minHeight, let maxHeight = size.maxHeight
+        else { continue }
+        let ratio = spec.aspectRatio?.split(separator: ":").compactMap { Int($0) }
+        specsByID[id] = ImageSpec(
+          widths: minWidth...maxWidth, heights: minHeight...maxHeight,
+          aspect: minWidth == maxWidth || ratio?.count != 2 ? nil : (ratio![0], ratio![1]),
+          extensions: Set((spec.fileExtensions ?? []).map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".")) }))
+      }
+      for type in datum.attributes?.placementTypes ?? [] where type.placementTypeId == "APP_SCREENSHOT" {
+        for mapping in type.specMappings ?? [] {
+          guard let group = mapping.placementGroupId else { continue }
+          specsByGroup[group, default: []] += (mapping.specs ?? []).compactMap { specsByID[$0] }
+        }
+      }
+    }
+    return specsByGroup
   }
 
   /// Media folders uploaded through the library, by folder name. Specs from

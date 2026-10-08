@@ -115,7 +115,11 @@ struct Ascelerate: AsyncParsableCommand {
       msg += "\n  Hourly limit: \(rate.limit) requests"
       msg += "\n  Remaining:    \(rate.remaining) requests"
     }
-    msg += "\n  Wait a few minutes before retrying."
+    if let cap = ProcessInfo.processInfo.environment["ASCELERATE_MAX_RATE_LIMIT_WAIT"] {
+      msg += "\n  Stopped waiting for it: ASCELERATE_MAX_RATE_LIMIT_WAIT allows \(cap) seconds in total."
+    } else {
+      msg += "\n  Wait a few minutes before retrying."
+    }
     return msg
   }
 

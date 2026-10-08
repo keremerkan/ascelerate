@@ -27,10 +27,15 @@ extension Client {
   /// response is thrown as an `ASCError`, and `ASCPaging.allPages` can follow `links.next`.
   /// With `dryRun`, GETs go out as usual but every other request is stopped before it is sent
   /// and reported on stderr (method, path, JSON body), surfacing as `ASCDryRunStop`.
-  public static func appStoreConnect(credentials: ASCCredentials, dryRun: Bool = false) throws -> Client {
+  public static func appStoreConnect(
+    credentials: ASCCredentials, dryRun: Bool = false, rateLimitWait: ASCRateLimitWait? = nil
+  ) throws -> Client {
     let key = try P256.Signing.PrivateKey(pemRepresentation: credentials.privateKeyPEM)
-    var middlewares: [any ClientMiddleware] = [
-      ErrorMiddleware(),
+    var middlewares: [any ClientMiddleware] = [ErrorMiddleware()]
+    // Inside the error middleware, to see a 429 before it becomes an error; outside JWT signing,
+    // so a request sent again after a long wait gets a fresh token.
+    if let rateLimitWait { middlewares.append(RateLimitWaitMiddleware(policy: rateLimitWait)) }
+    middlewares += [
       PagingMiddleware(),
       NullsMiddleware(),
       JWTMiddleware(tokens: TokenStore(credentials: credentials, key: key)),
@@ -198,6 +203,84 @@ public enum ASCRateLimit {
     let recorder = Recorder()
     _ = try await $recorder.withValue(recorder) { try await operation() }
     return recorder.header
+  }
+}
+
+/// Waits out App Store Connect's hourly request limit instead of failing. A 429 response says
+/// when the quota frees up again (`Retry-After`, in seconds; seen live: 2,186), so the request is
+/// sent again after that. Concurrent requests share one wait and one notice.
+public struct ASCRateLimitWait: Sendable {
+  /// The most this process waits in total; past it, a 429 is returned as an error. nil waits as
+  /// long as Apple asks.
+  public var maxTotalWait: TimeInterval?
+  /// Called with the time waiting ends when a wait starts or grows, and with nil when requests
+  /// go through again.
+  public var onWait: @Sendable (Date?) -> Void
+
+  public init(maxTotalWait: TimeInterval?, onWait: @escaping @Sendable (Date?) -> Void) {
+    self.maxTotalWait = maxTotalWait
+    self.onWait = onWait
+  }
+}
+
+/// The shared state of a rate limit wait: when requests may go out again, and how long this
+/// process has waited so far.
+actor RateLimitGate {
+  static let shared = RateLimitGate()
+
+  private var resumeAt: Date?
+  private var totalWaited: TimeInterval = 0
+  private var isWaiting = false
+
+  /// When requests may go out again, if that's still ahead.
+  var pendingResume: Date? { resumeAt.flatMap { $0 > Date() ? $0 : nil } }
+
+  /// Starts or extends the wait to `deadline`, unless that would take the total past `cap`.
+  /// Returns whether to wait, and whether to announce it: when a wait starts, or grows by a
+  /// minute or more (concurrent 429s arrive milliseconds apart, each a hair later).
+  func wait(until deadline: Date, cap: TimeInterval?) -> (wait: Bool, announce: Bool) {
+    let start = pendingResume ?? Date()
+    let added = max(0, deadline.timeIntervalSince(start))
+    if let cap, totalWaited + added > cap { return (false, false) }
+    totalWaited += added
+    let announce = !isWaiting || deadline.timeIntervalSince(resumeAt ?? .distantPast) >= 60
+    if deadline > (resumeAt ?? .distantPast) { resumeAt = deadline }
+    isWaiting = true
+    return (true, announce)
+  }
+
+  /// Called after a request went through; true once per wait, to announce the end.
+  func finish() -> Bool {
+    guard isWaiting else { return false }
+    isWaiting = false
+    resumeAt = nil
+    return true
+  }
+}
+
+struct RateLimitWaitMiddleware: ClientMiddleware {
+  let policy: ASCRateLimitWait
+  var gate = RateLimitGate.shared
+
+  func intercept(
+    _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
+    next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+  ) async throws -> (HTTPResponse, HTTPBody?) {
+    while true {
+      // Don't spend a request while another one already knows the quota is gone.
+      if let resume = await gate.pendingResume {
+        try await Task.sleep(for: .seconds(resume.timeIntervalSinceNow))
+      }
+      let (response, responseBody) = try await next(request, body, baseURL)
+      guard response.status.code == 429, body?.iterationBehavior != .single else {
+        if await gate.finish() { policy.onWait(nil) }
+        return (response, responseBody)
+      }
+      let seconds = response.headerFields[.retryAfter].flatMap(TimeInterval.init) ?? 60
+      let decision = await gate.wait(until: Date().addingTimeInterval(seconds), cap: policy.maxTotalWait)
+      guard decision.wait else { return (response, responseBody) }
+      if decision.announce, let resume = await gate.pendingResume { policy.onWait(resume) }
+    }
   }
 }
 

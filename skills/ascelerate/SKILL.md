@@ -118,7 +118,7 @@ ascelerate apps media verify <app> media/                     # Retry stuck item
 ascelerate apps media prune <app> media/                      # Delete server sets with no matching local folder
 ```
 
-iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media verify` lists them (file name + state) and, given the folder, flags locales whose Duo files or order differ (fix: `media upload --replace`); a file that still fails after retries makes `media upload` re-place that locale's Duo set at the end of the run. `media download` skips them; `media prune` never deletes them.
+iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media verify` lists them (file name + state) and, given the folder, flags locales whose Duo files or order differ (fix: `media upload --replace`); a file that still fails after retries makes `media upload` re-place that locale's Duo set at the end of the run. `media download` skips them; `media prune` never deletes them. Product page header and search results images work the same way: `PRODUCT_PAGE_HEADER/` (PNG 3840×1646 or 5244×2950) and `APP_STORE_SEARCH_RESULTS/` (3:2 JPG/PNG from 1920×1280 to 3840×2560, or PNG 5244×2950), one image per locale shown on every device (not per display type), any platform; an upload replaces the current image. Videos for them aren't supported yet.
 
 #### Folder structure
 

@@ -443,6 +443,8 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 | `APP_IPHONE_40` | iPhone 4" (iPhone SE 1st gen, 5s, 5c) | Yes | Yes |
 | `APP_IPHONE_35` | iPhone 3.5" (iPhone 4s and earlier) | Yes | Yes |
 | `APP_IPHONE_DUO` | iPhone Duo (uploaded through the asset library, see below) | Yes | No |
+| `PRODUCT_PAGE_HEADER` | Product page header image (asset library, see below) | Yes | No |
+| `APP_STORE_SEARCH_RESULTS` | App Store search results image (asset library, see below) | Yes | No |
 | `APP_IPAD_PRO_3GEN_11` | iPad Pro 11" | Yes | Yes |
 | `APP_IPAD_PRO_129` | iPad Pro 12.9" (1st/2nd gen) | Yes | Yes |
 | `APP_IPAD_105` | iPad 10.5" (iPad Air 3rd gen, iPad Pro 10.5") | Yes | Yes |
@@ -473,6 +475,8 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
 >
 > App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ; `media download` doesn't include them yet, and `media prune` never deletes them.
+>
+> `PRODUCT_PAGE_HEADER` and `APP_STORE_SEARCH_RESULTS` folders also go through the asset library, one image per locale each that isn't tied to a device class (the version shows it on iPhone, iPad and iPhone Duo alike), on every platform's versions: the product page header takes a PNG at 3840×1646 or 5244×2950, and the search results image a 3:2 JPG/PNG from 1920×1280 to 3840×2560 or a 5244×2950 PNG. Uploading replaces the locale's current image (the old one is removed after the new one is uploaded); videos for these slots aren't supported yet.
 >
 > `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
 

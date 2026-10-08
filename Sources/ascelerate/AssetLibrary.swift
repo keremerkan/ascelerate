@@ -6,17 +6,77 @@ import ImageIO
 /// and "placements" put them on version, custom product page, event, and experiment localizations.
 /// Existing screenshot sets show up as placements too (`APP_IPHONE_67` lands in
 /// `IPHONE_DYNAMIC_ISLAND_LARGE_PROFILE`), but some display classes, such as iPhone Duo, exist only
-/// here and have no `ScreenshotDisplayType`. Verified live 2026-10-06: the library's ID equals the
+/// here and have no `ScreenshotDisplayType`, and so do the product page header and search results
+/// images (category `CREATIVE_ASSETS`). Verified live 2026-10-06: the library's ID equals the
 /// app's ID, placements keep creation order (no ordering request needed), and placement states
 /// include `ACTIVE`, which the spec's enum lacks.
 enum AssetLibrary {
-  /// Media folders with no `ScreenshotDisplayType` that upload through the library instead,
-  /// mapped to their placement group (`appAssetLibraryRefData` placementProfileGroups).
-  static let placementGroups = ["APP_IPHONE_DUO": "IPHONE_DUO_PROFILE"]
+  typealias PlacementType =
+    Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.FilterPlacementTypePayloadPayload
 
-  /// Pixel sizes the library accepts per placement group (`appAssetLibraryRefData` imageSpecs):
-  /// the Duo's inner display unfolded, then its cover display, each in both orientations.
-  static let acceptedSizes = ["IPHONE_DUO_PROFILE": [(2853, 2007), (2007, 2853), (2034, 1398), (1398, 2034)]]
+  /// Image sizes and file types a placement accepts (`appAssetLibraryRefData` imageSpecs).
+  struct ImageSpec: Sendable {
+    let widths: ClosedRange<Int>
+    let heights: ClosedRange<Int>
+    /// Width:height a size in the ranges must match, for specs that aren't a single size.
+    let aspect: (width: Int, height: Int)?
+    let extensions: Set<String>
+
+    static func size(_ width: Int, _ height: Int, _ extensions: Set<String>) -> ImageSpec {
+      ImageSpec(widths: width...width, heights: height...height, aspect: nil, extensions: extensions)
+    }
+
+    func accepts(width: Int, height: Int, fileExtension: String) -> Bool {
+      extensions.contains(fileExtension) && widths.contains(width) && heights.contains(height)
+        && aspect.map { width * $0.height == height * $0.width } ?? true
+    }
+
+    var description: String {
+      let types = extensions.sorted().filter { $0 != "jpeg" }.map { $0.uppercased() }.joined(separator: "/")
+      guard let aspect else { return "\(widths.lowerBound)×\(heights.lowerBound) \(types)" }
+      return "\(aspect.width):\(aspect.height) from \(widths.lowerBound)×\(heights.lowerBound) to \(widths.upperBound)×\(heights.upperBound) \(types)"
+    }
+  }
+
+  /// A media folder whose images go through the library instead of a classic screenshot set.
+  struct Slot: Sendable {
+    /// What a file is called on its progress line.
+    let fileLabel: String
+    let placementType: PlacementType
+    /// The placement profile group (`appAssetLibraryRefData` placementProfileGroups).
+    let group: String
+    let category: String
+    let imageSpecs: [ImageSpec]
+    /// One image per localization, replaced on upload, instead of an ordered set.
+    let isSingle: Bool
+    /// Placed on every platform's versions, not only iOS.
+    let isPlatformIndependent: Bool
+  }
+
+  /// Media folders uploaded through the library, by folder name. Specs from
+  /// `appAssetLibraryRefData`, read live 2026-10-08: iPhone Duo (its inner display unfolded, then
+  /// its cover display), and the product page header and search results images, which version,
+  /// custom product page and product page optimization localizations each hold one of.
+  static let slots: [String: Slot] = [
+    "APP_IPHONE_DUO": Slot(
+      fileLabel: "Screenshot", placementType: .appScreenshot, group: "IPHONE_DUO_PROFILE",
+      category: "APP_SCREENSHOTS_AND_PREVIEWS",
+      imageSpecs: [(2853, 2007), (2007, 2853), (2034, 1398), (1398, 2034)].map { .size($0.0, $0.1, ["png", "jpg", "jpeg"]) },
+      isSingle: false, isPlatformIndependent: false),
+    "PRODUCT_PAGE_HEADER": Slot(
+      fileLabel: "Header    ", placementType: .productPageHeaderAsset, group: "DEFAULT_PROFILE",
+      category: "CREATIVE_ASSETS",
+      imageSpecs: [.size(3840, 1646, ["png"]), .size(5244, 2950, ["png"])],
+      isSingle: true, isPlatformIndependent: true),
+    "APP_STORE_SEARCH_RESULTS": Slot(
+      fileLabel: "Search    ", placementType: .appStoreSearchResultsAsset, group: "DEFAULT_PROFILE",
+      category: "CREATIVE_ASSETS",
+      imageSpecs: [
+        ImageSpec(widths: 1920...3840, heights: 1280...2560, aspect: (3, 2), extensions: ["png", "jpg", "jpeg"]),
+        .size(5244, 2950, ["png"]),
+      ],
+      isSingle: true, isPlatformIndependent: true),
+  ]
 
   static func libraryID(appID: String, client: ASCClient) async throws -> String {
     try await withTransientRetry {
@@ -24,9 +84,8 @@ enum AssetLibrary {
     }
   }
 
-  /// Throws if the image's pixel size is not one the placement group accepts.
-  static func validateSize(of file: MediaFile, group: String) throws {
-    guard let accepted = acceptedSizes[group] else { return }
+  /// Throws if the image's pixel size or file type is not one the slot accepts.
+  static func validateSize(of file: MediaFile, slot: Slot) throws {
     guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: file.path) as CFURL, nil),
       let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
       let width = properties[kCGImagePropertyPixelWidth] as? Int,
@@ -34,13 +93,15 @@ enum AssetLibrary {
     else {
       throw MediaUploadError.cannotReadFile(file.path)
     }
-    guard accepted.contains(where: { $0 == (width, height) }) else {
-      throw MediaUploadError.unsupportedSize(width: width, height: height, accepted: accepted)
+    let fileExtension = (file.fileName as NSString).pathExtension.lowercased()
+    guard slot.imageSpecs.contains(where: { $0.accepts(width: width, height: height, fileExtension: fileExtension) }) else {
+      throw MediaUploadError.unsupportedImage(
+        "\(width)×\(height) \(fileExtension.uppercased())", accepted: slot.imageSpecs.map(\.description))
     }
   }
 
   /// Uploads an image to the library (reserve, upload chunks, commit) and returns its ID.
-  static func uploadImage(_ file: MediaFile, libraryID: String, client: ASCClient) async throws -> String {
+  static func uploadImage(_ file: MediaFile, category: String, libraryID: String, client: ASCClient) async throws -> String {
     try await uploadAsset(
       filePath: file.path,
       reserve: {
@@ -48,7 +109,7 @@ enum AssetLibrary {
         // the library, which nothing shows.
         let created = try await withTransientRetry {
           try await client.appAssetLibraryImagesCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(category: "APP_SCREENSHOTS_AND_PREVIEWS", fileName: file.fileName, fileSize: Int64(file.fileSize)),
+            attributes: .init(category: category, fileName: file.fileName, fileSize: Int64(file.fileSize)),
             relationships: .init(assetLibrary: .init(data: .init(id: libraryID, _type: "appAssetLibraries"))),
             _type: "appAssetLibraryImages"
           )))).created.body.json.data
@@ -68,21 +129,21 @@ enum AssetLibrary {
     )
   }
 
-  /// Places a library image on an App Store version localization as a screenshot in `group`
-  /// and returns the placement's ID. Transient failures are retried, but a dropped connection
+  /// Places a library image on an App Store version localization in `slot` and returns the
+  /// placement's ID. Transient failures are retried, but a dropped connection
   /// can hide a placement the server did create, and posting it again would show the screenshot
   /// twice, so a retry first looks for a placement of the same image.
   @discardableResult
-  static func placeScreenshot(imageID: String, localizationID: String, group: String, client: ASCClient) async throws -> String {
+  static func placeImage(imageID: String, localizationID: String, slot: Slot, client: ASCClient) async throws -> String {
     var isRetry = false
     return try await withTransientRetry {
       if isRetry,
-        let existing = try await screenshotPlacements(localizationID: localizationID, group: group, imageID: imageID, client: client).first {
+        let existing = try await placements(localizationID: localizationID, slot: slot, imageID: imageID, client: client).first {
         return existing.id
       }
       isRetry = true
       return try await client.appAssetLibraryPlacementsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(placementGroup: group, placementType: "APP_SCREENSHOT"),
+        attributes: .init(placementGroup: slot.group, placementType: slot.placementType.rawValue),
         relationships: .init(
           appStoreVersionLocalization: .init(data: .init(id: localizationID, _type: "appStoreVersionLocalizations")),
           image: .init(data: .init(id: imageID, _type: "appAssetLibraryImages"))
@@ -92,16 +153,15 @@ enum AssetLibrary {
     }
   }
 
-  /// The localization's screenshot placements in `group`, in display order, optionally only
-  /// those of one image.
-  static func screenshotPlacements(
-    localizationID: String, group: String, imageID: String? = nil, client: ASCClient
+  /// The localization's placements in `slot`, in display order, optionally only those of one image.
+  static func placements(
+    localizationID: String, slot: Slot, imageID: String? = nil, client: ASCClient
   ) async throws -> [Components.Schemas.AppAssetLibraryPlacement] {
     try await withTransientRetry {
       try await client.appStoreVersionLocalizationsPlacementsGetToManyRelated(
         path: .init(id: localizationID),
         query: .init(
-          filterPlacementType: [.appScreenshot], filterPlacementGroup: [group], filterImage: imageID.map { [$0] },
+          filterPlacementType: [slot.placementType], filterPlacementGroup: [slot.group], filterImage: imageID.map { [$0] },
           sort: [.placementGroupPosition], limit: 200)
       ).ok.body.json.data
     }

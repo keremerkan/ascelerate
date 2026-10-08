@@ -2134,11 +2134,27 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
         path: .init(id: set.id)
       ).ok.body.json.data
       let allIDs = screenshots.map(\.id)
+      // A classic screenshot is also an asset library placement, which can stay PENDING after
+      // the screenshot reads COMPLETE (seen live 2026-10-09: 17 hours, and App Review refused
+      // the version with ASSET_IN_POST_PROCESSING). The placements follow the set's order.
+      var placementStates: [String?] = []
+      if let group = AssetLibrary.displayTypeGroups[displayType] {
+        let placements = try await AssetLibrary.placements(localizationID: loc.id, type: .appScreenshot, group: group, client: client)
+        if placements.count == screenshots.count { placementStates = placements.map { $0.attributes?.state } }
+      }
       for (i, screenshot) in screenshots.enumerated() {
-        items.append(item(
+        var entry = item(
           locale: locale, displayTypeName: displayType, position: i + 1,
           fileName: screenshot.attributes?.fileName, state: screenshot.attributes?.assetDeliveryState?.state,
-          isScreenshot: true, setID: set.id, mediaID: screenshot.id, allIDs: allIDs))
+          isScreenshot: true, setID: set.id, mediaID: screenshot.id, allIDs: allIDs)
+        if entry.isComplete, i < placementStates.count, let placementState = placementStates[i],
+          placementState != "ACTIVE", placementState != "INACTIVE", !placementState.hasPrefix("PARENT_") {
+          entry = MediaItemStatus(
+            locale: entry.locale, displayTypeName: entry.displayTypeName, position: entry.position, fileName: entry.fileName,
+            state: "\(formatState(placementState)) in the asset library", isComplete: false, isScreenshot: true,
+            setID: entry.setID, mediaID: entry.mediaID, allIDsInSet: entry.allIDsInSet)
+        }
+        items.append(entry)
       }
     }
 

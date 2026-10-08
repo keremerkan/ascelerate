@@ -179,6 +179,8 @@ ascelerate apps media verify <bundle-id> media/
 
 Klasör argümanı olmadan komut salt okunur bir durum raporu gösterir. Tüm öğeleri tamamlanmış olan setler tek satırlık özet gösterir; takılmış öğeleri olan setler her dosyayı ve durumunu genişleterek gösterir. Klasör argümanı ile takılmış öğeleri silip eşleşen yerel dosyalardan tekrar yüklemeyi teklif eder ve orijinal sıra düzenini korur.
 
+Bir ekran görüntüsü tamamlanmış görünse de varlık kitaplığındaki yerleşimi hâlâ işleniyorsa takılmış sayılır. App Review bu durumdaki bir sürümü kabul etmez ("Asset is being processed"); klasörle yeniden denemek o ekran görüntüsünü yeniden yükler.
+
 ## Eski Setleri Temizleme
 
 Yükleme sırasındaki `--replace` yalnızca yerel bir klasörle eşleşen setleri boşaltır; artık sunmadığınız ekran boyutlarına ait sunucu setleri eski ekran görüntülerini korur. `media prune`, eşleşen yerel locale/display-type klasörü olmayan setleri, öğe sayılarıyla birlikte listeleyip onay aldıktan sonra siler:

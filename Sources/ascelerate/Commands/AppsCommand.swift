@@ -1899,7 +1899,7 @@ struct AppsCommand: AsyncParsableCommand {
               print("Version is already submitted for review (state: \(activeState.map { formatState($0) } ?? "—")).")
               return nil
             case "READY_FOR_REVIEW":
-              print("Found existing review submission (state: readyForReview). Resubmitting...")
+              print("Found an existing draft review submission; using it.")
               submissionID = active.id
             case "UNRESOLVED_ISSUES":
               print("Found existing review submission with unresolved issues from a previous review.")
@@ -1910,6 +1910,15 @@ struct AppsCommand: AsyncParsableCommand {
               submissionID = active.id
             default:
               submissionID = active.id
+          }
+          // A draft left by a failed submit (the version was rejected when added) has no items:
+          // add the version if the submission doesn't hold it yet.
+          // The version relationship only carries its ID when included.
+          let items = try await client.reviewSubmissionsItemsGetToManyRelated(
+            path: .init(id: submissionID), query: .init(fieldsAppStoreVersions: [.versionString], include: [.appStoreVersion])
+          ).ok.body.json.data
+          if !items.contains(where: { $0.relationships?.appStoreVersion?.data?.id == appVersion.id }) {
+            try await addVersion(appVersion, versionString: versionString, to: submissionID, client: client)
           }
         } else {
           // Step 1: Create a review submission
@@ -1922,16 +1931,25 @@ struct AppsCommand: AsyncParsableCommand {
           print("Created review submission (\(submissionID))")
           
           // Step 2: Add the app store version as a review item
-          _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
-            relationships: .init(
-              appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions")),
-              reviewSubmission: .init(data: .init(id: submissionID, _type: "reviewSubmissions"))
-            ),
-            _type: "reviewSubmissionItems"
-          )))).created
-          print("Added version \(versionString) to submission")
+          try await addVersion(appVersion, versionString: versionString, to: submissionID, client: client)
         }
         return submissionID
+      }
+
+      /// Adds the version to a review submission. App Store Connect checks the version here: a
+      /// 409 "not in valid state" lists what's missing in its associated errors, which the error
+      /// output prints.
+      private func addVersion(
+        _ appVersion: Components.Schemas.AppStoreVersion, versionString: String, to submissionID: String, client: ASCClient
+      ) async throws {
+        _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
+          relationships: .init(
+            appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions")),
+            reviewSubmission: .init(data: .init(id: submissionID, _type: "reviewSubmissions"))
+          ),
+          _type: "reviewSubmissionItems"
+        )))).created
+        print("Added version \(versionString) to submission")
       }
 
       private func submitBundledProducts(app: Components.Schemas.App, client: ASCClient) async throws {

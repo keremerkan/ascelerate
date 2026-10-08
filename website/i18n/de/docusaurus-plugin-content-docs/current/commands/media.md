@@ -179,6 +179,8 @@ ascelerate apps media verify <bundle-id> media/
 
 Ohne Ordner-Argument zeigt der Befehl einen reinen Statusbericht an. Sets, in denen alle Elemente abgeschlossen sind, werden als kompakte Einzeiler angezeigt; Sets mit blockierten Elementen werden erweitert, um jede Datei und ihren Status anzuzeigen. Mit einem Ordner-Argument wird angeboten, blockierte Elemente erneut zu versuchen, indem sie gelöscht und aus den passenden lokalen Dateien erneut hochgeladen werden, wobei die ursprüngliche Reihenfolge beibehalten wird.
 
+Ein Screenshot gilt auch dann als blockiert, wenn er als abgeschlossen erscheint, seine Platzierung in der Asset-Bibliothek aber noch verarbeitet wird. App Review lehnt eine Version in diesem Zustand ab („Asset is being processed“), und ein erneuter Versuch mit dem Ordner lädt diesen Screenshot neu hoch.
+
 ## Veraltete Sets entfernen
 
 `--replace` beim Hochladen leert nur Sets, die einem lokalen Ordner entsprechen — Server-Sets für Bildschirmgrößen, die Sie nicht mehr ausliefern, behalten ihre veralteten Screenshots. `media prune` löscht die Sets ohne passenden lokalen Locale-/Display-Type-Ordner, nachdem sie mit Asset-Anzahl aufgelistet und bestätigt wurden:

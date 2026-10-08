@@ -62,3 +62,5 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 
 Le type de fichier détermine s'il est téléversé comme capture d'écran ou comme aperçu de l'app. Les types d'affichage et d'aperçu utilisent les identifiants d'appareil App Store standard (par ex. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).
+
+`--display-type` accepte aussi les emplacements de la bibliothèque de ressources `PRODUCT_PAGE_HEADER` et `APP_STORE_SEARCH_RESULTS` (une image ou une vidéo qui remplace l'actuelle) et `APP_IPHONE_DUO` (une capture ou un aperçu, ajouté après les existants) ; leurs tailles sont indiquées dans [Médias](media.md#header-and-search-results). `media list` les affiche, et `media delete` les retire par leur ID.

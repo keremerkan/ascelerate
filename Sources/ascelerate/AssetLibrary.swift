@@ -1,5 +1,6 @@
 import ASCKit
 import Foundation
+import AVFoundation
 import ImageIO
 
 /// App Asset Library (App Store Connect API 4.5.1): every app has a library of images and videos,
@@ -41,35 +42,87 @@ enum AssetLibrary {
     }
   }
 
-  /// A media folder whose images go through the library instead of a classic screenshot set.
+  /// Video sizes, lengths, frame rates and file types a placement accepts
+  /// (`appAssetLibraryRefData` videoSpecs).
+  struct VideoSpec: Sendable {
+    let widths: ClosedRange<Int>
+    let heights: ClosedRange<Int>
+    /// Width:height a size in the ranges must match, for specs that aren't a single size.
+    let aspect: (width: Int, height: Int)?
+    let seconds: ClosedRange<Double>
+    /// Accepted frame rates (each a range; 30 and 60 are given as 30...30 and 60...60).
+    let frameRates: [ClosedRange<Double>]
+    let requiresAudio: Bool
+    let extensions: Set<String> = ["mp4", "m4v", "mov"]
+
+    static func size(
+      _ width: Int, _ height: Int, seconds: ClosedRange<Double>, frameRates: [ClosedRange<Double>], requiresAudio: Bool
+    ) -> VideoSpec {
+      VideoSpec(
+        widths: width...width, heights: height...height, aspect: nil, seconds: seconds, frameRates: frameRates,
+        requiresAudio: requiresAudio)
+    }
+
+    func accepts(width: Int, height: Int, seconds length: Double, fps: Double, hasAudio: Bool, fileExtension: String) -> Bool {
+      extensions.contains(fileExtension) && widths.contains(width) && heights.contains(height)
+        && (aspect.map { width * $0.height == height * $0.width } ?? true)
+        && seconds.contains(length.rounded(.down))
+        // 29.97 fps counts as 30.
+        && frameRates.contains { ($0.lowerBound - 0.5)...($0.upperBound + 0.5) ~= fps }
+        && (hasAudio || !requiresAudio)
+    }
+
+    var description: String {
+      let size = aspect.map { "\($0.width):\($0.height) from \(widths.lowerBound)×\(heights.lowerBound) to \(widths.upperBound)×\(heights.upperBound)" }
+        ?? "\(widths.lowerBound)×\(heights.lowerBound)"
+      let rates = frameRates.map { $0.lowerBound == $0.upperBound ? "\(Int($0.lowerBound))" : "\(Int($0.lowerBound))–\(Int($0.upperBound))" }
+      return "\(size), \(Int(seconds.lowerBound))–\(Int(seconds.upperBound)) s at \(rates.joined(separator: " or ")) fps\(requiresAudio ? " with audio" : "")"
+    }
+  }
+
+  /// A media folder whose files go through the library instead of a classic screenshot set.
   struct Slot: Sendable {
-    /// What a file is called on its progress line.
+    /// What an image is called on its progress line.
     let fileLabel: String
     let placementType: PlacementType
     /// The placement profile group (`appAssetLibraryRefData` placementProfileGroups).
     let group: String
     let category: String
     let imageSpecs: [ImageSpec]
-    /// One image per localization, replaced on upload, instead of an ordered set.
+    /// Where the folder's videos go (header and search results take a video in the same place as
+    /// the image; iPhone Duo previews are their own placement type), or nil for images only.
+    var videoPlacementType: PlacementType? = nil
+    var videoSpecs: [VideoSpec] = []
+    /// What a video is called on its progress line.
+    var videoLabel = "Preview   "
+    /// One file (image or video) per localization, replaced on upload, instead of an ordered set.
     let isSingle: Bool
     /// Placed on every platform's versions, not only iOS.
     let isPlatformIndependent: Bool
   }
 
-  /// Whether a library image could belong to a placement: same asset category and a size its
-  /// specs accept. An unplaced image has no placement to tell, so this is how `media library
-  /// --only` tells a Duo screenshot (2853×2007) from a 6.9" one (1320×2868); an image with no
-  /// size yet (an unfinished upload) matches nothing.
-  static func image(_ image: Components.Schemas.AppAssetLibraryImage, fits specs: [ImageSpec], category: String) -> Bool {
-    guard let common = image.attributes?.common, common.category == category,
-      let width = common.imageAsset?.width, let height = common.imageAsset?.height
-    else { return false }
-    return specs.contains { $0.fits(width: width, height: height) }
+  /// What a placement is on.
+  enum Owner: Sendable {
+    case versionLocalization(String)
+    case productPageLocalization(String)
+  }
+
+  /// A library image or video.
+  enum Asset: Hashable, Sendable {
+    case image(String)
+    case video(String)
+
+    var id: String {
+      switch self {
+        case .image(let id), .video(let id): id
+      }
+    }
   }
 
   /// The placement group (`appAssetLibraryRefData` placementProfileGroups) each classic
-  /// screenshot display type's screenshots land in. Only used to recognize unplaced screenshots
-  /// by size, which can't put a placed image at risk.
+  /// screenshot display type's screenshots and previews land in: used to find a classic set's
+  /// library assets and, with `media library --only`, to recognize unplaced ones. A wrong entry
+  /// can only miss a cleanup, since only unused assets are ever deleted.
   static let displayTypeGroups: [String: String] = [
     "APP_IPHONE_67": "IPHONE_DYNAMIC_ISLAND_LARGE_PROFILE",
     "APP_IPHONE_65": "IPHONE_FACE_ID_LARGE_PROFILE",
@@ -94,32 +147,37 @@ enum AssetLibrary {
     "APP_WATCH_SERIES_3": "WATCH_SERIES_3_PROFILE",
   ]
 
-  /// The screenshot sizes each placement group accepts, read from `appAssetLibraryRefData`.
-  static func screenshotSpecs(client: ASCClient) async throws -> [String: [ImageSpec]] {
+  /// The spec IDs (`appAssetLibraryRefData`) each placement type and group accepts, keyed
+  /// "TYPE|GROUP". Every library image and video records the spec it was accepted under, which is
+  /// how `media library --only` tells an unplaced Duo screenshot from a 6.9" one, or a header
+  /// video from a Duo preview.
+  static func specIDs(client: ASCClient) async throws -> [String: Set<String>] {
+    let types = ["APP_SCREENSHOT", "APP_PREVIEW", "PRODUCT_PAGE_HEADER_ASSET", "APP_STORE_SEARCH_RESULTS_ASSET"]
     let data = try await withTransientRetry {
-      try await client.appAssetLibraryRefDataGetCollection(query: .init(filterPlacementTypes: ["APP_SCREENSHOT"])).ok.body.json.data
+      try await client.appAssetLibraryRefDataGetCollection(query: .init(filterPlacementTypes: types)).ok.body.json.data
     }
-    var specsByGroup: [String: [ImageSpec]] = [:]
+    var result: [String: Set<String>] = [:]
     for datum in data {
-      var specsByID: [String: ImageSpec] = [:]
-      for spec in datum.attributes?.imageSpecs ?? [] {
-        guard let id = spec.specId, let size = spec.dimensions,
-          let minWidth = size.minWidth, let maxWidth = size.maxWidth, let minHeight = size.minHeight, let maxHeight = size.maxHeight
-        else { continue }
-        let ratio = spec.aspectRatio?.split(separator: ":").compactMap { Int($0) }
-        specsByID[id] = ImageSpec(
-          widths: minWidth...maxWidth, heights: minHeight...maxHeight,
-          aspect: minWidth == maxWidth || ratio?.count != 2 ? nil : (ratio![0], ratio![1]),
-          extensions: Set((spec.fileExtensions ?? []).map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".")) }))
-      }
-      for type in datum.attributes?.placementTypes ?? [] where type.placementTypeId == "APP_SCREENSHOT" {
+      for type in datum.attributes?.placementTypes ?? [] {
+        guard let typeID = type.placementTypeId else { continue }
         for mapping in type.specMappings ?? [] {
           guard let group = mapping.placementGroupId else { continue }
-          specsByGroup[group, default: []] += (mapping.specs ?? []).compactMap { specsByID[$0] }
+          result["\(typeID)|\(group)", default: []].formUnion(mapping.specs ?? [])
         }
       }
     }
-    return specsByGroup
+    return result
+  }
+
+  /// The placement types and groups a `media library --only` kind covers: a library folder's
+  /// own (Duo screenshots and previews, the header, search results), or a classic display type's
+  /// screenshots and previews.
+  static func placementTargets(ofKind kind: String) -> [(type: String, group: String)]? {
+    if let slot = slots[kind] {
+      return [(slot.placementType.rawValue, slot.group)] + (slot.videoPlacementType.map { [($0.rawValue, slot.group)] } ?? [])
+    }
+    guard let group = displayTypeGroups[kind] else { return nil }
+    return [("APP_SCREENSHOT", group), ("APP_PREVIEW", group)]
   }
 
   /// Media folders uploaded through the library, by folder name. Specs from
@@ -131,11 +189,18 @@ enum AssetLibrary {
       fileLabel: "Screenshot", placementType: .appScreenshot, group: "IPHONE_DUO_PROFILE",
       category: "APP_SCREENSHOTS_AND_PREVIEWS",
       imageSpecs: [(2853, 2007), (2007, 2853), (2034, 1398), (1398, 2034)].map { .size($0.0, $0.1, ["png", "jpg", "jpeg"]) },
+      videoPlacementType: .appPreview,
+      videoSpecs: [(1920, 886), (886, 1920)].map {
+        .size($0.0, $0.1, seconds: 15...30, frameRates: [23...30], requiresAudio: true)
+      },
       isSingle: false, isPlatformIndependent: false),
     "PRODUCT_PAGE_HEADER": Slot(
       fileLabel: "Header    ", placementType: .productPageHeaderAsset, group: "DEFAULT_PROFILE",
       category: "CREATIVE_ASSETS",
       imageSpecs: [.size(3840, 1646, ["png"]), .size(5244, 2950, ["png"])],
+      videoPlacementType: .productPageHeaderAsset,
+      videoSpecs: [.size(3840, 1646, seconds: 5...30, frameRates: [30...30, 60...60], requiresAudio: false)],
+      videoLabel: "Header    ",
       isSingle: true, isPlatformIndependent: true),
     "APP_STORE_SEARCH_RESULTS": Slot(
       fileLabel: "Search    ", placementType: .appStoreSearchResultsAsset, group: "DEFAULT_PROFILE",
@@ -144,6 +209,13 @@ enum AssetLibrary {
         ImageSpec(widths: 1920...3840, heights: 1280...2560, aspect: (3, 2), extensions: ["png", "jpg", "jpeg"]),
         .size(5244, 2950, ["png"]),
       ],
+      videoPlacementType: .appStoreSearchResultsAsset,
+      videoSpecs: [
+        VideoSpec(
+          widths: 1920...3840, heights: 1280...2560, aspect: (3, 2), seconds: 5...30, frameRates: [30...30, 60...60],
+          requiresAudio: false)
+      ],
+      videoLabel: "Search    ",
       isSingle: true, isPlatformIndependent: true),
   ]
 
@@ -167,6 +239,54 @@ enum AssetLibrary {
       throw MediaUploadError.unsupportedImage(
         "\(width)×\(height) \(fileExtension.uppercased())", accepted: slot.imageSpecs.map(\.description))
     }
+  }
+
+  /// Throws if the video's size, length, frame rate, audio or file type is not one the slot
+  /// accepts.
+  static func validateVideo(_ file: MediaFile, slot: Slot) async throws {
+    let asset = AVURLAsset(url: URL(fileURLWithPath: file.path))
+    guard let track = try await asset.loadTracks(withMediaType: .video).first else {
+      throw MediaUploadError.cannotReadFile(file.path)
+    }
+    let (naturalSize, transform, fps) = try await track.load(.naturalSize, .preferredTransform, .nominalFrameRate)
+    let size = naturalSize.applying(transform)
+    let width = Int(abs(size.width).rounded()), height = Int(abs(size.height).rounded())
+    let seconds = try await asset.load(.duration).seconds
+    let hasAudio = !(try await asset.loadTracks(withMediaType: .audio)).isEmpty
+    let fileExtension = (file.fileName as NSString).pathExtension.lowercased()
+    guard slot.videoSpecs.contains(where: {
+      $0.accepts(width: width, height: height, seconds: seconds, fps: Double(fps), hasAudio: hasAudio, fileExtension: fileExtension)
+    }) else {
+      let found = "\(width)×\(height), \(String(format: "%.1f", seconds)) s at \(String(format: "%g", (fps * 100).rounded() / 100)) fps\(hasAudio ? " with audio" : " without audio")"
+      throw MediaUploadError.unsupportedVideo(found, accepted: slot.videoSpecs.map(\.description))
+    }
+  }
+
+  /// Uploads a video to the library (reserve, upload chunks, commit) and returns its ID.
+  static func uploadVideo(_ file: MediaFile, category: String, libraryID: String, client: ASCClient) async throws -> String {
+    try await uploadAsset(
+      filePath: file.path,
+      reserve: {
+        // As with images, a repeated reserve can at worst leave an unplaced video behind.
+        let created = try await withTransientRetry {
+          try await client.appAssetLibraryVideosCreateInstance(body: .json(.init(data: .init(
+            attributes: .init(category: category, fileName: file.fileName, fileSize: Int64(file.fileSize)),
+            relationships: .init(assetLibrary: .init(data: .init(id: libraryID, _type: "appAssetLibraries"))),
+            _type: "appAssetLibraryVideos"
+          )))).created.body.json.data
+        }
+        guard case .awaitingUpload(let attributes) = created.attributes else {
+          throw MediaUploadError.noUploadOperations
+        }
+        return (created.id, attributes.value2.uploadOperations ?? [])
+      },
+      commit: { id, _ in
+        _ = try await client.appAssetLibraryVideosUpdateInstance(
+          path: .init(id: id),
+          body: .json(.init(data: .init(attributes: .init(uploaded: true), id: id, _type: "appAssetLibraryVideos")))
+        ).ok
+      }
+    )
   }
 
   /// Uploads an image to the library (reserve, upload chunks, commit) and returns its ID.
@@ -198,92 +318,187 @@ enum AssetLibrary {
     )
   }
 
-  /// Places a library image on an App Store version localization in `slot` and returns the
-  /// placement's ID. Transient failures are retried, but a dropped connection
-  /// can hide a placement the server did create, and posting it again would show the screenshot
-  /// twice, so a retry first looks for a placement of the same image.
+  /// Places a library image or video on an App Store version localization and returns the
+  /// placement's ID. Transient failures are retried, but a dropped connection can hide a
+  /// placement the server did create, and posting it again would show the asset twice, so a retry
+  /// first looks for a placement of the same asset.
   @discardableResult
-  static func placeImage(imageID: String, localizationID: String, slot: Slot, client: ASCClient) async throws -> String {
+  static func place(
+    _ asset: Asset, on owner: Owner, type: PlacementType, group: String, client: ASCClient
+  ) async throws -> String {
     var isRetry = false
     return try await withTransientRetry {
       if isRetry,
-        let existing = try await placements(localizationID: localizationID, slot: slot, imageID: imageID, client: client).first {
+        let existing = try await placements(on: owner, type: type, group: group, of: asset, client: client).first {
         return existing.id
       }
       isRetry = true
+      let image: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.ImagePayload? =
+        if case .image(let id) = asset { .init(data: .init(id: id, _type: "appAssetLibraryImages")) } else { nil }
+      let video: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.VideoPayload? =
+        if case .video(let id) = asset { .init(data: .init(id: id, _type: "appAssetLibraryVideos")) } else { nil }
+      typealias Relationships = Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload
+      var version: Relationships.AppStoreVersionLocalizationPayload?
+      var productPage: Relationships.AppCustomProductPageLocalizationPayload?
+      switch owner {
+        case .versionLocalization(let id): version = .init(data: .init(id: id, _type: "appStoreVersionLocalizations"))
+        case .productPageLocalization(let id): productPage = .init(data: .init(id: id, _type: "appCustomProductPageLocalizations"))
+      }
       return try await client.appAssetLibraryPlacementsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(placementGroup: slot.group, placementType: slot.placementType.rawValue),
+        attributes: .init(placementGroup: group, placementType: type.rawValue),
         relationships: .init(
-          appStoreVersionLocalization: .init(data: .init(id: localizationID, _type: "appStoreVersionLocalizations")),
-          image: .init(data: .init(id: imageID, _type: "appAssetLibraryImages"))
+          appCustomProductPageLocalization: productPage, appStoreVersionLocalization: version,
+          image: image, video: video
         ),
         _type: "appAssetLibraryPlacements"
       )))).created.body.json.data.id
     }
   }
 
-  /// The localization's placements in `slot`, in display order, optionally only those of one image.
+  /// The localization's placements in `slot`, in display order, optionally only those of one asset.
   static func placements(
-    localizationID: String, slot: Slot, imageID: String? = nil, client: ASCClient
+    localizationID: String, slot: Slot, of asset: Asset? = nil, client: ASCClient
   ) async throws -> [Components.Schemas.AppAssetLibraryPlacement] {
     try await placements(
-      localizationID: localizationID, type: slot.placementType, group: slot.group, imageID: imageID, client: client)
+      localizationID: localizationID, type: slot.placementType, group: slot.group, of: asset, client: client)
   }
 
   static func placements(
-    localizationID: String, type: PlacementType, group: String, imageID: String? = nil, client: ASCClient
+    localizationID: String, type: PlacementType, group: String, of asset: Asset? = nil, client: ASCClient
   ) async throws -> [Components.Schemas.AppAssetLibraryPlacement] {
-    try await withTransientRetry {
-      try await client.appStoreVersionLocalizationsPlacementsGetToManyRelated(
-        path: .init(id: localizationID),
-        query: .init(
-          filterPlacementType: [type], filterPlacementGroup: [group], filterImage: imageID.map { [$0] },
-          sort: [.placementGroupPosition], limit: 200)
-      ).ok.body.json.data
-    }
+    try await placements(on: .versionLocalization(localizationID), type: type, group: group, of: asset, client: client)
   }
 
-  /// The library images behind a localization's classic screenshot set: its screenshots are the
-  /// screenshot placements in the display type's group (`displayTypeGroups`). Read them before
-  /// the set is cleared; deleting a classic screenshot leaves its library image behind, and the
-  /// classic API has no link from screenshot to image.
-  static func classicScreenshotImages(localizationID: String, displayType: String, client: ASCClient) async throws -> [String] {
-    guard let group = displayTypeGroups[displayType] else { return [] }
-    let placements = try await placements(localizationID: localizationID, type: .appScreenshot, group: group, client: client)
-    return try await withThrowingTaskGroup(of: String?.self) { tasks in
-      for placement in placements {
-        tasks.addTask { try await placedImage(placementID: placement.id, client: client).id }
+  /// The placements of `type` in `group` on `owner`, in display order, optionally only those of
+  /// one asset.
+  static func placements(
+    on owner: Owner, type: PlacementType, group: String, of asset: Asset? = nil, client: ASCClient
+  ) async throws -> [Components.Schemas.AppAssetLibraryPlacement] {
+    var imageID: String?, videoID: String?
+    switch asset {
+      case .image(let id): imageID = id
+      case .video(let id): videoID = id
+      case nil: break
+    }
+    return try await withTransientRetry {
+      switch owner {
+        case .versionLocalization(let id):
+          return try await client.appStoreVersionLocalizationsPlacementsGetToManyRelated(
+            path: .init(id: id),
+            query: .init(
+              filterPlacementType: [type], filterPlacementGroup: [group], filterImage: imageID.map { [$0] },
+              filterVideo: videoID.map { [$0] }, sort: [.placementGroupPosition], limit: 200)
+          ).ok.body.json.data
+        case .productPageLocalization(let id):
+          let pageType = Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query
+            .FilterPlacementTypePayloadPayload(rawValue: type.rawValue)
+          return try await client.appCustomProductPageLocalizationsPlacementsGetToManyRelated(
+            path: .init(id: id),
+            query: .init(
+              filterPlacementType: pageType.map { [$0] } ?? [], filterPlacementGroup: [group],
+              filterImage: imageID.map { [$0] }, filterVideo: videoID.map { [$0] }, sort: [.placementGroupPosition], limit: 200)
+          ).ok.body.json.data
       }
-      return try await tasks.reduce(into: []) { ids, id in id.map { ids.append($0) } }
     }
   }
 
-  /// Deletes each of these library images that `isUnused` allows; returns how many it deleted.
-  /// An image still placed anywhere (e.g. shared with the live version) is kept.
-  static func deleteImagesIfUnused(_ ids: [String], client: ASCClient) async throws -> Int {
+  /// Every placement of the library folders (iPhone Duo screenshots and previews, header, search
+  /// results) on `owner`, with the folder name it belongs to.
+  static func slotPlacements(on owner: Owner, client: ASCClient) async throws
+    -> [(kind: String, placement: Components.Schemas.AppAssetLibraryPlacement)] {
+    var result: [(String, Components.Schemas.AppAssetLibraryPlacement)] = []
+    for (name, slot) in slots.sorted(by: { $0.key < $1.key }) {
+      var types = [slot.placementType]
+      if let videoType = slot.videoPlacementType, videoType != slot.placementType { types.append(videoType) }
+      for type in types {
+        result += try await placements(on: owner, type: type, group: slot.group, client: client).map { (name, $0) }
+      }
+    }
+    return result
+  }
+
+  /// Validates, uploads and places one file in `slot` on `owner`: images under the slot's
+  /// placement type, videos under its video placement type. The `current` placements (a single
+  /// slot's existing one) are removed once the file is uploaded, so a failed upload leaves the
+  /// slot as it was. Under dry run nothing is reserved, and a placeholder ID lets the placement be
+  /// previewed. Returns the new placement's ID.
+  static func uploadAndPlace(
+    _ file: MediaFile, slot: Slot, on owner: Owner, libraryID: String, replacing current: [String] = [],
+    client: ASCClient
+  ) async throws -> String {
+    let asset: Asset
+    let type: PlacementType
+    if videoExtensions.contains((file.fileName as NSString).pathExtension.lowercased()), let videoType = slot.videoPlacementType {
+      try await validateVideo(file, slot: slot)
+      asset = .video(try await unlessDryRunStopped {
+        try await uploadVideo(file, category: slot.category, libraryID: libraryID, client: client)
+      } ?? "DRY-RUN-VIDEO")
+      type = videoType
+    } else {
+      try validateSize(of: file, slot: slot)
+      asset = .image(try await unlessDryRunStopped {
+        try await uploadImage(file, category: slot.category, libraryID: libraryID, client: client)
+      } ?? "DRY-RUN-IMAGE")
+      type = slot.placementType
+    }
+    for placementID in current {
+      try await removePlacement(id: placementID, client: client)
+    }
+    return try await place(asset, on: owner, type: type, group: slot.group, client: client)
+  }
+
+  /// The library assets behind a localization's classic screenshot or preview set: its items are
+  /// the placements of `type` (screenshot or preview) in the display type's group
+  /// (`displayTypeGroups`). Read them before the set is cleared; deleting a classic item leaves
+  /// its library asset behind, and the classic API has no link from item to asset.
+  static func classicSetAssets(
+    localizationID: String, displayType: String, type: PlacementType, client: ASCClient
+  ) async throws -> [Asset] {
+    guard let group = displayTypeGroups[displayType] else { return [] }
+    let placements = try await placements(localizationID: localizationID, type: type, group: group, client: client)
+    return try await withThrowingTaskGroup(of: Asset?.self) { tasks in
+      for placement in placements {
+        tasks.addTask { try await placedAsset(placementID: placement.id, client: client).asset }
+      }
+      return try await tasks.reduce(into: []) { assets, asset in asset.map { assets.append($0) } }
+    }
+  }
+
+  /// Deletes each of these library assets that `isUnused` allows; returns how many it deleted.
+  /// An asset still placed anywhere (e.g. shared with the live version) is kept.
+  static func deleteIfUnused(_ assets: [Asset], client: ASCClient) async throws -> Int {
     try await withThrowingTaskGroup(of: Bool.self) { tasks in
-      for id in ids {
-        tasks.addTask { try await deleteImageIfUnused(id: id, client: client) }
+      for asset in assets {
+        tasks.addTask { try await deleteIfUnused(asset, client: client) }
       }
       return try await tasks.reduce(0) { $0 + ($1 ? 1 : 0) }
     }
   }
 
-  /// The ID and file name of a placement's image. The placement list can't include images
+  /// The asset and file name behind a placement. The placement list can't include its assets
   /// (HTTP 500 every time, seen live 2026-10-07), so this costs one request per placement.
-  static func placedImage(placementID: String, client: ASCClient) async throws -> (id: String?, fileName: String?) {
+  static func placedAsset(placementID: String, client: ASCClient) async throws -> (asset: Asset?, fileName: String?) {
     let response = try await withTransientRetry {
-      try await client.appAssetLibraryPlacementsGetInstance(path: .init(id: placementID), query: .init(include: [.image])).ok.body.json
+      try await client.appAssetLibraryPlacementsGetInstance(
+        path: .init(id: placementID), query: .init(include: [.image, .video])
+      ).ok.body.json
     }
     var fileName: String?
-    for case .appAssetLibraryImages(let image) in response.included ?? [] {
-      fileName = image.attributes?.common.fileName
+    for included in response.included ?? [] {
+      switch included {
+        case .appAssetLibraryImages(let image): fileName = image.attributes?.common.fileName
+        case .appAssetLibraryVideos(let video): fileName = video.attributes?.common.fileName
+        default: break
+      }
     }
-    return (response.data.relationships?.value1?.value2.image?.data?.id, fileName)
+    let relationships = response.data.relationships
+    if let id = relationships?.value1?.value2.image?.data?.id { return (.image(id), fileName) }
+    if let id = relationships?.value2?.value2.video?.data?.id { return (.video(id), fileName) }
+    return (nil, fileName)
   }
 
   static func placementFileName(id: String, client: ASCClient) async throws -> String? {
-    try await placedImage(placementID: id, client: client).fileName
+    try await placedAsset(placementID: id, client: client).fileName
   }
 
   // MARK: - Removing images
@@ -305,34 +520,49 @@ enum AssetLibrary {
     return placements.isEmpty && unreviewedStates.contains(image.attributes?.stateName ?? "")
   }
 
-  /// Deletes a library image if `isUnused` allows it, checked against a fresh read. Returns
-  /// whether it was deleted.
-  static func deleteImageIfUnused(id: String, client: ASCClient) async throws -> Bool {
-    let image = try await withTransientRetry {
-      try await client.appAssetLibraryImagesGetInstance(
-        path: .init(id: id), query: .init(include: [.placements], limitPlacements: 1)
-      ).ok.body.json.data
-    }
-    guard isUnused(image) else { return false }
+  /// The same rule for a library video.
+  static func isUnused(_ video: Components.Schemas.AppAssetLibraryVideo) -> Bool {
+    guard let placements = video.relationships?.placements?.data else { return false }
+    return placements.isEmpty && unreviewedStates.contains(video.attributes?.stateName ?? "")
+  }
+
+  /// Deletes a library image or video if `isUnused` allows it, checked against a fresh read.
+  /// Returns whether it was deleted.
+  static func deleteIfUnused(_ asset: Asset, client: ASCClient) async throws -> Bool {
     do {
-      _ = try await withTransientRetry {
-        try await client.appAssetLibraryImagesDeleteInstance(path: .init(id: id)).noContent
+      switch asset {
+        case .image(let id):
+          let image = try await withTransientRetry {
+            try await client.appAssetLibraryImagesGetInstance(
+              path: .init(id: id), query: .init(include: [.placements], limitPlacements: 1)
+            ).ok.body.json.data
+          }
+          guard isUnused(image) else { return false }
+          _ = try await withTransientRetry { try await client.appAssetLibraryImagesDeleteInstance(path: .init(id: id)).noContent }
+        case .video(let id):
+          let video = try await withTransientRetry {
+            try await client.appAssetLibraryVideosGetInstance(
+              path: .init(id: id), query: .init(include: [.placements], limitPlacements: 1)
+            ).ok.body.json.data
+          }
+          guard isUnused(video) else { return false }
+          _ = try await withTransientRetry { try await client.appAssetLibraryVideosDeleteInstance(path: .init(id: id)).noContent }
       }
     } catch where ASCError.from(error)?.statusCode == 404 {
     }
     return true
   }
 
-  /// Removes a placement, then deletes its library image when nothing uses it any more: a removed
-  /// placement leaves its image in the library otherwise (seen live). Returns whether the image
-  /// was deleted. Under dry run the delete is shown and not sent, and the image is kept.
+  /// Removes a placement, then deletes its library asset when nothing uses it any more: a removed
+  /// placement leaves its asset in the library otherwise (seen live). Returns whether the asset
+  /// was deleted. Under dry run the delete is shown and not sent, and the asset is kept.
   @discardableResult
   static func removePlacement(id: String, client: ASCClient) async throws -> Bool {
-    let imageID = try await placedImage(placementID: id, client: client).id
+    let asset = try await placedAsset(placementID: id, client: client).asset
     guard try await unlessDryRunStopped({ try await deletePlacement(id: id, client: client) }) != nil,
-      let imageID
+      let asset
     else { return false }
-    return try await deleteImageIfUnused(id: imageID, client: client)
+    return try await deleteIfUnused(asset, client: client)
   }
 
   /// Deletes a placement. One that is already gone (a retried delete, or removed elsewhere)
@@ -343,6 +573,43 @@ enum AssetLibrary {
         try await client.appAssetLibraryPlacementsDeleteInstance(path: .init(id: id)).noContent
       }
     } catch where ASCError.from(error)?.statusCode == 404 {
+    }
+  }
+}
+
+extension Components.Schemas.AppAssetLibraryVideo.AttributesPayload {
+  /// The video's raw state (the payload is discriminated by it).
+  var stateName: String {
+    switch self {
+      case .accepted: "ACCEPTED"
+      case .approved: "APPROVED"
+      case .archived: "ARCHIVED"
+      case .awaitingUpload: "AWAITING_UPLOAD"
+      case .complete: "COMPLETE"
+      case .failed: "FAILED"
+      case .inReview: "IN_REVIEW"
+      case .prepareForSubmission: "PREPARE_FOR_SUBMISSION"
+      case .readyForReview: "READY_FOR_REVIEW"
+      case .rejected: "REJECTED"
+      case .uploadComplete: "UPLOAD_COMPLETE"
+      case .waitingForReview: "WAITING_FOR_REVIEW"
+    }
+  }
+
+  /// The attributes every video state shares (file name, size, spec, …).
+  var common: Components.Schemas.AppAssetLibraryVideoCommonAttributes {
+    switch self {
+      case .complete(let attributes), .prepareForSubmission(let attributes): attributes
+      case .accepted(let attributes): attributes.value1
+      case .approved(let attributes): attributes.value1
+      case .archived(let attributes): attributes.value1
+      case .awaitingUpload(let attributes): attributes.value1
+      case .failed(let attributes): attributes.value1
+      case .inReview(let attributes): attributes.value1
+      case .readyForReview(let attributes): attributes.value1
+      case .rejected(let attributes): attributes.value1
+      case .uploadComplete(let attributes): attributes.value1
+      case .waitingForReview(let attributes): attributes.value1
     }
   }
 }

@@ -62,3 +62,5 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 
 Der Dateityp bestimmt, ob die Datei als Screenshot oder als App-Vorschau hochgeladen wird. Anzeige- und Vorschautypen verwenden die üblichen App-Store-Gerätekennungen (z. B. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).
+
+`--display-type` nimmt auch die Asset-Bibliotheksplätze `PRODUCT_PAGE_HEADER` und `APP_STORE_SEARCH_RESULTS` (ein Bild oder Video, das das aktuelle ersetzt) sowie `APP_IPHONE_DUO` (ein Screenshot oder eine App-Vorschau, nach den vorhandenen hinzugefügt) an; die Größen stehen unter [Medien](media.md#header-and-search-results). `media list` zeigt sie an, und `media delete` entfernt sie anhand der ID.

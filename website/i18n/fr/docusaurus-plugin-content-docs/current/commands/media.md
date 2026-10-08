@@ -10,9 +10,12 @@ title: Captures d'écran et aperçus
 ```bash
 ascelerate apps media download <bundle-id>
 ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id> --locale en-US,tr
 ```
 
 Le téléchargement se fait par défaut dans `<bundle-id>-media/`, en utilisant la même structure de dossiers attendue par le téléversement.
+
+`--locale` limite le téléchargement aux localisations indiquées (par ex. `--locale en-US,tr`). Les captures iPhone Duo et les images d'en-tête et de résultats de recherche sont aussi enregistrées.
 
 ## Téléverser
 
@@ -122,16 +125,20 @@ Les types d'affichage Watch et iMessage ne prennent en charge que les captures d
 
 App Store Connect ne propose pas d'ensemble de captures d'écran pour l'iPhone Duo. ascelerate téléverse les fichiers d'un dossier `APP_IPHONE_DUO` dans la bibliothèque de ressources de l'application, puis les place dans la localisation de la version, dans l'ordre des fichiers. Les tailles acceptées sont 2853×2007 ou 2007×2853 (écran intérieur, déplié) et 2034×1398 ou 1398×2034 (écran extérieur) ; les autres tailles sont refusées avant tout téléversement. Avec `--replace`, les captures iPhone Duo existantes de chaque locale sont d'abord supprimées.
 
-Si un fichier échoue encore après les nouvelles tentatives, `media upload` replace les captures iPhone Duo de cette localisation à la fin de l'exécution, afin de conserver l'ordre des fichiers. `media verify` liste les captures iPhone Duo avec leur nom de fichier et leur état de traitement ; avec le dossier de médias, il signale aussi les localisations dont les captures iPhone Duo diffèrent du dossier par leurs fichiers ou leur ordre (relancez `media upload` avec `--replace` pour les corriger). Les aperçus d'application pour l'iPhone Duo ne sont pas encore pris en charge, `media download` n'inclut pas les captures iPhone Duo et `media prune` ne les supprime jamais.
+Le dossier peut aussi contenir des aperçus de l'application pour l'iPhone Duo (`.mp4`, `.m4v` ou `.mov`) : 1920×886 ou 886×1920, de 15 à 30 secondes à 23–30 i/s, avec une piste audio. Ils sont ajoutés après les aperçus existants de la localisation ; avec `--replace`, ceux-ci sont d'abord supprimés. Les captures et les aperçus sont remplacés séparément, et seulement si le dossier contient des fichiers de ce type.
+
+Si un fichier échoue encore après les nouvelles tentatives, `media upload` replace les captures ou aperçus iPhone Duo de cette localisation à la fin de l'exécution, afin de conserver l'ordre des fichiers. `media verify` les liste avec leur nom de fichier et leur état de traitement ; avec le dossier de médias, il signale aussi les localisations dont les fichiers ou leur ordre diffèrent du dossier (relancez `media upload` avec `--replace` pour les corriger). `media download` enregistre les captures sous leur propre nom de fichier, et `media prune` ne les supprime jamais.
 
 ### En-tête de la page produit et résultats de recherche {#header-and-search-results}
 
-Deux autres dossiers sont téléversés via la bibliothèque de ressources. Chacun contient une image par localisation, qui n'est liée à aucune classe d'appareil : la version l'affiche sur tous les appareils (iPhone, iPad, iPhone Duo), et les deux fonctionnent pour les versions de toutes les plateformes.
+Deux autres dossiers sont téléversés via la bibliothèque de ressources. Chacun contient une image ou une vidéo par localisation, qui n'est liée à aucune classe d'appareil : la version l'affiche sur tous les appareils (iPhone, iPad, iPhone Duo), et les deux fonctionnent pour les versions de toutes les plateformes.
 
-- `PRODUCT_PAGE_HEADER` : l'image en haut de la page produit. PNG en 3840×1646 ou 5244×2950.
-- `APP_STORE_SEARCH_RESULTS` : l'image affichée avec l'application dans les résultats de recherche de l'App Store. JPG ou PNG au format 3:2, de 1920×1280 à 3840×2560, ou PNG en 5244×2950.
+- `PRODUCT_PAGE_HEADER` : l'image ou la vidéo en haut de la page produit. Un PNG en 3840×1646 ou 5244×2950, ou une vidéo en 3840×1646 de 5 à 30 secondes à 30 ou 60 i/s.
+- `APP_STORE_SEARCH_RESULTS` : affichée avec l'application dans les résultats de recherche de l'App Store. Un JPG ou PNG au format 3:2, de 1920×1280 à 3840×2560, ou un PNG en 5244×2950 ; ou une vidéo au format 3:2 dans la même plage de tailles, de 5 à 30 secondes à 30 ou 60 i/s.
 
-Un téléversement remplace l'image actuelle de la localisation, avec ou sans `--replace` ; l'ancienne n'est supprimée qu'une fois la nouvelle téléversée. Les vidéos pour ces emplacements ne sont pas encore prises en charge. `media verify` les vérifie comme les captures iPhone Duo.
+Un téléversement remplace l'image ou la vidéo actuelle de la localisation, avec ou sans `--replace` ; l'ancienne n'est supprimée qu'une fois la nouvelle téléversée. Une nouvelle vidéo reste en traitement quelques minutes, ce que `media verify` indique. `media download` enregistre les images ; App Store Connect ne fournit pas de lien de téléchargement pour ces vidéos.
+
+Les pages produit personnalisées acceptent les mêmes fichiers avec `product-pages media upload` et `--display-type PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` ou `APP_IPHONE_DUO`.
 
 ## Utilisation avec app-store-screenshots
 
@@ -185,19 +192,20 @@ Les locales sans dossier local sont entièrement ignorées -- la commande ne pur
 
 ## Retirer des images de la bibliothèque de ressources
 
-`media remove` retire de la version un type d'image de la bibliothèque de ressources : `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` ou `APP_IPHONE_DUO`. La commande agit sur les localisations indiquées avec `--locale` ou sur toutes, et liste ce qu'elle a trouvé avant de demander confirmation :
+`media remove` retire de la version un type d'élément de la bibliothèque de ressources : l'image ou la vidéo `PRODUCT_PAGE_HEADER` ou `APP_STORE_SEARCH_RESULTS`, ou les captures `APP_IPHONE_DUO` (`--previews` pour ses aperçus). La commande agit sur les localisations indiquées avec `--locale` ou sur toutes, et liste ce qu'elle a trouvé avant de demander confirmation :
 
 ```bash
 ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
 ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
 ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --previews --locale en-US
 ```
 
 ## Nettoyer la bibliothèque de ressources
 
-Chaque application a une bibliothèque de ressources qui contient ses images téléversées, et les versions les partagent : les captures d'une nouvelle version sont les images de la version précédente, et les anciennes versions conservent les leurs. Une image reste donc utilisée tant qu'une version (ancienne comprise), une page produit personnalisée ou un événement la place. Quand ascelerate retire un placement (`media remove`, `media upload --replace` ou le remplacement d'une image d'en-tête ou de résultats de recherche), il supprime aussi l'image si plus rien ne l'utilise et qu'elle n'est jamais passée par l'App Review.
+Chaque application a une bibliothèque de ressources qui contient ses images et vidéos téléversées, et les versions les partagent : les captures d'une nouvelle version sont les images de la version précédente, et les anciennes versions conservent les leurs. Une image reste donc utilisée tant qu'une version (ancienne comprise), une page produit personnalisée ou un événement la place. Quand ascelerate retire un placement (`media remove`, `media upload --replace` ou le remplacement d'une image d'en-tête ou de résultats de recherche), il supprime aussi l'image ou la vidéo si plus rien ne l'utilise et qu'elle n'est jamais passée par l'App Review.
 
-Des téléversements antérieurs peuvent malgré tout avoir laissé des images inutilisées dans la bibliothèque. `media library` compte les images et liste celles qui sont inutilisées ; avec `--delete-unused`, il les supprime après confirmation :
+Des téléversements antérieurs peuvent malgré tout avoir laissé des images et vidéos inutilisées dans la bibliothèque. `media library` compte les images et vidéos et liste celles qui sont inutilisées ; avec `--delete-unused`, il les supprime après confirmation :
 
 ```bash
 ascelerate apps media library <bundle-id>

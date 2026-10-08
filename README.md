@@ -379,6 +379,7 @@ Only fields present in the JSON are updated -- omitted fields are left unchanged
 # Download all screenshots and preview videos
 ascelerate apps media download <bundle-id>
 ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id> --locale en-US,tr
 
 # Upload screenshots and preview videos from a folder
 ascelerate apps media upload <bundle-id> media/
@@ -476,7 +477,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 >
 > App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ; `media download` doesn't include them yet, and `media prune` never deletes them.
 >
-> `PRODUCT_PAGE_HEADER` and `APP_STORE_SEARCH_RESULTS` folders also go through the asset library, one image per locale each that isn't tied to a device class (the version shows it on iPhone, iPad and iPhone Duo alike), on every platform's versions: the product page header takes a PNG at 3840×1646 or 5244×2950, and the search results image a 3:2 JPG/PNG from 1920×1280 to 3840×2560 or a 5244×2950 PNG. Uploading replaces the locale's current image (the old one is removed after the new one is uploaded); videos for these slots aren't supported yet.
+> `PRODUCT_PAGE_HEADER` and `APP_STORE_SEARCH_RESULTS` folders also go through the asset library, one image per locale each that isn't tied to a device class (the version shows it on iPhone, iPad and iPhone Duo alike), on every platform's versions: the product page header takes a PNG at 3840×1646 or 5244×2950, and the search results image a 3:2 JPG/PNG from 1920×1280 to 3840×2560 or a 5244×2950 PNG. Each slot also takes a video instead (header: 3840×1646; search results: 3:2 in the same size range; 5–30 s at 30 or 60 fps). Uploading replaces the locale's current image or video (the old one is removed after the new one is uploaded). An `APP_IPHONE_DUO` folder can hold app previews too (1920×886 or 886×1920, 15–30 s at 23–30 fps, with audio). Custom product pages take all three through `product-pages media upload --display-type PRODUCT_PAGE_HEADER` (or `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`). `media download` saves the library images; App Store Connect gives no download link for library videos.
 >
 > `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
 
@@ -532,7 +533,7 @@ Locales that have no local folder at all are skipped entirely — the command on
 
 #### Remove asset library images
 
-`media remove` takes one kind of asset library image off a version (`PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` or `APP_IPHONE_DUO`), for the locales given with `--locale` or all of them, after listing what it found and asking:
+`media remove` takes one kind of asset library item off a version (the `PRODUCT_PAGE_HEADER` or `APP_STORE_SEARCH_RESULTS` image or video, or `APP_IPHONE_DUO` screenshots; `--previews` for Duo app previews), for the locales given with `--locale` or all of them, after listing what it found and asking:
 
 ```bash
 ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US

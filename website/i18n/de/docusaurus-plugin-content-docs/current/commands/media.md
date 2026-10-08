@@ -10,9 +10,12 @@ title: Screenshots & Vorschauen
 ```bash
 ascelerate apps media download <bundle-id>
 ascelerate apps media download <bundle-id> --folder my-media/ --version 2.1.0
+ascelerate apps media download <bundle-id> --locale en-US,tr
 ```
 
 Wird standardmäßig nach `<bundle-id>-media/` heruntergeladen und verwendet die gleiche Ordnerstruktur, die auch für den Upload erwartet wird.
+
+`--locale` beschränkt den Download auf die angegebenen Locales (z. B. `--locale en-US,tr`). Auch iPhone-Duo-Screenshots sowie Header- und Suchergebnisbilder werden gespeichert.
 
 ## Hochladen
 
@@ -122,16 +125,20 @@ Watch- und iMessage-Anzeigetypen unterstützen nur Screenshots — Videodateien 
 
 App Store Connect bietet für das iPhone Duo kein Screenshot-Set. ascelerate lädt die Dateien eines `APP_IPHONE_DUO`-Ordners in die Asset-Bibliothek der App hoch und ordnet sie in der Reihenfolge der Dateinamen der Versionslokalisierung zu. Zulässig sind 2853×2007 oder 2007×2853 (inneres Display, aufgeklappt) sowie 2034×1398 oder 1398×2034 (äußeres Display); andere Größen werden abgelehnt, bevor etwas hochgeladen wird. Mit `--replace` werden die vorhandenen iPhone-Duo-Screenshots jeder Locale zuerst entfernt.
 
-Scheitert eine Datei auch nach erneuten Versuchen, ordnet `media upload` die iPhone-Duo-Screenshots dieser Locale am Ende des Durchlaufs erneut zu, damit die Reihenfolge der Dateien erhalten bleibt. `media verify` listet iPhone-Duo-Screenshots mit Dateinamen und Verarbeitungsstatus auf; mit dem Medienordner meldet es außerdem Locales, deren iPhone-Duo-Screenshots in Dateien oder Reihenfolge vom Ordner abweichen (beheben Sie das mit `media upload` und `--replace`). App-Vorschauen für das iPhone Duo werden noch nicht unterstützt, `media download` berücksichtigt iPhone-Duo-Screenshots nicht, und `media prune` löscht sie nie.
+Der Ordner kann auch App-Vorschauen für das iPhone Duo enthalten (`.mp4`, `.m4v` oder `.mov`): 1920×886 oder 886×1920, 15–30 Sekunden bei 23–30 fps, mit Tonspur. Sie werden nach den vorhandenen Vorschauen der Locale hinzugefügt; mit `--replace` werden diese zuerst entfernt. Screenshots und Vorschauen werden getrennt ersetzt, und nur, wenn der Ordner Dateien dieser Art enthält.
+
+Scheitert eine Datei auch nach erneuten Versuchen, ordnet `media upload` die iPhone-Duo-Screenshots oder -Vorschauen dieser Locale am Ende des Durchlaufs erneut zu, damit die Reihenfolge der Dateien erhalten bleibt. `media verify` listet sie mit Dateinamen und Verarbeitungsstatus auf; mit dem Medienordner meldet es außerdem Locales, deren Dateien oder Reihenfolge vom Ordner abweichen (beheben Sie das mit `media upload` und `--replace`). `media download` speichert die Screenshots unter ihren eigenen Dateinamen, und `media prune` löscht sie nie.
 
 ### Produktseiten-Header und Suchergebnisse {#header-and-search-results}
 
-Zwei weitere Ordner werden über die Asset-Bibliothek hochgeladen. Jeder enthält ein Bild pro Locale, das an keine Geräteklasse gebunden ist: Die Version zeigt es auf jedem Gerät (iPhone, iPad, iPhone Duo), und beide funktionieren für Versionen aller Plattformen.
+Zwei weitere Ordner werden über die Asset-Bibliothek hochgeladen. Jeder enthält ein Bild oder Video pro Locale, das an keine Geräteklasse gebunden ist: Die Version zeigt es auf jedem Gerät (iPhone, iPad, iPhone Duo), und beide funktionieren für Versionen aller Plattformen.
 
-- `PRODUCT_PAGE_HEADER`: das Bild oben auf der Produktseite. PNG mit 3840×1646 oder 5244×2950.
-- `APP_STORE_SEARCH_RESULTS`: das Bild, das in den App Store-Suchergebnissen mit der App erscheint. JPG oder PNG im Format 3:2, von 1920×1280 bis 3840×2560, oder ein PNG mit 5244×2950.
+- `PRODUCT_PAGE_HEADER`: das Bild oder Video oben auf der Produktseite. Ein PNG mit 3840×1646 oder 5244×2950 oder ein Video mit 3840×1646, 5–30 Sekunden bei 30 oder 60 fps.
+- `APP_STORE_SEARCH_RESULTS`: erscheint in den App Store-Suchergebnissen mit der App. Ein JPG oder PNG im Format 3:2, von 1920×1280 bis 3840×2560, oder ein PNG mit 5244×2950; oder ein Video im Format 3:2 im selben Größenbereich, 5–30 Sekunden bei 30 oder 60 fps.
 
-Ein Upload ersetzt das aktuelle Bild der Locale, mit oder ohne `--replace`; das alte wird erst entfernt, nachdem das neue hochgeladen ist. Videos für diese Plätze werden noch nicht unterstützt. `media verify` prüft sie wie iPhone-Duo-Screenshots.
+Ein Upload ersetzt das aktuelle Bild oder Video der Locale, mit oder ohne `--replace`; das alte wird erst entfernt, nachdem das neue hochgeladen ist. Ein neues Video wird einige Minuten lang verarbeitet, was `media verify` anzeigt. `media download` speichert die Bilder; für diese Videos stellt App Store Connect keinen Download-Link bereit.
+
+Eigene Produktseiten nehmen dieselben Dateien über `product-pages media upload` mit `--display-type PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` oder `APP_IPHONE_DUO` an.
 
 ## Verwendung mit app-store-screenshots
 
@@ -185,19 +192,20 @@ Locales ohne lokalen Ordner werden vollständig übersprungen — der Befehl ber
 
 ## Bilder aus der Asset-Bibliothek entfernen
 
-`media remove` entfernt eine Art von Asset-Bibliotheksbild aus der Version: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` oder `APP_IPHONE_DUO`. Der Befehl wirkt auf die mit `--locale` angegebenen Locales oder auf alle und listet vor der Rückfrage auf, was er gefunden hat:
+`media remove` entfernt eine Art von Asset-Bibliothekselement aus der Version: das Bild oder Video `PRODUCT_PAGE_HEADER` bzw. `APP_STORE_SEARCH_RESULTS` oder die Screenshots `APP_IPHONE_DUO` (`--previews` für dessen App-Vorschauen). Der Befehl wirkt auf die mit `--locale` angegebenen Locales oder auf alle und listet vor der Rückfrage auf, was er gefunden hat:
 
 ```bash
 ascelerate apps media remove <bundle-id> PRODUCT_PAGE_HEADER --locale en-US
 ascelerate apps media remove <bundle-id> APP_STORE_SEARCH_RESULTS
 ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --version 2.1.0
+ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --previews --locale en-US
 ```
 
 ## Asset-Bibliothek aufräumen
 
-Jede App hat eine Asset-Bibliothek mit ihren hochgeladenen Bildern, und Versionen teilen sie: Die Screenshots einer neuen Version sind die Bilder der vorherigen Version, und alte Versionen behalten ihre. Ein Bild bleibt daher in Gebrauch, solange eine Version (auch eine alte), eine eigene Produktseite oder ein Event es verwendet. Wenn ascelerate eine Platzierung entfernt (`media remove`, `media upload --replace` oder beim Ersetzen eines Header- oder Suchergebnisbilds), löscht es auch das Bild, sofern es nichts mehr verwendet und es nie den App Review durchlaufen hat.
+Jede App hat eine Asset-Bibliothek mit ihren hochgeladenen Bildern und Videos, und Versionen teilen sie: Die Screenshots einer neuen Version sind die Bilder der vorherigen Version, und alte Versionen behalten ihre. Ein Bild bleibt daher in Gebrauch, solange eine Version (auch eine alte), eine eigene Produktseite oder ein Event es verwendet. Wenn ascelerate eine Platzierung entfernt (`media remove`, `media upload --replace` oder beim Ersetzen eines Header- oder Suchergebnisbilds), löscht es auch das Bild oder Video, sofern es nichts mehr verwendet und es nie den App Review durchlaufen hat.
 
-Frühere Uploads können dennoch ungenutzte Bilder in der Bibliothek hinterlassen haben. `media library` zählt die Bilder und listet die ungenutzten auf; mit `--delete-unused` löscht es sie nach einer Rückfrage:
+Frühere Uploads können dennoch ungenutzte Bilder und Videos in der Bibliothek hinterlassen haben. `media library` zählt die Bilder und Videos und listet die ungenutzten auf; mit `--delete-unused` löscht es sie nach einer Rückfrage:
 
 ```bash
 ascelerate apps media library <bundle-id>

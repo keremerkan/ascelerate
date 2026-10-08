@@ -541,7 +541,7 @@ ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --vers
 
 #### Clean up the asset library
 
-Versions share the app's asset library images (a new version's screenshots are the previous version's images, and old versions keep theirs), so an image stays in use as long as any version, custom product page or event places it. When ascelerate removes a placement (`media remove`, `media upload --replace`, or replacing a header or search results image), it also deletes the image if nothing uses it any more and it never went through App Review. Replacing classic screenshot sets, and earlier uploads, can still leave unused images; `media library` counts the images and lists the unused ones, and `--delete-unused` deletes them after asking:
+Versions share the app's asset library images (a new version's screenshots are the previous version's images, and old versions keep theirs), so an image stays in use as long as any version, custom product page or event places it. When ascelerate removes a placement (`media remove`, `media upload --replace`, or replacing a header or search results image), it also deletes the image if nothing uses it any more and it never went through App Review. Earlier uploads can still have left unused images; `media library` counts the images and lists the unused ones, and `--delete-unused` deletes them after asking:
 
 ```bash
 ascelerate apps media library <bundle-id>

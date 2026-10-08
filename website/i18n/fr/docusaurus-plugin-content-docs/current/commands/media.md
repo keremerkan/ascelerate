@@ -197,7 +197,7 @@ ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --vers
 
 Chaque application a une bibliothèque de ressources qui contient ses images téléversées, et les versions les partagent : les captures d'une nouvelle version sont les images de la version précédente, et les anciennes versions conservent les leurs. Une image reste donc utilisée tant qu'une version (ancienne comprise), une page produit personnalisée ou un événement la place. Quand ascelerate retire un placement (`media remove`, `media upload --replace` ou le remplacement d'une image d'en-tête ou de résultats de recherche), il supprime aussi l'image si plus rien ne l'utilise et qu'elle n'est jamais passée par l'App Review.
 
-Le remplacement des ensembles de captures classiques et les téléversements antérieurs peuvent malgré tout laisser des images inutilisées dans la bibliothèque. `media library` compte les images et liste celles qui sont inutilisées ; avec `--delete-unused`, il les supprime après confirmation :
+Des téléversements antérieurs peuvent malgré tout avoir laissé des images inutilisées dans la bibliothèque. `media library` compte les images et liste celles qui sont inutilisées ; avec `--delete-unused`, il les supprime après confirmation :
 
 ```bash
 ascelerate apps media library <bundle-id>

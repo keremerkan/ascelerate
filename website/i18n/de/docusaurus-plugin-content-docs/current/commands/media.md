@@ -197,7 +197,7 @@ ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --vers
 
 Jede App hat eine Asset-Bibliothek mit ihren hochgeladenen Bildern, und Versionen teilen sie: Die Screenshots einer neuen Version sind die Bilder der vorherigen Version, und alte Versionen behalten ihre. Ein Bild bleibt daher in Gebrauch, solange eine Version (auch eine alte), eine eigene Produktseite oder ein Event es verwendet. Wenn ascelerate eine Platzierung entfernt (`media remove`, `media upload --replace` oder beim Ersetzen eines Header- oder Suchergebnisbilds), löscht es auch das Bild, sofern es nichts mehr verwendet und es nie den App Review durchlaufen hat.
 
-Das Ersetzen klassischer Screenshot-Sets und frühere Uploads können dennoch ungenutzte Bilder in der Bibliothek hinterlassen. `media library` zählt die Bilder und listet die ungenutzten auf; mit `--delete-unused` löscht es sie nach einer Rückfrage:
+Frühere Uploads können dennoch ungenutzte Bilder in der Bibliothek hinterlassen haben. `media library` zählt die Bilder und listet die ungenutzten auf; mit `--delete-unused` löscht es sie nach einer Rückfrage:
 
 ```bash
 ascelerate apps media library <bundle-id>

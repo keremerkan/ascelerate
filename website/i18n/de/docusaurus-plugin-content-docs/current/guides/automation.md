@@ -105,4 +105,4 @@ Befehle beenden sich bei Fehlern mit einem Exit-Code ungleich Null, sodass sie s
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>
 ```
 
-Mit `--json` gibt `preflight` einen strukturierten Bericht aus (`{"passed": false, "checks": [{"group", "name", "passed", "detail"}]}`) und behält dabei das gleiche Exit-Code-Verhalten bei — ideal für CI-Gates, die melden müssen, *welche* Prüfung fehlgeschlagen ist.
+Mit `--json` gibt `preflight` einen strukturierten Bericht aus (`{"passed": false, "checks": [{"group", "name", "passed", "detail", "skipped"}]}`, wobei `skipped` nur bei aus dem Verkauf genommenen Produkten erscheint, die als bestanden zählen) und behält dabei das gleiche Exit-Code-Verhalten bei — ideal für CI-Gates, die melden müssen, *welche* Prüfung fehlgeschlagen ist.

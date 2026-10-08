@@ -28,7 +28,7 @@ Read commands support `--json` for machine-readable output — prefer it over pa
 ascelerate apps list --json
 ascelerate apps info <app> --json
 ascelerate apps versions <app> --json
-ascelerate apps review preflight <app> --json     # {passed, checks: [{group?, name, passed, detail}]}; exits non-zero on failures
+ascelerate apps review preflight <app> --json     # {passed, checks: [{group?, name, passed, detail, skipped?}]}; exits non-zero on failures; skipped = product the developer removed from sale (counts as passed)
 ascelerate apps review status <app> --json        # submissions incl. per-item states
 ascelerate builds list --bundle-id <app> --json
 ascelerate testflight builds <app> --json
@@ -156,7 +156,7 @@ ascelerate apps review attachment upload <app> [--version X] <file>   # reserve/
 ascelerate apps review attachment delete <attachment-id>
 ```
 
-`preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices). Exits non-zero on failures. With `--json` it emits the structured check list (same exit code) — ideal as a CI gate.
+`preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices; products in Developer Removed from Sale are skipped, not failed). Exits non-zero on failures. With `--json` it emits the structured check list (same exit code) — ideal as a CI gate.
 
 When submitting, the tool detects IAPs and subscriptions and offers to submit them alongside the app version.
 

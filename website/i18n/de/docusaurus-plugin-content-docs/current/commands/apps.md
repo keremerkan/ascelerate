@@ -131,6 +131,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+In-App-Käufe und Abonnements werden auf Preise und einen Status geprüft, der mit einer Einreichung mitgehen kann. Ein Produkt, das Sie aus dem Verkauf genommen haben (Developer Removed from Sale), wird als übersprungen (–) aufgeführt und lässt die Prüfung nicht fehlschlagen; die Ergebniszeile zählt es gesondert.
+
 Die Prüfung der Neuigkeiten wird übersprungen, wenn die App noch keine veröffentlichte Version hat — dieses Feld gibt es nur bei Updates, nicht bei einer Erstveröffentlichung.
 
 Der Befehl gibt einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt — und ist damit geeignet für CI-Pipelines und Workflow-Dateien. Mit `--json` gibt der Befehl statt der Tabelle einen strukturierten Bericht aus — einen booleschen `passed`-Wert plus einen Eintrag pro Prüfung (`group`, `name`, `passed`, `detail`) — und behält dabei das gleiche Exit-Code-Verhalten bei, sodass CI-Gates genau melden können, welche Prüfung fehlgeschlagen ist.

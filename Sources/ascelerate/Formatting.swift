@@ -991,8 +991,14 @@ func formatFieldName(_ name: String) -> String {
       "ID": "ID", "IOS": "iOS", "TVOS": "tvOS", "IPAD": "iPad", "IPHONE": "iPhone", "IMESSAGE": "iMessage",
       "ICLOUD": "iCloud", "TV": "TV", "URL": "URL", "NFC": "NFC", "RSA": "RSA", "PSP": "PSP",
     ]
-    return name.split(separator: "_")
-      .map { words[$0] ?? $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+    // Short words stay lowercase unless they come first ("Waiting for Review", "In Review").
+    let minorWords: Set<Substring> = ["A", "AN", "AND", "AT", "BY", "FOR", "FROM", "IN", "OF", "ON", "OR", "THE", "TO", "WITH"]
+    return name.split(separator: "_").enumerated()
+      .map { index, word in
+        if let fixed = words[word] { return fixed }
+        if index > 0 && minorWords.contains(word) { return word.lowercased() }
+        return word.prefix(1).uppercased() + word.dropFirst().lowercased()
+      }
       .joined(separator: " ")
   }
 

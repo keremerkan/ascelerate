@@ -105,4 +105,4 @@ ascelerate reviews list <bundle-id> --json | jq '[.[] | select(.response == null
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>
 ```
 
-`--json` を指定すると、`preflight` は終了コードの動作をそのままに、構造化されたレポート（`{"passed": false, "checks": [{"group", "name", "passed", "detail"}]}`）を出力します。どのチェックが失敗したかを報告する必要があるCIゲートに最適です。
+`--json` を指定すると、`preflight` は終了コードの動作をそのままに、構造化されたレポート（`{"passed": false, "checks": [{"group", "name", "passed", "detail", "skipped"}]}`。`skipped` は販売を停止した商品にのみ付き、合格として扱われます）を出力します。どのチェックが失敗したかを報告する必要があるCIゲートに最適です。

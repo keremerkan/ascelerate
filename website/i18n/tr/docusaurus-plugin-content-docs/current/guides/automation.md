@@ -105,4 +105,4 @@ Komutlar başarısızlıkta sıfır olmayan çıkış kodu döndürür, bu sayed
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>
 ```
 
-`--json` ile `preflight`, çıkış kodu davranışını aynen korurken tablo yerine yapılandırılmış bir rapor üretir (`{"passed": false, "checks": [{"group", "name", "passed", "detail"}]}`); bu sayede tam olarak *hangi* kontrolün başarısız olduğunu raporlaması gereken CI kapıları için idealdir.
+`--json` ile `preflight`, çıkış kodu davranışını aynen korurken tablo yerine yapılandırılmış bir rapor üretir (`{"passed": false, "checks": [{"group", "name", "passed", "detail", "skipped"}]}`; `skipped` yalnızca satıştan kaldırdığınız ürünlerde bulunur ve bunlar başarılı sayılır); bu sayede tam olarak *hangi* kontrolün başarısız olduğunu raporlaması gereken CI kapıları için idealdir.

@@ -105,4 +105,4 @@ Commands exit with a non-zero status on failure, making them safe to use in scri
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>
 ```
 
-With `--json`, `preflight` emits a structured report (`{"passed": false, "checks": [{"group", "name", "passed", "detail"}]}`) while keeping the same exit-code behavior — ideal for CI gates that need to report *which* check failed.
+With `--json`, `preflight` emits a structured report (`{"passed": false, "checks": [{"group", "name", "passed", "detail", "skipped"}]}`, where `skipped` appears only on products you removed from sale, which count as passed) while keeping the same exit-code behavior — ideal for CI gates that need to report *which* check failed.

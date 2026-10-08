@@ -226,13 +226,46 @@ enum AssetLibrary {
   static func placements(
     localizationID: String, slot: Slot, imageID: String? = nil, client: ASCClient
   ) async throws -> [Components.Schemas.AppAssetLibraryPlacement] {
+    try await placements(
+      localizationID: localizationID, type: slot.placementType, group: slot.group, imageID: imageID, client: client)
+  }
+
+  static func placements(
+    localizationID: String, type: PlacementType, group: String, imageID: String? = nil, client: ASCClient
+  ) async throws -> [Components.Schemas.AppAssetLibraryPlacement] {
     try await withTransientRetry {
       try await client.appStoreVersionLocalizationsPlacementsGetToManyRelated(
         path: .init(id: localizationID),
         query: .init(
-          filterPlacementType: [slot.placementType], filterPlacementGroup: [slot.group], filterImage: imageID.map { [$0] },
+          filterPlacementType: [type], filterPlacementGroup: [group], filterImage: imageID.map { [$0] },
           sort: [.placementGroupPosition], limit: 200)
       ).ok.body.json.data
+    }
+  }
+
+  /// The library images behind a localization's classic screenshot set: its screenshots are the
+  /// screenshot placements in the display type's group (`displayTypeGroups`). Read them before
+  /// the set is cleared; deleting a classic screenshot leaves its library image behind, and the
+  /// classic API has no link from screenshot to image.
+  static func classicScreenshotImages(localizationID: String, displayType: String, client: ASCClient) async throws -> [String] {
+    guard let group = displayTypeGroups[displayType] else { return [] }
+    let placements = try await placements(localizationID: localizationID, type: .appScreenshot, group: group, client: client)
+    return try await withThrowingTaskGroup(of: String?.self) { tasks in
+      for placement in placements {
+        tasks.addTask { try await placedImage(placementID: placement.id, client: client).id }
+      }
+      return try await tasks.reduce(into: []) { ids, id in id.map { ids.append($0) } }
+    }
+  }
+
+  /// Deletes each of these library images that `isUnused` allows; returns how many it deleted.
+  /// An image still placed anywhere (e.g. shared with the live version) is kept.
+  static func deleteImagesIfUnused(_ ids: [String], client: ASCClient) async throws -> Int {
+    try await withThrowingTaskGroup(of: Bool.self) { tasks in
+      for id in ids {
+        tasks.addTask { try await deleteImageIfUnused(id: id, client: client) }
+      }
+      return try await tasks.reduce(0) { $0 + ($1 ? 1 : 0) }
     }
   }
 

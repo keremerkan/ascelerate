@@ -197,7 +197,7 @@ ascelerate apps media remove <bundle-id> APP_IPHONE_DUO --locale en-US,tr --vers
 
 Her uygulamanın yüklenen görselleri tutan bir varlık kitaplığı vardır ve sürümler bu görselleri paylaşır: Yeni bir sürümün ekran görüntüleri önceki sürümün görselleridir ve eski sürümler kendi görsellerini korur. Bu nedenle bir görsel, herhangi bir sürüm (eskiler dahil), özel ürün sayfası veya etkinlik onu kullandığı sürece kullanımda kalır. ascelerate bir yerleşimi kaldırdığında (`media remove`, `media upload --replace` ya da bir başlık veya arama sonuçları görselinin değiştirilmesi), görseli artık hiçbir şey kullanmıyorsa ve görsel hiç App Review'dan geçmemişse görseli de siler.
 
-Klasik ekran görüntüsü setlerinin değiştirilmesi ve önceki yüklemeler kitaplıkta yine de kullanılmayan görseller bırakabilir. `media library` görselleri sayar ve kullanılmayanları listeler; `--delete-unused` ile bunları onay aldıktan sonra siler:
+Önceki yüklemeler kitaplıkta yine de kullanılmayan görseller bırakmış olabilir. `media library` görselleri sayar ve kullanılmayanları listeler; `--delete-unused` ile bunları onay aldıktan sonra siler:
 
 ```bash
 ascelerate apps media library <bundle-id>

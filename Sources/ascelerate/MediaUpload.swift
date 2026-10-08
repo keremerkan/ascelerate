@@ -420,9 +420,10 @@ struct UploadTally {
 }
 
 /// Prints how many existing items a `--replace` removed (or, under dry run, would remove).
-func printDeleted(_ count: Int, _ noun: String) {
+func printDeleted(_ count: Int, _ noun: String, libraryImages: Int = 0) {
   guard count > 0 else { return }
-  print("    \(ClientFactory.isDryRun ? "Would delete" : "Deleted") \(count) existing \(noun)\(count == 1 ? "" : "s").")
+  let images = libraryImages > 0 ? " and \(libraryImages) unused library image\(libraryImages == 1 ? "" : "s")" : ""
+  print("    \(ClientFactory.isDryRun ? "Would delete" : "Deleted") \(count) existing \(noun)\(count == 1 ? "" : "s")\(images).")
 }
 
 /// Numbers the files of a whole `media upload` run: each file's line starts with `[n/total]`.
@@ -901,7 +902,13 @@ extension AppsCommand {
                   screenshotSetID = existingSetID
 
                   if replace {
-                    printDeleted(try await ClassicMedia.deleteAllScreenshots(inSet: screenshotSetID, client: ascClient), "screenshot")
+                    // The set's library images, read before it's cleared, are deleted after it
+                    // when nothing else uses them (not under dry run, where nothing is cleared).
+                    let images = ClientFactory.isDryRun ? [] : try await AssetLibrary.classicScreenshotImages(
+                      localizationID: localization.id, displayType: displayType.rawValue, client: ascClient)
+                    let deleted = try await ClassicMedia.deleteAllScreenshots(inSet: screenshotSetID, client: ascClient)
+                    let deletedImages = try await AssetLibrary.deleteImagesIfUnused(images, client: ascClient)
+                    printDeleted(deleted, "screenshot", libraryImages: deletedImages)
                   }
                 } else {
                   screenshotSetID = try await unlessDryRunStopped {
@@ -1516,7 +1523,7 @@ extension AppsCommand {
           Versions share asset library images, and old versions keep theirs, so most
           images stay placed somewhere. An image is unused when it has no placement on
           any version (old ones included), custom product page or event, which happens
-          when a placement is removed (e.g. by replacing classic screenshot sets). With
+          when a placement is removed (e.g. by uploads from before ascelerate cleaned up). With
           --delete-unused, the unused images that never went through App Review are
           listed and, after confirmation, deleted. Images that were ever reviewed are
           never deleted.

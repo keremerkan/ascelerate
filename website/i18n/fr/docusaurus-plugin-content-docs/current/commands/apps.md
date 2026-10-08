@@ -131,6 +131,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+Les achats intégrés et les abonnements sont vérifiés pour leurs prix et un état compatible avec une soumission. Un produit que vous avez retiré de la vente (Developer Removed from Sale) est indiqué comme ignoré (–) et ne fait pas échouer la vérification ; la ligne de résultat le compte à part.
+
 La vérification des nouveautés est ignorée lorsque l'application n'a pas encore de version publiée — ce champ n'existe que pour les mises à jour, pas pour une première version.
 
 La commande se termine avec un code de sortie non nul lorsqu'une vérification échoue, ce qui la rend adaptée aux pipelines CI et aux fichiers de workflow. Avec `--json`, elle émet un rapport structuré au lieu du tableau — un booléen `passed` plus une entrée par vérification (`group`, `name`, `passed`, `detail`) — tout en conservant le même comportement de code de sortie, afin que les pipelines CI puissent signaler exactement quelle vérification a échoué.

@@ -1300,11 +1300,14 @@ struct AppsCommand: AsyncParsableCommand {
 
       /// One preflight check. `group` is nil for top-level checks, a locale code for
       /// per-locale checks, or the "inAppPurchases"/"subscriptions" section sentinels.
+      /// `skipped` (omitted unless true) marks a check that wasn't evaluated because the
+      /// developer took the item out on purpose; it counts as passed.
       fileprivate struct Check: Encodable {
         let group: String?
         let name: String
         let passed: Bool
         let detail: String
+        var skipped: Bool? = nil
       }
 
       private struct Report: Encodable {
@@ -1438,6 +1441,7 @@ struct AppsCommand: AsyncParsableCommand {
         checks += try await checkSubscriptions(appID: app.id, client: client)
 
         let failCount = checks.count(where: { !$0.passed })
+        let skipCount = checks.count(where: { $0.skipped == true })
 
         if jsonOption.json {
           try printJSON(Report(
@@ -1471,7 +1475,7 @@ struct AppsCommand: AsyncParsableCommand {
             rows.append(["", ""])
             rows.append([groupTitle(group), ""])
           }
-          let mark = check.passed ? green("✓") : red("✗")
+          let mark = check.skipped == true ? yellow("–") : check.passed ? green("✓") : red("✗")
           rows.append([(check.group == nil ? "" : "  ") + check.name, "\(mark) \(check.detail)"])
         }
 
@@ -1483,8 +1487,9 @@ struct AppsCommand: AsyncParsableCommand {
         )
 
         print()
-        let passCount = checks.count - failCount
-        let resultText = "\(green("\(passCount) passed")), \(failCount > 0 ? red("\(failCount) failed") : "\(failCount) failed")"
+        let passCount = checks.count - failCount - skipCount
+        let skipText = skipCount > 0 ? ", \(yellow("\(skipCount) skipped"))" : ""
+        let resultText = "\(green("\(passCount) passed"))\(skipText), \(failCount > 0 ? red("\(failCount) failed") : "\(failCount) failed")"
         print("Result: \(resultText)")
 
         if failCount > 0 {
@@ -1576,6 +1581,17 @@ struct AppsCommand: AsyncParsableCommand {
       /// IAP/subscription states that can ride along a submission.
       private static let submittableProductStates: Set<String> = ["READY_TO_SUBMIT", "APPROVED", "WAITING_FOR_REVIEW", "IN_REVIEW"]
 
+      /// A product the developer took off sale is a deliberate choice, not a problem: it's
+      /// listed as skipped (neither its state nor its prices are checked).
+      private static func productCheck(group: String, name: String, state: String?, hasPrices: Bool, missingPrices: String) -> Check {
+        let stateStr = state.map { formatState($0) } ?? "unknown"
+        if state == "DEVELOPER_REMOVED_FROM_SALE" {
+          return Check(group: group, name: name, passed: true, detail: "\(stateStr) (skipped)", skipped: true)
+        }
+        let submittable = state.map(submittableProductStates.contains) ?? false
+        return Check(group: group, name: name, passed: hasPrices && submittable, detail: hasPrices ? stateStr : missingPrices)
+      }
+
       /// Checks each in-app purchase's price schedule and state.
       private func checkInAppPurchases(appID: String, client: ASCClient) async throws -> [Check] {
         let iaps = try await ASCPaging.allPages(next: { $0.links.next }) {
@@ -1588,15 +1604,9 @@ struct AppsCommand: AsyncParsableCommand {
           try await IAPCommand.iapPriceScheduleExists(iapID: id, client: client)
         }
         for (iap, hasSchedule) in zip(sortedIAPs, schedules) {
-          let name = iap.attributes?.productId ?? iap.attributes?.name ?? iap.id
-          let state = iap.attributes?.state
-          let stateStr = state.map { formatState($0) } ?? "unknown"
-          let submittable = state.map(Self.submittableProductStates.contains) ?? false
-
-          checks.append(Check(
-            group: "inAppPurchases", name: name, passed: hasSchedule && submittable,
-            detail: hasSchedule ? stateStr : "No price schedule"
-          ))
+          checks.append(Self.productCheck(
+            group: "inAppPurchases", name: iap.attributes?.productId ?? iap.attributes?.name ?? iap.id,
+            state: iap.attributes?.state, hasPrices: hasSchedule, missingPrices: "No price schedule"))
         }
         return checks
       }
@@ -1612,15 +1622,9 @@ struct AppsCommand: AsyncParsableCommand {
           try await SubCommand.subscriptionHasPrices(subscriptionID: id, client: client)
         }
         for (sub, hasPrices) in zip(sortedSubs, priced) {
-          let name = sub.attributes?.productId ?? sub.attributes?.name ?? sub.id
-          let state = sub.attributes?.state
-          let stateStr = state.map { formatState($0) } ?? "unknown"
-          let submittable = state.map(Self.submittableProductStates.contains) ?? false
-
-          checks.append(Check(
-            group: "subscriptions", name: name, passed: hasPrices && submittable,
-            detail: hasPrices ? stateStr : "No prices set"
-          ))
+          checks.append(Self.productCheck(
+            group: "subscriptions", name: sub.attributes?.productId ?? sub.attributes?.name ?? sub.id,
+            state: sub.attributes?.state, hasPrices: hasPrices, missingPrices: "No prices set"))
         }
         return checks
       }

@@ -131,6 +131,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+In-app purchases and subscriptions are checked for prices and a state that can go with a submission. A product you removed from sale (Developer Removed from Sale) is listed as skipped (–) and doesn't fail the check; the result line counts it separately.
+
 The What's New check is skipped when the app has no previously released version — that field only exists for updates, not for a first release.
 
 Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files. With `--json`, the command emits a structured report instead of the table — a `passed` boolean plus one entry per check (`group`, `name`, `passed`, `detail`) — while keeping the same exit-code behavior, so CI gates can report exactly which check failed.

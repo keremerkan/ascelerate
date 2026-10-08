@@ -105,4 +105,4 @@ Les commandes se terminent avec un code de sortie non nul en cas d'échec, ce qu
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>
 ```
 
-Avec `--json`, `preflight` émet un rapport structuré (`{"passed": false, "checks": [{"group", "name", "passed", "detail"}]}`) tout en conservant le même comportement de code de sortie — idéal lorsque votre pipeline CI doit signaler *quelle* vérification a échoué.
+Avec `--json`, `preflight` émet un rapport structuré (`{"passed": false, "checks": [{"group", "name", "passed", "detail", "skipped"}]}`, où `skipped` n'apparaît que pour les produits retirés de la vente, qui comptent comme réussis) tout en conservant le même comportement de code de sortie — idéal lorsque votre pipeline CI doit signaler *quelle* vérification a échoué.

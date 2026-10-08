@@ -131,6 +131,8 @@ de-DE (German (Germany))
 Result: 5 passed, 3 failed
 ```
 
+Uygulama içi satın almalar ve abonelikler, fiyat ve gönderimle birlikte gidebilecek bir durum açısından denetlenir. Satıştan kaldırdığınız bir ürün (Developer Removed from Sale) atlandı (–) olarak listelenir ve kontrolün başarısız olmasına yol açmaz; sonuç satırı onu ayrıca sayar.
+
 Uygulamanın daha önce yayınlanmış bir sürümü yoksa yenilikler denetimi atlanır; bu alan yalnızca güncellemelerde bulunur, ilk sürümde yer almaz.
 
 Herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu döndürür, bu da CI pipeline'larında ve workflow dosyalarında rahatlıkla kullanılmasını sağlar. `--json` ile komut, tablo yerine yapılandırılmış bir rapor üretir: bir `passed` boolean'ı ve her kontrol için bir kayıt (`group`, `name`, `passed`, `detail`). Çıkış kodu davranışı aynı kaldığından, CI kapıları tam olarak hangi kontrolün başarısız olduğunu raporlayabilir.

@@ -992,7 +992,7 @@ ascelerate iap review-screenshot delete <bundle-id> <product-id>
 
 Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_RENEWING_SUBSCRIPTION`. States: `APPROVED`, `MISSING_METADATA`, `READY_TO_SUBMIT`, `WAITING_FOR_REVIEW`, `IN_REVIEW`, etc.
 
-`iap info` and `iap pricing show` warn when an IAP has no price schedule — the same condition surfaced in `apps review preflight`. When `set` changes the base territory price, existing per-territory manual overrides are preserved by default. If overrides exist, an interactive menu offers to revert any of them; pass `--remove-all-overrides` for a non-interactive wipe.
+`iap info` and `iap pricing show` warn when an IAP has no price schedule — the same condition surfaced in `apps review preflight` (which skips products you removed from sale instead of failing them). When `set` changes the base territory price, existing per-territory manual overrides are preserved by default. If overrides exist, an interactive menu offers to revert any of them; pass `--remove-all-overrides` for a non-interactive wipe.
 
 `iap pricing export` writes the base territory and every manual price to a JSON file keyed by territory code; `iap pricing import` applies such a file to any IAP — prices are matched to the target product's own tiers by customer price, so the file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize. If the current schedule already matches the file, import is a no-op.
 

@@ -46,7 +46,7 @@ struct ScreenshotTestRunner: Sendable {
 
         let derivedDataPath = try config.derivedDataPath ?? resolveDerivedDataPath()
         let xctestrunFile = try findXctestrunFile(derivedDataPath: derivedDataPath)
-        return BuildResult(xctestrunFile: try repairXctestrunIfNeeded(xctestrunFile))
+        return BuildResult(xctestrunFile: try prepareXctestrun(xctestrunFile))
     }
 
     /// Xcode 27 resolves a UI test target's `TEST_TARGET_NAME` by name across the whole
@@ -56,10 +56,19 @@ struct ScreenshotTestRunner: Sendable {
     /// "MyApp.app"). xcodebuild then fails the runner instantly, blocks on
     /// `simctl diagnose --timeout=600` for ten minutes per run, and only afterwards runs
     /// the tests with the correct app it already mapped from `DependentProductPaths`.
-    /// Detect the dangling path, point it at the one real app among the dependent
-    /// products, and write the repaired copy (with `__TESTROOT__` made absolute, since the
-    /// copy lives outside the Products dir) into the cache directory.
-    private func repairXctestrunIfNeeded(_ path: String) throws -> String {
+    /// Detect the dangling path and point it at the one real app among the dependent
+    /// products.
+    ///
+    /// Also switch off the unified log output of the app under test (`OS_ACTIVITY_MODE=disable`
+    /// in `UITargetAppEnvironmentVariables`, unless the project set it): XCTest's automation
+    /// logs every element query inside the app, which Xcode captures into the result bundle.
+    /// A query-heavy screenshot test wrote 3.1 MB per device run (14 MB on a longer one), and
+    /// Xcode 27.1's result bundle importer crashed copying the still-growing file; with the
+    /// logs off the same run wrote 2.7 KB (measured 2026-10-09).
+    ///
+    /// The prepared copy (with `__TESTROOT__` made absolute, since it lives outside the
+    /// Products dir) is written into the cache directory.
+    private func prepareXctestrun(_ path: String) throws -> String {
         let url = URL(fileURLWithPath: path)
         let testRoot = url.deletingLastPathComponent().path
         guard var plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil) as? [String: Any],
@@ -71,10 +80,18 @@ struct ScreenshotTestRunner: Sendable {
             FileManager.default.fileExists(atPath: product.replacingOccurrences(of: "__TESTROOT__", with: testRoot))
         }
 
-        var repaired = false
+        var changed = false
         for c in configurations.indices {
             guard var targets = configurations[c]["TestTargets"] as? [[String: Any]] else { continue }
             for t in targets.indices {
+                if targets[t]["UITargetAppPath"] != nil {
+                    var environment = targets[t]["UITargetAppEnvironmentVariables"] as? [String: String] ?? [:]
+                    if environment["OS_ACTIVITY_MODE"] == nil {
+                        environment["OS_ACTIVITY_MODE"] = "disable"
+                        targets[t]["UITargetAppEnvironmentVariables"] = environment
+                        changed = true
+                    }
+                }
                 guard let appPath = targets[t]["UITargetAppPath"] as? String, !exists(appPath) else { continue }
                 let host = targets[t]["TestHostPath"] as? String
                 let candidates = (targets[t]["DependentProductPaths"] as? [String] ?? [])
@@ -87,11 +104,11 @@ struct ScreenshotTestRunner: Sendable {
                 print("  " + yellow("Warning:") + " xctestrun points to a target app that was not built ('\(wrong)'); using '\(right)' from the scheme's build products instead.")
                 print("  Xcode 27 resolves TEST_TARGET_NAME across the whole workspace: a same-named target in another project probably has a different PRODUCT_NAME.")
                 targets[t]["UITargetAppPath"] = candidates[0]
-                repaired = true
+                changed = true
             }
             configurations[c]["TestTargets"] = targets
         }
-        guard repaired else { return path }
+        guard changed else { return path }
 
         plist["TestConfigurations"] = configurations
         let absolute = replacingTestRoot(plist, with: testRoot)

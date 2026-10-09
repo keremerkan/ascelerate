@@ -117,6 +117,10 @@ struct ScreenshotTestRunner: Sendable {
         args += ["-xctestrun", buildResult.xctestrunFile]
         args += ["-destination", "platform=iOS Simulator,id=\(udid)"]
         args += ["-parallel-testing-enabled", "NO"]
+        // No sysdiagnose-style collection on failure: after a failure xcodebuild otherwise runs
+        // `simctl diagnose --timeout=600`, a silent 10-minute stall per device (seen live with
+        // Xcode 27.1, 2026-10-09).
+        args += ["-collect-test-diagnostics", "never"]
 
         if let testplan = config.testplan {
             args += ["-testPlan", testplan]
@@ -136,6 +140,16 @@ struct ScreenshotTestRunner: Sendable {
 
         let status = try ScreenshotShell.runToLog("/usr/bin/xcodebuild", arguments: Array(args.dropFirst()), logFile: logFile)
 
+        // The screenshots are written while the tests run, so a run whose tests all passed keeps
+        // them even if xcodebuild fails afterwards. Seen live with Xcode 27.1: its result bundle
+        // importer crashes ("CASTreeDataStructure/Importer.swift: Fatal error … file has been
+        // modified") when the app is still writing to its captured console output.
+        if status != 0, Self.testsPassed(logFile: logFile) {
+            print("  [\(device.simulator)] " + green("Tests passed ✓") + yellow(" (xcodebuild then exited with status \(status); screenshots kept)"))
+            print("  Full log: \(logFile.path)")
+            return
+        }
+
         guard status == 0 else {
             let tail = ScreenshotShell.tail(logFile, lines: 15)
             print("  [\(device.simulator)] Test failed. Last lines from log:")
@@ -145,6 +159,14 @@ struct ScreenshotTestRunner: Sendable {
         }
 
         print("  [\(device.simulator)] " + green("Tests passed ✓"))
+    }
+
+    /// Whether the log's final test summary reports every test passed.
+    private static func testsPassed(logFile: URL) -> Bool {
+        let tail = ScreenshotShell.tail(logFile, lines: 400)
+        guard let summary = tail.range(of: "Test Suite 'All tests' ", options: .backwards) else { return false }
+        return tail[summary.upperBound...].hasPrefix("passed")
+            && !tail.contains("** TEST EXECUTE FAILED **")
     }
 
     private func findXctestrunFile(derivedDataPath: String) throws -> String {

@@ -1,11 +1,14 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 
 import PackageDescription
 
 let package = Package(
     name: "ascelerate",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v15)],
     dependencies: [
+        // Apple Ads Platform API client. Its traits add swift-service-lifecycle and
+        // swift-configuration, which a CLI doesn't need.
+        .package(url: "https://github.com/apple/apple-ads-platform-api-swift", from: "1.109.0", traits: []),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-certificates", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-crypto", from: "4.2.0"),
@@ -20,8 +23,13 @@ let package = Package(
             name: "ascelerate",
             dependencies: [
                 "ASCKit",
+                .product(name: "AppleAdsClient", package: "apple-ads-platform-api-swift"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "X509", package: "swift-certificates"),
+                .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 .product(name: "Yams", package: "Yams"),
             ]

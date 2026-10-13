@@ -105,6 +105,8 @@ enum AssetLibrary {
   enum Owner: Sendable {
     case versionLocalization(String)
     case productPageLocalization(String)
+    /// A product page optimization treatment's localization.
+    case treatmentLocalization(String)
   }
 
   /// A library image or video.
@@ -340,15 +342,18 @@ enum AssetLibrary {
       typealias Relationships = Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload
       var version: Relationships.AppStoreVersionLocalizationPayload?
       var productPage: Relationships.AppCustomProductPageLocalizationPayload?
+      var treatment: Relationships.AppStoreVersionExperimentTreatmentLocalizationPayload?
       switch owner {
         case .versionLocalization(let id): version = .init(data: .init(id: id, _type: "appStoreVersionLocalizations"))
         case .productPageLocalization(let id): productPage = .init(data: .init(id: id, _type: "appCustomProductPageLocalizations"))
+        case .treatmentLocalization(let id):
+          treatment = .init(data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations"))
       }
       return try await client.appAssetLibraryPlacementsCreateInstance(body: .json(.init(data: .init(
         attributes: .init(placementGroup: group, placementType: type.rawValue),
         relationships: .init(
-          appCustomProductPageLocalization: productPage, appStoreVersionLocalization: version,
-          image: image, video: video
+          appCustomProductPageLocalization: productPage, appStoreVersionExperimentTreatmentLocalization: treatment,
+          appStoreVersionLocalization: version, image: image, video: video
         ),
         _type: "appAssetLibraryPlacements"
       )))).created.body.json.data.id
@@ -396,6 +401,15 @@ enum AssetLibrary {
             path: .init(id: id),
             query: .init(
               filterPlacementType: pageType.map { [$0] } ?? [], filterPlacementGroup: [group],
+              filterImage: imageID.map { [$0] }, filterVideo: videoID.map { [$0] }, sort: [.placementGroupPosition], limit: 200)
+          ).ok.body.json.data
+        case .treatmentLocalization(let id):
+          let treatmentType = Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query
+            .FilterPlacementTypePayloadPayload(rawValue: type.rawValue)
+          return try await client.appStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated(
+            path: .init(id: id),
+            query: .init(
+              filterPlacementType: treatmentType.map { [$0] } ?? [], filterPlacementGroup: [group],
               filterImage: imageID.map { [$0] }, filterVideo: videoID.map { [$0] }, sort: [.placementGroupPosition], limit: 200)
           ).ok.body.json.data
       }

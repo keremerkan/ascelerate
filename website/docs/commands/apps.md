@@ -167,6 +167,23 @@ ascelerate apps release <bundle-id>
 ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
 
+## Accessibility declarations
+
+The App Store shows which accessibility features an app supports, declared per device family: VoiceOver, Voice Control, Larger Text, Dark Interface, Differentiate Without Color Alone, Sufficient Contrast, Reduced Motion, Captions, and Audio Descriptions.
+
+```bash
+# View the declarations (draft or published) per device family
+ascelerate apps accessibility <bundle-id>
+
+# Declare what the app supports on iPhone, and publish it
+ascelerate apps accessibility set <bundle-id> --device iphone --supports voiceover,larger-text,dark-interface --publish
+
+# Publish draft declarations as they are
+ascelerate apps accessibility publish <bundle-id>
+```
+
+`set` declares the full list: features you leave out are declared as not supported (`--supports none` declares none). Device families: `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. Without `--publish` the declaration stays a draft. Publishing a changed declaration replaces the published one; `--all` also lists replaced declarations. Declare only what users can rely on across the app's common tasks.
+
 ## Territory availability
 
 ```bash

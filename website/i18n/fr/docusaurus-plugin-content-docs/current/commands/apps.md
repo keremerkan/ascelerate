@@ -58,7 +58,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 
 Ajoutez `--json` pour obtenir les soumissions — y compris l'état de chaque élément — au format JSON lisible par machine.
 
-### Soumettre pour examen
+### Soumettre pour examen {#submit-for-review}
 
 ```bash
 ascelerate apps review submit <bundle-id>
@@ -166,6 +166,23 @@ ascelerate apps release <bundle-id>
 # Cibler une version ou une plateforme spécifique
 ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
+
+## Déclarations d'accessibilité
+
+L'App Store indique les fonctionnalités d'accessibilité qu'une application prend en charge, déclarées par famille d'appareils : VoiceOver, Contrôle vocal, Texte plus grand, Interface sombre, Différencier sans la couleur, Contraste suffisant, Réduction des animations, Sous-titres et Audiodescriptions.
+
+```bash
+# Voir les déclarations (brouillon ou publiées) par famille d'appareils
+ascelerate apps accessibility <bundle-id>
+
+# Déclarer ce que l'application prend en charge sur iPhone, et le publier
+ascelerate apps accessibility set <bundle-id> --device iphone --supports voiceover,larger-text,dark-interface --publish
+
+# Publier les déclarations en brouillon telles quelles
+ascelerate apps accessibility publish <bundle-id>
+```
+
+`set` déclare la liste complète : les fonctionnalités que vous omettez sont déclarées comme non prises en charge (`--supports none` n'en déclare aucune). Familles d'appareils : `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. Sans `--publish`, la déclaration reste un brouillon. La publication d'une déclaration modifiée remplace celle qui était publiée ; `--all` liste aussi les déclarations remplacées. Ne déclarez que ce sur quoi les utilisateurs peuvent compter dans les tâches courantes de l'application.
 
 ## Disponibilité territoriale
 

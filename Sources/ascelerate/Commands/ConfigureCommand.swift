@@ -35,15 +35,7 @@ struct ConfigureCommand: ParsableCommand {
       throw ValidationError("File not found at '\(expandedSource)'.")
     }
 
-    // Create the config directory owner-only from the start — the key must never
-    // be readable by other users, even transiently or after a mid-run failure.
-    if !fm.fileExists(atPath: Config.configDirectory.path) {
-      try fm.createDirectory(
-        at: Config.configDirectory, withIntermediateDirectories: true,
-        attributes: [.posixPermissions: 0o700])
-    } else {
-      try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: Config.configDirectory.path)
-    }
+    try Config.createDirectory()
 
     // Copy the .p8 file into the config directory. copyItem preserves the source
     // file's permissions (a downloaded key is typically 644), so tighten immediately.
@@ -60,14 +52,10 @@ struct ConfigureCommand: ParsableCommand {
       keyId: keyId,
       issuerId: issuerId,
       privateKeyPath: destinationURL.path,
-      vendorNumber: vendorNumber
+      vendorNumber: vendorNumber,
+      ads: try? Config.load().ads
     )
-
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-    let data = try encoder.encode(config)
-    try data.write(to: Config.configFile, options: .atomic)
-    try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Config.configFile.path)
+    try config.save()
 
     print()
     print("Private key copied to \(destinationURL.path)")

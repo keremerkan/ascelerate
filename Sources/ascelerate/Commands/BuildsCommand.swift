@@ -6,7 +6,7 @@ struct BuildsCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "builds",
     abstract: "Manage builds.",
-    subcommands: [List.self, AwaitProcessing.self, Archive.self, Upload.self, Validate.self]
+    subcommands: [List.self, Uploads.self, AwaitProcessing.self, Archive.self, Upload.self, Validate.self]
   )
 
   struct List: AsyncParsableCommand {
@@ -99,6 +99,105 @@ struct BuildsCommand: AsyncParsableCommand {
 
       print()
       print("Note: Recently uploaded builds may take a few minutes to appear.")
+    }
+  }
+
+  /// Uploads Apple has received, through the API or altool, with Apple's verdict on each: the place
+  /// to look when an upload never turns into a build.
+  struct Uploads: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      abstract: "List recent build uploads with their state and Apple's errors and warnings."
+    )
+
+    @Argument(help: "Bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+    var bundleID: String
+
+    @OptionGroup var platformOption: PlatformOption
+
+    @Option(name: .long, help: "Number of uploads to show (default 10).")
+    var limit = 10
+
+    @Flag(name: .long, help: "Delete upload records that will never complete: waiting for a file while another upload of the same build moved on, or for over a day.")
+    var deleteStale = false
+
+    @Flag(name: .shortAndLong, help: "Skip the confirmation prompt (with --delete-stale).")
+    var yes = false
+
+    @OptionGroup var jsonOption: JSONOption
+
+    struct Detail: Encodable {
+      let code: String?
+      let description: String?
+    }
+
+    struct Entry: Encodable {
+      let id: String
+      let version: String?
+      let build: String?
+      let platform: String?
+      let state: String?
+      let createdDate: Date?
+      let uploadedDate: Date?
+      let errors: [Detail]?
+      let warnings: [Detail]?
+    }
+
+    func run() async throws {
+      jsonOption.activate()
+      if yes { autoConfirm = true }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      if deleteStale {
+        let stale = try await BuildUploader.strayUploads(appID: app.id, platform: try platformOption.parsed()?.rawValue, client: client)
+        guard !stale.isEmpty else {
+          print("No stale upload records.")
+          return
+        }
+        for u in stale {
+          let a = u.attributes
+          print("  \(a?.cfBundleShortVersionString ?? "-") (\(a?.cfBundleVersion ?? "-")) \(formatState(a?.platform ?? "-")), created \(a?.createdDate.map { formatDate($0) } ?? "-")  \(u.id)")
+        }
+        guard confirm("Delete \(stale.count == 1 ? "this record" : "these \(stale.count) records")? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+        let deleted = try await BuildUploader.delete(stale, client: client)
+        print(green("Deleted") + " \(deleted) stale upload record\(deleted == 1 ? "" : "s").")
+        return
+      }
+      let uploads = try await client.appsBuildUploadsGetToManyRelated(
+        path: .init(id: app.id),
+        query: .init(filterPlatform: platformFilter(try platformOption.parsed()), sort: [.minusUploadedDate], limit: min(limit, 200))
+      ).ok.body.json.data
+      let details = { (list: [Components.Schemas.StateDetail]?) in list.map { $0.map { Detail(code: $0.code, description: $0.description) } } }
+      let entries = uploads.map { u in
+        let a = u.attributes
+        return Entry(
+          id: u.id, version: a?.cfBundleShortVersionString, build: a?.cfBundleVersion, platform: a?.platform,
+          state: a?.state?.state, createdDate: a?.createdDate, uploadedDate: a?.uploadedDate,
+          errors: details(a?.state?.errors), warnings: details(a?.state?.warnings)
+        )
+      }.sorted { ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast) }
+      if jsonOption.json { try printJSON(entries); return }
+      guard !entries.isEmpty else {
+        print("No build uploads.")
+        return
+      }
+      Table.print(
+        headers: ["Version", "Build", "Platform", "State", "Created", "Uploaded"],
+        rows: entries.map { e in
+          let state = e.state.map { $0 == "FAILED" ? red(formatState($0)) : formatState($0) } ?? "-"
+          return [e.version ?? "-", e.build ?? "-", formatState(e.platform ?? "-"), state,
+                  e.createdDate.map { formatDate($0) } ?? "-", e.uploadedDate.map { formatDate($0) } ?? "-"]
+        }
+      )
+      for e in entries where !(e.errors ?? []).isEmpty || !(e.warnings ?? []).isEmpty {
+        print()
+        print(bold("\(e.version ?? "-") (\(e.build ?? "-")) \(formatState(e.platform ?? "-"))"))
+        for d in e.errors ?? [] { print("  " + red("Error: ") + [d.code, d.description].compactMap { $0 }.joined(separator: ": ")) }
+        for d in e.warnings ?? [] { print("  " + yellow("Warning: ") + [d.code, d.description].compactMap { $0 }.joined(separator: ": ")) }
+      }
     }
   }
 
@@ -348,9 +447,9 @@ struct BuildsCommand: AsyncParsableCommand {
     }
   }
 
-  struct Upload: ParsableCommand {
+  struct Upload: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-      abstract: "Upload a build to App Store Connect via xcrun altool."
+      abstract: "Upload a build to App Store Connect (xcrun altool, or the App Store Connect API with --api)."
     )
 
     @Argument(help: "Path to the .ipa, .pkg, or .xcarchive file.",
@@ -363,12 +462,15 @@ struct BuildsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Filter archives by exact bundle identifier (use with --latest).")
     var bundleID: String?
 
+    @Flag(name: .long, help: "Upload through the App Store Connect API's build uploads (.ipa or Mac .pkg) instead of altool.")
+    var api = false
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
-    func run() throws {
+    func run() async throws {
       if yes { autoConfirm = true }
-      try ensureAltool()
+      if !api { try ensureAltool() }
 
       if file != nil && latest {
         throw ValidationError("Cannot specify both a file path and --latest.")
@@ -402,6 +504,16 @@ struct BuildsCommand: AsyncParsableCommand {
       // Export .xcarchive to .ipa/.pkg if needed
       let (uploadPath, tempDir, archivePlatform) = try resolveUploadable(expandedPath)
       defer { if let dir = tempDir { try? FileManager.default.removeItem(atPath: dir) } }
+
+      if api {
+        // Through ASCKit, so dry run shows the requests and stops at the first write.
+        guard uploadPath.hasSuffix(".ipa") || uploadPath.hasSuffix(".pkg") else {
+          throw ValidationError("--api uploads an .ipa or a .pkg.")
+        }
+        let buildNumber = try await BuildUploader.upload(path: uploadPath)
+        recordUploadedBuild(uploadedBuildNumber ?? buildNumber, platform: archivePlatform?.ascPlatform)
+        return
+      }
 
       // altool talks to Apple itself, outside the dry-run gate: skip the upload, and don't record
       // a build number a later await-processing or attach-latest would wait for in vain.

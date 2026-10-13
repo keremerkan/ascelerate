@@ -58,7 +58,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 
 `--json` を追加すると、提出内容を項目ごとの状態を含めて機械可読なJSONとして取得できます。
 
-### 審査への提出
+### 審査への提出 {#submit-for-review}
 
 ```bash
 ascelerate apps review submit <bundle-id>
@@ -166,6 +166,23 @@ ascelerate apps release <bundle-id>
 # 特定のバージョンまたはプラットフォームを対象にする
 ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
+
+## アクセシビリティの宣言
+
+App Store には、アプリが対応しているアクセシビリティ機能が表示されます。この宣言はデバイスファミリーごとに行います。対象となる機能は、VoiceOver、音声コントロール、さらに大きな文字、ダークインターフェイス、色以外で区別、十分なコントラスト、視差効果を減らす、キャプション、オーディオ説明です。
+
+```bash
+# デバイスファミリーごとの宣言（下書きまたは公開済み）を表示
+ascelerate apps accessibility <bundle-id>
+
+# iPhone でアプリが対応している機能を宣言して公開
+ascelerate apps accessibility set <bundle-id> --device iphone --supports voiceover,larger-text,dark-interface --publish
+
+# 下書きの宣言をそのまま公開
+ascelerate apps accessibility publish <bundle-id>
+```
+
+`set` は対応する機能の完全なリストを宣言します。指定しなかった機能は非対応として宣言されます（`--supports none` を指定すると、どの機能にも対応していないと宣言します）。デバイスファミリー：`iphone`、`ipad`、`mac`、`apple-tv`、`apple-watch`、`vision`。`--publish` を指定しない場合、宣言は下書きのままになります。変更した宣言を公開すると、公開済みの宣言が置き換えられます。`--all` を指定すると、置き換えられた宣言も一覧に表示されます。アプリの一般的な操作全体を通じてユーザーが確実に利用できる機能だけを宣言してください。
 
 ## 販売地域の管理
 

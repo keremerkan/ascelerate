@@ -215,7 +215,9 @@ final class UploadProgressLine: NSObject, URLSessionTaskDelegate, @unchecked Sen
   private let lock = NSLock()
   private let total: Int64
   /// Bytes of the chunks already uploaded.
-  private var base: Int64 = 0
+  private var finished: Int64 = 0
+  /// Bytes sent so far by each chunk in flight (chunks upload concurrently).
+  private var inFlight: [Int: Int64] = [:]
   private var shownPercent = -1
   private var isActive = true
 
@@ -227,7 +229,7 @@ final class UploadProgressLine: NSObject, URLSessionTaskDelegate, @unchecked Sen
 
   /// Counts a finished chunk; a retried chunk starts again from its own beginning.
   func chunkFinished(length: Int64) {
-    lock.withLock { base += length }
+    lock.withLock { finished += length }
   }
 
   func urlSession(
@@ -235,14 +237,20 @@ final class UploadProgressLine: NSObject, URLSessionTaskDelegate, @unchecked Sen
     totalBytesSent: Int64, totalBytesExpectedToSend: Int64
   ) {
     lock.withLock {
+      inFlight[task.taskIdentifier] = totalBytesSent
       guard isActive, total > 0 else { return }
-      let sent = min(base + totalBytesSent, total)
+      let sent = min(finished + inFlight.values.reduce(0, +), total)
       let percent = Int(sent * 100 / total)
-      guard percent != shownPercent else { return }
+      // Only forward: a finished chunk leaves `inFlight` a moment before it's counted.
+      guard percent > shownPercent else { return }
       shownPercent = percent
       // Restore the cursor, clear to the end of the line, draw.
       write("\u{1B}8\u{1B}[K\(percent)% (\(formatBytes(Int(sent))) of \(formatBytes(Int(total))))")
     }
+  }
+
+  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
+    _ = lock.withLock { inFlight.removeValue(forKey: task.taskIdentifier) }
   }
 
   /// Erases the progress, leaving the cursor where the line's text ended.
@@ -259,19 +267,19 @@ final class UploadProgressLine: NSObject, URLSessionTaskDelegate, @unchecked Sen
   }
 }
 
+/// One upload operation's request, ready to send from any task.
+private struct UploadChunk: Sendable {
+  let request: URLRequest
+  let offset: Int
+  let length: Int
+}
+
+/// PUTs the file's chunks to their presigned URLs, four at a time.
 func uploadChunks<Operation: UploadOperationDescribing>(filePath: String, operations: [Operation]) async throws {
-  guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
+  guard FileManager.default.isReadableFile(atPath: filePath) else {
     throw MediaUploadError.cannotReadFile(filePath)
   }
-  defer { try? fileHandle.close() }
-
-  fflush(stdout)
-  let progress = isTerminal
-    ? UploadProgressLine(totalBytes: operations.reduce(0) { $0 + Int64($1.length ?? 0) })
-    : nil
-  defer { progress?.finish() }
-
-  for operation in operations {
+  let chunks = try operations.map { operation in
     guard let urlString = operation.url,
       let url = URL(string: urlString),
       let method = operation.method,
@@ -280,40 +288,55 @@ func uploadChunks<Operation: UploadOperationDescribing>(filePath: String, operat
     else {
       throw MediaUploadError.invalidUploadOperation
     }
-
-    try fileHandle.seek(toOffset: UInt64(offset))
-    let chunkData = fileHandle.readData(ofLength: length)
-
     var request = URLRequest(url: url)
     request.httpMethod = method
     for header in operation.headers {
       request.setValue(header.value, forHTTPHeaderField: header.name)
     }
+    return UploadChunk(request: request, offset: offset, length: length)
+  }
 
-    // The storage host rate-limits bursts (HTTP 429 seen live after ~180 sequential uploads);
-    // retry 429/5xx with backoff, honoring Retry-After, and dropped or timed-out connections.
-    // A chunk PUT to its presigned URL is safe to repeat.
-    var delays: [Double] = [2, 5, 15, 30]
-    while true {
-      let response: URLResponse
-      do {
-        (_, response) = try await URLSession.shared.upload(for: request, from: chunkData, delegate: progress)
-      } catch where isTransientError(error) && !delays.isEmpty {
-        try await Task.sleep(for: .seconds(delays.removeFirst()))
-        continue
-      }
-      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-      if (200...299).contains(statusCode) {
-        progress?.chunkFinished(length: Int64(length))
-        break
-      }
-      guard statusCode == 429 || (500...599).contains(statusCode), !delays.isEmpty else {
-        throw MediaUploadError.chunkUploadFailed(statusCode)
-      }
-      let delay = delays.removeFirst()
-      let retryAfter = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Retry-After").flatMap(Double.init)
-      try await Task.sleep(for: .seconds(min(retryAfter ?? delay, 60)))
+  fflush(stdout)
+  let progress = isTerminal ? UploadProgressLine(totalBytes: chunks.reduce(0) { $0 + Int64($1.length) }) : nil
+  defer { progress?.finish() }
+
+  _ = try await boundedConcurrentMap(chunks, maxConcurrent: 4) { chunk in
+    try await upload(chunk, from: filePath, progress: progress)
+  }
+}
+
+private func upload(_ chunk: UploadChunk, from filePath: String, progress: UploadProgressLine?) async throws {
+  // Each chunk reads its own slice: a shared handle's seek position would race.
+  guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
+    throw MediaUploadError.cannotReadFile(filePath)
+  }
+  try fileHandle.seek(toOffset: UInt64(chunk.offset))
+  let chunkData = fileHandle.readData(ofLength: chunk.length)
+  try? fileHandle.close()
+
+  // The storage host rate-limits bursts (HTTP 429 seen live after ~180 sequential uploads);
+  // retry 429/5xx with backoff, honoring Retry-After, and dropped or timed-out connections.
+  // A chunk PUT to its presigned URL is safe to repeat.
+  var delays: [Double] = [2, 5, 15, 30]
+  while true {
+    let response: URLResponse
+    do {
+      (_, response) = try await URLSession.shared.upload(for: chunk.request, from: chunkData, delegate: progress)
+    } catch where isTransientError(error) && !delays.isEmpty {
+      try await Task.sleep(for: .seconds(delays.removeFirst()))
+      continue
     }
+    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+    if (200...299).contains(statusCode) {
+      progress?.chunkFinished(length: Int64(chunk.length))
+      return
+    }
+    guard statusCode == 429 || (500...599).contains(statusCode), !delays.isEmpty else {
+      throw MediaUploadError.chunkUploadFailed(statusCode)
+    }
+    let delay = delays.removeFirst()
+    let retryAfter = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Retry-After").flatMap(Double.init)
+    try await Task.sleep(for: .seconds(min(retryAfter ?? delay, 60)))
   }
 }
 
@@ -519,10 +542,7 @@ struct LibraryEntry: Sendable {
 /// localizations) and `product-pages media` (custom product page localizations).
 enum ClassicMedia {
   /// The localization a new set is created under.
-  enum Owner {
-    case versionLocalization(String)
-    case productPageLocalization(String)
-  }
+  typealias Owner = AssetLibrary.Owner
 
   static func createScreenshotSet(
     _ displayType: ASCEnum.ScreenshotDisplayType, owner: Owner, client: ASCClient
@@ -534,6 +554,9 @@ enum ClassicMedia {
       relationships = .init(appStoreVersionLocalization: .init(data: .init(id: id, _type: "appStoreVersionLocalizations")))
     case .productPageLocalization(let id):
       relationships = .init(appCustomProductPageLocalization: .init(data: .init(id: id, _type: "appCustomProductPageLocalizations")))
+    case .treatmentLocalization(let id):
+      relationships = .init(appStoreVersionExperimentTreatmentLocalization: .init(
+        data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations")))
     }
     return try await client.appScreenshotSetsCreateInstance(body: .json(.init(data: .init(
       attributes: .init(screenshotDisplayType: displayType.rawValue),
@@ -552,6 +575,9 @@ enum ClassicMedia {
       relationships = .init(appStoreVersionLocalization: .init(data: .init(id: id, _type: "appStoreVersionLocalizations")))
     case .productPageLocalization(let id):
       relationships = .init(appCustomProductPageLocalization: .init(data: .init(id: id, _type: "appCustomProductPageLocalizations")))
+    case .treatmentLocalization(let id):
+      relationships = .init(appStoreVersionExperimentTreatmentLocalization: .init(
+        data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations")))
     }
     return try await client.appPreviewSetsCreateInstance(body: .json(.init(data: .init(
       attributes: .init(previewType: previewType.rawValue),

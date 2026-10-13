@@ -7,8 +7,8 @@ title: Kurulum
 
 ## Gereksinimler
 
-- macOS 13+
-- Swift 6.0+ (yalnızca kaynaktan derleme için)
+- macOS 15+
+- Swift 6.2+ (yalnızca kaynaktan derleme için)
 
 ## Homebrew
 

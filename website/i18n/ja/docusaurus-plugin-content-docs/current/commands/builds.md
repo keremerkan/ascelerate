@@ -39,7 +39,30 @@ ascelerate builds upload MyApp.ipa
 
 `.ipa`、`.pkg`、`.xcarchive` ファイルを受け付けます。`.xcarchive` が指定された場合、アーカイブのプラットフォームを検出し、アップロード前に自動的に `.ipa`（iOS ファミリー）または `.pkg`（macOS）にエクスポートします。該当するプラットフォームは altool に渡されます。
 
-## 処理の待機
+### App Store Connect API を使ったアップロード
+
+```bash
+ascelerate builds upload MyApp.ipa --api
+ascelerate builds upload --latest --bundle-id com.example.MyApp --api
+```
+
+`--api` を指定すると、altool の代わりに App Store Connect API のビルドアップロードを使ってビルドを送信します。認証には、他のコマンドと同じ API キーを使用します。`.ipa` または Mac の `.pkg`（あるいは先にエクスポートされる `.xcarchive`）を受け付け、中に含まれるアプリからバージョンとビルド番号を読み取り、ファイルをチャンクに分けて並列でアップロードし（ターミナルではプログレスバーを表示します）、App Store Connect がファイルを受け付けるまで待機します。Apple がファイルを拒否した場合は、Apple のエラーコードと説明を表示してコマンドが失敗します。警告はアップロードが成功した後に表示されます。その後の処理は通常どおり進みます（[処理の待機](#await-processing)を参照）。
+
+現時点では、引き続き altool がデフォルトです。
+
+## アップロード履歴
+
+```bash
+ascelerate builds uploads <bundle-id>
+ascelerate builds uploads <bundle-id> --platform macos --limit 20
+ascelerate builds uploads <bundle-id> --delete-stale
+```
+
+アプリの最近のアップロードを、altool、Xcode、`--api` のどれで行われたかにかかわらず一覧表示します。各アップロードの状態（Awaiting Upload、Processing、Complete、Failed）と、Apple が付加したエラーや警告も表示されます。アップロードがいつまでもビルドにならない場合は、ここを確認してください。機械可読な出力には `--json` を追加してください。
+
+悪いタイミングで接続が切れると、届くことのないファイルを待ち続けるアップロードレコードが残ることがあります。`--api` によるアップロードは、成功した後に同じビルドのそうしたレコードを削除します。`--delete-stale` は残っているレコードを削除します。対象は、同じビルドの別のアップロードが先に進んでいるのにまだファイルを待っているレコードと、1日以上ファイルを待っているレコードです。進行中のアップロードが削除されることはありません。
+
+## 処理の待機 {#await-processing}
 
 ```bash
 ascelerate builds await-processing <bundle-id>

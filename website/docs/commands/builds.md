@@ -39,6 +39,29 @@ ascelerate builds upload MyApp.ipa
 
 Accepts `.ipa`, `.pkg`, or `.xcarchive` files. When given an `.xcarchive`, it detects the archive's platform and automatically exports to `.ipa` (iOS-family) or `.pkg` (macOS) before uploading, passing the matching platform to altool.
 
+### Upload through the App Store Connect API
+
+```bash
+ascelerate builds upload MyApp.ipa --api
+ascelerate builds upload --latest --bundle-id com.example.MyApp --api
+```
+
+With `--api`, the build goes through the App Store Connect API's build uploads instead of altool, using the same API key as every other command. It takes an `.ipa` or a Mac `.pkg` (or an `.xcarchive`, exported first), reads the version and build number from the app inside, uploads the file in parallel chunks with a progress bar on a terminal, and then waits until App Store Connect has accepted the file. If Apple rejects it, the command fails with Apple's error codes and descriptions; warnings are printed after a successful upload. Processing then continues as usual (see [Await processing](#await-processing)).
+
+altool stays the default for now.
+
+## Upload history
+
+```bash
+ascelerate builds uploads <bundle-id>
+ascelerate builds uploads <bundle-id> --platform macos --limit 20
+ascelerate builds uploads <bundle-id> --delete-stale
+```
+
+Lists the app's recent uploads, whether they were made with altool, Xcode or `--api`, with their state (Awaiting Upload, Processing, Complete, Failed) and the errors and warnings Apple attached to them. Look here when an upload never turns into a build. Add `--json` for machine-readable output.
+
+A connection that drops at the wrong moment can leave an upload record waiting for a file that will never arrive. `--api` uploads remove such records of the same build after they succeed, and `--delete-stale` removes any that are left: records still waiting for a file while another upload of the same build has moved on, or for more than a day. An upload still in progress is never removed.
+
 ## Await processing
 
 ```bash

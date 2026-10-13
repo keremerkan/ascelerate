@@ -29,7 +29,7 @@ function HomepageHeader() {
         <p className={styles.heroDescription}>
           <Translate id="homepage.hero.description">
             Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission.
-            Manage versions, localizations, screenshots, provisioning, in-app purchases, subscriptions, and sales reports.
+            Manage versions, localizations, screenshots, provisioning, in-app purchases, subscriptions, sales reports, and Apple Ads campaigns.
           </Translate>
         </p>
         <div className={styles.buttons}>
@@ -118,11 +118,29 @@ function getFeatures(): FeatureItem[] {
       ),
     },
     {
+      title: translate({id: 'homepage.features.presence.title', message: 'App Store Presence'}),
+      description: (
+        <Translate id="homepage.features.presence.description">
+          A/B test screenshots and icons with product page optimization, build custom product pages
+          and in-app events, nominate releases for featuring, and get webhooks for review and build events.
+        </Translate>
+      ),
+    },
+    {
       title: translate({id: 'homepage.features.reports.title', message: 'Reports & Analytics'}),
       description: (
         <Translate id="homepage.features.reports.description">
           Download Sales, Finance, and App Analytics reports — units, downloads, and proceeds.
           Summarized in the terminal, or saved as raw data for your own analysis.
+        </Translate>
+      ),
+    },
+    {
+      title: translate({id: 'homepage.features.ads.title', message: 'Apple Ads'}),
+      description: (
+        <Translate id="homepage.features.ads.description">
+          Read campaign, keyword, and search term reports, manage bids, budgets, and keywords,
+          find search terms to add or exclude, and research keyword popularity.
         </Translate>
       ),
     },

@@ -1,6 +1,6 @@
 {
   "homepage.hero.description": {
-    "message": "Apps erstellen, archivieren und im App Store veröffentlichen — vom Xcode-Archiv bis zur App Review-Einreichung. Verwalten Sie Versionen, Lokalisierungen, Screenshots, Provisioning, In-App-Käufe, Abonnements und Verkaufsberichte."
+    "message": "Apps erstellen, archivieren und im App Store veröffentlichen — vom Xcode-Archiv bis zur App Review-Einreichung. Verwalten Sie Versionen, Lokalisierungen, Screenshots, Provisioning, In-App-Käufe, Abonnements, Verkaufsberichte und Apple-Ads-Kampagnen."
   },
   "homepage.hero.getStarted": {
     "message": "Erste Schritte"
@@ -37,6 +37,18 @@
   },
   "homepage.features.reports.description": {
     "message": "Sales-, Finanz- und App-Analytics-Berichte herunterladen — Einheiten, Downloads und Erlöse. Im Terminal zusammengefasst oder als Rohdaten für Ihre eigene Analyse gespeichert."
+  },
+  "homepage.features.presence.title": {
+    "message": "App-Store-Präsenz"
+  },
+  "homepage.features.presence.description": {
+    "message": "Screenshots und App-Symbole mit der Produktseitenoptimierung per A/B-Test vergleichen, individuelle Produktseiten und In-App-Events erstellen, Releases für das Featuring im App Store nominieren und Webhooks für Review- und Build-Ereignisse empfangen."
+  },
+  "homepage.features.ads.title": {
+    "message": "Apple Ads"
+  },
+  "homepage.features.ads.description": {
+    "message": "Berichte zu Kampagnen, Keywords und Suchbegriffen abrufen, Gebote, Budgets und Keywords verwalten, Suchbegriffe zum Hinzufügen oder Ausschließen finden und die Beliebtheit von Keywords recherchieren."
   },
   "homepage.features.workflows.title": {
     "message": "Workflows & Automatisierung"

@@ -51,7 +51,7 @@ ascelerate reports finance --date 2026-05 --region US --type FINANCE_DETAIL --ou
 
 ## Analytics
 
-App Analyticsのレポートデータ — ダウンロード、インプレッション、製品ページの表示回数、セッションなど。Appleはこれらを非同期で生成します。コマンドはアプリのレポートリクエストを検索（または確認のうえ作成）し、レポートのセグメントをダウンロードします。
+App Analyticsのレポートデータ — ダウンロード、インプレッション、プロダクトページの表示回数、セッションなど。Appleはこれらを非同期で生成します。コマンドはアプリのレポートリクエストを検索（または確認のうえ作成）し、レポートのセグメントをダウンロードします。
 
 ```bash
 ascelerate reports analytics <bundle-id>

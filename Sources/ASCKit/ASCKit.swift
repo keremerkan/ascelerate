@@ -59,6 +59,11 @@ public struct ASCDryRunStop: Error, Sendable, CustomStringConvertible {
 
   public var description: String { "Dry run: \(method) \(path) was not sent." }
 
+  public init(method: String, path: String) {
+    self.method = method
+    self.path = path
+  }
+
   /// The `ASCDryRunStop` behind an error thrown by a generated operation, or nil.
   public static func from(_ error: Error) -> ASCDryRunStop? {
     if let stop = error as? ASCDryRunStop { return stop }
@@ -80,7 +85,8 @@ public enum ASCDryRun {
   private static let counter = Counter()
 
   public static var blockedWrites: Int { counter.count }
-  static func recordBlockedWrite() { counter.increment() }
+  /// Also called by the Apple Ads client's own dry-run gate.
+  public static func recordBlockedWrite() { counter.increment() }
 }
 
 struct DryRunMiddleware: ClientMiddleware {

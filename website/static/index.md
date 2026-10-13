@@ -6,7 +6,7 @@ canonical: https://ascelerate.dev/
 
 # ASCelerate
 
-A Swift CLI for App Store Connect. Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission. Manage versions, localizations, screenshots, provisioning, in-app purchases, subscriptions, and sales reports.
+A Swift CLI for App Store Connect. Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission. Manage versions, localizations, screenshots, provisioning, in-app purchases, subscriptions, sales reports, and Apple Ads campaigns.
 
 Open source: https://github.com/keremerkan/ascelerate
 
@@ -27,7 +27,9 @@ curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.s
 - **Provisioning Management** — Register devices, create certificates, manage bundle IDs and capabilities, create and reissue provisioning profiles. Most commands support interactive mode.
 - **Screenshots & Media** — Capture screenshots from simulators with dark mode, localization, and status bar overrides. Frame screenshots with Apple device bezels. Upload and download screenshots and app previews with a simple folder structure.
 - **In-App Purchases & Subscriptions** — List, create, update, and delete IAPs and subscriptions. Manage localizations and submit for review alongside your app version.
+- **App Store Presence** — A/B test screenshots and icons with product page optimization, build custom product pages and in-app events, nominate releases for featuring, and get webhooks for review and build events.
 - **Reports & Analytics** — Download Sales, Finance, and App Analytics reports: units, downloads, and proceeds. Summarized in the terminal, or saved as raw data for your own analysis.
+- **Apple Ads** — Read campaign, keyword, and search term reports, manage bids, budgets, and keywords, find search terms to add or exclude, and research keyword popularity.
 - **Workflows & Automation** — Chain commands into workflow files for repeatable release processes. Use `--yes` for fully unattended CI/CD execution.
 - **AI-Ready** — Ships with a skill file that gives AI coding agents (Claude Code, Cursor, Windsurf, GitHub Copilot) full knowledge of all commands and workflows.
 

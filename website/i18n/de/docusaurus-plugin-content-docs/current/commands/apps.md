@@ -58,7 +58,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 
 Mit `--json` erhalten Sie die Einreichungen — einschließlich der Status der einzelnen Elemente — als maschinenlesbares JSON.
 
-### Zur Überprüfung einreichen
+### Zur Überprüfung einreichen {#submit-for-review}
 
 ```bash
 ascelerate apps review submit <bundle-id>
@@ -166,6 +166,23 @@ ascelerate apps release <bundle-id>
 # Eine bestimmte Version oder Plattform ansteuern
 ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
+
+## Angaben zur Barrierefreiheit
+
+Der App Store zeigt, welche Bedienungshilfen eine App unterstützt, angegeben pro Gerätefamilie: VoiceOver, Sprachsteuerung, größerer Text, dunkle Benutzeroberfläche, Unterscheidung ohne Farbe, ausreichender Kontrast, reduzierte Bewegung, Untertitel und Audiobeschreibungen.
+
+```bash
+# Die Angaben (Entwurf oder veröffentlicht) pro Gerätefamilie anzeigen
+ascelerate apps accessibility <bundle-id>
+
+# Angeben, was die App auf dem iPhone unterstützt, und veröffentlichen
+ascelerate apps accessibility set <bundle-id> --device iphone --supports voiceover,larger-text,dark-interface --publish
+
+# Entwürfe unverändert veröffentlichen
+ascelerate apps accessibility publish <bundle-id>
+```
+
+`set` gibt die vollständige Liste an: Funktionen, die Sie weglassen, gelten als nicht unterstützt (`--supports none` gibt keine an). Gerätefamilien: `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. Ohne `--publish` bleibt die Angabe ein Entwurf. Wird eine geänderte Angabe veröffentlicht, ersetzt sie die bisher veröffentlichte; `--all` listet auch ersetzte Angaben auf. Geben Sie nur an, worauf sich Nutzer bei den üblichen Aufgaben in der App verlassen können.
 
 ## Länderverfügbarkeit
 

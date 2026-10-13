@@ -39,7 +39,30 @@ ascelerate builds upload MyApp.ipa
 
 `.ipa`, `.pkg` veya `.xcarchive` dosyalarını kabul eder. `.xcarchive` verildiğinde arşivin platformunu algılar ve yüklemeden önce otomatik olarak `.ipa` (iOS ailesi) veya `.pkg` (macOS) biçimine dışa aktarır; eşleşen platform altool'a iletilir.
 
-## İşlenmeyi bekleme
+### App Store Connect API üzerinden yükleme
+
+```bash
+ascelerate builds upload MyApp.ipa --api
+ascelerate builds upload --latest --bundle-id com.example.MyApp --api
+```
+
+`--api` ile build, altool yerine App Store Connect API'nin build yükleme uç noktaları üzerinden, diğer tüm komutlarla aynı API anahtarı kullanılarak gönderilir. Bir `.ipa` veya Mac `.pkg` dosyası (ya da önce dışa aktarılan bir `.xcarchive`) kabul eder, sürümü ve build numarasını içindeki uygulamadan okur, dosyayı paralel parçalar hâlinde yükler (terminalde bir ilerleme çubuğuyla) ve ardından App Store Connect dosyayı kabul edene kadar bekler. Apple dosyayı reddederse komut, Apple'ın hata kodları ve açıklamalarıyla başarısız olur; uyarılar ise başarılı bir yüklemenin ardından yazdırılır. Sonrasında işlenme her zamanki gibi devam eder (bkz. [İşlenmeyi bekleme](#await-processing)).
+
+Şimdilik varsayılan yöntem altool olmaya devam ediyor.
+
+## Yükleme geçmişi
+
+```bash
+ascelerate builds uploads <bundle-id>
+ascelerate builds uploads <bundle-id> --platform macos --limit 20
+ascelerate builds uploads <bundle-id> --delete-stale
+```
+
+Uygulamanın son yüklemelerini (altool, Xcode veya `--api` ile yapılmış olmalarından bağımsız olarak) durumları (Awaiting Upload, Processing, Complete, Failed) ve Apple'ın bunlara eklediği hata ve uyarılarla birlikte listeler. Bir yükleme bir türlü build'e dönüşmüyorsa buraya bakın. Makine tarafından okunabilir çıktı için `--json` ekleyin.
+
+Bağlantının yanlış anda kopması, hiç gelmeyecek bir dosyayı bekleyen bir yükleme kaydı bırakabilir. `--api` yüklemeleri, başarıyla tamamlandıktan sonra aynı build'e ait bu tür kayıtları kaldırır; `--delete-stale` ise geriye kalanları kaldırır: aynı build'in başka bir yüklemesi ilerlemişken ya da bir günden uzun süredir hâlâ dosya bekleyen kayıtlar. Devam eden bir yükleme hiçbir zaman kaldırılmaz.
+
+## İşlenmeyi bekleme {#await-processing}
 
 ```bash
 ascelerate builds await-processing <bundle-id>

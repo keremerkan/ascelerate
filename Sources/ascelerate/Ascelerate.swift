@@ -13,10 +13,11 @@ struct Ascelerate: AsyncParsableCommand {
       Global option: --dry-run (anywhere on the command line, or ASCELERATE_DRY_RUN=1) sends \
       reads as usual but prints every write instead of sending it.
       """,
-    subcommands: [AppsCommand.self, AppEventsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ProductPagesCommand.self, ScreenshotCommand.self, TestFlightCommand.self],
+    subcommands: [AppsCommand.self, AppEventsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ExperimentsCommand.self, NominationsCommand.self, ProductPagesCommand.self, ScreenshotCommand.self, TestFlightCommand.self, WebhooksCommand.self],
     groupedSubcommands: [
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self]),
       CommandGroup(name: "Reporting", subcommands: [ReportsCommand.self]),
+      CommandGroup(name: "Advertising", subcommands: [AdsCommand.self]),
       CommandGroup(name: "Provisioning", subcommands: [BundleIDsCommand.self, CertsCommand.self, DevicesCommand.self, ProfilesCommand.self]),
       CommandGroup(name: "Utilities", subcommands: [AliasCommand.self, RunWorkflowCommand.self, RateLimitCommand.self, VersionCommand.self]),
       CommandGroup(name: "Setup", subcommands: [ConfigureCommand.self, InstallCompletionsCommand.self, InstallSkillCommand.self]),

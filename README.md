@@ -15,8 +15,8 @@ A command-line tool for building, archiving, and publishing apps to the App Stor
 
 ## Requirements
 
-- macOS 13+
-- Swift 6.0+ (only for building from source)
+- macOS 15+
+- Swift 6.2+ (only for building from source)
 
 ## Installation
 
@@ -672,6 +672,18 @@ ascelerate apps app-info export <bundle-id> --output app-infos.json
 ascelerate apps app-info import <bundle-id> --file app-infos.json
 ```
 
+### Accessibility Declarations
+
+The App Store's accessibility labels, declared per device family:
+
+```bash
+ascelerate apps accessibility <bundle-id>                    # view (draft/published per device)
+ascelerate apps accessibility set <bundle-id> --device iphone --supports voiceover,larger-text,dark-interface --publish
+ascelerate apps accessibility publish <bundle-id>            # publish drafts unchanged
+```
+
+`set` declares the full list: features you leave out are declared as not supported.
+
 ### Territory Availability
 
 ```bash
@@ -861,6 +873,9 @@ ascelerate builds validate MyApp.ipa
 
 # Upload a build to App Store Connect
 ascelerate builds upload MyApp.ipa
+ascelerate builds upload MyApp.ipa --api      # upload through the App Store Connect API instead of altool (.ipa or Mac .pkg)
+ascelerate builds uploads <bundle-id>         # recent uploads with their state and Apple's errors/warnings
+ascelerate builds uploads <bundle-id> --delete-stale   # remove upload records that will never complete
 
 # Wait for a build to finish processing
 ascelerate builds await-processing <bundle-id>
@@ -1127,6 +1142,39 @@ ascelerate reviews delete-response <review-id>
 
 Reviews are read-only — you can only manage the developer response. `--sort` accepts `recent`, `oldest`, `critical` (lowest rating first), or `best`. Review IDs come from `reviews list`. With `--json`, `reviews list` includes full review bodies and developer responses, so no per-review `info` calls are needed.
 
+### Featuring Nominations
+
+Tell Apple's editorial team about a launch, an update or new content:
+
+```bash
+ascelerate nominations                                       # list (drafts, submitted, archived)
+ascelerate nominations create --app <bundle-id> --type enhancements --name "Version 5" \
+  --description "What's new and why it matters" --publish-start 2026-11-01 --devices iphone,ipad
+ascelerate nominations submit <id>                           # send a draft to Apple
+ascelerate nominations update <id> --publish-start 2026-11-08
+ascelerate nominations archive <id>
+ascelerate nominations delete <id>
+```
+
+`create` saves a draft unless you pass `--submit`. Types: `launch`, `enhancements`, `new-content`.
+
+### Webhooks
+
+Have App Store Connect POST an app's events (review state changes, build uploads, TestFlight feedback, …) to your server:
+
+```bash
+ascelerate webhooks <bundle-id>                              # list
+ascelerate webhooks create <bundle-id> --name "Release bot" --url https://example.com/hook \
+  --events app-store-version-app-version-state-updated,build-upload-state-updated
+ascelerate webhooks ping <bundle-id> "Release bot"           # send a test event
+ascelerate webhooks deliveries <bundle-id> "Release bot" --state failed
+ascelerate webhooks redeliver <delivery-id>
+ascelerate webhooks update <bundle-id> "Release bot" --enabled false
+ascelerate webhooks delete <bundle-id> "Release bot"
+```
+
+Without `--secret`, `create` generates a signing secret and prints it once. `--events all` subscribes to every event type.
+
 ### In-App Events
 
 ```bash
@@ -1183,6 +1231,22 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 
 Pages are referenced by name or ID. Each page's shareable App Store URL (with its `ppid`) appears in `list` and `info`.
 
+### Product Page Optimization
+
+A/B test screenshots, previews and app icons against the original product page:
+
+```bash
+ascelerate experiments <bundle-id>                                   # list tests
+ascelerate experiments create <bundle-id> --name "Screenshot order" --traffic 50 --treatment "Map first"
+ascelerate experiments media upload <bundle-id> "Screenshot order" "Map first" --locale en-US --display-type APP_IPHONE_67 01.png
+ascelerate experiments info <bundle-id> "Screenshot order"                  # treatments, locales and media
+ascelerate experiments submit <bundle-id> "Screenshot order"                # App Review
+ascelerate experiments start <bundle-id> "Screenshot order"                 # once approved
+ascelerate experiments stop <bundle-id> "Screenshot order"
+```
+
+`treatments add/update/delete/remove-locale` manage treatments (`--app-icon` tests an alternate icon from the live build); `media list/delete` manage their media. Tests and treatments are referenced by name or ID.
+
 ### Reports
 
 Download Sales & Trends, Financial, and App Analytics reports. Sales/Finance reports come back as Apple's gzipped TSV — ascelerate decompresses and summarizes them (or saves the raw file with `--output`/`--raw`).
@@ -1208,6 +1272,56 @@ ascelerate reports analytics <bundle-id> --category APP_USAGE --granularity WEEK
 - The sales summary groups units by app and **product type identifier**, distinguishing first-time downloads (`1*`/`3*`) from updates (`7*`) and in-app purchases (`IA*`). Use `--raw` for the full TSV.
 - Apple generates analytics reports asynchronously — a freshly created snapshot isn't ready immediately; re-run the command after a few minutes to download the segments.
 - The API does not expose aggregate rating counts or the star-rating average — only individual reviews (see Customer Reviews).
+
+### Apple Ads
+
+Manage Apple Ads (formerly Search Ads) campaigns through the Apple Ads Platform API: performance reports, keywords and negative keywords, bids and budgets, plus Apple's keyword research data. Apps are matched with App Store Connect, so `--app` takes the same bundle IDs and aliases as every other command.
+
+```bash
+# One-time setup: creates the key pair, prints the public key to paste into
+# Apple Ads → Account Settings → API, then asks for clientId/teamId/keyId
+ascelerate ads configure
+
+# Performance (--days N or --from/--to; --app, --campaign; --json)
+ascelerate ads reports campaigns --days 30
+ascelerate ads reports campaigns --campaign "MyApp US" --by device   # also age, gender, country, region, city
+ascelerate ads reports keywords --campaign "MyApp US"              # with Apple's suggested bid
+ascelerate ads reports search-terms --app myapp                    # what people searched, which keyword matched
+
+# Campaigns, keywords, negatives (writes confirm first; --dry-run shows the requests)
+ascelerate ads campaigns list
+ascelerate ads campaigns pause "MyApp US"
+ascelerate ads campaigns budget "MyApp US" --daily 120
+ascelerate ads campaigns create --like "MyApp US" --name "MyApp US Max Conv" --max-conversions --bid 2.50 --daily 25   # paused, with its automated ad group
+ascelerate ads keywords add --campaign "MyApp US" --match exact --bid 1.50 "qr scanner" "barcode reader"
+ascelerate ads keywords bid --campaign "MyApp US" --bid 1.25 "qr scanner"
+ascelerate ads negatives add --campaign "MyApp US" "free wifi"
+ascelerate ads adgroups create --campaign "MyApp US" --name "Exact" --search-match off   # copy of the existing group, paused
+ascelerate ads keywords copy --campaign "MyApp US" --from "US Ad Group" --to "Exact"
+ascelerate ads reports adgroups --campaign "MyApp US"
+
+# What to change: search terms to add as keywords, give their own bid, or exclude
+ascelerate ads opportunities --app myapp
+ascelerate ads recommendations apply <id>
+ascelerate ads campaigns target-cpa --app myapp --country US            # Apple's suggested Max Conversions target
+ascelerate ads history --app myapp --days 7                              # who changed what, old → new
+
+# Ad variations: send an ad group's taps to a custom product page (made in App Store Connect)
+ascelerate ads product-pages --app myapp
+ascelerate ads ads create --campaign "MyApp US" --ad-group "Scanner" --product-page "Scanner Page" --enabled
+ascelerate ads reports ads --campaign "MyApp US"
+
+# Keyword research and market insights
+ascelerate ads keywords suggest --app myapp --seed "qr code" --country US
+ascelerate ads keywords popularity --app myapp --country US --term "qr code" "qr scanner"
+ascelerate ads insights impression-share --app myapp --country US
+ascelerate ads recommendations
+```
+
+- Apple Ads uses its own credentials: an Apple Ads user with an API role (Account Settings → User Management). `ads configure` stores them in the `ads` section of `~/.ascelerate/config.json`.
+- Reports show both conversion rates: **CR (Tap)** counts installs after a tap; **CR (Total)** adds view-through installs (people who saw the ad and installed without tapping), so it can exceed 100%.
+- Search terms Apple withholds for privacy show as "(low volume)"; keyword suggestions are only relevant with `--seed`.
+- Apple knows age, gender and location (below country) only for users who allowed Personalized Ads, so those breakdowns come back almost entirely as "Unknown"; device is complete.
 
 ### Rate Limit
 

@@ -20,7 +20,7 @@ cp .build/release/ascelerate /usr/local/bin/
 ## Project Structure
 
 ```
-Package.swift                         # SPM manifest (Swift 6.0, macOS 13+)
+Package.swift                         # SPM manifest (Swift tools 6.2, macOS 15+; the Apple Ads client needs both)
 Scripts/
   prepare-asc-spec.swift              # Apple spec → Sources/ASCKit/openapi.json + nameOverrides
   compare-with-release.sh             # Diff read-only command output: released binary vs debug build
@@ -41,11 +41,21 @@ Sources/ascelerate/
   ProductAvailability.swift           # Shared driver for iap/sub availability commands
   ProductMedia.swift                  # Shared drivers for iap/sub images, review-screenshot, offer-code view-codes
   ProductVersions.swift               # Pending-version detection for IAPs/subs/groups (versions endpoints) + review-item resolution
+  Ads/
+    Ads.swift                         # Apple Ads client (withClient), middleware (dry-run gate, AdsError, 429 wait, raw-body capture), Scope, campaign/ad group/keyword lookups
+    AdsReports.swift                  # Report request/paging, Metrics (incl. summed totals), Report table renderer, DateRangeOptions
+    AdsASC.swift                      # App Store Connect side (app names, app ID/category, dry-run stop bridge); the only Ads file importing ASCKit
+  BuildUpload.swift                   # builds upload --api: .ipa/.pkg through buildUploads/buildUploadFiles (reserve, PUT chunks, MD5 commit, poll state, stray-record cleanup)
+  LocalizationMedia.swift             # One-file media for product page + experiment treatment localizations: list rows, upload (classic set or library slot), delete
   Reports.swift                       # Shared report plumbing: gunzip (gzip -dc), TSV parse, vendor-number resolve, sales/finance summarizers
   Commands/
     ConfigureCommand.swift            # Interactive credential setup, file permissions
     AppsCommand.swift                 # All app subcommands + findApp/findVersion helpers
     BuildsCommand.swift               # Build subcommands
+    AccessibilityCommand.swift        # apps accessibility (view/set/publish): App Store accessibility declarations per device family
+    ExperimentsCommand.swift          # experiments: product page optimization tests, treatments, treatment media, submit/start/stop
+    WebhooksCommand.swift             # webhooks (list/create/update/delete/ping/deliveries/redeliver)
+    NominationsCommand.swift          # nominations (list/create/update/submit/archive/delete): featuring nominations
     IAPCommand.swift                  # In-app purchase subcommands
     SubCommand.swift                 # Subscription subcommands
     CustomerReviewsCommand.swift      # Customer reviews + developer responses (list, info, respond, delete-response)
@@ -62,6 +72,14 @@ Sources/ascelerate/
     RateLimitCommand.swift            # API rate limit status check
     TestFlightCommand.swift           # TestFlight: beta groups, testers, build states, What to Test, beta review; findBetaGroup/findBuild helpers
     ReportsCommand.swift              # Sales/Finance/Analytics report downloads (reports sales/finance/analytics)
+    AdsCommand.swift                  # ads configure/accounts/campaigns (list, pause, resume, budget)
+    AdsKeywordsCommand.swift          # ads keywords (list/add/pause/resume/bid), negatives (list/add/remove)
+    AdsAdGroupsCommand.swift          # ads adgroups (list/create/update/pause/resume); create copies an existing group via Ads.convert
+    AdsOpportunitiesCommand.swift     # ads opportunities: search terms → add-exact / own-bid / negative, rules vs the campaign's averages
+    AdsReportsCommand.swift           # ads reports campaigns/keywords/search-terms
+    AdsInsightsCommand.swift          # ads keywords suggest/popularity, insights impression-share, recommendations (list/apply/dismiss)
+    AdsHistoryCommand.swift           # ads history: change log (who changed what, when) per campaign
+    AdsAdsCommand.swift               # ads product-pages, ads ads (list/create/pause/resume): custom product page ads
 skills/
   ascelerate/SKILL.md                # AI coding skill (single source of truth)
   package.json                        # npm package for npx installer
@@ -74,6 +92,7 @@ skills/
 - **[swift-argument-parser](https://github.com/apple/swift-argument-parser)** (1.3.0+) — CLI framework
 - **[swift-certificates](https://github.com/apple/swift-certificates)** (1.0.0+) — X.509 certificate and CSR generation (used by `certs create` auto-CSR flow)
 - **[Yams](https://github.com/jpsim/Yams)** (5.0.0+) — YAML parsing (used by `screenshot` command for `ascelerate.yml`)
+- **[apple-ads-platform-api-swift](https://github.com/apple/apple-ads-platform-api-swift)** (`AppleAdsClient`, 1.109.0+, traits off) — Apple's generated client for the Apple Ads Platform API, used by the `ads` commands. It requires macOS 15 and swift-tools 6.2 and brings AsyncHTTPClient/NIO (its token fetch always uses them); the stripped release binary grew from 42.8 MB (0.23.1) to 59.6 MB. Apple publishes no raw spec, so it can't be path-filtered like ASCKit; copying its generated `Client.swift`/`Types.swift` into an own target would drop NIO without changing command code.
 
 ## Authentication
 
@@ -83,9 +102,16 @@ Config file at `~/.ascelerate/config.json`:
     "keyId": "KEY_ID",
     "issuerId": "ISSUER_ID",
     "privateKeyPath": "/Users/.../.ascelerate/AuthKey_XXXXXXXXXX.p8",
-    "vendorNumber": "80012345"
+    "vendorNumber": "80012345",
+    "ads": {
+        "clientId": "SEARCHADS.…", "teamId": "SEARCHADS.…", "keyId": "…",
+        "privateKeyPath": "/Users/.../.ascelerate/ads-private-key.pem",
+        "adAccountId": 123456
+    }
 }
 ```
+
+- `ads` is **optional** — only the `ads` commands use it; `ads configure` writes it (generating the P-256 key pair) and `configure` keeps it when rewriting the file.
 
 - `configure` command copies the .p8 file into `~/.ascelerate/` and writes the config
 - `vendorNumber` is **optional** — only the `reports sales`/`reports finance` commands use it (App Store Connect → Payments and Financial Reports). `configure` prompts for it (skippable); `--vendor-number` overrides per-invocation. Resolved by `Reports.resolveVendorNumber()`.
@@ -135,13 +161,18 @@ ascelerate apps app-info view --list-categories                   # List availab
 ascelerate apps app-info update <bundle-id> [--name X] [--subtitle X] [--primary-category X] [-y]  # Update localization fields and/or categories
 ascelerate apps app-info import <bundle-id> [--file X] [--verbose] [-y]  # Bulk update localizations from JSON
 ascelerate apps app-info export <bundle-id> [--output X]          # Export localizations to JSON
+ascelerate apps accessibility [view] <bundle-id> [--all] [--json]   # App Store accessibility declarations per device family (--all: incl. replaced)
+ascelerate apps accessibility set <bundle-id> --device iphone|ipad|mac|apple-tv|apple-watch|vision --supports a,b,…|none [--publish] [-y]  # Full declaration (unlisted = unsupported); creates or updates
+ascelerate apps accessibility publish <bundle-id> [-y]            # Publish draft declarations as they are
 ascelerate apps availability <bundle-id> [--add X] [--remove X]  # View/update territory availability
 ascelerate apps encryption <bundle-id> [--create]                 # View/create encryption declarations
 ascelerate apps eula <bundle-id> [--file X] [--delete]            # View/manage custom EULA
 ascelerate apps subscription-grace-period <bundle-id> [--opt-in true|false] [--sandbox-opt-in true|false] [--duration X] [--renewal-type X] [-y]  # View/update app-level subscription grace period
 ascelerate builds list [--bundle-id <id>] [--version X] [--platform X] [--json]  # List builds
 ascelerate builds archive [--workspace X] [--scheme X] [--output X]  # Archive Xcode project
-ascelerate builds upload [file]                                   # Upload build via altool
+ascelerate builds upload [file] [--api]                           # Upload build via altool, or the App Store Connect API (--api, .ipa or Mac .pkg)
+ascelerate builds uploads <bundle-id> [--platform X] [--limit N] [--json]  # Recent uploads (API and altool) with state + Apple's errors/warnings
+ascelerate builds uploads <bundle-id> --delete-stale [-y]          # Delete upload records that will never complete
 ascelerate builds validate [file]                                 # Validate build via altool
 ascelerate builds await-processing <bundle-id> [--build-version X] [--platform X]  # Wait for build to finish processing
 ascelerate iap list <bundle-id> [--type X] [--state X] [--json]   # List in-app purchases
@@ -274,6 +305,31 @@ ascelerate reviews list <bundle-id> [--rating N] [--territory X] [--sort recent|
 ascelerate reviews info <review-id> [--json]                      # Full review text + developer response
 ascelerate reviews respond <review-id> --body "X" [-y]           # Publish/replace developer response
 ascelerate reviews delete-response <review-id> [-y]              # Delete developer response
+ascelerate experiments [list] <bundle-id> [--json]                  # Product page optimization tests
+ascelerate experiments info <bundle-id> <name-or-id> [--json]      # Test + treatments + localizations + media
+ascelerate experiments create <bundle-id> --name X --traffic N [--platform ios] [--treatment X ...] [-y]  # Create (with up to 3 treatments)
+ascelerate experiments update <bundle-id> <test> [--name X] [--traffic N] [-y]
+ascelerate experiments delete <bundle-id> <test> [-y]
+ascelerate experiments submit <bundle-id> <test> [-y]              # Submit for App Review (own submission, or added to an open draft)
+ascelerate experiments start|stop <bundle-id> <test> [-y]          # PATCH started true/false
+ascelerate experiments treatments add <bundle-id> <test> --name X [--app-icon X] [-y]
+ascelerate experiments treatments update <bundle-id> <test> <treatment> [--name X] [--app-icon X] [-y]
+ascelerate experiments treatments delete <bundle-id> <test> <treatment> [-y]
+ascelerate experiments treatments remove-locale <bundle-id> <test> <treatment> --locale X [-y]
+ascelerate experiments media list <bundle-id> <test> [--treatment X]
+ascelerate experiments media upload <bundle-id> <test> <treatment> --locale X [--display-type X | --preview-type X] [--preview-frame X] <file> [-y]  # Creates the treatment locale if needed; PRODUCT_PAGE_HEADER/APP_STORE_SEARCH_RESULTS/APP_IPHONE_DUO via the asset library
+ascelerate experiments media delete <bundle-id> <test> <media-id> [-y]
+ascelerate nominations [list] [--app X] [--state draft|submitted|archived] [--json]  # Featuring nominations (all states by default)
+ascelerate nominations create --app X [--app Y] --type launch|enhancements|new-content --name X --description X --publish-start YYYY-MM-DD [--publish-end X] [--devices iphone,ipad] [--locales en-US,tr-TR] [--territories USA,TUR] [--notes X] [--materials URL,URL] [--pre-order] [--submit] [-y]  # Create (draft unless --submit)
+ascelerate nominations update <id> [--name X] [--description X] [--type X] [--publish-start X] [--publish-end X] [--devices X] [--locales X] [--notes X] [--materials X] [-y]  # Change a draft
+ascelerate nominations submit|archive|delete <id> [-y]           # Submit a draft to Apple / archive / delete
+ascelerate webhooks [list] <bundle-id> [--json]                    # App Store Connect webhooks of an app
+ascelerate webhooks create <bundle-id> --name X --url URL --events a,b|all [--secret X] [--disabled] [-y]  # Create (random secret printed once if --secret omitted)
+ascelerate webhooks update <bundle-id> <name-or-id> [--name X] [--url X] [--events X] [--secret X] [--enabled true|false] [-y]
+ascelerate webhooks delete <bundle-id> <name-or-id> [-y]
+ascelerate webhooks ping <bundle-id> <name-or-id>                  # Send a test event
+ascelerate webhooks deliveries <bundle-id> <name-or-id> [--state succeeded|failed|pending] [--limit N] [--json]  # Recent deliveries, HTTP status, errors
+ascelerate webhooks redeliver <delivery-id> [-y]                   # Send a delivery's event again
 ascelerate testflight groups list <bundle-id>                     # List beta groups
 ascelerate testflight groups info <bundle-id> [group-name]        # Group details + testers + assigned builds
 ascelerate testflight groups create <bundle-id> --name X [--internal] [--all-builds] [--public-link] [--public-link-limit N] [--feedback true|false] [-y]  # Create beta group
@@ -323,6 +379,37 @@ ascelerate install-skill [--all] [--uninstall]                    # Install/upda
 ascelerate screenshot [--languages en-US,tr-TR]                   # Capture screenshots (optional language subset override)
 ascelerate screenshot init                                        # Create ascelerate/screenshot.yml + ScreenshotHelper.swift
 ascelerate screenshot create-helper [-o file]                     # Generate UITest helper file
+ascelerate ads configure [--new-key]                              # Apple Ads API credentials: creates the key pair, prints the public key, picks the ad account
+ascelerate ads accounts                                           # Ad accounts and roles of the API user
+ascelerate ads campaigns list [--app X] [--json]                  # Campaigns with status, countries, daily budget, bidding
+ascelerate ads campaigns pause|resume <campaign>... [-y]          # By name or ID
+ascelerate ads campaigns create --name N (--app X | --like C) [--country CC...] --daily X (--max-conversions --bid X | --default-bid X [--search-match on|off]) [--enabled] [-y]  # Campaign + ad group, paused
+ascelerate ads campaigns budget <campaign> --daily X [-y]         # Daily budget
+ascelerate ads campaigns bid <campaign> --amount X [-y]           # Campaign bid (Max Conversions: per-auction ceiling); sends type+goal too
+ascelerate ads adgroups [--app X] [--campaign X] [--json]         # Ad groups (default bid, CPA goal, Search Match)
+ascelerate ads adgroups create --campaign X --name N [--like G] [--default-bid B] [--search-match on|off] [--cpa-goal G] [--min-age A] [--max-age A] [--enabled] [-y]  # Copy of G's settings/targeting, paused unless --enabled
+ascelerate ads keywords copy --campaign X --from G --to G [--match M] [-y]  # Copy an ad group's keywords (text, match, bid, status)
+ascelerate ads reports adgroups [same options as reports]         # Performance per ad group
+ascelerate ads adgroups update <group> --campaign X [--name N] [--default-bid B] [--search-match on|off] [--cpa-goal G] [-y]
+ascelerate ads adgroups pause|resume --campaign X <group>... [-y]
+ascelerate ads opportunities [--app X] [--campaign X] [--days N | --from D --to D] [--min-taps N] [--json]  # Search terms to add/own-bid/exclude (default: last 30 complete days)
+ascelerate ads keywords list [--app X] [--campaign X] [--json]
+ascelerate ads keywords add --campaign X [--ad-group Y] --match exact|broad [--bid X] <kw>... [-y]
+ascelerate ads keywords pause|resume|bid --campaign X [--ad-group Y] [--match M] [--bid X] <kw>... [-y]
+ascelerate ads keywords suggest --app X [--seed T...] [--country C...] [--limit N] [--json]  # Apple's suggestions + where already targeted
+ascelerate ads keywords popularity --country C... (--app X | --genre G) [--term T... | --contains T] [--monthly] [--json]
+ascelerate ads negatives list|add|remove ...                      # Campaign- or ad group-level negative keywords
+ascelerate ads reports campaigns|keywords|search-terms [--days N | --from D --to D] [--app X] [--campaign X] [--all] [--json]  # campaigns also: --by age gender device country region city
+ascelerate ads insights impression-share --app X [--country C...] [--term T...] [--weeks 1-4] [--first-slot] [--json]
+ascelerate ads recommendations [--app X] [--json]                 # Apple's open daily budget / target CPA recommendations
+ascelerate ads recommendations apply|dismiss <id>... [-y]         # Apply (changes the campaign) or dismiss
+ascelerate ads campaigns target-cpa --app X [--country CC...] [--json]  # Apple's suggested Max Conversions target CPA
+ascelerate ads history [--app X] [--campaign X] [--days N | --from D --to D] [--json]  # Change history with old → new values
+ascelerate ads product-pages --app X [--json]                     # Product pages Apple Ads can send taps to
+ascelerate ads ads [--app X] [--campaign X] [--json]              # Ads (product page per ad group, review state)
+ascelerate ads ads create --campaign X [--ad-group Y] --product-page <name|id|default> [--name N] [--enabled] [-y]  # Creative (reused if one exists) + ad
+ascelerate ads ads pause|resume --campaign X <ad> [-y]            # Resume pauses the group's serving ad
+ascelerate ads reports ads [same options as reports]              # Performance per ad / product page
 ascelerate version                                                # Print version number (also: --version, -v)
 ascelerate <any command> --dry-run                                # Global: send reads, print writes instead of sending them (also: ASCELERATE_DRY_RUN=1)
 ```
@@ -450,6 +537,23 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - Recently uploaded builds may take a few minutes to appear in the API — the helper polls with a dot-based progress indicator until the build is found
 - `build attach-latest` prompts to wait if the latest build is still `PROCESSING`; with `--yes` it waits automatically
 
+### Accessibility declarations (`apps accessibility`)
+- One `accessibilityDeclarations` record per app and device family (`deviceFamily`: ASCEnum.DeviceFamily), nine `supports…` booleans (VoiceOver, Voice Control, Larger Text, Dark Interface, Differentiate Without Color Alone, Sufficient Contrast, Reduced Motion, Captions, Audio Descriptions; CLI names in `AccessibilityCommand.features`), a `state` (DRAFT, PUBLISHED, REPLACED) and a write-only `publish` flag on update. Publishing a changed declaration leaves the old one as REPLACED (`view` hides those unless `--all`). Some features don't apply to a family (Larger Text on Mac reads null, shown "-"). `set` sends the full declaration; `publish` PATCHes `publish: true` on every DRAFT. Live-verified 2026-10-13 (read; publish of an app's two drafts); `set` dry-run only.
+
+### Nominations (`nominations`)
+- Featuring nominations for Apple's editors (`/v1/nominations`): type `APP_LAUNCH`/`APP_ENHANCEMENTS`/`NEW_CONTENT` (CLI: launch, enhancements, new-content), name, description, publish start (required), optional end date, device families, locales, notes, supplemental material URLs, pre-order; `relatedApps` (one or more apps) is required. `--territories` sets `supportedTerritories` plus `launchInSelectMarketsFirst`. `create` saves a draft unless `--submit`; `submit`/`archive` PATCH `submitted`/`archived: true`.
+- **`filter[state]` is required on the list and takes a single value** (a comma list 400s with "Expect one of DRAFT,SUBMITTED,ARCHIVED"), so `list` queries each state. Live-verified 2026-10-13 (list, empty account); every write dry-run only.
+
+### Product page optimization (`experiments`)
+- v2 experiments (`apps/{id}/appStoreVersionExperimentsV2`, `/v2/appStoreVersionExperiments`; resource type `appStoreVersionExperiments`; the v1 endpoints are deprecated): name, platform, `trafficProportion` (percent of visitors who see a treatment), state, `reviewRequired`, start/end dates. Treatments (`appStoreVersionExperimentTreatments`, related through `appStoreVersionExperimentV2`, optional `appIconName`) hold one localization per locale (`appStoreVersionExperimentTreatmentLocalizations`), which owns classic screenshot/preview sets and library placements like a custom product page localization: `AssetLibrary.Owner.treatmentLocalization` (`ClassicMedia.Owner` is the same enum), and `LocalizationMedia` serves both `product-pages media` and `experiments media`. `media upload` creates the treatment localization after the confirmation when it's missing.
+- `submit` adds a review item with the `appStoreVersionExperimentV2` relationship: to a new submission that it then submits, or to an open draft (READY_FOR_REVIEW/UNRESOLVED_ISSUES) for the platform, which it submits only when the draft held nothing else; WAITING_FOR_REVIEW/IN_REVIEW refuse. `start`/`stop` PATCH `started`.
+- **A new treatment localization starts as a copy of the original page:** Apple seeds it with the current version localization's screenshots, previews and Duo placements (seen live: 7 iPhone 6.9", 5 iPad 13", 5 Duo), so an upload appends to that copy; replace screenshots by deleting the copied ones. The classic API mirrors Duo there too (`APP_IPHONE_DUO` set), so `LocalizationMedia` lists and deletes only non-slot sets (`classicScreenshotSets`/`classicPreviewSets`) and handles Duo through placements, as `apps media` does.
+- Live-verified 2026-10-13 on a draft test (never submitted): create with a treatment, `info`/`list`/`media list`, screenshot upload (created the en-US localization), media delete, treatment rename/add/delete, traffic update, remove-locale, delete; the live and draft versions' media were unchanged afterwards. `submit`, `start` and `stop` compiled only (a real test would go to App Review).
+
+### Webhooks (`webhooks`)
+- Per-app webhooks (`apps/{id}/webhooks`, `/v1/webhooks`): name, URL, enabled, event types (`ASCEnum.WebhookEventType`; the CLI takes lowercase-dash names or `all`) and a write-only signing secret, which `create` generates (32 random bytes, hex) and prints once when `--secret` is omitted. Webhooks are addressed by name (case-insensitive) or ID within the app. `ping` POSTs `webhookPings`; `deliveries` lists `webhooks/{id}/deliveries` with `include=event` (event type, ping flag) and the receiver's HTTP status; `redeliver` POSTs `webhookDeliveries` with the old delivery as `template`.
+- Live-verified 2026-10-13: list (no webhooks on the account); every write dry-run only.
+
 ### Reports (`reports sales` / `reports finance` / `reports analytics`)
 - **Sales/Finance endpoints return a gzipped TSV body (`application/a-gzip`), NOT JSON.** On ASCKit the operation exposes it as `.ok.body.applicationAGzip`; `Reports.reportText()` collects it and decompresses with `gzip -dc` (via `Process`, no new dependency; the `Compression` framework only does raw zlib, not gzip-with-header) → UTF-8 text. URLSession does NOT auto-decompress this content type.
 - **Vendor number** is required for sales/finance (not analytics). Stored optionally in `config.json` (`vendorNumber`), overridable via `--vendor-number`, resolved by `Reports.resolveVendorNumber()`.
@@ -457,6 +561,29 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - **Finance report `--date` is a *fiscal* period** `YYYY-MM` (MM = Apple fiscal period 01–12, not a calendar month); `--region` is required. Summary sums `Quantity` by title and `Extended Partner Share` by currency, skipping footer/total lines (non-numeric `Quantity`).
 - **A 404 from a download is surfaced via `Reports.notFoundHint()`** — the download path doesn't parse the JSON error body, so a bare "HTTP 404" is rewritten to "report not available yet / no activity; try an earlier date".
 - **Analytics is async + multi-step**: find-or-create an `analyticsReportRequest` for the app (`apps/{id}/analyticsReportRequests` filtered by accessType; reuse one not `isStoppedDueToInactivity`, else POST — prompts first, never auto-creates without `-y`) → list `reports` by `--category` (picker if multiple, or `--report-name`) → list `instances` by `--granularity` (picks latest `processingDate`, or `--processing-date`) → page `segments` → download each segment's `attributes.url` (presigned, gzipped) via plain `URLSession`, gunzip, save one CSV per segment to `--output` dir. A freshly created snapshot has no instances yet — the command tells the user to re-run later.
+
+### Apple Ads (`ads`, Apple Ads Platform API 1.0)
+- **Which API:** the Apple Ads Platform API (`https://api.ads.apple.com/v1`, August 2026). The old Campaign Management API v5 is sunset on 2027-01-26; never build on it. Requests carry `X-AP-Context: adAccountId=<id>` (`Ads.context`); lookups are `POST …/query`; responses wrap data in `result`.
+- **Client:** `Ads.withClient(ads) { client in … }` builds Apple's `AppleAdsClient` with a URLSession transport and `Ads.Middleware`, and unwraps failures (no `ClientError` dumps; auth and decoding errors become `AdsError`). ASCKit and AppleAdsClient both generate top-level `Client`/`Components`/`Operations`, so **no file may import both**: App Store Connect lookups for ads live in `Ads/AdsASC.swift`.
+- **Middleware:** reads (only) are retried twice after a timeout or dropped connection (seen live on appleid.apple.com and the API); the dry-run gate (reads are GETs, `/query` POSTs and `/search/…`; every other request is printed and stopped as ASCKit's `ASCDryRunStop`, via `adsDryRunStop`, so `--dry-run`, `unlessDryRunStopped` and run-workflow handle both APIs alike); error bodies `{"error":{code,message,details[{code,message,info.field}]}}` → `AdsError` (`message` is sometimes absent); 429 → waits `Retry-After`/`RateLimit-Reset` (4 attempts; the SDK has no rate-limit handling).
+- **Spec vs API mismatches (verified live 2026-10-13):** every `/query` result is untyped (`OpenAPIObjectContainer`) — `Ads.query` pages it and decodes into Apple's own models with the API's date format (UTC, `yyyy-MM-dd'T'HH:mm:ss.SSS`, no zone). Bulk create/update responses can't decode (base `Response.result` typed as object, the API sends an array) and impression share sends `promotedObjectId` as a number — `Ads.decodeRaw` captures the raw body (task-local box in the middleware) and decodes it itself, dropping the generated `DecodingError`; `Ads.bulk` reads per-item `{correlationId, success, result, error}`. Keyword suggestions reject sorting by `popularity` despite the docs (sorted client-side). The generated client has no bulk-delete operations (single `DELETE /negative-keywords/{id}` is used).
+- **Filter rules the API enforces:** report `campaignId` filters take only EQUALS for API users, and keyword/search-term reports require one → `Ads.perCampaign` (4 concurrent). The campaign report is one unfiltered request filtered client-side (`Scope.contains`). Negative keyword `/query` requires an `adGroupId` condition (IS_NULL for campaign-level, EQUALS per ad group). Impression share wants `promotedObjectId` IN. Recommendations/suggestions take `promotedObjectId` + `promotedObjectType: APPSTORE_APP`.
+- **Reports:** totals are summed from the shown rows (`Metrics.total`, Apple's formulas, 4 decimals) so they always match the scope; averages Apple reports as 0 with nothing to divide by become nil. Both conversion rates are shown: `tapInstallRate` (CR Tap) and `totalInstallRate` (CR Total, includes view-through, can exceed 100%). Search terms require the ORTZ time zone (all reports use it). Table numbers use en_US grouping regardless of the user's locale.
+- **Writes:** confirm first (`-y` skips), dry-run verified. Keyword/negative creation and keyword updates use the bulk endpoints with `allowPartialSuccess: true` (one request against the rate limit), reported per item. `--bid` is refused on Max Conversions campaigns. Amounts take the campaign's budget currency. Live-tested 2026-10-13 on a paused campaign: negatives add/remove, keyword pause/resume.
+- **Campaign create:** POST /campaigns then POST /adgroups. Max Conversions "requires an automated ad group" (Apple) and the API doesn't add it: ascelerate creates "Automated" with `automatedKeywordsOptIn` + `automatedKeywordsRequired` true and pricing CPT, and **no `bidStrategy` and no `startTime`**: the API rejects both on it ("AdGroup cannot have a bid strategy", "Start time not allowed for automated keywords required Ad Groups"), although a web-created one reads back with a MAX_CONVERSIONS strategy. `ads adgroups create --campaign X --automated` adds it to an existing Max Conversions campaign. Live-verified 2026-10-13 (a Max Conversions campaign: campaign create, then the automated group after the fix). Manual: "<name> Ad Group" with MANUAL_CPT/TAP and `--default-bid`. `--like` copies the campaign's targeting (placement), billing event and `regulationResponses` (France's CAMPAIGN_SAPIN_LAW), and for manual its ad group's device targeting and Search Match. Created PAUSED by default; under dry run a placeholder campaign ID shows the ad group request. If the ad group POST fails the campaign stays (paused) and the error says so.
+- **Campaign bid:** `bidStrategy.bid` is the per-auction ceiling for Max Conversions ("an upper bound"; for Manual CPT it governs participation). Apple requires `bidStrategyType` and `bidStrategyGoal` with every bid strategy update, so `campaigns bid` copies them from the campaign.
+- **CPA goal:** the ad group `cpaCap` is deprecated in the Platform API (Apple: use `bidStrategy` with MAX_CONVERSIONS). ascelerate still shows it (`adgroups` "CPA Goal"), copies it on create and accepts `--cpa-goal`; whether Apple still applies it is undocumented.
+- **Ad groups:** create needs `pricingModel` and should carry the source group's `bidStrategy`, `cpaCap` (CPA goal) and `targeting`; the create/update types mirror the read types, so `Ads.convert` re-encodes them as JSON (stays exact if Apple adds targeting fields). New groups default to PAUSED: an empty group with Search Match on spends at once. Update sends only the changed fields, except that a default-bid change also sends the group's current `bidStrategyType`/`bidStrategyGoal` (Apple requires them with any bid strategy update; live-verified 2026-10-13). Create requires `startTime` although the spec marks it optional (400 "Attribute [startTime] is required"); ascelerate sends now. Age targeting is `minAge`/`maxAge` `{include: ["18"]}` (18–64; no maxAge = 65+). Live-verified 2026-10-13: two paused age groups created and 32 keywords copied into each (`keywords copy`, bulk-create).
+- **Opportunities:** `ads opportunities` aggregates a campaign's search term rows by term (one row per serving keyword/ad group), compares with its keywords and negatives (any match type), and classifies against the campaign's own CPI, tap CR and TTR (thresholds in the command's `discussion`). Hidden low-volume terms are skipped; terms already negative are skipped; a term that is one of the campaign's keywords is never a negative candidate. Brand searches (app name before ":"/" - " from App Store Connect, plus `--brand`) are excluded from the averages and from negatives: in one French campaign the brand's CPI 0.05 put the average at 0.14 and flagged the core term "bloqueur d'appel" as a negative; without brand rows the average is 0.23.
+- **Max Conversions campaigns:** `opportunities` suggests only negatives there (Apple picks the searches; keyword suggestions don't apply). Apple accepts campaign-level negative keywords on them (live-verified 2026-10-13).
+- **Recommendations:** apply/dismiss bodies are `[{id, promotedObjectId, promotedObjectType}]`; the commands look the IDs up among open (AVAILABLE) recommendations first. Apple reports expectations it has no estimate for as 0 (shown as "-").
+- **Breakdowns (`reports campaigns --by`):** `groupBy` on the campaign report (keyword/search-term reports allow only device and country). Region/city need `countryCode` in `groupBy` too (Apple 400s otherwise; added automatically). Apple returns unknown values both as `UNKNOWN` and as a missing field in separate rows; `merged` sums them. Verified 2026-10-13 on four storefronts: age and region 100% unknown, gender over 99.5% (only users with Personalized Ads on are known); device is complete.
+- **Ads and product pages:** creatives are account-level and reusable (`DEFAULT_PRODUCT_PAGE`/`CUSTOM_PRODUCT_PAGE`, destination `APP_STORE_PRODUCT_PAGE` with `parameters.adamId` + `productPageId`); an ad = ad group + creative, only one ENABLED per ad group (create with `--enabled` pauses the serving ones first). `/product-pages/query` is filtered by `adamId`; `/ads/query` by `campaignId`. Seen live 2026-10-13: none of the apps has custom product pages (both queries return nothing), and `/ads/query` doesn't return Apple's implicit "Default Ad" that `reports ads` shows, so whether an enabled custom-page ad must first pause that implicit ad is unverified. Ads create/pause/resume are dry-run verified only.
+- **Change history (`ads history`):** POST /change-history/query needs an `eventTime` BETWEEN filter (yyyy-MM-ddTHH:mm:ss.SSS, `options.timeZone` ORTZ) **and an `entityType` filter** (400 "EntityType required" although the docs call it optional; ascelerate sends Campaign, AdGroup, Keyword, NegativeKeyword). With `options.metadata: latest`, each summary row's `metas` (untyped) carry `detailId` plus a `meta` object (text, matchType, bidAmount, campaignId, adGroupId, status); GET /change-history/{detailId} gives `details[].changes[]` {field, oldValues, newValues}, fetched for UPDATE events only, 4 at a time. Apple logs some bulk keyword updates and ad group default-bid changes as CREATE (verified live 2026-10-13), so creates show the resulting values from `meta`.
+- **Target CPA suggestion:** POST /suggestions/target-cpas/query with promotedObjectId/promotedObjectType (+ countryOrRegion IN): the highest tap-install CPI across storefronts with ≥10 installs in 28 days.
+- **Genres:** `keywords popularity --app` maps the app's primary App Store category to an Apple Ads genre (`Ads.genre(forCategory:)`; UTILITIES/PRODUCTIVITY → PRODUCTIVITY_UTILITIES); unmapped categories (weather, music, reference…) need `--genre`.
+- **Live-verified writes:** negatives add/remove, keyword add, copy, pause/resume and bid, ad group create, update and resume, recommendation dismiss, campaign bid, budget and resume (2026-10-13). Dry-run only: campaign pause, ad group pause, recommendation apply.
+- **Not done yet** (38 of the 99 generated operations are used): creative/ad update and delete, assets (Apple Maps creatives), product page locale details, app eligibility and creative rejection reasons, app details/storefronts, geo search, single-item deletes (campaigns, ad groups, keywords; ascelerate pauses instead), shared budgets/budget orders (monthly-invoicing accounts only), account admin (ad accounts, delegations), and everything Apple Maps (business brands, categories, locations, location groups, brand reports).
 
 ### API calls
 - **`filterBundleId` does prefix matching** — `com.foo.Bar` also matches `com.foo.BarPro`. Always use `findApp()` which filters for exact `bundleID` match from results.
@@ -575,7 +702,7 @@ media/
 - **Duo verify:** the placement list with `include=image` answers HTTP 500 every time, so `fetchAllMediaStatus` lists each localization's Duo placements (sorted by `placementGroupPosition`) and fetches each one with `include=image` for its file name (`AssetLibrary.placementFileName`, concurrently per locale, retried: it throws occasional 500s). A placement reads `ACTIVE` when done. With a folder, `placementSetsDifferingFromFolder` flags locales whose Duo file names in display order differ from the folder; stuck or misordered Duo screenshots are fixed with `media upload --replace`, not by verify's classic retry. `/v1/appAssetLibraryPlacements/{id}/image` answers 403.
 - **Spec bug:** Apple's `AppAssetLibraryPlacement.relationships` is a `oneOf` discriminated by `mediaType`, which Apple sends in `attributes`, so any response with placement relationships failed to decode. The prepare script turns a discriminated `oneOf` whose property no branch declares into an `anyOf` (the only such schema in 4.5.1); the image ID is `relationships?.value1?.value2.image?.data?.id`.
 - **Upload progress:** each `media upload` file line starts with `[n/total]` for the whole run (`UploadCounter`; the end-of-run Duo pass numbers its own files). On a terminal (`isTerminal`), `uploadChunks` draws live byte progress after the line's text through a URLSession task delegate (`UploadProgressLine`: saves the cursor with `ESC 7`, redraws with `ESC 8` + clear-to-end on each percent change, erases on finish so the caller's "Done." lands as before). Every asset upload gets it, since they all go through `uploadChunks`; a `run-workflow` in a terminal shows it too, while piped output and CI logs stay plain. Verified in a pty on a live Duo upload: screenshots finish in one to three redraws, so it matters mostly for previews.
-- **Chunk uploads retry 429/5xx and network errors** (`uploadChunks`, honoring `Retry-After`, 4 attempts; a chunk PUT is safe to repeat, and `uploadAsset` also retries the commit PATCH): the storage host rate-limited a burst live after ~180 sequential uploads. `uploadChunks`/`uploadAsset` are generic over `UploadOperationDescribing`, which ASCKit's `UploadOperation` adopts.
+- **Chunk uploads run four at a time** (`uploadChunks` via `boundedConcurrentMap`; each chunk reads its own slice with its own file handle; `UploadProgressLine` sums bytes per in-flight task and only moves forward) **and retry 429/5xx and network errors** (honoring `Retry-After`, 4 attempts; a chunk PUT is safe to repeat, and `uploadAsset` also retries the commit PATCH): the storage host rate-limited a burst live after ~180 sequential uploads. `uploadChunks`/`uploadAsset` are generic over `UploadOperationDescribing`, which ASCKit's `UploadOperation` adopts.
 - File matching: server position N = Nth file alphabetically in local `locale/displayType/` folder
 
 ## Screenshot Module (`ascelerate screenshot`)
@@ -688,29 +815,27 @@ Every docs page has a `.md` twin served via `Accept: text/markdown` content nego
 
 ## Not Yet Implemented
 
-Apple's spec covers ~185 top-level v1 resources. ascelerate wraps **82** of them — deep coverage where it exists (apps, versions, version/app-info localizations, screenshots/previews, full IAP + subscriptions incl. promoted-purchase CRUD, provisioning, review submissions + App Review Information (details + attachments), builds, territories/availability, encryption, EULA, age rating, routing coverage, customer reviews + responses, in-app events incl. localizations + media, TestFlight core), but several whole product areas are untouched. Gap analysis last refreshed against App Store Connect OpenAPI 4.4.1; with ASCKit, new endpoints only need their paths added to `filter.paths`.
+Measured 2026-10-13 against the 4.5.1 spec: ascelerate calls **298 of 1,303 operations (23%)** and touches **102 of 203 top-level resources (50%; 62% without Game Center's 39)**. The operation share understates it: relationship-only variants count separately, and ascelerate reads related data through `include`. It covers — deep coverage where it exists (apps, versions, version/app-info localizations, screenshots/previews, full IAP + subscriptions incl. promoted-purchase CRUD, provisioning, review submissions + App Review Information (details + attachments), builds, territories/availability, encryption, EULA, age rating, routing coverage, customer reviews + responses, in-app events incl. localizations + media, TestFlight core), but several whole product areas are untouched. Gap analysis last refreshed against App Store Connect OpenAPI 4.4.1; with ASCKit, new endpoints only need their paths added to `filter.paths`.
 
 ### Partially covered
 - **Monetization** — IAP and subscriptions have CRUD + localizations + pricing (per-territory overrides for IAPs, equalize fan-out for subs with increase/decrease safety, cross-product export/import of price schedules) + per-product availability + app-level grace period + subscription introductory offers + IAP/sub offer codes (with one-time-use + custom code generation) + subscription promotional offers + group submissions + IAP/sub promotional images + App Review screenshots. Remaining: **win-back offers** (blocked by Apple's spec, not a code generator: `WinBackOfferPriceInlineCreate` has no relationships at all in 4.5.1, while every sibling price inline create (IAP/sub price, offer-code, promotional-offer) carries territory and price point, and the read-side `WinBackOfferPrice` exposes them. Recheck when Apple updates the spec), IAP hosted content (`inAppPurchaseContents`; read-only via API; low value).
-- **Build upload** — done via `altool` (binary upload); the API-native `buildUploads`/`buildUploadFiles`/`buildBundles` path is intentionally unused. `.xcarchive` platform is detected from the archived app's Info.plist (`DTPlatformName`, falling back to Contents/ bundle layout): macOS exports to `.pkg` and uploads with `--type macos` (needs a Mac Installer Distribution cert), iOS-family exports to `.ipa`.
+- **Build upload** — `altool` by default; `builds upload --api` uploads an `.ipa` or Mac `.pkg` through the API (`BuildUpload.swift`): POST buildUploads (version, build, platform: from the .ipa's Info.plist via `unzip -p`, or from the .pkg's Distribution file via `tar -xOf <pkg> Distribution`, the `<bundle>` at the payload root, platform MAC_OS), POST buildUploadFiles (assetType `ASSET`, uti `com.apple.ipa` or `com.apple.pkg`), PUT chunks via `uploadChunks` (`DeliveryFileUploadOperation` mapped to `UploadOperationDescribing`), PATCH `uploaded: true` + MD5 `sourceFileChecksums`, then poll the build upload's `state.state` every 30 s until COMPLETE (FAILED throws with `state.errors` code + description). **Live-verified 2026-10-13 with an app's macOS .pkg and iOS .ipa**: both COMPLETE and Valid. Apple's processing took ~7 min (Mac) and ~8 min (iOS) after the file arrived. On a flaky connection the create request went out twice (two AWAITING_UPLOAD records 24 s apart, the first orphaned; ascelerate doesn't resend POSTs, so the network layer did), so after COMPLETE the uploader deletes the build's other AWAITING_UPLOAD records (`strayUploads`: waiting while a sibling of the same version/build/platform moved on, or older than a day; never a slow upload in progress). `builds uploads` lists `apps/{id}/buildUploads` (altool uploads appear there too, with Apple's warnings) and `--delete-stale` cleans the same set. Keep altool the default until the API path has a few more releases behind it. `.xcarchive` platform is detected from the archived app's Info.plist (`DTPlatformName`, falling back to Contents/ bundle layout): macOS exports to `.pkg` and uploads with `--type macos` (needs a Mac Installer Distribution cert), iOS-family exports to `.ipa`.
 - **Custom product pages** — page CRUD (`product-pages list/info/create/update/delete`; create is a compound version+localization request using `${local-id}` inline references) + localizations (`product-pages localizations view/export/import`; promotional text per locale) + media (`product-pages media list/upload/delete`; per-locale screenshot sets by display type and app preview sets). Remaining: **per-locale search-keyword linkages** (blocked by Apple's spec: in 4.5.1 the `AppKeyword` schema has no attributes, only `type`+`id`+`links`, so the keyword *text* is unavailable, and there's no endpoint to create keywords. The relationship endpoints exist — `appCustomProductPageLocalizations/{id}/relationships/searchKeywords` GET/POST/DELETE link keyword IDs to a localization, sourced from the read-only app pool `apps/{id}/searchKeywords` — but a command could only shuffle opaque, undisplayable IDs. Not shippable until `AppKeyword` exposes the keyword text).
-- **App metadata** — no commands for app tags, app categories CRUD, app clips, nominations (editorial).
+- **App metadata** — no commands for app tags, app categories CRUD, app clips.
 - **TestFlight** — **fully covered** as of 0.16.0: beta groups (CRUD + public links + build assignment + recruitment criteria), beta testers (list/add/remove/invite-resend/CSV bulk import), builds with internal/external states (`buildBetaDetails`) + auto-notify toggle, expire, tester notifications (`buildBetaNotifications`), pre-release version trains, What to Test (`betaBuildLocalizations` view/set/export/import), beta review submissions (`submit`/`status`), beta app info (`betaAppLocalizations`), beta review information (`betaAppReviewDetails`), beta license agreement (`betaLicenseAgreements`), and tester feedback (`betaFeedbackCrashSubmissions` incl. crash log text, `betaFeedbackScreenshotSubmissions` incl. image download). Note: Apple's public API has no bulk-tester endpoint — `testers import` loops `betaTesters` POSTs client-side.
 
 ### Missing entirely
 Counts are approximate top-level resources from the 1.7.0 surface.
 - **Game Center** (~38) — achievements, leaderboards (+sets), challenges, activities, matchmaking (queues/rules/teams), groups, details, enabled versions, releases.
 - **Xcode Cloud (CI/CD) + SCM** (~17) — `ci*` (products, workflows, build runs/actions, artifacts, issues, test results, macOS/Xcode versions) and `scm*` (providers, repositories, git refs, pull requests).
-- **A/B experiments** (3) — App Store version experiments + treatments + treatment localizations.
 - **App Clips** (7) — app clips, advanced/default experiences, header/advanced images, app-clip review details.
 - **Background Assets** (6) — assets, versions, upload files, app-store/internal/external beta releases.
 - **Alternative distribution / EU** (~8) — `alternativeDistribution*` (domains, keys, packages + variants/deltas/versions) and `marketplace*` (search details, webhooks).
-- **Webhooks** (3) — webhooks + deliveries + pings (ASC event notifications; newer).
 - **Analytics / Sales / Finance** — **covered** via `reports sales/finance/analytics` (Sales & Trends, Financial, and App Analytics reports; gzipped TSV/CSV downloaded + summarized). Remaining: analytics-report `segments`/`instances` are exposed only through the `analytics` flow (no standalone commands), and **diagnostic signatures** (`diagnosticSignatures`) are untouched.
 - **Users & access** (3) — users, user invitations, actors (team management).
 - **App-level pricing & release** — `appPriceSchedules` (paid-app pricing), `appStoreVersionPromotions`, `endAppAvailabilityPreOrders`. (`appStoreVersionReleaseRequests` is covered via `apps release`.)
 - **Provisioning extras** — `merchantIDs` (Apple Pay), `passTypeIDs` (Wallet).
-- **Niche** — accessibility declarations, `appEncryptionDeclarationDocuments`, Android-to-iOS app mapping.
+- **Niche** — `appEncryptionDeclarationDocuments`, Android-to-iOS app mapping.
 
 ## Release build note
 

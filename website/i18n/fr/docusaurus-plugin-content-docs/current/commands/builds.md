@@ -39,6 +39,29 @@ ascelerate builds upload MyApp.ipa
 
 Accepte les fichiers `.ipa`, `.pkg` ou `.xcarchive`. Lorsqu'un `.xcarchive` est fourni, la plateforme de l'archive est détectée et l'export se fait automatiquement en `.ipa` (famille iOS) ou en `.pkg` (macOS) avant le téléversement, avec la plateforme correspondante transmise à altool.
 
+### Téléverser via l'API App Store Connect
+
+```bash
+ascelerate builds upload MyApp.ipa --api
+ascelerate builds upload --latest --bundle-id com.example.MyApp --api
+```
+
+Avec `--api`, le build passe par les téléversements de builds de l'API App Store Connect au lieu d'altool, avec la même clé d'API que toutes les autres commandes. La commande accepte un `.ipa` ou un `.pkg` Mac (ou un `.xcarchive`, exporté au préalable), lit la version et le numéro de build dans l'application qu'il contient, téléverse le fichier en plusieurs morceaux en parallèle, avec une barre de progression dans un terminal, puis attend qu'App Store Connect ait accepté le fichier. Si Apple le refuse, la commande échoue en affichant les codes et les descriptions d'erreur d'Apple ; les avertissements sont affichés après un téléversement réussi. Le traitement se poursuit ensuite comme d'habitude (voir [Attendre le traitement](#attendre-le-traitement)).
+
+altool reste pour l'instant l'outil par défaut.
+
+## Historique des téléversements
+
+```bash
+ascelerate builds uploads <bundle-id>
+ascelerate builds uploads <bundle-id> --platform macos --limit 20
+ascelerate builds uploads <bundle-id> --delete-stale
+```
+
+Liste les téléversements récents de l'application, qu'ils aient été faits avec altool, Xcode ou `--api`, avec leur état (Awaiting Upload, Processing, Complete, Failed) et les erreurs et avertissements qu'Apple y a associés. Consultez cette liste lorsqu'un téléversement ne devient jamais un build. Ajoutez `--json` pour une sortie lisible par machine.
+
+Une connexion qui se coupe au mauvais moment peut laisser un enregistrement de téléversement en attente d'un fichier qui n'arrivera jamais. Les téléversements `--api` suppriment, une fois réussis, ces enregistrements du même build, et `--delete-stale` supprime ceux qui restent : les enregistrements toujours en attente d'un fichier alors qu'un autre téléversement du même build a avancé, ou depuis plus d'un jour. Un téléversement encore en cours n'est jamais supprimé.
+
 ## Attendre le traitement
 
 ```bash

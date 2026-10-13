@@ -1,9 +1,9 @@
 ---
 sidebar_position: 6
-title: アプリ内課金
+title: App内課金
 ---
 
-# アプリ内課金
+# App内課金
 
 ## 一覧
 
@@ -24,7 +24,7 @@ ascelerate iap info <bundle-id> <product-id>
 
 ## プロモートされた課金アイテム
 
-App Store の製品ページでアプリ内課金またはサブスクリプションをプロモートします。表示順に一覧表示されます。
+App Store のプロダクトページでApp内課金またはサブスクリプションをプロモートします。表示順に一覧表示されます。
 
 ```bash
 ascelerate iap promoted list <bundle-id>
@@ -97,7 +97,7 @@ ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 
 `override` および `remove` はベース以外の地域でのみ動作します。ベース地域の価格を変更するには `set` を使用してください。
 
-アプリ内課金に価格スケジュールがない場合、`iap info` および `iap pricing show` の両方で警告が表示されます。同じ状態は `apps review preflight` でも提出を妨げる問題として表示されます。
+App内課金に価格スケジュールがない場合、`iap info` および `iap pricing show` の両方で警告が表示されます。同じ状態は `apps review preflight` でも提出を妨げる問題として表示されます。
 
 ### 製品間で価格をコピー
 
@@ -105,7 +105,7 @@ ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 # 価格スケジュール（ベース地域 + すべての手動価格）をJSONにエクスポート
 ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
 
-# 別のアプリ内課金に適用（同じアプリでも別のアプリでも可）
+# 別のApp内課金に適用（同じアプリでも別のアプリでも可）
 ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
 ```
 
@@ -113,10 +113,10 @@ ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices
 
 ## 地域別の利用可否
 
-各アプリ内課金は、アプリとは独立した独自の地域別利用可否を持ちます。デフォルトではアプリ内課金はアプリの地域を継承しますが、`iap availability` で変更を加えると、アプリ内課金に明示的なリストが作成されます。
+各App内課金は、アプリとは独立した独自の地域別利用可否を持ちます。デフォルトではApp内課金はアプリの地域を継承しますが、`iap availability` で変更を加えると、App内課金に明示的なリストが作成されます。
 
 ```bash
-# 現在のアプリ内課金固有の地域を表示
+# 現在のApp内課金固有の地域を表示
 ascelerate iap availability <bundle-id> <product-id>
 
 # 地域リストを編集（POSTはリスト全体を置き換えます）
@@ -127,13 +127,13 @@ ascelerate iap availability <bundle-id> <product-id> --available-in-new-territor
 
 ## オファーコード
 
-オファーコードは、アプリ内課金で一度限りの割引を利用できる引換コードです。同じオファーコードリソースの下で2種類のバリエーションがあります：
+オファーコードは、App内課金で一度限りの割引を利用できる引換コードです。同じオファーコードリソースの下で2種類のバリエーションがあります：
 
 - **ワンタイムユースコード**：Appleが非同期でN個の一意のコードをバッチで生成します。各コードは一度しか使用できません。
 - **カスタムコード**：開発者が指定する文字列（例：`PROMO2026`）。N回まで使用可能です。
 
 ```bash
-# アプリ内課金のすべてのオファーコードを一覧表示
+# App内課金のすべてのオファーコードを一覧表示
 ascelerate iap offer-code list <bundle-id> <product-id>
 
 # オファーコードの詳細とコードバッチ数を表示
@@ -160,11 +160,11 @@ ascelerate iap offer-code add-custom-codes <bundle-id> <product-id> <offer-code-
   --code PROMO2026 --count 1000 --expires 2026-12-31
 ```
 
-アプリ内課金オファーコードの顧客対象：`NON_SPENDER`、`ACTIVE_SPENDER`、`CHURNED_SPENDER`。
+App内課金オファーコードの顧客対象：`NON_SPENDER`、`ACTIVE_SPENDER`、`CHURNED_SPENDER`。
 
 ## プロモーション画像
 
-App Storeでアプリ内課金と並んで表示されるプロモーション画像をアップロードします。
+App StoreでApp内課金と並んで表示されるプロモーション画像をアップロードします。
 
 ```bash
 ascelerate iap images list <bundle-id> <product-id>
@@ -176,7 +176,7 @@ ascelerate iap images delete <bundle-id> <product-id> <image-id>
 
 ## App Reviewスクリーンショット
 
-各アプリ内課金は最大1つのApp Reviewスクリーンショット（Appleの審査担当者に表示）を持つことができます。アップロードすると既存のスクリーンショットが置き換えられます。
+各App内課金は最大1つのApp Reviewスクリーンショット（Appleの審査担当者に表示）を持つことができます。アップロードすると既存のスクリーンショットが置き換えられます。
 
 ```bash
 ascelerate iap review-screenshot view <bundle-id> <product-id>

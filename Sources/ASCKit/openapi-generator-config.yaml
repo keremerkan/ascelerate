@@ -8,6 +8,34 @@ accessModifier: public
 namingStrategy: idiomatic
 filter:
   paths:
+    - /v1/apps/{id}/appStoreVersionExperimentsV2
+    - /v2/appStoreVersionExperiments
+    - /v2/appStoreVersionExperiments/{id}
+    - /v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments
+    - /v1/appStoreVersionExperimentTreatments
+    - /v1/appStoreVersionExperimentTreatments/{id}
+    - /v1/appStoreVersionExperimentTreatments/{id}/appStoreVersionExperimentTreatmentLocalizations
+    - /v1/appStoreVersionExperimentTreatmentLocalizations
+    - /v1/appStoreVersionExperimentTreatmentLocalizations/{id}
+    - /v1/appStoreVersionExperimentTreatmentLocalizations/{id}/appPreviewSets
+    - /v1/appStoreVersionExperimentTreatmentLocalizations/{id}/appScreenshotSets
+    - /v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements
+    - /v1/apps/{id}/webhooks
+    - /v1/webhooks
+    - /v1/webhooks/{id}
+    - /v1/webhooks/{id}/deliveries
+    - /v1/webhookDeliveries
+    - /v1/webhookPings
+    - /v1/nominations
+    - /v1/nominations/{id}
+    - /v1/accessibilityDeclarations
+    - /v1/accessibilityDeclarations/{id}
+    - /v1/apps/{id}/accessibilityDeclarations
+    - /v1/buildUploadFiles
+    - /v1/buildUploadFiles/{id}
+    - /v1/apps/{id}/buildUploads
+    - /v1/buildUploads
+    - /v1/buildUploads/{id}
     - /v1/betaGroups/{id}
     - /v1/betaGroups/{id}/relationships/builds
     - /v1/betaGroups/{id}/relationships/betaTesters

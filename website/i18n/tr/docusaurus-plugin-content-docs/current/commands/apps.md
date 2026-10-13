@@ -58,7 +58,7 @@ ascelerate apps review status <bundle-id> --version 2.1.0
 
 Gönderimleri (öğe başına durumlar dahil) makine tarafından okunabilir JSON olarak almak için `--json` ekleyin.
 
-### İncelemeye gönderme
+### İncelemeye gönderme {#submit-for-review}
 
 ```bash
 ascelerate apps review submit <bundle-id>
@@ -166,6 +166,23 @@ ascelerate apps release <bundle-id>
 # Belirli bir sürümü veya platformu hedefleyin
 ascelerate apps release <bundle-id> --version 2.1.0 --platform macos
 ```
+
+## Erişilebilirlik beyanları
+
+App Store, bir uygulamanın desteklediği erişilebilirlik özelliklerini gösterir. Bu özellikler cihaz ailesi başına beyan edilir: VoiceOver, Voice Control, Larger Text, Dark Interface, Differentiate Without Color Alone, Sufficient Contrast, Reduced Motion, Captions ve Audio Descriptions.
+
+```bash
+# Beyanları (taslak veya yayınlanmış) cihaz ailesi başına görüntüleyin
+ascelerate apps accessibility <bundle-id>
+
+# Uygulamanın iPhone'da neleri desteklediğini beyan edin ve yayınlayın
+ascelerate apps accessibility set <bundle-id> --device iphone --supports voiceover,larger-text,dark-interface --publish
+
+# Taslak beyanları olduğu gibi yayınlayın
+ascelerate apps accessibility publish <bundle-id>
+```
+
+`set` listenin tamamını beyan eder: Dışarıda bıraktığınız özellikler desteklenmiyor olarak beyan edilir (`--supports none` hiçbir özelliğin desteklenmediğini beyan eder). Cihaz aileleri: `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. `--publish` verilmezse beyan taslak olarak kalır. Değiştirilmiş bir beyan yayınlandığında yayındaki beyanın yerini alır; `--all` yerini almış beyanları da listeler. Yalnızca kullanıcıların uygulamanın yaygın görevlerinde güvenebileceği özellikleri beyan edin.
 
 ## Bölge erişilebilirliği
 

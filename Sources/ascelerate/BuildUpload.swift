@@ -1,0 +1,210 @@
+import ArgumentParser
+import ASCKit
+import Foundation
+
+/// Uploads an .ipa or a Mac .pkg through the App Store Connect API's build upload resources instead
+/// of altool: create a build upload, reserve its file, PUT the chunks to the presigned URLs, commit the
+/// file with its MD5, then wait until Apple has taken the upload in (state COMPLETE) or rejected it (FAILED).
+enum BuildUploader {
+  /// What the upload needs to know about the app.
+  struct AppInfo {
+    let bundleID: String
+    let version: String
+    let buildNumber: String
+    /// App Store Connect platform: IOS, MAC_OS, TV_OS or VISION_OS.
+    let platform: String
+  }
+
+  static func info(path: String) throws -> AppInfo {
+    let name = (path as NSString).lastPathComponent
+    if path.hasSuffix(".pkg") {
+      // A product archive's Distribution file lists the bundles with their versions; the app is
+      // the one at the payload root (the others are its extensions).
+      let xml = try XMLDocument(data: try output("/usr/bin/tar", ["-xOf", path, "Distribution"]))
+      let bundles = try xml.nodes(forXPath: "//bundle").compactMap { $0 as? XMLElement }
+      guard let app = bundles.first(where: { !($0.attribute(forName: "path")?.stringValue ?? "/").contains("/") }) ?? bundles.first,
+        let bundleID = app.attribute(forName: "id")?.stringValue,
+        let version = app.attribute(forName: "CFBundleShortVersionString")?.stringValue,
+        let build = app.attribute(forName: "CFBundleVersion")?.stringValue
+      else { throw ValidationError("Couldn't read the app's bundle version from \(name)'s Distribution file.") }
+      return AppInfo(bundleID: bundleID, version: version, buildNumber: build, platform: "MAC_OS")
+    }
+    // `unzip -p` with a wildcard prints the one Info.plist at the app bundle's root.
+    guard let plist = try? PropertyListSerialization.propertyList(
+        from: try output("/usr/bin/unzip", ["-p", path, "Payload/*.app/Info.plist"]), format: nil) as? [String: Any],
+      let bundleID = plist["CFBundleIdentifier"] as? String,
+      let version = plist["CFBundleShortVersionString"] as? String,
+      let build = plist["CFBundleVersion"] as? String
+    else { throw ValidationError("Couldn't read the app's Info.plist from \(name).") }
+    let platforms = plist["CFBundleSupportedPlatforms"] as? [String] ?? []
+    let platform = platforms.contains("AppleTVOS") ? "TV_OS" : platforms.contains("XROS") ? "VISION_OS" : "IOS"
+    return AppInfo(bundleID: bundleID, version: version, buildNumber: build, platform: platform)
+  }
+
+  /// The standard output of a tool that must succeed.
+  private static func output(_ tool: String, _ arguments: [String]) throws -> Data {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: tool)
+    process.arguments = arguments
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    process.standardError = FileHandle.nullDevice
+    try process.run()
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else {
+      throw ValidationError("\((tool as NSString).lastPathComponent) failed reading \((arguments.dropFirst().first ?? "") as String).")
+    }
+    return data
+  }
+
+  /// Uploads the .ipa or .pkg and waits for Apple's verdict on it. Returns the uploaded build number.
+  @discardableResult
+  static func upload(path: String) async throws -> String {
+    let info = try info(path: path)
+    let client = try ClientFactory.makeClient()
+    let app = try await findApp(bundleID: info.bundleID, client: client)
+    let fileName = (path as NSString).lastPathComponent
+    let size = try FileManager.default.attributesOfItem(atPath: path)[.size] as? Int ?? 0
+    print("Uploading \(fileName): \(info.bundleID) \(info.version) (\(info.buildNumber)), \(formatState(info.platform))")
+
+    let upload = try await client.buildUploadsCreateInstance(body: .json(.init(data: .init(
+      attributes: .init(cfBundleShortVersionString: info.version, cfBundleVersion: info.buildNumber, platform: info.platform),
+      relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
+      _type: "buildUploads"
+    )))).created.body.json.data
+
+    let file = try await client.buildUploadFilesCreateInstance(body: .json(.init(data: .init(
+      attributes: .init(
+        assetType: "ASSET", fileName: fileName, fileSize: Int64(size),
+        uti: path.hasSuffix(".pkg") ? "com.apple.pkg" : "com.apple.ipa"),
+      relationships: .init(buildUpload: .init(data: .init(id: upload.id, _type: "buildUploads"))),
+      _type: "buildUploadFiles"
+    )))).created.body.json.data
+
+    try await uploadChunks(filePath: path, operations: (file.attributes?.uploadOperations ?? []).map(DeliveryOperation.init))
+    let checksum = try md5Hex(filePath: path)
+    _ = try await withTransientRetry {
+      try await client.buildUploadFilesUpdateInstance(
+        path: .init(id: file.id),
+        body: .json(.init(data: .init(
+          attributes: .init(sourceFileChecksums: .init(file: .init(algorithm: "MD5", hash: checksum)), uploaded: true),
+          id: file.id, _type: "buildUploadFiles"
+        )))
+      ).ok
+    }
+    print("Uploaded. Waiting for App Store Connect to take it in", terminator: "")
+    fflush(stdout)
+    try await waitForUpload(id: upload.id, client: client)
+
+    // Records of this build still waiting for a file can't complete any more: an earlier run's that
+    // failed, or a second one made when a flaky connection sent the create request again (seen live).
+    do {
+      let stray = try await strayUploads(
+        appID: app.id, version: info.version, build: info.buildNumber, platform: info.platform, client: client)
+      if try await delete(stray, client: client) > 0 {
+        print("Removed \(stray.count) unused upload record\(stray.count == 1 ? "" : "s") of this build.")
+      }
+    } catch {
+      print(yellow("Warning:") + " couldn't remove unused upload records of this build: \(describeError(error))")
+    }
+    return info.buildNumber
+  }
+
+  /// The app's upload records that will never complete: still waiting for their file while another
+  /// upload of the same build has moved past that, or for over a day. A slow upload in progress is
+  /// neither, so it's never included.
+  static func strayUploads(
+    appID: String, version: String? = nil, build: String? = nil, platform: String? = nil, client: ASCClient
+  ) async throws -> [Components.Schemas.BuildUpload] {
+    typealias PlatformFilter = Operations.AppsBuildUploadsGetToManyRelated.Input.Query.FilterPlatformPayloadPayload
+    let uploads = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.appsBuildUploadsGetToManyRelated(
+        path: .init(id: appID),
+        query: .init(
+          filterCfBundleShortVersionString: version.map { [$0] }, filterCfBundleVersion: build.map { [$0] },
+          filterPlatform: platform.flatMap(PlatformFilter.init(rawValue:)).map { [$0] }, limit: 200)
+      ).ok.body.json
+    }.flatMap(\.data)
+    let key = { (u: Components.Schemas.BuildUpload) in
+      [u.attributes?.cfBundleShortVersionString, u.attributes?.cfBundleVersion, u.attributes?.platform].map { $0 ?? "" }
+    }
+    let waiting = { (u: Components.Schemas.BuildUpload) in u.attributes?.state?.state == "AWAITING_UPLOAD" }
+    let movedOn = Set(uploads.filter { !waiting($0) }.map(key))
+    let dayAgo = Date().addingTimeInterval(-24 * 3600)
+    return uploads.filter { u in
+      waiting(u) && (movedOn.contains(key(u)) || (u.attributes?.createdDate ?? .distantFuture) < dayAgo)
+    }
+  }
+
+  /// Deletes upload records; returns how many went (none under dry run).
+  @discardableResult
+  static func delete(_ uploads: [Components.Schemas.BuildUpload], client: ASCClient) async throws -> Int {
+    var deleted = 0
+    for upload in uploads {
+      let done = try await unlessDryRunStopped {
+        try await withTransientRetry { try await client.buildUploadsDeleteInstance(path: .init(id: upload.id)).noContent }
+      }
+      if done != nil { deleted += 1 }
+    }
+    return deleted
+  }
+
+  /// Polls the build upload until COMPLETE (returns) or FAILED (throws with Apple's messages).
+  private static func waitForUpload(id: String, client: ASCClient) async throws {
+    let deadline = Date().addingTimeInterval(45 * 60)
+    while Date() < deadline {
+      let upload = try await withTransientRetry {
+        try await client.buildUploadsGetInstance(path: .init(id: id)).ok.body.json.data
+      }
+      let state = upload.attributes?.state
+      switch state?.state {
+      case "COMPLETE":
+        print(" done.")
+        printDetails(state?.warnings, label: "Warning")
+        printDetails(state?.infos, label: "Note")
+        print(green("Upload complete.") + " Processing continues in App Store Connect ('ascelerate builds await-processing').")
+        return
+      case "FAILED":
+        print()
+        let errors = (state?.errors ?? []).map(describe)
+        throw ValidationError("App Store Connect rejected the upload:\n" + (errors.isEmpty ? "  (no details)" : errors.map { "  - \($0)" }.joined(separator: "\n")))
+      default:
+        print(".", terminator: "")
+        fflush(stdout)
+        // Each poll counts against the hourly API quota; Apple takes minutes, not seconds.
+        try await Task.sleep(for: .seconds(30))
+      }
+    }
+    print()
+    throw ValidationError("The upload didn't finish within 45 minutes; check it in App Store Connect.")
+  }
+
+  private static func printDetails(_ details: [Components.Schemas.StateDetail]?, label: String) {
+    for detail in details ?? [] { print("  \(label): \(describe(detail))") }
+  }
+
+  private static func describe(_ detail: Components.Schemas.StateDetail) -> String {
+    [detail.code, detail.description].compactMap { $0 }.joined(separator: ": ")
+  }
+}
+
+/// A build upload chunk (`DeliveryFileUploadOperation` has 64-bit offsets and part numbers) in the shape
+/// `uploadChunks` takes.
+private struct DeliveryOperation: UploadOperationDescribing {
+  let url: String?
+  let method: String?
+  let offset: Int?
+  let length: Int?
+  let headers: [(name: String, value: String)]
+
+  init(_ operation: Components.Schemas.DeliveryFileUploadOperation) {
+    url = operation.url
+    method = operation.method
+    offset = operation.offset.map(Int.init)
+    length = operation.length.map(Int.init)
+    headers = (operation.requestHeaders ?? []).compactMap { header in
+      header.name.flatMap { name in header.value.map { (name, $0) } }
+    }
+  }
+}

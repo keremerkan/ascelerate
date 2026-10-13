@@ -991,7 +991,7 @@ func formatFieldName(_ name: String) -> String {
     // Words whose casing isn't Title Case (raw values like DEVELOPER_ID_APPLICATION, IPAD).
     let words: [Substring: String] = [
       "ID": "ID", "IOS": "iOS", "TVOS": "tvOS", "IPAD": "iPad", "IPHONE": "iPhone", "IMESSAGE": "iMessage",
-      "ICLOUD": "iCloud", "TV": "TV", "URL": "URL", "NFC": "NFC", "RSA": "RSA", "PSP": "PSP",
+      "ICLOUD": "iCloud", "TV": "TV", "URL": "URL", "NFC": "NFC", "RSA": "RSA", "PSP": "PSP", "CPT": "CPT", "CPA": "CPA", "CPM": "CPM",
     ]
     // Short words stay lowercase unless they come first ("Waiting for Review", "In Review").
     let minorWords: Set<Substring> = ["A", "AN", "AND", "AT", "BY", "FOR", "FROM", "IN", "OF", "ON", "OR", "THE", "TO", "WITH"]

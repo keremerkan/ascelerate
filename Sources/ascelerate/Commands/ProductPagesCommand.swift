@@ -540,48 +540,9 @@ struct ProductPagesCommand: AsyncParsableCommand {
         ).ok.body.json
 
         var rows: [[String]] = []
-        for loc in locs.data.sorted(by: {
-          ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
-        }) {
-          let locale = loc.attributes?.locale ?? "?"
-          let sets = try await client.appCustomProductPageLocalizationsAppScreenshotSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-          for set in sets.data {
-            // Raw, as `--display-type` takes it and the media commands print it.
-            let displayType = set.attributes?.screenshotDisplayType ?? "—"
-            let shots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
-              path: .init(id: set.id), query: .init(limit: 50)
-            ).ok.body.json
-            for s in shots.data {
-              rows.append([
-                locale, "Screenshot", displayType,
-                s.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", s.id,
-              ])
-            }
-          }
-          let previewSets = try await client.appCustomProductPageLocalizationsAppPreviewSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-          for set in previewSets.data {
-            let previewType = set.attributes?.previewType ?? "—"
-            let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(
-              path: .init(id: set.id), query: .init(limit: 50)
-            ).ok.body.json
-            for p in previews.data {
-              rows.append([
-                locale, "Preview", previewType,
-                p.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", p.id,
-              ])
-            }
-          }
-          // Asset library placements: header, search results, iPhone Duo.
-          for (kind, placement) in try await AssetLibrary.slotPlacements(on: .productPageLocalization(loc.id), client: client) {
-            rows.append([
-              locale, placement.attributes?.mediaType == "VIDEO" ? "Video" : "Image", kind,
-              placement.attributes?.state.map { formatState($0) } ?? "—", placement.id,
-            ])
-          }
+        for loc in locs.data.sorted(by: { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }) {
+          rows += try await LocalizationMedia.rows(
+            locale: loc.attributes?.locale ?? "?", on: .productPageLocalization(loc.id), client: client)
         }
 
         if rows.isEmpty {
@@ -595,12 +556,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
     struct Upload: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "Upload a screenshot (.png/.jpg) or app preview (.mp4/.mov) to a localization.",
-        discussion: """
-          --display-type or --preview-type can also name an asset library slot:
-          PRODUCT_PAGE_HEADER or APP_STORE_SEARCH_RESULTS (one image or video, replacing
-          the current one) or APP_IPHONE_DUO (a screenshot or app preview, added after the
-          existing ones). Sizes are checked against Apple's specs before uploading.
-          """
+        discussion: LocalizationMedia.uploadDiscussion
       )
 
       @Argument(help: "The bundle identifier of the app.",
@@ -638,114 +594,10 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let locID = try await ProductPagesCommand.localizationID(
           forLocale: locale, pageID: productPage.id, client: client)
 
-        let media = try MediaFile(readingFrom: file)
-        let ext = (media.fileName as NSString).pathExtension.lowercased()
-        let isImage = ["png", "jpg", "jpeg"].contains(ext)
-        let isVideo = videoExtensions.contains(ext)
-
-        if let slotName = [displayType, previewType].compactMap({ $0?.uppercased() }).first(where: { AssetLibrary.slots[$0] != nil }),
-          let slot = AssetLibrary.slots[slotName] {
-          try await uploadToLibrary(media, slot: slot, slotName: slotName, isVideo: isVideo, page: productPage, localizationID: locID, appID: app.id, client: client)
-          return
-        }
-        guard isImage || isVideo else {
-          throw ValidationError(
-            "Unsupported file type '.\(ext)'. Use png/jpg for screenshots or mp4/mov for previews.")
-        }
-        if isImage && displayType == nil {
-          throw ValidationError("--display-type is required for screenshots (e.g. APP_IPHONE_67).")
-        }
-        if isVideo && previewType == nil {
-          throw ValidationError("--preview-type is required for app previews (e.g. APP_IPHONE_67).")
-        }
-
-        let typeLabel = (isImage ? displayType : previewType)?.uppercased() ?? "—"
-        print("Upload \(isImage ? "screenshot" : "app preview"):")
-        print("  Page:   \(productPage.attributes?.name ?? page)")
-        print("  Locale: \(localeName(locale))")
-        print("  Type:   \(typeLabel)")
-        print("  File:   \(media.fileName) (\(formatBytes(media.fileSize)))")
-        print()
-        guard confirm("Upload? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let mediaID: String
-        if isImage {
-          let display: ASCEnum.ScreenshotDisplayType = try parseEnum(displayType!, name: "display-type")
-          let setID = try await Self.screenshotSetID(
-            localizationID: locID, displayType: display, client: client)
-          mediaID = try await ClassicMedia.uploadScreenshot(media, setID: setID, client: client)
-        } else {
-          let preview: ASCEnum.PreviewType = try parseEnum(previewType!, name: "preview-type")
-          let setID = try await Self.previewSetID(
-            localizationID: locID, previewType: preview, client: client)
-          mediaID = try await ClassicMedia.uploadPreview(media, setID: setID, previewFrame: previewFrame, client: client)
-        }
-
-        print()
-        success("Uploaded", "\(isImage ? "screenshot" : "app preview") (id: \(mediaID)).")
-      }
-
-      /// Uploads to an asset library slot: a single slot's current image or video is replaced, an
-      /// iPhone Duo screenshot or preview is added after the existing ones.
-      private func uploadToLibrary(
-        _ media: MediaFile, slot: AssetLibrary.Slot, slotName: String, isVideo: Bool,
-        page productPage: Components.Schemas.AppCustomProductPage, localizationID: String, appID: String, client: ASCClient
-      ) async throws {
-        guard !isVideo || slot.videoPlacementType != nil else {
-          throw ValidationError("\(slotName) takes images only.")
-        }
-        let owner = AssetLibrary.Owner.productPageLocalization(localizationID)
-        let current = slot.isSingle
-          ? try await AssetLibrary.placements(on: owner, type: slot.placementType, group: slot.group, client: client).map(\.id)
-          : []
-        print("Upload \(isVideo ? "video" : "image") to the asset library:")
-        print("  Page:   \(productPage.attributes?.name ?? page)")
-        print("  Locale: \(localeName(locale))")
-        print("  Slot:   \(slotName)\(current.isEmpty ? "" : " (replaces the current one)")")
-        print("  File:   \(media.fileName) (\(formatBytes(media.fileSize)))")
-        print()
-        guard confirm("Upload? [y/N] ") else {
-          cancelled()
-          return
-        }
-        let libraryID = try await AssetLibrary.libraryID(appID: appID, client: client)
-        let placementID = try await AssetLibrary.uploadAndPlace(
-          media, slot: slot, on: owner, libraryID: libraryID, replacing: current, client: client)
-        print()
-        success("Uploaded", "\(isVideo ? "video" : "image") (placement id: \(placementID)).")
-      }
-
-      /// Finds the screenshot set with `displayType`, creating it under the localization if absent.
-      private static func screenshotSetID(
-        localizationID: String, displayType: ASCEnum.ScreenshotDisplayType, client: ASCClient
-      ) async throws -> String {
-        let sets = try await client.appCustomProductPageLocalizationsAppScreenshotSetsGetToManyRelated(
-          path: .init(id: localizationID), query: .init(limit: 50)
-        ).ok.body.json
-        if let existing = sets.data.first(where: {
-          $0.attributes?.screenshotDisplayType == displayType.rawValue
-        }) {
-          return existing.id
-        }
-        return try await ClassicMedia.createScreenshotSet(
-          displayType, owner: .productPageLocalization(localizationID), client: client)
-      }
-
-      /// Finds the preview set with `previewType`, creating it under the localization if absent.
-      private static func previewSetID(
-        localizationID: String, previewType: ASCEnum.PreviewType, client: ASCClient
-      ) async throws -> String {
-        let sets = try await client.appCustomProductPageLocalizationsAppPreviewSetsGetToManyRelated(
-          path: .init(id: localizationID), query: .init(limit: 50)
-        ).ok.body.json
-        if let existing = sets.data.first(where: { $0.attributes?.previewType == previewType.rawValue }) {
-          return existing.id
-        }
-        return try await ClassicMedia.createPreviewSet(
-          previewType, owner: .productPageLocalization(localizationID), client: client)
+        try await LocalizationMedia.upload(
+          file: file, displayType: displayType, previewType: previewType, previewFrame: previewFrame, appID: app.id,
+          context: [("Page", productPage.attributes?.name ?? page), ("Locale", localeName(locale))], client: client,
+          owner: .productPageLocalization(locID))
       }
     }
 
@@ -780,60 +632,8 @@ struct ProductPagesCommand: AsyncParsableCommand {
           path: .init(id: versionID), query: .init(limit: 50)
         ).ok.body.json
 
-        var kind: String?
-        outer: for loc in locs.data {
-          let sets = try await client.appCustomProductPageLocalizationsAppScreenshotSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-          for set in sets.data {
-            let shots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
-              path: .init(id: set.id), query: .init(limit: 50)
-            ).ok.body.json
-            if shots.data.contains(where: { $0.id == mediaID }) { kind = "screenshot"; break outer }
-          }
-          let previewSets = try await client.appCustomProductPageLocalizationsAppPreviewSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-          for set in previewSets.data {
-            let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(
-              path: .init(id: set.id), query: .init(limit: 50)
-            ).ok.body.json
-            if previews.data.contains(where: { $0.id == mediaID }) { kind = "preview"; break outer }
-          }
-        }
-
-        if kind == nil {
-          // An asset library placement: removing it also deletes its image or video from the
-          // library when nothing else uses it.
-          for loc in locs.data {
-            let placements = try await AssetLibrary.slotPlacements(on: .productPageLocalization(loc.id), client: client)
-            guard let match = placements.first(where: { $0.placement.id == mediaID }) else { continue }
-            guard confirm("Remove this \(match.kind) placement? [y/N] ") else {
-              cancelled()
-              return
-            }
-            let deleted = try await AssetLibrary.removePlacement(id: mediaID, client: client)
-            print()
-            success("Removed", "\(match.kind) placement \(mediaID)\(deleted ? " and its unused library file" : "").")
-            return
-          }
-        }
-        guard let kind else {
-          throw ValidationError("Media '\(mediaID)' not found on this page.")
-        }
-
-        guard confirm("Delete this \(kind)? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        if kind == "screenshot" {
-          try await ClassicMedia.deleteScreenshot(mediaID, client: client)
-        } else {
-          try await ClassicMedia.deletePreview(mediaID, client: client)
-        }
-        print()
-        success("Deleted", "\(kind) \(mediaID).")
+        try await LocalizationMedia.delete(
+          mediaID: mediaID, among: locs.data.map { .productPageLocalization($0.id) }, client: client)
       }
     }
   }

@@ -7,8 +7,8 @@ title: Installation
 
 ## Prérequis
 
-- macOS 13+
-- Swift 6.0+ (uniquement pour la compilation depuis les sources)
+- macOS 15+
+- Swift 6.2+ (uniquement pour la compilation depuis les sources)
 
 ## Homebrew
 

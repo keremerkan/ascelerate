@@ -1,6 +1,6 @@
 ---
 name: ascelerate
-description: Use when working with App Store Connect tasks — app submissions, localizations, screenshots, builds, provisioning, in-app purchases, subscriptions, or release workflows. Triggers on App Store, App Store Connect, asc, ascelerate, app review, provisioning profiles, screenshots, localizations, IAP, subscriptions.
+description: Use when working with App Store Connect tasks — app submissions, localizations, screenshots, builds, provisioning, in-app purchases, subscriptions, or release workflows — and with Apple Ads (Search Ads) — campaigns, keywords, bids, budgets, search terms, ad performance reports, keyword research and popularity. Triggers on App Store, App Store Connect, asc, ascelerate, app review, provisioning profiles, screenshots, localizations, IAP, subscriptions, Apple Ads, Search Ads, ad campaigns, keywords, CPT, CPI, ASO.
 ---
 
 # ascelerate
@@ -43,6 +43,8 @@ ascelerate sub list <app> --json
 ascelerate sub info <app> <product-id> --json     # includes "hasPricing" boolean
 ascelerate sub pricing show <app> <product-id> --json
 ascelerate rate-limit --json
+ascelerate ads campaigns list --json              # every ads read command takes --json; see "Apple Ads" below
+ascelerate ads reports campaigns|keywords|search-terms --json
 ```
 
 Conventions: list commands emit a top-level JSON array, detail commands a single object; raw API enum values (`WAITING_FOR_REVIEW`, `IOS`); ISO 8601 dates; resource `id` always included; null fields omitted; empty results emit `[]`. `--json` implies non-interactive — ambiguity errors instead of prompting (disambiguate with `--platform` etc.). Errors go to stderr, so stdout is always valid JSON.
@@ -303,6 +305,33 @@ Reviews are read-only; only the developer response is writable. Review IDs come 
 
 The App Store Connect API does **not** expose aggregate rating counts or the star-rating average/histogram — only individual reviews (above). For download/unit numbers and revenue, use `reports` (below).
 
+### Featuring nominations
+
+```bash
+ascelerate nominations [--app <app>] [--state draft|submitted|archived] [--json]
+ascelerate nominations create --app <app> --type launch|enhancements|new-content --name "..." --description "..." --publish-start 2026-11-01 [--devices iphone,ipad] [--locales en-US,tr-TR] [--territories USA,TUR] [--materials https://...] [--notes "..."] [--pre-order] [--submit]
+ascelerate nominations update <id> [--name ...] [--description ...] [--publish-start ...]   # drafts only
+ascelerate nominations submit <id>      # send a draft to Apple's editors
+ascelerate nominations archive <id>
+ascelerate nominations delete <id>
+```
+
+`create` saves a draft unless `--submit`; review the draft with the user before submitting. When drafting the description, lead with what's new and why it matters to users (the editors read it), mention localization and accessibility work, and nominate well ahead of the publish date.
+
+### Webhooks (App Store Connect event notifications)
+
+```bash
+ascelerate webhooks <app> [--json]
+ascelerate webhooks create <app> --name "Release bot" --url https://example.com/hook --events app-store-version-app-version-state-updated,build-upload-state-updated [--secret ...] [--disabled]
+ascelerate webhooks update <app> "Release bot" [--url ...] [--events ...|all] [--secret ...] [--enabled true|false]
+ascelerate webhooks delete <app> "Release bot"
+ascelerate webhooks ping <app> "Release bot"                 # test event
+ascelerate webhooks deliveries <app> "Release bot" [--state failed] [--json]   # HTTP status + error per delivery
+ascelerate webhooks redeliver <delivery-id>
+```
+
+Event types (`--events`, or `all`): `app-store-version-app-version-state-updated` (review/release state), `build-upload-state-updated`, `build-beta-detail-external-build-state-updated` (TestFlight external), `beta-feedback-crash-submission-created`, `beta-feedback-screenshot-submission-created`, plus background asset and alternative distribution events. Without `--secret`, `create` generates the signing secret and prints it once: tell the user to store it on the receiving server. To debug a receiver: `ping`, then `deliveries --state failed` for the HTTP status and error, fix, `redeliver`.
+
 ### Reports (downloads, proceeds, analytics)
 
 ```bash
@@ -317,6 +346,93 @@ ascelerate reports analytics <app> [--category APP_STORE_ENGAGEMENT|APP_USAGE|CO
 - **Vendor number** is required for `sales`/`finance` (App Store Connect → Payments and Financial Reports). Save it once with `ascelerate configure`, or pass `--vendor-number`.
 - `sales`/`finance` default to a parsed **summary**; add `--raw` to print the TSV or `--output PATH` to save it. `--date` defaults to the most recent completed period for sales; for `finance` it's a *fiscal* period `YYYY-MM` (not a calendar month) and is required along with `--region`.
 - `analytics` reuses an existing report request or prompts to create one (a one-time snapshot by default; `--ongoing` for recurring). A freshly created snapshot isn't ready immediately — re-run the command after a few minutes to download the segments.
+
+### Apple Ads (campaigns, keywords, search terms, insights)
+
+`ascelerate ads` drives the Apple Ads Platform API: performance reports, campaign/keyword/negative management, and Apple's keyword research data, across every app and campaign of the ad account. App names come from App Store Connect, so `--app` takes the same bundle IDs and aliases as the rest of ascelerate.
+
+**Setup (once):** `ascelerate ads configure` — separate credentials from App Store Connect: an Apple Ads user with an API role (Account Settings → User Management), whose public key (ascelerate creates the key pair and prints it) is pasted into Account Settings → API; then it asks for the clientId/teamId/keyId shown there and the ad account to use. `ads accounts` lists accessible ad accounts.
+
+```bash
+# Read
+ascelerate ads campaigns list [--app <app>] [--json]                  # status, countries, daily budget, bidding (Manual CPT / Max Conversions)
+ascelerate ads adgroups [--app <app>] [--campaign X] [--json]         # default bid, CPA goal, Search Match on/off
+ascelerate ads keywords list [--app <app>] [--campaign X] [--json]    # text, match type, status, bid
+ascelerate ads negatives list [--app <app>] [--campaign X] [--json]   # campaign- or ad group-level
+ascelerate ads reports campaigns    [--days 7 | --from YYYY-MM-DD --to YYYY-MM-DD] [--app <app>] [--campaign X] [--all] [--by age gender device country region city] [--json]
+ascelerate ads reports adgroups     [same options]                    # per ad group (compare test groups, e.g. age splits)
+ascelerate ads reports ads          [same options]                    # per ad, i.e. per product page (default vs custom)
+ascelerate ads reports keywords     [same options]                    # per keyword, with Apple's suggested bid
+ascelerate ads reports search-terms [same options]                    # what people actually searched, the keyword that matched, TARGETED vs AUTO (Search Match)
+ascelerate ads recommendations [--app <app>] [--json]                 # Apple's open daily budget / target CPA recommendations with expected outcome
+ascelerate ads campaigns target-cpa --app <app> [--country US] [--json]   # Apple's suggested target CPA for a new Max Conversions campaign
+ascelerate ads history [--app <app>] [--campaign X] [--days 7] [--json]   # who changed what (UI, API, Apple support), with old → new values
+ascelerate ads opportunities [--app <app>] [--campaign X] [--days 30] [--min-taps 10] [--brand "be gone" ...] [--json]   # search terms to add as exact keywords / give their own bid / exclude (last 30 complete days)
+
+# Keyword research
+ascelerate ads keywords suggest --app <app> --seed "qr code" "barcode" [--country US GB] [--limit 50] [--json]   # popularity 0-100 + where you already target it
+ascelerate ads keywords popularity --country US (--app <app> | --genre PRODUCTIVITY_UTILITIES) [--term a b | --contains x] [--monthly] [--limit 100] [--json]
+ascelerate ads insights impression-share --app <app> [--country US] [--term a b] [--weeks 1-4] [--first-slot] [--json]
+
+# Write (confirm first; -y skips; --dry-run prints the request without sending)
+ascelerate ads campaigns pause|resume <campaign>...
+ascelerate ads campaigns create --like <campaign> --name N [--app <app>] [--country US] --daily 25 (--max-conversions --bid 2.50 | --default-bid 1.00 [--search-match on|off]) [--enabled]   # created PAUSED with its ad group (Max Conversions: the automated one)
+ascelerate ads campaigns budget <campaign> --daily 120
+ascelerate ads campaigns bid <campaign> --amount 0.80          # campaign-level bid; for Max Conversions the per-auction ceiling
+ascelerate ads keywords add --campaign X [--ad-group Y] --match exact|broad [--bid 1.50] "kw 1" "kw 2"   # skips keywords already there
+ascelerate ads keywords pause|resume --campaign X [--ad-group Y] [--match exact|broad] "kw"...
+ascelerate ads keywords bid --campaign X [--ad-group Y] [--match exact|broad] --bid 1.25 "kw"...
+ascelerate ads negatives add --campaign X [--ad-group Y] [--match exact|broad] "term"...                 # campaign-level unless --ad-group; default exact
+ascelerate ads negatives remove --campaign X [--match exact|broad] "term"...
+ascelerate ads adgroups create --campaign X --name "Exact" [--like "Existing Group"] [--default-bid 1.00] [--search-match on|off] [--cpa-goal 0.80] [--min-age 18] [--max-age 24] [--enabled]   # copies --like's pricing, bidding, CPA goal and targeting; created PAUSED unless --enabled
+ascelerate ads keywords copy --campaign X --from "Group A" --to "Group B" [--match exact|broad]   # text, match type, bid, status; skips ones already there
+ascelerate ads adgroups update "Group" --campaign X [--name N] [--default-bid B] [--search-match on|off] [--cpa-goal G]
+ascelerate ads adgroups create --campaign X --automated               # the automated ad group a Max Conversions campaign needs (campaigns create adds it)
+ascelerate ads adgroups pause|resume --campaign X "Group"...
+ascelerate ads recommendations apply|dismiss <recommendation-id>...    # IDs from `ads recommendations`; apply changes the budget/target CPA
+ascelerate ads product-pages --app <app> [--json]                      # the app's product pages as Apple Ads sees them (custom pages come from App Store Connect)
+ascelerate ads ads [--app <app>] [--campaign X] [--json]               # ads you created, with product page and review state
+ascelerate ads ads create --campaign X [--ad-group Y] --product-page <name|id|default> [--name N] [--enabled]   # ad variation: sends the ad group's taps to that page (Apple reviews it)
+ascelerate ads ads pause|resume --campaign X <ad>                      # resume pauses the ad group's serving ad (one serves per ad group)
+```
+
+`--campaign` takes a campaign name (case-insensitive) or ID; a wrong name lists the valid ones. Report dates are in the ad account's time zone and `--days N` includes today (partial data) — for decisions, end ranges yesterday (`--to`) or compare complete periods. Keyword and search term reports take one request per campaign (Apple requires it), so an unscoped report over many campaigns takes a few seconds.
+
+**Reading the metrics** (every report row has the same `metrics` object):
+- `spend` (amount + currency), `impressions`, `taps`, `installs` (tap + view-through), `tapInstalls`.
+- `ttr` = taps / impressions: how relevant the ad looks for the search. Low TTR on a keyword usually means the search intent doesn't match the app.
+- `tapConversionRate` = tapInstalls / taps: how well the product page converts people who tapped. **`totalConversionRate`** = all installs / taps and includes people who saw the ad but installed without tapping; above 100% means strong view-through (brand or organic halo). Judge keyword quality on the tap rate; credit the campaign with the total.
+- `averageCPT` = what a tap actually cost; the keyword's `bid` is the maximum. A bid far above average CPT has room to come down; Apple's `suggestedBid` (keywords report) is its estimate to win more auctions.
+- `averageCPI` = spend / all installs. Compare across keywords and campaigns of the same app and country, not across countries.
+- Search terms: `source` `TARGETED` matched one of your keywords; `AUTO` came from Search Match. A row without `searchTerm` is Apple hiding low-volume searches — it can't be added as a keyword.
+- Impression share: `lowImpressionShare`–`highImpressionShare` (a range; 0.91–1.0 means over 90%), `rank` among advertisers (1 = most impressions), `popularityTier` 1–5. A low share on a popular, converting term is room to grow; a share under 100% on your own brand name means competitors bid on it.
+- Popularity: `popularity` 1–100 across the storefront, `popularityInGenre` 1–100, `rankInGenre`. Only terms in the genre's ranked list come back; `--term`s that aren't are listed as `unranked` (less popular in that genre, or ranked under another one), not an error. Keyword suggestions are only relevant with `--seed`; without it Apple returns generic popular apps. Suggestion data is thin in some storefronts (in Turkey a seed only returned itself, with popularity on a 1–5 scale) — fall back to search terms and impression share there.
+- Exact match includes close variants: a search can be served by a different exact keyword (search "qr" by exact "qr kodu"; "karekod okuyucu" by exact "barkod okuyucu"), at that keyword's bid. Aggregate the search terms report by `searchTerm` and compare with the keyword list: a converting search term without its own exact keyword deserves one with its own bid, and a cheap term riding an expensive keyword's bid is overpaying.
+- `--by` breakdowns (campaign report only; JSON `breakdown`): **device** is reliable. **Age, gender, region and city are almost always `UNKNOWN`** (verified on four storefronts: 100% of spend for age and region, over 99.5% for gender), because Apple only knows them for users who allowed Personalized Ads. Don't base age or gender decisions on them; targeting an ad group by age or gender also limits it to those users, which cuts reach.
+- Ignore keywords with too little data (rough rule: fewer than ~20 taps) before calling them good or bad.
+
+`ads opportunities` automates the search-term analysis below with fixed rules against each campaign's own averages (JSON `kind`: `add-exact` = converting, no exact keyword of its own, CPI ≤ 1.25× the campaign's; `own-bid` = no own exact keyword, CPI above that, served by another keyword's bid; `negative` = no installs, tap conversion under half, TTR under a third on 1,000+ impressions, or CPI over 2×; never a term that is one of the campaign's keywords; terms need `--min-taps`). Each entry has `reason`, `metrics` and `servedBy` (keyword, match type, current bid; empty = Search Match). Brand searches (containing the app's name before ":" or " - ", or a `--brand` spelling) are left out of the campaign averages and never suggested as negatives: in brand-heavy campaigns their very cheap installs would otherwise make core generic terms look like negatives (seen live). Pass misspellings and spaced variants of the brand with `--brand`. Treat it as candidates: check relevance (competitor app names, off-topic intent such as a search for a web browser or an exam answer-sheet reader that happens to convert cheaply) before acting. Pass search terms to `keywords add`/`negatives add` exactly as the JSON returns them: Apple stores a typed Turkish "İ" as `i` + U+0307, which a retyped term won't match (add the plain spelling as well if unsure).
+
+**Age/gender targeting caveats:** ages 18–64 only (no `--max-age` = 65+); it reaches only users who allowed Personalized Ads; and since September 2026 Apple's AdServices returns no attribution for installs from age- or gender-targeted ad groups, so RevenueCat/MMPs can't tie their purchases to the campaign. Judge such groups on Apple Ads' own spend, installs and CPI (`ads reports adgroups`).
+
+Ad groups may carry a legacy **CPA goal** (`cpaGoal`). Apple deprecates it in favour of the Max Conversions bid strategy (target CPA) and doesn't document whether it still steers bidding; don't build new setups on it, and judge Manual CPT campaigns on bids, keywords and revenue. A typical restructure: `adgroups create --name "Exact" --search-match off` (copies the existing group, paused), move proven terms there as exact keywords, add them as exact negatives to the discovery group (broad + Search Match), then `adgroups resume`.
+
+**Workflows:**
+1. *Account review across apps:* `ads reports campaigns --days 30 --json` and `--days 7`; compare CPI, TTR and conversion per campaign; `ads recommendations` for budget-limited campaigns. Summarize per app: spend, installs, CPI, what changed.
+2. *Keyword tuning (Manual CPT campaigns):* `ads reports keywords --campaign X --days 30 --json`. Pause or lower bids on keywords with meaningful spend and no or very expensive installs; raise bids toward `suggestedBid` on keywords with good CPI and few impressions; lower bids that sit far above average CPT.
+3. *Search term mining:* start with `ads opportunities --campaign X --json`; for detail, `ads reports search-terms --campaign X --days 30 --json` (plus `ads keywords list` and `ads negatives list` for what exists; a campaign may have no negatives at all). Converting AUTO or broad-matched terms with good CPI → `ads keywords add --match exact`. Irrelevant or non-converting terms with real spend → `ads negatives add` (exact by default; broad only for a clearly irrelevant word). Never add a negative that blocks one of the campaign's own converting keywords.
+4. *Where to grow:* `ads insights impression-share --app X --country C --weeks 4 --json`: popular terms where the app has a low share or rank 2+ (a competitor wins) and the search terms report shows good CPI are the place to raise bids or add exact keywords; a high share on irrelevant terms is wasted reach to exclude.
+5. *Keyword discovery / ASO:* `ads keywords suggest --app X --seed ...` (shows where each is already targeted), `ads keywords popularity --app X --country US --term ...` to size them, `ads insights impression-share --app X` to see where you are weak. The same popularity data helps App Store keyword (ASO) choices.
+6. *Revenue per campaign/keyword:* Apple Ads reports installs, not purchases. If the app uses RevenueCat with AdServices attribution (`Purchases.shared.attribution.enableAdServicesAttributionTokenCollection()`), RevenueCat's v2 Charts API (`GET /v2/projects/<id>/charts/revenue|conversion_to_paying`) segments and filters by `apple_search_ads_campaign`, `apple_search_ads_ad_group` and `apple_search_ads_keyword` (its `/options` endpoint lists `attribution_*` names the chart endpoint rejects); join with `ads reports campaigns|keywords --json` spend for spend per paying user and revenue on spend. Cheap installs and paying users can point in opposite directions (a keyword with the lowest CPI can bring the fewest payers). Expect small payer counts per keyword: treat them as direction.
+A new campaign for an app shares auctions with that app's other campaigns in the same storefront: Apple lets one of them into each auction, so a test campaign next to a running one only gets leftovers (seen live: a Max Conversions campaign beside its manual twin got 1% of the volume). To test, move the traffic: e.g. keep the old campaign brand-only (pause non-brand keywords, Search Match off) and let the new one take the rest.
+
+7. *Max Conversions campaigns* set bids themselves, but under the campaign bid, which Apple treats as a per-auction ceiling: a ceiling below the storefront's typical tap cost starves the campaign (seen live: 0.20 in France delivered ~2 spend in 9 months). Set it from what an install is worth, not as a target. Keyword bids don't apply there (ascelerate refuses `--bid`); steer them with this bid, the budget and Apple's target CPA recommendations.
+
+**Custom product pages as ad variations:** an ad sends an ad group's taps to a product page; only one ad per ad group serves, so a custom page for specific searches needs an ad group of its own with those keywords (`adgroups create`, `keywords add`, then `ads create --product-page`). Custom pages are made in App Store Connect (`ascelerate product-pages create`). Ad groups without an ad you created serve Apple's implicit "Default Ad" (it shows in `reports ads` but not in `ads ads`). A good use: searches whose intent the default page doesn't speak to (low tap conversion on a relevant term).
+
+**Change history:** `ads history` lists every change to campaigns, ad groups, keywords and negatives, including ones made in the web interface (By "UI") and by Apple support, for up to 6 months. Use it to check what changed before reading a performance shift, and to confirm a log matches reality. Apple records some bulk keyword updates and ad group bid changes as "Create" events; their details show the resulting values (match type, bid) instead of old → new.
+
+**Rules for changes:** writes spend real money. Present the proposed changes (current → new, per keyword or campaign) and get the user's approval first; run the command with `--dry-run` to show the exact requests, then with `-y`. Prefer gradual bid changes over large jumps. Amounts are in the ad account's currency.
 
 ### In-app events
 
@@ -366,6 +482,24 @@ ascelerate product-pages media delete <app> <name-or-id> <media-id>
 ```
 
 Pages are referenced by name or ID. `create` issues a compound POST (page + version + localization linked via `${local-id}` inline references).
+
+### Product page optimization (A/B tests)
+
+```bash
+ascelerate experiments <app> [--json]
+ascelerate experiments info <app> "<test>" [--json]                      # treatments, locales, media per locale
+ascelerate experiments create <app> --name "Screenshot order" --traffic 50 --treatment "Map first" [--treatment "..."]   # up to 3 treatments
+ascelerate experiments treatments add <app> "<test>" --name "Icon B" --app-icon AppIconB   # alternate icon must ship in the live build
+ascelerate experiments media upload <app> "<test>" "<treatment>" --locale en-US --display-type APP_IPHONE_67 01.png   # locale created if missing
+ascelerate experiments media list <app> "<test>" [--treatment "..."]
+ascelerate experiments media delete <app> "<test>" <media-id>
+ascelerate experiments treatments remove-locale <app> "<test>" "<treatment>" --locale de-DE
+ascelerate experiments submit <app> "<test>"    # App Review (new media needs it)
+ascelerate experiments start <app> "<test>"     # after approval
+ascelerate experiments stop <app> "<test>"
+```
+
+Workflow: create the test with its treatments, upload each treatment's screenshots per locale (same display types and library slots as `product-pages media`), check with `info`, `submit`, then `start` once approved. A treatment's locale starts as a copy of the original page's media (Apple seeds it when it's created, e.g. by the first upload), so uploads append to that copy: delete the copied screenshots you're replacing (`media list` shows their IDs). A locale a treatment doesn't cover shows the original page. Test one idea per treatment (e.g. first screenshot, or icon) so the result is attributable. Results are read in App Store Connect; ascelerate doesn't fetch them.
 
 #### Custom product page localization JSON format
 
@@ -450,6 +584,9 @@ iPhone Duo simulator (Xcode 27.1+): `setHinge(.open)` / `setHinge(.closed)` unfo
 ```bash
 ascelerate builds archive                           # Auto-detects workspace/scheme
 ascelerate builds upload MyApp.ipa
+ascelerate builds upload MyApp.ipa --api      # through the App Store Connect API instead of altool (.ipa or Mac .pkg; waits until App Store Connect has taken it in)
+ascelerate builds uploads <app> [--json]       # recent uploads (any method) with state and Apple's errors/warnings: check here when an upload never became a build
+ascelerate builds uploads <app> --delete-stale # remove upload records that will never complete
 ascelerate builds await-processing <app>             # Wait for processing
 ascelerate builds list --bundle-id <app>
 ```
@@ -546,6 +683,10 @@ ascelerate apps encryption <app> --create --description "Uses HTTPS"
 ascelerate apps eula <app> --file eula.txt
 ascelerate apps phased-release <app> --enable
 
+# App Store accessibility declarations (per device family: iphone, ipad, mac, apple-tv, apple-watch, vision)
+ascelerate apps accessibility <app>                                       # which features are declared, and draft/published state
+ascelerate apps accessibility set <app> --device iphone --supports voiceover,voice-control,larger-text,dark-interface,differentiate-without-color,sufficient-contrast,reduced-motion [--publish]   # full declaration: unlisted = not supported ('none' for none)
+ascelerate apps accessibility publish <app>                               # publish drafts as they are
 # App-level subscription grace period (after failed renewal payments)
 ascelerate apps subscription-grace-period <app>                         # view
 ascelerate apps subscription-grace-period <app> --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS

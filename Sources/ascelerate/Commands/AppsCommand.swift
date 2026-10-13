@@ -10,7 +10,7 @@ struct AppsCommand: AsyncParsableCommand {
     groupedSubcommands: [
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, Release.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
-      CommandGroup(name: "Configuration", subcommands: [Availability.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
+      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, Availability.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
     ]
   )

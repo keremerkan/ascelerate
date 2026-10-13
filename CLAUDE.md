@@ -92,7 +92,7 @@ skills/
 - **[swift-argument-parser](https://github.com/apple/swift-argument-parser)** (1.3.0+) — CLI framework
 - **[swift-certificates](https://github.com/apple/swift-certificates)** (1.0.0+) — X.509 certificate and CSR generation (used by `certs create` auto-CSR flow)
 - **[Yams](https://github.com/jpsim/Yams)** (5.0.0+) — YAML parsing (used by `screenshot` command for `ascelerate.yml`)
-- **[apple-ads-platform-api-swift](https://github.com/apple/apple-ads-platform-api-swift)** (`AppleAdsClient`, 1.109.0+, traits off) — Apple's generated client for the Apple Ads Platform API, used by the `ads` commands. It requires macOS 15 and swift-tools 6.2 and brings AsyncHTTPClient/NIO (its token fetch always uses them); the stripped release binary grew from 42.8 MB (0.23.1) to 59.6 MB. Apple publishes no raw spec, so it can't be path-filtered like ASCKit; copying its generated `Client.swift`/`Types.swift` into an own target would drop NIO without changing command code.
+- **[apple-ads-platform-api-swift](https://github.com/apple/apple-ads-platform-api-swift)** (`AppleAdsClient`, 1.109.0+, traits off) — Apple's generated client for the Apple Ads Platform API, used by the `ads` commands. It requires macOS 15 and swift-tools 6.2 and brings AsyncHTTPClient/NIO (its token fetch always uses them); the stripped release binary grew from 42.8 MB (0.23.1) to 64.4 MB (0.24.0, which also generates more ASCKit paths). Apple publishes no raw spec, so it can't be path-filtered like ASCKit; copying its generated `Client.swift`/`Types.swift` into an own target would drop NIO without changing command code.
 
 ## Authentication
 

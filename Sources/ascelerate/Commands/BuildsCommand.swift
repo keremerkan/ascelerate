@@ -166,10 +166,13 @@ struct BuildsCommand: AsyncParsableCommand {
         print(green("Deleted") + " \(deleted) stale upload record\(deleted == 1 ? "" : "s").")
         return
       }
-      let uploads = try await client.appsBuildUploadsGetToManyRelated(
-        path: .init(id: app.id),
-        query: .init(filterPlatform: platformFilter(try platformOption.parsed()), sort: [.minusUploadedDate], limit: min(limit, 200))
-      ).ok.body.json.data
+      // Apple sorts records without an uploadedDate (never finished) first whatever the order, so
+      // take them all and order by creation here.
+      let uploads = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsBuildUploadsGetToManyRelated(
+          path: .init(id: app.id), query: .init(filterPlatform: platformFilter(try platformOption.parsed()), limit: 200)
+        ).ok.body.json
+      }.flatMap(\.data)
       let details = { (list: [Components.Schemas.StateDetail]?) in list.map { $0.map { Detail(code: $0.code, description: $0.description) } } }
       let entries = uploads.map { u in
         let a = u.attributes
@@ -178,7 +181,7 @@ struct BuildsCommand: AsyncParsableCommand {
           state: a?.state?.state, createdDate: a?.createdDate, uploadedDate: a?.uploadedDate,
           errors: details(a?.state?.errors), warnings: details(a?.state?.warnings)
         )
-      }.sorted { ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast) }
+      }.sorted { ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast) }.prefix(limit).map { $0 }
       if jsonOption.json { try printJSON(entries); return }
       guard !entries.isEmpty else {
         print("No build uploads.")

@@ -1,5 +1,6 @@
 import ArgumentParser
 import ASCKit
+import AscelerateCore
 import Foundation
 
 struct CustomerReviewsCommand: AsyncParsableCommand {

@@ -1,5 +1,6 @@
 import AppleAdsClient
 import ArgumentParser
+import AscelerateCore
 import Foundation
 import OpenAPIRuntime
 

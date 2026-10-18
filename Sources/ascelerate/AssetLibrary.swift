@@ -1,4 +1,5 @@
 import ASCKit
+import AscelerateCore
 import Foundation
 import AVFoundation
 import ImageIO

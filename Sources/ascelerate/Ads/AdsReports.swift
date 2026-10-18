@@ -1,5 +1,6 @@
 import AppleAdsClient
 import ArgumentParser
+import AscelerateCore
 import Foundation
 
 // Report plumbing shared by `ads reports campaigns|keywords|search-terms`.

@@ -1,5 +1,6 @@
 import ArgumentParser
 import ASCKit
+import AscelerateCore
 import Foundation
 
 /// Uploads an .ipa or a Mac .pkg through the App Store Connect API's build upload resources instead

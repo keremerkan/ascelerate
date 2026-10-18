@@ -1,5 +1,6 @@
 import ArgumentParser
 import ASCKit
+import AscelerateCore
 import Foundation
 
 extension Components.Schemas.InAppPurchaseLocalization {

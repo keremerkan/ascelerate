@@ -1,4 +1,5 @@
 import ASCKit
+import AscelerateCore
 import Foundation
 
 // App Store Connect side of the `ads` commands. Kept apart from the Ads files: ASCKit and

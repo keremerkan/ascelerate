@@ -16,21 +16,21 @@ import Foundation
 /// POSTs return HTTP 409 for products without a pending version — checking here first turns that
 /// into a clear message and also catches image/screenshot-only edits that the older
 /// localization-state heuristic missed.
-enum ProductVersions {
+public enum ProductVersions {
   /// A product version awaiting submission.
-  struct Pending: Encodable, Sendable {
-    let id: String
-    let version: Int?
-    let state: String
+  public struct Pending: Encodable, Sendable {
+    public let id: String
+    public let version: Int?
+    public let state: String
 
-    var label: String { "v\(version.map(String.init) ?? "?") (\(formatState(state)))" }
+    public var label: String { "v\(version.map(String.init) ?? "?") (\(formatState(state)))" }
   }
 
-  static let pendingStates: Set<String> = [
+  public static let pendingStates: Set<String> = [
     "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "REJECTED", "DEVELOPER_REJECTED",
   ]
 
-  static func pendingIAP(_ iapID: String, client: ASCClient) async throws -> Pending? {
+  public static func pendingIAP(_ iapID: String, client: ASCClient) async throws -> Pending? {
     let response = try await client.inAppPurchasesV2VersionsGetToManyRelated(
       path: .init(id: iapID),
       query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
@@ -38,7 +38,7 @@ enum ProductVersions {
     return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
   }
 
-  static func pendingSubscription(_ subID: String, client: ASCClient) async throws -> Pending? {
+  public static func pendingSubscription(_ subID: String, client: ASCClient) async throws -> Pending? {
     let response = try await client.subscriptionsVersionsGetToManyRelated(
       path: .init(id: subID),
       query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
@@ -50,7 +50,7 @@ enum ProductVersions {
   /// localizations (all a group version holds) differ from the latest APPROVED version:
   /// App Store Connect keeps unchanged drafts open (seen live 2026-10-07: a v2 draft identical
   /// to the approved v1, invisible in the web UI), and the version API has no DELETE to clear them.
-  static func pendingGroup(_ groupID: String, client: ASCClient) async throws -> Pending? {
+  public static func pendingGroup(_ groupID: String, client: ASCClient) async throws -> Pending? {
     let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
       try await client.subscriptionGroupsVersionsGetToManyRelated(path: .init(id: groupID)).ok.body.json
     }.flatMap(\.data)
@@ -88,17 +88,17 @@ enum ProductVersions {
   // MARK: - Review submission items
 
   /// What a review submission item refers to, resolved for display.
-  struct ReviewItemInfo: Sendable {
+  public struct ReviewItemInfo: Sendable {
     /// Raw kind: APP_STORE_VERSION, IN_APP_PURCHASE, SUBSCRIPTION, SUBSCRIPTION_GROUP.
-    let kind: String
+    public let kind: String
     /// App version string, or the product's name.
-    let name: String?
+    public let name: String?
     /// Product version number (nil for app versions).
-    let version: Int?
+    public let version: Int?
     /// Product version state (nil for app versions).
-    let versionState: String?
+    public let versionState: String?
 
-    var description: String {
+    public var description: String {
       let versionLabel = version.map { " v\($0)" } ?? ""
       let stateLabel = versionState.map { " (\(formatState($0)))" } ?? ""
       return "\(formatState(kind)) \(name ?? "—")\(versionLabel)\(stateLabel)"
@@ -107,7 +107,7 @@ enum ProductVersions {
 
   /// Resolves every item of a review submission to its target (app version or product version),
   /// keyed by item ID. Product names cost one extra request per product item.
-  static func reviewItems(submissionID: String, client: ASCClient) async throws -> [String: ReviewItemInfo] {
+  public static func reviewItems(submissionID: String, client: ASCClient) async throws -> [String: ReviewItemInfo] {
     let response = try await client.reviewSubmissionsItemsGetToManyRelated(
       path: .init(id: submissionID),
       query: .init(

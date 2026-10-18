@@ -1,5 +1,6 @@
 import ArgumentParser
 import ASCKit
+import AscelerateCore
 import Foundation
 
 /// Featuring nominations: tell Apple's editorial team about a launch, an update or new content.

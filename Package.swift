@@ -5,6 +5,11 @@ import PackageDescription
 let package = Package(
     name: "ascelerate",
     platforms: [.macOS(.v15)],
+    products: [
+        .executable(name: "ascelerate", targets: ["ascelerate"]),
+        .library(name: "ASCKit", targets: ["ASCKit"]),
+        .library(name: "AscelerateCore", targets: ["AscelerateCore"]),
+    ],
     dependencies: [
         // Apple Ads Platform API client. Its traits add swift-service-lifecycle and
         // swift-configuration, which a CLI doesn't need.
@@ -23,6 +28,7 @@ let package = Package(
             name: "ascelerate",
             dependencies: [
                 "ASCKit",
+                "AscelerateCore",
                 .product(name: "AppleAdsClient", package: "apple-ads-platform-api-swift"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
@@ -33,6 +39,12 @@ let package = Package(
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 .product(name: "Yams", package: "Yams"),
             ]
+        ),
+        // App Store Connect logic shared by the commands, free of terminal I/O: lookups that can
+        // be ambiguous take a `choose` closure instead of prompting.
+        .target(
+            name: "AscelerateCore",
+            dependencies: ["ASCKit"]
         ),
         .target(
             name: "ASCKit",

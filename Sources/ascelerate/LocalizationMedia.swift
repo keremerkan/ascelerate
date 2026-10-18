@@ -1,5 +1,6 @@
 import ArgumentParser
 import ASCKit
+import AscelerateCore
 import Foundation
 
 /// One file at a time for a localization outside `apps media`'s folder flow: a custom product page

@@ -617,22 +617,6 @@ struct AppsCommand: AsyncParsableCommand {
       
       let platformValue = try parsePlatform(platform)
 
-      // Check if version already exists — for THIS platform: one app record
-      // can hold the same version string per platform (universal purchase).
-      let existingVersions = try await client.appsAppStoreVersionsGetToManyRelated(
-        path: .init(id: app.id), query: .init(filterVersionString: [versionString])
-      ).ok.body.json
-      if let existing = existingVersions.data.first(where: {
-        $0.attributes?.versionString == versionString && $0.attributes?.platform == platformValue.rawValue
-      }) {
-        let state = existing.attributes?.appVersionState
-        if state == "PREPARE_FOR_SUBMISSION" {
-          print("Version \(versionString) already exists for \(platform) (PREPARE_FOR_SUBMISSION). Continuing.")
-          return
-        }
-        throw ValidationError("Version \(versionString) already exists for \(platform) (state: \(state.map { formatState($0) } ?? "unknown")).")
-      }
-      
       let releaseTypeValue: ASCEnum.AppStoreVersionCreateRequestReleaseType?
       if let releaseType {
         releaseTypeValue = switch releaseType.lowercased() {
@@ -644,18 +628,24 @@ struct AppsCommand: AsyncParsableCommand {
       } else {
         releaseTypeValue = nil
       }
-      
-      let response = try await client.appStoreVersionsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(
-          copyright: copyright,
-          platform: platformValue.rawValue,
-          releaseType: releaseTypeValue?.rawValue,
-          versionString: versionString
-        ),
-        relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-        _type: "appStoreVersions"
-      )))).created.body.json
-      let attrs = response.data.attributes
+
+      let created: Components.Schemas.AppStoreVersion
+      do {
+        switch try await createVersion(
+          appID: app.id, versionString: versionString, platform: platformValue,
+          releaseType: releaseTypeValue, copyright: copyright, client: client)
+        {
+          case .created(let version):
+            created = version
+          case .alreadyInPreparation:
+            print("Version \(versionString) already exists for \(platform) (PREPARE_FOR_SUBMISSION). Continuing.")
+            return
+        }
+      } catch VersionCreationError.alreadyExists(_, _, let state) {
+        throw ValidationError("Version \(versionString) already exists for \(platform) (state: \(state.map { formatState($0) } ?? "unknown")).")
+      }
+
+      let attrs = created.attributes
       success("Created", "version \(attrs?.versionString ?? versionString)")
       print("  Platform:     \(attrs?.platform.map { formatState($0) } ?? "—")")
       print("  State:        \(attrs?.appVersionState.map { formatState($0) } ?? "—")")

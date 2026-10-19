@@ -34,6 +34,7 @@ Tests/ASCKitTests/
 Sources/AscelerateCore/               # App Store Connect logic without terminal I/O (see "AscelerateCore")
   Lookup.swift                        # findApp(exactBundleID:), findVersion(…, choose:), Platform, platformFilter, optionalRelated, attachedBuild, AppLookupError
   ProductVersions.swift               # Pending-version detection for IAPs/subs/groups (versions endpoints) + review-item resolution
+  Versions.swift                      # createVersion (created / already in preparation / VersionCreationError.alreadyExists)
   Formatting.swift                    # formatFieldName/formatState, localeName, formatDate, formatBytes, boundedConcurrentMap
   Retry.swift                         # isTransientError, withTransientRetry, unlessDryRunStopped
 Sources/ascelerate/
@@ -422,7 +423,7 @@ ascelerate <any command> --dry-run                                # Global: send
 ## Key Patterns
 
 ### AscelerateCore
-- **What:** App Store Connect logic the commands share, in its own target with no terminal I/O: no ArgumentParser, no `print`/`readLine`, no reads of `autoConfirm`/`jsonMode`/`dryRunFlag`. The `ascelerate` target keeps parsing, prompts, colours, aliases, tables and JSON rendering, and calls into the core. Moved so far: the app/version lookups, `ProductVersions`, and the pure formatting and retry helpers; the rest moves one area at a time.
+- **What:** App Store Connect logic the commands share, in its own target with no terminal I/O: no ArgumentParser, no `print`/`readLine`, no reads of `autoConfirm`/`jsonMode`/`dryRunFlag`. The `ascelerate` target keeps parsing, prompts, colours, aliases, tables and JSON rendering, and calls into the core. Moved so far: the app/version lookups, `ProductVersions`, `createVersion` (used by `apps create-version`), and the pure formatting and retry helpers; the rest moves one area at a time.
 - **Rules:** a lookup that can be ambiguous takes a `choose: Choose<T>` closure (`findVersion`); the CLI wrapper of the same name passes `promptSelection` with its `--yes`/`--json` hint. Alias resolution stays in the CLI (`findApp(bundleID:)` → `resolveAlias` → `findApp(exactBundleID:)`). Errors are `LocalizedError`s, not `ValidationError`. Everything the commands use is `public`.
 - **Moving code:** move it unchanged first, then adapt; verify with `Scripts/compare-with-release.sh` against the released binary (identical output and exit codes) plus `swift test`. A CLI file needs `import AscelerateCore` only when it uses a core symbol; the Ads files can import it (it doesn't re-export ASCKit).
 

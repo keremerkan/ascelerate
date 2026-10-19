@@ -193,10 +193,8 @@ struct AppsCommand: AsyncParsableCommand {
       subcommands: [View.self, Update.self, Import.self, Export.self]
     )
     
-    static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW"]
-    
     static func checkEditable(_ version: Components.Schemas.AppStoreVersion, promotionalTextOnly: Bool) throws {
-      guard let state = version.attributes?.appVersionState, !editableStates.contains(state) else {
+      guard let state = version.attributes?.appVersionState, !VersionLocalizations.editableStates.contains(state) else {
         return // editable — all fields allowed
       }
       if promotionalTextOnly {
@@ -321,22 +319,13 @@ struct AppsCommand: AsyncParsableCommand {
           throw ValidationError("No localization found for locale '\(localeDesc)'.")
         }
         
-        let response = try await client.appStoreVersionLocalizationsUpdateInstance(
-          path: .init(id: localization.id),
-          body: .json(.init(data: .init(
-            attributes: .init(
-              description: description,
-              keywords: keywords,
-              marketingUrl: validURL(marketingURL),
-              promotionalText: promotionalText,
-              supportUrl: validURL(supportURL),
-              whatsNew: whatsNew
-            ),
-            id: localization.id,
-            _type: "appStoreVersionLocalizations"
-          )))
-        ).ok.body.json
-        let attrs = response.data.attributes
+        let updated = try await VersionLocalizations.update(
+          localizationID: localization.id,
+          fields: LocaleFields(
+            description: description, whatsNew: whatsNew, keywords: keywords, promotionalText: promotionalText,
+            marketingURL: marketingURL, supportURL: supportURL),
+          client: client)
+        let attrs = updated.attributes
         let versionString = version.attributes?.versionString ?? "unknown"
         success("Updated", "localization for version \(versionString) [\(attrs?.locale.map { localeName($0) } ?? "—")]")
         
@@ -447,7 +436,7 @@ struct AppsCommand: AsyncParsableCommand {
         version: Components.Schemas.AppStoreVersion, localeUpdates: [String: LocaleFields]
       ) throws -> [String: LocaleFields] {
         guard let state = version.attributes?.appVersionState,
-          !Localizations.editableStates.contains(state)
+          !VersionLocalizations.editableStates.contains(state)
         else {
           return localeUpdates
         }
@@ -480,42 +469,17 @@ struct AppsCommand: AsyncParsableCommand {
               print("  [\(localeName(locale))] Skipped.")
               continue
             }
-            let response = try await client.appStoreVersionLocalizationsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(
-                description: fields.description,
-                keywords: fields.keywords,
-                locale: locale,
-                marketingUrl: validURL(fields.marketingURL),
-                promotionalText: fields.promotionalText,
-                supportUrl: validURL(fields.supportURL),
-                whatsNew: fields.whatsNew
-              ),
-              relationships: .init(
-                appStoreVersion: .init(data: .init(id: versionID, _type: "appStoreVersions"))),
-              _type: "appStoreVersionLocalizations"
-            )))).created.body.json
+            let created = try await VersionLocalizations.create(
+              versionID: versionID, locale: locale, fields: fields, client: client)
             print("  [\(localeName(locale))] \(green("Created."))")
-            if verbose { printLocaleResponse(response.data.attributes) }
+            if verbose { printLocaleResponse(created.attributes) }
             continue
           }
 
-          let response = try await client.appStoreVersionLocalizationsUpdateInstance(
-            path: .init(id: localization.id),
-            body: .json(.init(data: .init(
-              attributes: .init(
-                description: fields.description,
-                keywords: fields.keywords,
-                marketingUrl: validURL(fields.marketingURL),
-                promotionalText: fields.promotionalText,
-                supportUrl: validURL(fields.supportURL),
-                whatsNew: fields.whatsNew
-              ),
-              id: localization.id,
-              _type: "appStoreVersionLocalizations"
-            )))
-          ).ok.body.json
+          let updated = try await VersionLocalizations.update(
+            localizationID: localization.id, fields: fields, client: client)
           print("  [\(localeName(locale))] Updated.")
-          if verbose { printLocaleResponse(response.data.attributes) }
+          if verbose { printLocaleResponse(updated.attributes) }
         }
       }
 
@@ -1333,7 +1297,7 @@ struct AppsCommand: AsyncParsableCommand {
 
         // 1. Version state
         progress("Checking version state...")
-        let editable = versionState.map { Localizations.editableStates.contains($0) } ?? false
+        let editable = versionState.map { VersionLocalizations.editableStates.contains($0) } ?? false
         checks.append(Check(
           group: nil, name: "Version state", passed: editable,
           detail: editable ? stateStr : "\(stateStr) (not editable)"
@@ -3837,15 +3801,6 @@ struct AgeRatingFields: Codable {
   var ageRatingOverride: String?
 }
 
-struct LocaleFields: Codable {
-  var description: String?
-  var whatsNew: String?
-  var keywords: String?
-  var promotionalText: String?
-  var marketingURL: String?
-  var supportURL: String?
-}
-
 struct AppInfoLocaleFields: Codable {
   var name: String?
   var subtitle: String?
@@ -4010,11 +3965,6 @@ func attachBuild(_ buildID: String, toVersion versionID: String, client: ASCClie
     path: .init(id: versionID),
     body: .json(.init(data: .init(id: buildID, _type: "builds")))
   ).noContent
-}
-
-/// A URL option as the API's string, dropping values that don't parse as a URL.
-func validURL(_ value: String?) -> String? {
-  value.flatMap { URL(string: $0)?.absoluteString }
 }
 
 /// Fetches builds for the app matching the given version, prompts the user to pick one, and attaches it.

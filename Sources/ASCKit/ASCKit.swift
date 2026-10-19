@@ -117,6 +117,8 @@ struct DryRunMiddleware: ClientMiddleware {
 /// An App Store Connect error response (HTTP 4xx/5xx) with Apple's error entries.
 public struct ASCError: Error, Sendable {
   public struct Entry: Sendable, Decodable {
+    /// Apple's machine-readable error code, e.g. `STATE_ERROR.ASSETS_PER_PLACEMENT_LIMIT_EXCEEDED`.
+    public let code: String
     public let title: String
     public let detail: String
     /// The reasons behind a state error, keyed by the resource they concern
@@ -124,11 +126,12 @@ public struct ASCError: Error, Sendable {
     /// says what is missing here.
     public let associatedErrors: [String: [Entry]]
 
-    private enum CodingKeys: String, CodingKey { case title, detail, meta }
+    private enum CodingKeys: String, CodingKey { case code, title, detail, meta }
     private struct Meta: Decodable { let associatedErrors: [String: [Entry]]? }
 
     public init(from decoder: any Decoder) throws {
       let container = try decoder.container(keyedBy: CodingKeys.self)
+      code = try container.decodeIfPresent(String.self, forKey: .code) ?? ""
       title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
       detail = try container.decodeIfPresent(String.self, forKey: .detail) ?? ""
       associatedErrors = (try? container.decodeIfPresent(Meta.self, forKey: .meta))??.associatedErrors ?? [:]

@@ -55,3 +55,15 @@ public func createVersion(
   )))).created.body.json
   return .created(response.data)
 }
+
+/// Changes an App Store version's own fields; a nil one is left as it is. App Store Connect takes
+/// both only while the version is editable (`VersionLocalizations.editableStates`).
+public func updateVersion(
+  versionID: String, versionString: String? = nil, copyright: String? = nil, client: ASCClient
+) async throws -> Components.Schemas.AppStoreVersion {
+  try await client.appStoreVersionsUpdateInstance(
+    path: .init(id: versionID),
+    body: .json(.init(data: .init(
+      attributes: .init(copyright: copyright, versionString: versionString), id: versionID, _type: "appStoreVersions")))
+  ).ok.body.json.data
+}

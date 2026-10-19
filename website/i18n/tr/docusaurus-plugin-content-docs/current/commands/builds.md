@@ -46,7 +46,7 @@ ascelerate builds upload MyApp.ipa --api
 ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 ```
 
-`--api` ile build, altool yerine App Store Connect API'nin build yükleme uç noktaları üzerinden, diğer tüm komutlarla aynı API anahtarı kullanılarak gönderilir. Bir `.ipa` veya Mac `.pkg` dosyası (ya da önce dışa aktarılan bir `.xcarchive`) kabul eder, sürümü ve build numarasını içindeki uygulamadan okur, dosyayı paralel parçalar hâlinde yükler (terminalde bir ilerleme çubuğuyla) ve ardından App Store Connect dosyayı kabul edene kadar bekler. Apple dosyayı reddederse komut, Apple'ın hata kodları ve açıklamalarıyla başarısız olur; uyarılar ise başarılı bir yüklemenin ardından yazdırılır. Sonrasında işlenme her zamanki gibi devam eder (bkz. [İşlenmeyi bekleme](#await-processing)).
+`--api` ile build, altool yerine App Store Connect API'nin build yükleme uç noktaları üzerinden, diğer tüm komutlarla aynı API anahtarı kullanılarak gönderilir. Bir `.ipa` veya Mac `.pkg` dosyası (ya da önce dışa aktarılan bir `.xcarchive`) kabul eder, sürümü ve build numarasını içindeki uygulamadan okur, dosyayı parçalar hâlinde tek tek yükler (terminalde bir ilerleme çubuğuyla; bkz. [Parça parça yükleme](../guides/automation.md#upload-chunks)) ve ardından App Store Connect dosyayı kabul edene kadar bekler. Apple dosyayı reddederse komut, Apple'ın hata kodları ve açıklamalarıyla başarısız olur; uyarılar ise başarılı bir yüklemenin ardından yazdırılır. Sonrasında işlenme her zamanki gibi devam eder (bkz. [İşlenmeyi bekleme](#await-processing)).
 
 Şimdilik varsayılan yöntem altool olmaya devam ediyor.
 

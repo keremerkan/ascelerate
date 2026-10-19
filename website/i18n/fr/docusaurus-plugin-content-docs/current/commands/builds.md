@@ -46,7 +46,7 @@ ascelerate builds upload MyApp.ipa --api
 ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 ```
 
-Avec `--api`, le build passe par les téléversements de builds de l'API App Store Connect au lieu d'altool, avec la même clé d'API que toutes les autres commandes. La commande accepte un `.ipa` ou un `.pkg` Mac (ou un `.xcarchive`, exporté au préalable), lit la version et le numéro de build dans l'application qu'il contient, téléverse le fichier en plusieurs morceaux en parallèle, avec une barre de progression dans un terminal, puis attend qu'App Store Connect ait accepté le fichier. Si Apple le refuse, la commande échoue en affichant les codes et les descriptions d'erreur d'Apple ; les avertissements sont affichés après un téléversement réussi. Le traitement se poursuit ensuite comme d'habitude (voir [Attendre le traitement](#attendre-le-traitement)).
+Avec `--api`, le build passe par les téléversements de builds de l'API App Store Connect au lieu d'altool, avec la même clé d'API que toutes les autres commandes. La commande accepte un `.ipa` ou un `.pkg` Mac (ou un `.xcarchive`, exporté au préalable), lit la version et le numéro de build dans l'application qu'il contient, téléverse le fichier par morceaux, un par un (voir [Téléversement par morceaux](../guides/automation.md#upload-chunks)), avec une barre de progression dans un terminal, puis attend qu'App Store Connect ait accepté le fichier. Si Apple le refuse, la commande échoue en affichant les codes et les descriptions d'erreur d'Apple ; les avertissements sont affichés après un téléversement réussi. Le traitement se poursuit ensuite comme d'habitude (voir [Attendre le traitement](#attendre-le-traitement)).
 
 altool reste pour l'instant l'outil par défaut.
 

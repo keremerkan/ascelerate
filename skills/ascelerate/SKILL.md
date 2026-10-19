@@ -753,6 +753,7 @@ When the user asks to add a new language/locale to an app, translate **all** of 
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)
 - Hitting App Store Connect's hourly API limit (3,600/key, rolling): ascelerate waits the `Retry-After` time with a notice on stderr and continues; set `ASCELERATE_MAX_RATE_LIMIT_WAIT=<seconds>` (total per run, `0` = fail at once) for CI. `rate-limit` shows the remaining quota and never waits
+- File uploads (media, `builds upload --api`) send one chunk at a time; on a fast connection with a long round trip, `ASCELERATE_PARALLEL_CHUNKS=<n>` sends n at once
 - Add `--dry-run` (anywhere on the command line, or set `ASCELERATE_DRY_RUN=1`) to try commands or a whole workflow without changing anything: reads run, every write is printed to stderr instead of sent, `builds upload` is skipped, and `run-workflow` continues past blocked steps
 - Add `--json` to read commands for machine-readable output (see JSON output above)
 - Use `ascelerate rate-limit` to check API quota (3600 requests/hour)

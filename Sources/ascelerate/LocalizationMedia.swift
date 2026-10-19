@@ -7,41 +7,7 @@ import Foundation
 /// localization (`product-pages media`) or a product page optimization treatment localization
 /// (`experiments media`). Screenshots and previews go to classic sets; PRODUCT_PAGE_HEADER,
 /// APP_STORE_SEARCH_RESULTS and APP_IPHONE_DUO go through the asset library.
-enum LocalizationMedia {
-  typealias Owner = AssetLibrary.Owner
-
-  static func screenshotSets(on owner: Owner, client: ASCClient) async throws -> [Components.Schemas.AppScreenshotSet] {
-    switch owner {
-    case .versionLocalization(let id):
-      try await client.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    case .productPageLocalization(let id):
-      try await client.appCustomProductPageLocalizationsAppScreenshotSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    case .treatmentLocalization(let id):
-      try await client.appStoreVersionExperimentTreatmentLocalizationsAppScreenshotSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    }
-  }
-
-  static func previewSets(on owner: Owner, client: ASCClient) async throws -> [Components.Schemas.AppPreviewSet] {
-    switch owner {
-    case .versionLocalization(let id):
-      try await client.appStoreVersionLocalizationsAppPreviewSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    case .productPageLocalization(let id):
-      try await client.appCustomProductPageLocalizationsAppPreviewSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    case .treatmentLocalization(let id):
-      try await client.appStoreVersionExperimentTreatmentLocalizationsAppPreviewSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    }
-  }
-
-  /// The classic sets apart from the API's mirrors of library slots (iPhone Duo), which list the
-  /// same media as the slot's placements.
-  static func classicScreenshotSets(on owner: Owner, client: ASCClient) async throws -> [Components.Schemas.AppScreenshotSet] {
-    try await screenshotSets(on: owner, client: client).filter { AssetLibrary.slots[$0.attributes?.screenshotDisplayType ?? ""] == nil }
-  }
-
-  static func classicPreviewSets(on owner: Owner, client: ASCClient) async throws -> [Components.Schemas.AppPreviewSet] {
-    try await previewSets(on: owner, client: client).filter { AssetLibrary.slots["APP_\($0.attributes?.previewType ?? "")"] == nil }
-  }
-
+extension LocalizationMedia {
   /// `[locale, kind, type, state, media ID]` rows for every screenshot, preview and library placement.
   static func rows(locale: String, on owner: Owner, client: ASCClient) async throws -> [[String]] {
     var rows: [[String]] = []

@@ -670,11 +670,7 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.appStoreVersionsUpdateInstance(
-        path: .init(id: appVersion.id),
-        body: .json(.init(data: .init(
-          attributes: .init(copyright: newCopyright), id: appVersion.id, _type: "appStoreVersions")))
-      ).ok
+      _ = try await updateVersion(versionID: appVersion.id, copyright: newCopyright, client: client)
 
       print()
       success("Updated", "copyright for version \(versionString) (\(platformStr)).")

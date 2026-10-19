@@ -46,7 +46,7 @@ ascelerate builds upload MyApp.ipa --api
 ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 ```
 
-`--api` を指定すると、altool の代わりに App Store Connect API のビルドアップロードを使ってビルドを送信します。認証には、他のコマンドと同じ API キーを使用します。`.ipa` または Mac の `.pkg`（あるいは先にエクスポートされる `.xcarchive`）を受け付け、中に含まれるアプリからバージョンとビルド番号を読み取り、ファイルをチャンクに分けて並列でアップロードし（ターミナルではプログレスバーを表示します）、App Store Connect がファイルを受け付けるまで待機します。Apple がファイルを拒否した場合は、Apple のエラーコードと説明を表示してコマンドが失敗します。警告はアップロードが成功した後に表示されます。その後の処理は通常どおり進みます（[処理の待機](#await-processing)を参照）。
+`--api` を指定すると、altool の代わりに App Store Connect API のビルドアップロードを使ってビルドを送信します。認証には、他のコマンドと同じ API キーを使用します。`.ipa` または Mac の `.pkg`（あるいは先にエクスポートされる `.xcarchive`）を受け付け、中に含まれるアプリからバージョンとビルド番号を読み取り、ファイルをチャンクに分けて 1 つずつアップロードし（ターミナルではプログレスバーを表示します。[チャンク単位のアップロード](../guides/automation.md#upload-chunks)を参照）、App Store Connect がファイルを受け付けるまで待機します。Apple がファイルを拒否した場合は、Apple のエラーコードと説明を表示してコマンドが失敗します。警告はアップロードが成功した後に表示されます。その後の処理は通常どおり進みます（[処理の待機](#await-processing)を参照）。
 
 現時点では、引き続き altool がデフォルトです。
 

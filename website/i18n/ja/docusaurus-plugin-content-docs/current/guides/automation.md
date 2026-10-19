@@ -44,6 +44,14 @@ ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes
 
 `ascelerate rate-limit` は残りのリクエスト数を表示します。このコマンドは待ちません。
 
+## チャンク単位のアップロード {#upload-chunks}
+
+App Store Connect は、アップロードされるファイル（スクリーンショット、プレビュー、`builds upload --api` のビルド、その他のメディア）をチャンク単位で受け取ります。ascelerate はチャンクを 1 つずつ送信するため、同じ回線のほかの通信にも帯域が残ります。高速でも Apple のストレージまでの遅延が大きい回線では、複数を同時に送ると早く終わることがあります。`ASCELERATE_PARALLEL_CHUNKS` に同時に送るチャンク数を設定してください。
+
+```bash
+ASCELERATE_PARALLEL_CHUNKS=4 ascelerate apps media upload <bundle-id> media/
+```
+
 ## CIでのXcode署名
 
 `builds archive` とアーカイブからIPAへのエクスポートの両方で、`xcodebuild` に `-allowProvisioningUpdates` を渡します。これがないと、`xcodebuild` はローカルにキャッシュされたプロビジョニングプロファイルのみを使用し、Developer Portalから更新されたものを取得しません。

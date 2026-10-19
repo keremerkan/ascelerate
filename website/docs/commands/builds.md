@@ -46,7 +46,7 @@ ascelerate builds upload MyApp.ipa --api
 ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 ```
 
-With `--api`, the build goes through the App Store Connect API's build uploads instead of altool, using the same API key as every other command. It takes an `.ipa` or a Mac `.pkg` (or an `.xcarchive`, exported first), reads the version and build number from the app inside, uploads the file in parallel chunks with a progress bar on a terminal, and then waits until App Store Connect has accepted the file. If Apple rejects it, the command fails with Apple's error codes and descriptions; warnings are printed after a successful upload. Processing then continues as usual (see [Await processing](#await-processing)).
+With `--api`, the build goes through the App Store Connect API's build uploads instead of altool, using the same API key as every other command. It takes an `.ipa` or a Mac `.pkg` (or an `.xcarchive`, exported first), reads the version and build number from the app inside, uploads the file in chunks with a progress bar on a terminal (one at a time; see [Upload chunks](../guides/automation.md#upload-chunks)), and then waits until App Store Connect has accepted the file. If Apple rejects it, the command fails with Apple's error codes and descriptions; warnings are printed after a successful upload. Processing then continues as usual (see [Await processing](#await-processing)).
 
 altool stays the default for now.
 

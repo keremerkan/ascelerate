@@ -1,16 +1,9 @@
 import ArgumentParser
 import ASCKit
 import AscelerateCore
-import CryptoKit
 import Foundation
 
 // MARK: - Media Types
-
-struct MediaFile {
-  let path: String
-  let fileName: String
-  let fileSize: Int
-}
 
 struct DisplayTypeMedia {
   let folderName: String
@@ -194,64 +187,33 @@ func filterPlan(_ plan: MediaUploadPlan, platform: Platform?) -> (plan: MediaUpl
 
 // MARK: - Upload Helpers
 
-/// An upload operation's fields as `uploadChunks` reads them.
-protocol UploadOperationDescribing {
-  var url: String? { get }
-  var method: String? { get }
-  var offset: Int? { get }
-  var length: Int? { get }
-  var headers: [(name: String, value: String)] { get }
-}
-
-extension Components.Schemas.UploadOperation: UploadOperationDescribing {
-  var headers: [(name: String, value: String)] {
-    (requestHeaders ?? []).compactMap { header in header.name.flatMap { name in header.value.map { (name, $0) } } }
-  }
-}
-
 /// Live byte progress for an upload, drawn in place after whatever the current line shows and
-/// erased when the upload ends, so the caller's "Done." lands where it would have. Bytes come
-/// from URLSession's task delegate, which reports them as they go out.
-final class UploadProgressLine: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+/// erased when the upload ends, so the caller's "Done." lands where it would have.
+final class UploadProgressLine: UploadProgressObserver, @unchecked Sendable {
   private let lock = NSLock()
-  private let total: Int64
-  /// Bytes of the chunks already uploaded.
-  private var finished: Int64 = 0
-  /// Bytes sent so far by each chunk in flight (chunks upload concurrently).
-  private var inFlight: [Int: Int64] = [:]
   private var shownPercent = -1
   private var isActive = true
 
-  init(totalBytes: Int64) {
-    total = totalBytes
-    super.init()
+  init() {
     write("\u{1B}7")  // save the cursor position
   }
 
-  /// Counts a finished chunk; a retried chunk starts again from its own beginning.
-  func chunkFinished(length: Int64) {
-    lock.withLock { finished += length }
+  /// The observer for every upload of a run (`UploadProgress.observe`): a live line on a
+  /// terminal, none otherwise. Either way the line's text so far is flushed first.
+  static let observe: @Sendable (Int64) -> (any UploadProgressObserver)? = { _ in
+    fflush(stdout)
+    return isTerminal ? UploadProgressLine() : nil
   }
 
-  func urlSession(
-    _ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64,
-    totalBytesSent: Int64, totalBytesExpectedToSend: Int64
-  ) {
+  func progress(sent: Int64, total: Int64) {
     lock.withLock {
-      inFlight[task.taskIdentifier] = totalBytesSent
       guard isActive, total > 0 else { return }
-      let sent = min(finished + inFlight.values.reduce(0, +), total)
       let percent = Int(sent * 100 / total)
-      // Only forward: a finished chunk leaves `inFlight` a moment before it's counted.
       guard percent > shownPercent else { return }
       shownPercent = percent
       // Restore the cursor, clear to the end of the line, draw.
       write("\u{1B}8\u{1B}[K\(percent)% (\(formatBytes(Int(sent))) of \(formatBytes(Int(total))))")
     }
-  }
-
-  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
-    _ = lock.withLock { inFlight.removeValue(forKey: task.taskIdentifier) }
   }
 
   /// Erases the progress, leaving the cursor where the line's text ended.
@@ -268,139 +230,11 @@ final class UploadProgressLine: NSObject, URLSessionTaskDelegate, @unchecked Sen
   }
 }
 
-/// One upload operation's request, ready to send from any task.
-private struct UploadChunk: Sendable {
-  let request: URLRequest
-  let offset: Int
-  let length: Int
-}
-
-/// PUTs the file's chunks to their presigned URLs, four at a time.
-func uploadChunks<Operation: UploadOperationDescribing>(filePath: String, operations: [Operation]) async throws {
-  guard FileManager.default.isReadableFile(atPath: filePath) else {
-    throw MediaUploadError.cannotReadFile(filePath)
-  }
-  let chunks = try operations.map { operation in
-    guard let urlString = operation.url,
-      let url = URL(string: urlString),
-      let method = operation.method,
-      let offset = operation.offset,
-      let length = operation.length
-    else {
-      throw MediaUploadError.invalidUploadOperation
-    }
-    var request = URLRequest(url: url)
-    request.httpMethod = method
-    for header in operation.headers {
-      request.setValue(header.value, forHTTPHeaderField: header.name)
-    }
-    return UploadChunk(request: request, offset: offset, length: length)
-  }
-
-  fflush(stdout)
-  let progress = isTerminal ? UploadProgressLine(totalBytes: chunks.reduce(0) { $0 + Int64($1.length) }) : nil
-  defer { progress?.finish() }
-
-  _ = try await boundedConcurrentMap(chunks, maxConcurrent: 4) { chunk in
-    try await upload(chunk, from: filePath, progress: progress)
-  }
-}
-
-private func upload(_ chunk: UploadChunk, from filePath: String, progress: UploadProgressLine?) async throws {
-  // Each chunk reads its own slice: a shared handle's seek position would race.
-  guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
-    throw MediaUploadError.cannotReadFile(filePath)
-  }
-  try fileHandle.seek(toOffset: UInt64(chunk.offset))
-  let chunkData = fileHandle.readData(ofLength: chunk.length)
-  try? fileHandle.close()
-
-  // The storage host rate-limits bursts (HTTP 429 seen live after ~180 sequential uploads);
-  // retry 429/5xx with backoff, honoring Retry-After, and dropped or timed-out connections.
-  // A chunk PUT to its presigned URL is safe to repeat.
-  var delays: [Double] = [2, 5, 15, 30]
-  while true {
-    let response: URLResponse
-    do {
-      (_, response) = try await URLSession.shared.upload(for: chunk.request, from: chunkData, delegate: progress)
-    } catch where isTransientError(error) && !delays.isEmpty {
-      try await Task.sleep(for: .seconds(delays.removeFirst()))
-      continue
-    }
-    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-    if (200...299).contains(statusCode) {
-      progress?.chunkFinished(length: Int64(chunk.length))
-      return
-    }
-    guard statusCode == 429 || (500...599).contains(statusCode), !delays.isEmpty else {
-      throw MediaUploadError.chunkUploadFailed(statusCode)
-    }
-    let delay = delays.removeFirst()
-    let retryAfter = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Retry-After").flatMap(Double.init)
-    try await Task.sleep(for: .seconds(min(retryAfter ?? delay, 60)))
-  }
-}
-
-func md5Hex(filePath: String) throws -> String {
-  guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
-    throw MediaUploadError.cannotReadFile(filePath)
-  }
-  defer { try? fileHandle.close() }
-
-  var md5 = Insecure.MD5()
-  let bufferSize = 1024 * 1024
-
-  while true {
-    let data = fileHandle.readData(ofLength: bufferSize)
-    if data.isEmpty { break }
-    md5.update(data: data)
-  }
-
-  let digest = md5.finalize()
-  return digest.map { String(format: "%02x", $0) }.joined()
-}
-
 extension MediaFile {
   /// Reads a file's name and size from disk, expanding `~` in the path.
   init(readingFrom file: String) throws {
     let path = expandPath(file)
-    let attrs = try FileManager.default.attributesOfItem(atPath: path)
-    self.path = path
-    self.fileName = (path as NSString).lastPathComponent
-    self.fileSize = (attrs[.size] as? Int) ?? 0
-  }
-}
-
-/// Runs the App Store Connect 3-step asset upload protocol shared by app screenshots/previews,
-/// IAP/subscription promotional images, and App Review screenshots:
-/// reserve → upload chunks → commit with checksum.
-///
-/// - Parameters:
-///   - reserve: performs the create POST; returns the new asset's ID and its upload operations.
-///   - commit: performs the PATCH marking the asset uploaded, given the ID and computed MD5 checksum.
-/// - Returns: the new asset's ID.
-func uploadAsset<Operation: UploadOperationDescribing>(
-  filePath: String,
-  reserve: () async throws -> (id: String, operations: [Operation]),
-  commit: (_ id: String, _ md5: String) async throws -> Void
-) async throws -> String {
-  let (id, operations) = try await reserve()
-  guard !operations.isEmpty else {
-    throw MediaUploadError.noUploadOperations
-  }
-  try await uploadChunks(filePath: filePath, operations: operations)
-  let md5 = try md5Hex(filePath: filePath)
-  // The commit PATCH only marks the asset uploaded, so it is safe to repeat.
-  try await withTransientRetry { try await commit(id, md5) }
-  return id
-}
-
-func mediaMimeType(for fileName: String) -> String {
-  let ext = (fileName as NSString).pathExtension.lowercased()
-  switch ext {
-  case "mp4": return "video/mp4"
-  case "mov": return "video/quicktime"
-  default: return "application/octet-stream"
+    try self.init(path: path)
   }
 }
 
@@ -534,178 +368,6 @@ struct LibraryEntry: Sendable {
     hasFile = state != "AWAITING_UPLOAD"
     isPlaced = video.relationships?.placements?.data.map { !$0.isEmpty }
     isUnused = AssetLibrary.isUnused(video)
-  }
-}
-
-// MARK: - Screenshot and Preview Writes
-
-/// Writes to classic screenshot and preview sets, shared by `apps media` (version
-/// localizations) and `product-pages media` (custom product page localizations).
-enum ClassicMedia {
-  /// The localization a new set is created under.
-  typealias Owner = AssetLibrary.Owner
-
-  static func createScreenshotSet(
-    _ displayType: ASCEnum.ScreenshotDisplayType, owner: Owner, client: ASCClient
-  ) async throws -> String {
-    typealias Relationships = Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload
-    let relationships: Relationships
-    switch owner {
-    case .versionLocalization(let id):
-      relationships = .init(appStoreVersionLocalization: .init(data: .init(id: id, _type: "appStoreVersionLocalizations")))
-    case .productPageLocalization(let id):
-      relationships = .init(appCustomProductPageLocalization: .init(data: .init(id: id, _type: "appCustomProductPageLocalizations")))
-    case .treatmentLocalization(let id):
-      relationships = .init(appStoreVersionExperimentTreatmentLocalization: .init(
-        data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations")))
-    }
-    return try await client.appScreenshotSetsCreateInstance(body: .json(.init(data: .init(
-      attributes: .init(screenshotDisplayType: displayType.rawValue),
-      relationships: relationships,
-      _type: "appScreenshotSets"
-    )))).created.body.json.data.id
-  }
-
-  static func createPreviewSet(
-    _ previewType: ASCEnum.PreviewType, owner: Owner, client: ASCClient
-  ) async throws -> String {
-    typealias Relationships = Components.Schemas.AppPreviewSetCreateRequest.DataPayload.RelationshipsPayload
-    let relationships: Relationships
-    switch owner {
-    case .versionLocalization(let id):
-      relationships = .init(appStoreVersionLocalization: .init(data: .init(id: id, _type: "appStoreVersionLocalizations")))
-    case .productPageLocalization(let id):
-      relationships = .init(appCustomProductPageLocalization: .init(data: .init(id: id, _type: "appCustomProductPageLocalizations")))
-    case .treatmentLocalization(let id):
-      relationships = .init(appStoreVersionExperimentTreatmentLocalization: .init(
-        data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations")))
-    }
-    return try await client.appPreviewSetsCreateInstance(body: .json(.init(data: .init(
-      attributes: .init(previewType: previewType.rawValue),
-      relationships: relationships,
-      _type: "appPreviewSets"
-    )))).created.body.json.data.id
-  }
-
-  /// Reserves, uploads and commits a screenshot in `setID`; returns its ID.
-  static func uploadScreenshot(_ file: MediaFile, setID: String, client: ASCClient) async throws -> String {
-    try await uploadAsset(
-      filePath: file.path,
-      reserve: {
-        let response = try await client.appScreenshotsCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(fileName: file.fileName, fileSize: file.fileSize),
-          relationships: .init(appScreenshotSet: .init(data: .init(id: setID, _type: "appScreenshotSets"))),
-          _type: "appScreenshots"
-        )))).created.body.json
-        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-      },
-      commit: { id, md5 in
-        _ = try await client.appScreenshotsUpdateInstance(
-          path: .init(id: id),
-          body: .json(.init(data: .init(
-            attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id, _type: "appScreenshots")))
-        ).ok
-      })
-  }
-
-  /// Reserves, uploads and commits an app preview in `setID`; returns its ID.
-  static func uploadPreview(
-    _ file: MediaFile, setID: String, previewFrame: String? = nil, client: ASCClient
-  ) async throws -> String {
-    try await uploadAsset(
-      filePath: file.path,
-      reserve: {
-        let response = try await client.appPreviewsCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(
-            fileName: file.fileName, fileSize: file.fileSize, mimeType: mediaMimeType(for: file.fileName),
-            previewFrameTimeCode: previewFrame),
-          relationships: .init(appPreviewSet: .init(data: .init(id: setID, _type: "appPreviewSets"))),
-          _type: "appPreviews"
-        )))).created.body.json
-        return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-      },
-      commit: { id, md5 in
-        _ = try await client.appPreviewsUpdateInstance(
-          path: .init(id: id),
-          body: .json(.init(data: .init(
-            attributes: .init(previewFrameTimeCode: previewFrame, sourceFileChecksum: md5, uploaded: true),
-            id: id, _type: "appPreviews")))
-        ).ok
-      })
-  }
-
-  static func deleteScreenshot(_ id: String, client: ASCClient) async throws {
-    _ = try await client.appScreenshotsDeleteInstance(path: .init(id: id)).noContent
-  }
-
-  static func deletePreview(_ id: String, client: ASCClient) async throws {
-    _ = try await client.appPreviewsDeleteInstance(path: .init(id: id)).noContent
-  }
-
-  static func deleteScreenshotSet(_ id: String, client: ASCClient) async throws {
-    _ = try await client.appScreenshotSetsDeleteInstance(path: .init(id: id)).noContent
-  }
-
-  static func deletePreviewSet(_ id: String, client: ASCClient) async throws {
-    _ = try await client.appPreviewSetsDeleteInstance(path: .init(id: id)).noContent
-  }
-
-  /// Deletes every screenshot in a set; returns how many there were. Under dry run the
-  /// stopped deletes count as done.
-  static func deleteAllScreenshots(inSet setID: String, client: ASCClient) async throws -> Int {
-    let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
-    for screenshot in screenshots { _ = try await unlessDryRunStopped { try await deleteScreenshot(screenshot.id, client: client) } }
-    return screenshots.count
-  }
-
-  /// Deletes every preview in a set; returns how many there were. Under dry run the
-  /// stopped deletes count as done.
-  static func deleteAllPreviews(inSet setID: String, client: ASCClient) async throws -> Int {
-    let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
-    for preview in previews { _ = try await unlessDryRunStopped { try await deletePreview(preview.id, client: client) } }
-    return previews.count
-  }
-
-  /// Sets the order of a screenshot set's screenshots.
-  static func reorderScreenshots(setID: String, ids: [String], client: ASCClient) async throws {
-    _ = try await client.appScreenshotSetsAppScreenshotsReplaceToManyRelationship(
-      path: .init(id: setID),
-      body: .json(.init(data: ids.map { .init(id: $0, _type: "appScreenshots") }))
-    ).noContent
-  }
-
-  /// Sets the order of a preview set's previews.
-  static func reorderPreviews(setID: String, ids: [String], client: ASCClient) async throws {
-    _ = try await client.appPreviewSetsAppPreviewsReplaceToManyRelationship(
-      path: .init(id: setID),
-      body: .json(.init(data: ids.map { .init(id: $0, _type: "appPreviews") }))
-    ).noContent
-  }
-}
-
-enum MediaUploadError: LocalizedError {
-  case cannotReadFile(String)
-  case invalidUploadOperation
-  case chunkUploadFailed(Int)
-  case noUploadOperations
-  case unsupportedImage(String, accepted: [String])
-  case unsupportedVideo(String, accepted: [String])
-
-  var errorDescription: String? {
-    switch self {
-    case .unsupportedImage(let image, let accepted):
-      return "A \(image) image is not accepted here; use \(accepted.joined(separator: ", "))."
-    case .unsupportedVideo(let video, let accepted):
-      return "A video of \(video) is not accepted here; use \(accepted.joined(separator: "; or "))."
-    case .cannotReadFile(let path):
-      return "Cannot read file at '\(path)'."
-    case .invalidUploadOperation:
-      return "Upload operation missing required fields."
-    case .chunkUploadFailed(let statusCode):
-      return "Chunk upload failed with status \(statusCode)."
-    case .noUploadOperations:
-      return "No upload operations returned by the API."
-    }
   }
 }
 
@@ -1758,20 +1420,8 @@ extension AppsCommand {
         }
         let app = try await findApp(bundleID: bundleID, client: client)
         let libraryID = try await AssetLibrary.libraryID(appID: app.id, client: client)
-        let images = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await withTransientRetry {
-            try await client.appAssetLibrariesImagesGetToManyRelated(
-              path: .init(id: libraryID), query: .init(limit: 200, include: [.placements], limitPlacements: 1)
-            ).ok.body.json
-          }
-        }.flatMap(\.data)
-        let videos = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await withTransientRetry {
-            try await client.appAssetLibrariesVideosGetToManyRelated(
-              path: .init(id: libraryID), query: .init(limit: 200, include: [.placements], limitPlacements: 1)
-            ).ok.body.json
-          }
-        }.flatMap(\.data)
+        let images = try await AssetLibrary.images(libraryID: libraryID, client: client)
+        let videos = try await AssetLibrary.videos(libraryID: libraryID, client: client)
         let entries = images.map(LibraryEntry.init) + videos.map(LibraryEntry.init)
 
         // An asset whose placements didn't come back counts as placed.

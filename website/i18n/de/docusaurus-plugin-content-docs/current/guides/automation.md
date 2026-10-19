@@ -44,6 +44,14 @@ ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes
 
 `ascelerate rate-limit` zeigt, wie viele Anfragen übrig sind; dieser Befehl wartet nie.
 
+## Upload in Teilen {#upload-chunks}
+
+App Store Connect nimmt hochgeladene Dateien (Screenshots, Vorschauen, Builds mit `builds upload --api` und andere Medien) in Teilen an. ascelerate sendet sie nacheinander und lässt so Bandbreite für alles andere auf der Verbindung. Bei einer schnellen Verbindung mit hoher Latenz zu Apples Speicher kann es schneller gehen, mehrere gleichzeitig zu senden: Setzen Sie `ASCELERATE_PARALLEL_CHUNKS` auf die Anzahl der Teile, die gleichzeitig gesendet werden.
+
+```bash
+ASCELERATE_PARALLEL_CHUNKS=4 ascelerate apps media upload <bundle-id> media/
+```
+
 ## Xcode-Signierung in CI
 
 Sowohl `builds archive` als auch der Export von Archiv zu IPA übergeben `-allowProvisioningUpdates` an `xcodebuild`. Ohne dieses Flag verwendet `xcodebuild` nur lokal zwischengespeicherte Provisioning-Profile und lädt keine aktualisierten Profile aus dem Developer Portal herunter.

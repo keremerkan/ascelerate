@@ -44,6 +44,14 @@ ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes
 
 `ascelerate rate-limit` kalan istek sayısını gösterir; bu komut hiçbir zaman beklemez.
 
+## Parça parça yükleme {#upload-chunks}
+
+App Store Connect yüklenen dosyaları (ekran görüntüleri, önizlemeler, `builds upload --api` ile gönderilen build'ler ve diğer medya) parçalar hâlinde alır. ascelerate parçaları tek tek gönderir; böylece bağlantıdaki diğer işler için de bant genişliği kalır. Hızlı ama Apple'ın depolama sunucularına gecikmesi yüksek bir bağlantıda birkaç parçayı aynı anda göndermek yüklemeyi kısaltabilir: `ASCELERATE_PARALLEL_CHUNKS` değişkenini aynı anda gönderilecek parça sayısına ayarlayın.
+
+```bash
+ASCELERATE_PARALLEL_CHUNKS=4 ascelerate apps media upload <bundle-id> media/
+```
+
 ## CI'da Xcode imzalama
 
 Hem `builds archive` hem de arşivden IPA'ya dışa aktarma, `xcodebuild`'e `-allowProvisioningUpdates` geçirir. Bu olmadan `xcodebuild` yalnızca yerel olarak önbelleğe alınmış provisioning profillerini kullanır ve Developer Portal'dan güncellenmiş olanları almaz.

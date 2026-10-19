@@ -1402,6 +1402,14 @@ A command stops at its first blocked write, or reports each blocked request as f
 
 App Store Connect allows 3,600 API requests per hour for your key, counted over a rolling hour. When a long command uses them up, ascelerate waits until App Store Connect allows requests again, shows when it will continue, and carries on (Ctrl-C stops it). To fail instead, e.g. in CI, set `ASCELERATE_MAX_RATE_LIMIT_WAIT` to the most seconds a run may wait in total (`0` fails at the first rate-limited request). `ascelerate rate-limit` shows what's left and never waits.
 
+### Upload chunks
+
+App Store Connect takes uploaded files (screenshots, previews, builds with `builds upload --api`, and other media) in chunks. ascelerate sends them one at a time, which leaves bandwidth for everything else on the connection. On a fast connection with a long round trip to Apple's storage, sending several at once can finish sooner: set `ASCELERATE_PARALLEL_CHUNKS` to the number of chunks to send at the same time.
+
+```bash
+ASCELERATE_PARALLEL_CHUNKS=4 ascelerate apps media upload <bundle-id> media/
+```
+
 ### Version
 
 ```bash

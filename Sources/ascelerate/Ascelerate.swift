@@ -1,5 +1,6 @@
 import ArgumentParser
 import ASCKit
+import AscelerateCore
 import Foundation
 
 @main
@@ -32,6 +33,15 @@ struct Ascelerate: AsyncParsableCommand {
   }
 
   static func main() async {
+    // Asset uploads send one chunk at a time unless ASCELERATE_PARALLEL_CHUNKS asks for more, and
+    // each shows its progress on a terminal.
+    let parallelChunks = ProcessInfo.processInfo.environment["ASCELERATE_PARALLEL_CHUNKS"].flatMap(Int.init) ?? 1
+    await UploadOptions.$parallelChunks.withValue(max(1, parallelChunks)) {
+      await UploadProgress.$observe.withValue(UploadProgressLine.observe) { await runCommandLine() }
+    }
+  }
+
+  private static func runCommandLine() async {
     // Ignore SIGPIPE so a downstream reader that closes the pipe early (e.g. `ascelerate ... | head`)
     // can't terminate us mid-operation — which for write commands could leave changes half-applied.
     // Writes to the broken stdout then fail silently instead of killing the process.

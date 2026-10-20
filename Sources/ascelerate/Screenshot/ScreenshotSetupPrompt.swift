@@ -190,6 +190,8 @@ enum ScreenshotSetupPrompt {
 
       Work through the steps in order. Each step ends with a check: don't move on while it fails. Ask the user when a decision is theirs (which screens, what demo content) or when a step needs Xcode's interface.
 
+      \(conversationLanguage)
+
       ## What's here already
 
       Detected in \(root) by `ascelerate screenshot setup-prompt`. Run it again later to see what's left.
@@ -318,6 +320,8 @@ enum ScreenshotSetupPrompt {
 
       You're building a small web app that turns this app's captured screenshots into its App Store images: each screenshot in its device frame on a designed background with a headline, in every language, at the exact sizes App Store Connect takes, exported into the folder layout the ascelerate command-line tool (version \(Ascelerate.appVersion)) uploads.
 
+      \(conversationLanguage)
+
       ## What's here already
 
       Detected in \(root) by `ascelerate screenshot setup-prompt --design`. Run it again after changing the capture setup (framing, for example) to see the current state.
@@ -405,6 +409,17 @@ enum ScreenshotSetupPrompt {
       Tell the user how to change the copy and the design, how to export again, and how to upload: `ascelerate apps media upload <bundle ID> export --platform ios --replace`, or the ascelerate app.
 
       """
+  }
+
+  /// Which language to talk to the user in. These instructions are in English, which would
+  /// otherwise set the conversation's language; the Mac's preferred language is the user's.
+  private static var conversationLanguage: String {
+    let code = Locale(identifier: Locale.preferredLanguages.first ?? "en").language.languageCode?.identifier ?? "en"
+    let keep = "Keep commands, code and file names as they are."
+    guard code != "en", let language = Locale(identifier: "en").localizedString(forLanguageCode: code) else {
+      return "Talk with the user in the language they write to you in. \(keep)"
+    }
+    return "Talk with the user in \(language) (their Mac's language) unless they write to you in another language. \(keep)"
   }
 
   private static func list(_ values: [String]) -> String {

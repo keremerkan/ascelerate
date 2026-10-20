@@ -247,6 +247,8 @@ filter:
     - /v1/analyticsReports/{id}/instances
     - /v1/analyticsReportInstances/{id}/segments
     - /v1/apps/{id}/customerReviews
+    - /v1/apps/{id}/customerReviewSummarizations
+    - /v1/appStoreVersions/{id}/customerReviews
     - /v1/customerReviews/{id}
     - /v1/customerReviewResponses
     - /v1/customerReviewResponses/{id}

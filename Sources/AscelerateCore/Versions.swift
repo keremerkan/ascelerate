@@ -56,6 +56,14 @@ public func createVersion(
   return .created(response.data)
 }
 
+/// Deletes an App Store version. Deleting a platform's only version, never submitted, removes the
+/// platform from the app (verified live 2026-10-20 on PREPARE_FOR_SUBMISSION versions, the app's
+/// original iOS platform included: HTTP 204, and the platform was gone from App Store Connect). The
+/// version's screenshots and previews go with it; their files stay in the app's asset library.
+public func deleteVersion(id: String, client: ASCClient) async throws {
+  _ = try await client.appStoreVersionsDeleteInstance(path: .init(id: id)).noContent
+}
+
 /// Changes an App Store version's own fields; a nil one is left as it is. App Store Connect takes
 /// both only while the version is editable (`VersionLocalizations.editableStates`).
 public func updateVersion(

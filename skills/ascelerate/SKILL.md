@@ -450,7 +450,7 @@ ascelerate events localizations import <app> <ref-or-id> --file event-locales.js
 
 # Media (png/jpg -> screenshot, mp4/mov -> video clip)
 ascelerate events media list <app> <ref-or-id>
-ascelerate events media upload <app> <ref-or-id> --locale en-US --asset-type EVENT_CARD|EVENT_DETAILS_PAGE <file> [--preview-frame 00:00:03]
+ascelerate events media upload <app> <ref-or-id> --locale en-US --asset-type EVENT_CARD|EVENT_DETAILS_PAGE <file> [--preview-frame 00:00:03:00]
 ascelerate events media delete <app> <ref-or-id> <media-id>
 ```
 
@@ -477,7 +477,7 @@ ascelerate product-pages localizations import <app> <name-or-id> --file page-loc
 # Media (png/jpg -> screenshot by --display-type, mp4/mov -> app preview by --preview-type; set auto-created)
 ascelerate product-pages media list <app> <name-or-id>
 ascelerate product-pages media upload <app> <name-or-id> --locale en-US --display-type APP_IPHONE_67 shot.png
-ascelerate product-pages media upload <app> <name-or-id> --locale en-US --preview-type APP_IPHONE_67 clip.mp4 [--preview-frame 00:00:03]
+ascelerate product-pages media upload <app> <name-or-id> --locale en-US --preview-type APP_IPHONE_67 clip.mp4 [--preview-frame 00:00:03:00]
 ascelerate product-pages media delete <app> <name-or-id> <media-id>
 ```
 

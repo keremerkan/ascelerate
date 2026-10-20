@@ -610,7 +610,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Preview type for videos (e.g. APP_IPHONE_67).")
       var previewType: String?
 
-      @Option(name: .long, help: "Preview frame timecode for app previews (e.g. 00:00:03).")
+      @Option(name: .long, help: "Preview frame timecode for app previews, hh:mm:ss:frame (e.g. 00:00:03:00).")
       var previewFrame: String?
 
       @Argument(help: "Path to the media file.", completion: .file(extensions: ["png", "jpg", "jpeg", "mp4", "mov"]))

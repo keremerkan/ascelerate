@@ -176,12 +176,32 @@ public enum AssetLibrary {
   /// such as APP_IPHONE_DUO). Read live 2026-10-19, every one is a single size, in both
   /// orientations, and most refuse an alpha channel.
   public static func screenshotSpecs(client: ASCClient) async throws -> [String: [ImageSpec]] {
+    let byGroup = try await refDataSpecs(placementType: "APP_SCREENSHOT", client: client).images
+    let slotGroups = slots.filter { $0.value.placementType == .appScreenshot }.mapValues(\.group)
+    return displayTypeGroups.merging(slotGroups) { classic, _ in classic }.compactMapValues { byGroup[$0] }
+  }
+
+  /// The video specs each display type's app previews accept, keyed by display type, like
+  /// `screenshotSpecs` (iPhone Duo's from its slot). Read live 2026-10-19: iPhone and iPhone Duo
+  /// 1920×886 or 886×1920, iPad 13" 1600×1200 or 1200×1600, all 15–30 s at 23–30 fps with audio.
+  public static func previewSpecs(client: ASCClient) async throws -> [String: [VideoSpec]] {
+    let byGroup = try await refDataSpecs(placementType: "APP_PREVIEW", client: client).videos
+    let slotGroups = slots.filter { $0.value.videoPlacementType == .appPreview }.mapValues(\.group)
+    return displayTypeGroups.merging(slotGroups) { classic, _ in classic }.compactMapValues { byGroup[$0] }
+  }
+
+  /// The image and video specs of a placement type's groups in `appAssetLibraryRefData`, keyed by
+  /// placement group.
+  private static func refDataSpecs(
+    placementType: String, client: ASCClient
+  ) async throws -> (images: [String: [ImageSpec]], videos: [String: [VideoSpec]]) {
     let data = try await withTransientRetry {
-      try await client.appAssetLibraryRefDataGetCollection(query: .init(filterPlacementTypes: ["APP_SCREENSHOT"])).ok.body.json.data
+      try await client.appAssetLibraryRefDataGetCollection(query: .init(filterPlacementTypes: [placementType])).ok.body.json.data
     }
-    var byGroup: [String: [ImageSpec]] = [:]
+    var images: [String: [ImageSpec]] = [:]
+    var videos: [String: [VideoSpec]] = [:]
     for datum in data {
-      let specs = Dictionary(
+      let imageSpecs = Dictionary(
         (datum.attributes?.imageSpecs ?? []).compactMap { spec -> (String, ImageSpec)? in
           guard let id = spec.specId, let size = spec.dimensions,
             let minWidth = size.minWidth, let maxWidth = size.maxWidth, let minHeight = size.minHeight,
@@ -192,15 +212,43 @@ public enum AssetLibrary {
             widths: minWidth...maxWidth, heights: minHeight...maxHeight, aspect: nil, extensions: extensions,
             alphaAllowed: spec.alphaAllowed ?? true))
         }, uniquingKeysWith: { first, _ in first })
-      for type in datum.attributes?.placementTypes ?? [] where type.placementTypeId == "APP_SCREENSHOT" {
+      let videoSpecs = Dictionary(
+        (datum.attributes?.videoSpecs ?? []).compactMap { spec -> (String, VideoSpec)? in
+          guard let id = spec.specId, let size = spec.dimensions,
+            let minWidth = size.minWidth, let maxWidth = size.maxWidth, let minHeight = size.minHeight,
+            let maxHeight = size.maxHeight,
+            let shortest = spec.duration?.min.flatMap(seconds(iso8601:)),
+            let longest = spec.duration?.max.flatMap(seconds(iso8601:))
+          else { return nil }
+          let rates = (spec.frameRates ?? []).compactMap { rate in
+            rate.minFps.flatMap { low in rate.maxFps.map { Double(low)...Double($0) } }
+          }
+          return (id, VideoSpec(
+            widths: minWidth...maxWidth, heights: minHeight...maxHeight, aspect: nil, seconds: shortest...longest,
+            frameRates: rates, requiresAudio: spec.audioRequired ?? false))
+        }, uniquingKeysWith: { first, _ in first })
+      for type in datum.attributes?.placementTypes ?? [] where type.placementTypeId == placementType {
         for mapping in type.specMappings ?? [] {
           guard let group = mapping.placementGroupId else { continue }
-          byGroup[group, default: []] += (mapping.specs ?? []).compactMap { specs[$0] }
+          images[group, default: []] += (mapping.specs ?? []).compactMap { imageSpecs[$0] }
+          videos[group, default: []] += (mapping.specs ?? []).compactMap { videoSpecs[$0] }
         }
       }
     }
-    let slotGroups = slots.filter { $0.value.placementType == .appScreenshot }.mapValues(\.group)
-    return displayTypeGroups.merging(slotGroups) { classic, _ in classic }.compactMapValues { byGroup[$0] }
+    return (images, videos)
+  }
+
+  /// Seconds in an ISO 8601 duration as the reference data gives them ("PT15S", "PT1M30S").
+  private static func seconds(iso8601 duration: String) -> Double? {
+    guard let match = duration.wholeMatch(of: /PT(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?/) else { return nil }
+    return Double(match.1.map { Int($0) ?? 0 } ?? 0) * 60 + (match.2.flatMap { Double($0) } ?? 0)
+  }
+
+  /// The classic preview type of a screenshot display type: its name without `APP_`. Watch and
+  /// iMessage screenshots have no previews.
+  public static func previewType(of displayType: String) -> ASCEnum.PreviewType? {
+    guard displayType.hasPrefix("APP_"), !displayType.hasPrefix("APP_WATCH_") else { return nil }
+    return ASCEnum.PreviewType(rawValue: String(displayType.dropFirst(4)))
   }
 
   /// Places a library image or video on an App Store version localization and returns the

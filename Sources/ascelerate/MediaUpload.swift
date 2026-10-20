@@ -64,7 +64,7 @@ func scanMediaFolder(at path: String) throws -> MediaUploadPlan {
       }
 
       let screenshotType = ASCEnum.ScreenshotDisplayType(rawValue: displayTypeName)
-      let pvType = previewTypeForDisplayType(displayTypeName)
+      let pvType = AssetLibrary.previewType(of: displayTypeName)
 
       let slot = AssetLibrary.slots[displayTypeName]
       if screenshotType == nil && slot == nil {
@@ -134,14 +134,6 @@ func scanMediaFolder(at path: String) throws -> MediaUploadPlan {
   )
 }
 
-func previewTypeForDisplayType(_ rawValue: String) -> ASCEnum.PreviewType? {
-  if rawValue.hasPrefix("APP_WATCH_") || rawValue.hasPrefix("IMESSAGE_") {
-    return nil
-  }
-  guard rawValue.hasPrefix("APP_") else { return nil }
-  let previewRaw = String(rawValue.dropFirst(4))
-  return ASCEnum.PreviewType(rawValue: previewRaw)
-}
 
 /// The App Store version platform a screenshot display type belongs to.
 /// Watch and iMessage display types ride along iOS app versions.

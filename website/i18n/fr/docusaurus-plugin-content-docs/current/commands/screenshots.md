@@ -14,6 +14,19 @@ ascelerate screenshot init                  # Create config and helper in ascele
 ascelerate screenshot                       # Capture screenshots
 ```
 
+## Configuration avec un agent de codage IA
+
+La capture demande une cible de tests UI, le helper de capture, un mode capture avec du contenu de démonstration dans l'app, les tests eux-mêmes et la configuration. Un agent de codage peut mettre tout cela en place :
+
+```bash
+ascelerate screenshot setup-prompt          # Print the setup instructions
+ascelerate screenshot setup-prompt --copy   # Copy them to the clipboard
+```
+
+Collez les instructions dans un agent de codage qui travaille dans le projet (Claude Code, Codex, Cursor, l'assistant de codage de Xcode…). Elles partent de ce que le projet contient déjà (projets, schemes, cibles de tests UI, localisations, configuration, version du helper, simulateurs installés) : relancer la commande montre donc ce qu'il reste à faire. Elles couvrent aussi les contours d'appareil, que vous téléchargez vous-même depuis les [ressources de design](https://developer.apple.com/design/resources/) d'Apple (Product Bezels).
+
+`--design` affiche à la place les instructions d'un générateur de designs : une petite application web dans `app-store-screenshots/` qui transforme les captures encadrées en images App Store avec des titres dans chaque langue, exportées pour `ascelerate apps media upload` (voir [Médias](media.md#designing-app-store-images)).
+
 ## Commandes
 
 ### Exécuter
@@ -21,9 +34,12 @@ ascelerate screenshot                       # Capture screenshots
 ```bash
 ascelerate screenshot                       # Capture screenshots
 ascelerate screenshot run                   # Same as above
+ascelerate screenshot --json-events         # Progress as JSON Lines events on stdout
 ```
 
 Utilise toujours `ascelerate/screenshot.yml` dans le répertoire courant.
+
+`--json-events` sert aux outils qui suivent une exécution : stdout contient un objet JSON par ligne (`start`, `build`, `language`, `device` avec des étapes comme `testing`, `passed`, `failed` et `collected`, et `finished` avec tous les résultats), et la progression lisible passe sur stderr.
 
 ### Initialiser
 
@@ -31,13 +47,14 @@ Utilise toujours `ascelerate/screenshot.yml` dans le répertoire courant.
 ascelerate screenshot init
 ```
 
-Crée `ascelerate/screenshot.yml` et `ascelerate/ScreenshotHelper.swift` dans le répertoire `ascelerate/`. Demande confirmation avant l'écriture. Ne remplace pas les fichiers existants.
+Crée `ascelerate/screenshot.yml` et `ascelerate/ScreenshotHelper.swift` dans le répertoire `ascelerate/`. Demande confirmation avant l'écriture (`-y` l'évite). Ne remplace pas les fichiers existants.
 
 ### Créer le helper
 
 ```bash
 ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
+ascelerate screenshot create-helper -o UITests/ScreenshotHelper.swift -y   # Overwrite without asking
 ```
 
 ### Encadrement
@@ -52,9 +69,10 @@ Encadre les captures d'écran avec des contours d'appareil. Utilise les paramèt
 
 ```bash
 ascelerate screenshot doctor                   # Check config and environment
+ascelerate screenshot doctor --json            # The same as JSON
 ```
 
-Vérifie la configuration et l'environnement : fichier de configuration, existence du projet/workspace, disponibilité de xcodebuild et simctl, simulateurs, version du fichier helper, fichiers de contour d'appareil et répertoires de sortie. Affiche une liste de contrôle avec des indicateurs de réussite/échec/avertissement.
+Vérifie la configuration et l'environnement : fichier de configuration, existence du projet/workspace, disponibilité de xcodebuild et simctl, simulateurs, version du fichier helper, fichiers de contour d'appareil et répertoires de sortie. Affiche une liste de contrôle avec des indicateurs de réussite/échec/avertissement. Avec `--json`, il affiche la configuration (scheme, appareils, langues, répertoire de sortie) et chaque vérification avec son statut (`pass`, `warn` ou `fail`).
 
 ## Configuration (`ascelerate/screenshot.yml`)
 

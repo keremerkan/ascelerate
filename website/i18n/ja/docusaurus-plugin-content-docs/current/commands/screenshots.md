@@ -14,6 +14,19 @@ ascelerate screenshot init                  # Create config and helper in ascele
 ascelerate screenshot                       # Capture screenshots
 ```
 
+## AIコーディングエージェントでセットアップ
+
+キャプチャには、UIテストターゲット、スクリーンショットヘルパー、アプリ内のデモコンテンツ付きスクリーンショットモード、テスト本体、設定が必要です。コーディングエージェントがこれらをすべてセットアップできます：
+
+```bash
+ascelerate screenshot setup-prompt          # Print the setup instructions
+ascelerate screenshot setup-prompt --copy   # Copy them to the clipboard
+```
+
+指示を、プロジェクトで作業するコーディングエージェント（Claude Code、Codex、Cursor、Xcodeのコーディングアシスタントなど）に貼り付けます。指示はプロジェクトの現状（プロジェクト、スキーム、UIテストターゲット、ローカライズ、設定、ヘルパーのバージョン、インストール済みのシミュレーター）から始まるため、コマンドを再実行すると残りの作業がわかります。デバイスフレームも扱います。フレームはAppleの[デザインリソース](https://developer.apple.com/design/resources/)（Product Bezels）からご自身でダウンロードします。
+
+`--design` を指定すると、代わりにデザインジェネレーターの指示を出力します。`app-store-screenshots/` に置く小さなWebアプリで、フレーミングしたスクリーンショットを各言語の見出し付きApp Store画像に変換し、`ascelerate apps media upload` 用にエクスポートします（[メディア](media.md#designing-app-store-images)を参照）。
+
 ## コマンド
 
 ### 実行
@@ -21,9 +34,12 @@ ascelerate screenshot                       # Capture screenshots
 ```bash
 ascelerate screenshot                       # Capture screenshots
 ascelerate screenshot run                   # Same as above
+ascelerate screenshot --json-events         # Progress as JSON Lines events on stdout
 ```
 
 常にカレントディレクトリの `ascelerate/screenshot.yml` を使用します。
+
+`--json-events` は実行を追跡する他のツール向けです。stdoutには1行に1つのJSONオブジェクト（`start`、`build`、`language`、`testing`・`passed`・`failed`・`collected` などのステップを持つ `device`、すべての結果を含む `finished`）が出力され、読みやすい進捗はstderrに移ります。
 
 ### 初期化
 
@@ -31,13 +47,14 @@ ascelerate screenshot run                   # Same as above
 ascelerate screenshot init
 ```
 
-`ascelerate/` ディレクトリに `ascelerate/screenshot.yml` と `ascelerate/ScreenshotHelper.swift` の両方を作成します。書き込み前に確認を求めます。既存のファイルは上書きしません。
+`ascelerate/` ディレクトリに `ascelerate/screenshot.yml` と `ascelerate/ScreenshotHelper.swift` の両方を作成します。書き込み前に確認を求めます（`-y` で省略できます）。既存のファイルは上書きしません。
 
 ### ヘルパー作成
 
 ```bash
 ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
+ascelerate screenshot create-helper -o UITests/ScreenshotHelper.swift -y   # Overwrite without asking
 ```
 
 ### フレーミング
@@ -52,9 +69,10 @@ ascelerate screenshot frame                    # Frame screenshots with device b
 
 ```bash
 ascelerate screenshot doctor                   # Check config and environment
+ascelerate screenshot doctor --json            # The same as JSON
 ```
 
-スクリーンショットの設定と環境を検証します：設定ファイル、プロジェクト/ワークスペースの存在、xcodebuildとsimctlの利用可能性、シミュレーターデバイス、ヘルパーファイルのバージョン、デバイスベゼルファイル、出力ディレクトリをチェックします。合格/不合格/警告のインジケーター付きチェックリストを表示します。
+スクリーンショットの設定と環境を検証します：設定ファイル、プロジェクト/ワークスペースの存在、xcodebuildとsimctlの利用可能性、シミュレーターデバイス、ヘルパーファイルのバージョン、デバイスベゼルファイル、出力ディレクトリをチェックします。合格/不合格/警告のインジケーター付きチェックリストを表示します。`--json` を指定すると、設定（スキーム、デバイス、言語、出力ディレクトリ）と各チェックのステータス（`pass`、`warn`、`fail`）をJSONで出力します。
 
 ## 設定（`ascelerate/screenshot.yml`）
 

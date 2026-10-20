@@ -14,6 +14,19 @@ ascelerate screenshot init                  # Create config and helper in ascele
 ascelerate screenshot                       # Capture screenshots
 ```
 
+## Mit einem KI-Coding-Agenten einrichten
+
+Für die Aufnahme braucht es ein UI-Test-Target, den Screenshot-Helper, einen Screenshot-Modus mit Demo-Inhalten in der App, die Tests selbst und die Konfiguration. Ein Coding-Agent kann all das einrichten:
+
+```bash
+ascelerate screenshot setup-prompt          # Print the setup instructions
+ascelerate screenshot setup-prompt --copy   # Copy them to the clipboard
+```
+
+Fügen Sie die Anleitung in einen Coding-Agenten ein, der im Projekt arbeitet (Claude Code, Codex, Cursor, der Coding-Assistent von Xcode …). Sie geht von dem aus, was das Projekt schon hat (Projekte, Schemes, UI-Test-Targets, Lokalisierungen, Konfiguration, Helper-Version, installierte Simulatoren), ein erneuter Aufruf zeigt also, was noch fehlt. Sie behandelt auch Geräterahmen, die Sie selbst aus Apples [Design Resources](https://developer.apple.com/design/resources/) (Product Bezels) herunterladen.
+
+`--design` gibt stattdessen die Anleitung für einen Design-Generator aus: eine kleine Web-App in `app-store-screenshots/`, die die gerahmten Screenshots in App Store-Bilder mit Überschriften in jeder Sprache verwandelt und für `ascelerate apps media upload` exportiert (siehe [Medien](media.md#designing-app-store-images)).
+
 ## Befehle
 
 ### Ausführen
@@ -21,9 +34,12 @@ ascelerate screenshot                       # Capture screenshots
 ```bash
 ascelerate screenshot                       # Capture screenshots
 ascelerate screenshot run                   # Same as above
+ascelerate screenshot --json-events         # Progress as JSON Lines events on stdout
 ```
 
 Verwendet immer `ascelerate/screenshot.yml` im aktuellen Verzeichnis.
+
+`--json-events` ist für andere Tools gedacht, die einen Lauf verfolgen: stdout enthält ein JSON-Objekt pro Zeile (`start`, `build`, `language`, `device` mit Schritten wie `testing`, `passed`, `failed` und `collected` sowie `finished` mit allen Ergebnissen), der lesbare Fortschritt wandert nach stderr.
 
 ### Initialisieren
 
@@ -31,13 +47,14 @@ Verwendet immer `ascelerate/screenshot.yml` im aktuellen Verzeichnis.
 ascelerate screenshot init
 ```
 
-Erstellt sowohl `ascelerate/screenshot.yml` als auch `ascelerate/ScreenshotHelper.swift` im Verzeichnis `ascelerate/`. Fragt vor dem Schreiben um Bestätigung. Überschreibt keine bestehenden Dateien.
+Erstellt sowohl `ascelerate/screenshot.yml` als auch `ascelerate/ScreenshotHelper.swift` im Verzeichnis `ascelerate/`. Fragt vor dem Schreiben um Bestätigung (`-y` überspringt sie). Überschreibt keine bestehenden Dateien.
 
 ### Helper erstellen
 
 ```bash
 ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
+ascelerate screenshot create-helper -o UITests/ScreenshotHelper.swift -y   # Overwrite without asking
 ```
 
 ### Rahmen
@@ -52,9 +69,10 @@ Rahmt aufgenommene Screenshots mit Geräterahmen-Bildern. Verwendet die `frameDe
 
 ```bash
 ascelerate screenshot doctor                   # Check config and environment
+ascelerate screenshot doctor --json            # The same as JSON
 ```
 
-Überprüft die Screenshot-Konfiguration und Umgebung: Konfigurationsdatei, Projekt-/Workspace-Existenz, xcodebuild- und simctl-Verfügbarkeit, Simulatorgeräte, Helper-Dateiversion, Geräterahmen-Dateien und Ausgabeverzeichnisse. Zeigt eine Checkliste mit Bestanden/Fehlgeschlagen/Warnung-Indikatoren.
+Überprüft die Screenshot-Konfiguration und Umgebung: Konfigurationsdatei, Projekt-/Workspace-Existenz, xcodebuild- und simctl-Verfügbarkeit, Simulatorgeräte, Helper-Dateiversion, Geräterahmen-Dateien und Ausgabeverzeichnisse. Zeigt eine Checkliste mit Bestanden/Fehlgeschlagen/Warnung-Indikatoren. Mit `--json` gibt er die Konfiguration (Scheme, Geräte, Sprachen, Ausgabeverzeichnis) und jede Prüfung mit ihrem Status (`pass`, `warn` oder `fail`) aus.
 
 ## Konfiguration (`ascelerate/screenshot.yml`)
 

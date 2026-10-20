@@ -5,7 +5,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "screenshot",
         abstract: "Capture App Store screenshots from simulators.",
-        subcommands: [Run.self, Init.self, CreateHelper.self, Frame.self, Doctor.self],
+        subcommands: [Run.self, Init.self, CreateHelper.self, Frame.self, Doctor.self, SetupPrompt.self],
         defaultSubcommand: Run.self
     )
 
@@ -25,6 +25,12 @@ struct ScreenshotCommand: AsyncParsableCommand {
             )
         )
         var languages: [String] = []
+
+        @Flag(
+            name: .customLong("json-events"),
+            help: "Report progress as JSON events on stdout, one per line (start, build, language, device, finished), for other tools. The readable progress goes to stderr."
+        )
+        var jsonEvents = false
 
         func run() async throws {
             let configPath = ScreenshotCommand.configPath
@@ -57,14 +63,15 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 screenshotConfig.languages = requested
             }
 
-            print("ascelerate screenshot")
-            print("  Scheme: \(screenshotConfig.scheme)")
-            print("  Devices: \(screenshotConfig.devices.map(\.simulator).joined(separator: ", "))")
-            print("  Languages: \(screenshotConfig.languages.joined(separator: ", "))")
-            print("  Output: \(screenshotConfig.outputDirectory)")
-
             let runner = ScreenshotRunner(config: screenshotConfig)
-            try await runner.run()
+            try await ScreenshotOutput.$emitsEvents.withValue(jsonEvents) {
+                ScreenshotOutput.log("ascelerate screenshot")
+                ScreenshotOutput.log("  Scheme: \(screenshotConfig.scheme)")
+                ScreenshotOutput.log("  Devices: \(screenshotConfig.devices.map(\.simulator).joined(separator: ", "))")
+                ScreenshotOutput.log("  Languages: \(screenshotConfig.languages.joined(separator: ", "))")
+                ScreenshotOutput.log("  Output: \(screenshotConfig.outputDirectory)")
+                try await runner.run()
+            }
         }
     }
 
@@ -73,7 +80,11 @@ struct ScreenshotCommand: AsyncParsableCommand {
             abstract: "Initialize screenshot configuration and helper."
         )
 
+        @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+        var yes = false
+
         func run() throws {
+            if yes { autoConfirm = true }
             let fm = FileManager.default
             let cwd = fm.currentDirectoryPath
             let dir = "ascelerate"
@@ -143,30 +154,49 @@ struct ScreenshotCommand: AsyncParsableCommand {
             abstract: "Check screenshot configuration for problems."
         )
 
-        private struct Check {
+        @OptionGroup var jsonOption: JSONOption
+
+        /// A check's outcome; `status` is `pass`, `warn` or `fail`.
+        private struct Check: Encodable {
             let name: String
             let status: String
             let detail: String
         }
 
+        /// What the configuration asks for, once it parses.
+        private struct ConfigSummary: Encodable {
+            let scheme: String
+            let devices: [String]
+            let languages: [String]
+            let outputDirectory: String
+        }
+
+        private struct Report: Encodable {
+            let config: ConfigSummary?
+            let checks: [Check]
+        }
+
         func run() throws {
+            jsonOption.activate()
             let configPath = ScreenshotCommand.configPath
             let fm = FileManager.default
 
-            print("ascelerate screenshot doctor\n")
+            if !jsonOption.json {
+                print("ascelerate screenshot doctor\n")
+            }
 
             var checks: [Check] = []
 
             func pass(_ name: String, _ detail: String = "") {
-                checks.append(Check(name: name, status: green("✓"), detail: detail))
+                checks.append(Check(name: name, status: "pass", detail: detail))
             }
 
             func fail(_ name: String, _ detail: String) {
-                checks.append(Check(name: name, status: red("✗"), detail: detail))
+                checks.append(Check(name: name, status: "fail", detail: detail))
             }
 
             func warn(_ name: String, _ detail: String) {
-                checks.append(Check(name: name, status: yellow("!"), detail: detail))
+                checks.append(Check(name: name, status: "warn", detail: detail))
             }
 
             // 1. Config file
@@ -176,7 +206,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 } else {
                     fail("Config", "Not found at \(configPath). Run 'ascelerate screenshot init'.")
                 }
-                printChecks(checks)
+                try report(Report(config: nil, checks: checks))
                 return
             }
             pass("Config", configPath)
@@ -187,7 +217,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 config = try ScreenshotConfig.load(from: configPath)
             } catch {
                 fail("Config", "Failed to parse: \(error)")
-                printChecks(checks)
+                try report(Report(config: nil, checks: checks))
                 return
             }
             pass("Config parsing", "Valid YAML")
@@ -237,13 +267,8 @@ struct ScreenshotCommand: AsyncParsableCommand {
 
             // 7. Helper file
             let helperPath = config.helperPath ?? ScreenshotCommand.defaultHelperPath
-            if fm.fileExists(atPath: helperPath) {
-                if let content = try? String(contentsOfFile: helperPath, encoding: .utf8),
-                   let range = content.range(of: #"ScreenshotHelperVersion \[(.+?)\]"#, options: .regularExpression) {
-                    let match = String(content[range])
-                    let version = match
-                        .replacingOccurrences(of: "ScreenshotHelperVersion [", with: "")
-                        .replacingOccurrences(of: "]", with: "")
+            if let version = CreateHelper.installedVersion(at: helperPath) {
+                if !version.isEmpty {
                     let current = CreateHelper.helperVersion
                     if version == current {
                         pass("Helper", "\(helperPath) (v\(version))")
@@ -312,19 +337,33 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 }
             }
 
-            printChecks(checks)
+            try report(Report(
+                config: ConfigSummary(
+                    scheme: config.scheme, devices: config.devices.map(\.simulator), languages: config.languages,
+                    outputDirectory: config.outputDirectory),
+                checks: checks))
         }
 
-        private func printChecks(_ checks: [Check]) {
+        private func report(_ report: Report) throws {
+            if jsonOption.json {
+                try printJSON(report)
+                return
+            }
+            let checks = report.checks
             let nameWidth = max(checks.map { $0.name.count }.max() ?? 0, 6)
 
             for check in checks {
                 let paddedName = check.name.padding(toLength: nameWidth, withPad: " ", startingAt: 0)
-                print("  \(check.status) \(bold(paddedName))  \(check.detail)")
+                let mark = switch check.status {
+                    case "pass": green("✓")
+                    case "warn": yellow("!")
+                    default: red("✗")
+                }
+                print("  \(mark) \(bold(paddedName))  \(check.detail)")
             }
 
-            let failures = checks.filter { $0.status.contains("✗") }.count
-            let warnings = checks.filter { $0.status.contains("!") }.count
+            let failures = checks.filter { $0.status == "fail" }.count
+            let warnings = checks.filter { $0.status == "warn" }.count
 
             print()
             if failures == 0 && warnings == 0 {
@@ -338,6 +377,45 @@ struct ScreenshotCommand: AsyncParsableCommand {
         }
     }
 
+    struct SetupPrompt: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "setup-prompt",
+            abstract: "Print instructions for an AI coding agent to set up screenshot capture in this project.",
+            discussion: """
+                Run it in the project root and give the output to a coding agent (Claude Code, Codex, Cursor, \
+                Xcode's coding assistant…). It starts with what the project already has, so running it again \
+                after a partial setup shows what's left. --design prints the prompt for a web app that turns the \
+                captured screenshots into App Store images instead.
+                """
+        )
+
+        @Flag(name: .long, help: "Print the prompt for a screenshot design generator instead.")
+        var design = false
+
+        @Flag(name: .long, help: "Copy the prompt to the clipboard instead of printing it.")
+        var copy = false
+
+        func run() throws {
+            let survey = ScreenshotProjectSurvey.survey()
+            let root = FileManager.default.currentDirectoryPath
+            let prompt = design
+                ? ScreenshotSetupPrompt.design(survey, root: root) : ScreenshotSetupPrompt.capture(survey, root: root)
+            guard copy else {
+                print(prompt, terminator: "")
+                return
+            }
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/pbcopy")
+            let pipe = Pipe()
+            process.standardInput = pipe
+            try process.run()
+            pipe.fileHandleForWriting.write(Data(prompt.utf8))
+            try pipe.fileHandleForWriting.close()
+            process.waitUntilExit()
+            success("Copied", "the prompt to the clipboard. Paste it into your coding agent.")
+        }
+    }
+
     struct CreateHelper: ParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "create-helper",
@@ -347,10 +425,16 @@ struct ScreenshotCommand: AsyncParsableCommand {
         @Option(name: .shortAndLong, help: "Output file path.")
         var output: String?
 
+        @Flag(name: .shortAndLong, help: "Overwrite an existing file without asking.")
+        var yes = false
+
         func run() throws {
+            if yes { autoConfirm = true }
             let filename: String
             if let output {
                 filename = output
+            } else if yes {
+                filename = ScreenshotCommand.defaultHelperPath
             } else {
                 let defaultPath = ScreenshotCommand.defaultHelperPath
                 print("Enter filename [\(defaultPath)]: ", terminator: "")
@@ -377,6 +461,14 @@ struct ScreenshotCommand: AsyncParsableCommand {
         }
 
         static let helperVersion = "1.3"
+
+        /// The version marker of the helper at `path`: nil when there's no file, empty when it has
+        /// no marker.
+        static func installedVersion(at path: String) -> String? {
+            guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
+            guard let match = content.firstMatch(of: /ScreenshotHelperVersion \[(.+?)\]/) else { return "" }
+            return String(match.1)
+        }
 
         static let helperSource = """
         //

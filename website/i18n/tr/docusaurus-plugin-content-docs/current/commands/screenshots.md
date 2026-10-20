@@ -14,6 +14,19 @@ ascelerate screenshot init                  # Create config and helper in ascele
 ascelerate screenshot                       # Capture screenshots
 ```
 
+## Yapay zeka kodlama ajanıyla kurulum
+
+Yakalama için bir UI test hedefi, ekran görüntüsü helper'ı, uygulamada örnek içerikli bir ekran görüntüsü modu, testlerin kendisi ve yapılandırma gerekir. Bunların hepsini bir kodlama ajanı kurabilir:
+
+```bash
+ascelerate screenshot setup-prompt          # Print the setup instructions
+ascelerate screenshot setup-prompt --copy   # Copy them to the clipboard
+```
+
+Talimatları projede çalışan bir kodlama ajanına (Claude Code, Codex, Cursor, Xcode'un kodlama asistanı…) yapıştırın. Talimatlar projede zaten olanlardan (projeler, şemalar, UI test hedefleri, yerelleştirmeler, yapılandırma, helper sürümü, yüklü simülatörler) yola çıkar; komutu yeniden çalıştırmak geriye ne kaldığını gösterir. Cihaz çerçevelerini de kapsar: çerçeveleri Apple'ın [tasarım kaynakları](https://developer.apple.com/design/resources/) sayfasından (Product Bezels) kendiniz indirirsiniz.
+
+`--design` bunun yerine bir tasarım oluşturucunun talimatlarını yazdırır: `app-store-screenshots/` klasöründe, çerçevelenmiş ekran görüntülerini her dilde başlıklı App Store görsellerine dönüştüren ve `ascelerate apps media upload` için dışa aktaran küçük bir web uygulaması (bkz. [Medya](media.md#designing-app-store-images)).
+
 ## Komutlar
 
 ### Çalıştırma
@@ -21,9 +34,12 @@ ascelerate screenshot                       # Capture screenshots
 ```bash
 ascelerate screenshot                       # Capture screenshots
 ascelerate screenshot run                   # Same as above
+ascelerate screenshot --json-events         # Progress as JSON Lines events on stdout
 ```
 
 Her zaman mevcut dizindeki `ascelerate/screenshot.yml` dosyasını kullanır.
+
+`--json-events`, bir çalıştırmayı izleyen diğer araçlar içindir: stdout her satırda bir JSON nesnesi taşır (`start`, `build`, `language`, `testing`, `passed`, `failed` ve `collected` gibi adımlarıyla `device` ve tüm sonuçlarıyla `finished`), okunabilir ilerleme ise stderr'e geçer.
 
 ### Başlatma
 
@@ -31,13 +47,14 @@ Her zaman mevcut dizindeki `ascelerate/screenshot.yml` dosyasını kullanır.
 ascelerate screenshot init
 ```
 
-`ascelerate/` dizininde hem `ascelerate/screenshot.yml` hem de `ascelerate/ScreenshotHelper.swift` dosyalarını oluşturur. Yazmadan önce onay ister. Mevcut dosyaların üzerine yazmaz.
+`ascelerate/` dizininde hem `ascelerate/screenshot.yml` hem de `ascelerate/ScreenshotHelper.swift` dosyalarını oluşturur. Yazmadan önce onay ister (`-y` onayı atlar). Mevcut dosyaların üzerine yazmaz.
 
 ### Helper oluşturma
 
 ```bash
 ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
+ascelerate screenshot create-helper -o UITests/ScreenshotHelper.swift -y   # Overwrite without asking
 ```
 
 ### Çerçeveleme
@@ -52,9 +69,10 @@ Yakalanan ekran görüntülerini cihaz çerçeve görüntüleri ile çerçeveler
 
 ```bash
 ascelerate screenshot doctor                   # Check config and environment
+ascelerate screenshot doctor --json            # The same as JSON
 ```
 
-Ekran görüntüsü yapılandırmasını ve ortamı doğrular: yapılandırma dosyası, proje/workspace varlığı, xcodebuild ve simctl erişilebilirliği, simülatör cihazları, helper dosya sürümü, cihaz çerçeve dosyaları ve çıktı dizinlerini kontrol eder. Başarılı/başarısız/uyarı göstergeleri ile bir kontrol listesi gösterir.
+Ekran görüntüsü yapılandırmasını ve ortamı doğrular: yapılandırma dosyası, proje/workspace varlığı, xcodebuild ve simctl erişilebilirliği, simülatör cihazları, helper dosya sürümü, cihaz çerçeve dosyaları ve çıktı dizinlerini kontrol eder. Başarılı/başarısız/uyarı göstergeleri ile bir kontrol listesi gösterir. `--json` ile yapılandırmayı (şema, cihazlar, diller, çıktı dizini) ve her kontrolü durumuyla (`pass`, `warn` ya da `fail`) JSON olarak yazdırır.
 
 ## Yapılandırma (`ascelerate/screenshot.yml`)
 

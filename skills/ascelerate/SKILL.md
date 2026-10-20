@@ -511,13 +511,17 @@ Workflow: create the test with its treatments, upload each treatment's screensho
 
 Capture App Store screenshots from simulators using UI tests. Replaces fastlane snapshot.
 
+**To set up screenshot capture in a project** (UI test target, helper, screenshot mode, tests, configuration, device frames), run `ascelerate screenshot setup-prompt` in the project root and follow the instructions it prints: they start from what the project already has and match this ascelerate version. `--design` prints the instructions for a web app that turns the framed screenshots into App Store images.
+
 ```bash
-ascelerate screenshot init                          # Generate config and helper in ascelerate/ directory
-ascelerate screenshot create-helper                 # Generate ScreenshotHelper.swift for UITest target
+ascelerate screenshot init [-y]                     # Generate config and helper in ascelerate/ directory
+ascelerate screenshot create-helper [-o X] [-y]     # Generate ScreenshotHelper.swift for UITest target
 ascelerate screenshot run                           # Capture screenshots
 ascelerate screenshot run -l en-US,tr-TR            # Override languages (subset of configured), comma-separated
+ascelerate screenshot run --json-events             # Progress as JSON Lines on stdout (start, build, language, device, finished); readable log on stderr
 ascelerate screenshot frame                         # Frame captured screenshots with device bezels
-ascelerate screenshot doctor                        # Check config and environment for problems
+ascelerate screenshot doctor [--json]               # Check config and environment for problems
+ascelerate screenshot setup-prompt [--design] [--copy]  # Instructions for a coding agent to set up capture (or a design generator)
 ```
 
 #### Config (`ascelerate/screenshot.yml`)

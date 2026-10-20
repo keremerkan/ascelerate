@@ -61,13 +61,13 @@ struct ScreenshotFramer: Sendable {
                         try Self.writePNG(result, to: outputURL)
                         deviceFramed += 1
                     } catch {
-                        print("  [\(device.simulator)] " + red("\(error)"))
+                        ScreenshotOutput.log("  [\(device.simulator)] " + red("\(error)"))
                     }
                 }
             }
 
             if deviceFramed > 0 {
-                print("  [\(device.simulator)] Framed \(deviceFramed) screenshot(s) → \(language)/")
+                ScreenshotOutput.log("  [\(device.simulator)] Framed \(deviceFramed) screenshot(s) → \(language)/")
             }
         }
     }
@@ -80,18 +80,18 @@ struct ScreenshotFramer: Sendable {
         var loaded: [(device: ScreenshotConfig.Device, images: [Bezel])] = []
         for device in devices {
             guard !device.deviceBezels.isEmpty else {
-                print("  [\(device.simulator)] " + red("No deviceBezel path configured, skipping"))
+                ScreenshotOutput.log("  [\(device.simulator)] " + red("No deviceBezel path configured, skipping"))
                 continue
             }
             var images: [Bezel] = []
             for bezelPath in device.deviceBezels {
                 let resolved = URL(fileURLWithPath: bezelPath).path
                 guard FileManager.default.fileExists(atPath: resolved) else {
-                    print("  [\(device.simulator)] " + red("Bezel not found: \(bezelPath)"))
+                    ScreenshotOutput.log("  [\(device.simulator)] " + red("Bezel not found: \(bezelPath)"))
                     continue
                 }
                 guard let image = Self.loadImage(from: URL(fileURLWithPath: resolved)) else {
-                    print("  [\(device.simulator)] " + red("Failed to load bezel: \(bezelPath)"))
+                    ScreenshotOutput.log("  [\(device.simulator)] " + red("Failed to load bezel: \(bezelPath)"))
                     continue
                 }
                 let screen = Self.findScreenArea(in: image)?.size ?? CGSize(width: image.width, height: image.height)
@@ -103,7 +103,7 @@ struct ScreenshotFramer: Sendable {
         }
 
         if loaded.isEmpty {
-            print("  No bezels loaded, skipping framing.")
+            ScreenshotOutput.log("  No bezels loaded, skipping framing.")
         }
 
         return loaded
@@ -123,7 +123,7 @@ struct ScreenshotFramer: Sendable {
         }
 
         if total > 0 {
-            print("\n" + green("Framed") + " \(total) screenshot(s) → \(framedPath)")
+            ScreenshotOutput.log("\n" + green("Framed") + " \(total) screenshot(s) → \(framedPath)")
         }
     }
 

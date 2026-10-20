@@ -13,6 +13,10 @@ struct ScreenshotRunner: Sendable {
 
     func run() async throws {
         let startTime = Date()
+        let outputPath = URL(fileURLWithPath: config.outputDirectory).standardizedFileURL.path
+        ScreenshotOutput.emit(ScreenshotEvent(
+            event: "start", scheme: config.scheme, devices: config.devices.map(\.simulator),
+            languages: config.languages, outputDirectory: outputPath))
         let simulatorManager = SimulatorManager()
         let testRunner = ScreenshotTestRunner(config: config)
         let collector = ScreenshotCollector(config: config)
@@ -21,11 +25,13 @@ struct ScreenshotRunner: Sendable {
 
         let resolvedDevices = try config.devices.map { device -> (ScreenshotConfig.Device, SimulatorManager.SimDevice) in
             let sim = try simulatorManager.findDevice(name: device.simulator)
-            print("Found simulator: \(sim.name) (\(sim.udid))")
+            ScreenshotOutput.log("Found simulator: \(sim.name) (\(sim.udid))")
             return (device, sim)
         }
 
+        ScreenshotOutput.emit(ScreenshotEvent(event: "build", step: "started"))
         let buildResult = try testRunner.build(resolvedDevices: resolvedDevices)
+        ScreenshotOutput.emit(ScreenshotEvent(event: "build", step: "finished"))
 
         var results: [Result] = []
 
@@ -37,7 +43,9 @@ struct ScreenshotRunner: Sendable {
 
         for (langIndex, language) in config.languages.enumerated() {
             let locale = languageToLocale(language)
-            print("\n--- [\(langIndex + 1)/\(config.languages.count)] \(language) ---")
+            ScreenshotOutput.log("\n--- [\(langIndex + 1)/\(config.languages.count)] \(language) ---")
+            ScreenshotOutput.emit(ScreenshotEvent(
+                event: "language", language: language, index: langIndex + 1, count: config.languages.count))
 
             do {
                 if config.headless != true {
@@ -45,7 +53,7 @@ struct ScreenshotRunner: Sendable {
                         try simulatorManager.launchUIHost()
                     } catch {
                         // Screenshots render off the framebuffer either way; windows are a nicety.
-                        print("  " + yellow("Warning:") + " Could not open the simulator UI, continuing headless: \(error)")
+                        ScreenshotOutput.log("  " + yellow("Warning:") + " Could not open the simulator UI, continuing headless: \(error)")
                     }
                 }
 
@@ -58,8 +66,9 @@ struct ScreenshotRunner: Sendable {
                     isFirstRun: langIndex == 0
                 )
             } catch {
-                print("\n  " + red("Failed to prepare simulators for \(language): \(error)"))
+                ScreenshotOutput.log("\n  " + red("Failed to prepare simulators for \(language): \(error)"))
                 for (device, _) in resolvedDevices {
+                    ScreenshotOutput.emit(.device("failed", device.simulator, language: language, message: "\(error)"))
                     results.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
                 }
                 for (_, sim) in resolvedDevices {
@@ -68,9 +77,10 @@ struct ScreenshotRunner: Sendable {
                 continue
             }
 
-            print("\n  Running tests concurrently...")
+            ScreenshotOutput.log("\n  Running tests concurrently...")
             let deviceResults = await withTaskGroup(of: (ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?).self) { group in
                 for (device, sim) in resolvedDevices {
+                    ScreenshotOutput.emit(.device("testing", device.simulator, language: language))
                     group.addTask {
                         do {
                             try testRunner.test(device: device, udid: sim.udid, language: language, buildResult: buildResult)
@@ -104,7 +114,12 @@ struct ScreenshotRunner: Sendable {
                 }
                 guard !failedDevices.isEmpty else { break }
 
-                print("\n  " + yellow("Retry \(attempt)/\(maxRetries) for \(language) — erasing failed simulators..."))
+                ScreenshotOutput.log("\n  " + yellow("Retry \(attempt)/\(maxRetries) for \(language) — erasing failed simulators..."))
+
+                for (device, _) in failedDevices {
+                    ScreenshotOutput.emit(ScreenshotEvent(
+                        event: "device", step: "retrying", language: language, device: device.simulator, index: attempt))
+                }
 
                 // Remove failed results — they'll be replaced by retry results
                 let failedDeviceNames = Set(failedDevices.map { $0.0.simulator })
@@ -121,9 +136,10 @@ struct ScreenshotRunner: Sendable {
                         forceErase: true
                     )
 
-                    print("\n  Running retry tests...")
+                    ScreenshotOutput.log("\n  Running retry tests...")
                     let retryResults = await withTaskGroup(of: (ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?).self) { group in
                         for (device, sim) in failedDevices {
+                            ScreenshotOutput.emit(.device("testing", device.simulator, language: language))
                             group.addTask {
                                 do {
                                     try testRunner.test(device: device, udid: sim.udid, language: language, buildResult: buildResult)
@@ -150,8 +166,9 @@ struct ScreenshotRunner: Sendable {
                     languageResults += retryLanguageResults
                     pendingCollection += retryResults
                 } catch {
-                    print("\n  " + red("Retry preparation failed: \(error)"))
+                    ScreenshotOutput.log("\n  " + red("Retry preparation failed: \(error)"))
                     for (device, _) in failedDevices {
+                        ScreenshotOutput.emit(.device("failed", device.simulator, language: language, message: "\(error)"))
                         languageResults.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
                     }
                     for (_, sim) in failedDevices {
@@ -179,7 +196,7 @@ struct ScreenshotRunner: Sendable {
             }
 
             if config.stopAfterFirstError == true && results.contains(where: { !$0.success }) {
-                print("\nStopping after first error.")
+                ScreenshotOutput.log("\nStopping after first error.")
                 break
             }
         }
@@ -192,10 +209,17 @@ struct ScreenshotRunner: Sendable {
             let message = config.helperPath != nil
                 ? "Could not find \(config.helperPath!) to check for updates."
                 : "Could not find screenshot helper file to check for updates."
-            print("\n" + yellow("Warning:") + " \(message) Set 'helperPath' in screenshot.yml to enable version checking.")
+            ScreenshotOutput.log("\n" + yellow("Warning:") + " \(message) Set 'helperPath' in screenshot.yml to enable version checking.")
         }
 
-        printSummary(results, elapsed: Date().timeIntervalSince(startTime))
+        let elapsed = Date().timeIntervalSince(startTime)
+        ScreenshotOutput.emit(ScreenshotEvent(
+            event: "finished", outputDirectory: outputPath,
+            results: results.map {
+                ScreenshotEvent.Result(language: $0.language, device: $0.device, success: $0.success, retried: $0.retried, error: $0.error)
+            },
+            elapsed: Int(elapsed)))
+        printSummary(results, elapsed: elapsed)
     }
 
     /// Runs the full per-device prep flow for every device concurrently: optional erase,
@@ -216,11 +240,12 @@ struct ScreenshotRunner: Sendable {
             for (device, sim) in resolvedDevices {
                 group.addTask {
                     let tag = "[\(device.simulator)]"
-                    print("\n  \(tag) Preparing...")
+                    ScreenshotOutput.log("\n  \(tag) Preparing...")
+                    ScreenshotOutput.emit(.device("preparing", device.simulator, language: language))
 
                     let didErase = forceErase || config.eraseSimulator
                     if didErase {
-                        print("  \(tag) Erasing...")
+                        ScreenshotOutput.log("  \(tag) Erasing...")
                         try simulatorManager.erase(udid: sim.udid)
                     }
 
@@ -228,12 +253,12 @@ struct ScreenshotRunner: Sendable {
                         try simulatorManager.boot(udid: sim.udid, waitUntilReady: false)
                         silenceSystemNoise(udid: sim.udid, tag: tag, simulatorManager: simulatorManager)
                         try simulatorManager.localize(udid: sim.udid, language: language, locale: locale)
-                        print("  \(tag) Localized to \(language) (\(locale))")
+                        ScreenshotOutput.log("  \(tag) Localized to \(language) (\(locale))")
                         try simulatorManager.shutdown(udid: sim.udid)
-                        print("  \(tag) Booting and waiting for ready state...")
+                        ScreenshotOutput.log("  \(tag) Booting and waiting for ready state...")
                         try simulatorManager.boot(udid: sim.udid)
                     } else {
-                        print("  \(tag) Booting and waiting for ready state...")
+                        ScreenshotOutput.log("  \(tag) Booting and waiting for ready state...")
                         try simulatorManager.boot(udid: sim.udid)
                         silenceSystemNoise(udid: sim.udid, tag: tag, simulatorManager: simulatorManager)
                     }
@@ -242,18 +267,18 @@ struct ScreenshotRunner: Sendable {
                         do {
                             try simulatorManager.showDeviceWindow(udid: sim.udid)
                         } catch {
-                            print("  \(tag) " + yellow("Warning:") + " Could not open the device window: \(error)")
+                            ScreenshotOutput.log("  \(tag) " + yellow("Warning:") + " Could not open the device window: \(error)")
                         }
                     }
 
                     if let wait = config.waitAfterBoot, wait > 0 {
-                        print("  \(tag) Waiting \(wait)s after boot...")
+                        ScreenshotOutput.log("  \(tag) Waiting \(wait)s after boot...")
                         try await Task.sleep(nanoseconds: UInt64(wait) * 1_000_000_000)
                     }
 
                     if (didErase || isFirstRun), let extraWait = config.waitAfterEraseAndReboot, extraWait > 0 {
                         let reason = didErase ? "erased simulator" : "first run of this session"
-                        print("  \(tag) Waiting \(extraWait)s for first-run system alerts (\(reason))...")
+                        ScreenshotOutput.log("  \(tag) Waiting \(extraWait)s for first-run system alerts (\(reason))...")
                         try await Task.sleep(nanoseconds: UInt64(extraWait) * 1_000_000_000)
                     }
 
@@ -262,16 +287,17 @@ struct ScreenshotRunner: Sendable {
                     }
 
                     if config.overrideStatusBar {
-                        print("  \(tag) Overriding status bar...")
+                        ScreenshotOutput.log("  \(tag) Overriding status bar...")
                         try simulatorManager.overrideStatusBar(udid: sim.udid, arguments: config.statusBarArguments)
                     }
 
                     if let bundleID = config.reinstallApp {
-                        print("  \(tag) Uninstalling app...")
+                        ScreenshotOutput.log("  \(tag) Uninstalling app...")
                         try? simulatorManager.uninstallApp(udid: sim.udid, bundleID: bundleID)
                     }
 
                     try collector.prepareCacheDirectory(language: language, locale: locale, device: device, udid: sim.udid)
+                    ScreenshotOutput.emit(.device("ready", device.simulator, language: language))
                 }
             }
             try await group.waitForAll()
@@ -285,14 +311,14 @@ struct ScreenshotRunner: Sendable {
         do {
             try simulatorManager.suppressAppleIntelligenceBanner(udid: udid)
         } catch {
-            print("  \(tag) " + yellow("Warning:") + " Could not suppress the Apple Intelligence banner: \(error)")
+            ScreenshotOutput.log("  \(tag) " + yellow("Warning:") + " Could not suppress the Apple Intelligence banner: \(error)")
         }
         guard config.disableAssetDownloads == true else { return }
-        print("  \(tag) Disabling asset downloads...")
+        ScreenshotOutput.log("  \(tag) Disabling asset downloads...")
         do {
             try simulatorManager.disableAssetDownloads(udid: udid)
         } catch {
-            print("  \(tag) " + yellow("Warning:") + " Could not disable asset downloads: \(error)")
+            ScreenshotOutput.log("  \(tag) " + yellow("Warning:") + " Could not disable asset downloads: \(error)")
         }
     }
 
@@ -305,7 +331,8 @@ struct ScreenshotRunner: Sendable {
 
         for (device, sim, error) in deviceResults {
             if let error {
-                print("  [\(device.simulator)] " + red("Failed: \(error)"))
+                ScreenshotOutput.log("  [\(device.simulator)] " + red("Failed: \(error)"))
+                ScreenshotOutput.emit(.device("failed", device.simulator, language: language, message: "\(error)"))
                 let logFile = ScreenshotCollector.cacheRoot
                     .appendingPathComponent("logs")
                     .appendingPathComponent("\(device.simulator)-\(language).log")
@@ -317,6 +344,7 @@ struct ScreenshotRunner: Sendable {
                 try? FileManager.default.copyItem(at: logFile, to: errorDest)
                 results.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
             } else {
+                ScreenshotOutput.emit(.device("passed", device.simulator, language: language))
                 results.append(Result(language: language, device: device.simulator, success: true, error: nil))
             }
             try? simulatorManager.shutdown(udid: sim.udid)
@@ -343,16 +371,18 @@ struct ScreenshotRunner: Sendable {
             try? FileManager.default.removeItem(at: oldErrorLog)
 
             do {
-                try collector.collectScreenshots(language: language, device: device, udid: sim.udid)
+                let count = try collector.collectScreenshots(language: language, device: device, udid: sim.udid)
+                ScreenshotOutput.emit(.device("collected", device.simulator, language: language, count: count))
             } catch {
-                print("  [\(device.simulator)] " + red("Failed to collect: \(error)"))
+                ScreenshotOutput.log("  [\(device.simulator)] " + red("Failed to collect: \(error)"))
+                ScreenshotOutput.emit(.device("failed", device.simulator, language: language, message: "\(error)"))
                 results[idx] = Result(language: language, device: device.simulator, success: false, error: "\(error)", retried: results[idx].retried)
             }
         }
     }
 
     private func printSummary(_ results: [Result], elapsed: TimeInterval) {
-        print("\n")
+        ScreenshotOutput.log("\n")
 
         let devices = config.devices.map(\.simulator)
         let languages = config.languages
@@ -365,8 +395,8 @@ struct ScreenshotRunner: Sendable {
         for (i, device) in devices.enumerated() {
             header += device.padding(toLength: deviceWidths[i] + 2, withPad: " ", startingAt: 0)
         }
-        print(header)
-        print(String(repeating: "─", count: header.count))
+        ScreenshotOutput.log(header)
+        ScreenshotOutput.log(String(repeating: "─", count: header.count))
 
         for language in languages {
             var row = language.padding(toLength: langWidth + 2, withPad: " ", startingAt: 0)
@@ -380,7 +410,7 @@ struct ScreenshotRunner: Sendable {
                 }
                 row += mark.padding(toLength: deviceWidths[i] + 2, withPad: " ", startingAt: 0)
             }
-            print(row)
+            ScreenshotOutput.log(row)
         }
 
         let succeeded = results.filter(\.success).count
@@ -392,19 +422,19 @@ struct ScreenshotRunner: Sendable {
         if retried > 0 {
             summary += " " + yellow("(\(retried) succeeded after retry — verify those screenshots)")
         }
-        print("\n\(summary)")
+        ScreenshotOutput.log("\n\(summary)")
 
         if failed > 0 {
-            print("\n" + red("Failed:"))
+            ScreenshotOutput.log("\n" + red("Failed:"))
             for result in results where !result.success {
-                print("  " + red("❌ \(result.language) / \(result.device): \(result.error ?? "unknown")"))
+                ScreenshotOutput.log("  " + red("❌ \(result.language) / \(result.device): \(result.error ?? "unknown")"))
             }
         }
 
         let minutes = Int(elapsed) / 60
         let seconds = Int(elapsed) % 60
         let timeStr = minutes > 0 ? "\(minutes)m \(seconds)s" : "\(seconds)s"
-        print("\nScreenshots saved to \(config.outputDirectory) (\(timeStr))")
+        ScreenshotOutput.log("\nScreenshots saved to \(config.outputDirectory) (\(timeStr))")
     }
 
     private func languageToLocale(_ language: String) -> String {
@@ -433,7 +463,7 @@ struct ScreenshotRunner: Sendable {
                 : FileManager.default.currentDirectoryPath + "/" + helperPath
 
             guard FileManager.default.fileExists(atPath: fullPath) else {
-                print(yellow("Warning:") + " Helper file not found at '\(helperPath)'. Check helperPath in screenshot.yml.")
+                ScreenshotOutput.log(yellow("Warning:") + " Helper file not found at '\(helperPath)'. Check helperPath in screenshot.yml.")
                 return false
             }
 
@@ -472,7 +502,7 @@ struct ScreenshotRunner: Sendable {
         guard let content = try? String(contentsOf: url, encoding: .utf8) else { return }
 
         guard let range = content.range(of: #"ScreenshotHelperVersion \[(.+?)\]"#, options: .regularExpression) else {
-            print(yellow("Warning:") + " \(url.lastPathComponent) has no version marker. Run 'ascelerate screenshot create-helper' to regenerate.")
+            ScreenshotOutput.log(yellow("Warning:") + " \(url.lastPathComponent) has no version marker. Run 'ascelerate screenshot create-helper' to regenerate.")
             return
         }
 
@@ -482,7 +512,7 @@ struct ScreenshotRunner: Sendable {
             .replacingOccurrences(of: "]", with: "")
 
         if fileVersion != currentVersion {
-            print(yellow("Warning:") + " \(url.lastPathComponent) is version \(fileVersion), latest is \(currentVersion). Run 'ascelerate screenshot create-helper' to update.")
+            ScreenshotOutput.log(yellow("Warning:") + " \(url.lastPathComponent) is version \(fileVersion), latest is \(currentVersion). Run 'ascelerate screenshot create-helper' to update.")
         }
     }
 }

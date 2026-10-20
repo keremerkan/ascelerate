@@ -5,7 +5,7 @@ import Foundation
 
 @main
 struct Ascelerate: AsyncParsableCommand {
-  static let appVersion = "0.24.0"
+  static let appVersion = "0.25.0"
 
   static let configuration = CommandConfiguration(
     commandName: "ascelerate",
@@ -46,6 +46,9 @@ struct Ascelerate: AsyncParsableCommand {
     // can't terminate us mid-operation — which for write commands could leave changes half-applied.
     // Writes to the broken stdout then fail silently instead of killing the process.
     signal(SIGPIPE, SIG_IGN)
+    // Line-buffer stdout so piped output (CI logs, other tools reading it) shows each line as it's
+    // printed instead of in blocks.
+    setvbuf(stdout, nil, _IOLBF, 0)
 
     // Catch --version before ArgumentParser rejects it as unknown flag
     let args = extractDryRunFlag(Array(CommandLine.arguments.dropFirst()))

@@ -1,5 +1,4 @@
 import ArgumentParser
-import ASCKit
 import AscelerateCore
 import Foundation
 
@@ -34,33 +33,16 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     let createdDate: Date?
     let response: Response?
 
-    init(review: Components.Schemas.CustomerReview, response resp: Components.Schemas.CustomerReviewResponseV1?) {
-      let a = review.attributes
+    init(_ review: CustomerReviews.Review) {
       id = review.id
-      rating = a?.rating
-      title = a?.title
-      body = a?.body
-      reviewerNickname = a?.reviewerNickname
-      territory = a?.territory
-      createdDate = a?.createdDate
-      response = resp.map {
-        Response(state: $0.attributes?.state, lastModifiedDate: $0.attributes?.lastModifiedDate, body: $0.attributes?.responseBody)
-      }
+      rating = review.rating
+      title = review.title
+      body = review.body
+      reviewerNickname = review.reviewerNickname
+      territory = review.territory
+      createdDate = review.createdDate
+      response = review.response.map { Response(state: $0.state, lastModifiedDate: $0.lastModifiedDate, body: $0.body) }
     }
-  }
-
-  /// Fetches a review by ID along with its developer response (if any).
-  static func fetchReview(
-    reviewID: String, client: ASCClient
-  ) async throws -> (review: Components.Schemas.CustomerReview, response: Components.Schemas.CustomerReviewResponseV1?) {
-    let resp = try await client.customerReviewsGetInstance(
-      path: .init(id: reviewID), query: .init(include: [.response])
-    ).ok.body.json
-    let response = resp.included?.compactMap { item -> Components.Schemas.CustomerReviewResponseV1? in
-      if case .customerReviewResponses(let r) = item { return r }
-      return nil
-    }.first
-    return (resp.data, response)
   }
 
   /// Prints a review (and its response, if present). `full` shows the complete body.
@@ -119,12 +101,12 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let sortValue: [Operations.AppsCustomerReviewsGetToManyRelated.Input.Query.SortPayloadPayload]
+      let sortValue: CustomerReviews.Sort
       switch sort.lowercased() {
-      case "recent": sortValue = [.minusCreatedDate]
-      case "oldest": sortValue = [.createdDate]
-      case "critical": sortValue = [.rating]
-      case "best": sortValue = [.minusRating]
+      case "recent": sortValue = .recent
+      case "oldest": sortValue = .oldest
+      case "critical": sortValue = .critical
+      case "best": sortValue = .favorable
       default:
         throw ValidationError("Invalid --sort '\(sort)'. Use: recent, oldest, critical, best.")
       }
@@ -133,30 +115,11 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         throw ValidationError("--rating must be between 1 and 5.")
       }
 
-      let resp = try await client.appsCustomerReviewsGetToManyRelated(
-        path: .init(id: app.id),
-        query: .init(
-          filterRating: rating.map { ["\($0)"] },
-          filterReviewTerritory: territory.map { [$0.uppercased()] },
-          existsPublishedResponse: unanswered ? false : nil,
-          sort: sortValue,
-          limit: min(max(limit, 1), 200),
-          include: [.response]
-        )
-      ).ok.body.json
-
-      let responsesByID = Dictionary(
-        uniqueKeysWithValues: (resp.included ?? []).compactMap { item -> (String, Components.Schemas.CustomerReviewResponseV1)? in
-          if case .customerReviewResponses(let r) = item { return (r.id, r) }
-          return nil
-        })
-
-      let entries = resp.data.map { review in
-        ReviewEntry(
-          review: review,
-          response: review.relationships?.response?.data.flatMap { responsesByID[$0.id] }
-        )
-      }
+      let page = try await CustomerReviews.page(
+        appID: app.id,
+        filter: .init(rating: rating, territory: territory?.uppercased(), hasResponse: unanswered ? false : nil),
+        sort: sortValue, limit: limit, client: client)
+      let entries = page.reviews.map(ReviewEntry.init)
 
       if jsonOption.json {
         try printJSON(entries)
@@ -204,9 +167,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     func run() async throws {
       jsonOption.activate()
       let client = try ClientFactory.makeClient()
-      let (review, response) = try await CustomerReviewsCommand.fetchReview(
-        reviewID: reviewID, client: client)
-      let entry = ReviewEntry(review: review, response: response)
+      let entry = ReviewEntry(try await CustomerReviews.review(id: reviewID, client: client))
       if jsonOption.json {
         try printJSON(entry)
         return
@@ -237,27 +198,23 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
       guard !trimmed.isEmpty else { throw ValidationError("--body cannot be empty.") }
 
       let client = try ClientFactory.makeClient()
-      let (review, existing) = try await CustomerReviewsCommand.fetchReview(
-        reviewID: reviewID, client: client)
-      CustomerReviewsCommand.printReview(ReviewEntry(review: review, response: existing))
+      let review = try await CustomerReviews.review(id: reviewID, client: client)
+      let existing = review.response
+      CustomerReviewsCommand.printReview(ReviewEntry(review))
       print()
 
-      let replacedBody = existing?.attributes?.responseBody
+      let replacedBody = existing?.body
       if let existing {
         guard confirm("This review already has a response. Replace it? [y/N] ") else {
           cancelled()
           return
         }
-        _ = try await client.customerReviewResponsesDeleteInstance(path: .init(id: existing.id)).noContent
+        try await CustomerReviews.deleteResponse(id: existing.id, client: client)
       }
 
-      let resp: Components.Schemas.CustomerReviewResponseV1Response
+      let resp: CustomerReviews.Response
       do {
-        resp = try await client.customerReviewResponsesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(responseBody: body),
-          relationships: .init(review: .init(data: .init(id: reviewID, _type: "customerReviews"))),
-          _type: "customerReviewResponses"
-        )))).created.body.json
+        resp = try await CustomerReviews.respond(reviewID: reviewID, body: body, client: client)
       } catch {
         // The old response is already deleted at this point — the API only allows
         // one response per review, so replace works as delete-then-create.
@@ -270,7 +227,7 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
         throw error
       }
 
-      let state = resp.data.attributes?.state.map { formatState($0) } ?? "—"
+      let state = resp.state.map { formatState($0) } ?? "—"
       print()
       success("Responded", "to review (state: \(state)).")
     }
@@ -293,22 +250,20 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     func run() async throws {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
-      let (review, existing) = try await CustomerReviewsCommand.fetchReview(
-        reviewID: reviewID, client: client)
-
-      guard let existing else {
+      let review = try await CustomerReviews.review(id: reviewID, client: client)
+      guard let existing = review.response else {
         print("No developer response on this review.")
         return
       }
 
-      CustomerReviewsCommand.printReview(ReviewEntry(review: review, response: existing))
+      CustomerReviewsCommand.printReview(ReviewEntry(review))
       print()
       guard confirm("Delete this response? [y/N] ") else {
         cancelled()
         return
       }
 
-      _ = try await client.customerReviewResponsesDeleteInstance(path: .init(id: existing.id)).noContent
+      try await CustomerReviews.deleteResponse(id: existing.id, client: client)
       print()
       success("Deleted", "developer response.")
     }

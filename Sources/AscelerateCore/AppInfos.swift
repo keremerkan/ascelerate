@@ -1,0 +1,228 @@
+import ASCKit
+import Foundation
+
+/// An app's App Store information (`appInfos`): its state, categories, age ratings and per-locale
+/// name and subtitle. An app holds several: the live one, one being prepared with the next version,
+/// and replaced ones. Also the app-level details shown with it (content rights, primary language,
+/// App Store Server Notifications endpoints).
+public enum AppInfos {
+  /// States in which an app info's localizations and categories can change.
+  public static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW"]
+
+  public enum AppInfoError: LocalizedError {
+    case notFound
+    /// The app info's raw state, when known.
+    case notEditable(state: String?)
+
+    public var errorDescription: String? {
+      switch self {
+        case .notFound:
+          return "No app info found."
+        case .notEditable(let state):
+          let stateName = state.map { formatState($0) } ?? "unknown"
+          return "App info is in state '\(stateName)' — updates are only allowed in PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW."
+      }
+    }
+  }
+
+  /// An app info relationship to a category.
+  public enum CategorySlot: String, CaseIterable, Sendable {
+    case primaryCategory, primarySubcategoryOne, primarySubcategoryTwo
+    case secondaryCategory, secondarySubcategoryOne, secondarySubcategoryTwo
+  }
+
+  /// A category and its subcategories (Games has them), by ID: the ID is the name
+  /// (`DEVELOPER_TOOLS`, `GAMES_PUZZLE`).
+  public struct Category: Sendable, Hashable {
+    public let id: String
+    public let subcategories: [String]
+  }
+
+  /// The most relevant app info: an editable one over the live one, never a replaced one.
+  public static func pickActive(from appInfos: [Components.Schemas.AppInfo]) throws -> Components.Schemas.AppInfo {
+    let candidates = appInfos.filter { $0.attributes?.state != "REPLACED_WITH_NEW_INFO" }
+    guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? "") })
+      ?? candidates.first
+      ?? appInfos.first
+    else {
+      throw AppInfoError.notFound
+    }
+    return appInfo
+  }
+
+  public static func findActive(appID: String, client: ASCClient) async throws -> Components.Schemas.AppInfo {
+    try pickActive(from: await client.appsAppInfosGetToManyRelated(path: .init(id: appID)).ok.body.json.data)
+  }
+
+  /// Throws `AppInfoError.notEditable` unless the app info's localizations and categories can change.
+  public static func checkEditable(_ appInfo: Components.Schemas.AppInfo) throws {
+    guard let state = appInfo.attributes?.state, editableStates.contains(state) else {
+      throw AppInfoError.notEditable(state: appInfo.attributes?.state)
+    }
+  }
+
+  /// Changes an app info localization's fields; a nil one is left as it is.
+  @discardableResult
+  public static func updateLocalization(
+    id: String, name: String? = nil, subtitle: String? = nil, privacyPolicyURL: String? = nil,
+    privacyChoicesURL: String? = nil, client: ASCClient
+  ) async throws -> Components.Schemas.AppInfoLocalization {
+    try await client.appInfoLocalizationsUpdateInstance(
+      path: .init(id: id),
+      body: .json(.init(data: .init(
+        attributes: .init(
+          name: name, privacyChoicesUrl: privacyChoicesURL, privacyPolicyUrl: privacyPolicyURL, subtitle: subtitle),
+        id: id,
+        _type: "appInfoLocalizations"
+      )))
+    ).ok.body.json.data
+  }
+
+  /// Sets an app info's categories: each slot in `changes` to its category ID, or none for nil
+  /// (sent as `{"data": null}`). Slots not in `changes` are left as they are.
+  public static func updateCategories(
+    appInfoID: String, _ changes: [CategorySlot: String?], client: ASCClient
+  ) async throws {
+    // A set slot's category ID; nil for a slot left alone or cleared.
+    func id(_ slot: CategorySlot) -> String? { changes[slot] ?? nil }
+    let cleared = changes.filter { $0.value == nil }.keys.map { ["data", "relationships", $0.rawValue, "data"] }
+    _ = try await ASCNulls.sending(cleared) {
+      try await client.appInfosUpdateInstance(
+        path: .init(id: appInfoID),
+        body: .json(.init(data: .init(
+          id: appInfoID,
+          relationships: .init(
+            primaryCategory: id(.primaryCategory).map { .init(data: .init(id: $0, _type: "appCategories")) },
+            primarySubcategoryOne: id(.primarySubcategoryOne).map { .init(data: .init(id: $0, _type: "appCategories")) },
+            primarySubcategoryTwo: id(.primarySubcategoryTwo).map { .init(data: .init(id: $0, _type: "appCategories")) },
+            secondaryCategory: id(.secondaryCategory).map { .init(data: .init(id: $0, _type: "appCategories")) },
+            secondarySubcategoryOne: id(.secondarySubcategoryOne).map { .init(data: .init(id: $0, _type: "appCategories")) },
+            secondarySubcategoryTwo: id(.secondarySubcategoryTwo).map { .init(data: .init(id: $0, _type: "appCategories")) }),
+          _type: "appInfos"
+        )))
+      ).ok
+    }
+  }
+
+  /// The top-level App Store categories of any of the platforms, with their subcategories, sorted
+  /// by ID.
+  public static func categories(platforms: [ASCEnum.Platform], client: ASCClient) async throws -> [Category] {
+    let filter = platforms.compactMap {
+      Operations.AppCategoriesGetCollection.Input.Query.FilterPlatformsPayloadPayload(rawValue: $0.rawValue)
+    }
+    let response = try await client.appCategoriesGetCollection(query: .init(
+      filterPlatforms: filter, existsParent: false, limit: 200, include: [.subcategories], limitSubcategories: 50
+    )).ok.body.json
+    return response.data.map { category in
+      Category(id: category.id, subcategories: (category.relationships?.subcategories?.data ?? []).map(\.id).sorted())
+    }.sorted { $0.id < $1.id }
+  }
+
+  /// The age rating App Store Connect gives an app info in each territory (raw values such as
+  /// `FOUR_PLUS`, with local systems' own: Korea `ALL`, Vietnam `ZERO_ZERO`), by territory code.
+  /// Replaces the deprecated single `appStoreAgeRating`. Empty until the age rating questionnaire
+  /// is answered.
+  public static func territoryAgeRatings(appInfoID: String, client: ASCClient) async throws -> [String: String] {
+    let ratings = try await client.appInfosTerritoryAgeRatingsGetToManyRelated(
+      path: .init(id: appInfoID), query: .init(limit: 200, include: [.territory])
+    ).ok.body.json.data
+    return Dictionary(
+      ratings.compactMap { rating in
+        rating.relationships?.territory?.data.flatMap { territory in
+          rating.attributes?.appStoreAgeRating.map { (territory.id, $0) }
+        }
+      },
+      uniquingKeysWith: { first, _ in first })
+  }
+
+  /// An app info's age rating questionnaire (`ageRatingDeclarations`); its answers are nil until
+  /// it's first answered.
+  public static func ageRatingDeclaration(
+    appInfoID: String, client: ASCClient
+  ) async throws -> Components.Schemas.AgeRatingDeclaration {
+    try await client.appInfosAgeRatingDeclarationGetToOneRelated(path: .init(id: appInfoID)).ok.body.json.data
+  }
+
+  /// Changes age rating questionnaire answers: a nil attribute is left as it is, and the ones
+  /// named in `clearing` (`kidsAgeBand`, `developerAgeRatingInfoUrl`) are sent as null, which
+  /// removes them (an empty URL is refused). The territory ratings follow at once.
+  @discardableResult
+  public static func updateAgeRatingDeclaration(
+    id: String, _ attributes: Components.Schemas.AgeRatingDeclarationUpdateRequest.DataPayload.AttributesPayload,
+    clearing: [String] = [], client: ASCClient
+  ) async throws -> Components.Schemas.AgeRatingDeclaration {
+    try await ASCNulls.sending(clearing.map { ["data", "attributes", $0] }) {
+      try await client.ageRatingDeclarationsUpdateInstance(
+        path: .init(id: id),
+        body: .json(.init(data: .init(attributes: attributes, id: id, _type: "ageRatingDeclarations")))
+      ).ok.body.json.data
+    }
+  }
+
+  /// An App Store Server Notifications environment of an app.
+  public enum NotificationEnvironment: String, CaseIterable, Sendable {
+    case production, sandbox
+  }
+
+  /// Where an app's App Store Server Notifications go in one environment: the server's URL and the
+  /// notification version (`V1`, `V2`).
+  public struct NotificationEndpoint: Codable, Hashable, Sendable {
+    public var url: String
+    public var version: String
+
+    public init(url: String, version: String = "V2") {
+      self.url = url
+      self.version = version
+    }
+  }
+
+  /// The app's App Store Server Notifications endpoint in the environment; nil when it has none.
+  public static func notificationEndpoint(
+    of app: Components.Schemas.App, _ environment: NotificationEnvironment
+  ) -> NotificationEndpoint? {
+    let attributes = app.attributes
+    let (url, version) =
+      switch environment {
+        case .production: (attributes?.subscriptionStatusUrl, attributes?.subscriptionStatusUrlVersion)
+        case .sandbox: (attributes?.subscriptionStatusUrlForSandbox, attributes?.subscriptionStatusUrlVersionForSandbox)
+      }
+    return url.map { NotificationEndpoint(url: $0, version: version ?? "V2") }
+  }
+
+  /// Changes an app's own details shown with its app information; a nil one is left as it is.
+  /// `contentRights` says whether the app contains, shows or accesses third-party content
+  /// (`contentRightsDeclaration`: `USES_THIRD_PARTY_CONTENT` or `DOES_NOT_USE_THIRD_PARTY_CONTENT`);
+  /// `primaryLocale` is the language its product page falls back to, one it has a localization in.
+  /// `notificationEndpoints` sets each listed environment's App Store Server Notifications endpoint,
+  /// or removes it for nil (URL and version sent as null: App Store Connect refuses a URL without
+  /// its version, and an empty one). Returns the app as saved: reading the app right afterwards can
+  /// still return the old values for about a second.
+  @discardableResult
+  public static func updateApp(
+    appID: String, contentRights: String? = nil, primaryLocale: String? = nil,
+    notificationEndpoints: [NotificationEnvironment: NotificationEndpoint?] = [:], client: ASCClient
+  ) async throws -> Components.Schemas.App {
+    // A set environment's endpoint; nil for one left alone or removed.
+    func endpoint(_ environment: NotificationEnvironment) -> NotificationEndpoint? {
+      notificationEndpoints[environment] ?? nil
+    }
+    let removed = notificationEndpoints.filter { $0.value == nil }.keys.flatMap { environment in
+      environment == .production
+        ? ["subscriptionStatusUrl", "subscriptionStatusUrlVersion"]
+        : ["subscriptionStatusUrlForSandbox", "subscriptionStatusUrlVersionForSandbox"]
+    }
+    return try await ASCNulls.sending(removed.map { ["data", "attributes", $0] }) {
+      try await client.appsUpdateInstance(
+        path: .init(id: appID),
+        body: .json(.init(data: .init(
+          attributes: .init(
+            contentRightsDeclaration: contentRights, primaryLocale: primaryLocale,
+            subscriptionStatusUrl: endpoint(.production)?.url,
+            subscriptionStatusUrlForSandbox: endpoint(.sandbox)?.url,
+            subscriptionStatusUrlVersion: endpoint(.production)?.version,
+            subscriptionStatusUrlVersionForSandbox: endpoint(.sandbox)?.version),
+          id: appID, _type: "apps")))
+      ).ok.body.json.data
+    }
+  }
+}

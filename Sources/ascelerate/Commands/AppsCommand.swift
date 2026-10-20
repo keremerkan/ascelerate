@@ -2506,27 +2506,24 @@ struct AppsCommand: AsyncParsableCommand {
       subcommands: [View.self, Update.self, Import.self, Export.self, AgeRating.self]
     )
     
-    private static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW"]
-
+    // The core's lookups, with their errors as validation errors (the CLI's message format).
     static func findActiveAppInfo(appID: String, client: ASCClient) async throws -> Components.Schemas.AppInfo {
       try pickActiveAppInfo(from: await client.appsAppInfosGetToManyRelated(path: .init(id: appID)).ok.body.json.data)
     }
 
-    /// Picks the most relevant AppInfo: prefers editable (prepareForSubmission/waitingForReview) over live, skips replaced.
     static func pickActiveAppInfo(from appInfos: [Components.Schemas.AppInfo]) throws -> Components.Schemas.AppInfo {
-      let candidates = appInfos.filter { $0.attributes?.state != "REPLACED_WITH_NEW_INFO" }
-      guard let appInfo = candidates.first(where: { editableStates.contains($0.attributes?.state ?? "") })
-              ?? candidates.first
-              ?? appInfos.first else {
-        throw ValidationError("No app info found.")
+      do {
+        return try AppInfos.pickActive(from: appInfos)
+      } catch let error as AppInfos.AppInfoError {
+        throw ValidationError(error.localizedDescription)
       }
-      return appInfo
     }
-    
+
     static func checkEditable(_ appInfo: Components.Schemas.AppInfo) throws {
-      guard let state = appInfo.attributes?.state, editableStates.contains(state) else {
-        let stateStr = appInfo.attributes?.state.map { formatState($0) } ?? "unknown"
-        throw ValidationError("App info is in state '\(stateStr)' — updates are only allowed in PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW.")
+      do {
+        try AppInfos.checkEditable(appInfo)
+      } catch let error as AppInfos.AppInfoError {
+        throw ValidationError(error.localizedDescription)
       }
     }
     
@@ -2554,17 +2551,11 @@ struct AppsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         
         if listCategories {
-          let response = try await client.appCategoriesGetCollection(query: .init(
-            filterPlatforms: [.ios], existsParent: false, limit: 200, include: [.subcategories], limitSubcategories: 50
-          )).ok.body.json
-          
           print("Categories (iOS):")
-          for cat in response.data.sorted(by: { $0.id < $1.id }) {
-            print("  \(cat.id)")
-            if let subs = cat.relationships?.subcategories?.data, !subs.isEmpty {
-              for sub in subs.sorted(by: { $0.id < $1.id }) {
-                print("    \(sub.id)")
-              }
+          for category in try await AppInfos.categories(platforms: [.ios], client: client) {
+            print("  \(category.id)")
+            for subcategory in category.subcategories {
+              print("    \(subcategory)")
             }
           }
           return
@@ -2722,30 +2713,19 @@ struct AppsCommand: AsyncParsableCommand {
             throw ValidationError("No localization found for locale '\(localeDesc)'.")
           }
           
-          let response = try await client.appInfoLocalizationsUpdateInstance(
-            path: .init(id: localization.id),
-            body: .json(.init(data: .init(
-              attributes: .init(
-                name: name, privacyChoicesUrl: privacyChoicesURL, privacyPolicyUrl: privacyPolicyURL,
-                subtitle: subtitle),
-              id: localization.id,
-              _type: "appInfoLocalizations"
-            )))
-          ).ok.body.json
-          let updatedLocale = response.data.attributes?.locale ?? locale ?? "primary"
+          let updated = try await AppInfos.updateLocalization(
+            id: localization.id, name: name, subtitle: subtitle, privacyPolicyURL: privacyPolicyURL,
+            privacyChoicesURL: privacyChoicesURL, client: client)
+          let updatedLocale = updated.attributes?.locale ?? locale ?? "primary"
           success("Updated", "localization [\(updatedLocale)].")
         }
         
         // Update categories
         if hasCategoryFields {
-          let relationships = Components.Schemas.AppInfoUpdateRequest.DataPayload.RelationshipsPayload(
-            primaryCategory: primaryCategory.map { .init(data: .init(id: $0, _type: "appCategories")) },
-            secondaryCategory: secondaryCategory.map { .init(data: .init(id: $0, _type: "appCategories")) }
-          )
-          _ = try await client.appInfosUpdateInstance(
-            path: .init(id: appInfo.id),
-            body: .json(.init(data: .init(id: appInfo.id, relationships: relationships, _type: "appInfos")))
-          ).ok
+          var changes: [AppInfos.CategorySlot: String?] = [:]
+          if let primaryCategory { changes[.primaryCategory] = primaryCategory }
+          if let secondaryCategory { changes[.secondaryCategory] = secondaryCategory }
+          try await AppInfos.updateCategories(appInfoID: appInfo.id, changes, client: client)
           success("Updated", "categories.")
         }
         
@@ -2866,20 +2846,13 @@ struct AppsCommand: AsyncParsableCommand {
             continue
           }
 
-          let response = try await client.appInfoLocalizationsUpdateInstance(
-            path: .init(id: localization.id),
-            body: .json(.init(data: .init(
-              attributes: .init(
-                name: fields.name, privacyChoicesUrl: fields.privacyChoicesURL,
-                privacyPolicyUrl: fields.privacyPolicyURL, subtitle: fields.subtitle),
-              id: localization.id,
-              _type: "appInfoLocalizations"
-            )))
-          ).ok.body.json
+          let updated = try await AppInfos.updateLocalization(
+            id: localization.id, name: fields.name, subtitle: fields.subtitle, privacyPolicyURL: fields.privacyPolicyURL,
+            privacyChoicesURL: fields.privacyChoicesURL, client: client)
           print("  [\(localeName(locale))] Updated.")
 
           if verbose {
-            let attrs = response.data.attributes
+            let attrs = updated.attributes
             print("    Response:")
             print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
             if let v = attrs?.name { print("      Name:               \(v)") }
@@ -2953,7 +2926,7 @@ struct AppsCommand: AsyncParsableCommand {
 
       static func fetchDeclaration(appID: String, client: ASCClient) async throws -> Components.Schemas.AgeRatingDeclaration {
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: appID, client: client)
-        return try await client.appInfosAgeRatingDeclarationGetToOneRelated(path: .init(id: appInfo.id)).ok.body.json.data
+        return try await AppInfos.ageRatingDeclaration(appInfoID: appInfo.id, client: client)
       }
 
       static func toFields(attrs: Components.Schemas.AgeRatingDeclaration.AttributesPayload?) -> AgeRatingFields {
@@ -3231,10 +3204,7 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
 
-          _ = try await client.ageRatingDeclarationsUpdateInstance(
-            path: .init(id: declaration.id),
-            body: .json(.init(data: .init(attributes: attributes, id: declaration.id, _type: "ageRatingDeclarations")))
-          ).ok
+          try await AppInfos.updateAgeRatingDeclaration(id: declaration.id, attributes, client: client)
           print()
           success("Updated", "age rating declaration for \(appName).")
         }
@@ -3554,10 +3524,7 @@ struct AppsCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
-      // Try to get existing EULA (API returns 404 or null data when none exists)
-      let existing = try await optionalRelated {
-        try await client.appsEndUserLicenseAgreementGetToOneRelated(path: .init(id: app.id)).ok.body.json.data
-      }
+      let existing = try await LicenseAgreements.agreement(appID: app.id, client: client)
       
       if delete {
         guard let eula = existing else {
@@ -3575,7 +3542,7 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        _ = try await client.endUserLicenseAgreementsDeleteInstance(path: .init(id: eula.id)).noContent
+        try await LicenseAgreements.delete(id: eula.id, client: client)
         print()
         success("Deleted", "custom EULA.")
         return
@@ -3607,32 +3574,19 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
           
-          _ = try await client.endUserLicenseAgreementsUpdateInstance(
-            path: .init(id: eula.id),
-            body: .json(.init(data: .init(
-              attributes: .init(agreementText: text), id: eula.id, _type: "endUserLicenseAgreements")))
-          ).ok
+          try await LicenseAgreements.update(id: eula.id, text: text, client: client)
           print()
           success("Updated", "EULA.")
         } else {
           // Create new — need all territory IDs
-          let allTerritoryIDs = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.territoriesGetCollection(query: .init(limit: 200)).ok.body.json
-          }.flatMap { $0.data.map(\.id) }
+          let allTerritoryIDs = try await LicenseAgreements.allTerritoryIDs(client: client)
           
           guard confirm("Create custom EULA for all \(allTerritoryIDs.count) territories? [y/N] ") else {
             cancelled()
             return
           }
           
-          _ = try await client.endUserLicenseAgreementsCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(agreementText: text),
-            relationships: .init(
-              app: .init(data: .init(id: app.id, _type: "apps")),
-              territories: .init(data: allTerritoryIDs.map { .init(id: $0, _type: "territories") })
-            ),
-            _type: "endUserLicenseAgreements"
-          )))).created
+          try await LicenseAgreements.create(appID: app.id, text: text, territoryIDs: allTerritoryIDs, client: client)
           print()
           success("Created", "EULA for \(allTerritoryIDs.count) territories.")
         }

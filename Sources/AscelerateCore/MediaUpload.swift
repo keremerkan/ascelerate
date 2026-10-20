@@ -28,9 +28,12 @@ public enum MediaUploadError: LocalizedError {
   case noUploadOperations
   case unsupportedImage(String, accepted: [String])
   case unsupportedVideo(String, accepted: [String])
+  case noMediaSets
 
   public var errorDescription: String? {
     switch self {
+    case .noMediaSets:
+      return "An in-app event's localization has no screenshot or preview sets."
     case .unsupportedImage(let image, let accepted):
       return "A \(image) image is not accepted here; use \(accepted.joined(separator: ", "))."
     case .unsupportedVideo(let video, let accepted):

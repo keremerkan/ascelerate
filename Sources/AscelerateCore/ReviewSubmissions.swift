@@ -172,11 +172,43 @@ public enum ReviewSubmissions {
     ).ok
   }
 
-  /// Takes an item out of a submission.
+  /// Takes an item out of a draft submission. A draft's item is deleted: `PATCH removed: true`
+  /// answers 409 "Cannot remove item because of state of reviewSubmission" there (seen live
+  /// 2026-10-21). An event taken out goes back to Draft.
   public static func removeItem(id: String, client: ASCClient) async throws {
-    _ = try await client.reviewSubmissionItemsUpdateInstance(
-      path: .init(id: id), body: .json(.init(data: .init(attributes: .init(removed: true), id: id, _type: "reviewSubmissionItems")))
-    ).ok
+    _ = try await client.reviewSubmissionItemsDeleteInstance(path: .init(id: id)).noContent
+  }
+
+  /// Adds an in-app event to the app's draft submission (`READY_FOR_REVIEW`) for `platform`,
+  /// creating the draft when there's none, as App Store Connect's Add for Review does. It goes to
+  /// App Review when the draft is submitted. Returns the draft's ID.
+  @discardableResult
+  public static func addEvent(_ eventID: String, appID: String, platform: String, client: ASCClient) async throws -> String {
+    typealias Query = Operations.AppsReviewSubmissionsGetToManyRelated.Input.Query
+    let drafts = try await client.appsReviewSubmissionsGetToManyRelated(
+      path: .init(id: appID),
+      query: .init(
+        filterPlatform: Query.FilterPlatformPayloadPayload(rawValue: platform).map { [$0] },
+        filterState: [.readyForReview], limit: 10)
+    ).ok.body.json.data
+    let draftID: String
+    if let draft = drafts.first {
+      draftID = draft.id
+    } else {
+      draftID = try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(platform: platform),
+        relationships: .init(app: .init(data: .init(id: appID, _type: "apps"))),
+        _type: "reviewSubmissions"
+      )))).created.body.json.data.id
+    }
+    _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
+      relationships: .init(
+        appEvent: .init(data: .init(id: eventID, _type: "appEvents")),
+        reviewSubmission: .init(data: .init(id: draftID, _type: "reviewSubmissions"))
+      ),
+      _type: "reviewSubmissionItems"
+    )))).created
+    return draftID
   }
 
   /// Marks a rejected item's issues as resolved, after fixing them (and replying to App Review in

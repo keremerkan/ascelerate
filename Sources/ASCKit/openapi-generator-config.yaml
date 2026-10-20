@@ -166,6 +166,7 @@ filter:
     - /v1/appAssetLibraries/{id}/videos
     - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/appCustomProductPageLocalizations/{id}/placements
+    - /v1/appEventLocalizations/{id}/placements
     - /v1/devices
     - /v1/devices/{id}
     - /v1/salesReports

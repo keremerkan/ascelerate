@@ -62,7 +62,7 @@ ascelerate events localizations import <bundle-id> summer-sale --file event-loca
 ```bash
 ascelerate events media list <bundle-id> summer-sale
 ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_CARD card.png
-ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_DETAILS_PAGE clip.mp4 --preview-frame 00:00:03
+ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_DETAILS_PAGE clip.mp4 --preview-frame 00:00:03:00
 ascelerate events media delete <bundle-id> summer-sale <media-id>
 ```
 

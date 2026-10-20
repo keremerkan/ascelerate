@@ -1197,7 +1197,7 @@ ascelerate events localizations import <bundle-id> summer-sale --file event-loca
 # Media — event card / details page screenshots and video clips
 ascelerate events media list <bundle-id> summer-sale
 ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_CARD card.png
-ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_DETAILS_PAGE clip.mp4 --preview-frame 00:00:03
+ascelerate events media upload <bundle-id> summer-sale --locale en-US --asset-type EVENT_DETAILS_PAGE clip.mp4 --preview-frame 00:00:03:00
 ascelerate events media delete <bundle-id> summer-sale <media-id>
 ```
 
@@ -1225,7 +1225,7 @@ ascelerate product-pages localizations import <bundle-id> "Summer 2026" --file p
 # Screenshots & app previews (sets created on first upload)
 ascelerate product-pages media list <bundle-id> "Summer 2026"
 ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --display-type APP_IPHONE_67 screenshot.png
-ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --preview-type APP_IPHONE_67 preview.mp4 --preview-frame 00:00:03
+ascelerate product-pages media upload <bundle-id> "Summer 2026" --locale en-US --preview-type APP_IPHONE_67 preview.mp4 --preview-frame 00:00:03:00
 ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 ```
 

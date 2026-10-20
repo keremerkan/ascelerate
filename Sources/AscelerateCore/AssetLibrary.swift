@@ -107,6 +107,8 @@ public enum AssetLibrary {
     case productPageLocalization(String)
     /// A product page optimization treatment's localization.
     case treatmentLocalization(String)
+    /// An in-app event's localization (its event card and details page media).
+    case eventLocalization(String)
   }
 
   /// A library image or video.
@@ -154,7 +156,10 @@ public enum AssetLibrary {
   /// how `media library --only` tells an unplaced Duo screenshot from a 6.9" one, or a header
   /// video from a Duo preview.
   public static func specIDs(client: ASCClient) async throws -> [String: Set<String>] {
-    let types = ["APP_SCREENSHOT", "APP_PREVIEW", "PRODUCT_PAGE_HEADER_ASSET", "APP_STORE_SEARCH_RESULTS_ASSET"]
+    let types = [
+      "APP_SCREENSHOT", "APP_PREVIEW", "PRODUCT_PAGE_HEADER_ASSET", "APP_STORE_SEARCH_RESULTS_ASSET", "EVENT_CARD_ASSET",
+      "EVENT_DETAILS_PAGE_ASSET",
+    ]
     let data = try await withTransientRetry {
       try await client.appAssetLibraryRefDataGetCollection(query: .init(filterPlacementTypes: types)).ok.body.json.data
     }
@@ -190,6 +195,22 @@ public enum AssetLibrary {
     return displayTypeGroups.merging(slotGroups) { classic, _ in classic }.compactMapValues { byGroup[$0] }
   }
 
+  /// The image and video specs a placement type accepts in a group, live from
+  /// `appAssetLibraryRefData`: an in-app event card's (`EVENT_CARD_ASSET`, `DEFAULT_PROFILE`) are
+  /// 16:9 images 1920–3840 wide and 16:9 videos of 15–30 s at 30 or 60 fps (read 2026-10-21).
+  public static func placementSpecs(
+    type: String, group: String, client: ASCClient
+  ) async throws -> (images: [ImageSpec], videos: [VideoSpec]) {
+    let specs = try await refDataSpecs(placementType: type, client: client)
+    return (specs.images[group] ?? [], specs.videos[group] ?? [])
+  }
+
+  /// A spec's aspect ratio ("16:9"), which bounds a range of sizes (a single size needs none).
+  private static func aspect(_ ratio: String?) -> (width: Int, height: Int)? {
+    let parts = ratio?.split(separator: ":").compactMap { Int($0) } ?? []
+    return parts.count == 2 && parts[0] > 0 && parts[1] > 0 ? (parts[0], parts[1]) : nil
+  }
+
   /// The image and video specs of a placement type's groups in `appAssetLibraryRefData`, keyed by
   /// placement group.
   private static func refDataSpecs(
@@ -208,8 +229,10 @@ public enum AssetLibrary {
             let maxHeight = size.maxHeight
           else { return nil }
           let extensions = Set((spec.fileExtensions ?? []).map { $0.trimmingPrefix(".").lowercased() })
+          let isRange = minWidth != maxWidth || minHeight != maxHeight
           return (id, ImageSpec(
-            widths: minWidth...maxWidth, heights: minHeight...maxHeight, aspect: nil, extensions: extensions,
+            widths: minWidth...maxWidth, heights: minHeight...maxHeight, aspect: isRange ? aspect(spec.aspectRatio) : nil,
+            extensions: extensions,
             alphaAllowed: spec.alphaAllowed ?? true))
         }, uniquingKeysWith: { first, _ in first })
       let videoSpecs = Dictionary(
@@ -223,8 +246,10 @@ public enum AssetLibrary {
           let rates = (spec.frameRates ?? []).compactMap { rate in
             rate.minFps.flatMap { low in rate.maxFps.map { Double(low)...Double($0) } }
           }
+          let isRange = minWidth != maxWidth || minHeight != maxHeight
           return (id, VideoSpec(
-            widths: minWidth...maxWidth, heights: minHeight...maxHeight, aspect: nil, seconds: shortest...longest,
+            widths: minWidth...maxWidth, heights: minHeight...maxHeight, aspect: isRange ? aspect(spec.aspectRatio) : nil,
+            seconds: shortest...longest,
             frameRates: rates, requiresAudio: spec.audioRequired ?? false))
         }, uniquingKeysWith: { first, _ in first })
       for type in datum.attributes?.placementTypes ?? [] where type.placementTypeId == placementType {
@@ -274,16 +299,19 @@ public enum AssetLibrary {
       var version: Relationships.AppStoreVersionLocalizationPayload?
       var productPage: Relationships.AppCustomProductPageLocalizationPayload?
       var treatment: Relationships.AppStoreVersionExperimentTreatmentLocalizationPayload?
+      var event: Relationships.AppEventLocalizationPayload?
       switch owner {
         case .versionLocalization(let id): version = .init(data: .init(id: id, _type: "appStoreVersionLocalizations"))
         case .productPageLocalization(let id): productPage = .init(data: .init(id: id, _type: "appCustomProductPageLocalizations"))
         case .treatmentLocalization(let id):
           treatment = .init(data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations"))
+        case .eventLocalization(let id): event = .init(data: .init(id: id, _type: "appEventLocalizations"))
       }
       return try await client.appAssetLibraryPlacementsCreateInstance(body: .json(.init(data: .init(
         attributes: .init(placementGroup: group, placementType: type.rawValue),
         relationships: .init(
-          appCustomProductPageLocalization: productPage, appStoreVersionExperimentTreatmentLocalization: treatment,
+          appCustomProductPageLocalization: productPage, appEventLocalization: event,
+          appStoreVersionExperimentTreatmentLocalization: treatment,
           appStoreVersionLocalization: version, image: image, video: video
         ),
         _type: "appAssetLibraryPlacements"
@@ -496,6 +524,15 @@ public enum AssetLibrary {
             path: .init(id: id),
             query: .init(
               filterPlacementType: treatmentType.map { [$0] } ?? [], filterPlacementGroup: [group],
+              filterImage: imageID.map { [$0] }, filterVideo: videoID.map { [$0] }, sort: [.placementGroupPosition], limit: 200)
+          ).ok.body.json.data
+        case .eventLocalization(let id):
+          let eventType = Operations.AppEventLocalizationsPlacementsGetToManyRelated.Input.Query
+            .FilterPlacementTypePayloadPayload(rawValue: type.rawValue)
+          return try await client.appEventLocalizationsPlacementsGetToManyRelated(
+            path: .init(id: id),
+            query: .init(
+              filterPlacementType: eventType.map { [$0] } ?? [], filterPlacementGroup: [group],
               filterImage: imageID.map { [$0] }, filterVideo: videoID.map { [$0] }, sort: [.placementGroupPosition], limit: 200)
           ).ok.body.json.data
       }

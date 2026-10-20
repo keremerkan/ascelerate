@@ -61,21 +61,32 @@ public enum AppInfos {
     }
   }
 
-  /// Changes an app info localization's fields; a nil one is left as it is.
+  /// The fields of an app info localization that can be cleared (sent as null: an empty URL is
+  /// refused).
+  public enum LocalizationField: String, Sendable {
+    case subtitle, privacyPolicyUrl, privacyChoicesUrl, privacyPolicyText
+  }
+
+  /// Changes an app info localization's fields; a nil one is left as it is, and the ones in
+  /// `clearing` are removed. `privacyPolicyText` is the policy Apple TV shows instead of a URL.
   @discardableResult
   public static func updateLocalization(
     id: String, name: String? = nil, subtitle: String? = nil, privacyPolicyURL: String? = nil,
-    privacyChoicesURL: String? = nil, client: ASCClient
+    privacyChoicesURL: String? = nil, privacyPolicyText: String? = nil, clearing: [LocalizationField] = [],
+    client: ASCClient
   ) async throws -> Components.Schemas.AppInfoLocalization {
-    try await client.appInfoLocalizationsUpdateInstance(
-      path: .init(id: id),
-      body: .json(.init(data: .init(
-        attributes: .init(
-          name: name, privacyChoicesUrl: privacyChoicesURL, privacyPolicyUrl: privacyPolicyURL, subtitle: subtitle),
-        id: id,
-        _type: "appInfoLocalizations"
-      )))
-    ).ok.body.json.data
+    try await ASCNulls.sending(clearing.map { ["data", "attributes", $0.rawValue] }) {
+      try await client.appInfoLocalizationsUpdateInstance(
+        path: .init(id: id),
+        body: .json(.init(data: .init(
+          attributes: .init(
+            name: name, privacyChoicesUrl: privacyChoicesURL, privacyPolicyText: privacyPolicyText,
+            privacyPolicyUrl: privacyPolicyURL, subtitle: subtitle),
+          id: id,
+          _type: "appInfoLocalizations"
+        )))
+      ).ok.body.json.data
+    }
   }
 
   /// Sets an app info's categories: each slot in `changes` to its category ID, or none for nil
@@ -195,28 +206,33 @@ public enum AppInfos {
   /// `primaryLocale` is the language its product page falls back to, one it has a localization in.
   /// `notificationEndpoints` sets each listed environment's App Store Server Notifications endpoint,
   /// or removes it for nil (URL and version sent as null: App Store Connect refuses a URL without
-  /// its version, and an empty one). Returns the app as saved: reading the app right afterwards can
-  /// still return the old values for about a second.
+  /// its version, and an empty one). `accessibilityURL` is the page about the app's accessibility
+  /// its product page links to; `.some(nil)` removes it. Returns the app as saved: reading the app
+  /// right afterwards can still return the old values for about a second.
   @discardableResult
   public static func updateApp(
     appID: String, contentRights: String? = nil, primaryLocale: String? = nil,
-    notificationEndpoints: [NotificationEnvironment: NotificationEndpoint?] = [:], client: ASCClient
+    notificationEndpoints: [NotificationEnvironment: NotificationEndpoint?] = [:], accessibilityURL: String?? = nil,
+    client: ASCClient
   ) async throws -> Components.Schemas.App {
     // A set environment's endpoint; nil for one left alone or removed.
     func endpoint(_ environment: NotificationEnvironment) -> NotificationEndpoint? {
       notificationEndpoints[environment] ?? nil
     }
-    let removed = notificationEndpoints.filter { $0.value == nil }.keys.flatMap { environment in
+    var removed = notificationEndpoints.filter { $0.value == nil }.keys.flatMap { environment in
       environment == .production
         ? ["subscriptionStatusUrl", "subscriptionStatusUrlVersion"]
         : ["subscriptionStatusUrlForSandbox", "subscriptionStatusUrlVersionForSandbox"]
+    }
+    if case .some(.none) = accessibilityURL {
+      removed.append("accessibilityUrl")
     }
     return try await ASCNulls.sending(removed.map { ["data", "attributes", $0] }) {
       try await client.appsUpdateInstance(
         path: .init(id: appID),
         body: .json(.init(data: .init(
           attributes: .init(
-            contentRightsDeclaration: contentRights, primaryLocale: primaryLocale,
+            accessibilityUrl: accessibilityURL ?? nil, contentRightsDeclaration: contentRights, primaryLocale: primaryLocale,
             subscriptionStatusUrl: endpoint(.production)?.url,
             subscriptionStatusUrlForSandbox: endpoint(.sandbox)?.url,
             subscriptionStatusUrlVersion: endpoint(.production)?.version,

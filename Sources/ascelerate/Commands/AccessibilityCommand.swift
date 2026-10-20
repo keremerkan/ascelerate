@@ -14,43 +14,7 @@ extension AppsCommand {
     )
 
     /// The declarable features: CLI name, API attribute, App Store label.
-    static let features: [(name: String, attribute: String, label: String)] = [
-      ("voiceover", "supportsVoiceover", "VoiceOver"),
-      ("voice-control", "supportsVoiceControl", "Voice Control"),
-      ("larger-text", "supportsLargerText", "Larger Text"),
-      ("dark-interface", "supportsDarkInterface", "Dark Interface"),
-      ("differentiate-without-color", "supportsDifferentiateWithoutColorAlone", "Differentiate Without Color Alone"),
-      ("sufficient-contrast", "supportsSufficientContrast", "Sufficient Contrast"),
-      ("reduced-motion", "supportsReducedMotion", "Reduced Motion"),
-      ("captions", "supportsCaptions", "Captions"),
-      ("audio-descriptions", "supportsAudioDescriptions", "Audio Descriptions"),
-    ]
-
-    struct Declaration: Encodable {
-      let id: String
-      let deviceFamily: String?
-      let state: String?
-      /// Feature name (voiceover, larger-text, …) → supported.
-      let supports: [String: Bool]
-    }
-
-    static func declarations(appID: String, client: ASCClient) async throws -> [Declaration] {
-      try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.appsAccessibilityDeclarationsGetToManyRelated(path: .init(id: appID), query: .init(limit: 200)).ok.body.json
-      }.flatMap(\.data).map { d in
-        let a = d.attributes
-        let values: [String: Bool?] = [
-          "voiceover": a?.supportsVoiceover, "voice-control": a?.supportsVoiceControl, "larger-text": a?.supportsLargerText,
-          "dark-interface": a?.supportsDarkInterface, "differentiate-without-color": a?.supportsDifferentiateWithoutColorAlone,
-          "sufficient-contrast": a?.supportsSufficientContrast, "reduced-motion": a?.supportsReducedMotion,
-          "captions": a?.supportsCaptions, "audio-descriptions": a?.supportsAudioDescriptions,
-        ]
-        return Declaration(
-          id: d.id, deviceFamily: a?.deviceFamily, state: a?.state,
-          supports: values.compactMapValues { $0 }
-        )
-      }
-    }
+    static let features = AccessibilityDeclarations.features
 
     struct View: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "Show the accessibility declarations per device family.")
@@ -69,7 +33,7 @@ extension AppsCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let order = ASCEnum.DeviceFamily.allCases.map(\.rawValue)
-        let declarations = try await AccessibilityCommand.declarations(appID: app.id, client: client)
+        let declarations = try await AccessibilityDeclarations.list(appID: app.id, client: client)
           .filter { all || $0.state != "REPLACED" }
           .sorted { (order.firstIndex(of: $0.deviceFamily ?? "") ?? 99) < (order.firstIndex(of: $1.deviceFamily ?? "") ?? 99) }
         if jsonOption.json { try printJSON(declarations); return }
@@ -101,7 +65,7 @@ extension AppsCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let drafts = try await AccessibilityCommand.declarations(appID: app.id, client: client).filter { $0.state == "DRAFT" }
+        let drafts = try await AccessibilityDeclarations.list(appID: app.id, client: client).filter { $0.state == "DRAFT" }
         guard !drafts.isEmpty else {
           print("No draft declarations to publish.")
           return
@@ -114,10 +78,7 @@ extension AppsCommand {
         for draft in drafts {
           // Under dry run every request is shown, not only the first.
           guard try await unlessDryRunStopped({
-            try await client.accessibilityDeclarationsUpdateInstance(
-              path: .init(id: draft.id),
-              body: .json(.init(data: .init(attributes: .init(publish: true), id: draft.id, _type: "accessibilityDeclarations")))
-            ).ok
+            try await AccessibilityDeclarations.publish(id: draft.id, client: client)
           }) != nil else { continue }
           print(green("Published") + " the \(formatState(draft.deviceFamily ?? "-")) declaration.")
         }
@@ -155,16 +116,20 @@ extension AppsCommand {
         if let unknown = names.first(where: { !known.contains($0) }) {
           throw ValidationError("Unknown feature '\(unknown)'. Features: \(AccessibilityCommand.features.map(\.name).joined(separator: ", ")).")
         }
+        let applicable = AccessibilityDeclarations.features(for: family.rawValue)
+        if let other = names.first(where: { name in !applicable.contains { $0.name == name } }) {
+          throw ValidationError("'\(other)' doesn't apply to \(formatState(family.rawValue)).")
+        }
         let on = Swift.Set(names)
         let has = { (name: String) in on.contains(name) }
 
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let existing = try await AccessibilityCommand.declarations(appID: app.id, client: client)
+        let existing = try await AccessibilityDeclarations.list(appID: app.id, client: client)
           .first { $0.deviceFamily == family.rawValue && $0.state != "REPLACED" }
 
         print("\(app.attributes?.name ?? bundleID), \(formatState(family.rawValue)):")
-        for f in AccessibilityCommand.features {
+        for f in applicable {
           let before = existing?.supports[f.name].map { $0 ? "yes" : "no" } ?? "-"
           print("  \(f.label): \(has(f.name) ? green("yes") : "no")" + (existing == nil ? "" : " (now \(before))"))
         }
@@ -174,40 +139,15 @@ extension AppsCommand {
         }
 
         if let existing {
-          _ = try await client.accessibilityDeclarationsUpdateInstance(
-            path: .init(id: existing.id),
-            body: .json(.init(data: .init(
-              attributes: .init(
-                publish: publish ? true : nil,
-                supportsAudioDescriptions: has("audio-descriptions"), supportsCaptions: has("captions"),
-                supportsDarkInterface: has("dark-interface"), supportsDifferentiateWithoutColorAlone: has("differentiate-without-color"),
-                supportsLargerText: has("larger-text"), supportsReducedMotion: has("reduced-motion"),
-                supportsSufficientContrast: has("sufficient-contrast"), supportsVoiceControl: has("voice-control"),
-                supportsVoiceover: has("voiceover")
-              ),
-              id: existing.id, _type: "accessibilityDeclarations"
-            )))
-          ).ok
+          try await AccessibilityDeclarations.update(
+            id: existing.id, deviceFamily: family.rawValue, supported: on, publish: publish, client: client)
           print(green("Updated") + " the \(formatState(family.rawValue)) declaration" + (publish ? " and published it." : "."))
         } else {
-          let created = try await client.accessibilityDeclarationsCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(
-              deviceFamily: family.rawValue,
-              supportsAudioDescriptions: has("audio-descriptions"), supportsCaptions: has("captions"),
-              supportsDarkInterface: has("dark-interface"), supportsDifferentiateWithoutColorAlone: has("differentiate-without-color"),
-              supportsLargerText: has("larger-text"), supportsReducedMotion: has("reduced-motion"),
-              supportsSufficientContrast: has("sufficient-contrast"), supportsVoiceControl: has("voice-control"),
-              supportsVoiceover: has("voiceover")
-            ),
-            relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-            _type: "accessibilityDeclarations"
-          )))).created.body.json.data
+          let created = try await AccessibilityDeclarations.create(
+            appID: app.id, deviceFamily: family.rawValue, supported: on, client: client)
           print(green("Created") + " the \(formatState(family.rawValue)) declaration.")
           if publish {
-            _ = try await client.accessibilityDeclarationsUpdateInstance(
-              path: .init(id: created.id),
-              body: .json(.init(data: .init(attributes: .init(publish: true), id: created.id, _type: "accessibilityDeclarations")))
-            ).ok
+            try await AccessibilityDeclarations.publish(id: created.id, client: client)
             print(green("Published") + " it.")
           }
         }

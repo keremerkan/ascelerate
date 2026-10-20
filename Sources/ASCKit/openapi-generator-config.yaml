@@ -59,6 +59,7 @@ filter:
     - /v1/apps/{id}/endUserLicenseAgreement
     - /v1/endUserLicenseAgreements
     - /v1/endUserLicenseAgreements/{id}
+    - /v1/endUserLicenseAgreements/{id}/territories
     - /v1/territories
     - /v1/apps/{id}/subscriptionGracePeriod
     - /v1/subscriptionGracePeriods/{id}
@@ -225,6 +226,7 @@ filter:
     - /v1/appStoreReviewDetails/{id}/appStoreReviewAttachments
     - /v1/appCategories
     - /v1/appInfos/{id}/appInfoLocalizations
+    - /v1/appInfos/{id}/territoryAgeRatings
     - /v1/appInfos/{id}/ageRatingDeclaration
     - /v1/certificates
     - /v1/certificates/{id}

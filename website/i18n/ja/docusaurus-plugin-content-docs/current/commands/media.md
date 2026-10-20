@@ -140,27 +140,21 @@ App Store Connect には iPhone Duo 用のスクリーンショットセット�
 
 カスタムプロダクトページにも、`product-pages media upload` に `--display-type PRODUCT_PAGE_HEADER`、`APP_STORE_SEARCH_RESULTS`、`APP_IPHONE_DUO` を指定して同じファイルをアップロードできます。
 
-## app-store-screenshotsとの連携
+## App Store画像のデザイン {#designing-app-store-images}
 
-[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) は、AIコーディングエージェント用のコンパニオンスキルで、本番品質のApp Storeスクリーンショットを生成します。`ascelerate screenshot frame` でフレーム加工されたデバイススクリーンショットを使用して広告スタイルのマーケティングレイアウトをレンダリングするNext.jsページを作成し、`ascelerate apps media upload` でアップロード可能なzipファイルとしてエクスポートします：
+`ascelerate screenshot setup-prompt --design` は、AIコーディングエージェントがデザインジェネレーターを構築するための指示を出力します。プロジェクトの `app-store-screenshots/` フォルダに置く小さなWebアプリで、フレーミングしたスクリーンショット（`ascelerate screenshot frame`）を各言語の見出し付きの広告スタイルのApp Store画像に変換し、`media upload` が読み込める構成でエクスポートします：
 
 ```
-en-US/APP_IPHONE_67/01_hero.png
-en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
-de-DE/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
+export/de-DE/APP_IPHONE_67/01_hero.png
 ```
-
-AIコーディングエージェントにスキルをインストールします：
 
 ```bash
-npx skills add keremerkan/ascelerate
+ascelerate apps media upload <bundle-id> export --platform ios --replace
 ```
 
-エクスポートしたzipを直接アップロードできます：
-
-```bash
-ascelerate apps media upload <bundle-id> screenshots.zip --replace
-```
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) スキル（`npx skills add keremerkan/ascelerate`）も、エージェントを同じ指示に案内します。
 
 ## 停滞したメディアの確認とリトライ
 

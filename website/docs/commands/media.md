@@ -140,27 +140,21 @@ Uploading replaces the locale's current image or video, with or without `--repla
 
 Custom product pages take the same files through `product-pages media upload` with `--display-type PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` or `APP_IPHONE_DUO`.
 
-## Using with app-store-screenshots
+## Designing App Store images {#designing-app-store-images}
 
-[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style marketing layouts using framed device screenshots from `ascelerate screenshot frame` and exports them as a zip file ready for upload via `ascelerate apps media upload`:
+`ascelerate screenshot setup-prompt --design` prints instructions for an AI coding agent to build a design generator: a small web app in the project's `app-store-screenshots/` folder that turns framed screenshots (`ascelerate screenshot frame`) into ad-style App Store images with headlines in every language, and exports them in the layout `media upload` takes:
 
 ```
-en-US/APP_IPHONE_67/01_hero.png
-en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
-de-DE/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
+export/de-DE/APP_IPHONE_67/01_hero.png
 ```
-
-Install the skill for your AI coding agent:
 
 ```bash
-npx skills add keremerkan/ascelerate
+ascelerate apps media upload <bundle-id> export --platform ios --replace
 ```
 
-Upload the exported zip directly:
-
-```bash
-ascelerate apps media upload <bundle-id> screenshots.zip --replace
-```
+The [app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) skill (`npx skills add keremerkan/ascelerate`) points agents to the same instructions.
 
 ## Verify and retry stuck media
 

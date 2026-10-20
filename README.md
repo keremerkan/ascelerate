@@ -481,27 +481,21 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 >
 > `media download` saves files in this same folder structure (defaults to `<bundle-id>-media/`), so you can download, edit, and re-upload.
 
-#### Using with app-store-screenshots
+#### Designing App Store images
 
-[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) is a companion skill for AI coding agents that generates production-ready App Store screenshots. It creates a Next.js page that renders ad-style marketing layouts using framed device screenshots from `ascelerate screenshot frame` and exports them as a zip file ready for upload via `ascelerate apps media upload`:
+`ascelerate screenshot setup-prompt --design` prints instructions for an AI coding agent to build a design generator: a small web app in the project's `app-store-screenshots/` folder that turns framed screenshots (`ascelerate screenshot frame`) into ad-style App Store images with headlines in every language, and exports them in the layout `media upload` takes:
 
 ```
-en-US/APP_IPHONE_67/01_hero.png
-en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
-de-DE/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
+export/de-DE/APP_IPHONE_67/01_hero.png
 ```
-
-Install the skill for your AI coding agent:
 
 ```bash
-npx skills add keremerkan/ascelerate
+ascelerate apps media upload <bundle-id> export --platform ios --replace
 ```
 
-Upload the exported zip directly:
-
-```bash
-ascelerate apps media upload <bundle-id> screenshots.zip --replace
-```
+The [app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) skill (`npx skills add keremerkan/ascelerate`) points agents to the same instructions.
 
 #### Verify and retry stuck media
 
@@ -561,15 +555,21 @@ Images that went through App Review are never deleted, and each one is checked a
 Capture App Store screenshots directly from iOS/iPadOS simulators using UI tests. Replaces [fastlane snapshot](https://docs.fastlane.tools/actions/snapshot/).
 
 ```bash
-# Generate config and helper files
+# Let an AI coding agent set it up: UI tests, helper, screenshot mode with demo content, configuration
+ascelerate screenshot setup-prompt --copy         # Copies instructions to paste into the agent (--design: a design generator)
+
+# Or by hand: generate config and helper files
 ascelerate screenshot init                        # Creates ascelerate/screenshot.yml and ascelerate/ScreenshotHelper.swift
 
 # Capture screenshots
 ascelerate screenshot run
 ascelerate screenshot run -l en-US,tr-TR          # Only capture a subset of configured languages
+ascelerate screenshot run --json-events           # Progress as JSON Lines on stdout for other tools
 ascelerate screenshot frame                       # Frame screenshots with device bezels
-ascelerate screenshot doctor                      # Check config and environment for problems
+ascelerate screenshot doctor [--json]             # Check config and environment for problems
 ```
+
+The setup instructions start from what the project already has, so running `setup-prompt` again shows what's left. They also cover device frames, which you download from Apple's [design resources](https://developer.apple.com/design/resources/) (Product Bezels).
 
 Add `ScreenshotHelper.swift` to your UITest target, then call `setupScreenshots(app)` in `setUp()` and `screenshot("name")` to capture:
 
@@ -1424,7 +1424,7 @@ Versions up to 0.21 were built on top of [asc-swift](https://github.com/aaronsky
 
 *"A Swift Client, App Store Connect"* — [@validatedev](https://x.com/validatedev/status/2026613415012118674)
 
-The [app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) skill is based on [ParthJadhav/app-store-screenshots](https://github.com/ParthJadhav/app-store-screenshots), significantly rewritten with device bezel framing, iPad support, localization, and ascelerate-compatible export.
+The design generator instructions (`ascelerate screenshot setup-prompt --design`, formerly the app-store-screenshots skill) are based on [ParthJadhav/app-store-screenshots](https://github.com/ParthJadhav/app-store-screenshots), significantly rewritten with device bezel framing, iPad support, localization, and ascelerate-compatible export.
 
 Developed with [Claude Code](https://claude.ai/code).
 

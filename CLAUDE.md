@@ -741,6 +741,8 @@ Sources/ascelerate/
     ScreenshotCollector.swift    # Moves PNGs from per-device cache to output dir
     SimulatorManager.swift       # xcrun simctl: boot, shutdown, erase, localize, status bar, dark mode
     ScreenshotShell.swift        # Process wrapper: run (capture), stream (passthrough), runToLog (to file)
+    ScreenshotOutput.swift       # Progress output: readable log, or JSON events with --json-events (log to stderr)
+    ScreenshotSetupPrompt.swift  # setup-prompt: project survey (projects, schemes from scheme files, UI test targets, knownRegions, simulators, config, helper) + the agent prompts
     ScreenshotError.swift        # Error types
   Commands/
     ScreenshotCommand.swift      # Subcommands: run, init, create-helper + embedded ScreenshotHelper.swift
@@ -801,7 +803,9 @@ overrideStatusBar: true
 - `xcrun simctl bootstatus` waits for full boot before applying status bar override
 - **Xcode 27 removed Simulator.app.** Simulator windows are now hosted by `<Xcode>/Contents/Applications/DeviceHub.app` (bundle ID `com.apple.dt.Devices`); Xcode ≤26 ships `<Xcode>/Contents/Developer/Applications/Simulator.app`. `open -a Simulator` resolves by name via LaunchServices and fails once no Simulator.app is registered. `SimulatorManager.launchUIHost()` resolves the host inside the `xcode-select -p` Xcode (DeviceHub first, then Simulator.app, then bundle-ID fallbacks); failure only prints a warning and the run continues headless. **DeviceHub does not open windows for booted devices on its own** (Simulator.app did): launching it only shows its device-management window, `-CurrentDeviceUDID` is ignored, and there is no AppleScript/CLI. The only hook is its URL scheme: `open -a <DeviceHub.app> "devices://device/open?id=<udid>"` opens (or focuses) that device's window — `SimulatorManager.showDeviceWindow(udid:)` calls it after every boot in `prepareDevicesConcurrently` (no-op for Simulator.app). Nothing else depends on the app: every other step goes through `xcrun simctl` (CoreSimulatorService), verified live with DeviceHub on Xcode 27.1 (2026-09-22): boot, status_bar, ui appearance, spawn, io screenshot, and full XCUITest runs.
 - Test output goes to log files (not stdout) to prevent interleaved output from concurrent devices
-- Helper version tracked via `// ScreenshotHelperVersion [X.Y]` comment in generated file
+- Helper version tracked via `// ScreenshotHelperVersion [X.Y]` comment in generated file (`CreateHelper.installedVersion(at:)`, shared by doctor and setup-prompt)
+- **`setup-prompt` is the onboarding path:** it prints instructions for an AI coding agent (UI test target, helper, a `-ASC_SCREENSHOT` screenshot mode with demo data, the tests, the configuration, optional device frames the user downloads from Apple), opening with what the project already has, so re-running it shows what's left. `--design` covers a web app that renders framed screenshots into App Store images and exports `<locale>/<display type>/NN_name.png` for `apps media upload`. The prompts are embedded in the binary so they always match its helper and commands: update them with any change to the helper, the configuration or these commands.
+- **`--json-events`** (run) prints one JSON object per line on stdout (`start`, `build`, `language`, `device` steps preparing/ready/testing/retrying/passed/failed/collected, `finished` with results) and moves the readable log to stderr (`ScreenshotOutput`, a task-local); stdout is line-buffered for every command so piped readers see lines as they're printed. `doctor --json` prints `{config: {scheme, devices, languages, outputDirectory}?, checks: [{name, status: pass|warn|fail, detail}]}`.
 - `clearPreviousScreenshots` only clears per-language after all devices succeed
 - `numberOfRetries` — retries failed languages by erasing the failed simulators, re-localizing, rebooting, and rerunning tests. Works around simulator localization bugs where translated labels aren't found. Only failed devices are retried.
 - `testplan` and `xcargs` are passed to both build and test phases
@@ -815,9 +819,11 @@ overrideStatusBar: true
 ### Commands
 
 ```
-ascelerate screenshot [-l en-US,tr-TR]        # Capture screenshots (optionally filter to a subset of configured languages)
-ascelerate screenshot init                    # Create ascelerate/screenshot.yml + ScreenshotHelper.swift
-ascelerate screenshot create-helper [-o file] # Generate ScreenshotHelper.swift (default: ascelerate/)
+ascelerate screenshot [-l en-US,tr-TR] [--json-events]  # Capture screenshots (optionally a subset of configured languages; events: JSON Lines on stdout, log on stderr)
+ascelerate screenshot init [-y]               # Create ascelerate/screenshot.yml + ScreenshotHelper.swift
+ascelerate screenshot create-helper [-o file] [-y]  # Generate ScreenshotHelper.swift (default: ascelerate/)
+ascelerate screenshot doctor [--json]         # Check the configuration and environment
+ascelerate screenshot setup-prompt [--design] [--copy]  # Print a coding agent's setup instructions for this project (or a design generator's)
 ```
 
 ## Website (`website/`)

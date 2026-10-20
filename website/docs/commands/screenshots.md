@@ -14,6 +14,19 @@ ascelerate screenshot init                  # Create config and helper in ascele
 ascelerate screenshot                       # Capture screenshots
 ```
 
+## Set up with an AI coding agent
+
+Capturing takes a UI test target, the screenshot helper, a screenshot mode with demo content in the app, the tests themselves and the configuration. A coding agent can set all of it up:
+
+```bash
+ascelerate screenshot setup-prompt          # Print the setup instructions
+ascelerate screenshot setup-prompt --copy   # Copy them to the clipboard
+```
+
+Paste the instructions into a coding agent working in the project (Claude Code, Codex, Cursor, Xcode's coding assistant…). They start from what the project already has (projects, schemes, UI test targets, localizations, configuration, helper version, installed simulators), so running the command again shows what's left. They also cover device frames, which you download from Apple's [design resources](https://developer.apple.com/design/resources/) (Product Bezels).
+
+`--design` prints the instructions for a design generator instead: a small web app in `app-store-screenshots/` that turns the framed screenshots into App Store images with headlines in every language, exported for `ascelerate apps media upload` (see [Media](media.md#designing-app-store-images)).
+
 ## Commands
 
 ### Run
@@ -21,9 +34,12 @@ ascelerate screenshot                       # Capture screenshots
 ```bash
 ascelerate screenshot                       # Capture screenshots
 ascelerate screenshot run                   # Same as above
+ascelerate screenshot --json-events         # Progress as JSON Lines events on stdout
 ```
 
 Always uses `ascelerate/screenshot.yml` in the current directory.
+
+`--json-events` is for other tools following a run: stdout carries one JSON object per line (`start`, `build`, `language`, `device` with steps such as `testing`, `passed`, `failed` and `collected`, and `finished` with every result), and the readable progress moves to stderr.
 
 ### Init
 
@@ -31,13 +47,14 @@ Always uses `ascelerate/screenshot.yml` in the current directory.
 ascelerate screenshot init
 ```
 
-Creates both `ascelerate/screenshot.yml` and `ascelerate/ScreenshotHelper.swift` in the `ascelerate/` directory. Prompts for confirmation before writing. Won't overwrite existing files.
+Creates both `ascelerate/screenshot.yml` and `ascelerate/ScreenshotHelper.swift` in the `ascelerate/` directory. Prompts for confirmation before writing (`-y` skips it). Won't overwrite existing files.
 
 ### Create helper
 
 ```bash
 ascelerate screenshot create-helper         # Generates ScreenshotHelper.swift
 ascelerate screenshot create-helper -o CustomHelper.swift
+ascelerate screenshot create-helper -o UITests/ScreenshotHelper.swift -y   # Overwrite without asking
 ```
 
 ### Frame
@@ -52,9 +69,10 @@ Frames captured screenshots using device bezel images. Uses the `frameDevice` an
 
 ```bash
 ascelerate screenshot doctor                   # Check config and environment
+ascelerate screenshot doctor --json            # The same as JSON
 ```
 
-Validates the screenshot configuration and environment: checks config file, project/workspace existence, xcodebuild and simctl availability, simulator devices, helper file version, device bezel files, and output directories. Shows a checklist with pass/fail/warning indicators.
+Validates the screenshot configuration and environment: checks config file, project/workspace existence, xcodebuild and simctl availability, simulator devices, helper file version, device bezel files, and output directories. Shows a checklist with pass/fail/warning indicators. With `--json` it prints the configuration (scheme, devices, languages, output directory) and each check with its status (`pass`, `warn` or `fail`).
 
 ## Config (`ascelerate/screenshot.yml`)
 

@@ -140,27 +140,21 @@ Un téléversement remplace l'image ou la vidéo actuelle de la localisation, av
 
 Les pages produit personnalisées acceptent les mêmes fichiers avec `product-pages media upload` et `--display-type PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` ou `APP_IPHONE_DUO`.
 
-## Utilisation avec app-store-screenshots
+## Concevoir les images App Store {#designing-app-store-images}
 
-[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) est un skill compagnon pour les agents de codage IA qui génère des captures d'écran App Store prêtes pour la production. Il crée une page Next.js qui produit des mises en page marketing de style publicitaire utilisant des captures d'écran encadrées par `ascelerate screenshot frame` et les exporte sous forme de fichier zip prêt à être téléversé via `ascelerate apps media upload` :
+`ascelerate screenshot setup-prompt --design` affiche des instructions pour qu'un agent de codage IA construise un générateur de designs : une petite application web dans le dossier `app-store-screenshots/` du projet, qui transforme les captures encadrées (`ascelerate screenshot frame`) en images App Store de style publicitaire avec des titres dans chaque langue, et les exporte dans l'arborescence attendue par `media upload` :
 
 ```
-en-US/APP_IPHONE_67/01_hero.png
-en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
-de-DE/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
+export/de-DE/APP_IPHONE_67/01_hero.png
 ```
-
-Installez le skill pour votre agent de codage IA :
 
 ```bash
-npx skills add keremerkan/ascelerate
+ascelerate apps media upload <bundle-id> export --platform ios --replace
 ```
 
-Téléversez le zip exporté directement :
-
-```bash
-ascelerate apps media upload <bundle-id> screenshots.zip --replace
-```
+Le skill [app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) (`npx skills add keremerkan/ascelerate`) renvoie les agents vers les mêmes instructions.
 
 ## Vérifier et retenter les médias bloqués
 

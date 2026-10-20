@@ -140,27 +140,21 @@ Yükleme, `--replace` kullanılsın ya da kullanılmasın, locale'in mevcut gör
 
 Özel ürün sayfaları aynı dosyaları `product-pages media upload` ile `--display-type PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS` veya `APP_IPHONE_DUO` vererek kabul eder.
 
-## app-store-screenshots ile kullanım
+## App Store görsellerini tasarlama {#designing-app-store-images}
 
-[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots), yapay zeka kodlama ajanları için üretime hazır App Store ekran görüntüleri oluşturan yardımcı bir skill'dir. `ascelerate screenshot frame` ile çerçevelenmiş cihaz ekran görüntülerini kullanarak reklam tarzı pazarlama düzenleri oluşturan bir Next.js sayfası yaratır ve bunları `ascelerate apps media upload` ile yüklenmeye hazır zip dosyası olarak dışa aktarır:
+`ascelerate screenshot setup-prompt --design`, bir yapay zeka kodlama ajanının tasarım oluşturucu kurması için talimatlar yazdırır: projenin `app-store-screenshots/` klasöründe, çerçevelenmiş ekran görüntülerini (`ascelerate screenshot frame`) her dilde başlıklı, reklam tarzı App Store görsellerine dönüştüren ve `media upload` komutunun beklediği düzende dışa aktaran küçük bir web uygulaması:
 
 ```
-en-US/APP_IPHONE_67/01_hero.png
-en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
-de-DE/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPHONE_67/01_hero.png
+export/en-US/APP_IPAD_PRO_3GEN_129/01_hero.png
+export/de-DE/APP_IPHONE_67/01_hero.png
 ```
-
-Skill'i yapay zeka kodlama ajanınıza yükleyin:
 
 ```bash
-npx skills add keremerkan/ascelerate
+ascelerate apps media upload <bundle-id> export --platform ios --replace
 ```
 
-Dışa aktarılan zip'i doğrudan yükleyin:
-
-```bash
-ascelerate apps media upload <bundle-id> screenshots.zip --replace
-```
+[app-store-screenshots](https://github.com/keremerkan/ascelerate/tree/main/skills/app-store-screenshots) skill'i (`npx skills add keremerkan/ascelerate`) ajanları aynı talimatlara yönlendirir.
 
 ## Takılmış medyayı doğrulama ve yeniden deneme
 

@@ -40,7 +40,9 @@ struct ScreenshotCollector: Sendable {
         try launchArgs.joined(separator: " ").write(to: cacheDir.appendingPathComponent("screenshot-launch_arguments.txt"), atomically: true, encoding: .utf8)
     }
 
-    func collectScreenshots(language: String, device: ScreenshotConfig.Device, udid: String) throws {
+    /// Copies a device's screenshots into the language's output folder; returns how many.
+    @discardableResult
+    func collectScreenshots(language: String, device: ScreenshotConfig.Device, udid: String) throws -> Int {
         let fm = FileManager.default
         let outputDir = URL(fileURLWithPath: config.outputDirectory)
             .appendingPathComponent(language)
@@ -50,15 +52,15 @@ struct ScreenshotCollector: Sendable {
         let screenshotsDir = screenshotsCache(for: udid)
 
         guard let files = try? fm.contentsOfDirectory(at: screenshotsDir, includingPropertiesForKeys: nil) else {
-            print("  [\(device.simulator)] Warning: No screenshots found in cache directory")
-            return
+            ScreenshotOutput.log("  [\(device.simulator)] Warning: No screenshots found in cache directory")
+            return 0
         }
 
         let screenshots = files.filter { $0.pathExtension.lowercased() == "png" }
 
         guard !screenshots.isEmpty else {
-            print("  [\(device.simulator)] Warning: No PNG screenshots found")
-            return
+            ScreenshotOutput.log("  [\(device.simulator)] Warning: No PNG screenshots found")
+            return 0
         }
 
         for file in screenshots {
@@ -67,7 +69,8 @@ struct ScreenshotCollector: Sendable {
             try fm.copyItem(at: file, to: destination)
         }
 
-        print("  [\(device.simulator)] Collected \(screenshots.count) screenshot(s) → \(language)/")
+        ScreenshotOutput.log("  [\(device.simulator)] Collected \(screenshots.count) screenshot(s) → \(language)/")
+        return screenshots.count
     }
 
     func clearLanguageScreenshots(language: String) throws {

@@ -9,7 +9,7 @@ struct ScreenshotTestRunner: Sendable {
 
     func build(resolvedDevices: [(ScreenshotConfig.Device, SimulatorManager.SimDevice)]) throws -> BuildResult {
         if config.testWithoutBuilding != true {
-            print("\nBuilding for testing...")
+            ScreenshotOutput.log("\nBuilding for testing...")
 
             var args = ["xcodebuild"]
 
@@ -101,8 +101,8 @@ struct ScreenshotTestRunner: Sendable {
                 }
                 let wrong = URL(fileURLWithPath: appPath).lastPathComponent
                 let right = URL(fileURLWithPath: candidates[0]).lastPathComponent
-                print("  " + yellow("Warning:") + " xctestrun points to a target app that was not built ('\(wrong)'); using '\(right)' from the scheme's build products instead.")
-                print("  Xcode 27 resolves TEST_TARGET_NAME across the whole workspace: a same-named target in another project probably has a different PRODUCT_NAME.")
+                ScreenshotOutput.log("  " + yellow("Warning:") + " xctestrun points to a target app that was not built ('\(wrong)'); using '\(right)' from the scheme's build products instead.")
+                ScreenshotOutput.log("  Xcode 27 resolves TEST_TARGET_NAME across the whole workspace: a same-named target in another project probably has a different PRODUCT_NAME.")
                 targets[t]["UITargetAppPath"] = candidates[0]
                 changed = true
             }
@@ -153,7 +153,7 @@ struct ScreenshotTestRunner: Sendable {
         try FileManager.default.createDirectory(at: logDir, withIntermediateDirectories: true)
         let logFile = logDir.appendingPathComponent("\(device.simulator)-\(language).log")
 
-        print("  [\(device.simulator)] Running tests...")
+        ScreenshotOutput.log("  [\(device.simulator)] Running tests...")
 
         let status = try ScreenshotShell.runToLog("/usr/bin/xcodebuild", arguments: Array(args.dropFirst()), logFile: logFile)
 
@@ -162,20 +162,20 @@ struct ScreenshotTestRunner: Sendable {
         // importer crashes ("CASTreeDataStructure/Importer.swift: Fatal error … file has been
         // modified") when the app is still writing to its captured console output.
         if status != 0, Self.testsPassed(logFile: logFile) {
-            print("  [\(device.simulator)] " + green("Tests passed ✓") + yellow(" (xcodebuild then exited with status \(status); screenshots kept)"))
-            print("  Full log: \(logFile.path)")
+            ScreenshotOutput.log("  [\(device.simulator)] " + green("Tests passed ✓") + yellow(" (xcodebuild then exited with status \(status); screenshots kept)"))
+            ScreenshotOutput.log("  Full log: \(logFile.path)")
             return
         }
 
         guard status == 0 else {
             let tail = ScreenshotShell.tail(logFile, lines: 15)
-            print("  [\(device.simulator)] Test failed. Last lines from log:")
-            print(tail)
-            print("  Full log: \(logFile.path)")
+            ScreenshotOutput.log("  [\(device.simulator)] Test failed. Last lines from log:")
+            ScreenshotOutput.log(tail)
+            ScreenshotOutput.log("  Full log: \(logFile.path)")
             throw ScreenshotError.xcodebuildFailed(status)
         }
 
-        print("  [\(device.simulator)] " + green("Tests passed ✓"))
+        ScreenshotOutput.log("  [\(device.simulator)] " + green("Tests passed ✓"))
     }
 
     /// Whether the log's final test summary reports every test passed.
@@ -191,7 +191,7 @@ struct ScreenshotTestRunner: Sendable {
 
         let productsDir = baseURL.appendingPathComponent("Build/Products")
         if let file = xctestrunFileIn(directory: productsDir) {
-            print("  Using xctestrun: \(file.lastPathComponent)")
+            ScreenshotOutput.log("  Using xctestrun: \(file.lastPathComponent)")
             return file.path
         }
 
@@ -210,7 +210,7 @@ struct ScreenshotTestRunner: Sendable {
             }
         }
         if let newest = candidates.max(by: { modificationDate($0) < modificationDate($1) }) {
-            print("  Using xctestrun: \(newest.path)")
+            ScreenshotOutput.log("  Using xctestrun: \(newest.path)")
             return newest.path
         }
 
@@ -247,7 +247,7 @@ struct ScreenshotTestRunner: Sendable {
 
         let exactPath = derivedDataRoot.appendingPathComponent(projectName)
         if FileManager.default.fileExists(atPath: exactPath.path) {
-            print("  Using derived data: \(exactPath.path)")
+            ScreenshotOutput.log("  Using derived data: \(exactPath.path)")
             return exactPath.path
         }
 
@@ -264,7 +264,7 @@ struct ScreenshotTestRunner: Sendable {
             throw ScreenshotError.derivedDataNotFound(projectName)
         }
 
-        print("  Using derived data: \(match.path)")
+        ScreenshotOutput.log("  Using derived data: \(match.path)")
         return match.path
     }
 }

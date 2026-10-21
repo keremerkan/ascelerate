@@ -16,6 +16,7 @@
 // - `anyOf` blocks that only restate required properties are dropped (they generate empty types).
 // - A discriminated `oneOf` whose discriminator property no branch declares becomes an `anyOf`
 //   (the asset library placement's `relationships`, which could never decode).
+// - Operations keep only their success responses (the error middleware handles the rest).
 import Foundation
 
 guard CommandLine.arguments.count == 2 else {
@@ -166,10 +167,33 @@ func dropEmptyEnums(_ value: Any) -> Any {
 
 spec["paths"] = dropEmptyEnums(spec["paths"] ?? [:])
 
+// Only success responses are kept: ASCKit's error middleware throws every 4xx/5xx as `ASCError`
+// before the generated client decodes it, so the typed error responses (400, 401, 403, 404, 409,
+// 422 and 429 on most operations) were never used, and they made up most of the generated code.
+// Compiling the full client took 25 GB of memory in a release build, more than CI machines have.
+var droppedResponses = 0
+
+func keepSuccessResponses(_ paths: Any) -> Any {
+  guard let paths = paths as? [String: Any] else { return paths }
+  return paths.mapValues { operations -> Any in
+    guard let operations = operations as? [String: Any] else { return operations }
+    return operations.mapValues { operation -> Any in
+      guard var operation = operation as? [String: Any], let responses = operation["responses"] as? [String: Any]
+      else { return operation }
+      let kept = responses.filter { $0.key.hasPrefix("2") }
+      droppedResponses += responses.count - kept.count
+      operation["responses"] = kept
+      return operation
+    }
+  }
+}
+
+spec["paths"] = keepSuccessResponses(spec["paths"] ?? [:])
+
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(droppedResponses) error responses dropped)")
 
 // ASCEnums.swift: the enum catalog as Swift enums, for validating input (`parseEnum`) and
 // naming values in code; requests and responses carry the raw strings.

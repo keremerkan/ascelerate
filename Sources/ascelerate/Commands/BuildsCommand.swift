@@ -702,7 +702,9 @@ private struct ArchiveInfo {
 /// Finds the most recent .xcarchive in Xcode's default archive location.
 /// Reads each archive's Info.plist to extract bundle ID and creation date.
 private func findLatestArchive(bundleID: String?) throws -> ArchiveInfo {
-  let archivesDir = expandPath("~/Library/Developer/Xcode/Archives")
+  // Xcode's folder, in the account's home whatever $HOME says (like DerivedData).
+  let archivesDir = FileManager.default.homeDirectoryForCurrentUser
+    .appendingPathComponent("Library/Developer/Xcode/Archives").path
   let fm = FileManager.default
 
   guard fm.fileExists(atPath: archivesDir) else {

@@ -31,7 +31,7 @@ struct InstallSkillCommand: AsyncParsableCommand {
     .init(name: "GitHub Copilot", dir: ".github/instructions", file: "ascelerate.md", detects: []),
   ]
 
-  private static var home: URL { FileManager.default.homeDirectoryForCurrentUser }
+  private static var home: URL { homeDirectory }
   static func skillFileURL(_ a: Agent) -> URL {
     home.appendingPathComponent(a.dir).appendingPathComponent(a.file)
   }

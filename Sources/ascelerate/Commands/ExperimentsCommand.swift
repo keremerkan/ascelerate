@@ -13,9 +13,8 @@ struct ExperimentsCommand: AsyncParsableCommand {
     defaultSubcommand: List.self
   )
 
-  typealias Experiment = Components.Schemas.AppStoreVersionExperimentV2
-  typealias Treatment = Components.Schemas.AppStoreVersionExperimentTreatment
-  typealias Localization = Components.Schemas.AppStoreVersionExperimentTreatmentLocalization
+  typealias Experiment = Experiments.Experiment
+  typealias Treatment = Experiments.Treatment
 
   /// The app and experiment every subcommand but `list`/`create` starts from.
   struct Target: ParsableArguments {
@@ -28,52 +27,20 @@ struct ExperimentsCommand: AsyncParsableCommand {
 
     func resolve(_ client: ASCClient) async throws -> (app: Components.Schemas.App, experiment: Experiment) {
       let app = try await findApp(bundleID: bundleID, client: client)
-      let all = try await ExperimentsCommand.experiments(appID: app.id, client: client)
-      guard let match = all.first(where: { $0.id == experiment || $0.attributes?.name?.lowercased() == experiment.lowercased() }) else {
-        let names = all.compactMap { $0.attributes?.name }
-        throw ValidationError("No experiment '\(experiment)' found." + (names.isEmpty ? "" : " Experiments: \(names.joined(separator: ", "))."))
+      do {
+        return (app, try await Experiments.find(experiment, appID: app.id, client: client))
+      } catch let error as Experiments.LookupError {
+        throw ValidationError(error.localizedDescription)
       }
-      return (app, match)
     }
-  }
-
-  static func experiments(appID: String, client: ASCClient) async throws -> [Experiment] {
-    try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.appsAppStoreVersionExperimentsV2GetToManyRelated(path: .init(id: appID), query: .init(limit: 200)).ok.body.json
-    }.flatMap(\.data)
-  }
-
-  static func treatments(experimentID: String, client: ASCClient) async throws -> [Treatment] {
-    try await client.appStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated(
-      path: .init(id: experimentID), query: .init(limit: 50)
-    ).ok.body.json.data
   }
 
   static func treatment(_ ref: String, experimentID: String, client: ASCClient) async throws -> Treatment {
-    let all = try await treatments(experimentID: experimentID, client: client)
-    guard let match = all.first(where: { $0.id == ref || $0.attributes?.name?.lowercased() == ref.lowercased() }) else {
-      let names = all.compactMap { $0.attributes?.name }
-      throw ValidationError("No treatment '\(ref)' found." + (names.isEmpty ? "" : " Treatments: \(names.joined(separator: ", "))."))
+    do {
+      return try await Experiments.treatment(ref, experimentID: experimentID, client: client)
+    } catch let error as Experiments.LookupError {
+      throw ValidationError(error.localizedDescription)
     }
-    return match
-  }
-
-  static func localizations(treatmentID: String, client: ASCClient) async throws -> [Localization] {
-    try await client.appStoreVersionExperimentTreatmentsAppStoreVersionExperimentTreatmentLocalizationsGetToManyRelated(
-      path: .init(id: treatmentID), query: .init(limit: 50)
-    ).ok.body.json.data.sorted { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }
-  }
-
-  static func name(_ experiment: Experiment) -> String { experiment.attributes?.name ?? experiment.id }
-
-  static func patch(
-    _ experiment: Experiment, _ attributes: Components.Schemas.AppStoreVersionExperimentV2UpdateRequest.DataPayload.AttributesPayload,
-    client: ASCClient
-  ) async throws {
-    _ = try await client.appStoreVersionExperimentsV2UpdateInstance(
-      path: .init(id: experiment.id),
-      body: .json(.init(data: .init(attributes: attributes, id: experiment.id, _type: "appStoreVersionExperiments")))
-    ).ok
   }
 
   // MARK: - Experiments
@@ -90,9 +57,8 @@ struct ExperimentsCommand: AsyncParsableCommand {
     var treatments: [TreatmentEntry]?
 
     init(_ e: Experiment) {
-      let a = e.attributes
-      id = e.id; name = a?.name; platform = a?.platform; state = a?.state; trafficProportion = a?.trafficProportion
-      reviewRequired = a?.reviewRequired; startDate = a?.startDate; endDate = a?.endDate
+      id = e.id; name = e.name; platform = e.platform; state = e.state; trafficProportion = e.trafficProportion
+      reviewRequired = e.reviewRequired; startDate = e.startDate; endDate = e.endDate
     }
   }
 
@@ -130,7 +96,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
       jsonOption.activate()
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      let entries = try await ExperimentsCommand.experiments(appID: app.id, client: client).map(Entry.init)
+      let entries = try await Experiments.list(appID: app.id, client: client).map(Entry.init)
       if jsonOption.json { try printJSON(entries); return }
       guard !entries.isEmpty else {
         print("No product page optimization tests. Create one with 'ascelerate experiments create'.")
@@ -157,14 +123,14 @@ struct ExperimentsCommand: AsyncParsableCommand {
       let (_, experiment) = try await target.resolve(client)
       var entry = Entry(experiment)
       var treatments: [TreatmentEntry] = []
-      for t in try await ExperimentsCommand.treatments(experimentID: experiment.id, client: client) {
+      for t in try await Experiments.treatments(experimentID: experiment.id, client: client) {
         var localizations: [LocalizationEntry] = []
-        for loc in try await ExperimentsCommand.localizations(treatmentID: t.id, client: client) {
+        for loc in try await Experiments.localizations(treatmentID: t.id, client: client) {
           let media = try await LocalizationMedia.rows(locale: "", on: .treatmentLocalization(loc.id), client: client)
             .map { MediaEntry(id: $0[4], kind: $0[1], type: $0[2], state: $0[3]) }
-          localizations.append(LocalizationEntry(id: loc.id, locale: loc.attributes?.locale, media: media))
+          localizations.append(LocalizationEntry(id: loc.id, locale: loc.locale, media: media))
         }
-        treatments.append(TreatmentEntry(id: t.id, name: t.attributes?.name, appIconName: t.attributes?.appIconName, localizations: localizations))
+        treatments.append(TreatmentEntry(id: t.id, name: t.name, appIconName: t.appIconName, localizations: localizations))
       }
       entry.treatments = treatments
       if jsonOption.json { try printJSON(entry); return }
@@ -234,11 +200,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
         return
       }
       let created = try await unlessDryRunStopped {
-        try await client.appStoreVersionExperimentsV2CreateInstance(body: .json(.init(data: .init(
-          attributes: .init(name: name, platform: platform.rawValue, trafficProportion: traffic),
-          relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-          _type: "appStoreVersionExperiments"
-        )))).created.body.json.data
+        try await Experiments.create(appID: app.id, name: name, platform: platform.rawValue, trafficProportion: traffic, client: client)
       }
       if let created { print(green("Created") + " test \(created.id).") }
       for name in treatment {
@@ -270,12 +232,12 @@ struct ExperimentsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (_, experiment) = try await target.resolve(client)
-      guard confirm("Update test '\(ExperimentsCommand.name(experiment))'? [y/N] ") else {
+      guard confirm("Update test '\(experiment.name)'? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
-      try await ExperimentsCommand.patch(experiment, .init(name: name, trafficProportion: traffic), client: client)
-      print(green("Updated") + " test '\(name ?? ExperimentsCommand.name(experiment))'.")
+      try await Experiments.update(id: experiment.id, name: name, trafficProportion: traffic, client: client)
+      print(green("Updated") + " test '\(name ?? experiment.name)'.")
     }
   }
 
@@ -291,12 +253,12 @@ struct ExperimentsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (_, experiment) = try await target.resolve(client)
-      guard confirm("Delete test '\(ExperimentsCommand.name(experiment))' and its treatments? [y/N] ") else {
+      guard confirm("Delete test '\(experiment.name)' and its treatments? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
-      _ = try await client.appStoreVersionExperimentsV2DeleteInstance(path: .init(id: experiment.id)).noContent
-      print(green("Deleted") + " test '\(ExperimentsCommand.name(experiment))'.")
+      try await Experiments.delete(id: experiment.id, client: client)
+      print(green("Deleted") + " test '\(experiment.name)'.")
     }
   }
 
@@ -312,12 +274,12 @@ struct ExperimentsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (_, experiment) = try await target.resolve(client)
-      guard confirm("Start test '\(ExperimentsCommand.name(experiment))'? [y/N] ") else {
+      guard confirm("Start test '\(experiment.name)'? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
-      try await ExperimentsCommand.patch(experiment, .init(started: true), client: client)
-      print(green("Started") + " test '\(ExperimentsCommand.name(experiment))'.")
+      try await Experiments.start(id: experiment.id, client: client)
+      print(green("Started") + " test '\(experiment.name)'.")
     }
   }
 
@@ -333,12 +295,12 @@ struct ExperimentsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (_, experiment) = try await target.resolve(client)
-      guard confirm("Stop test '\(ExperimentsCommand.name(experiment))'? It can't be restarted. [y/N] ") else {
+      guard confirm("Stop test '\(experiment.name)'? It can't be restarted. [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
-      try await ExperimentsCommand.patch(experiment, .init(started: false), client: client)
-      print(green("Stopped") + " test '\(ExperimentsCommand.name(experiment))'.")
+      try await Experiments.stop(id: experiment.id, client: client)
+      print(green("Stopped") + " test '\(experiment.name)'.")
     }
   }
 
@@ -361,7 +323,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (app, experiment) = try await target.resolve(client)
-      let platform = experiment.attributes?.platform ?? "IOS"
+      let platform = experiment.platform ?? "IOS"
       let open = try await client.appsReviewSubmissionsGetToManyRelated(
         path: .init(id: app.id), query: .init(filterState: [.readyForReview, .waitingForReview, .inReview, .unresolvedIssues])
       ).ok.body.json.data.first { $0.attributes?.platform == platform }
@@ -374,8 +336,8 @@ struct ExperimentsCommand: AsyncParsableCommand {
       }
 
       let plan = open == nil || otherItems == 0
-        ? "Submit test '\(ExperimentsCommand.name(experiment))' for App Review?"
-        : "Add test '\(ExperimentsCommand.name(experiment))' to the draft \(formatState(platform)) submission (\(otherItems) other item(s))?"
+        ? "Submit test '\(experiment.name)' for App Review?"
+        : "Add test '\(experiment.name)' to the draft \(formatState(platform)) submission (\(otherItems) other item(s))?"
       guard confirm("\(plan) [y/N] ") else {
         print(yellow("Cancelled."))
         return
@@ -408,7 +370,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
         path: .init(id: submission),
         body: .json(.init(data: .init(attributes: .init(submitted: true), id: submission, _type: "reviewSubmissions")))
       ).ok
-      print(green("Submitted") + " test '\(ExperimentsCommand.name(experiment))' for App Review. Start it once it's approved ('ascelerate experiments start').")
+      print(green("Submitted") + " test '\(experiment.name)' for App Review. Start it once it's approved ('ascelerate experiments start').")
     }
   }
 
@@ -423,11 +385,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
 
     static func add(name: String, appIcon: String?, experimentID: String, client: ASCClient) async throws {
       let created = try await unlessDryRunStopped {
-        try await client.appStoreVersionExperimentTreatmentsCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(appIconName: appIcon, name: name),
-          relationships: .init(appStoreVersionExperimentV2: .init(data: .init(id: experimentID, _type: "appStoreVersionExperiments"))),
-          _type: "appStoreVersionExperimentTreatments"
-        )))).created.body.json.data
+        try await Experiments.createTreatment(experimentID: experimentID, name: name, appIconName: appIcon, client: client)
       }
       if let created { print(green("Added") + " treatment '\(name)' (\(created.id)).") }
     }
@@ -450,7 +408,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let (_, experiment) = try await target.resolve(client)
-        guard confirm("Add treatment '\(name)' to '\(ExperimentsCommand.name(experiment))'? [y/N] ") else {
+        guard confirm("Add treatment '\(name)' to '\(experiment.name)'? [y/N] ") else {
           print(yellow("Cancelled."))
           return
         }
@@ -484,14 +442,12 @@ struct ExperimentsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let (_, experiment) = try await target.resolve(client)
         let t = try await ExperimentsCommand.treatment(treatment, experimentID: experiment.id, client: client)
-        guard confirm("Update treatment '\(t.attributes?.name ?? t.id)'? [y/N] ") else {
+        guard confirm("Update treatment '\(t.name)'? [y/N] ") else {
           print(yellow("Cancelled."))
           return
         }
-        _ = try await client.appStoreVersionExperimentTreatmentsUpdateInstance(path: .init(id: t.id), body: .json(.init(data: .init(
-          attributes: .init(appIconName: appIcon, name: name), id: t.id, _type: "appStoreVersionExperimentTreatments"
-        )))).ok
-        print(green("Updated") + " treatment '\(name ?? t.attributes?.name ?? t.id)'.")
+        try await Experiments.updateTreatment(id: t.id, name: name, appIconName: appIcon.map { .some($0) }, client: client)
+        print(green("Updated") + " treatment '\(name ?? t.name)'.")
       }
     }
 
@@ -511,12 +467,12 @@ struct ExperimentsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let (_, experiment) = try await target.resolve(client)
         let t = try await ExperimentsCommand.treatment(treatment, experimentID: experiment.id, client: client)
-        guard confirm("Delete treatment '\(t.attributes?.name ?? t.id)'? [y/N] ") else {
+        guard confirm("Delete treatment '\(t.name)'? [y/N] ") else {
           print(yellow("Cancelled."))
           return
         }
-        _ = try await client.appStoreVersionExperimentTreatmentsDeleteInstance(path: .init(id: t.id)).noContent
-        print(green("Deleted") + " treatment '\(t.attributes?.name ?? t.id)'.")
+        try await Experiments.deleteTreatment(id: t.id, client: client)
+        print(green("Deleted") + " treatment '\(t.name)'.")
       }
     }
 
@@ -540,14 +496,14 @@ struct ExperimentsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let (_, experiment) = try await target.resolve(client)
         let t = try await ExperimentsCommand.treatment(treatment, experimentID: experiment.id, client: client)
-        guard let loc = try await ExperimentsCommand.localizations(treatmentID: t.id, client: client)
-          .first(where: { $0.attributes?.locale?.lowercased() == locale.lowercased() })
-        else { throw ValidationError("Treatment '\(t.attributes?.name ?? t.id)' has no \(locale) localization.") }
-        guard confirm("Remove \(localeName(locale)) from treatment '\(t.attributes?.name ?? t.id)'? [y/N] ") else {
+        guard let loc = try await Experiments.localizations(treatmentID: t.id, client: client)
+          .first(where: { $0.locale.lowercased() == locale.lowercased() })
+        else { throw ValidationError("Treatment '\(t.name)' has no \(locale) localization.") }
+        guard confirm("Remove \(localeName(locale)) from treatment '\(t.name)'? [y/N] ") else {
           print(yellow("Cancelled."))
           return
         }
-        _ = try await client.appStoreVersionExperimentTreatmentLocalizationsDeleteInstance(path: .init(id: loc.id)).noContent
+        try await Experiments.deleteLocalization(id: loc.id, client: client)
         print(green("Removed") + " \(localeName(locale)).")
       }
     }
@@ -573,13 +529,13 @@ struct ExperimentsCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let (_, experiment) = try await target.resolve(client)
-        var treatments = try await ExperimentsCommand.treatments(experimentID: experiment.id, client: client)
+        var treatments = try await Experiments.treatments(experimentID: experiment.id, client: client)
         if let treatment { treatments = [try await ExperimentsCommand.treatment(treatment, experimentID: experiment.id, client: client)] }
         var rows: [[String]] = []
         for t in treatments {
-          for loc in try await ExperimentsCommand.localizations(treatmentID: t.id, client: client) {
-            rows += try await LocalizationMedia.rows(locale: loc.attributes?.locale ?? "?", on: .treatmentLocalization(loc.id), client: client)
-              .map { [t.attributes?.name ?? t.id] + $0 }
+          for loc in try await Experiments.localizations(treatmentID: t.id, client: client) {
+            rows += try await LocalizationMedia.rows(locale: loc.locale.isEmpty ? "?" : loc.locale, on: .treatmentLocalization(loc.id), client: client)
+              .map { [t.name] + $0 }
           }
         }
         guard !rows.isEmpty else {
@@ -624,22 +580,18 @@ struct ExperimentsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let (app, experiment) = try await target.resolve(client)
         let t = try await ExperimentsCommand.treatment(treatment, experimentID: experiment.id, client: client)
-        let existing = try await ExperimentsCommand.localizations(treatmentID: t.id, client: client)
-          .first { $0.attributes?.locale?.lowercased() == locale.lowercased() }
+        let existing = try await Experiments.localizations(treatmentID: t.id, client: client)
+          .first { $0.locale.lowercased() == locale.lowercased() }
         try await LocalizationMedia.upload(
           file: file, displayType: displayType, previewType: previewType, previewFrame: previewFrame, appID: app.id,
           context: [
-            ("Test", ExperimentsCommand.name(experiment)), ("Treatment", t.attributes?.name ?? t.id),
+            ("Test", experiment.name), ("Treatment", t.name),
             ("Locale", localeName(locale) + (existing == nil ? " (new)" : "")),
           ],
           client: client, owner: existing.map { .treatmentLocalization($0.id) },
           createOwner: {
             let created = try await unlessDryRunStopped {
-              try await client.appStoreVersionExperimentTreatmentLocalizationsCreateInstance(body: .json(.init(data: .init(
-                attributes: .init(locale: locale),
-                relationships: .init(appStoreVersionExperimentTreatment: .init(data: .init(id: t.id, _type: "appStoreVersionExperimentTreatments"))),
-                _type: "appStoreVersionExperimentTreatmentLocalizations"
-              )))).created.body.json.data.id
+              try await Experiments.createLocalization(treatmentID: t.id, locale: locale, client: client).id
             }
             return .treatmentLocalization(created ?? "DRY-RUN-LOCALIZATION")
           })
@@ -662,8 +614,8 @@ struct ExperimentsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let (_, experiment) = try await target.resolve(client)
         var owners: [AssetLibrary.Owner] = []
-        for t in try await ExperimentsCommand.treatments(experimentID: experiment.id, client: client) {
-          owners += try await ExperimentsCommand.localizations(treatmentID: t.id, client: client).map { .treatmentLocalization($0.id) }
+        for t in try await Experiments.treatments(experimentID: experiment.id, client: client) {
+          owners += try await Experiments.localizations(treatmentID: t.id, client: client).map { .treatmentLocalization($0.id) }
         }
         try await LocalizationMedia.delete(mediaID: mediaID, among: owners, client: client)
       }

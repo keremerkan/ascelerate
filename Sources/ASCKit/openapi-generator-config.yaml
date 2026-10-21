@@ -192,6 +192,7 @@ filter:
     - /v1/appCustomProductPageVersions/{id}/appCustomProductPageLocalizations
     - /v1/appCustomProductPageVersions
     - /v1/appCustomProductPageVersions/{id}
+    - /v1/builds/{id}/icons
     - /v1/appCustomProductPageLocalizations/{id}/appScreenshotSets
     - /v1/appCustomProductPageLocalizations/{id}/appPreviewSets
     - /v1/apps/{id}/betaFeedbackCrashSubmissions

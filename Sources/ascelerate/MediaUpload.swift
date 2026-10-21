@@ -889,11 +889,12 @@ extension AppsCommand {
           // placements. Library videos have no download URL (videoAsset stays empty, seen live), so
           // header and search results videos are skipped; Duo previews come from the classic
           // API's preview mirror below, which has one.
-          let libraryPlacements = try await AssetLibrary.slotPlacements(on: .versionLocalization(loc.id), client: client)
-          for kind in AssetLibrary.slots.keys.sorted() {
-            let placements = libraryPlacements.filter { $0.kind == kind }.map(\.placement)
-            let images = placements.filter { $0.attributes?.mediaType != "VIDEO" }
-            let skippedVideos = AssetLibrary.slots[kind]?.isSingle == true ? placements.count - images.count : 0
+          for (kind, slot) in AssetLibrary.slots.sorted(by: { $0.key < $1.key }) {
+            // The placements come with their images (one request per slot).
+            let placements = try await AssetLibrary.placementsWithMedia(
+              on: .versionLocalization(loc.id), type: slot.placementType, group: slot.group, client: client)
+            let images = placements.compactMap(\.image)
+            let skippedVideos = slot.isSingle ? placements.count - images.count : 0
             if skippedVideos > 0 {
               print("[\(localeName(locale))] \(kind): skipped a video (App Store Connect gives no download URL for library videos).")
             }
@@ -904,15 +905,7 @@ extension AppsCommand {
             // Look every image up first: names that are unique and already sort into display order
             // are kept as they are, so the folder round-trips through upload and verify; otherwise
             // each gets its position as a prefix, as classic sets do.
-            var found: [(id: String, common: Components.Schemas.AppAssetLibraryImageCommonAttributes?)] = []
-            for placement in images {
-              if case .image(let imageID) = try await AssetLibrary.placedAsset(placementID: placement.id, client: client).asset {
-                let common = try await withTransientRetry {
-                  try await client.appAssetLibraryImagesGetInstance(path: .init(id: imageID)).ok.body.json.data.attributes?.common
-                }
-                found.append((imageID, common))
-              }
-            }
+            let found = images.map { (id: $0.id, common: $0.attributes?.common) }
             // Server-supplied names: strip path separators before building local paths.
             let names = found.map { ($0.common?.fileName ?? "\($0.id).png").replacingOccurrences(of: "/", with: "_") }
             let keepNames = Set(names).count == names.count && names == names.sorted()
@@ -1768,15 +1761,11 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
         + (slot.videoPlacementType.map { $0 == slot.placementType ? [] : [(name, $0, slot.group, false)] } ?? [])
     }
     for (displayTypeName, type, group, isScreenshot) in placementSets {
-      let placements = try await AssetLibrary.placements(localizationID: loc.id, type: type, group: group, client: client)
-      let fileNames = try await withThrowingTaskGroup(of: (Int, String?).self) { tasks in
-        for (i, placement) in placements.enumerated() {
-          tasks.addTask { (i, try await AssetLibrary.placementFileName(id: placement.id, client: client)) }
-        }
-        var names = [String?](repeating: nil, count: placements.count)
-        for try await (i, name) in tasks { names[i] = name }
-        return names
-      }
+      // The placements come with their images or videos, for their file names.
+      let placed = try await AssetLibrary.placementsWithMedia(
+        on: .versionLocalization(loc.id), type: type, group: group, client: client)
+      let placements = placed.map(\.placement)
+      let fileNames = placed.map { $0.image?.attributes?.common.fileName ?? $0.video?.attributes?.common.fileName }
       for (i, placement) in placements.enumerated() {
         let state = placement.attributes?.state
         items.append(MediaItemStatus(

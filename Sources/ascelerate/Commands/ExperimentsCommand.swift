@@ -257,7 +257,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
         print(yellow("Cancelled."))
         return
       }
-      try await Experiments.delete(id: experiment.id, client: client)
+      try await Experiments.delete(id: experiment.id, state: experiment.state, client: client)
       print(green("Deleted") + " test '\(experiment.name)'.")
     }
   }
@@ -342,34 +342,14 @@ struct ExperimentsCommand: AsyncParsableCommand {
         print(yellow("Cancelled."))
         return
       }
-      var submissionID = open?.id
-      if submissionID == nil {
-        submissionID = try await unlessDryRunStopped {
-          try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(platform: platform),
-            relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-            _type: "reviewSubmissions"
-          )))).created.body.json.data.id
-        }
-      }
-      let submission = submissionID ?? "DRY-RUN-SUBMISSION"
-      _ = try await unlessDryRunStopped {
-        try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
-          relationships: .init(
-            appStoreVersionExperimentV2: .init(data: .init(id: experiment.id, _type: "appStoreVersionExperiments")),
-            reviewSubmission: .init(data: .init(id: submission, _type: "reviewSubmissions"))
-          ),
-          _type: "reviewSubmissionItems"
-        )))).created
-      }
+      // Without an open submission, a new one (a placeholder ID under dry run).
+      let submission = try await ReviewSubmissions.add(
+        .experiment(experiment.id), appID: app.id, platform: platform, draftID: open?.id, client: client)
       guard otherItems == 0 else {
         print(green("Added") + " the test to the draft submission. It goes to review with the submission's other items ('ascelerate apps review submit').")
         return
       }
-      _ = try await client.reviewSubmissionsUpdateInstance(
-        path: .init(id: submission),
-        body: .json(.init(data: .init(attributes: .init(submitted: true), id: submission, _type: "reviewSubmissions")))
-      ).ok
+      try await ReviewSubmissions.submit(id: submission, client: client)
       print(green("Submitted") + " test '\(experiment.name)' for App Review. Start it once it's approved ('ascelerate experiments start').")
     }
   }

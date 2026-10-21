@@ -197,30 +197,41 @@ public enum ReviewSubmissions {
     case appEvent(String)
     case customProductPageVersion(String)
     case experiment(String)
+    /// An asset library image or video, reviewed on its own (App Store Connect's Add for Review
+    /// on an asset).
+    case libraryImage(String)
+    case libraryVideo(String)
   }
 
-  /// Adds an item to the app's draft submission (`READY_FOR_REVIEW`) for `platform`, creating the
-  /// draft when there's none, as App Store Connect's Add for Review does. It goes to App Review
-  /// when the draft is submitted. Returns the draft's ID.
+  /// Adds an item to the app's open draft submission for `platform` (`READY_FOR_REVIEW`, or
+  /// `UNRESOLVED_ISSUES` after a rejection), or to `draftID` when the caller found it, creating a
+  /// draft when there's none, as App Store Connect's Add for Review does. It goes to App Review when
+  /// the draft is submitted. Returns the draft's ID (a placeholder when dry run stopped creating it,
+  /// so the item's request is still previewed).
   @discardableResult
-  public static func add(_ item: DraftItem, appID: String, platform: String, client: ASCClient) async throws -> String {
+  public static func add(
+    _ item: DraftItem, appID: String, platform: String, draftID: String? = nil, client: ASCClient
+  ) async throws -> String {
     typealias Query = Operations.AppsReviewSubmissionsGetToManyRelated.Input.Query
-    let drafts = try await client.appsReviewSubmissionsGetToManyRelated(
-      path: .init(id: appID),
-      query: .init(
-        filterPlatform: Query.FilterPlatformPayloadPayload(rawValue: platform).map { [$0] },
-        filterState: [.readyForReview], limit: 10)
-    ).ok.body.json.data
-    let draftID: String
-    if let draft = drafts.first {
-      draftID = draft.id
-    } else {
-      draftID = try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(platform: platform),
-        relationships: .init(app: .init(data: .init(id: appID, _type: "apps"))),
-        _type: "reviewSubmissions"
-      )))).created.body.json.data.id
+    var found = draftID
+    if found == nil {
+      found = try await client.appsReviewSubmissionsGetToManyRelated(
+        path: .init(id: appID),
+        query: .init(
+          filterPlatform: Query.FilterPlatformPayloadPayload(rawValue: platform).map { [$0] },
+          filterState: [.readyForReview, .unresolvedIssues], limit: 10)
+      ).ok.body.json.data.first?.id
     }
+    if found == nil {
+      found = try await unlessDryRunStopped {
+        try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
+          attributes: .init(platform: platform),
+          relationships: .init(app: .init(data: .init(id: appID, _type: "apps"))),
+          _type: "reviewSubmissions"
+        )))).created.body.json.data.id
+      } ?? "DRY-RUN-SUBMISSION"
+    }
+    let draftID = found ?? ""
     var relationships = Components.Schemas.ReviewSubmissionItemCreateRequest.DataPayload.RelationshipsPayload(
       reviewSubmission: .init(data: .init(id: draftID, _type: "reviewSubmissions")))
     switch item {
@@ -230,9 +241,15 @@ public enum ReviewSubmissions {
         relationships.appCustomProductPageVersion = .init(data: .init(id: id, _type: "appCustomProductPageVersions"))
       case .experiment(let id):
         relationships.appStoreVersionExperimentV2 = .init(data: .init(id: id, _type: "appStoreVersionExperiments"))
+      case .libraryImage(let id):
+        relationships.appAssetLibraryImage = .init(data: .init(id: id, _type: "appAssetLibraryImages"))
+      case .libraryVideo(let id):
+        relationships.appAssetLibraryVideo = .init(data: .init(id: id, _type: "appAssetLibraryVideos"))
     }
-    _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
-      relationships: relationships, _type: "reviewSubmissionItems")))).created
+    _ = try await unlessDryRunStopped {
+      try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
+        relationships: relationships, _type: "reviewSubmissionItems")))).created
+    }
     return draftID
   }
 
@@ -242,5 +259,17 @@ public enum ReviewSubmissions {
     _ = try await client.reviewSubmissionItemsUpdateInstance(
       path: .init(id: id), body: .json(.init(data: .init(attributes: .init(resolved: true), id: id, _type: "reviewSubmissionItems")))
     ).ok
+  }
+}
+
+extension ReviewSubmissions.Actor {
+  /// Some actors come without `actorType` (a nomination's: only a user's name or an `apiKeyId`,
+  /// seen live 2026-10-21), so a missing type is inferred from those.
+  init(_ actor: Components.Schemas.Actor) {
+    let attributes = actor.attributes
+    let name = [attributes?.userFirstName, attributes?.userLastName].compactMap(\.self).joined(separator: " ")
+    let type = attributes?.actorType ?? (attributes?.apiKeyId != nil ? "API_KEY" : name.isEmpty ? "" : "USER")
+    self.init(
+      type: type, name: name.isEmpty ? nil : name, email: attributes?.userEmail, apiKeyID: attributes?.apiKeyId)
   }
 }

@@ -112,7 +112,16 @@ public enum Experiments {
     try await patch(id: id, .init(started: false), client: client)
   }
 
-  public static func delete(id: String, client: ASCClient) async throws {
+  /// Deletes a test, after its treatments' placements while it's editable
+  /// (`AssetLibrary.clearPlacements`; one that went through review holds only reviewed images).
+  public static func delete(id: String, state: String? = nil, client: ASCClient) async throws {
+    var state = state
+    if state == nil { state = try await get(id: id, client: client).state }
+    if ["PREPARE_FOR_SUBMISSION", "REJECTED"].contains(state) {
+      for treatment in try await treatments(experimentID: id, client: client) {
+        try await clearPlacements(treatmentID: treatment.id, client: client)
+      }
+    }
     _ = try await client.appStoreVersionExperimentsV2DeleteInstance(path: .init(id: id)).noContent
   }
 
@@ -167,8 +176,16 @@ public enum Experiments {
     }
   }
 
+  /// Deletes a treatment, after its placements (`AssetLibrary.clearPlacements`).
   public static func deleteTreatment(id: String, client: ASCClient) async throws {
+    try await clearPlacements(treatmentID: id, client: client)
     _ = try await client.appStoreVersionExperimentTreatmentsDeleteInstance(path: .init(id: id)).noContent
+  }
+
+  private static func clearPlacements(treatmentID: String, client: ASCClient) async throws {
+    for localization in try await localizations(treatmentID: treatmentID, client: client) {
+      try await AssetLibrary.clearPlacements(on: .treatmentLocalization(localization.id), client: client)
+    }
   }
 
   // MARK: Localizations
@@ -193,8 +210,10 @@ public enum Experiments {
     return Localization(id: created.id, locale: created.attributes?.locale ?? locale)
   }
 
-  /// Removes a language from a treatment; that language then shows the original page.
+  /// Removes a language from a treatment, after its placements (`AssetLibrary.clearPlacements`);
+  /// that language then shows the original page.
   public static func deleteLocalization(id: String, client: ASCClient) async throws {
+    try await AssetLibrary.clearPlacements(on: .treatmentLocalization(id), client: client)
     _ = try await client.appStoreVersionExperimentTreatmentLocalizationsDeleteInstance(path: .init(id: id)).noContent
   }
 

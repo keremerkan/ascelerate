@@ -4,7 +4,8 @@ import Foundation
 import AVFoundation
 import ImageIO
 
-/// Uploading to, placing in and cleaning up the App Asset Library (its read side is in AscelerateCore).
+/// Checking files for, uploading to and placing in the App Asset Library, and removing placements
+/// (the rest of it, deleting unused assets included, is in AscelerateCore).
 extension AssetLibrary {
   /// Throws if the image's pixel size or file type is not one the slot accepts.
   static func validateSize(of file: MediaFile, slot: Slot) throws {
@@ -81,51 +82,8 @@ extension AssetLibrary {
     localizationID: String, displayType: String, type: PlacementType, client: ASCClient
   ) async throws -> [Asset] {
     guard let group = displayTypeGroups[displayType] else { return [] }
-    let placements = try await placements(localizationID: localizationID, type: type, group: group, client: client)
-    return try await withThrowingTaskGroup(of: Asset?.self) { tasks in
-      for placement in placements {
-        tasks.addTask { try await placedAsset(placementID: placement.id, client: client).asset }
-      }
-      return try await tasks.reduce(into: []) { assets, asset in asset.map { assets.append($0) } }
-    }
-  }
-
-  /// Deletes each of these library assets that `isUnused` allows; returns how many it deleted.
-  /// An asset still placed anywhere (e.g. shared with the live version) is kept.
-  static func deleteIfUnused(_ assets: [Asset], client: ASCClient) async throws -> Int {
-    try await withThrowingTaskGroup(of: Bool.self) { tasks in
-      for asset in assets {
-        tasks.addTask { try await deleteIfUnused(asset, client: client) }
-      }
-      return try await tasks.reduce(0) { $0 + ($1 ? 1 : 0) }
-    }
-  }
-
-  /// Deletes a library image or video if `isUnused` allows it, checked against a fresh read.
-  /// Returns whether it was deleted.
-  static func deleteIfUnused(_ asset: Asset, client: ASCClient) async throws -> Bool {
-    do {
-      switch asset {
-        case .image(let id):
-          let image = try await withTransientRetry {
-            try await client.appAssetLibraryImagesGetInstance(
-              path: .init(id: id), query: .init(include: [.placements], limitPlacements: 1)
-            ).ok.body.json.data
-          }
-          guard isUnused(image) else { return false }
-          _ = try await withTransientRetry { try await client.appAssetLibraryImagesDeleteInstance(path: .init(id: id)).noContent }
-        case .video(let id):
-          let video = try await withTransientRetry {
-            try await client.appAssetLibraryVideosGetInstance(
-              path: .init(id: id), query: .init(include: [.placements], limitPlacements: 1)
-            ).ok.body.json.data
-          }
-          guard isUnused(video) else { return false }
-          _ = try await withTransientRetry { try await client.appAssetLibraryVideosDeleteInstance(path: .init(id: id)).noContent }
-      }
-    } catch where ASCError.from(error)?.statusCode == 404 {
-    }
-    return true
+    return try await placementsWithMedia(on: .versionLocalization(localizationID), type: type, group: group, client: client)
+      .compactMap { placed in placed.image.map { .image($0.id) } ?? placed.video.map { .video($0.id) } }
   }
 
   /// Removes a placement, then deletes its library asset when nothing uses it any more: a removed

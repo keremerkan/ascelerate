@@ -203,15 +203,3 @@ public enum Nominations {
       submittedBy: r?.submittedByActor?.data.flatMap { actors[$0.id] })
   }
 }
-
-extension ReviewSubmissions.Actor {
-  /// Nominations' actors come without `actorType` (only a user's name or an `apiKeyId`, seen live
-  /// 2026-10-21), so a missing type is inferred from those.
-  init(_ actor: Components.Schemas.Actor) {
-    let attributes = actor.attributes
-    let name = [attributes?.userFirstName, attributes?.userLastName].compactMap(\.self).joined(separator: " ")
-    let type = attributes?.actorType ?? (attributes?.apiKeyId != nil ? "API_KEY" : name.isEmpty ? "" : "USER")
-    self.init(
-      type: type, name: name.isEmpty ? nil : name, email: attributes?.userEmail, apiKeyID: attributes?.apiKeyId)
-  }
-}

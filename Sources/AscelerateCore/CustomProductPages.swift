@@ -157,7 +157,15 @@ public enum CustomProductPages {
     ).ok
   }
 
+  /// Deletes a page, after the placements on its editable versions' localizations
+  /// (`AssetLibrary.clearPlacements`; a version in review or approved holds only reviewed images,
+  /// whose leftover placements do no harm).
   public static func delete(id: String, client: ASCClient) async throws {
+    for version in try await versions(pageID: id, client: client) where ["PREPARE_FOR_SUBMISSION", "REJECTED"].contains(version.state) {
+      for localization in try await localizations(versionID: version.id, client: client) {
+        try await AssetLibrary.clearPlacements(on: .productPageLocalization(localization.id), client: client)
+      }
+    }
     _ = try await client.appCustomProductPagesDeleteInstance(path: .init(id: id)).noContent
   }
 
@@ -240,7 +248,9 @@ public enum CustomProductPages {
     }
   }
 
+  /// Deletes a language, after its placements (`AssetLibrary.clearPlacements`).
   public static func deleteLocalization(id: String, client: ASCClient) async throws {
+    try await AssetLibrary.clearPlacements(on: .productPageLocalization(id), client: client)
     _ = try await client.appCustomProductPageLocalizationsDeleteInstance(path: .init(id: id)).noContent
   }
 

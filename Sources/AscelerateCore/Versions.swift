@@ -59,8 +59,19 @@ public func createVersion(
 /// Deletes an App Store version. Deleting a platform's only version, never submitted, removes the
 /// platform from the app (verified live 2026-10-20 on PREPARE_FOR_SUBMISSION versions, the app's
 /// original iOS platform included: HTTP 204, and the platform was gone from App Store Connect). The
-/// version's screenshots and previews go with it; their files stay in the app's asset library.
+/// version's screenshots and previews go with it; their files stay in the app's asset library
+/// (the placements of its unreviewed media are deleted first while it can be deleted at all, see
+/// `AssetLibrary.clearPlacements`; one waiting for review still takes media changes, but not a delete).
 public func deleteVersion(id: String, client: ASCClient) async throws {
+  let version = try await client.appStoreVersionsGetInstance(path: .init(id: id)).ok.body.json.data
+  if version.attributes?.appVersionState == "PREPARE_FOR_SUBMISSION" {
+    let localizations = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+      path: .init(id: id), query: .init(limit: 200)
+    ).ok.body.json.data
+    for localization in localizations {
+      try await AssetLibrary.clearPlacements(on: .versionLocalization(localization.id), client: client)
+    }
+  }
   _ = try await client.appStoreVersionsDeleteInstance(path: .init(id: id)).noContent
 }
 

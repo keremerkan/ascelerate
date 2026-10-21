@@ -406,10 +406,11 @@ struct ProductPagesCommand: AsyncParsableCommand {
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
           if let existing = byLocale[locale] {
             // A locale without promotional text in the file is left as it is.
-            var updated = existing
-            if let text = fields.promotionalText {
-              updated = try await CustomProductPages.updateLocalization(id: existing.id, promotionalText: text, client: client)
+            guard let text = fields.promotionalText else {
+              print("  [\(localeName(locale))] Unchanged (no promotional text in the file).")
+              continue
             }
+            let updated = try await CustomProductPages.updateLocalization(id: existing.id, promotionalText: text, client: client)
             print("  [\(localeName(locale))] Updated.")
             if verbose {
               print("    Promotional Text: \(updated.promotionalText ?? "—")")

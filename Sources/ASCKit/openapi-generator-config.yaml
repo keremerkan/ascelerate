@@ -164,6 +164,8 @@ filter:
     - /v1/appAssetLibraryVideos
     - /v1/appAssetLibraryVideos/{id}
     - /v1/appAssetLibraries/{id}/videos
+    - /v1/appAssetLibraryImages/{id}/placements
+    - /v1/appAssetLibraryVideos/{id}/placements
     - /v1/appStoreVersionLocalizations/{id}/placements
     - /v1/appCustomProductPageLocalizations/{id}/placements
     - /v1/appEventLocalizations/{id}/placements

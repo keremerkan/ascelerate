@@ -392,7 +392,7 @@ struct AppEventsCommand: AsyncParsableCommand {
         return
       }
 
-      try await AppEvents.delete(id: appEvent.id, client: client)
+      try await AppEvents.delete(id: appEvent.id, state: appEvent.state, client: client)
       print()
       success("Deleted", "in-app event '\(name)'.")
     }

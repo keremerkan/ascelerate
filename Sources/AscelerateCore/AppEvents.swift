@@ -159,7 +159,16 @@ public enum AppEvents {
     })
   }
 
-  public static func delete(id: String, client: ASCClient) async throws {
+  /// Deletes an event, after its localizations' placements while it's a draft or rejected
+  /// (`AssetLibrary.clearPlacements`; one that went through review holds only reviewed media).
+  public static func delete(id: String, state: String? = nil, client: ASCClient) async throws {
+    var state = state
+    if state == nil { state = try await get(id: id, client: client).state }
+    if ["DRAFT", "REJECTED"].contains(state) {
+      for localization in try await localizations(eventID: id, client: client) {
+        try await AssetLibrary.clearPlacements(on: .eventLocalization(localization.id), client: client)
+      }
+    }
     _ = try await client.appEventsDeleteInstance(path: .init(id: id)).noContent
   }
 
@@ -197,7 +206,9 @@ public enum AppEvents {
     ).ok.body.json.data)
   }
 
+  /// Deletes a language, after its placements (`AssetLibrary.clearPlacements`).
   public static func deleteLocalization(id: String, client: ASCClient) async throws {
+    try await AssetLibrary.clearPlacements(on: .eventLocalization(id), client: client)
     _ = try await client.appEventLocalizationsDeleteInstance(path: .init(id: id)).noContent
   }
 

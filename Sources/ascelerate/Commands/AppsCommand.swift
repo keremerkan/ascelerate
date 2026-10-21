@@ -11,7 +11,7 @@ struct AppsCommand: AsyncParsableCommand {
     groupedSubcommands: [
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, Release.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
-      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, Availability.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
+      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, Availability.self, PricingCommand.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
     ]
   )
@@ -3243,20 +3243,11 @@ struct AppsCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let appName = app.attributes?.name ?? bundleID
       
-      // Get availability info (without includes — territory limit is only 50)
-      let availability = try await client.appsAppAvailabilityV2GetToOneRelated(path: .init(id: app.id)).ok.body.json.data
-      let availableInNew = availability.attributes?.availableInNewTerritories
-      
-      // Paginate through all territory availabilities via the v2 sub-resource
-      let territoryAvailabilities = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.appAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated(
-          path: .init(id: availability.id), query: .init(limit: 50, include: [.territory])
-        ).ok.body.json
-      }.flatMap(\.data)
-      let territoryMap: [(code: String, id: String, isAvailable: Bool)] = territoryAvailabilities.compactMap { ta in
-        guard let code = ta.relationships?.territory?.data?.id else { return nil }
-        return (code, ta.id, ta.attributes?.available ?? false)
+      guard let availability = try await AppAvailability.availability(appID: app.id, client: client) else {
+        throw AppAvailability.NotSetUpError(appName: appName)
       }
+      let availableInNew: Bool? = availability.availableInNewTerritories
+      let territoryMap = availability.territories.map { (code: $0.territoryID, id: $0.id, isAvailable: $0.available) }
       
       // Edit mode
       if add != nil || remove != nil {
@@ -3323,11 +3314,7 @@ struct AppsCommand: AsyncParsableCommand {
         var failed: [String] = []
         for change in changes {
           do {
-            _ = try await client.territoryAvailabilitiesUpdateInstance(
-              path: .init(id: change.id),
-              body: .json(.init(data: .init(
-                attributes: .init(available: change.newValue), id: change.id, _type: "territoryAvailabilities")))
-            ).ok
+            try await AppAvailability.update(id: change.id, available: change.newValue, client: client)
           } catch {
             failed.append(change.code)
             print("  Failed to update \(change.code): \(describeError(error))")

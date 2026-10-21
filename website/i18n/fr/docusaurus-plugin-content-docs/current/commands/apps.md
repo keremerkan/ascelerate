@@ -198,6 +198,33 @@ ascelerate apps availability <bundle-id> --add CHN,RUS
 ascelerate apps availability <bundle-id> --remove CHN
 ```
 
+## Prix de l'application
+
+```bash
+# Prix de base, prix fixés manuellement et changements prévus (--all : tous les territoires ; --json)
+ascelerate apps pricing <bundle-id>
+ascelerate apps pricing tiers <bundle-id> --territory USA
+
+# Prix de base, immédiatement ou à partir d'une date (dans la devise du territoire de base ; 0 pour gratuit)
+ascelerate apps pricing set <bundle-id> --price 0.99
+ascelerate apps pricing set <bundle-id> --price 1.99 --start-date 2026-12-01
+
+# Prix manuels : un territoire, conserver les prix actuels d'Apple ou les rendre à Apple
+ascelerate apps pricing override <bundle-id> --territory FRA --price 0.99
+ascelerate apps pricing keep <bundle-id> --territories all
+ascelerate apps pricing remove <bundle-id> --territories FRA,DEU
+
+# Changement de prix temporaire (promotion) et suppression d'un changement prévu
+ascelerate apps pricing sale <bundle-id> --territories all --price 0.49 --start-date 2026-12-20 --end-date 2026-12-27
+ascelerate apps pricing cancel <bundle-id> --territory USA --start-date 2026-12-01
+
+# Copier un calendrier de prix vers une autre application (format de iap pricing export)
+ascelerate apps pricing export <bundle-id> --output prices.json
+ascelerate apps pricing import <other-bundle-id> --file prices.json
+```
+
+Apple calcule les prix des autres territoires à partir du prix de base et peut les ajuster selon les taxes et les taux de change ; un prix fixé manuellement reste tel quel. Pour plusieurs territoires, `sale` prend le prix dans la devise du territoire de base et applique ailleurs les prix comparables d'Apple ; ensuite, le prix précédent s'applique de nouveau dans chaque territoire. `import` remplace l'ensemble du calendrier de prix.
+
 ## Déclarations de chiffrement
 
 ```bash

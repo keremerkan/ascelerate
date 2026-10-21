@@ -683,6 +683,13 @@ ascelerate apps app-info age-rating <app>
 ascelerate apps app-info age-rating export <app>
 ascelerate apps app-info age-rating import <app> --file age-rating.json
 ascelerate apps availability <app> --add CHN,RUS
+ascelerate apps pricing <app> [--all] [--json]                      # base price, prices set by hand, planned changes
+ascelerate apps pricing set <app> --price 0.99 [--base-territory USA] [--start-date YYYY-MM-DD] [--drop-manual]   # base price; Apple derives the rest
+ascelerate apps pricing override <app> --territory FRA --price 0.99   # one territory by hand
+ascelerate apps pricing keep|remove <app> --territories FRA,DEU|all   # keep Apple's current prices by hand / give back to Apple
+ascelerate apps pricing sale <app> --territories all --price 0.49 --start-date D --end-date D   # temporary change; several territories: price in the base currency
+ascelerate apps pricing cancel <app> --territory USA --start-date D   # remove a planned change
+ascelerate apps pricing export|import <app> [--output|--file prices.json]   # same format as iap pricing export; import replaces the schedule
 ascelerate apps encryption <app> --create --description "Uses HTTPS"
 ascelerate apps eula <app> --file eula.txt
 ascelerate apps phased-release <app> --enable

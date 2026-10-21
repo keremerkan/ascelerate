@@ -55,6 +55,14 @@ filter:
     - /v1/apps/{id}/appAvailabilityV2
     - /v2/appAvailabilities/{id}/territoryAvailabilities
     - /v1/territoryAvailabilities/{id}
+    - /v2/appAvailabilities
+    - /v1/endAppAvailabilityPreOrders
+    - /v1/apps/{id}/appPriceSchedule
+    - /v1/appPriceSchedules
+    - /v1/appPriceSchedules/{id}/manualPrices
+    - /v1/appPriceSchedules/{id}/automaticPrices
+    - /v1/apps/{id}/appPricePoints
+    - /v3/appPricePoints/{id}/equalizations
     - /v1/appEncryptionDeclarations
     - /v1/apps/{id}/endUserLicenseAgreement
     - /v1/endUserLicenseAgreements

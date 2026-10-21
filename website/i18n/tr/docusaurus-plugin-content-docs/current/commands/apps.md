@@ -198,6 +198,33 @@ ascelerate apps availability <bundle-id> --add CHN,RUS
 ascelerate apps availability <bundle-id> --remove CHN
 ```
 
+## Uygulama fiyatlandırması
+
+```bash
+# Temel fiyat, elle belirlenen fiyatlar ve planlanan değişiklikler (--all: tüm bölgeler; --json)
+ascelerate apps pricing <bundle-id>
+ascelerate apps pricing tiers <bundle-id> --territory USA
+
+# Temel fiyat, hemen veya belirli bir tarihten itibaren (temel bölgenin para biriminde; ücretsiz için 0)
+ascelerate apps pricing set <bundle-id> --price 0.99
+ascelerate apps pricing set <bundle-id> --price 1.99 --start-date 2026-12-01
+
+# Elle belirlenen fiyatlar: tek bir bölge, Apple'ın güncel fiyatlarını koruma veya fiyatları Apple'a geri bırakma
+ascelerate apps pricing override <bundle-id> --territory FRA --price 0.99
+ascelerate apps pricing keep <bundle-id> --territories all
+ascelerate apps pricing remove <bundle-id> --territories FRA,DEU
+
+# Geçici fiyat değişikliği (indirim) ve planlanan bir değişikliği kaldırma
+ascelerate apps pricing sale <bundle-id> --territories all --price 0.49 --start-date 2026-12-20 --end-date 2026-12-27
+ascelerate apps pricing cancel <bundle-id> --territory USA --start-date 2026-12-01
+
+# Fiyat planını başka bir uygulamaya kopyalama (iap pricing export biçimi)
+ascelerate apps pricing export <bundle-id> --output prices.json
+ascelerate apps pricing import <other-bundle-id> --file prices.json
+```
+
+Apple diğer bölgelerin fiyatlarını temel fiyattan belirler ve vergi veya döviz kuru değişikliklerine göre ayarlayabilir; elle belirlenen bir fiyat olduğu gibi kalır. Birden çok bölgede `sale`, fiyatı temel bölgenin para biriminde alır ve diğer bölgelere Apple'ın karşılaştırılabilir fiyatlarını verir; sonrasında her bölgede önceki fiyat yeniden geçerli olur. `import` fiyat planını bütünüyle değiştirir.
+
 ## Şifreleme beyanları
 
 ```bash

@@ -104,23 +104,13 @@ struct NominationsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       var appID: String?
       if let app { appID = try await findApp(bundleID: app, client: client).id }
-      // filter[state] is required and takes a single value, so each state is its own query.
-      let states = state.map { [$0.uppercased()] } ?? ["DRAFT", "SUBMITTED", "ARCHIVED"]
-      var nominations: [Components.Schemas.Nomination] = []
-      for state in states {
-        guard let filter = Operations.NominationsGetCollection.Input.Query.FilterStatePayloadPayload(rawValue: state) else { continue }
-        nominations += try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.nominationsGetCollection(query: .init(
-            filterState: [filter], filterRelatedApps: appID.map { [$0] }, limit: 200, include: [.relatedApps]
-          )).ok.body.json
-        }.flatMap(\.data)
-      }
-      let entries = nominations.map { n in
-        let a = n.attributes
-        return Entry(
-          id: n.id, name: a?.name, type: a?._type, state: a?.state, description: a?.description,
-          publishStartDate: a?.publishStartDate, publishEndDate: a?.publishEndDate, deviceFamilies: a?.deviceFamilies,
-          locales: a?.locales, submittedDate: a?.submittedDate, appIds: n.relationships?.relatedApps?.data?.map { $0.id }
+      let states = state.map { [$0.uppercased()] } ?? Nominations.states
+      let entries = try await Nominations.list(appID: appID, states: states, client: client).map { n in
+        Entry(
+          id: n.id, name: n.name, type: n.type, state: n.state, description: n.description,
+          publishStartDate: n.publishStartDate, publishEndDate: n.publishEndDate,
+          deviceFamilies: n.deviceFamilies.isEmpty ? nil : n.deviceFamilies, locales: n.locales.isEmpty ? nil : n.locales,
+          submittedDate: n.submittedDate, appIds: n.appIDs.isEmpty ? nil : n.appIDs
         )
       }
       if jsonOption.json { try printJSON(entries); return }
@@ -179,19 +169,12 @@ struct NominationsCommand: AsyncParsableCommand {
         print(yellow("Cancelled."))
         return
       }
-      let created = try await client.nominationsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(
-          description: fields.description ?? "", deviceFamilies: devices, launchInSelectMarketsFirst: territories == nil ? nil : true,
-          locales: NominationsCommand.list(fields.locales), name: fields.name ?? "", notes: fields.notes,
-          preOrderEnabled: preOrder ? true : nil, publishEndDate: end, publishStartDate: start, submitted: submit,
-          supplementalMaterialsUris: NominationsCommand.list(fields.materials), _type: type.rawValue
-        ),
-        relationships: .init(
-          relatedApps: .init(data: appIDs.map { .init(id: $0, _type: "apps") }),
-          supportedTerritories: territories.map { .init(data: $0.map { .init(id: $0, _type: "territories") }) }
-        ),
-        _type: "nominations"
-      )))).created.body.json.data
+      let created = try await Nominations.create(
+        name: fields.name ?? "", type: type.rawValue, description: fields.description ?? "", publishStartDate: start,
+        publishEndDate: end, appIDs: appIDs, deviceFamilies: devices, locales: NominationsCommand.list(fields.locales),
+        territories: territories, launchInSelectMarketsFirst: territories == nil ? nil : true,
+        preOrderEnabled: preOrder ? true : nil, notes: fields.notes,
+        supplementalMaterials: NominationsCommand.list(fields.materials), submit: submit, client: client)
       print(green(submit ? "Submitted" : "Created") + " nomination \(created.id)" + (submit ? "." : " (draft; submit it with 'ascelerate nominations submit \(created.id)')."))
     }
   }
@@ -216,15 +199,11 @@ struct NominationsCommand: AsyncParsableCommand {
         print(yellow("Cancelled."))
         return
       }
-      _ = try await ClientFactory.makeClient().nominationsUpdateInstance(path: .init(id: id), body: .json(.init(data: .init(
-        attributes: .init(
-          description: fields.description, deviceFamilies: try NominationsCommand.devices(fields.devices),
-          locales: NominationsCommand.list(fields.locales), name: fields.name, notes: fields.notes,
-          publishEndDate: end, publishStartDate: start,
-          supplementalMaterialsUris: NominationsCommand.list(fields.materials), _type: type
-        ),
-        id: id, _type: "nominations"
-      )))).ok
+      try await Nominations.update(
+        id: id, name: fields.name, type: type, description: fields.description, publishStartDate: start,
+        publishEndDate: end.map { .some($0) }, deviceFamilies: try NominationsCommand.devices(fields.devices),
+        locales: NominationsCommand.list(fields.locales), notes: fields.notes,
+        supplementalMaterials: NominationsCommand.list(fields.materials), client: ClientFactory.makeClient())
       print(green("Updated") + " nomination \(id).")
     }
   }
@@ -236,7 +215,7 @@ struct NominationsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      try await NominationsCommand.patch(id, verb: "Submit", done: "Submitted", attributes: .init(submitted: true))
+      try await NominationsCommand.confirmed(id, verb: "Submit", done: "Submitted") { try await Nominations.submit(id: id, client: $0) }
     }
   }
 
@@ -247,7 +226,7 @@ struct NominationsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      try await NominationsCommand.patch(id, verb: "Archive", done: "Archived", attributes: .init(archived: true))
+      try await NominationsCommand.confirmed(id, verb: "Archive", done: "Archived") { try await Nominations.archive(id: id, client: $0) }
     }
   }
 
@@ -258,26 +237,18 @@ struct NominationsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      guard confirm("Delete nomination \(id)? [y/N] ") else {
-        print(yellow("Cancelled."))
-        return
-      }
-      _ = try await ClientFactory.makeClient().nominationsDeleteInstance(path: .init(id: id)).noContent
-      print(green("Deleted") + " nomination \(id).")
+      try await NominationsCommand.confirmed(id, verb: "Delete", done: "Deleted") { try await Nominations.delete(id: id, client: $0) }
     }
   }
 
-  private static func patch(
-    _ id: String, verb: String, done: String,
-    attributes: Components.Schemas.NominationUpdateRequest.DataPayload.AttributesPayload
+  private static func confirmed(
+    _ id: String, verb: String, done: String, _ action: (ASCClient) async throws -> some Any
   ) async throws {
     guard confirm("\(verb) nomination \(id)? [y/N] ") else {
       print(yellow("Cancelled."))
       return
     }
-    _ = try await ClientFactory.makeClient().nominationsUpdateInstance(
-      path: .init(id: id), body: .json(.init(data: .init(attributes: attributes, id: id, _type: "nominations")))
-    ).ok
+    _ = try await action(ClientFactory.makeClient())
     print(green(done) + " nomination \(id).")
   }
 }

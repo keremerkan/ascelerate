@@ -1312,10 +1312,13 @@ struct AppsCommand: AsyncParsableCommand {
         // 3. Fetch version localizations
         // What's New only exists for updates — if no earlier version of this platform
         // was ever released, the field isn't required (or even settable).
+        // Typed explicitly: Swift 6.2 infers the element as optional inside the array literal.
+        typealias PlatformFilter = Operations.AppsAppStoreVersionsGetToManyRelated.Input.Query.FilterPlatformPayloadPayload
+        let platform: PlatformFilter? = appVersion.attributes?.platform.flatMap(PlatformFilter.init(rawValue:))
         let releasedResponse = try await client.appsAppStoreVersionsGetToManyRelated(
           path: .init(id: app.id),
           query: .init(
-            filterPlatform: appVersion.attributes?.platform.flatMap { .init(rawValue: $0) }.map { [$0] },
+            filterPlatform: platform.map { [$0] },
             filterAppVersionState: [.readyForDistribution, .replacedWithNewVersion],
             limit: 2
           )

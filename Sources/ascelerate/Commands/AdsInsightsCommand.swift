@@ -172,11 +172,17 @@ extension AdsCommand.Keywords {
       print("\(formatState(genre)), \(countries.joined(separator: ", ")): \(start) – \(end)")
       print()
       let multiple = countries.count > 1
+      // Built step by step: Swift 6.2 can't type-check the concatenated literals in reasonable time.
+      var headers = ["Rank", "Search Term"]
+      if multiple { headers.append("Country") }
+      headers += ["Popularity", "In Genre", "Tier (1–5)"]
       Table.print(
-        headers: ["Rank", "Search Term"] + (multiple ? ["Country"] : []) + ["Popularity", "In Genre", "Tier (1–5)"],
-        rows: report.rows.map { r in
-          [r.rankInGenre.map(String.init) ?? "-", r.searchTerm] + (multiple ? [r.countryOrRegion ?? "-"] : [])
-            + [r.popularity.map(String.init) ?? "-", r.popularityInGenre.map(String.init) ?? "-", r.popularityTier.map(String.init) ?? "-"]
+        headers: headers,
+        rows: report.rows.map { r -> [String] in
+          var row = [r.rankInGenre.map(String.init) ?? "-", r.searchTerm]
+          if multiple { row.append(r.countryOrRegion ?? "-") }
+          row += [r.popularity.map(String.init) ?? "-", r.popularityInGenre.map(String.init) ?? "-", r.popularityTier.map(String.init) ?? "-"]
+          return row
         }
       )
     }
@@ -304,14 +310,19 @@ extension AdsCommand {
         print("\(app.name), \(firstSlot ? "first position" : "all positions"): \(start) – \(end)")
         print()
         func percent(_ v: Double?) -> String { v.map { String(Int(($0 * 100).rounded())) } ?? "?" }
+        var headers = ["Search Term", "Country"]
+        if weeks > 1 { headers.append("Week") }
+        headers += ["Impression Share", "Rank", "Popularity (1–5)"]
         Table.print(
-          headers: ["Search Term", "Country"] + (weeks > 1 ? ["Week"] : []) + ["Impression Share", "Rank", "Popularity (1–5)"],
-          rows: rows.map { r in
+          headers: headers,
+          rows: rows.map { r -> [String] in
             let share = r.lowImpressionShare == r.highImpressionShare
               ? percent(r.lowImpressionShare) + "%"
               : percent(r.lowImpressionShare) + "–" + percent(r.highImpressionShare) + "%"
-            return [r.searchTerm, r.countryOrRegion ?? "-"] + (weeks > 1 ? [r.week ?? "-"] : [])
-              + [share, r.rank.map(String.init) ?? "-", r.popularityTier.map(String.init) ?? "-"]
+            var row = [r.searchTerm, r.countryOrRegion ?? "-"]
+            if weeks > 1 { row.append(r.week ?? "-") }
+            row += [share, r.rank.map(String.init) ?? "-", r.popularityTier.map(String.init) ?? "-"]
+            return row
           }
         )
       }

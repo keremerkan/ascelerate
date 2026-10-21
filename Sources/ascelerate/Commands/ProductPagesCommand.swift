@@ -12,45 +12,35 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
   // MARK: - Shared helpers
 
-  /// Resolves a page name or ID to an AppCustomProductPage for the given app.
-  static func findProductPage(ref: String, appID: String, client: ASCClient) async throws -> Components.Schemas.AppCustomProductPage {
-    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.appsAppCustomProductPagesGetToManyRelated(path: .init(id: appID), query: .init(limit: 200)).ok.body.json
-    }.flatMap(\.data)
-    if let match = pages.first(where: { $0.attributes?.name == ref || $0.id == ref }) {
-      return match
+  /// Resolves a page name or ID to a page of the app (without its versions).
+  static func findProductPage(ref: String, appID: String, client: ASCClient) async throws -> CustomProductPages.Page {
+    do {
+      return try await CustomProductPages.find(ref, appID: appID, client: client)
+    } catch let error as CustomProductPages.LookupError {
+      throw ValidationError(error.localizedDescription)
     }
-    throw ValidationError("No custom product page '\(ref)' found for this app.")
   }
 
-  /// Picks the editable version of a page (prefers prepareForSubmission, skips replaced).
+  /// The page's current version (prefers prepareForSubmission, skips replaced).
   static func activeVersionID(pageID: String, client: ASCClient) async throws -> String {
-    let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.appCustomProductPagesAppCustomProductPageVersionsGetToManyRelated(
-        path: .init(id: pageID), query: .init(limit: 50)
-      ).ok.body.json
-    }.flatMap(\.data)
-    guard !versions.isEmpty else {
-      throw ValidationError("This custom product page has no versions.")
+    do {
+      return try await CustomProductPages.currentVersion(pageID: pageID, client: client).id
+    } catch let error as CustomProductPages.LookupError {
+      throw ValidationError(error.localizedDescription)
     }
-    return (versions.first { $0.attributes?.state == "PREPARE_FOR_SUBMISSION" }
-      ?? versions.first { $0.attributes?.state != "REPLACED_WITH_NEW_VERSION" }
-      ?? versions[0]).id
   }
 
-  /// Resolves a locale to its localization ID on the page's editable version.
+  /// Resolves a locale to its localization ID on the page's current version.
   static func localizationID(
     forLocale locale: String, pageID: String, client: ASCClient
   ) async throws -> String {
     let versionID = try await activeVersionID(pageID: pageID, client: client)
-    let locs = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
-      path: .init(id: versionID), query: .init(limit: 50)
-    ).ok.body.json
-    guard let loc = locs.data.first(where: { $0.attributes?.locale == locale }) else {
+    guard let localization = try await CustomProductPages.localization(locale: locale, versionID: versionID, client: client)
+    else {
       throw ValidationError(
         "No '\(locale)' localization on this page. Add it first with 'product-pages localizations import'.")
     }
-    return loc.id
+    return localization.id
   }
 
   // MARK: - List
@@ -68,9 +58,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.appsAppCustomProductPagesGetToManyRelated(path: .init(id: app.id), query: .init(limit: 200)).ok.body.json
-      }.flatMap(\.data)
+      let pages = try await CustomProductPages.list(appID: app.id, client: client)
 
       if pages.isEmpty {
         print("No custom product pages found.")
@@ -78,12 +66,11 @@ struct ProductPagesCommand: AsyncParsableCommand {
       }
 
       var rows: [[String]] = []
-      for page in pages.sorted(by: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }) {
-        let a = page.attributes
+      for page in pages.sorted(by: { $0.name < $1.name }) {
         rows.append([
-          a?.name ?? "—",
-          a?.visible == true ? green("Visible") : yellow("Hidden"),
-          a?.url.map { "\($0)" } ?? "—",
+          page.name.isEmpty ? "—" : page.name,
+          page.visible ? green("Visible") : yellow("Hidden"),
+          page.url ?? "—",
           page.id,
         ])
       }
@@ -111,32 +98,23 @@ struct ProductPagesCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
-      let a = productPage.attributes
 
-      print("Name:       \(a?.name ?? "—")")
-      print("Visibility: \(a?.visible == true ? "Visible" : "Hidden")")
-      print("URL:        \(a?.url.map { "\($0)" } ?? "—")")
+      print("Name:       \(productPage.name.isEmpty ? "—" : productPage.name)")
+      print("Visibility: \(productPage.visible ? "Visible" : "Hidden")")
+      print("URL:        \(productPage.url ?? "—")")
       print("Page ID:    \(productPage.id)")
 
-      let versions = try await client.appCustomProductPagesAppCustomProductPageVersionsGetToManyRelated(
-        path: .init(id: productPage.id), query: .init(limit: 50)
-      ).ok.body.json
-      for version in versions.data {
+      for version in try await CustomProductPages.versions(pageID: productPage.id, client: client) {
         print()
-        print("Version \(version.attributes?.version ?? "—") (\(version.attributes?.state.map { formatState($0) } ?? "—"))")
+        print("Version \(version.version ?? "—") (\(version.state.map { formatState($0) } ?? "—"))")
         print("  Version ID: \(version.id)")
-        if let deepLink = version.attributes?.deepLink { print("  Deep Link:  \(deepLink)") }
+        if let deepLink = version.deepLink { print("  Deep Link:  \(deepLink)") }
 
-        let locs = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
-          path: .init(id: version.id), query: .init(limit: 50)
-        ).ok.body.json
-        if !locs.data.isEmpty {
+        let localizations = try await CustomProductPages.localizations(versionID: version.id, client: client)
+        if !localizations.isEmpty {
           print("  Localizations:")
-          for loc in locs.data.sorted(by: {
-            ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
-          }) {
-            let promo = loc.attributes?.promotionalText
-            print("    [\(loc.attributes?.locale.map { localeName($0) } ?? "—")] \(promo ?? "—")")
+          for localization in localizations.sorted(by: { $0.locale < $1.locale }) {
+            print("    [\(localization.locale.isEmpty ? "—" : localeName(localization.locale))] \(localization.promotionalText ?? "—")")
           }
         }
       }
@@ -185,40 +163,11 @@ struct ProductPagesCommand: AsyncParsableCommand {
         return
       }
 
-      // Compound create: the page references an inline version, which references an inline
-      // localization. Local IDs (the API requires the `${local-id}` format) link them within
-      // the single request.
-      let versionLID = "${ascelerate-version}"
-      let localizationLID = "${ascelerate-localization}"
-
-      let response = try await client.appCustomProductPagesCreateInstance(body: .json(.init(
-        data: .init(
-          attributes: .init(name: name),
-          relationships: .init(
-            app: .init(data: .init(id: app.id, _type: "apps")),
-            appCustomProductPageVersions: .init(data: [.init(id: versionLID, _type: "appCustomProductPageVersions")])
-          ),
-          _type: "appCustomProductPages"
-        ),
-        included: [
-          .AppCustomProductPageVersionInlineCreate(.init(
-            id: versionLID,
-            relationships: .init(
-              appCustomProductPageLocalizations: .init(
-                data: [.init(id: localizationLID, _type: "appCustomProductPageLocalizations")])
-            ),
-            _type: "appCustomProductPageVersions"
-          )),
-          .AppCustomProductPageLocalizationInlineCreate(.init(
-            attributes: .init(locale: locale, promotionalText: promotionalText),
-            id: localizationLID,
-            _type: "appCustomProductPageLocalizations"
-          )),
-        ]
-      ))).created.body.json
+      let created = try await CustomProductPages.create(
+        appID: app.id, name: name, locales: [locale], promotionalText: promotionalText, client: client)
 
       print()
-      success("Created", "custom product page '\(name)' (id: \(response.data.id)).")
+      success("Created", "custom product page '\(name)' (id: \(created.id)).")
     }
   }
 
@@ -256,19 +205,15 @@ struct ProductPagesCommand: AsyncParsableCommand {
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
 
-      guard confirm("Update page '\(productPage.attributes?.name ?? page)'? [y/N] ") else {
+      guard confirm("Update page '\(productPage.name)'? [y/N] ") else {
         cancelled()
         return
       }
 
-      _ = try await client.appCustomProductPagesUpdateInstance(
-        path: .init(id: productPage.id),
-        body: .json(.init(data: .init(
-          attributes: .init(name: name, visible: visible), id: productPage.id, _type: "appCustomProductPages")))
-      ).ok
+      try await CustomProductPages.update(id: productPage.id, name: name, visible: visible, client: client)
 
       print()
-      success("Updated", "custom product page '\(name ?? productPage.attributes?.name ?? page)'.")
+      success("Updated", "custom product page '\(name ?? productPage.name)'.")
     }
   }
 
@@ -295,7 +240,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
-      let name = productPage.attributes?.name ?? page
+      let name = productPage.name
 
       print("Custom product page: \(name)")
       print()
@@ -304,7 +249,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.appCustomProductPagesDeleteInstance(path: .init(id: productPage.id)).noContent
+      try await CustomProductPages.delete(id: productPage.id, client: client)
       print()
       success("Deleted", "custom product page '\(name)'.")
     }
@@ -344,21 +289,17 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let versionID = try await ProductPagesCommand.activeVersionID(
           pageID: productPage.id, client: client)
 
-        let resp = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
-          path: .init(id: versionID), query: .init(limit: 50)
-        ).ok.body.json
-        if resp.data.isEmpty {
+        let localizations = try await CustomProductPages.localizations(versionID: versionID, client: client)
+        if localizations.isEmpty {
           print("No localizations found.")
           return
         }
 
-        print("Localizations for '\(productPage.attributes?.name ?? page)':")
+        print("Localizations for '\(productPage.name)':")
         print()
-        for loc in resp.data.sorted(by: {
-          ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
-        }) {
-          print("[\(localeName(loc.attributes?.locale ?? "?"))]")
-          print("  Promotional Text: \(loc.attributes?.promotionalText ?? "—")")
+        for localization in localizations.sorted(by: { $0.locale < $1.locale }) {
+          print("[\(localeName(localization.locale.isEmpty ? "?" : localization.locale))]")
+          print("  Promotional Text: \(localization.promotionalText ?? "—")")
           print()
         }
       }
@@ -388,22 +329,16 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let versionID = try await ProductPagesCommand.activeVersionID(
           pageID: productPage.id, client: client)
 
-        let resp = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
-          path: .init(id: versionID), query: .init(limit: 50)
-        ).ok.body.json
-
         var result: [String: ProductPageLocaleFields] = [:]
-        for loc in resp.data {
-          guard let locale = loc.attributes?.locale else { continue }
-          result[locale] = ProductPageLocaleFields(
-            promotionalText: loc.attributes?.promotionalText)
+        for localization in try await CustomProductPages.localizations(versionID: versionID, client: client) {
+          result[localization.locale] = ProductPageLocaleFields(promotionalText: localization.promotionalText)
         }
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(result)
 
-        let pageName = productPage.attributes?.name ?? "page"
+        let pageName = productPage.name
         let outputPath = expandPath(
           confirmOutputPath(output ?? "\(pageName)-localizations.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
@@ -452,7 +387,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
           throw ValidationError("JSON file contains no locale data.")
         }
 
-        print("Importing \(localeUpdates.count) locale(s) for '\(productPage.attributes?.name ?? page)':")
+        print("Importing \(localeUpdates.count) locale(s) for '\(productPage.name)':")
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
           print("  [\(localeName(locale))] \(fields.promotionalText ?? "—")")
         }
@@ -464,39 +399,31 @@ struct ProductPagesCommand: AsyncParsableCommand {
         }
         print()
 
-        let existing = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
-          path: .init(id: versionID), query: .init(limit: 50)
-        ).ok.body.json
         let byLocale = Dictionary(
-          existing.data.compactMap { loc in loc.attributes?.locale.map { ($0, loc) } },
+          try await CustomProductPages.localizations(versionID: versionID, client: client).map { ($0.locale, $0) },
           uniquingKeysWith: { first, _ in first })
 
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
-          if let loc = byLocale[locale] {
-            let response = try await client.appCustomProductPageLocalizationsUpdateInstance(
-              path: .init(id: loc.id),
-              body: .json(.init(data: .init(
-                attributes: .init(promotionalText: fields.promotionalText), id: loc.id,
-                _type: "appCustomProductPageLocalizations")))
-            ).ok.body.json
+          if let existing = byLocale[locale] {
+            // A locale without promotional text in the file is left as it is.
+            var updated = existing
+            if let text = fields.promotionalText {
+              updated = try await CustomProductPages.updateLocalization(id: existing.id, promotionalText: text, client: client)
+            }
             print("  [\(localeName(locale))] Updated.")
             if verbose {
-              print("    Promotional Text: \(response.data.attributes?.promotionalText ?? "—")")
+              print("    Promotional Text: \(updated.promotionalText ?? "—")")
             }
           } else {
             guard confirm("  [\(localeName(locale))] Locale not present. Create it? [y/N] ") else {
               print("  [\(localeName(locale))] Skipped.")
               continue
             }
-            let response = try await client.appCustomProductPageLocalizationsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(locale: locale, promotionalText: fields.promotionalText),
-              relationships: .init(
-                appCustomProductPageVersion: .init(data: .init(id: versionID, _type: "appCustomProductPageVersions"))),
-              _type: "appCustomProductPageLocalizations"
-            )))).created.body.json
+            let created = try await CustomProductPages.createLocalization(
+              versionID: versionID, locale: locale, promotionalText: fields.promotionalText, client: client)
             print("  [\(localeName(locale))] \(green("Created."))")
             if verbose {
-              print("    Promotional Text: \(response.data.attributes?.promotionalText ?? "—")")
+              print("    Promotional Text: \(created.promotionalText ?? "—")")
             }
           }
         }
@@ -536,14 +463,12 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let versionID = try await ProductPagesCommand.activeVersionID(
           pageID: productPage.id, client: client)
 
-        let locs = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
-          path: .init(id: versionID), query: .init(limit: 50)
-        ).ok.body.json
-
         var rows: [[String]] = []
-        for loc in locs.data.sorted(by: { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }) {
+        for localization in try await CustomProductPages.localizations(versionID: versionID, client: client)
+          .sorted(by: { $0.locale < $1.locale }) {
           rows += try await LocalizationMedia.rows(
-            locale: loc.attributes?.locale ?? "?", on: .productPageLocalization(loc.id), client: client)
+            locale: localization.locale.isEmpty ? "?" : localization.locale,
+            on: .productPageLocalization(localization.id), client: client)
         }
 
         if rows.isEmpty {
@@ -597,7 +522,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
         try await LocalizationMedia.upload(
           file: file, displayType: displayType, previewType: previewType, previewFrame: previewFrame, appID: app.id,
-          context: [("Page", productPage.attributes?.name ?? page), ("Locale", localeName(locale))], client: client,
+          context: [("Page", productPage.name), ("Locale", localeName(locale))], client: client,
           owner: .productPageLocalization(locID))
       }
     }
@@ -629,12 +554,9 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let versionID = try await ProductPagesCommand.activeVersionID(
           pageID: productPage.id, client: client)
 
-        let locs = try await client.appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(
-          path: .init(id: versionID), query: .init(limit: 50)
-        ).ok.body.json
-
+        let localizations = try await CustomProductPages.localizations(versionID: versionID, client: client)
         try await LocalizationMedia.delete(
-          mediaID: mediaID, among: locs.data.map { .productPageLocalization($0.id) }, client: client)
+          mediaID: mediaID, among: localizations.map { .productPageLocalization($0.id) }, client: client)
       }
     }
   }

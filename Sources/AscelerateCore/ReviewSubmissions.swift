@@ -69,7 +69,7 @@ public enum ReviewSubmissions {
   }
 
   /// A submission's items, resolved to what they are. Product names cost one request per product
-  /// item, an app version's build one per version.
+  /// item, an app version's build one per version, a custom product page's name one per page.
   public static func items(submissionID: String, client: ASCClient) async throws -> [Item] {
     let response = try await client.reviewSubmissionsItemsGetToManyRelated(
       path: .init(id: submissionID),
@@ -90,10 +90,12 @@ public enum ReviewSubmissions {
     ).ok.body.json
     var versions: [String: Components.Schemas.AppStoreVersion] = [:]
     var events: [String: String] = [:]
+    var experiments: [String: String] = [:]
     for included in response.included ?? [] {
       switch included {
         case .appStoreVersions(let version): versions[version.id] = version
         case .appEvents(let event): events[event.id] = event.attributes?.referenceName
+        case .appStoreVersionExperiments(let experiment): experiments[experiment.id] = experiment.attributes?.name
         default: break
       }
     }
@@ -105,7 +107,7 @@ public enum ReviewSubmissions {
         || relationships?.subscriptionGroupVersion?.data != nil
     }
     let products = hasProducts ? try await ProductVersions.reviewItems(submissionID: submissionID, client: client) : [:]
-    let (versionsByID, eventNames) = (versions, events)
+    let (versionsByID, eventNames, experimentNames) = (versions, events, experiments)
     return try await boundedConcurrentMap(response.data, maxConcurrent: 4) { item in
       let relationships = item.relationships
       let state = item.attributes?.state
@@ -121,6 +123,23 @@ public enum ReviewSubmissions {
       }
       if let id = relationships?.appEvent?.data?.id {
         return Item(id: item.id, state: state, kind: "appEvent", name: eventNames[id], platform: nil, build: nil)
+      }
+      if let id = relationships?.appStoreVersionExperimentV2?.data?.id {
+        return Item(
+          id: item.id, state: state, kind: "appStoreVersionExperimentV2", name: experimentNames[id], platform: nil,
+          build: nil)
+      }
+      if let id = relationships?.appCustomProductPageVersion?.data?.id {
+        // The included version doesn't name its page: one more request, with the page included.
+        let response = try await client.appCustomProductPageVersionsGetInstance(
+          path: .init(id: id), query: .init(include: [.appCustomProductPage])
+        ).ok.body.json
+        let name = response.included?.lazy.compactMap { included -> String? in
+          if case .appCustomProductPages(let page) = included { return page.attributes?.name }
+          return nil
+        }.first
+        return Item(
+          id: item.id, state: state, kind: "appCustomProductPageVersion", name: name, platform: nil, build: nil)
       }
       if let product = products[item.id] {
         let kinds = ["IN_APP_PURCHASE": "inAppPurchaseVersion", "SUBSCRIPTION": "subscriptionVersion",
@@ -173,11 +192,18 @@ public enum ReviewSubmissions {
     _ = try await client.reviewSubmissionItemsDeleteInstance(path: .init(id: id)).noContent
   }
 
-  /// Adds an in-app event to the app's draft submission (`READY_FOR_REVIEW`) for `platform`,
-  /// creating the draft when there's none, as App Store Connect's Add for Review does. It goes to
-  /// App Review when the draft is submitted. Returns the draft's ID.
+  /// What Add for Review puts in a draft submission besides an app version.
+  public enum DraftItem: Sendable {
+    case appEvent(String)
+    case customProductPageVersion(String)
+    case experiment(String)
+  }
+
+  /// Adds an item to the app's draft submission (`READY_FOR_REVIEW`) for `platform`, creating the
+  /// draft when there's none, as App Store Connect's Add for Review does. It goes to App Review
+  /// when the draft is submitted. Returns the draft's ID.
   @discardableResult
-  public static func addEvent(_ eventID: String, appID: String, platform: String, client: ASCClient) async throws -> String {
+  public static func add(_ item: DraftItem, appID: String, platform: String, client: ASCClient) async throws -> String {
     typealias Query = Operations.AppsReviewSubmissionsGetToManyRelated.Input.Query
     let drafts = try await client.appsReviewSubmissionsGetToManyRelated(
       path: .init(id: appID),
@@ -195,13 +221,18 @@ public enum ReviewSubmissions {
         _type: "reviewSubmissions"
       )))).created.body.json.data.id
     }
+    var relationships = Components.Schemas.ReviewSubmissionItemCreateRequest.DataPayload.RelationshipsPayload(
+      reviewSubmission: .init(data: .init(id: draftID, _type: "reviewSubmissions")))
+    switch item {
+      case .appEvent(let id):
+        relationships.appEvent = .init(data: .init(id: id, _type: "appEvents"))
+      case .customProductPageVersion(let id):
+        relationships.appCustomProductPageVersion = .init(data: .init(id: id, _type: "appCustomProductPageVersions"))
+      case .experiment(let id):
+        relationships.appStoreVersionExperimentV2 = .init(data: .init(id: id, _type: "appStoreVersionExperiments"))
+    }
     _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
-      relationships: .init(
-        appEvent: .init(data: .init(id: eventID, _type: "appEvents")),
-        reviewSubmission: .init(data: .init(id: draftID, _type: "reviewSubmissions"))
-      ),
-      _type: "reviewSubmissionItems"
-    )))).created
+      relationships: relationships, _type: "reviewSubmissionItems")))).created
     return draftID
   }
 

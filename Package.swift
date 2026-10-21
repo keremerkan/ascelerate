@@ -62,5 +62,9 @@ let package = Package(
             name: "ASCKitTests",
             dependencies: ["ASCKit"]
         ),
+        .testTarget(
+            name: "AscelerateCoreTests",
+            dependencies: ["AscelerateCore"]
+        ),
     ]
 )

@@ -198,6 +198,33 @@ ascelerate apps availability <bundle-id> --add CHN,RUS
 ascelerate apps availability <bundle-id> --remove CHN
 ```
 
+## App-Preise
+
+```bash
+# Basispreis, manuell festgelegte Preise und geplante Änderungen (--all: alle Länder; --json)
+ascelerate apps pricing <bundle-id>
+ascelerate apps pricing tiers <bundle-id> --territory USA
+
+# Basispreis, sofort oder ab einem Datum (in der Währung des Basislands; 0 für kostenlos)
+ascelerate apps pricing set <bundle-id> --price 0.99
+ascelerate apps pricing set <bundle-id> --price 1.99 --start-date 2026-12-01
+
+# Manuelle Preise: ein Land, Apples aktuelle Preise beibehalten oder an Apple zurückgeben
+ascelerate apps pricing override <bundle-id> --territory FRA --price 0.99
+ascelerate apps pricing keep <bundle-id> --territories all
+ascelerate apps pricing remove <bundle-id> --territories FRA,DEU
+
+# Vorübergehende Preisänderung (Rabattaktion) und eine geplante Änderung entfernen
+ascelerate apps pricing sale <bundle-id> --territories all --price 0.49 --start-date 2026-12-20 --end-date 2026-12-27
+ascelerate apps pricing cancel <bundle-id> --territory USA --start-date 2026-12-01
+
+# Einen Preisplan in eine andere App kopieren (Format von iap pricing export)
+ascelerate apps pricing export <bundle-id> --output prices.json
+ascelerate apps pricing import <other-bundle-id> --file prices.json
+```
+
+Apple leitet die Preise der anderen Länder vom Basispreis ab und kann sie an Steuer- und Wechselkursänderungen anpassen; ein manuell festgelegter Preis bleibt unverändert. Bei mehreren Ländern nimmt `sale` den Preis in der Währung des Basislands und gibt den anderen Apples vergleichbare Preise; danach gilt in jedem Land wieder der frühere Preis. `import` ersetzt den gesamten Preisplan.
+
 ## Verschlüsselungserklärungen
 
 ```bash

@@ -198,6 +198,33 @@ ascelerate apps availability <bundle-id> --add CHN,RUS
 ascelerate apps availability <bundle-id> --remove CHN
 ```
 
+## アプリの価格
+
+```bash
+# ベース価格、手動で設定した価格、予定されている変更（--all：すべての地域、--json）
+ascelerate apps pricing <bundle-id>
+ascelerate apps pricing tiers <bundle-id> --territory USA
+
+# ベース価格を今すぐ、または指定日から変更（ベース地域の通貨、無料は0）
+ascelerate apps pricing set <bundle-id> --price 0.99
+ascelerate apps pricing set <bundle-id> --price 1.99 --start-date 2026-12-01
+
+# 手動価格：1つの地域に設定、Appleの現在の価格を手動で固定、またはAppleの価格に戻す
+ascelerate apps pricing override <bundle-id> --territory FRA --price 0.99
+ascelerate apps pricing keep <bundle-id> --territories all
+ascelerate apps pricing remove <bundle-id> --territories FRA,DEU
+
+# 一時的な価格変更（セール）と、予定された変更の取り消し
+ascelerate apps pricing sale <bundle-id> --territories all --price 0.49 --start-date 2026-12-20 --end-date 2026-12-27
+ascelerate apps pricing cancel <bundle-id> --territory USA --start-date 2026-12-01
+
+# 価格スケジュールを別のアプリにコピー（iap pricing exportと同じ形式）
+ascelerate apps pricing export <bundle-id> --output prices.json
+ascelerate apps pricing import <other-bundle-id> --file prices.json
+```
+
+Appleはベース価格から他の地域の価格を算出し、税や為替レートの変動に応じて調整することがあります。手動で設定した価格は変わりません。複数の地域を指定した場合、`sale`はベース地域の通貨で価格を受け取り、ほかの地域にはAppleの同等価格を適用します。期間が終わると、各地域で以前の価格に戻ります。`import`は価格スケジュール全体を置き換えます。
+
 ## 暗号化宣言
 
 ```bash

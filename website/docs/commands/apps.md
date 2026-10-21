@@ -198,6 +198,33 @@ ascelerate apps availability <bundle-id> --add CHN,RUS
 ascelerate apps availability <bundle-id> --remove CHN
 ```
 
+## App pricing
+
+```bash
+# Base price, prices set by hand and planned changes (--all: every territory; --json)
+ascelerate apps pricing <bundle-id>
+ascelerate apps pricing tiers <bundle-id> --territory USA
+
+# Base price, now or from a date (in the base territory's currency; 0 for free)
+ascelerate apps pricing set <bundle-id> --price 0.99
+ascelerate apps pricing set <bundle-id> --price 1.99 --start-date 2026-12-01
+
+# Prices set by hand: one territory, keep Apple's current prices, or give them back to Apple
+ascelerate apps pricing override <bundle-id> --territory FRA --price 0.99
+ascelerate apps pricing keep <bundle-id> --territories all
+ascelerate apps pricing remove <bundle-id> --territories FRA,DEU
+
+# Temporary price change (a sale), and removing a planned change
+ascelerate apps pricing sale <bundle-id> --territories all --price 0.49 --start-date 2026-12-20 --end-date 2026-12-27
+ascelerate apps pricing cancel <bundle-id> --territory USA --start-date 2026-12-01
+
+# Copy a schedule to another app (the iap pricing export format)
+ascelerate apps pricing export <bundle-id> --output prices.json
+ascelerate apps pricing import <other-bundle-id> --file prices.json
+```
+
+Apple derives the other territories' prices from the base price and may adjust them for tax and exchange rate changes; a price set by hand stays as it is. For several territories, `sale` takes the price in the base territory's currency and gives the others Apple's comparable prices; afterwards each territory's earlier price applies again. `import` replaces the whole schedule.
+
 ## Encryption declarations
 
 ```bash

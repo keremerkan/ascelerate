@@ -544,10 +544,20 @@ func sanitizePath(_ path: String) -> String {
   return result
 }
 
+/// The user's home folder for ascelerate's own files and `~` in paths: `$HOME` when set, as shells
+/// take it (a test or sandbox points it at a temporary folder), else the account's.
+/// `homeDirectoryForCurrentUser` ignores `$HOME`.
+let homeDirectory: URL = {
+  if let home = ProcessInfo.processInfo.environment["HOME"], home.hasPrefix("/") {
+    return URL(fileURLWithPath: home, isDirectory: true)
+  }
+  return FileManager.default.homeDirectoryForCurrentUser
+}()
+
 func expandPath(_ path: String) -> String {
   let cleaned = sanitizePath(path)
   if cleaned.hasPrefix("~/") {
-    return FileManager.default.homeDirectoryForCurrentUser
+    return homeDirectory
       .appendingPathComponent(String(cleaned.dropFirst(2))).path
   }
   return cleaned
@@ -606,7 +616,7 @@ func isVersionOlder(_ a: String, than b: String) -> Bool {
 /// binary in PATH must not offer to "update" files installed by a newer one.
 func completionsVersionDetail() -> String? {
   guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return nil }
-  let home = FileManager.default.homeDirectoryForCurrentUser
+  let home = homeDirectory
 
   let completionPath: String
   if shell.hasSuffix("/zsh") {

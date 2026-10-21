@@ -10,9 +10,7 @@ struct Config: Codable {
   /// Apple Ads Platform API credentials. Optional — only the `ads` commands need them.
   var ads: AdsConfig?
 
-  static let configDirectory = FileManager.default
-    .homeDirectoryForCurrentUser
-    .appendingPathComponent(".ascelerate")
+  static let configDirectory = homeDirectory.appendingPathComponent(".ascelerate")
 
   static let configFile = configDirectory.appendingPathComponent("config.json")
 

@@ -12,7 +12,7 @@ struct InstallCompletionsCommand: ParsableCommand {
       throw ValidationError("Cannot detect shell. Set the SHELL environment variable.")
     }
 
-    let home = FileManager.default.homeDirectoryForCurrentUser
+    let home = homeDirectory
     let fm = FileManager.default
 
     if shell.hasSuffix("/zsh") {

@@ -53,14 +53,8 @@ public enum ReviewSubmissions {
       query: .init(limit: 50, include: [.submittedByActor, .lastUpdatedByActor])
     ).ok.body.json
     var actors: [String: Actor] = [:]
-    for included in response.included ?? [] {
-      if case .actors(let actor) = included {
-        let attributes = actor.attributes
-        let name = [attributes?.userFirstName, attributes?.userLastName].compactMap(\.self).joined(separator: " ")
-        actors[actor.id] = Actor(
-          type: attributes?.actorType ?? "", name: name.isEmpty ? nil : name, email: attributes?.userEmail,
-          apiKeyID: attributes?.apiKeyId)
-      }
+    for case .actors(let actor) in response.included ?? [] {
+      actors[actor.id] = Actor(actor)
     }
     let actorsByID = actors
     let submissions = try await boundedConcurrentMap(response.data, maxConcurrent: 4) { submission in

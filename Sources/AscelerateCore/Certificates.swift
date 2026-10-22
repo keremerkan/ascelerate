@@ -3,6 +3,7 @@ import Foundation
 #if canImport(Security)
 import Security
 #endif
+import SwiftASN1
 import X509
 
 /// Signing certificates (`certificates`): the team's development, distribution, Developer ID and
@@ -24,6 +25,30 @@ public enum Certificates {
     public let activated: Bool?
     /// The certificate itself (DER).
     public let content: Data?
+  }
+
+  /// What a certificate file (DER) says about itself: its names, serial number and expiry.
+  public struct Summary: Hashable, Sendable {
+    /// "Apple Development: Created via API (HF77C2262H)".
+    public let commonName: String
+    /// The team ID, in Apple's signing certificates.
+    public let organizationalUnit: String?
+    /// Hex, without leading zeros (as App Store Connect shows it).
+    public let serialNumber: String
+    public let expirationDate: Date
+  }
+
+  public static func summary(of certificate: Data) throws -> Summary {
+    let parsed = try X509.Certificate(derEncoded: Array(certificate))
+    func first(_ type: ASN1ObjectIdentifier) -> String? {
+      parsed.subject.flatMap { $0 }.first { $0.type == type }.map { String(describing: $0.value) }
+    }
+    let hex = parsed.serialNumber.bytes.map { String(format: "%02X", $0) }.joined()
+    let serial = String(hex.drop { $0 == "0" })
+    return Summary(
+      commonName: first(.RDNAttributeType.commonName) ?? "",
+      organizationalUnit: first(.RDNAttributeType.organizationalUnitName),
+      serialNumber: serial.isEmpty ? "0" : serial, expirationDate: parsed.notValidAfter)
   }
 
   /// The types the API creates, in the order a picker shows them: the rest need a pass type or
@@ -104,20 +129,39 @@ public enum Certificates {
   /// A PEM certificate signing request for a private key. Apple sets the certificate's names
   /// itself, so the common name only shows in the request.
   public static func signingRequest(privateKey: X509.Certificate.PrivateKey, commonName: String = "asc") throws -> String {
-    let request = try CertificateSigningRequest(
-      version: .v1,
-      subject: try DistinguishedName { CommonName(commonName) },
-      privateKey: privateKey,
-      attributes: CertificateSigningRequest.Attributes(),
-      signatureAlgorithm: .sha256WithRSAEncryption
-    )
-    return try request.serializeAsPEM().pemString
+    do {
+      let request = try CertificateSigningRequest(
+        version: .v1,
+        subject: try DistinguishedName { CommonName(commonName) },
+        privateKey: privateKey,
+        attributes: CertificateSigningRequest.Attributes(),
+        signatureAlgorithm: .sha256WithRSAEncryption
+      )
+      return try request.serializeAsPEM().pemString
+    } catch let error as CertificateError {
+      // Its own description has the reason; as an NSError it's only "error 1".
+      throw SigningRequestError(reason: String(describing: error))
+    }
+  }
+
+  public struct SigningRequestError: LocalizedError {
+    public let reason: String
+
+    public var errorDescription: String? {
+      "The certificate signing request couldn't be made: \(reason)"
+    }
   }
 
   #if canImport(Security)
   /// A PEM certificate signing request for an RSA private key in the keychain.
   public static func signingRequest(key: SecKey, commonName: String = "asc") throws -> String {
-    try signingRequest(privateKey: X509.Certificate.PrivateKey(key), commonName: commonName)
+    let privateKey: X509.Certificate.PrivateKey
+    do {
+      privateKey = try X509.Certificate.PrivateKey(key)
+    } catch let error as CertificateError {
+      throw SigningRequestError(reason: String(describing: error))
+    }
+    return try signingRequest(privateKey: privateKey, commonName: commonName)
   }
   #endif
 }

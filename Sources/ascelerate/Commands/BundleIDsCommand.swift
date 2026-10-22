@@ -422,20 +422,20 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: AS
   let bidIdentifier = bundleID.identifier
 
   // Fetch all profiles that reference this bundle ID
-  let matchingProfiles = try await fetchProfilesWithBundleIDs(client: client).profiles
-    .filter { $0.relationships?.bundleId?.data?.id == bundleID.id }
-    .sorted { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
+  let matchingProfiles = try await Profiles.list(client: client)
+    .filter { $0.bundleIDResourceID == bundleID.id }
+    .sorted { $0.name < $1.name }
 
   guard !matchingProfiles.isEmpty else { return }
 
-  let certsByFamily = try await fetchCertificatesByFamily(client: client)
+  let certsByFamily = try await Profiles.certificatesByFamily(client: client)
 
   print()
   print("Capability changes require provisioning profile regeneration.")
   print("Found \(matchingProfiles.count) profile(s) for \(bidIdentifier):")
   for profile in matchingProfiles {
-    let name = profile.attributes?.name ?? "—"
-    let type = profile.attributes?.profileType.map { formatState($0) } ?? "—"
+    let name = profile.name.isEmpty ? "—" : profile.name
+    let type = profile.type.map { formatState($0) } ?? "—"
     print("  \(name) (\(type))")
   }
   print()
@@ -450,10 +450,10 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: AS
   var failed = 0
 
   for profile in matchingProfiles {
-    let neededFamily = certFamilyForProfileType(profile.attributes?.profileType ?? "")
+    let neededFamily = Profiles.certificateFamily(forProfileType: profile.type ?? "")
     let certs = certsByFamily[neededFamily] ?? []
     guard !certs.isEmpty else {
-      print("  SKIP \(profile.attributes?.name ?? "—") — no \(neededFamily.lowercased()) certificate found")
+      print("  SKIP \(profile.name.isEmpty ? "—" : profile.name) — no \(neededFamily.lowercased()) certificate found")
       failed += 1
       continue
     }

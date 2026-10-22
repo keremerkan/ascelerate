@@ -42,6 +42,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   MediaUpload.swift                   # MediaFile, chunk upload (UploadProgress observer), md5Hex, uploadAsset (reserve → PUT → commit), MediaUploadError
   ClassicMedia.swift                  # Screenshot/preview set writes: create sets, upload, delete, reorder
   VersionLocalizations.swift          # LocaleFields (localizations JSON format), validURL, editableStates, update/create a version localization
+  LocalizationFile.swift              # Localization files (export/import JSON: one object per locale, missing fields left alone): encode/decode; AppInfoLocaleFields
   AppInfos.swift                      # App infos: pickActive/findActive, localization updates (fields to clear sent as null) and category updates, categories, territory age ratings, age rating declaration read/update (nulls), updateApp (content rights, primary language, server notification endpoints, accessibility URL; returns the saved app)
   AccessibilityDeclarations.swift     # Accessibility declarations: features (per device family), list, create, update, delete, publish
   CustomerReviews.swift               # Customer reviews: pages (filter incl. version, sort), rating counts, one review, respond, delete response, Apple's summaries

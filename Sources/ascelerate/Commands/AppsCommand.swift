@@ -539,9 +539,7 @@ struct AppsCommand: AsyncParsableCommand {
           )
         }
         
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(result)
+        let data = try LocalizationFile.encode(result)
         
         let outputPath = expandPath(
           confirmOutputPath(output ?? "\(bundleID)-localizations.json", isDirectory: false))
@@ -2907,9 +2905,7 @@ struct AppsCommand: AsyncParsableCommand {
           )
         }
         
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(result)
+        let data = try LocalizationFile.encode(result)
         
         let outputPath = expandPath(
           confirmOutputPath(output ?? "\(bundleID)-app-infos.json", isDirectory: false))
@@ -3774,13 +3770,6 @@ struct AgeRatingFields: Codable {
   var kidsAgeBand: String?
   /// Apple's `ageRatingOverrideV2` (NINE_PLUS … EIGHTEEN_PLUS); the v1 field is deprecated.
   var ageRatingOverride: String?
-}
-
-struct AppInfoLocaleFields: Codable {
-  var name: String?
-  var subtitle: String?
-  var privacyPolicyURL: String?
-  var privacyChoicesURL: String?
 }
 
 private func describeDecodingError(_ error: DecodingError) -> String {

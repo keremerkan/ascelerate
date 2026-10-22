@@ -79,6 +79,27 @@ func runProductAssetUpload<Operation: UploadOperationDescribing>(
   success("Uploaded", successDetail(assetID, media))
 }
 
+/// The same, with the upload done by one call (the core's uploads, which take a file path).
+func runProductAssetUpload(
+  file: String,
+  summary: (MediaFile) -> [String],
+  upload: (MediaFile) async throws -> String,
+  successDetail: (_ id: String, _ media: MediaFile) -> String
+) async throws {
+  let media = try MediaFile(readingFrom: file)
+  for line in summary(media) {
+    print(line)
+  }
+  print()
+  guard confirm("Upload? [y/N] ") else {
+    cancelled()
+    return
+  }
+  let assetID = try await upload(media)
+  print()
+  success("Uploaded", successDetail(assetID, media))
+}
+
 /// Shared driver for `iap images delete` / `sub images delete`: confirms, then
 /// performs the type-specific delete.
 func runProductImageDelete(
@@ -96,32 +117,33 @@ func runProductImageDelete(
 }
 
 /// Shared driver for `iap review-screenshot view` / `sub review-screenshot view`:
-/// prints the screenshot details returned by `fetch`, treating DecodingError / 404
-/// as "no screenshot uploaded".
+/// prints the screenshot details returned by `fetch` (nil: none uploaded).
 func runReviewScreenshotView(
   productID: String,
-  fetch: () async throws -> (id: String, fileName: String?, fileSizeText: String?, stateText: String?)
+  fetch: () async throws -> (id: String, fileName: String?, fileSizeText: String?, stateText: String?)?
 ) async throws {
-  do {
-    let shot = try await fetch()
-    print("Review Screenshot:")
-    print("  ID:    \(shot.id)")
-    print("  File:  \(shot.fileName ?? "—")")
-    print("  Size:  \(shot.fileSizeText ?? "—")")
-    print("  State: \(shot.stateText ?? "—")")
-  } catch where ASCError.isMissingRelated(error) {
+  guard let shot = try await fetch() else {
     print("No review screenshot uploaded for \(productID).")
+    return
   }
+  print("Review Screenshot:")
+  print("  ID:    \(shot.id)")
+  print("  File:  \(shot.fileName ?? "—")")
+  print("  Size:  \(shot.fileSizeText ?? "—")")
+  print("  State: \(shot.stateText ?? "—")")
 }
 
 /// Shared driver for `iap review-screenshot delete` / `sub review-screenshot delete`:
-/// resolves the current screenshot's ID via `fetchID`, confirms, then deletes it.
+/// resolves the current screenshot's ID via `fetchID` (nil: none uploaded), confirms, then deletes it.
 func runReviewScreenshotDelete(
   productID: String,
-  fetchID: () async throws -> String,
+  fetchID: () async throws -> String?,
   delete: (_ screenshotID: String) async throws -> Void
 ) async throws {
-  let screenshotID = try await fetchID()
+  guard let screenshotID = try await fetchID() else {
+    print("No review screenshot uploaded for \(productID).")
+    return
+  }
 
   guard confirm("Delete review screenshot for \(productID)? [y/N] ") else {
     cancelled()

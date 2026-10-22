@@ -105,6 +105,7 @@ filter:
     - /v1/subscriptionGroupLocalizations
     - /v1/subscriptionGroupLocalizations/{id}
     - /v1/subscriptionPrices
+    - /v1/subscriptionPrices/{id}
     - /v1/subscriptions/{id}/planAvailabilities
     - /v1/subscriptionPlanAvailabilities
     - /v1/subscriptionPlanAvailabilities/{id}
@@ -271,6 +272,7 @@ filter:
     - /v1/apps/{id}/inAppPurchasesV2
     - /v2/inAppPurchases/{id}/iapPriceSchedule
     - /v1/inAppPurchasePriceSchedules/{id}/manualPrices
+    - /v1/inAppPurchasePriceSchedules/{id}/automaticPrices
     - /v2/inAppPurchases/{id}/versions
     - /v1/subscriptions/{id}/versions
     - /v1/subscriptionGroups/{id}/versions

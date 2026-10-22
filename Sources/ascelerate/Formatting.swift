@@ -931,13 +931,30 @@ struct GroupLocaleFields: Codable {
 }
 
 /// A localization reduced to the fields the shared import/export helpers operate on.
-/// Decouples the helpers from the concrete asc-swift types (IAP vs subscription localizations).
 struct LocalizationRecord {
   let id: String
   let locale: String
   let name: String?
   let description: String?
 }
+
+/// A core product localization (IAP or subscription), whose missing values are empty strings.
+protocol ProductLocalization {
+  var id: String { get }
+  var locale: String { get }
+  var name: String { get }
+  var description: String { get }
+}
+
+extension ProductLocalization {
+  var localizationRecord: LocalizationRecord {
+    LocalizationRecord(
+      id: id, locale: locale, name: name.isEmpty ? nil : name, description: description.isEmpty ? nil : description)
+  }
+}
+
+extension InAppPurchases.Localization: ProductLocalization {}
+extension Subscriptions.Localization: ProductLocalization {}
 
 /// Writes product (IAP/subscription) localizations to a JSON file keyed by locale.
 func exportProductLocalizations(

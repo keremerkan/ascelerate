@@ -201,6 +201,11 @@ public enum ReviewSubmissions {
     /// on an asset).
     case libraryImage(String)
     case libraryVideo(String)
+    /// An in-app purchase's, subscription's or subscription group's pending version
+    /// (`ProductVersions.pendingIAP` and its siblings), reviewed with the next app version.
+    case inAppPurchaseVersion(String)
+    case subscriptionVersion(String)
+    case subscriptionGroupVersion(String)
   }
 
   /// Adds an item to the app's open draft submission for `platform` (`READY_FOR_REVIEW`, or
@@ -245,6 +250,12 @@ public enum ReviewSubmissions {
         relationships.appAssetLibraryImage = .init(data: .init(id: id, _type: "appAssetLibraryImages"))
       case .libraryVideo(let id):
         relationships.appAssetLibraryVideo = .init(data: .init(id: id, _type: "appAssetLibraryVideos"))
+      case .inAppPurchaseVersion(let id):
+        relationships.inAppPurchaseVersion = .init(data: .init(id: id, _type: "inAppPurchaseVersions"))
+      case .subscriptionVersion(let id):
+        relationships.subscriptionVersion = .init(data: .init(id: id, _type: "subscriptionVersions"))
+      case .subscriptionGroupVersion(let id):
+        relationships.subscriptionGroupVersion = .init(data: .init(id: id, _type: "subscriptionGroupVersions"))
     }
     _ = try await unlessDryRunStopped {
       try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(

@@ -3,12 +3,6 @@ import ASCKit
 import AscelerateCore
 import Foundation
 
-extension Components.Schemas.SubscriptionLocalization {
-  var localizationRecord: LocalizationRecord {
-    LocalizationRecord(id: id, locale: attributes?.locale ?? "", name: attributes?.name, description: attributes?.description)
-  }
-}
-
 extension Components.Schemas.SubscriptionPricePoint: ResolvablePricePoint {
   var resolverCustomerPrice: String? { attributes?.customerPrice }
 }
@@ -32,7 +26,7 @@ struct SubCommand: AsyncParsableCommand {
   struct GroupInfo: Sendable {
     let id: String
     let name: String
-    let subscriptions: [Components.Schemas.Subscription]
+    let subscriptions: [Subscriptions.Subscription]
   }
 
   /// JSON shape for a subscription, shared by `sub groups` and `sub list`.
@@ -50,58 +44,30 @@ struct SubCommand: AsyncParsableCommand {
     let familySharable: Bool?
     let group: GroupRef?
 
-    init(_ sub: Components.Schemas.Subscription, group: GroupInfo? = nil) {
-      let a = sub.attributes
+    init(_ sub: Subscriptions.Subscription, group: GroupInfo? = nil) {
       id = sub.id
-      productID = a?.productId
-      name = a?.name
-      period = a?.subscriptionPeriod
-      state = a?.state
-      groupLevel = a?.groupLevel
-      familySharable = a?.familySharable
+      productID = sub.productID
+      name = sub.name
+      period = sub.period
+      state = sub.state
+      groupLevel = sub.level
+      familySharable = sub.familySharable
       self.group = group.map { GroupRef(id: $0.id, name: $0.name) }
     }
   }
 
   static func fetchGroups(appID: String, client: ASCClient) async throws -> [GroupInfo] {
-    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.appsSubscriptionGroupsGetToManyRelated(
-        path: .init(id: appID), query: .init(include: [.subscriptions], limitSubscriptions: 50)
-      ).ok.body.json
+    try await Subscriptions.groups(appID: appID, client: client).map {
+      GroupInfo(id: $0.id, name: $0.referenceName.isEmpty ? "—" : $0.referenceName, subscriptions: $0.subscriptions)
     }
-    var result: [GroupInfo] = []
-    for page in pages {
-      var subsByID: [String: Components.Schemas.Subscription] = [:]
-      for item in page.included ?? [] {
-        if case .subscriptions(let sub) = item {
-          subsByID[sub.id] = sub
-        }
-      }
-      for group in page.data {
-        let name = group.attributes?.referenceName ?? "—"
-        let subIDs = group.relationships?.subscriptions?.data?.map(\.id) ?? []
-        var subs = subIDs.compactMap { subsByID[$0] }
-        if subIDs.count >= 50 {
-          // The included relationship is capped at limitSubscriptions — a group at
-          // the cap may have more; fetch the full list via the sub-resource endpoint.
-          subs = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.subscriptionGroupsSubscriptionsGetToManyRelated(
-              path: .init(id: group.id), query: .init(limit: 50)
-            ).ok.body.json
-          }.flatMap(\.data)
-        }
-        result.append(GroupInfo(id: group.id, name: name, subscriptions: subs))
-      }
-    }
-    return result
   }
 
   static func findSubscription(
     productID: String, appID: String, client: ASCClient
-  ) async throws -> (subscription: Components.Schemas.Subscription, group: GroupInfo) {
+  ) async throws -> (subscription: Subscriptions.Subscription, group: GroupInfo) {
     let groups = try await fetchGroups(appID: appID, client: client)
     for group in groups {
-      if let match = group.subscriptions.first(where: { $0.attributes?.productId == productID }) {
+      if let match = group.subscriptions.first(where: { $0.productID == productID }) {
         return (match, group)
       }
     }
@@ -637,7 +603,7 @@ struct SubCommand: AsyncParsableCommand {
           id: group.id,
           name: group.name,
           subscriptions: group.subscriptions
-            .sorted { ($0.attributes?.groupLevel ?? 0) < ($1.attributes?.groupLevel ?? 0) }
+            .sorted { ($0.level ?? 0) < ($1.level ?? 0) }
             .map { SubEntry($0) }
         )
       }
@@ -699,7 +665,7 @@ struct SubCommand: AsyncParsableCommand {
 
       let entries = groups.flatMap { group in
         group.subscriptions
-          .sorted { ($0.attributes?.groupLevel ?? 0) < ($1.attributes?.groupLevel ?? 0) }
+          .sorted { ($0.level ?? 0) < ($1.level ?? 0) }
           .map { SubEntry($0, group: group) }
       }
 
@@ -773,48 +739,27 @@ struct SubCommand: AsyncParsableCommand {
         productID: productID, appID: app.id, client: client
       )
 
-      // Fetch full details with localizations
-      let detailResponse = try await client.subscriptionsGetInstance(
-        path: .init(id: sub.id),
-        query: .init(include: [.subscriptionLocalizations], limitSubscriptionLocalizations: 50)
-      ).ok.body.json
-      let data = detailResponse.data
-
-      // Extract localizations from included items
-      let locIDs = Set(
-        data.relationships?.subscriptionLocalizations?.data?.map(\.id) ?? []
-      )
-      let localizations: [Components.Schemas.SubscriptionLocalization] = (detailResponse.included ?? []).compactMap {
-        if case .subscriptionLocalizations(let loc) = $0,
-           locIDs.isEmpty || locIDs.contains(loc.id) {
-          return loc
-        }
-        return nil
-      }
+      let localizations = try await Subscriptions.localizations(subscriptionID: sub.id, client: client)
 
       let hasPrices = try await SubCommand.subscriptionHasPrices(subscriptionID: sub.id, client: client)
       let pendingVersion = try await ProductVersions.pendingSubscription(sub.id, client: client)
 
-      let attrs = data.attributes
       let detail = Detail(
-        id: data.id,
-        productID: attrs?.productId,
-        name: attrs?.name,
-        period: attrs?.subscriptionPeriod,
-        state: attrs?.state,
-        groupLevel: attrs?.groupLevel,
-        familySharable: attrs?.familySharable,
-        reviewNote: attrs?.reviewNote,
+        id: sub.id,
+        productID: sub.productID,
+        name: sub.name,
+        period: sub.period,
+        state: sub.state,
+        groupLevel: sub.level,
+        familySharable: sub.familySharable,
+        reviewNote: sub.reviewNote,
         group: SubEntry.GroupRef(id: group.id, name: group.name),
         localizations: localizations
-          .sorted { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }
+          .sorted { $0.locale < $1.locale }
           .map {
             Detail.Localization(
-              id: $0.id,
-              locale: $0.attributes?.locale,
-              name: $0.attributes?.name,
-              description: $0.attributes?.description
-            )
+              id: $0.id, locale: $0.locale, name: $0.name.isEmpty ? nil : $0.name,
+              description: $0.description.isEmpty ? nil : $0.description)
           },
         hasPricing: hasPrices,
         pendingVersion: pendingVersion
@@ -882,13 +827,9 @@ struct SubCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.subscriptionGroupsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(referenceName: refName),
-        relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-        _type: "subscriptionGroups"
-      )))).created.body.json
+      let created = try await Subscriptions.createGroup(appID: app.id, referenceName: refName, client: client)
 
-      success("Created", "subscription group '\(response.data.attributes?.referenceName ?? refName)'.")
+      success("Created", "subscription group '\(created.referenceName)'.")
     }
   }
 
@@ -923,11 +864,7 @@ struct SubCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.subscriptionGroupsUpdateInstance(
-        path: .init(id: group.id),
-        body: .json(.init(data: .init(
-          attributes: .init(referenceName: newName), id: group.id, _type: "subscriptionGroups")))
-      ).ok
+      try await Subscriptions.updateGroup(id: group.id, referenceName: newName, client: client)
 
       success("Updated", "group '\(newName)'.")
     }
@@ -959,7 +896,7 @@ struct SubCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.subscriptionGroupsDeleteInstance(path: .init(id: group.id)).noContent
+      try await Subscriptions.deleteGroup(id: group.id, client: client)
 
       success("Deleted", "group '\(group.name)'.")
     }
@@ -1048,20 +985,11 @@ struct SubCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.subscriptionsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(
-          familySharable: familySharable ? true : nil,
-          groupLevel: level,
-          name: refName,
-          productId: pid,
-          reviewNote: note,
-          subscriptionPeriod: subPeriod?.rawValue
-        ),
-        relationships: .init(group: .init(data: .init(id: group.id, _type: "subscriptionGroups"))),
-        _type: "subscriptions"
-      )))).created.body.json
+      let created = try await Subscriptions.create(
+        groupID: group.id, productID: pid, name: refName, period: subPeriod?.rawValue, level: level, reviewNote: note,
+        familySharable: familySharable, client: client)
 
-      success("Created", "subscription '\(response.data.attributes?.name ?? refName)'.")
+      success("Created", "subscription '\(created.name.isEmpty ? refName : created.name)'.")
     }
   }
 
@@ -1126,7 +1054,7 @@ struct SubCommand: AsyncParsableCommand {
       if let v = groupLevel { changes.append("Group Level: \(v)") }
       if let v = reviewNote { changes.append("Review Note: \(v)") }
       if let v = familyVal { changes.append("Family Shareable: \(v ? "Yes" : "No")") }
-      print("Updates for '\(sub.attributes?.name ?? productID)':")
+      print("Updates for '\(sub.name)':")
       for c in changes { print("  \(c)") }
       print()
 
@@ -1135,22 +1063,11 @@ struct SubCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.subscriptionsUpdateInstance(
-        path: .init(id: sub.id),
-        body: .json(.init(data: .init(
-          attributes: .init(
-            familySharable: familyVal,
-            groupLevel: groupLevel,
-            name: name,
-            reviewNote: reviewNote,
-            subscriptionPeriod: periodVal?.rawValue
-          ),
-          id: sub.id,
-          _type: "subscriptions"
-        )))
-      ).ok
+      try await Subscriptions.update(
+        id: sub.id, name: name, period: periodVal?.rawValue, level: groupLevel, reviewNote: reviewNote,
+        familySharable: familyVal, client: client)
 
-      success("Updated", "'\(name ?? sub.attributes?.name ?? productID)'.")
+      success("Updated", "'\(name ?? sub.name)'.")
     }
   }
 
@@ -1179,14 +1096,14 @@ struct SubCommand: AsyncParsableCommand {
         productID: productID, appID: app.id, client: client
       )
 
-      guard confirm("Delete subscription '\(sub.attributes?.name ?? productID)'? [y/N] ") else {
+      guard confirm("Delete subscription '\(sub.name)'? [y/N] ") else {
         cancelled()
         return
       }
 
-      _ = try await client.subscriptionsDeleteInstance(path: .init(id: sub.id)).noContent
+      try await Subscriptions.delete(id: sub.id, client: client)
 
-      success("Deleted", "'\(sub.attributes?.name ?? productID)'.")
+      success("Deleted", "'\(sub.name)'.")
     }
   }
 
@@ -1215,13 +1132,13 @@ struct SubCommand: AsyncParsableCommand {
         productID: productID, appID: app.id, client: client
       )
 
-      let state = sub.attributes?.state
+      let state: String? = sub.state
       guard let pending = try await ProductVersions.pendingSubscription(sub.id, client: client) else {
         let stateStr = state.map { formatState($0) } ?? "unknown"
-        throw ValidationError("Subscription '\(sub.attributes?.name ?? productID)' has no pending version to submit (state: \(stateStr)). Edit it first.")
+        throw ValidationError("Subscription '\(sub.name)' has no pending version to submit (state: \(stateStr)). Edit it first.")
       }
 
-      print("Subscription:    \(sub.attributes?.name ?? productID)")
+      print("Subscription:    \(sub.name)")
       print("Product ID:      \(productID)")
       print("Group:           \(group.name)")
       print("State:           \(state.map { formatState($0) } ?? "—")")
@@ -1236,12 +1153,9 @@ struct SubCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.subscriptionSubmissionsCreateInstance(body: .json(.init(data: .init(
-        relationships: .init(subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))),
-        _type: "subscriptionSubmissions"
-      )))).created
+      try await Subscriptions.submit(id: sub.id, client: client)
 
-      success("Submitted", "'\(sub.attributes?.name ?? productID)' for review.")
+      success("Submitted", "'\(sub.name)' for review.")
     }
   }
 
@@ -1274,23 +1188,20 @@ struct SubCommand: AsyncParsableCommand {
           productID: productID, appID: app.id, client: client
         )
 
-        let locsResponse = try await client.subscriptionsSubscriptionLocalizationsGetToManyRelated(
-          path: .init(id: sub.id), query: .init(limit: 50)
-        ).ok.body.json
+        let localizations = try await Subscriptions.localizations(subscriptionID: sub.id, client: client)
 
-        if locsResponse.data.isEmpty {
+        if localizations.isEmpty {
           print("No localizations found.")
           return
         }
 
-        print("Localizations for '\(sub.attributes?.name ?? productID)':")
+        print("Localizations for '\(sub.name)':")
         print()
 
-        for loc in locsResponse.data.sorted(by: { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }) {
-          let locale = loc.attributes?.locale ?? "?"
-          print("[\(localeName(locale))]")
-          print("  Name:        \(loc.attributes?.name ?? "—")")
-          print("  Description: \(loc.attributes?.description ?? "—")")
+        for loc in localizations.sorted(by: { $0.locale < $1.locale }).map(\.localizationRecord) {
+          print("[\(localeName(loc.locale.isEmpty ? "?" : loc.locale))]")
+          print("  Name:        \(loc.name ?? "—")")
+          print("  Description: \(loc.description ?? "—")")
           print()
         }
       }
@@ -1321,11 +1232,9 @@ struct SubCommand: AsyncParsableCommand {
           productID: productID, appID: app.id, client: client
         )
 
-        let locsResponse = try await client.subscriptionsSubscriptionLocalizationsGetToManyRelated(
-          path: .init(id: sub.id), query: .init(limit: 50)
-        ).ok.body.json
         try exportProductLocalizations(
-          locsResponse.data.map(\.localizationRecord), productID: productID, output: output)
+          try await Subscriptions.localizations(subscriptionID: sub.id, client: client).map(\.localizationRecord),
+          productID: productID, output: output)
       }
     }
 
@@ -1369,30 +1278,19 @@ struct SubCommand: AsyncParsableCommand {
           throw ValidationError("JSON file contains no locale data.")
         }
 
-        let locsResponse = try await client.subscriptionsSubscriptionLocalizationsGetToManyRelated(
-          path: .init(id: sub.id), query: .init(limit: 50)
-        ).ok.body.json
-
         try await importProductLocalizations(
           localeUpdates,
-          productName: sub.attributes?.name ?? productID,
-          existing: locsResponse.data.map(\.localizationRecord),
+          productName: sub.name,
+          existing: try await Subscriptions.localizations(subscriptionID: sub.id, client: client).map(\.localizationRecord),
           verbose: verbose,
           create: { locale, name, description in
-            let response = try await client.subscriptionLocalizationsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(description: description, locale: locale, name: name),
-              relationships: .init(subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))),
-              _type: "subscriptionLocalizations"
-            )))).created.body.json
-            return response.data.localizationRecord
+            try await Subscriptions.createLocalization(
+              subscriptionID: sub.id, locale: locale, name: name, description: description, client: client
+            ).localizationRecord
           },
           update: { id, name, description in
-            let response = try await client.subscriptionLocalizationsUpdateInstance(
-              path: .init(id: id),
-              body: .json(.init(data: .init(
-                attributes: .init(description: description, name: name), id: id, _type: "subscriptionLocalizations")))
-            ).ok.body.json
-            return response.data.localizationRecord
+            try await Subscriptions.updateLocalization(id: id, name: name, description: description, client: client)
+              .localizationRecord
           }
         )
       }
@@ -1424,11 +1322,9 @@ struct SubCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
-        let locsResponse = try await client.subscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated(
-          path: .init(id: group.id), query: .init(limit: 50)
-        ).ok.body.json
+        let localizations = try await Subscriptions.groupLocalizations(groupID: group.id, client: client)
 
-        if locsResponse.data.isEmpty {
+        if localizations.isEmpty {
           print("No localizations found for group '\(group.name)'.")
           return
         }
@@ -1436,11 +1332,10 @@ struct SubCommand: AsyncParsableCommand {
         print("Localizations for group '\(group.name)':")
         print()
 
-        for loc in locsResponse.data.sorted(by: { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }) {
-          let locale = loc.attributes?.locale ?? "?"
-          print("[\(localeName(locale))]")
-          print("  Name:            \(loc.attributes?.name ?? "—")")
-          print("  Custom App Name: \(loc.attributes?.customAppName ?? "—")")
+        for loc in localizations.sorted(by: { $0.locale < $1.locale }) {
+          print("[\(localeName(loc.locale.isEmpty ? "?" : loc.locale))]")
+          print("  Name:            \(loc.name.isEmpty ? "—" : loc.name)")
+          print("  Custom App Name: \(loc.customAppName ?? "—")")
           print()
         }
       }
@@ -1466,16 +1361,11 @@ struct SubCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
-        let locsResponse = try await client.subscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated(
-          path: .init(id: group.id), query: .init(limit: 50)
-        ).ok.body.json
-
         var result: [String: GroupLocaleFields] = [:]
-        for loc in locsResponse.data {
-          guard let locale = loc.attributes?.locale else { continue }
-          result[locale] = GroupLocaleFields(
-            name: loc.attributes?.name,
-            customAppName: loc.attributes?.customAppName
+        for loc in try await Subscriptions.groupLocalizations(groupID: group.id, client: client) where !loc.locale.isEmpty {
+          result[loc.locale] = GroupLocaleFields(
+            name: loc.name.isEmpty ? nil : loc.name,
+            customAppName: loc.customAppName
           )
         }
 
@@ -1540,14 +1430,8 @@ struct SubCommand: AsyncParsableCommand {
         print()
 
         // Fetch existing localizations
-        let locsResponse = try await client.subscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated(
-          path: .init(id: group.id), query: .init(limit: 50)
-        ).ok.body.json
-
         let locByLocale = Dictionary(
-          locsResponse.data.compactMap { loc in
-            loc.attributes?.locale.map { ($0, loc) }
-          },
+          try await Subscriptions.groupLocalizations(groupID: group.id, client: client).map { ($0.locale, $0) },
           uniquingKeysWith: { first, _ in first }
         )
 
@@ -1563,44 +1447,28 @@ struct SubCommand: AsyncParsableCommand {
               continue
             }
 
-            let response = try await client.subscriptionGroupLocalizationsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(customAppName: fields.customAppName, locale: locale, name: name),
-              relationships: .init(subscriptionGroup: .init(data: .init(id: group.id, _type: "subscriptionGroups"))),
-              _type: "subscriptionGroupLocalizations"
-            )))).created.body.json
+            let created = try await Subscriptions.createGroupLocalization(
+              groupID: group.id, locale: locale, name: name, customAppName: fields.customAppName, client: client)
             print("  [\(localeName(locale))] \(green("Created."))")
-
-            if verbose {
-              let attrs = response.data.attributes
-              print("    Response:")
-              print("      Locale:          \(attrs?.locale.map { localeName($0) } ?? "—")")
-              if let v = attrs?.name { print("      Name:            \(v)") }
-              if let v = attrs?.customAppName { print("      Custom App Name: \(v)") }
-            }
+            if verbose { printGroupLocalization(created) }
             continue
           }
 
-          let response = try await client.subscriptionGroupLocalizationsUpdateInstance(
-            path: .init(id: localization.id),
-            body: .json(.init(data: .init(
-              attributes: .init(customAppName: fields.customAppName, name: fields.name),
-              id: localization.id,
-              _type: "subscriptionGroupLocalizations"
-            )))
-          ).ok.body.json
+          let updated = try await Subscriptions.updateGroupLocalization(
+            id: localization.id, name: fields.name, customAppName: fields.customAppName, client: client)
           print("  [\(localeName(locale))] Updated.")
-
-          if verbose {
-            let attrs = response.data.attributes
-            print("    Response:")
-            print("      Locale:          \(attrs?.locale.map { localeName($0) } ?? "—")")
-            if let v = attrs?.name { print("      Name:            \(v)") }
-            if let v = attrs?.customAppName { print("      Custom App Name: \(v)") }
-          }
+          if verbose { printGroupLocalization(updated) }
         }
 
         print()
         print("Done.")
+      }
+
+      private func printGroupLocalization(_ localization: Subscriptions.GroupLocalization) {
+        print("    Response:")
+        print("      Locale:          \(localization.locale.isEmpty ? "—" : localeName(localization.locale))")
+        if !localization.name.isEmpty { print("      Name:            \(localization.name)") }
+        if let v = localization.customAppName { print("      Custom App Name: \(v)") }
       }
     }
   }
@@ -1820,7 +1688,7 @@ struct SubCommand: AsyncParsableCommand {
       }
 
       private func runSingleTerritory(
-        sub: Components.Schemas.Subscription, territoryID: String, point: Components.Schemas.SubscriptionPricePoint,
+        sub: Subscriptions.Subscription, territoryID: String, point: Components.Schemas.SubscriptionPricePoint,
         currency: String?, client: ASCClient
       ) async throws {
         // Fetch existing price for this territory (if any) and compare against the target.
@@ -1882,11 +1750,11 @@ struct SubCommand: AsyncParsableCommand {
           startDate: startDate, preserveCurrent: preserveCurrent, client: client)
 
         print()
-        success("Updated", "price for '\(sub.attributes?.name ?? productID)' in \(territoryID).")
+        success("Updated", "price for '\(sub.name)' in \(territoryID).")
       }
 
       private func runEqualizeAllTerritories(
-        sub: Components.Schemas.Subscription, sourceTerritory: String,
+        sub: Subscriptions.Subscription, sourceTerritory: String,
         sourcePoint: Components.Schemas.SubscriptionPricePoint, sourceCurrency: String?, client: ASCClient
       ) async throws {
         // Fetch the equivalent price points for every territory by walking the
@@ -2138,39 +2006,16 @@ struct SubCommand: AsyncParsableCommand {
         availableInNewTerritories: availableInNewTerritories,
         verbose: verbose,
         fetchCurrent: {
-          let plans = try await client.subscriptionsPlanAvailabilitiesGetToManyRelated(path: .init(id: sub.id)).ok.body.json.data
-          guard let plan = plans.first(where: { $0.attributes?.planType == planType.rawValue }) else {
-            return nil
-          }
-          planID = plan.id
-          let territories = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.subscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated(
-              path: .init(id: plan.id), query: .init(limit: 200)
-            ).ok.body.json
-          }.flatMap { $0.data.map(\.id) }
-          return (plan.attributes?.availableInNewTerritories, territories)
+          guard let availability = try await Subscriptions.availability(
+            subscriptionID: sub.id, plan: planType.rawValue, client: client)
+          else { return nil }
+          planID = availability.id
+          return (availability.availableInNewTerritories, availability.territories)
         },
         post: { availableInNew, territories in
-          if let planID {
-            _ = try await client.subscriptionPlanAvailabilitiesUpdateInstance(
-              path: .init(id: planID),
-              body: .json(.init(data: .init(
-                attributes: .init(availableInNewTerritories: availableInNew),
-                id: planID,
-                relationships: .init(availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") })),
-                _type: "subscriptionPlanAvailabilities"
-              )))
-            ).ok
-          } else {
-            _ = try await client.subscriptionPlanAvailabilitiesCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(availableInNewTerritories: availableInNew, planType: planType.rawValue),
-              relationships: .init(
-                availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") }),
-                subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))
-              ),
-              _type: "subscriptionPlanAvailabilities"
-            )))).created
-          }
+          try await Subscriptions.setAvailability(
+            subscriptionID: sub.id, plan: planType.rawValue, existingID: planID,
+            availableInNewTerritories: availableInNew, territories: territories, client: client)
         }
       )
     }
@@ -3266,10 +3111,7 @@ struct SubCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.subscriptionGroupSubmissionsCreateInstance(body: .json(.init(data: .init(
-        relationships: .init(subscriptionGroup: .init(data: .init(id: group.id, _type: "subscriptionGroups"))),
-        _type: "subscriptionGroupSubmissions"
-      )))).created
+      try await Subscriptions.submitGroup(id: group.id, client: client)
 
       print()
       success("Submitted", "group '\(group.name)' for review.")
@@ -3304,16 +3146,8 @@ struct SubCommand: AsyncParsableCommand {
           productID: productID, appID: app.id, client: client)
 
         try await runProductImagesList(productID: productID) {
-          let images = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.subscriptionsImagesGetToManyRelated(path: .init(id: sub.id), query: .init(limit: 50)).ok.body.json
-          }.flatMap(\.data)
-          return images.map { img in
-            [
-              img.id,
-              img.attributes?.fileName ?? "—",
-              img.attributes?.fileSize.map { formatBytes($0) } ?? "—",
-              img.attributes?.state.map { formatState($0) } ?? "—",
-            ]
+          try await Subscriptions.images(subscriptionID: sub.id, client: client).map { img in
+            [img.id, img.fileName, formatBytes(img.fileSize), img.state.map { formatState($0) } ?? "—"]
           }
         }
       }
@@ -3355,20 +3189,8 @@ struct SubCommand: AsyncParsableCommand {
               "  Size:         \(formatBytes(media.fileSize))",
             ]
           },
-          reserve: { media in
-            let response = try await client.subscriptionImagesCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(fileName: media.fileName, fileSize: media.fileSize),
-              relationships: .init(subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))),
-              _type: "subscriptionImages"
-            )))).created.body.json
-            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-          },
-          commit: { id, md5 in
-            _ = try await client.subscriptionImagesUpdateInstance(
-              path: .init(id: id),
-              body: .json(.init(data: .init(
-                attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id, _type: "subscriptionImages")))
-            ).ok
+          upload: { media in
+            try await Subscriptions.uploadImage(subscriptionID: sub.id, filePath: media.path, client: client)
           },
           successDetail: { imageID, media in "\(media.fileName) (id: \(imageID))." }
         )
@@ -3399,7 +3221,7 @@ struct SubCommand: AsyncParsableCommand {
         _ = try await findApp(bundleID: bundleID, client: client)
 
         try await runProductImageDelete(imageID: imageID) {
-          _ = try await client.subscriptionImagesDeleteInstance(path: .init(id: imageID)).noContent
+          try await Subscriptions.deleteImage(id: imageID, client: client)
         }
       }
     }
@@ -3433,16 +3255,9 @@ struct SubCommand: AsyncParsableCommand {
           productID: productID, appID: app.id, client: client)
 
         try await runReviewScreenshotView(productID: productID) {
-          let response = try await client.subscriptionsAppStoreReviewScreenshotGetToOneRelated(
-            path: .init(id: sub.id)
-          ).ok.body.json
-          let attrs = response.data.attributes
-          return (
-            response.data.id,
-            attrs?.fileName,
-            attrs?.fileSize.map { formatBytes($0) },
-            attrs?.assetDeliveryState?.state.map { formatState($0) }
-          )
+          try await Subscriptions.reviewScreenshot(subscriptionID: sub.id, client: client).map {
+            ($0.id, $0.fileName, formatBytes($0.fileSize), $0.state.map { formatState($0) })
+          }
         }
       }
     }
@@ -3483,20 +3298,8 @@ struct SubCommand: AsyncParsableCommand {
               "  Size:         \(formatBytes(media.fileSize))",
             ]
           },
-          reserve: { media in
-            let response = try await client.subscriptionAppStoreReviewScreenshotsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(fileName: media.fileName, fileSize: media.fileSize),
-              relationships: .init(subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))),
-              _type: "subscriptionAppStoreReviewScreenshots"
-            )))).created.body.json
-            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-          },
-          commit: { id, md5 in
-            _ = try await client.subscriptionAppStoreReviewScreenshotsUpdateInstance(
-              path: .init(id: id),
-              body: .json(.init(data: .init(
-                attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id, _type: "subscriptionAppStoreReviewScreenshots")))
-            ).ok
+          upload: { media in
+            try await Subscriptions.uploadReviewScreenshot(subscriptionID: sub.id, filePath: media.path, client: client)
           },
           successDetail: { screenshotID, _ in "review screenshot (id: \(screenshotID))." }
         )
@@ -3527,15 +3330,9 @@ struct SubCommand: AsyncParsableCommand {
 
         try await runReviewScreenshotDelete(
           productID: productID,
-          fetchID: {
-            try await client.subscriptionsAppStoreReviewScreenshotGetToOneRelated(
-              path: .init(id: sub.id)
-            ).ok.body.json.data.id
-          },
+          fetchID: { try await Subscriptions.reviewScreenshot(subscriptionID: sub.id, client: client)?.id },
           delete: { screenshotID in
-            _ = try await client.subscriptionAppStoreReviewScreenshotsDeleteInstance(
-              path: .init(id: screenshotID)
-            ).noContent
+            try await Subscriptions.deleteReviewScreenshot(id: screenshotID, client: client)
           }
         )
       }

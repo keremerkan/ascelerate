@@ -1571,14 +1571,14 @@ struct AppsCommand: AsyncParsableCommand {
         let allSubs = subGroups.flatMap(\.subscriptions)
 
         var checks: [Check] = []
-        let sortedSubs = allSubs.sorted(by: { ($0.attributes?.productId ?? "") < ($1.attributes?.productId ?? "") })
+        let sortedSubs = allSubs.sorted(by: { $0.productID < $1.productID })
         let priced = try await boundedConcurrentMap(sortedSubs.map(\.id)) { id in
           try await SubCommand.subscriptionHasPrices(subscriptionID: id, client: client)
         }
         for (sub, hasPrices) in zip(sortedSubs, priced) {
           checks.append(Self.productCheck(
-            group: "subscriptions", name: sub.attributes?.productId ?? sub.attributes?.name ?? sub.id,
-            state: sub.attributes?.state, hasPrices: hasPrices, missingPrices: "No prices set"))
+            group: "subscriptions", name: sub.productID.isEmpty ? sub.id : sub.productID,
+            state: sub.state, hasPrices: hasPrices, missingPrices: "No prices set"))
         }
         return checks
       }
@@ -1921,7 +1921,7 @@ struct AppsCommand: AsyncParsableCommand {
         let fetchedSubs = groups.flatMap(\.subscriptions)
 
         let skippedIAPs = fetchedIAPs.filter { !candidateStates.contains($0.attributes?.state ?? "") }
-        let skippedSubs = fetchedSubs.filter { !candidateStates.contains($0.attributes?.state ?? "") }
+        let skippedSubs = fetchedSubs.filter { !candidateStates.contains($0.state) }
 
         // Partition candidates by whether they actually have a pending version.
         var pendingLabels: [String: String] = [:]  // product/group ID → "v2 (Prepare for Submission)"
@@ -1941,12 +1941,12 @@ struct AppsCommand: AsyncParsableCommand {
           }
         }
 
-        let candidateSubs = fetchedSubs.filter { candidateStates.contains($0.attributes?.state ?? "") }
+        let candidateSubs = fetchedSubs.filter { candidateStates.contains($0.state) }
         let subPending = try await boundedConcurrentMap(candidateSubs.map(\.id)) {
           try await ProductVersions.pendingSubscription($0, client: client)
         }
         var submittableSubIDs: Set<String> = []
-        var unchangedSubs: [Components.Schemas.Subscription] = []
+        var unchangedSubs: [Subscriptions.Subscription] = []
         for (sub, pending) in zip(candidateSubs, subPending) {
           if let pending {
             submittableSubIDs.insert(sub.id)
@@ -1976,13 +1976,13 @@ struct AppsCommand: AsyncParsableCommand {
             print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productId ?? "—")) — \(iap.attributes?.state.map { formatState($0) } ?? "—")")
           }
           for sub in skippedSubs {
-            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productId ?? "—")) — \(sub.attributes?.state.map { formatState($0) } ?? "—")")
+            print("  Sub: \(sub.name.isEmpty ? "—" : sub.name) (\(sub.productID.isEmpty ? "—" : sub.productID)) — \(sub.state.isEmpty ? "—" : formatState(sub.state))")
           }
           for iap in unchangedIAPs {
             print("  IAP: \(iap.attributes?.name ?? "—") (\(iap.attributes?.productId ?? "—")) — Approved (no pending changes)")
           }
           for sub in unchangedSubs {
-            print("  Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productId ?? "—")) — Approved (no pending changes)")
+            print("  Sub: \(sub.name.isEmpty ? "—" : sub.name) (\(sub.productID.isEmpty ? "—" : sub.productID)) — Approved (no pending changes)")
           }
         }
 
@@ -1996,7 +1996,7 @@ struct AppsCommand: AsyncParsableCommand {
             let groupNote = pendingLabels[group.id].map { " — group changes \($0)" } ?? ""
             print("  Group: \(group.name)\(groupNote)")
             for sub in group.subscriptions where submittableSubIDs.contains(sub.id) {
-              print("    Sub: \(sub.attributes?.name ?? "—") (\(sub.attributes?.productId ?? "—")) — \(pendingLabels[sub.id] ?? "—")")
+              print("    Sub: \(sub.name.isEmpty ? "—" : sub.name) (\(sub.productID.isEmpty ? "—" : sub.productID)) — \(pendingLabels[sub.id] ?? "—")")
             }
           }
           print()
@@ -2021,9 +2021,9 @@ struct AppsCommand: AsyncParsableCommand {
                     relationships: .init(subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))),
                     _type: "subscriptionSubmissions"
                   )))).created
-                  print("  \(green("Submitted")) subscription '\(sub.attributes?.name ?? "—")'")
+                  print("  \(green("Submitted")) subscription '\(sub.name.isEmpty ? "—" : sub.name)'")
                 } catch let error where isNoPendingVersionError(error) {
-                  print("  Skipped subscription '\(sub.attributes?.name ?? "—")' — no pending version")
+                  print("  Skipped subscription '\(sub.name.isEmpty ? "—" : sub.name)' — no pending version")
                 }
               }
               // Submit the group itself only when it has its own pending version

@@ -3,12 +3,6 @@ import ASCKit
 import AscelerateCore
 import Foundation
 
-extension Components.Schemas.InAppPurchaseLocalization {
-  var localizationRecord: LocalizationRecord {
-    LocalizationRecord(id: id, locale: attributes?.locale ?? "", name: attributes?.name, description: attributes?.description)
-  }
-}
-
 extension Components.Schemas.InAppPurchasePricePoint: ResolvablePricePoint {
   var resolverCustomerPrice: String? { attributes?.customerPrice }
 }
@@ -24,14 +18,12 @@ struct IAPCommand: AsyncParsableCommand {
 
   static func findIAP(
     productID: String, appID: String, client: ASCClient
-  ) async throws -> Components.Schemas.InAppPurchaseV2 {
-    let response = try await client.appsInAppPurchasesV2GetToManyRelated(
-      path: .init(id: appID), query: .init(filterProductId: [productID])
-    ).ok.body.json
-    guard let iap = response.data.first else {
+  ) async throws -> InAppPurchases.Purchase {
+    do {
+      return try await InAppPurchases.find(productID: productID, appID: appID, client: client)
+    } catch InAppPurchases.LookupError.notFound {
       throw ValidationError("No in-app purchase found with product ID '\(productID)'.")
     }
-    return iap
   }
 
   /// Resolves the IAP from bundle/product ID and verifies the offer code actually
@@ -87,57 +79,18 @@ struct IAPCommand: AsyncParsableCommand {
     }
   }
 
-  /// Fetches the IAP's current price schedule with all manual prices and their territories.
+  /// The IAP's current price schedule: its base territory and the manual prices that apply today.
   /// Returns nil if no schedule exists (404 or null data).
   static func fetchExistingSchedule(iapID: String, client: ASCClient) async throws -> ExistingSchedule? {
-    let schedule: Components.Schemas.InAppPurchasePriceSchedule
-    do {
-      schedule = try await client.inAppPurchasesV2IapPriceScheduleGetToOneRelated(
-        path: .init(id: iapID),
-        query: .init(fieldsInAppPurchasePriceSchedules: [.baseTerritory, .manualPrices], include: [.baseTerritory])
-      ).ok.body.json.data
-    } catch where ASCError.isMissingRelated(error) {
-      return nil
-    }
-
-    // A schedule exists at this point (the GET succeeded) — failing to hydrate any
-    // part of it must throw, not degrade: every write path POSTs the schedule
-    // wholesale, so a silently dropped entry would be permanently deleted.
-    guard let baseID = schedule.relationships?.baseTerritory?.data?.id else {
-      throw ValidationError("Could not resolve the price schedule's base territory. Retry, or inspect with 'iap pricing show'.")
-    }
-
-    // Relationship `data` only populates with `include`; the included payload also carries
-    // each point's customer price and each territory's currency.
-    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.inAppPurchasePriceSchedulesManualPricesGetToManyRelated(
-        path: .init(id: schedule.id), query: .init(limit: 200, include: [.inAppPurchasePricePoint, .territory])
-      ).ok.body.json
-    }
-    var entries: [ManualPriceEntry] = []
-    for page in pages {
-      var pointPrices: [String: String] = [:]
-      var territoryCurrencies: [String: String] = [:]
-      for item in page.included ?? [] {
-        switch item {
-        case .inAppPurchasePricePoints(let p):
-          if let cp = p.attributes?.customerPrice { pointPrices[p.id] = cp }
-        case .territories(let t):
-          if let c = t.attributes?.currency { territoryCurrencies[t.id] = c }
-        }
-      }
-      for price in page.data {
-        guard let territoryID = price.relationships?.territory?.data?.id,
-              let pricePointID = price.relationships?.inAppPurchasePricePoint?.data?.id
-        else {
-          throw ValidationError("Could not resolve territory/price point for a manual price entry. Retry, or inspect with 'iap pricing show'.")
-        }
-        entries.append(ManualPriceEntry(
-          territoryID: territoryID, pricePointID: pricePointID,
-          customerPrice: pointPrices[pricePointID], currency: territoryCurrencies[territoryID]))
-      }
-    }
-    return ExistingSchedule(baseTerritoryID: baseID, manualPrices: entries)
+    guard let schedule = try await InAppPurchases.schedule(purchaseID: iapID, client: client) else { return nil }
+    let today = AppPricing.today
+    return ExistingSchedule(
+      baseTerritoryID: schedule.baseTerritoryID,
+      manualPrices: schedule.manualPrices.filter { $0.applies(on: today) }.map {
+        ManualPriceEntry(
+          territoryID: $0.territoryID, pricePointID: $0.point.id, customerPrice: $0.point.customerPrice,
+          currency: schedule.currencies[$0.territoryID])
+      })
   }
 
   /// POSTs a new schedule that fully replaces any prior one, retrying transient API
@@ -150,32 +103,10 @@ struct IAPCommand: AsyncParsableCommand {
     startDate: String,
     client: ASCClient
   ) async throws {
-    let localIDs = manualPrices.indices.map { "${price\($0)}" }
-    let inlinePrices = zip(localIDs, manualPrices).map { localID, entry in
-      Components.Schemas.InAppPurchasePriceInlineCreate(
-        attributes: .init(startDate: startDate),
-        id: localID,
-        relationships: .init(
-          inAppPurchasePricePoint: .init(data: .init(id: entry.pricePointID, _type: "inAppPurchasePricePoints")),
-          inAppPurchaseV2: .init(data: .init(id: iapID, _type: "inAppPurchases"))
-        ),
-        _type: "inAppPurchasePrices"
-      )
-    }
-    let request = Components.Schemas.InAppPurchasePriceScheduleCreateRequest(
-      data: .init(
-        relationships: .init(
-          baseTerritory: .init(data: .init(id: baseTerritoryID, _type: "territories")),
-          inAppPurchase: .init(data: .init(id: iapID, _type: "inAppPurchases")),
-          manualPrices: .init(data: localIDs.map { .init(id: $0, _type: "inAppPurchasePrices") })
-        ),
-        _type: "inAppPurchasePriceSchedules"
-      ),
-      included: inlinePrices.map { .InAppPurchasePriceInlineCreate($0) }
-    )
-    _ = try await withTransientRetry {
-      try await client.inAppPurchasePriceSchedulesCreateInstance(body: .json(request)).created
-    }
+    try await InAppPurchases.setSchedule(
+      purchaseID: iapID, baseTerritoryID: baseTerritoryID,
+      manualPrices: manualPrices.map { AppPricing.NewPrice(pricePointID: $0.pricePointID, startDate: startDate) },
+      client: client)
   }
 
   /// Returns today's date in YYYY-MM-DD UTC.
@@ -286,22 +217,12 @@ struct IAPCommand: AsyncParsableCommand {
       let filterType: [Query.FilterInAppPurchaseTypePayloadPayload]? = try parseFilter(type, name: "type")
       let filterState: [Query.FilterStatePayloadPayload]? = try parseFilter(state, name: "state")
 
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.appsInAppPurchasesV2GetToManyRelated(
-          path: .init(id: app.id),
-          query: .init(filterState: filterState, filterInAppPurchaseType: filterType, limit: 200)
-        ).ok.body.json
-      }
-      let entries = pages.flatMap(\.data).map { iap in
-        let attrs = iap.attributes
-        return Entry(
-          id: iap.id,
-          productID: attrs?.productId,
-          name: attrs?.name,
-          type: attrs?.inAppPurchaseType,
-          state: attrs?.state,
-          familySharable: attrs?.familySharable
-        )
+      let purchases = try await InAppPurchases.list(
+        appID: app.id, types: filterType?.map(\.rawValue), states: filterState?.map(\.rawValue), client: client)
+      let entries = purchases.map { iap in
+        Entry(
+          id: iap.id, productID: iap.productID, name: iap.name, type: iap.type, state: iap.state,
+          familySharable: iap.familySharable)
       }
 
       if jsonOption.json {
@@ -369,49 +290,27 @@ struct IAPCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let response = try await client.appsInAppPurchasesV2GetToManyRelated(
-        path: .init(id: app.id),
-        query: .init(filterProductId: [productID], include: [.inAppPurchaseLocalizations], limitInAppPurchaseLocalizations: 50)
-      ).ok.body.json
-
-      guard let iap = response.data.first else {
-        throw ValidationError("No in-app purchase found with product ID '\(productID)'.")
-      }
-
-      // Extract localizations from included items
-      let locIDs = Set(
-        iap.relationships?.inAppPurchaseLocalizations?.data?.map(\.id) ?? []
-      )
-      let localizations: [Components.Schemas.InAppPurchaseLocalization] = (response.included ?? []).compactMap {
-        if case .inAppPurchaseLocalizations(let loc) = $0,
-           locIDs.isEmpty || locIDs.contains(loc.id) {
-          return loc
-        }
-        return nil
-      }
+      let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+      let localizations = try await InAppPurchases.localizations(purchaseID: iap.id, client: client)
 
       let hasSchedule = try await IAPCommand.iapPriceScheduleExists(iapID: iap.id, client: client)
       let pendingVersion = try await ProductVersions.pendingIAP(iap.id, client: client)
 
-      let attrs = iap.attributes
       let detail = Detail(
         id: iap.id,
-        productID: attrs?.productId,
-        name: attrs?.name,
-        type: attrs?.inAppPurchaseType,
-        state: attrs?.state,
-        familySharable: attrs?.familySharable,
-        contentHosting: attrs?.contentHosting,
-        reviewNote: attrs?.reviewNote,
+        productID: iap.productID,
+        name: iap.name,
+        type: iap.type,
+        state: iap.state,
+        familySharable: iap.familySharable,
+        contentHosting: iap.contentHosting,
+        reviewNote: iap.reviewNote,
         localizations: localizations
-          .sorted { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }
+          .sorted { $0.locale < $1.locale }
           .map {
             Detail.Localization(
-              id: $0.id,
-              locale: $0.attributes?.locale,
-              name: $0.attributes?.name,
-              description: $0.attributes?.description
-            )
+              id: $0.id, locale: $0.locale, name: $0.name.isEmpty ? nil : $0.name,
+              description: $0.description.isEmpty ? nil : $0.description)
           },
         hasPricing: hasSchedule,
         pendingVersion: pendingVersion
@@ -561,7 +460,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
 
         // Resolve the product to either an IAP or a subscription.
-        var iap: Components.Schemas.InAppPurchaseV2?
+        var iap: InAppPurchases.Purchase?
         do {
           iap = try await findIAP(productID: productID, appID: app.id, client: client)
         } catch is ValidationError {
@@ -574,14 +473,14 @@ struct IAPCommand: AsyncParsableCommand {
           relationships = .init(
             app: .init(data: .init(id: app.id, _type: "apps")),
             inAppPurchaseV2: .init(data: .init(id: iap.id, _type: "inAppPurchases")))
-          label = "IAP '\(iap.attributes?.name ?? productID)'"
+          label = "IAP '\(iap.name)'"
         } else {
           let (sub, _) = try await SubCommand.findSubscription(
             productID: productID, appID: app.id, client: client)
           relationships = .init(
             app: .init(data: .init(id: app.id, _type: "apps")),
             subscription: .init(data: .init(id: sub.id, _type: "subscriptions")))
-          label = "subscription '\(sub.attributes?.name ?? productID)'"
+          label = "subscription '\(sub.name)'"
         }
 
         guard confirm("Promote \(label)? [y/N] ") else {
@@ -798,19 +697,11 @@ struct IAPCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.inAppPurchasesV2CreateInstance(body: .json(.init(data: .init(
-        attributes: .init(
-          familySharable: familySharable ? true : nil,
-          inAppPurchaseType: iapType.rawValue,
-          name: refName,
-          productId: pid,
-          reviewNote: note
-        ),
-        relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-        _type: "inAppPurchases"
-      )))).created.body.json
+      let created = try await InAppPurchases.create(
+        appID: app.id, type: iapType.rawValue, productID: pid, name: refName, reviewNote: note,
+        familySharable: familySharable, client: client)
 
-      success("Created", "in-app purchase '\(response.data.attributes?.name ?? refName)'.")
+      success("Created", "in-app purchase '\(created.name.isEmpty ? refName : created.name)'.")
     }
   }
 
@@ -861,7 +752,7 @@ struct IAPCommand: AsyncParsableCommand {
       if let v = name { changes.append("Name: \(v)") }
       if let v = reviewNote { changes.append("Review Note: \(v)") }
       if let v = familyVal { changes.append("Family Shareable: \(v ? "Yes" : "No")") }
-      print("Updates for '\(iap.attributes?.name ?? productID)':")
+      print("Updates for '\(iap.name)':")
       for c in changes { print("  \(c)") }
       print()
 
@@ -870,16 +761,9 @@ struct IAPCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.inAppPurchasesV2UpdateInstance(
-        path: .init(id: iap.id),
-        body: .json(.init(data: .init(
-          attributes: .init(familySharable: familyVal, name: name, reviewNote: reviewNote),
-          id: iap.id,
-          _type: "inAppPurchases"
-        )))
-      ).ok
+      try await InAppPurchases.update(id: iap.id, name: name, reviewNote: reviewNote, familySharable: familyVal, client: client)
 
-      success("Updated", "'\(name ?? iap.attributes?.name ?? productID)'.")
+      success("Updated", "'\(name ?? iap.name)'.")
     }
   }
 
@@ -906,14 +790,14 @@ struct IAPCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-      guard confirm("Delete in-app purchase '\(iap.attributes?.name ?? productID)'? [y/N] ") else {
+      guard confirm("Delete in-app purchase '\(iap.name)'? [y/N] ") else {
         cancelled()
         return
       }
 
-      _ = try await client.inAppPurchasesV2DeleteInstance(path: .init(id: iap.id)).noContent
+      try await InAppPurchases.delete(id: iap.id, client: client)
 
-      success("Deleted", "'\(iap.attributes?.name ?? productID)'.")
+      success("Deleted", "'\(iap.name)'.")
     }
   }
 
@@ -940,13 +824,13 @@ struct IAPCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-      let state = iap.attributes?.state
+      let state: String? = iap.state
       guard let pending = try await ProductVersions.pendingIAP(iap.id, client: client) else {
         let stateStr = state.map { formatState($0) } ?? "unknown"
-        throw ValidationError("In-app purchase '\(iap.attributes?.name ?? productID)' has no pending version to submit (state: \(stateStr)). Edit it first.")
+        throw ValidationError("In-app purchase '\(iap.name)' has no pending version to submit (state: \(stateStr)). Edit it first.")
       }
 
-      print("In-app purchase: \(iap.attributes?.name ?? productID)")
+      print("In-app purchase: \(iap.name)")
       print("Product ID:      \(productID)")
       print("State:           \(state.map { formatState($0) } ?? "—")")
       print("Pending Version: \(pending.label)")
@@ -960,12 +844,9 @@ struct IAPCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.inAppPurchaseSubmissionsCreateInstance(body: .json(.init(data: .init(
-        relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id, _type: "inAppPurchases"))),
-        _type: "inAppPurchaseSubmissions"
-      )))).created
+      try await InAppPurchases.submit(id: iap.id, client: client)
 
-      success("Submitted", "'\(iap.attributes?.name ?? productID)' for review.")
+      success("Submitted", "'\(iap.name)' for review.")
     }
   }
 
@@ -996,23 +877,20 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let locsResponse = try await client.inAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated(
-          path: .init(id: iap.id), query: .init(limit: 50)
-        ).ok.body.json
+        let localizations = try await InAppPurchases.localizations(purchaseID: iap.id, client: client)
 
-        if locsResponse.data.isEmpty {
+        if localizations.isEmpty {
           print("No localizations found.")
           return
         }
 
-        print("Localizations for '\(iap.attributes?.name ?? productID)':")
+        print("Localizations for '\(iap.name)':")
         print()
 
-        for loc in locsResponse.data.sorted(by: { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }) {
-          let locale = loc.attributes?.locale ?? "?"
-          print("[\(localeName(locale))]")
-          print("  Name:        \(loc.attributes?.name ?? "—")")
-          print("  Description: \(loc.attributes?.description ?? "—")")
+        for loc in localizations.sorted(by: { $0.locale < $1.locale }).map(\.localizationRecord) {
+          print("[\(localeName(loc.locale.isEmpty ? "?" : loc.locale))]")
+          print("  Name:        \(loc.name ?? "—")")
+          print("  Description: \(loc.description ?? "—")")
           print()
         }
       }
@@ -1041,11 +919,9 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let locsResponse = try await client.inAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated(
-          path: .init(id: iap.id), query: .init(limit: 50)
-        ).ok.body.json
         try exportProductLocalizations(
-          locsResponse.data.map(\.localizationRecord), productID: productID, output: output)
+          try await InAppPurchases.localizations(purchaseID: iap.id, client: client).map(\.localizationRecord),
+          productID: productID, output: output)
       }
     }
 
@@ -1087,30 +963,19 @@ struct IAPCommand: AsyncParsableCommand {
           throw ValidationError("JSON file contains no locale data.")
         }
 
-        let locsResponse = try await client.inAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated(
-          path: .init(id: iap.id), query: .init(limit: 50)
-        ).ok.body.json
-
         try await importProductLocalizations(
           localeUpdates,
-          productName: iap.attributes?.name ?? productID,
-          existing: locsResponse.data.map(\.localizationRecord),
+          productName: iap.name,
+          existing: try await InAppPurchases.localizations(purchaseID: iap.id, client: client).map(\.localizationRecord),
           verbose: verbose,
           create: { locale, name, description in
-            let response = try await client.inAppPurchaseLocalizationsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(description: description, locale: locale, name: name),
-              relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id, _type: "inAppPurchases"))),
-              _type: "inAppPurchaseLocalizations"
-            )))).created.body.json
-            return response.data.localizationRecord
+            try await InAppPurchases.createLocalization(
+              purchaseID: iap.id, locale: locale, name: name, description: description, client: client
+            ).localizationRecord
           },
           update: { id, name, description in
-            let response = try await client.inAppPurchaseLocalizationsUpdateInstance(
-              path: .init(id: id),
-              body: .json(.init(data: .init(
-                attributes: .init(description: description, name: name), id: id, _type: "inAppPurchaseLocalizations")))
-            ).ok.body.json
-            return response.data.localizationRecord
+            try await InAppPurchases.updateLocalization(id: id, name: name, description: description, client: client)
+              .localizationRecord
           }
         )
       }
@@ -1378,7 +1243,7 @@ struct IAPCommand: AsyncParsableCommand {
         )
 
         print()
-        success("Updated", "price for '\(iap.attributes?.name ?? productID)'.")
+        success("Updated", "price for '\(iap.name)'.")
       }
     }
 
@@ -1726,7 +1591,7 @@ struct IAPCommand: AsyncParsableCommand {
         }
 
         print()
-        success("Imported", "price schedule for '\(iap.attributes?.name ?? productID)'.")
+        success("Imported", "price schedule for '\(iap.name)'.")
       }
     }
 
@@ -1781,26 +1646,12 @@ struct IAPCommand: AsyncParsableCommand {
         availableInNewTerritories: availableInNewTerritories,
         verbose: verbose,
         fetchCurrent: {
-          let availability = try await client.inAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated(
-            path: .init(id: iap.id), query: .init(include: [.availableTerritories], limitAvailableTerritories: 50)
-          ).ok.body.json.data
-          // Paginate for the full list
-          let territories = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.inAppPurchaseAvailabilitiesAvailableTerritoriesGetToManyRelated(
-              path: .init(id: availability.id), query: .init(limit: 200)
-            ).ok.body.json
-          }.flatMap { $0.data.map(\.id) }
-          return (availability.attributes?.availableInNewTerritories, territories)
+          try await InAppPurchases.availability(purchaseID: iap.id, client: client)
+            .map { ($0.availableInNewTerritories, $0.territories) }
         },
         post: { availableInNew, territories in
-          _ = try await client.inAppPurchaseAvailabilitiesCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(availableInNewTerritories: availableInNew),
-            relationships: .init(
-              availableTerritories: .init(data: territories.map { .init(id: $0, _type: "territories") }),
-              inAppPurchase: .init(data: .init(id: iap.id, _type: "inAppPurchases"))
-            ),
-            _type: "inAppPurchaseAvailabilities"
-          )))).created
+          try await InAppPurchases.setAvailability(
+            purchaseID: iap.id, availableInNewTerritories: availableInNew, territories: territories, client: client)
         }
       )
     }
@@ -2255,16 +2106,8 @@ struct IAPCommand: AsyncParsableCommand {
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         try await runProductImagesList(productID: productID) {
-          let images = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.inAppPurchasesV2ImagesGetToManyRelated(path: .init(id: iap.id), query: .init(limit: 50)).ok.body.json
-          }.flatMap(\.data)
-          return images.map { img in
-            [
-              img.id,
-              img.attributes?.fileName ?? "—",
-              img.attributes?.fileSize.map { formatBytes($0) } ?? "—",
-              img.attributes?.state.map { formatState($0) } ?? "—",
-            ]
+          try await InAppPurchases.images(purchaseID: iap.id, client: client).map { img in
+            [img.id, img.fileName, formatBytes(img.fileSize), img.state.map { formatState($0) } ?? "—"]
           }
         }
       }
@@ -2305,20 +2148,8 @@ struct IAPCommand: AsyncParsableCommand {
               "  Size:     \(formatBytes(media.fileSize))",
             ]
           },
-          reserve: { media in
-            let response = try await client.inAppPurchaseImagesCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(fileName: media.fileName, fileSize: media.fileSize),
-              relationships: .init(inAppPurchase: .init(data: .init(id: iap.id, _type: "inAppPurchases"))),
-              _type: "inAppPurchaseImages"
-            )))).created.body.json
-            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-          },
-          commit: { id, md5 in
-            _ = try await client.inAppPurchaseImagesUpdateInstance(
-              path: .init(id: id),
-              body: .json(.init(data: .init(
-                attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id, _type: "inAppPurchaseImages")))
-            ).ok
+          upload: { media in
+            try await InAppPurchases.uploadImage(purchaseID: iap.id, filePath: media.path, client: client)
           },
           successDetail: { imageID, media in "\(media.fileName) (id: \(imageID))." }
         )
@@ -2349,7 +2180,7 @@ struct IAPCommand: AsyncParsableCommand {
         _ = try await findApp(bundleID: bundleID, client: client)
 
         try await runProductImageDelete(imageID: imageID) {
-          _ = try await client.inAppPurchaseImagesDeleteInstance(path: .init(id: imageID)).noContent
+          try await InAppPurchases.deleteImage(id: imageID, client: client)
         }
       }
     }
@@ -2382,16 +2213,9 @@ struct IAPCommand: AsyncParsableCommand {
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         try await runReviewScreenshotView(productID: productID) {
-          let response = try await client.inAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated(
-            path: .init(id: iap.id)
-          ).ok.body.json
-          let attrs = response.data.attributes
-          return (
-            response.data.id,
-            attrs?.fileName,
-            attrs?.fileSize.map { formatBytes($0) },
-            attrs?.assetDeliveryState?.state.map { formatState($0) }
-          )
+          try await InAppPurchases.reviewScreenshot(purchaseID: iap.id, client: client).map {
+            ($0.id, $0.fileName, formatBytes($0.fileSize), $0.state.map { formatState($0) })
+          }
         }
       }
     }
@@ -2431,21 +2255,8 @@ struct IAPCommand: AsyncParsableCommand {
               "  Size:    \(formatBytes(media.fileSize))",
             ]
           },
-          reserve: { media in
-            let response = try await client.inAppPurchaseAppStoreReviewScreenshotsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(fileName: media.fileName, fileSize: media.fileSize),
-              relationships: .init(inAppPurchaseV2: .init(data: .init(id: iap.id, _type: "inAppPurchases"))),
-              _type: "inAppPurchaseAppStoreReviewScreenshots"
-            )))).created.body.json
-            return (response.data.id, response.data.attributes?.uploadOperations ?? [])
-          },
-          commit: { id, md5 in
-            _ = try await client.inAppPurchaseAppStoreReviewScreenshotsUpdateInstance(
-              path: .init(id: id),
-              body: .json(.init(data: .init(
-                attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id,
-                _type: "inAppPurchaseAppStoreReviewScreenshots")))
-            ).ok
+          upload: { media in
+            try await InAppPurchases.uploadReviewScreenshot(purchaseID: iap.id, filePath: media.path, client: client)
           },
           successDetail: { screenshotID, _ in "review screenshot (id: \(screenshotID))." }
         )
@@ -2475,15 +2286,9 @@ struct IAPCommand: AsyncParsableCommand {
 
         try await runReviewScreenshotDelete(
           productID: productID,
-          fetchID: {
-            try await client.inAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated(
-              path: .init(id: iap.id)
-            ).ok.body.json.data.id
-          },
+          fetchID: { try await InAppPurchases.reviewScreenshot(purchaseID: iap.id, client: client)?.id },
           delete: { screenshotID in
-            _ = try await client.inAppPurchaseAppStoreReviewScreenshotsDeleteInstance(
-              path: .init(id: screenshotID)
-            ).noContent
+            try await InAppPurchases.deleteReviewScreenshot(id: screenshotID, client: client)
           }
         )
       }

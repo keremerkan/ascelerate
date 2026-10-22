@@ -44,7 +44,7 @@ let package = Package(
         // be ambiguous take a `choose` closure instead of prompting.
         .target(
             name: "AscelerateCore",
-            dependencies: ["ASCKit"]
+            dependencies: ["ASCKit", .product(name: "X509", package: "swift-certificates")]
         ),
         .target(
             name: "ASCKit",

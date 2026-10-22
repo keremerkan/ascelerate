@@ -261,8 +261,23 @@ ascelerate apps subscription-grace-period <bundle-id>
 ascelerate apps subscription-grace-period <bundle-id> \
   --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
 
-# サンドボックステストでも有効化
-ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+# サンドボックステストのみ（本番環境は無効のまま）
+ascelerate apps subscription-grace-period <bundle-id> \
+  --sandbox-opt-in true --duration THREE_DAYS --renewal-type ALL_RENEWALS
 ```
 
 `--duration` の有効な値：`THREE_DAYS`、`SIXTEEN_DAYS`、`TWENTY_EIGHT_DAYS`。`--renewal-type` の有効な値：`ALL_RENEWALS`、`PAID_TO_PAID_ONLY`。
+
+サンドボックスを無効にしたまま本番環境だけを有効にすることはできません。`--opt-in` を有効にするとサンドボックスも有効になり、指定がなければ期間は16日、対象はすべての更新になります。両方を無効にすると期間と更新タイプは消去されます。
+
+## 合理化された購入（Streamlined Purchasing）
+
+合理化された購入により、顧客はApp Storeの製品ページなど、アプリの外でアプリのサブスクリプションを購入できます。デフォルトで有効で、アプリのすべてのサブスクリプションに適用されます。Appleが無効化を認めるのは、最後に承認されたビルドがStoreKitの `PurchaseIntent` APIを使用しているアプリだけです。その場合、顧客はアプリ内で登録します。
+
+```bash
+# 表示
+ascelerate apps streamlined-purchasing <bundle-id>
+
+# 無効化
+ascelerate apps streamlined-purchasing <bundle-id> --enabled false
+```

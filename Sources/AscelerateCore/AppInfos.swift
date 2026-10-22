@@ -89,6 +89,32 @@ public enum AppInfos {
     }
   }
 
+  /// The App Store's 50 languages, as app info and version localizations name them (`tr`,
+  /// `de-DE`, `zh-Hans`; seen live 2026-10-22).
+  public static let locales = [
+    "ar-SA", "bn-BD", "ca", "cs", "da", "de-DE", "el", "en-AU", "en-CA", "en-GB", "en-US", "es-ES", "es-MX", "fi",
+    "fr-CA", "fr-FR", "gu-IN", "he", "hi", "hr", "hu", "id", "it", "ja", "kn-IN", "ko", "ml-IN", "mr-IN", "ms", "nl-NL",
+    "no", "or-IN", "pa-IN", "pl", "pt-BR", "pt-PT", "ro", "ru", "sk", "sl-SI", "sv", "ta-IN", "te-IN", "th", "tr", "uk",
+    "ur-PK", "vi", "zh-Hans", "zh-Hant",
+  ]
+
+  /// Adds a language to an app info, with its app name (App Store Connect fills in the primary
+  /// language's).
+  @discardableResult
+  public static func createLocalization(
+    appInfoID: String, locale: String, name: String, client: ASCClient
+  ) async throws -> Components.Schemas.AppInfoLocalization {
+    try await client.appInfoLocalizationsCreateInstance(body: .json(.init(data: .init(
+      attributes: .init(locale: locale, name: name),
+      relationships: .init(appInfo: .init(data: .init(id: appInfoID, _type: "appInfos"))),
+      _type: "appInfoLocalizations"
+    )))).created.body.json.data
+  }
+
+  public static func deleteLocalization(id: String, client: ASCClient) async throws {
+    _ = try await client.appInfoLocalizationsDeleteInstance(path: .init(id: id)).noContent
+  }
+
   /// Sets an app info's categories: each slot in `changes` to its category ID, or none for nil
   /// (sent as `{"data": null}`). Slots not in `changes` are left as they are.
   public static func updateCategories(

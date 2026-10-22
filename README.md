@@ -760,11 +760,22 @@ ascelerate apps subscription-grace-period <bundle-id>
 # Enable for production with a 16-day window, applies to all renewals
 ascelerate apps subscription-grace-period <bundle-id> --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
 
-# Enable for sandbox testing too
-ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+# Sandbox testing only (production stays off)
+ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true --duration THREE_DAYS --renewal-type ALL_RENEWALS
 ```
 
 Valid `--duration` values: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Valid `--renewal-type` values: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.
+
+Production can't be on without sandbox: turning on `--opt-in` turns sandbox on too, with a 16-day window for all renewals unless you pass others. Turning both off clears the duration and renewal type.
+
+### Streamlined Purchasing
+
+Streamlined purchasing lets customers buy the app's subscriptions outside the app, such as on its App Store product page. It's on by default and applies to all the app's subscriptions. Apple turns it off only for an app whose latest approved build uses the StoreKit `PurchaseIntent` API; customers then subscribe from within the app.
+
+```bash
+ascelerate apps streamlined-purchasing <bundle-id>                 # view
+ascelerate apps streamlined-purchasing <bundle-id> --enabled false # turn off
+```
 
 ### Devices
 

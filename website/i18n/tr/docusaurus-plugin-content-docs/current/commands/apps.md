@@ -261,8 +261,23 @@ ascelerate apps subscription-grace-period <bundle-id>
 ascelerate apps subscription-grace-period <bundle-id> \
   --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
 
-# Sandbox testi için de etkinleştir
-ascelerate apps subscription-grace-period <bundle-id> --sandbox-opt-in true
+# Yalnızca sandbox testi (üretim kapalı kalır)
+ascelerate apps subscription-grace-period <bundle-id> \
+  --sandbox-opt-in true --duration THREE_DAYS --renewal-type ALL_RENEWALS
 ```
 
 Geçerli `--duration` değerleri: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Geçerli `--renewal-type` değerleri: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.
+
+Üretim, sandbox kapalıyken açık olamaz: `--opt-in` sandbox'ı da açar ve başka değer verilmezse süre 16 gün, kapsam tüm yenilemeler olur. İkisi de kapatılınca süre ve yenileme türü silinir.
+
+## Kolaylaştırılmış satın alma (Streamlined Purchasing)
+
+Kolaylaştırılmış satın alma, müşterilerin uygulamanın aboneliklerini uygulama dışında, örneğin App Store ürün sayfasında satın almasını sağlar. Varsayılan olarak açıktır ve uygulamanın tüm aboneliklerine uygulanır. Apple bunu yalnızca son onaylanan yapısı StoreKit `PurchaseIntent` API'sini kullanan bir uygulamada kapattırır; müşteriler o zaman uygulama içinden abone olur.
+
+```bash
+# Görüntüle
+ascelerate apps streamlined-purchasing <bundle-id>
+
+# Kapat
+ascelerate apps streamlined-purchasing <bundle-id> --enabled false
+```

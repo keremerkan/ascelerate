@@ -258,7 +258,7 @@ ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [-
 
 # Introductory offers (free trials + intro discounts for NEW subscribers)
 ascelerate sub intro-offer list <app> <product-id>
-ascelerate sub intro-offer create <app> <product-id> --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+ascelerate sub intro-offer create <app> <product-id> --mode FREE_TRIAL --duration ONE_WEEK --periods 1 --territories all
 ascelerate sub intro-offer create <app> <product-id> --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --territory USA --price 0.99
 ascelerate sub intro-offer update <app> <product-id> <offer-id> --end-date 2026-12-31
 ascelerate sub intro-offer delete <app> <product-id> <offer-id>
@@ -701,10 +701,12 @@ ascelerate apps accessibility publish <app>                               # publ
 # App-level subscription grace period (after failed renewal payments)
 ascelerate apps subscription-grace-period <app>                         # view
 ascelerate apps subscription-grace-period <app> --opt-in true --duration SIXTEEN_DAYS --renewal-type ALL_RENEWALS
-ascelerate apps subscription-grace-period <app> --sandbox-opt-in true
+ascelerate apps subscription-grace-period <app> --sandbox-opt-in true --duration THREE_DAYS --renewal-type ALL_RENEWALS   # sandbox only
+# Streamlined purchasing (buying subscriptions outside the app; turning off needs an approved build using StoreKit PurchaseIntent)
+ascelerate apps streamlined-purchasing <app> [--enabled true|false]
 ```
 
-Grace period durations: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Renewal types: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`.
+Grace period durations: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Renewal types: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`. Production needs sandbox on too (`--opt-in true` turns it on, defaulting to 16 days and all renewals); turning both off clears duration and renewal type.
 
 ### Workflow files
 

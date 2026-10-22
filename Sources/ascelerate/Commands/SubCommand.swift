@@ -2050,17 +2050,7 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.subscriptionsIntroductoryOffersGetToManyRelated(
-            path: .init(id: sub.id), query: .init(limit: 200, include: [.subscriptionPricePoint, .territory])
-          ).ok.body.json
-        }
-        let offers = pages.flatMap(\.data)
-        var pricePoints: [String: Components.Schemas.SubscriptionPricePoint] = [:]
-        for case .subscriptionPricePoints(let p) in pages.flatMap({ $0.included ?? [] }) {
-          pricePoints[p.id] = p
-        }
-
+        let offers = try await Subscriptions.introductoryOffers(subscriptionID: sub.id, client: client)
         if offers.isEmpty {
           print("No introductory offers configured for \(productID).")
           return
@@ -2069,24 +2059,9 @@ struct SubCommand: AsyncParsableCommand {
         Table.print(
           headers: ["ID", "Mode", "Duration", "Periods", "Territory", "Price", "Start", "End"],
           rows: offers.map { o in
-            let attrs = o.attributes
-            let territoryID = o.relationships?.territory?.data?.id ?? "Global"
-            let pointID = o.relationships?.subscriptionPricePoint?.data?.id ?? ""
-            let priceStr: String
-            if attrs?.offerMode == "FREE_TRIAL" {
-              priceStr = "Free"
-            } else {
-              priceStr = pricePoints[pointID]?.attributes?.customerPrice ?? "—"
-            }
-            return [
-              o.id,
-              attrs?.offerMode.map { formatState($0) } ?? "—",
-              attrs?.duration.map { formatState($0) } ?? "—",
-              attrs?.numberOfPeriods.map { "\($0)" } ?? "—",
-              territoryID,
-              priceStr,
-              attrs?.startDate ?? "—",
-              attrs?.endDate ?? "—",
+            [
+              o.id, formatState(o.mode), formatState(o.duration), "\(o.periods)", o.territoryID,
+              o.mode == "FREE_TRIAL" ? "Free" : o.customerPrice ?? "—", o.startDate ?? "—", o.endDate ?? "—",
             ]
           }
         )
@@ -2099,9 +2074,12 @@ struct SubCommand: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "Create an introductory offer.",
         discussion: """
-          Free trials don't need a price. Pay-as-you-go and pay-up-front modes need
-          --price (in the territory's currency). Without --territory, the offer applies
-          globally; with --territory, it's scoped to that one territory.
+          An offer is one record per country or region; all of them are created in one request.
+          --territories takes codes (USA,TUR) or `all` (every country or region with a price).
+          Free trials don't need a price. Pay-as-you-go and pay-up-front modes need --price, the
+          price in the first listed territory (USA with `all`); the others get Apple's comparable
+          price. Countries or regions with an offer at the same time (or another one starting
+          later) are skipped and listed.
           """
       )
 
@@ -2121,10 +2099,10 @@ struct SubCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Number of periods (e.g. 3 for three months at one-month duration).")
       var periods: Int
 
-      @Option(name: .long, help: "Territory code. Omit for a global offer.")
-      var territory: String?
+      @Option(name: [.customLong("territories"), .customLong("territory")], help: "Territory codes (USA,TUR), or all.")
+      var territories: String
 
-      @Option(name: .long, help: "Customer price (required for PAY_AS_YOU_GO / PAY_UP_FRONT, not allowed for FREE_TRIAL).")
+      @Option(name: .long, help: "Customer price in the first territory (required for PAY_AS_YOU_GO / PAY_UP_FRONT, not allowed for FREE_TRIAL).")
       var price: String?
 
       @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: immediate).")
@@ -2138,86 +2116,86 @@ struct SubCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
-        let app = try await findApp(bundleID: bundleID, client: client)
-        let (sub, _) = try await SubCommand.findSubscription(
-          productID: productID, appID: app.id, client: client)
-
         let offerMode: ASCEnum.SubscriptionOfferMode = try parseEnum(mode, name: "mode")
         let offerDuration: ASCEnum.SubscriptionOfferDuration = try parseEnum(duration, name: "duration")
         guard periods > 0 else {
           throw ValidationError("--periods must be greater than 0.")
         }
-
-        // Validate price is set when needed
         if offerMode == .freeTrial && price != nil {
           throw ValidationError("--price is not allowed for FREE_TRIAL mode.")
         }
-        if (offerMode == .payAsYouGo || offerMode == .payUpFront) && price == nil {
+        if offerMode != .freeTrial && price == nil {
           throw ValidationError("--price is required for \(offerMode.rawValue) mode.")
         }
 
-        // Resolve price point if needed
-        var pricePointID: String?
-        var resolvedTerritoryID: String?
-        let territoryForPriceLookup = (territory ?? "USA").uppercased()
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let (sub, _) = try await SubCommand.findSubscription(
+          productID: productID, appID: app.id, client: client)
 
-        if let price = price {
-          let target = try parseCustomerPrice(price)
-          let tiers = try await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.subscriptionsPricePointsGetToManyRelated(
-              path: .init(id: sub.id), query: .init(filterTerritory: [territoryForPriceLookup], limit: 200)
-            ).ok.body.json
-          }.flatMap(\.data)
-          let match = try findPricePoint(
-            in: tiers, target: target, priceLabel: price, territoryID: territoryForPriceLookup,
-            currency: nil)
-          pricePointID = match.id
-          // If user explicitly set --territory, scope the offer to that territory.
-          // Otherwise, leave territory unset → offer is global with this territory's price as the equalization base.
-          if territory != nil {
-            resolvedTerritoryID = territoryForPriceLookup
-          }
-        } else if territory != nil {
-          // --territory without --price means a free-trial scoped to that territory
-          resolvedTerritoryID = territoryForPriceLookup
+        let current = try await Subscriptions.prices(subscriptionID: sub.id, client: client).current
+        var listed: [String]
+        if territories.lowercased() == "all" {
+          listed = current.keys.sorted()
+          guard !listed.isEmpty else { throw ValidationError("\(productID) has no prices yet.") }
+          if listed.contains("USA") { listed = ["USA"] + listed.filter { $0 != "USA" } }
+        } else {
+          listed = territories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
+            .filter { !$0.isEmpty }
+          guard !listed.isEmpty else { throw ValidationError("--territories needs at least one code.") }
         }
 
-        // Summary
+        // A paid offer's tier in the first territory, and Apple's comparable tiers elsewhere.
+        var pricePoints: [String: String] = [:]
+        if let price {
+          let first = listed[0]
+          let tiers = try await Subscriptions.pricePoints(subscriptionID: sub.id, territoryID: first, client: client)
+          let point = try findPricePoint(
+            in: tiers, target: try parseCustomerPrice(price), priceLabel: price, territoryID: first, currency: nil)
+          pricePoints[first] = point.id
+          for equalized in try await Subscriptions.equalizations(of: point.id, client: client).points
+          where listed.contains(equalized.territoryID) {
+            pricePoints[equalized.territoryID] = equalized.id
+          }
+          let missing = listed.filter { pricePoints[$0] == nil }
+          guard missing.isEmpty else {
+            throw ValidationError("No comparable price for \(missing.joined(separator: ", ")).")
+          }
+        }
+
+        let existing = try await Subscriptions.introductoryOffers(subscriptionID: sub.id, client: client)
+        let conflicts = Subscriptions.introductoryOfferConflicts(
+          listed, existing: existing, start: startDate, end: endDate, today: AppPricing.today)
+        let targets = listed.filter { !conflicts.contains($0) }
+
         print()
         print("Create introductory offer:")
         print("  Subscription:   \(productID)")
         print("  Mode:           \(formatState(offerMode.rawValue))")
         print("  Duration:       \(periods) × \(formatState(offerDuration.rawValue))")
-        print("  Territory:      \(resolvedTerritoryID ?? "Global")")
-        if let price { print("  Price:          \(price)") }
+        print("  Territories:    \(targets.count == current.count && territories.lowercased() == "all" ? "All (\(targets.count))" : targets.joined(separator: ", "))")
+        if let price { print("  Price:          \(price) in \(listed[0]), comparable prices elsewhere") }
         if let startDate { print("  Start Date:     \(startDate)") }
         if let endDate { print("  End Date:       \(endDate)") }
+        if !conflicts.isEmpty {
+          print(yellow("  Skipped (an offer at the same time, or another one starting later): \(conflicts.sorted().joined(separator: ", "))"))
+        }
         print()
+        guard !targets.isEmpty else {
+          throw ValidationError("Every listed territory already has an offer at that time.")
+        }
 
-        guard confirm("Create this offer? [y/N] ") else {
+        guard confirm("Create this offer in \(targets.count) territor\(targets.count == 1 ? "y" : "ies")? [y/N] ") else {
           cancelled()
           return
         }
 
-        let response = try await client.subscriptionIntroductoryOffersCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(
-            duration: offerDuration.rawValue,
-            endDate: endDate,
-            numberOfPeriods: periods,
-            offerMode: offerMode.rawValue,
-            startDate: startDate
-          ),
-          relationships: .init(
-            subscription: .init(data: .init(id: sub.id, _type: "subscriptions")),
-            subscriptionPricePoint: pricePointID.map { .init(data: .init(id: $0, _type: "subscriptionPricePoints")) },
-            territory: resolvedTerritoryID.map { .init(data: .init(id: $0, _type: "territories")) }
-          ),
-          _type: "subscriptionIntroductoryOffers"
-        )))).created.body.json
+        try await Subscriptions.createIntroductoryOffers(
+          subscriptionID: sub.id, mode: offerMode.rawValue, duration: offerDuration.rawValue, periods: periods,
+          startDate: startDate, endDate: endDate, territoryIDs: targets, prices: pricePoints, client: client)
 
         print()
-        success("Created", "introductory offer (id: \(response.data.id)).")
+        success("Created", "introductory offer in \(targets.count) territor\(targets.count == 1 ? "y" : "ies").")
       }
     }
 
@@ -2260,17 +2238,7 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        // Clearing needs an explicit `"endDate": null`: the generated request omits nil.
-        _ = try await ASCNulls.sending(endDate.isEmpty ? [["data", "attributes", "endDate"]] : []) {
-          try await client.subscriptionIntroductoryOffersUpdateInstance(
-            path: .init(id: offerID),
-            body: .json(.init(data: .init(
-              attributes: .init(endDate: endDate.isEmpty ? nil : endDate),
-              id: offerID,
-              _type: "subscriptionIntroductoryOffers"
-            )))
-          ).ok
-        }
+        try await Subscriptions.setIntroductoryOfferEnd(id: offerID, endDate: endDate.isEmpty ? nil : endDate, client: client)
 
         print()
         success("Updated", "introductory offer end date.")
@@ -2308,7 +2276,7 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.subscriptionIntroductoryOffersDeleteInstance(path: .init(id: offerID)).noContent
+        try await Subscriptions.deleteIntroductoryOffer(id: offerID, client: client)
 
         print()
         success("Deleted", "introductory offer \(offerID).")

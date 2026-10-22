@@ -14,12 +14,7 @@ public enum Nominations {
 
   /// The languages App Store Connect offers, as it sends them: the App Store's locale codes in
   /// uppercase (read live 2026-10-21 from a nomination with every language selected).
-  public static let locales = [
-    "AR-SA", "BN-BD", "CA", "CS", "DA", "DE-DE", "EL", "EN-AU", "EN-CA", "EN-GB", "EN-US", "ES-ES", "ES-MX", "FI",
-    "FR-CA", "FR-FR", "GU-IN", "HE", "HI", "HR", "HU", "ID", "IT", "JA", "KN-IN", "KO", "ML-IN", "MR-IN", "MS", "NL-NL",
-    "NO", "OR-IN", "PA-IN", "PL", "PT-BR", "PT-PT", "RO", "RU", "SK", "SL-SI", "SV", "TA-IN", "TE-IN", "TH", "TR", "UK",
-    "UR-PK", "VI", "ZH-HANS", "ZH-HANT",
-  ]
+  public static let locales = AppInfos.locales.map { $0.uppercased() }
 
   public struct Nomination: Codable, Hashable, Identifiable, Sendable {
     public let id: String

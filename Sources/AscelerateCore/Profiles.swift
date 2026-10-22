@@ -23,8 +23,10 @@ public enum Profiles {
     public let content: Data?
     /// The bundle ID's resource ID.
     public let bundleIDResourceID: String?
-    /// The bundle ID, when the list was read with it.
-    public let bundleIdentifier: String?
+    /// The bundle ID, when the list was read with it (a reissued profile keeps it).
+    public var bundleIdentifier: String?
+    /// The devices' resource IDs, when the list was read with them (development and ad hoc only).
+    public var deviceIDs: [String]?
 
     public var isActive: Bool { state == "ACTIVE" }
     /// Development and ad hoc profiles list the devices they install on.
@@ -97,6 +99,18 @@ public enum Profiles {
     profileType.contains("DEVELOPMENT") || profileType.contains("ADHOC")
   }
 
+  /// Whether a device can be in a profile of this type: only Macs in Mac and Mac Catalyst
+  /// profiles, Apple TVs in tvOS ones, and every other device in iOS ones, Macs included (Apple
+  /// silicon Macs run iPhone and iPad apps; Apple takes Intel Macs too). Devices have no tvOS
+  /// platform, so Apple TVs are told apart by their class.
+  public static func fits(_ device: Devices.Device, profileType: String) -> Bool {
+    let isMac = device.deviceClass == "MAC" || device.platform == "MAC_OS"
+    let isTV = device.deviceClass == "APPLE_TV"
+    if profileType.hasPrefix("MAC_") { return isMac }
+    if profileType.hasPrefix("TVOS_") { return isTV }
+    return !isTV
+  }
+
   /// The team's certificates by family.
   public static func certificatesByFamily(client: ASCClient) async throws -> [String: [Certificates.Certificate]] {
     Dictionary(grouping: try await Certificates.list(client: client).filter { $0.type != nil }) { certificateFamily($0.type!) }
@@ -104,9 +118,10 @@ public enum Profiles {
 
   // MARK: Reading
 
-  /// The team's profiles with their bundle IDs, optionally by name, types or states.
+  /// The team's profiles with their bundle IDs, optionally by name, types or states, and with
+  /// their devices.
   public static func list(
-    name: String? = nil, types: [String]? = nil, states: [String]? = nil, client: ASCClient
+    name: String? = nil, types: [String]? = nil, states: [String]? = nil, withDevices: Bool = false, client: ASCClient
   ) async throws -> [Profile] {
     typealias Query = Operations.ProfilesGetCollection.Input.Query
     let typeFilter = try types?.map { raw in
@@ -121,7 +136,7 @@ public enum Profiles {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.profilesGetCollection(query: .init(
           filterName: name.map { [$0] }, filterProfileType: typeFilter, filterProfileState: stateFilter,
-          limit: 200, include: [.bundleId]
+          limit: 200, include: withDevices ? [.bundleId, .devices] : [.bundleId], limitDevices: withDevices ? 50 : nil
         )).ok.body.json
       }
     }
@@ -129,9 +144,22 @@ public enum Profiles {
     for case .bundleIds(let bundleID) in pages.flatMap({ $0.included ?? [] }) {
       identifiers[bundleID.id] = bundleID.attributes?.identifier
     }
-    return pages.flatMap(\.data).map { profile in
+    var profiles = pages.flatMap(\.data).map { profile in
       Profile(profile, bundleIdentifier: (profile.relationships?.bundleId?.data?.id).flatMap { identifiers[$0] })
     }
+    guard withDevices else { return profiles }
+    // The included linkages stop at 50: a profile with more is read on its own.
+    let linkages = Dictionary(uniqueKeysWithValues: pages.flatMap(\.data).map { ($0.id, $0.relationships?.devices) })
+    for index in profiles.indices where profiles[index].needsDevices {
+      let linkage = linkages[profiles[index].id] ?? nil
+      let ids = linkage?.data?.map(\.id) ?? []
+      if ids.count >= 50 || (linkage?.meta?.paging.total ?? 0) > ids.count {
+        profiles[index].deviceIDs = try await devices(profileID: profiles[index].id, client: client).map(\.id)
+      } else {
+        profiles[index].deviceIDs = ids
+      }
+    }
+    return profiles
   }
 
   /// A profile by exact name (or the only partial match): Apple's name filter can match partially.
@@ -190,9 +218,10 @@ public enum Profiles {
 
   /// Makes a profile again with these certificates: deletes it and creates it with the same
   /// name, type and bundle ID, and its devices (read before the delete) unless `deviceIDs` is
-  /// given.
+  /// given, plus `addingDeviceIDs`.
   public static func reissue(
-    _ profile: Profile, certificateIDs: [String], deviceIDs: [String]? = nil, client: ASCClient
+    _ profile: Profile, certificateIDs: [String], deviceIDs: [String]? = nil, addingDeviceIDs: [String] = [],
+    client: ASCClient
   ) async throws(ReissueError) -> Profile {
     guard let type = profile.type, ASCEnum.ProfileCreateRequestProfileType(rawValue: type) != nil else {
       throw .unknownType(profile.type ?? "")
@@ -212,6 +241,7 @@ public enum Profiles {
           throw .devicesUnreadable(error)
         }
       }
+      devices += addingDeviceIDs.filter { !devices.contains($0) }
     }
     do {
       try await delete(id: profile.id, client: client)
@@ -219,9 +249,11 @@ public enum Profiles {
       throw .deleteFailed(error)
     }
     do {
-      return try await create(
+      var new = try await create(
         name: profile.name, type: type, bundleIDResourceID: bundleIDResourceID, certificateIDs: certificateIDs,
         deviceIDs: devices, client: client)
+      new.bundleIdentifier = profile.bundleIdentifier
+      return new
     } catch {
       throw .createFailed(error, deviceUDIDs: udids)
     }
@@ -235,6 +267,6 @@ extension Profiles.Profile {
       id: profile.id, name: attributes?.name ?? "", type: attributes?.profileType, state: attributes?.profileState,
       platform: attributes?.platform, uuid: attributes?.uuid, createdDate: attributes?.createdDate,
       expirationDate: attributes?.expirationDate, content: attributes?.profileContent.flatMap { Data(base64Encoded: $0) },
-      bundleIDResourceID: profile.relationships?.bundleId?.data?.id, bundleIdentifier: bundleIdentifier)
+      bundleIDResourceID: profile.relationships?.bundleId?.data?.id, bundleIdentifier: bundleIdentifier, deviceIDs: nil)
   }
 }

@@ -220,7 +220,7 @@ struct ProfilesCommand: AsyncParsableCommand {
     }
 
     private func promptDevices(client: ASCClient) async throws -> [String] {
-      let allDevices = try await Devices.list(enabledOnly: true, client: client)
+      let allDevices = try await Devices.list(statuses: ["ENABLED"], client: client)
       guard !allDevices.isEmpty else {
         throw ValidationError("No enabled devices found. Register one first with 'devices register'.")
       }
@@ -315,7 +315,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       let deviceIDs: [String]?
       if let devices {
         if devices.lowercased() == "all" {
-          let allDevices = try await Devices.list(enabledOnly: true, client: client)
+          let allDevices = try await Devices.list(statuses: ["ENABLED"], client: client)
           guard !allDevices.isEmpty else {
             throw ValidationError("No enabled devices found in your account.")
           }
@@ -479,7 +479,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       // Fetch all enabled devices upfront if --all-devices
       var allEnabledDeviceIDs: [String]?
       if allDevices, targets.contains(where: \.needsDevices) {
-        allEnabledDeviceIDs = try await Devices.list(enabledOnly: true, client: client).map(\.id)
+        allEnabledDeviceIDs = try await Devices.list(statuses: ["ENABLED"], client: client).map(\.id)
       }
 
       // Display summary

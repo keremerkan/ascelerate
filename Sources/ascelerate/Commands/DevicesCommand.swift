@@ -31,34 +31,25 @@ struct DevicesCommand: AsyncParsableCommand {
       let filterPlatform: [Query.FilterPlatformPayloadPayload]? = try parseFilter(platform, name: "platform")
       let filterStatus: [Query.FilterStatusPayloadPayload]? = try parseFilter(status, name: "status")
 
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.devicesGetCollection(query: .init(
-          filterName: name.map { [$0] }, filterPlatform: filterPlatform, filterStatus: filterStatus, limit: 200
-        )).ok.body.json
-      }
+      let devices = try await Devices.list(
+        name: name, platforms: filterPlatform?.map(\.rawValue), statuses: filterStatus?.map(\.rawValue), client: client)
 
-      var rows: [[String]] = []
-      for page in pages {
-        for device in page.data {
-          let attrs = device.attributes
-          rows.append([
-            attrs?.name ?? "—",
-            attrs?.udid ?? "—",
-            attrs?.platform.map { formatState($0) } ?? "—",
-            attrs?.deviceClass.map { formatState($0) } ?? "—",
-            attrs?.status.map { formatState($0) } ?? "—",
-            attrs?.model ?? "—",
-            attrs?.addedDate.map { formatDate($0) } ?? "—",
-          ])
-        }
-      }
-
-      if rows.isEmpty {
+      if devices.isEmpty {
         print("No devices found.")
       } else {
         Table.print(
           headers: ["Name", "UDID", "Platform", "Class", "Status", "Model", "Added"],
-          rows: rows
+          rows: devices.map { device in
+            [
+              dash(device.name),
+              dash(device.udid),
+              device.platform.map { formatState($0) } ?? "—",
+              device.deviceClass.map { formatState($0) } ?? "—",
+              device.status.map { formatState($0) } ?? "—",
+              device.model ?? "—",
+              device.addedDate.map { formatDate($0) } ?? "—",
+            ]
+          }
         )
       }
     }
@@ -75,21 +66,19 @@ struct DevicesCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let device: Components.Schemas.Device
-      if let nameOrUDID {
-        device = try await findDevice(nameOrUDID: nameOrUDID, client: client)
+      let device = if let nameOrUDID {
+        try await Devices.find(nameOrUDID: nameOrUDID, client: client)
       } else {
-        device = try await promptDevice(client: client)
+        try await promptDevice(client: client)
       }
 
-      let attrs = device.attributes
-      print("Name:     \(attrs?.name ?? "—")")
-      print("UDID:     \(attrs?.udid ?? "—")")
-      print("Platform: \(attrs?.platform.map { formatState($0) } ?? "—")")
-      print("Class:    \(attrs?.deviceClass.map { formatState($0) } ?? "—")")
-      print("Status:   \(attrs?.status.map { formatState($0) } ?? "—")")
-      print("Model:    \(attrs?.model ?? "—")")
-      print("Added:    \(attrs?.addedDate.map { formatDate($0) } ?? "—")")
+      print("Name:     \(dash(device.name))")
+      print("UDID:     \(dash(device.udid))")
+      print("Platform: \(device.platform.map { formatState($0) } ?? "—")")
+      print("Class:    \(device.deviceClass.map { formatState($0) } ?? "—")")
+      print("Status:   \(device.status.map { formatState($0) } ?? "—")")
+      print("Model:    \(device.model ?? "—")")
+      print("Added:    \(device.addedDate.map { formatDate($0) } ?? "—")")
     }
   }
 
@@ -142,16 +131,13 @@ struct DevicesCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.devicesCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(name: deviceName, platform: platformValue.rawValue, udid: deviceUDID),
-        _type: "devices"
-      )))).created.body.json
+      let device = try await Devices.register(
+        name: deviceName, udid: deviceUDID, platform: platformValue.rawValue, client: client)
 
-      let attrs = response.data.attributes
       print()
-      success("Registered", "device '\(attrs?.name ?? deviceName)'.")
-      print("  UDID:   \(attrs?.udid ?? deviceUDID)")
-      print("  Status: \(attrs?.status.map { formatState($0) } ?? "—")")
+      success("Registered", "device '\(device.name.isEmpty ? deviceName : device.name)'.")
+      print("  UDID:   \(device.udid.isEmpty ? deviceUDID : device.udid)")
+      print("  Status: \(device.status.map { formatState($0) } ?? "—")")
     }
   }
 
@@ -231,11 +217,10 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let device: Components.Schemas.Device
-      if let nameOrUDID {
-        device = try await findDevice(nameOrUDID: nameOrUDID, client: client)
+      let device = if let nameOrUDID {
+        try await Devices.find(nameOrUDID: nameOrUDID, client: client)
       } else {
-        device = try await promptDevice(client: client)
+        try await promptDevice(client: client)
       }
 
       let newName: String?
@@ -251,17 +236,17 @@ struct DevicesCommand: AsyncParsableCommand {
         }
       } else {
         // Interactive: ask what to update
-        let currentName = device.attributes?.name ?? "—"
-        let currentStatus = device.attributes?.status.map { formatState($0) } ?? "—"
+        let currentName = dash(device.name)
+        let currentStatus = device.status.map { formatState($0) } ?? "—"
         let updates = try promptUpdates(currentName: currentName, currentStatus: currentStatus)
         newName = updates.newName
         statusValue = updates.newStatus
       }
 
-      let currentName = device.attributes?.name ?? "—"
-      print("Device: \(currentName) (\(device.attributes?.udid ?? "—"))")
+      let currentName = dash(device.name)
+      print("Device: \(currentName) (\(dash(device.udid)))")
       if let newName { print("  Name:   \(currentName) → \(newName)") }
-      if let statusValue { print("  Status: \(device.attributes?.status.map { formatState($0) } ?? "—") → \(formatState(statusValue.rawValue))") }
+      if let statusValue { print("  Status: \(device.status.map { formatState($0) } ?? "—") → \(formatState(statusValue.rawValue))") }
       print()
 
       guard confirm("Update this device? [y/N] ") else {
@@ -269,64 +254,26 @@ struct DevicesCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.devicesUpdateInstance(
-        path: .init(id: device.id),
-        body: .json(.init(data: .init(
-          attributes: .init(name: newName, status: statusValue?.rawValue),
-          id: device.id,
-          _type: "devices"
-        )))
-      ).ok.body.json
+      let updated = try await Devices.update(id: device.id, name: newName, status: statusValue?.rawValue, client: client)
 
-      let attrs = response.data.attributes
       print()
-      success("Updated", "device '\(attrs?.name ?? currentName)'.")
+      success("Updated", "device '\(updated.name.isEmpty ? currentName : updated.name)'.")
     }
   }
 }
 
 /// Prompts the user to select a device from a numbered list.
-func promptDevice(client: ASCClient) async throws -> Components.Schemas.Device {
-  let devices = try fetchAll(
-    await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.devicesGetCollection(query: .init(limit: 200)).ok.body.json
-    },
-    data: \.data,
-    emptyMessage: "No devices found in your account.",
-    sort: { ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "") }
-  )
+func promptDevice(client: ASCClient) async throws -> Devices.Device {
+  let devices = try await Devices.list(client: client)
+  guard !devices.isEmpty else { throw ValidationError("No devices found in your account.") }
   return try promptSelection(
-    "Devices", items: devices,
-    display: { "\($0.attributes?.name ?? "—") (\($0.attributes?.udid ?? "—")) — \($0.attributes?.status.map { formatState($0) } ?? "—")" },
+    "Devices", items: devices.sorted { $0.name < $1.name },
+    display: { "\(dash($0.name)) (\(dash($0.udid))) — \($0.status.map { formatState($0) } ?? "—")" },
     prompt: "Select device"
   )
 }
 
-/// Looks up a device by UDID first, then falls back to name.
-func findDevice(nameOrUDID: String, client: ASCClient) async throws -> Components.Schemas.Device {
-  let byUDID = try await client.devicesGetCollection(query: .init(filterUdid: [nameOrUDID], limit: 1)).ok.body.json
-  if let device = byUDID.data.first {
-    return device
-  }
-  let byName = try await client.devicesGetCollection(query: .init(filterName: [nameOrUDID], limit: 200)).ok.body.json.data
-  // Name filter may return partial matches, find exact match
-  if let device = byName.first(where: { $0.attributes?.name == nameOrUDID }) {
-    return device
-  }
-  // If only one result, use it even if not exact (fuzzy match by API)
-  if byName.count == 1 {
-    return byName[0]
-  }
-  throw DeviceLookupError.notFound(nameOrUDID)
-}
-
-enum DeviceLookupError: LocalizedError {
-  case notFound(String)
-
-  var errorDescription: String? {
-    switch self {
-    case .notFound(let identifier):
-      return "No device found matching '\(identifier)'. Use UDID or exact device name."
-    }
-  }
+/// An attribute Apple left out, as the tables show it.
+private func dash(_ value: String) -> String {
+  value.isEmpty ? "—" : value
 }

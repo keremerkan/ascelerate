@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'ASCelerate',
+  title: 'Ascelerate',
   tagline: 'A Swift CLI for App Store Connect',
   favicon: 'img/favicon.svg',
 
@@ -62,7 +62,7 @@ const config: Config = {
     },
     navbar: {
       logo: {
-        alt: 'ASCelerate',
+        alt: 'Ascelerate',
         src: 'img/icon.png',
         srcDark: 'img/icon-dark.png',
       },

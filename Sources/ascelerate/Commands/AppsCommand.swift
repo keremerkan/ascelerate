@@ -11,7 +11,7 @@ struct AppsCommand: AsyncParsableCommand {
     groupedSubcommands: [
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, Release.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
-      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, Availability.self, PricingCommand.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self]),
+      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, Availability.self, PricingCommand.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self, StreamlinedPurchasing.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
     ]
   )
@@ -3636,21 +3636,16 @@ struct AppsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      guard let current = try await optionalRelated({
-        try await client.appsSubscriptionGracePeriodGetToOneRelated(path: .init(id: app.id)).ok.body.json.data
-      }) else {
-        throw ValidationError("No subscription grace period configuration exists for this app.")
-      }
+      let current = try await Subscriptions.gracePeriod(appID: app.id, client: client)
 
       let isEdit = optIn != nil || sandboxOptIn != nil || duration != nil || renewalType != nil
 
       if !isEdit {
-        let attrs = current.attributes
         print("Subscription Grace Period:")
-        print("  Opt-in (production): \(attrs?.optIn == true ? "Yes" : attrs?.optIn == false ? "No" : "—")")
-        print("  Opt-in (sandbox):    \(attrs?.sandboxOptIn == true ? "Yes" : attrs?.sandboxOptIn == false ? "No" : "—")")
-        print("  Duration:            \(attrs?.duration.map { formatState($0) } ?? "—")")
-        print("  Renewal Type:        \(attrs?.renewalType.map { formatState($0) } ?? "—")")
+        print("  Opt-in (production): \(current.optIn ? "Yes" : "No")")
+        print("  Opt-in (sandbox):    \(current.sandboxOptIn ? "Yes" : "No")")
+        print("  Duration:            \(current.duration.map { formatState($0) } ?? "—")")
+        print("  Renewal Type:        \(current.renewalType.map { formatState($0) } ?? "—")")
         return
       }
 
@@ -3686,22 +3681,62 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.subscriptionGracePeriodsUpdateInstance(
-        path: .init(id: current.id),
-        body: .json(.init(data: .init(
-          attributes: .init(
-            duration: newDuration?.rawValue,
-            optIn: newOptIn,
-            renewalType: newRenewalType?.rawValue,
-            sandboxOptIn: newSandboxOptIn
-          ),
-          id: current.id,
-          _type: "subscriptionGracePeriods"
-        )))
-      ).ok
+      let saved = try await Subscriptions.updateGracePeriod(
+        id: current.id, optIn: newOptIn, sandboxOptIn: newSandboxOptIn, duration: newDuration?.rawValue,
+        renewalType: newRenewalType?.rawValue, client: client)
 
       print()
-      success("Updated", "subscription grace period.")
+      success("Updated", "subscription grace period: production \(saved.optIn ? "on" : "off"), sandbox \(saved.sandboxOptIn ? "on" : "off")\(saved.duration.map { ", \(formatState($0))" } ?? "")\(saved.renewalType.map { ", \(formatState($0))" } ?? "").")
+    }
+  }
+
+  // MARK: - Streamlined Purchasing
+
+  struct StreamlinedPurchasing: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "streamlined-purchasing",
+      abstract: "View or change whether customers can buy the app's subscriptions outside the app.",
+      discussion: """
+        On by default. Turning it off needs an approved build that uses the StoreKit purchase APIs;
+        customers then subscribe only from within the app. Applies to all the app's subscriptions.
+        """
+    )
+
+    @Argument(help: "The bundle identifier of the app.",
+              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+    var bundleID: String
+
+    @Option(name: .long, help: "Turn streamlined purchasing on or off (true/false).")
+    var enabled: String?
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() async throws {
+      if yes { autoConfirm = true }
+      let newValue: Bool? = try enabled.map {
+        guard let b = Bool($0.lowercased()) else {
+          throw ValidationError("Invalid value for --enabled. Use 'true' or 'false'.")
+        }
+        return b
+      }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(bundleID: bundleID, client: client)
+      let current = try await Subscriptions.streamlinedPurchasing(appID: app.id, client: client)
+      guard let newValue else {
+        print("Streamlined Purchasing: \(current ? "On" : "Off")")
+        return
+      }
+      if newValue == current {
+        print("Streamlined Purchasing is already \(current ? "on" : "off").")
+        return
+      }
+      guard confirm("Turn streamlined purchasing \(newValue ? "on" : "off")? [y/N] ") else {
+        cancelled()
+        return
+      }
+      let saved = try await Subscriptions.setStreamlinedPurchasing(appID: app.id, enabled: newValue, client: client)
+      success("Turned", "streamlined purchasing \(saved ? "on" : "off").")
     }
   }
 }

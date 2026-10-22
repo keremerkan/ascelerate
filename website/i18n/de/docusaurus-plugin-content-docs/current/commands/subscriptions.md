@@ -136,7 +136,7 @@ ascelerate sub intro-offer list <bundle-id> <product-id>
 
 # Kostenlose Testversion (kein Preis nötig; --periods + --duration legen die Dauer fest)
 ascelerate sub intro-offer create <bundle-id> <product-id> \
-  --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+  --mode FREE_TRIAL --duration ONE_WEEK --periods 1 --territories all
 
 # Pay-as-you-go-Rabatt (3 Monate zu $0.99/Monat, auf USA beschränkt)
 ascelerate sub intro-offer create <bundle-id> <product-id> \

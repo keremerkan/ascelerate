@@ -139,7 +139,7 @@ ascelerate sub intro-offer list <bundle-id> <product-id>
 
 # Free trial (no price needed; --periods + --duration set the trial length)
 ascelerate sub intro-offer create <bundle-id> <product-id> \
-  --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+  --mode FREE_TRIAL --duration ONE_WEEK --periods 1 --territories all
 
 # Pay-as-you-go discount (3 months at $0.99/mo, scoped to USA)
 ascelerate sub intro-offer create <bundle-id> <product-id> \

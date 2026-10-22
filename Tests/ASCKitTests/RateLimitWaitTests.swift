@@ -13,6 +13,27 @@ final class Notices: @unchecked Sendable {
   func add(_ value: Date?) { lock.withLock { values.append(value) } }
 }
 
+/// Holds callers until `count` have arrived, then lets them all through (and every later one).
+actor Barrier {
+  private let count: Int
+  private var arrived = 0
+  private var waiting: [CheckedContinuation<Void, Never>] = []
+
+  init(count: Int) {
+    self.count = count
+  }
+
+  func arrive() async {
+    arrived += 1
+    if arrived >= count {
+      waiting.forEach { $0.resume() }
+      waiting = []
+      return
+    }
+    await withCheckedContinuation { waiting.append($0) }
+  }
+}
+
 /// A fake App Store Connect that answers 429 (with `Retry-After`) a given number of times, then 200.
 final class FakeServer: @unchecked Sendable {
   private let lock = NSLock()
@@ -89,10 +110,16 @@ final class FakeServer: @unchecked Sendable {
     let waiting = middleware(cap: nil, notices: notices)
     let url = URL(string: "https://api.example.com")!
     let request = request
+    // All four are sent before any 429 comes back, as concurrent requests are: a task that
+    // started late would otherwise go out after the wait and start a second one.
+    let sent = Barrier(count: 4)
     let statuses = try await withThrowingTaskGroup(of: HTTPResponse.Status.self) { group in
       for _ in 0..<4 {
         group.addTask {
-          try await waiting.intercept(request, body: nil, baseURL: url, operationID: "test") { _, _, _ in server.respond() }.0.status
+          try await waiting.intercept(request, body: nil, baseURL: url, operationID: "test") { _, _, _ in
+            await sent.arrive()
+            return server.respond()
+          }.0.status
         }
       }
       return try await group.reduce(into: []) { $0.append($1) }
@@ -100,5 +127,39 @@ final class FakeServer: @unchecked Sendable {
     #expect(statuses.allSatisfy { $0 == .ok })
     #expect(notices.all.compactMap { $0 }.count == 1)
     #expect(notices.all.filter { $0 == nil }.count == 1)
+  }
+
+  @Test func longerWaitThanMaxWaitIsReturned() async throws {
+    // A spent hourly quota asks for most of an hour: returned at once rather than waited out.
+    let notices = Notices()
+    let server = FakeServer(limited: 1, retryAfter: "2186")
+    let (response, _) = try await RateLimitWaitMiddleware(
+      policy: ASCRateLimitWait(maxTotalWait: nil, maxWait: 60) { notices.add($0) }, gate: RateLimitGate()
+    ).intercept(
+      request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test"
+    ) { _, _, _ in server.respond() }
+    #expect(response.status == .tooManyRequests)
+    #expect(server.requests == 1)
+    #expect(notices.all.isEmpty)
+  }
+
+  @Test func pacingAllowsABurstThenSpacesRequests() async throws {
+    let pacing = PacingMiddleware(pacing: ASCRequestPacing(burst: 3, perSecond: 10), gate: PacingGate())
+    let server = FakeServer(limited: 0)
+    let started = Date()
+    try await withThrowingTaskGroup(of: Void.self) { group in
+      for _ in 0..<8 {
+        group.addTask {
+          _ = try await pacing.intercept(
+            request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test"
+          ) { _, _, _ in server.respond() }
+        }
+      }
+      try await group.waitForAll()
+    }
+    // Three at once, then five more a tenth of a second apart.
+    let elapsed = Date().timeIntervalSince(started)
+    #expect(server.requests == 8)
+    #expect(elapsed >= 0.45 && elapsed < 1.5)
   }
 }

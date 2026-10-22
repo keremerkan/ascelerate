@@ -27,19 +27,30 @@ extension Client {
   /// response is thrown as an `ASCError`, and `ASCPaging.allPages` can follow `links.next`.
   /// With `dryRun`, GETs go out as usual but every other request is stopped before it is sent
   /// and reported on stderr (method, path, JSON body), surfacing as `ASCDryRunStop`.
+  /// `writeGate` runs before every request other than a GET (method, path) and refuses it by
+  /// throwing; the caller gets that error as the runtime's `ClientError.underlyingError`.
+  /// `rateLimitObserver` gets the hourly limit, the requests left and the operation with every
+  /// response that carries them (most do; the subscription endpoints neither report nor count
+  /// requests, seen 2026-10-22).
   public static func appStoreConnect(
-    credentials: ASCCredentials, dryRun: Bool = false, rateLimitWait: ASCRateLimitWait? = nil
+    credentials: ASCCredentials, dryRun: Bool = false, rateLimitWait: ASCRateLimitWait? = nil,
+    writeGate: (@Sendable (_ method: String, _ path: String) async throws -> Void)? = nil,
+    rateLimitObserver: (@Sendable (_ limit: Int, _ remaining: Int, _ operationID: String) -> Void)? = nil,
+    pacing: ASCRequestPacing? = nil
   ) throws -> Client {
     let key = try P256.Signing.PrivateKey(pemRepresentation: credentials.privateKeyPEM)
-    var middlewares: [any ClientMiddleware] = [ErrorMiddleware()]
+    var middlewares: [any ClientMiddleware] = [ErrorMiddleware(rateLimitObserver: rateLimitObserver)]
     // Inside the error middleware, to see a 429 before it becomes an error; outside JWT signing,
     // so a request sent again after a long wait gets a fresh token.
     if let rateLimitWait { middlewares.append(RateLimitWaitMiddleware(policy: rateLimitWait)) }
+    // Inside the wait, so a request sent again is paced too.
+    if let pacing { middlewares.append(PacingMiddleware(pacing: pacing)) }
     middlewares += [
       PagingMiddleware(),
       NullsMiddleware(),
       JWTMiddleware(tokens: TokenStore(credentials: credentials, key: key)),
     ]
+    if let writeGate { middlewares.append(WriteGateMiddleware(gate: writeGate)) }
     if dryRun { middlewares.append(DryRunMiddleware()) }
     return Client(
       serverURL: try Servers.Server1.url(),
@@ -112,6 +123,21 @@ struct DryRunMiddleware: ClientMiddleware {
   }
 }
 
+/// Asks the caller's gate before sending a request other than a GET.
+struct WriteGateMiddleware: ClientMiddleware {
+  let gate: @Sendable (_ method: String, _ path: String) async throws -> Void
+
+  func intercept(
+    _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
+    next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+  ) async throws -> (HTTPResponse, HTTPBody?) {
+    if request.method != .get {
+      try await gate(request.method.rawValue, request.path ?? "?")
+    }
+    return try await next(request, body, baseURL)
+  }
+}
+
 // MARK: - Errors
 
 /// An App Store Connect error response (HTTP 4xx/5xx) with Apple's error entries.
@@ -179,12 +205,18 @@ struct ErrorMiddleware: ClientMiddleware {
     let errors: [ASCError.Entry]?
   }
 
+  var rateLimitObserver: (@Sendable (_ limit: Int, _ remaining: Int, _ operationID: String) -> Void)?
+
   func intercept(
     _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
     next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
     let (response, responseBody) = try await next(request, body, baseURL)
-    ASCRateLimit.recorder?.header = rateLimitHeader.flatMap { response.headerFields[$0] }
+    let header = rateLimitHeader.flatMap { response.headerFields[$0] }
+    ASCRateLimit.recorder?.header = header
+    if let rateLimitObserver, let quota = header.flatMap(parseRateLimit) {
+      rateLimitObserver(quota.limit, quota.remaining, operationID)
+    }
     guard response.status.code >= 400 else { return (response, responseBody) }
     var data = Data()
     if let responseBody {
@@ -244,12 +276,16 @@ public struct ASCRateLimitWait: Sendable {
   /// The most this process waits in total; past it, a 429 is returned as an error. nil waits as
   /// long as Apple asks.
   public var maxTotalWait: TimeInterval?
+  /// The longest single wait; a 429 asking for more is returned as an error (nil: no limit).
+  /// A short-lived burst limit asks for seconds, a spent hourly quota for most of an hour.
+  public var maxWait: TimeInterval?
   /// Called with the time waiting ends when a wait starts or grows, and with nil when requests
   /// go through again.
   public var onWait: @Sendable (Date?) -> Void
 
-  public init(maxTotalWait: TimeInterval?, onWait: @escaping @Sendable (Date?) -> Void) {
+  public init(maxTotalWait: TimeInterval?, maxWait: TimeInterval? = nil, onWait: @escaping @Sendable (Date?) -> Void) {
     self.maxTotalWait = maxTotalWait
+    self.maxWait = maxWait
     self.onWait = onWait
   }
 }
@@ -308,10 +344,57 @@ struct RateLimitWaitMiddleware: ClientMiddleware {
         return (response, responseBody)
       }
       let seconds = response.headerFields[.retryAfter].flatMap(TimeInterval.init) ?? 60
+      if let maxWait = policy.maxWait, seconds > maxWait { return (response, responseBody) }
       let decision = await gate.wait(until: Date().addingTimeInterval(seconds), cap: policy.maxTotalWait)
       guard decision.wait else { return (response, responseBody) }
       if decision.announce, let resume = await gate.pendingResume { policy.onWait(resume) }
     }
+  }
+}
+
+/// Spaces requests out. Besides the hourly quota, App Store Connect refuses bursts: a 429 "The
+/// request rate limit has been reached" with nearly all of the hour's requests left (seen
+/// 2026-10-22, four price tier reads at a time, each paging). A token bucket shared by every
+/// client of the process: `burst` requests at once, then `perSecond`.
+public struct ASCRequestPacing: Sendable {
+  public var burst: Int
+  public var perSecond: Double
+
+  public init(burst: Int, perSecond: Double) {
+    self.burst = burst
+    self.perSecond = perSecond
+  }
+}
+
+actor PacingGate {
+  static let shared = PacingGate()
+
+  private var tokens: Double?
+  private var refilled = Date()
+
+  /// Takes a request's token, returning how long to wait for it (tokens taken ahead go negative,
+  /// so concurrent requests queue up one after another).
+  func reserve(_ pacing: ASCRequestPacing) -> TimeInterval {
+    let now = Date()
+    let burst = Double(max(pacing.burst, 1))
+    let available = min(burst, (tokens ?? burst) + now.timeIntervalSince(refilled) * pacing.perSecond)
+    refilled = now
+    tokens = available - 1
+    return available >= 1 ? 0 : (1 - available) / pacing.perSecond
+  }
+}
+
+struct PacingMiddleware: ClientMiddleware {
+  let pacing: ASCRequestPacing
+  var gate = PacingGate.shared
+
+  func intercept(
+    _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
+    next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+  ) async throws -> (HTTPResponse, HTTPBody?) {
+    let wait = await gate.reserve(pacing)
+    if wait > 0 { try await Task.sleep(for: .seconds(wait)) }
+    return try await next(request, body, baseURL)
   }
 }
 

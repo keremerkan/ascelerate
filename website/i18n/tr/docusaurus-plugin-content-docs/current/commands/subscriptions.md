@@ -136,7 +136,7 @@ ascelerate sub intro-offer list <bundle-id> <product-id>
 
 # Ücretsiz deneme (fiyat gerekmez; --periods + --duration deneme süresini belirler)
 ascelerate sub intro-offer create <bundle-id> <product-id> \
-  --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+  --mode FREE_TRIAL --duration ONE_WEEK --periods 1 --territories all
 
 # Pay-as-you-go indirimi (3 ay $0.99/ay, USA'ya özel)
 ascelerate sub intro-offer create <bundle-id> <product-id> \

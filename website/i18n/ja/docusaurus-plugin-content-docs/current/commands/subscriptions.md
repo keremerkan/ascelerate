@@ -136,7 +136,7 @@ ascelerate sub intro-offer list <bundle-id> <product-id>
 
 # 無料トライアル（価格不要；--periods と --duration で期間を設定）
 ascelerate sub intro-offer create <bundle-id> <product-id> \
-  --mode FREE_TRIAL --duration ONE_WEEK --periods 1
+  --mode FREE_TRIAL --duration ONE_WEEK --periods 1 --territories all
 
 # Pay-as-you-go割引（3ヶ月、月額$0.99、USA限定）
 ascelerate sub intro-offer create <bundle-id> <product-id> \

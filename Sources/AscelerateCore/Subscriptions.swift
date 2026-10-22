@@ -363,6 +363,28 @@ public enum Subscriptions {
       .sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) }
   }
 
+  /// Several territories' price tiers for the subscription, cheapest first: one request for up to
+  /// nine territories (about 800 tiers each; `limit` takes 8000), where one territory alone pages
+  /// at 200.
+  public static func pricePoints(subscriptionID: String, territoryIDs: [String], client: ASCClient) async throws -> [String: [AppPricing.PricePoint]] {
+    let points = try await withTransientRetry {
+      try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.subscriptionsPricePointsGetToManyRelated(
+          path: .init(id: subscriptionID),
+          query: .init(
+            filterTerritory: territoryIDs, fieldsSubscriptionPricePoints: [.customerPrice, .proceeds, .territory], limit: 8000,
+            include: [.territory])
+        ).ok.body.json
+      }
+    }.flatMap(\.data)
+    var tiers: [String: [AppPricing.PricePoint]] = [:]
+    for point in points {
+      guard let territoryID = point.relationships?.territory?.data?.id else { continue }
+      tiers[territoryID, default: []].append(pricePoint(point, territoryID: territoryID))
+    }
+    return tiers.mapValues { $0.sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) } }
+  }
+
   /// What a tier comes to in every other territory, with each territory's currency.
   public static func equalizations(
     of pricePointID: String, client: ASCClient

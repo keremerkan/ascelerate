@@ -56,6 +56,13 @@ public enum VersionLocalizations {
     ).ok.body.json.data
   }
 
+  /// Removes a locale from a version, with its screenshots and previews: the asset library
+  /// placements go first, which deleting the locale would otherwise leave behind for good.
+  public static func delete(id: String, client: ASCClient) async throws {
+    try await AssetLibrary.clearPlacements(on: .versionLocalization(id), client: client)
+    _ = try await client.appStoreVersionLocalizationsDeleteInstance(path: .init(id: id)).noContent
+  }
+
   /// Adds a locale to a version, with `fields` as its text.
   public static func create(
     versionID: String, locale: String, fields: LocaleFields, client: ASCClient

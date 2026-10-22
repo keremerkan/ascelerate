@@ -1,10 +1,10 @@
 ---
-title: "ASCelerate — A Swift CLI for App Store Connect"
+title: "Ascelerate — A Swift CLI for App Store Connect"
 description: "A command-line tool for building, archiving, and publishing apps to the App Store."
 canonical: https://ascelerate.dev/
 ---
 
-# ASCelerate
+# Ascelerate
 
 A Swift CLI for App Store Connect. Build, archive, and publish apps to the App Store — from Xcode archive to App Review submission. Manage versions, localizations, screenshots, provisioning, in-app purchases, subscriptions, sales reports, and Apple Ads campaigns.
 

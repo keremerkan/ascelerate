@@ -21,7 +21,7 @@ struct Ascelerate: AsyncParsableCommand {
       CommandGroup(name: "Advertising", subcommands: [AdsCommand.self]),
       CommandGroup(name: "Provisioning", subcommands: [BundleIDsCommand.self, CertsCommand.self, DevicesCommand.self, ProfilesCommand.self]),
       CommandGroup(name: "Utilities", subcommands: [AliasCommand.self, RunWorkflowCommand.self, RateLimitCommand.self, VersionCommand.self]),
-      CommandGroup(name: "Setup", subcommands: [ConfigureCommand.self, InstallCompletionsCommand.self, InstallSkillCommand.self]),
+      CommandGroup(name: "Setup", subcommands: [ConfigureCommand.self, InstallCompletionsCommand.self, InstallSkillCommand.self, UpdateCommand.self]),
     ]
   )
 
@@ -85,8 +85,15 @@ struct Ascelerate: AsyncParsableCommand {
       abstract: "Print the version number."
     )
 
-    func run() {
-      print(Ascelerate.appVersion)
+    @Flag(name: .long, help: "Also report whether shell completions and the AI skill are current, as JSON.")
+    var json = false
+
+    func run() throws {
+      guard json else {
+        print(Ascelerate.appVersion)
+        return
+      }
+      try printJSON(["version": Ascelerate.appVersion, "completions": completionsStatus(), "skill": skillStatus()])
     }
   }
 

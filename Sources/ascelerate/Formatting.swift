@@ -615,17 +615,7 @@ func isVersionOlder(_ a: String, than b: String) -> Bool {
 /// binary (a genuine upgrade), nil if current or newer. Never reports a downgrade — an older
 /// binary in PATH must not offer to "update" files installed by a newer one.
 func completionsVersionDetail() -> String? {
-  guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return nil }
-  let home = homeDirectory
-
-  let completionPath: String
-  if shell.hasSuffix("/zsh") {
-    completionPath = home.appendingPathComponent(".zfunc/_ascelerate").path
-  } else if shell.hasSuffix("/bash") {
-    completionPath = home.appendingPathComponent(".bash_completions/ascelerate.bash").path
-  } else {
-    return nil
-  }
+  guard let completionPath = completionScriptPath() else { return nil }
 
   guard FileManager.default.fileExists(atPath: completionPath),
     let data = FileManager.default.contents(atPath: completionPath),
@@ -645,6 +635,29 @@ func completionsVersionDetail() -> String? {
     return " (v\(stampedVersion) → v\(currentVersion))"
   }
   return ""  // installed but no stamp — outdated
+}
+
+/// Where `install-completions` puts the completion script for the user's shell (zsh or bash), or
+/// nil for another shell.
+func completionScriptPath() -> String? {
+  guard let shell = ProcessInfo.processInfo.environment["SHELL"] else { return nil }
+  if shell.hasSuffix("/zsh") { return homeDirectory.appendingPathComponent(".zfunc/_ascelerate").path }
+  if shell.hasSuffix("/bash") { return homeDirectory.appendingPathComponent(".bash_completions/ascelerate.bash").path }
+  return nil
+}
+
+/// Whether shell completions are installed and current: `current`, `outdated`, `missing`, or
+/// `unsupported` for a shell other than zsh and bash.
+func completionsStatus() -> String {
+  guard let path = completionScriptPath() else { return "unsupported" }
+  guard FileManager.default.fileExists(atPath: path) else { return "missing" }
+  return completionsVersionDetail() == nil ? "current" : "outdated"
+}
+
+/// Whether the AI agent skill is installed and current: `current`, `outdated` or `missing`.
+func skillStatus() -> String {
+  guard !InstallSkillCommand.installedSkillPaths().isEmpty else { return "missing" }
+  return skillVersionDetail() == nil ? "current" : "outdated"
 }
 
 /// Returns a version detail string like " (v0.5.0 → v0.6.1)" if any CLI-installed (stamped) skill

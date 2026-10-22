@@ -24,26 +24,16 @@ struct BundleIDsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let filterPlatform: [Operations.BundleIdsGetCollection.Input.Query.FilterPlatformPayloadPayload]? =
-        try parseFilter(platform, name: "platform")
+      let filterPlatform: ASCEnum.BundleIdPlatform? = try platform.map { try parseEnum($0, name: "platform") }
+      let bundleIDs = try await BundleIDs.list(platform: filterPlatform?.rawValue, identifierPrefix: identifier, client: client)
 
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.bundleIdsGetCollection(query: .init(
-          filterPlatform: filterPlatform, filterIdentifier: identifier.map { [$0] }, limit: 200
-        )).ok.body.json
-      }
-
-      var rows: [[String]] = []
-      for page in pages {
-        for bundleID in page.data {
-          let attrs = bundleID.attributes
-          rows.append([
-            attrs?.identifier ?? "—",
-            attrs?.name ?? "—",
-            attrs?.platform.map { formatState($0) } ?? "—",
-            attrs?.seedId ?? "—",
-          ])
-        }
+      let rows = bundleIDs.map { bundleID in
+        [
+          bundleID.identifier.isEmpty ? "—" : bundleID.identifier,
+          bundleID.name.isEmpty ? "—" : bundleID.name,
+          bundleID.platform.map { formatState($0) } ?? "—",
+          bundleID.seedID ?? "—",
+        ]
       }
 
       if rows.isEmpty {
@@ -68,26 +58,24 @@ struct BundleIDsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let bundleID: Components.Schemas.BundleId
+      let bundleID: BundleIDs.BundleID
       if let identifier {
-        bundleID = try await findBundleID(identifier: identifier, client: client)
+        bundleID = try await BundleIDs.find(identifier: identifier, client: client)
       } else {
         bundleID = try await promptBundleID(client: client)
       }
 
-      let attrs = bundleID.attributes
-      print("Identifier: \(attrs?.identifier ?? "—")")
-      print("Name:       \(attrs?.name ?? "—")")
-      print("Platform:   \(attrs?.platform.map { formatState($0) } ?? "—")")
-      print("Seed ID:    \(attrs?.seedId ?? "—")")
+      print("Identifier: \(bundleID.identifier.isEmpty ? "—" : bundleID.identifier)")
+      print("Name:       \(bundleID.name.isEmpty ? "—" : bundleID.name)")
+      print("Platform:   \(bundleID.platform.map { formatState($0) } ?? "—")")
+      print("Seed ID:    \(bundleID.seedID ?? "—")")
 
       let capabilities = try await fetchCapabilities(bundleID: bundleID, client: client)
       if !capabilities.isEmpty {
         print()
         print("Capabilities:")
         for cap in capabilities {
-          let capType = cap.attributes?.capabilityType.map { formatState($0) } ?? "—"
-          print("  \(capType)")
+          print("  \(cap.type.isEmpty ? "—" : formatState(cap.type))")
         }
       }
     }
@@ -142,16 +130,13 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.bundleIdsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(identifier: bundleIDIdentifier, name: bundleIDName, platform: platformValue.rawValue),
-        _type: "bundleIds"
-      )))).created.body.json
+      let registered = try await BundleIDs.register(
+        identifier: bundleIDIdentifier, name: bundleIDName, platform: platformValue.rawValue, client: client)
 
-      let attrs = response.data.attributes
       print()
-      success("Registered", "bundle identifier '\(attrs?.identifier ?? bundleIDIdentifier)'.")
-      print("  Name:     \(attrs?.name ?? bundleIDName)")
-      print("  Seed ID:  \(attrs?.seedId ?? "—")")
+      success("Registered", "bundle identifier '\(registered.identifier.isEmpty ? bundleIDIdentifier : registered.identifier)'.")
+      print("  Name:     \(registered.name.isEmpty ? bundleIDName : registered.name)")
+      print("  Seed ID:  \(registered.seedID ?? "—")")
     }
   }
 
@@ -175,18 +160,17 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let bundleID: Components.Schemas.BundleId
+      let bundleID: BundleIDs.BundleID
       if let identifier {
-        bundleID = try await findBundleID(identifier: identifier, client: client)
+        bundleID = try await BundleIDs.find(identifier: identifier, client: client)
       } else {
         bundleID = try await promptBundleID(client: client)
       }
 
-      let attrs = bundleID.attributes
       print("Bundle identifier:")
-      print("  Identifier: \(attrs?.identifier ?? "—")")
-      print("  Name:       \(attrs?.name ?? "—")")
-      print("  Platform:   \(attrs?.platform.map { formatState($0) } ?? "—")")
+      print("  Identifier: \(bundleID.identifier.isEmpty ? "—" : bundleID.identifier)")
+      print("  Name:       \(bundleID.name.isEmpty ? "—" : bundleID.name)")
+      print("  Platform:   \(bundleID.platform.map { formatState($0) } ?? "—")")
       print()
       print("WARNING: Deleting a bundle identifier cannot be undone.")
       print()
@@ -196,9 +180,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.bundleIdsDeleteInstance(path: .init(id: bundleID.id)).noContent
+      try await BundleIDs.delete(id: bundleID.id, client: client)
       print()
-      success("Deleted", "bundle identifier '\(attrs?.identifier ?? identifier ?? "—")'.")
+      success("Deleted", "bundle identifier '\(bundleID.identifier)'.")
     }
   }
   struct Update: AsyncParsableCommand {
@@ -225,17 +209,17 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let bundleID: Components.Schemas.BundleId
+      let bundleID: BundleIDs.BundleID
       if let identifier {
-        bundleID = try await findBundleID(identifier: identifier, client: client)
+        bundleID = try await BundleIDs.find(identifier: identifier, client: client)
       } else {
         bundleID = try await promptBundleID(client: client)
       }
 
-      let currentName = bundleID.attributes?.name ?? "—"
+      let currentName = bundleID.name.isEmpty ? "—" : bundleID.name
       let newName = try name ?? promptText("New display name [\(currentName)]: ")
 
-      let bidIdentifier = bundleID.attributes?.identifier ?? identifier ?? bundleID.id
+      let bidIdentifier = bundleID.identifier
       print("Update bundle identifier:")
       print("  Identifier: \(bidIdentifier)")
       print("  Name:       \(currentName) → \(newName)")
@@ -246,15 +230,11 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.bundleIdsUpdateInstance(
-        path: .init(id: bundleID.id),
-        body: .json(.init(data: .init(attributes: .init(name: newName), id: bundleID.id, _type: "bundleIds")))
-      ).ok.body.json
+      let updated = try await BundleIDs.rename(id: bundleID.id, to: newName, client: client)
 
-      let attrs = response.data.attributes
       print()
-      success("Updated", "bundle identifier '\(attrs?.identifier ?? bidIdentifier)'.")
-      print("  Name: \(attrs?.name ?? newName)")
+      success("Updated", "bundle identifier '\(updated.identifier.isEmpty ? bidIdentifier : updated.identifier)'.")
+      print("  Name: \(updated.name.isEmpty ? newName : updated.name)")
     }
   }
 
@@ -305,15 +285,15 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let bundleID: Components.Schemas.BundleId
+      let bundleID: BundleIDs.BundleID
       if let identifier {
-        bundleID = try await findBundleID(identifier: identifier, client: client)
+        bundleID = try await BundleIDs.find(identifier: identifier, client: client)
       } else {
         bundleID = try await promptBundleID(client: client)
       }
 
       // Fetch current capabilities to check for duplicates
-      let enabledTypes = Set(try await fetchCapabilities(bundleID: bundleID, client: client).compactMap { $0.attributes?.capabilityType })
+      let enabledTypes = Set(try await fetchCapabilities(bundleID: bundleID, client: client).map(\.type))
 
       let capabilityType: ASCEnum.CapabilityType
       if let type {
@@ -327,7 +307,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         capabilityType = try promptCapabilityType(excluding: enabledTypes)
       }
 
-      let bidIdentifier = bundleID.attributes?.identifier ?? identifier ?? bundleID.id
+      let bidIdentifier = bundleID.identifier
       print("Enable capability:")
       print("  Bundle ID:  \(bidIdentifier)")
       print("  Capability: \(formatState(capabilityType.rawValue))")
@@ -338,15 +318,10 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.bundleIdCapabilitiesCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(capabilityType: capabilityType.rawValue),
-        relationships: .init(bundleId: .init(data: .init(id: bundleID.id, _type: "bundleIds"))),
-        _type: "bundleIdCapabilities"
-      )))).created.body.json
+      let enabled = try await BundleIDs.enable(capabilityType.rawValue, bundleID: bundleID.id, client: client)
 
-      let attrs = response.data.attributes
       print()
-      success("Enabled", "\(attrs?.capabilityType.map { formatState($0) } ?? formatState(capabilityType.rawValue)) on '\(bidIdentifier)'.")
+      success("Enabled", "\(formatState(enabled.type.isEmpty ? capabilityType.rawValue : enabled.type)) on '\(bidIdentifier)'.")
 
       if Self.requiresPortalConfiguration.contains(capabilityType) {
         print()
@@ -377,8 +352,8 @@ struct BundleIDsCommand: AsyncParsableCommand {
     var yes = false
 
     private func promptCapability(
-      bundleID: Components.Schemas.BundleId, client: ASCClient
-    ) async throws -> Components.Schemas.BundleIdCapability {
+      bundleID: BundleIDs.BundleID, client: ASCClient
+    ) async throws -> BundleIDs.Capability {
       let caps = try await fetchCapabilities(bundleID: bundleID, client: client)
       guard !caps.isEmpty else {
         throw ValidationError("No capabilities enabled on this bundle identifier.")
@@ -387,7 +362,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       return try promptSelection(
         "Enabled capabilities",
         items: caps,
-        display: { $0.attributes?.capabilityType.map { formatState($0) } ?? "—" },
+        display: { $0.type.isEmpty ? "—" : formatState($0.type) },
         prompt: "Select capability to disable"
       )
     }
@@ -401,16 +376,16 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let bundleID: Components.Schemas.BundleId
+      let bundleID: BundleIDs.BundleID
       if let identifier {
-        bundleID = try await findBundleID(identifier: identifier, client: client)
+        bundleID = try await BundleIDs.find(identifier: identifier, client: client)
       } else {
         bundleID = try await promptBundleID(client: client)
       }
 
       let capability = try await promptCapability(bundleID: bundleID, client: client)
-      let capType = capability.attributes?.capabilityType.map { formatState($0) } ?? "—"
-      let bidIdentifier = bundleID.attributes?.identifier ?? identifier ?? bundleID.id
+      let capType = capability.type.isEmpty ? "—" : formatState(capability.type)
+      let bidIdentifier = bundleID.identifier
 
       print()
       print("Disable capability:")
@@ -423,7 +398,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.bundleIdCapabilitiesDeleteInstance(path: .init(id: capability.id)).noContent
+      try await BundleIDs.disable(capabilityID: capability.id, client: client)
       print()
       success("Disabled", "\(capType) on '\(bidIdentifier)'.")
 
@@ -435,16 +410,16 @@ struct BundleIDsCommand: AsyncParsableCommand {
 /// The capabilities enabled on a bundle ID, sorted by display name (the API returns them in
 /// no stable order). The endpoint rejects `limit` and returns them all.
 private func fetchCapabilities(
-  bundleID: Components.Schemas.BundleId, client: ASCClient
-) async throws -> [Components.Schemas.BundleIdCapability] {
-  try await client.bundleIdsBundleIdCapabilitiesGetToManyRelated(path: .init(id: bundleID.id)).ok.body.json.data
-    .sorted { formatState($0.attributes?.capabilityType ?? "").localizedCaseInsensitiveCompare(formatState($1.attributes?.capabilityType ?? "")) == .orderedAscending }
+  bundleID: BundleIDs.BundleID, client: ASCClient
+) async throws -> [BundleIDs.Capability] {
+  try await BundleIDs.capabilities(bundleID: bundleID.id, client: client)
+    .sorted { formatState($0.type).localizedCaseInsensitiveCompare(formatState($1.type)) == .orderedAscending }
 }
 
 /// After a capability change, checks for provisioning profiles referencing this bundle ID
 /// and offers to regenerate them (delete + recreate with the same settings).
-private func regenerateProfilesIfNeeded(bundleID: Components.Schemas.BundleId, client: ASCClient) async throws {
-  let bidIdentifier = bundleID.attributes?.identifier ?? bundleID.id
+private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: ASCClient) async throws {
+  let bidIdentifier = bundleID.identifier
 
   // Fetch all profiles that reference this bundle ID
   let matchingProfiles = try await fetchProfilesWithBundleIDs(client: client).profiles
@@ -501,29 +476,14 @@ private func regenerateProfilesIfNeeded(bundleID: Components.Schemas.BundleId, c
 }
 
 /// Prompts the user to select a bundle identifier from a numbered list.
-func promptBundleID(client: ASCClient) async throws -> Components.Schemas.BundleId {
-  let bundleIDs = try fetchAll(
-    await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.bundleIdsGetCollection(query: .init(limit: 200)).ok.body.json
-    },
-    data: \.data,
-    emptyMessage: "No bundle identifiers found in your account.",
-    sort: { ($0.attributes?.identifier ?? "") < ($1.attributes?.identifier ?? "") }
-  )
+func promptBundleID(client: ASCClient) async throws -> BundleIDs.BundleID {
+  let bundleIDs = try await BundleIDs.list(client: client)
+  guard !bundleIDs.isEmpty else { throw ValidationError("No bundle identifiers found in your account.") }
   return try promptSelection(
-    "Bundle identifiers", items: bundleIDs,
-    display: { "\($0.attributes?.identifier ?? "—") (\($0.attributes?.name ?? "—"), \($0.attributes?.platform.map { formatState($0) } ?? "—"))" },
+    "Bundle identifiers", items: bundleIDs.sorted { $0.identifier < $1.identifier },
+    display: { "\($0.identifier) (\($0.name), \($0.platform.map { formatState($0) } ?? "—"))" },
     prompt: "Select bundle identifier"
   )
-}
-
-/// Looks up a bundle ID by identifier. `filter[identifier]` does prefix matching, so the exact match is picked.
-func findBundleID(identifier: String, client: ASCClient) async throws -> Components.Schemas.BundleId {
-  let response = try await client.bundleIdsGetCollection(query: .init(filterIdentifier: [identifier], limit: 200)).ok.body.json
-  guard let bundleID = response.data.first(where: { $0.attributes?.identifier == identifier }) else {
-    throw BundleIDLookupError.notFound(identifier)
-  }
-  return bundleID
 }
 
 /// Prompts the user to select a platform from a numbered list.
@@ -534,15 +494,4 @@ func promptPlatform<Platform: RawRepresentable & CaseIterable>() throws -> Platf
     display: { $0.rawValue },
     prompt: "Select platform"
   )
-}
-
-enum BundleIDLookupError: LocalizedError {
-  case notFound(String)
-
-  var errorDescription: String? {
-    switch self {
-    case .notFound(let identifier):
-      return "No bundle identifier found matching '\(identifier)'."
-    }
-  }
 }

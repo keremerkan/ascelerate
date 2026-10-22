@@ -238,7 +238,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       let neededFamily = certFamilyForProfileType(profileType.rawValue)
 
       let filtered = try await fetchCertificates(family: neededFamily, client: client).sorted {
-        ($0.attributes?.expirationDate ?? .distantPast) > ($1.attributes?.expirationDate ?? .distantPast)
+        ($0.expirationDate ?? .distantPast) > ($1.expirationDate ?? .distantPast)
       }
 
       guard !filtered.isEmpty else {
@@ -249,7 +249,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         "\(neededFamily) certificates",
         items: filtered,
         display: { cert in
-          let expires = cert.attributes?.expirationDate.map { formatDate($0) } ?? "—"
+          let expires = cert.expirationDate.map { formatDate($0) } ?? "—"
           return "\(certLabel(cert)) — expires \(expires)"
         },
         prompt: "Select certificates"
@@ -312,14 +312,14 @@ struct ProfilesCommand: AsyncParsableCommand {
       }
 
       // 3. Resolve bundle ID
-      let bundleID: Components.Schemas.BundleId
+      let bundleID: BundleIDs.BundleID
       let bundleIDLabel: String
       if let bundleIdentifier {
-        bundleID = try await findBundleID(identifier: bundleIdentifier, client: client)
+        bundleID = try await BundleIDs.find(identifier: bundleIdentifier, client: client)
         bundleIDLabel = bundleIdentifier
       } else {
         bundleID = try await promptBundleID(client: client)
-        bundleIDLabel = bundleID.attributes?.identifier ?? bundleID.id
+        bundleIDLabel = bundleID.identifier
       }
 
       // 4. Resolve certificates
@@ -506,15 +506,15 @@ struct ProfilesCommand: AsyncParsableCommand {
       }
 
       // Resolve certificates
-      var explicitCerts: [Components.Schemas.Certificate]?
-      var certsByFamily: [String: [Components.Schemas.Certificate]] = [:]
+      var explicitCerts: [Certificates.Certificate]?
+      var certsByFamily: [String: [Certificates.Certificate]] = [:]
 
       if let toCerts {
         // Explicit certificates specified
         let identifiers = toCerts.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        var resolved: [Components.Schemas.Certificate] = []
+        var resolved: [Certificates.Certificate] = []
         for identifier in identifiers {
-          let cert = try await findCertificate(serialOrName: identifier, client: client)
+          let cert = try await Certificates.find(serialOrName: identifier, client: client)
           resolved.append(cert)
         }
         explicitCerts = resolved
@@ -565,7 +565,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       var failed = 0
 
       for profile in targets {
-        let certs: [Components.Schemas.Certificate]
+        let certs: [Certificates.Certificate]
         if let explicitCerts {
           certs = explicitCerts
         } else {
@@ -736,19 +736,17 @@ func fetchEnabledDevices(client: ASCClient) async throws -> [Components.Schemas.
 }
 
 /// Fetches all signing certificates in the account, filtered to `family` if given.
-func fetchCertificates(family: String? = nil, client: ASCClient) async throws -> [Components.Schemas.Certificate] {
-  let allCerts = try await ASCPaging.allPages(next: { $0.links.next }) {
-    try await client.certificatesGetCollection(query: .init(limit: 200)).ok.body.json
-  }.flatMap(\.data)
+func fetchCertificates(family: String? = nil, client: ASCClient) async throws -> [Certificates.Certificate] {
+  let allCerts = try await Certificates.list(client: client)
   guard let family else { return allCerts }
-  return allCerts.filter { $0.attributes?.certificateType.map(certFamily) == family }
+  return allCerts.filter { $0.type.map(certFamily) == family }
 }
 
 /// All certificates in the account grouped by `certFamily`.
-func fetchCertificatesByFamily(client: ASCClient) async throws -> [String: [Components.Schemas.Certificate]] {
-  var certsByFamily: [String: [Components.Schemas.Certificate]] = [:]
+func fetchCertificatesByFamily(client: ASCClient) async throws -> [String: [Certificates.Certificate]] {
+  var certsByFamily: [String: [Certificates.Certificate]] = [:]
   for cert in try await fetchCertificates(client: client) {
-    guard let type = cert.attributes?.certificateType else { continue }
+    guard let type = cert.type else { continue }
     certsByFamily[certFamily(type), default: []].append(cert)
   }
   return certsByFamily
@@ -785,7 +783,7 @@ func createProfile(
 func reissueProfile(
   _ profile: Components.Schemas.Profile,
   bundleIDIdentifier: String,
-  certs: [Components.Schemas.Certificate],
+  certs: [Certificates.Certificate],
   overrideDeviceIDs: [String]? = nil,
   verb: String,
   client: ASCClient
@@ -836,7 +834,7 @@ func reissueProfile(
     print("  OK   \(profileName) — \(verb) with \(certs.count) cert(s) (expires \(newExpiry))")
     return true
   } catch {
-    let certSpec = certs.compactMap { $0.attributes?.serialNumber }.joined(separator: ",")
+    let certSpec = certs.compactMap(\.serialNumber).joined(separator: ",")
     let devicesArg = deviceUDIDs.isEmpty ? "" : " --devices \(deviceUDIDs.joined(separator: ","))"
     print("  FAIL \(profileName) — recreate failed: \(describeError(error))")
     print("         Recovery: ascelerate profiles create --name \"\(profileName)\" --type \(profileTypeRaw) --bundle-id \(bundleIDIdentifier) --certificates \(certSpec)\(devicesArg)")
@@ -863,9 +861,9 @@ func certFamily(_ rawType: String) -> String {
 }
 
 /// Formats a certificate as "DisplayName (Serial)" for clear identification.
-func certLabel(_ cert: Components.Schemas.Certificate) -> String {
-  let name = cert.attributes?.displayName ?? "—"
-  let serial = cert.attributes?.serialNumber ?? cert.id
+func certLabel(_ cert: Certificates.Certificate) -> String {
+  let name = cert.displayName ?? "—"
+  let serial = cert.serialNumber ?? cert.id
   return "\(name) (\(serial))"
 }
 

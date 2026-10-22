@@ -4,7 +4,6 @@ import AscelerateCore
 import Crypto
 import _CryptoExtras
 import Foundation
-import SwiftASN1
 import X509
 
 struct CertsCommand: AsyncParsableCommand {
@@ -35,28 +34,19 @@ struct CertsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let filterType: [Operations.CertificatesGetCollection.Input.Query.FilterCertificateTypePayloadPayload]? =
-        try parseFilter(type, name: "type")
+      let filterType: [ASCEnum.CertificateType]? = try parseFilter(type, name: "type")
+      let certificates = try await Certificates.list(
+        types: filterType?.map(\.rawValue), displayName: displayName, client: client)
 
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.certificatesGetCollection(query: .init(
-          filterDisplayName: displayName.map { [$0] }, filterCertificateType: filterType, limit: 200
-        )).ok.body.json
-      }
-
-      var rows: [[String]] = []
-      for page in pages {
-        for cert in page.data {
-          let attrs = cert.attributes
-          rows.append([
-            attrs?.displayName ?? "—",
-            attrs?.certificateType.map { formatState($0) } ?? "—",
-            attrs?.serialNumber ?? "—",
-            attrs?.platform.map { formatState($0) } ?? "—",
-            attrs?.expirationDate.map { formatDate($0) } ?? "—",
-            attrs?.activated == true ? "Yes" : "No",
-          ])
-        }
+      let rows = certificates.map { cert in
+        [
+          cert.displayName ?? "—",
+          cert.type.map { formatState($0) } ?? "—",
+          cert.serialNumber ?? "—",
+          cert.platform.map { formatState($0) } ?? "—",
+          cert.expirationDate.map { formatDate($0) } ?? "—",
+          cert.activated == true ? "Yes" : "No",
+        ]
       }
 
       if rows.isEmpty {
@@ -81,21 +71,20 @@ struct CertsCommand: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
 
-      let cert: Components.Schemas.Certificate
+      let cert: Certificates.Certificate
       if let serialOrName {
-        cert = try await findCertificate(serialOrName: serialOrName, client: client)
+        cert = try await Certificates.find(serialOrName: serialOrName, client: client)
       } else {
         cert = try await promptCertificate(client: client)
       }
 
-      let attrs = cert.attributes
-      print("Display Name:  \(attrs?.displayName ?? "—")")
-      print("Name:          \(attrs?.name ?? "—")")
-      print("Type:          \(attrs?.certificateType.map { formatState($0) } ?? "—")")
-      print("Serial Number: \(attrs?.serialNumber ?? "—")")
-      print("Platform:      \(attrs?.platform.map { formatState($0) } ?? "—")")
-      print("Expires:       \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
-      print("Active:        \(attrs?.activated == true ? "Yes" : "No")")
+      print("Display Name:  \(cert.displayName ?? "—")")
+      print("Name:          \(cert.name ?? "—")")
+      print("Type:          \(cert.type.map { formatState($0) } ?? "—")")
+      print("Serial Number: \(cert.serialNumber ?? "—")")
+      print("Platform:      \(cert.platform.map { formatState($0) } ?? "—")")
+      print("Expires:       \(cert.expirationDate.map { formatDate($0) } ?? "—")")
+      print("Active:        \(cert.activated == true ? "Yes" : "No")")
     }
   }
 
@@ -175,15 +164,7 @@ struct CertsCommand: AsyncParsableCommand {
       } else {
         // Auto-generate RSA 2048 key pair + CSR
         let key = try _RSA.Signing.PrivateKey(keySize: .bits2048)
-        let subject = try DistinguishedName { CommonName("asc") }
-        let csrRequest = try CertificateSigningRequest(
-          version: .v1,
-          subject: subject,
-          privateKey: .init(key),
-          attributes: CertificateSigningRequest.Attributes(),
-          signatureAlgorithm: .sha256WithRSAEncryption
-        )
-        csrContent = try csrRequest.serializeAsPEM().pemString
+        csrContent = try Certificates.signingRequest(privateKey: .init(key))
         rsaKey = key
 
         print("Create certificate:")
@@ -198,17 +179,13 @@ struct CertsCommand: AsyncParsableCommand {
         return
       }
 
-      let response = try await client.certificatesCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(certificateType: certType.rawValue, csrContent: csrContent),
-        _type: "certificates"
-      )))).created.body.json
+      let created = try await Certificates.create(type: certType.rawValue, csr: csrContent, client: client)
 
-      let attrs = response.data.attributes
       print()
       success("Created", "certificate.")
-      print("  Display Name:  \(attrs?.displayName ?? "—")")
-      print("  Serial Number: \(attrs?.serialNumber ?? "—")")
-      print("  Expires:       \(attrs?.expirationDate.map { formatDate($0) } ?? "—")")
+      print("  Display Name:  \(created.displayName ?? "—")")
+      print("  Serial Number: \(created.serialNumber ?? "—")")
+      print("  Expires:       \(created.expirationDate.map { formatDate($0) } ?? "—")")
 
       // Determine output base name
       let baseName: String?
@@ -216,17 +193,13 @@ struct CertsCommand: AsyncParsableCommand {
         baseName = output
       } else if rsaKey != nil {
         // Auto mode without --output: use serial number
-        baseName = attrs?.serialNumber
+        baseName = created.serialNumber
       } else {
         baseName = nil
       }
 
       // Save certificate
-      if let baseName, let content = attrs?.certificateContent {
-        guard let certData = Data(base64Encoded: content) else {
-          throw ValidationError("Could not decode certificate content from API response.")
-        }
-
+      if let baseName, let certData = created.content {
         let cerName = rsaKey != nil ? "\(baseName).cer" : baseName
         let cerPath = expandPath(confirmOutputPath(cerName, isDirectory: false))
         try certData.write(to: URL(fileURLWithPath: cerPath))
@@ -323,29 +296,17 @@ struct CertsCommand: AsyncParsableCommand {
 
       let client = try ClientFactory.makeClient()
 
-      let certs: [Components.Schemas.Certificate]
+      let certs: [Certificates.Certificate]
       if let serialNumber {
         // Exact-match guard: revoking a partial-filter match would destroy the wrong cert
-        let response = try await client.certificatesGetCollection(
-          query: .init(filterSerialNumber: [serialNumber], limit: 200)
-        ).ok.body.json
-        guard let found = response.data.first(where: { $0.attributes?.serialNumber == serialNumber }) else {
+        guard let found = try await Certificates.find(serialNumber: serialNumber, client: client) else {
           throw ValidationError("No certificate found with serial number '\(serialNumber)'.")
         }
         certs = [found]
       } else {
-        let allCerts = try fetchAll(
-          await ASCPaging.allPages(next: { $0.links.next }) {
-            try await client.certificatesGetCollection(query: .init(limit: 200)).ok.body.json
-          },
-          data: \.data,
-          emptyMessage: "No certificates found in your account.",
-          sort: { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
-        )
         certs = try promptMultiSelection(
-          "Certificates", items: allCerts,
-          display: { "\($0.attributes?.displayName ?? "—") (\($0.attributes?.serialNumber ?? "—")) — \($0.attributes?.certificateType.map { formatState($0) } ?? "—"), expires \($0.attributes?.expirationDate.map { formatDate($0) } ?? "—")" },
-          prompt: "Select certificate"
+          "Certificates", items: try await allCertificates(client: client),
+          display: certificateChoice, prompt: "Select certificate"
         )
       }
 
@@ -356,10 +317,10 @@ struct CertsCommand: AsyncParsableCommand {
         headers: ["Display Name", "Type", "Serial Number", "Expires"],
         rows: certs.map { c in
           [
-            c.attributes?.displayName ?? "—",
-            c.attributes?.certificateType.map { formatState($0) } ?? "—",
-            c.attributes?.serialNumber ?? "—",
-            c.attributes?.expirationDate.map { formatDate($0) } ?? "—",
+            c.displayName ?? "—",
+            c.type.map { formatState($0) } ?? "—",
+            c.serialNumber ?? "—",
+            c.expirationDate.map { formatDate($0) } ?? "—",
           ]
         }
       )
@@ -376,9 +337,9 @@ struct CertsCommand: AsyncParsableCommand {
       var succeeded = 0
       var failed = 0
       for cert in certs {
-        let label = cert.attributes?.displayName ?? cert.attributes?.serialNumber ?? "—"
+        let label = cert.displayName ?? cert.serialNumber ?? "—"
         do {
-          _ = try await client.certificatesDeleteInstance(path: .init(id: cert.id)).noContent
+          try await Certificates.revoke(id: cert.id, client: client)
           print("  OK   \(label)")
           succeeded += 1
         } catch {
@@ -394,46 +355,21 @@ struct CertsCommand: AsyncParsableCommand {
 }
 
 /// Prompts the user to select a certificate from a numbered list.
-func promptCertificate(client: ASCClient) async throws -> Components.Schemas.Certificate {
-  let certs = try fetchAll(
-    await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.certificatesGetCollection(query: .init(limit: 200)).ok.body.json
-    },
-    data: \.data,
-    emptyMessage: "No certificates found in your account.",
-    sort: { ($0.attributes?.displayName ?? "") < ($1.attributes?.displayName ?? "") }
-  )
-  return try promptSelection(
-    "Certificates", items: certs,
-    display: { "\($0.attributes?.displayName ?? "—") (\($0.attributes?.serialNumber ?? "—")) — \($0.attributes?.certificateType.map { formatState($0) } ?? "—"), expires \($0.attributes?.expirationDate.map { formatDate($0) } ?? "—")" },
-    prompt: "Select certificate"
+func promptCertificate(client: ASCClient) async throws -> Certificates.Certificate {
+  try promptSelection(
+    "Certificates", items: try await allCertificates(client: client),
+    display: certificateChoice, prompt: "Select certificate"
   )
 }
 
-/// Looks up a certificate by serial number first, then falls back to display name.
-func findCertificate(serialOrName: String, client: ASCClient) async throws -> Components.Schemas.Certificate {
-  // ASC filters can partial-match, so require an exact hit
-  let bySerial = try await client.certificatesGetCollection(query: .init(filterSerialNumber: [serialOrName], limit: 200)).ok.body.json.data
-  if let cert = bySerial.first(where: { $0.attributes?.serialNumber == serialOrName }) {
-    return cert
-  }
-  let byName = try await client.certificatesGetCollection(query: .init(filterDisplayName: [serialOrName], limit: 200)).ok.body.json.data
-  if let cert = byName.first(where: { $0.attributes?.displayName == serialOrName }) {
-    return cert
-  }
-  if byName.count == 1 {
-    return byName[0]
-  }
-  throw CertLookupError.notFound(serialOrName)
+/// The account's certificates by display name, for a picker.
+private func allCertificates(client: ASCClient) async throws -> [Certificates.Certificate] {
+  let certs = try await Certificates.list(client: client)
+  guard !certs.isEmpty else { throw ValidationError("No certificates found in your account.") }
+  return certs.sorted { ($0.displayName ?? "") < ($1.displayName ?? "") }
 }
 
-enum CertLookupError: LocalizedError {
-  case notFound(String)
-
-  var errorDescription: String? {
-    switch self {
-    case .notFound(let identifier):
-      return "No certificate found matching '\(identifier)'. Use serial number or exact display name."
-    }
-  }
+/// A certificate in a picker: name, serial number, type and expiry.
+private func certificateChoice(_ cert: Certificates.Certificate) -> String {
+  "\(cert.displayName ?? "—") (\(cert.serialNumber ?? "—")) — \(cert.type.map { formatState($0) } ?? "—"), expires \(cert.expirationDate.map { formatDate($0) } ?? "—")"
 }

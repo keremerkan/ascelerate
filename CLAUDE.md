@@ -155,6 +155,8 @@ Config file at `~/.ascelerate/config.json`:
 
 ```
 ascelerate configure                                              # Interactive setup
+ascelerate configure --stdin                                      # Non-interactive: {"keyId","issuerId","privateKey"} JSON on stdin; keeps vendorNumber + ads
+ascelerate configure --show                                       # Print the key ID and issuer ID in use
 ascelerate apps list [--json]                                     # List all apps
 ascelerate apps info <bundle-id> [--json]                         # App details
 ascelerate apps versions <bundle-id> [--json]                     # List App Store versions
@@ -450,7 +452,8 @@ ascelerate ads ads [--app X] [--campaign X] [--json]              # Ads (product
 ascelerate ads ads create --campaign X [--ad-group Y] --product-page <name|id|default> [--name N] [--enabled] [-y]  # Creative (reused if one exists) + ad
 ascelerate ads ads pause|resume --campaign X <ad> [-y]            # Resume pauses the group's serving ad
 ascelerate ads reports ads [same options as reports]              # Performance per ad / product page
-ascelerate version                                                # Print version number (also: --version, -v)
+ascelerate version [--json]                                       # Print version number (also: --version, -v); --json adds completions/skill status (current|outdated|missing|unsupported)
+ascelerate update [--check] [-y]                                  # Update a GitHub-release install (not Homebrew's): digest + Developer ID (team GH4CGS3B5H) checked before replacing itself; sudo for /usr/local/bin
 ascelerate <any command> --dry-run                                # Global: send reads, print writes instead of sending them (also: ASCELERATE_DRY_RUN=1)
 ```
 

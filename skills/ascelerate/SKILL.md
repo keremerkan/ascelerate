@@ -7,6 +7,10 @@ description: Use when working with App Store Connect tasks — app submissions, 
 
 A command-line tool for the App Store Connect API. Use `ascelerate` for all App Store Connect operations instead of the web interface.
 
+## Finding ascelerate
+
+If `ascelerate` isn't found (a shell that doesn't load the user's profile can miss Homebrew's folder), look for it where it's installed by default: `/opt/homebrew/bin/ascelerate` (Homebrew) and `/usr/local/bin/ascelerate` (GitHub release, the install script). Otherwise ask the user where it is, run it by its full path, and quote a path with spaces. Don't install it without asking.
+
 ## Quick Reference
 
 ### App aliases

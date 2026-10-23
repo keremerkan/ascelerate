@@ -338,7 +338,7 @@ struct BuildsCommand: AsyncParsableCommand {
         "-configuration", configuration ?? "Release",
         "-destination", destination ?? "generic/platform=iOS",
         "-allowProvisioningUpdates",
-      ] + quietFlag
+      ] + quietFlag + (try APICredentials.fromEnvironment()?.xcodebuildArguments ?? [])
 
       var archivePath: String?
       if let output {
@@ -549,7 +549,7 @@ struct BuildsCommand: AsyncParsableCommand {
         }
       }
 
-      let config = try Config.load()
+      let key = try APICredentials.current()
 
       // Export .xcarchive to .ipa/.pkg if needed
       let (uploadPath, tempDir, archivePlatform) = try resolveUploadable(expandedPath)
@@ -580,9 +580,9 @@ struct BuildsCommand: AsyncParsableCommand {
       var altoolArgs = [
         "altool", "--upload-app",
         "-f", uploadPath,
-        "--apiKey", config.keyId,
-        "--apiIssuer", config.issuerId,
-        "--p8-file-path", config.privateKeyPath,
+        "--apiKey", key.keyID,
+        "--apiIssuer", key.issuerID,
+        "--p8-file-path", key.privateKeyPath,
         "--show-progress",
       ]
       if let archivePlatform {
@@ -655,7 +655,7 @@ struct BuildsCommand: AsyncParsableCommand {
         expandedPath = try resolveFilePath(file, prompt: "Path to .ipa, .pkg, or .xcarchive file: ")
       }
 
-      let config = try Config.load()
+      let key = try APICredentials.current()
 
       // Export .xcarchive to .ipa/.pkg if needed
       let (uploadPath, tempDir, archivePlatform) = try resolveUploadable(expandedPath)
@@ -668,9 +668,9 @@ struct BuildsCommand: AsyncParsableCommand {
       var altoolArgs = [
         "altool", "--validate-app",
         "-f", uploadPath,
-        "--apiKey", config.keyId,
-        "--apiIssuer", config.issuerId,
-        "--p8-file-path", config.privateKeyPath,
+        "--apiKey", key.keyID,
+        "--apiIssuer", key.issuerID,
+        "--p8-file-path", key.privateKeyPath,
       ]
       if let archivePlatform {
         altoolArgs += ["--type", archivePlatform.altoolType]
@@ -953,7 +953,7 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
     "-exportPath", exportDir,
     "-exportOptionsPlist", plistPath,
     "-allowProvisioningUpdates",
-  ]
+  ] + ((try? APICredentials.fromEnvironment())??.xcodebuildArguments ?? [])
   // Capture stdout (it carries the *.xcdistributionlogs path) and surface it only on failure.
   let stdoutPipe = Pipe()
   process.standardOutput = stdoutPipe

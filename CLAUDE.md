@@ -158,6 +158,7 @@ Config file at `~/.ascelerate/config.json`:
 
 - `configure` command copies the .p8 file into `~/.ascelerate/` and writes the config
 - `vendorNumber` is **optional** — only the `reports sales`/`reports finance` commands use it (App Store Connect → Payments and Financial Reports). `configure` prompts for it (skippable); `--vendor-number` overrides per-invocation. Resolved by `Reports.resolveVendorNumber()`.
+- **A key for one run:** `ASCELERATE_KEY_ID`, `ASCELERATE_ISSUER_ID` and `ASCELERATE_PRIVATE_KEY_PATH` (all three, or the run fails naming the missing ones) take precedence over `config.json` without changing it (`APICredentials` in Config.swift; the API client, `altool` and `configure --show` use it). With them, `builds archive` and the export also pass `-authenticationKeyPath`/`-authenticationKeyID`/`-authenticationKeyIssuerID` to `xcodebuild`, which provisions with the key instead of Xcode's Apple ID accounts; the configured key isn't passed, so provisioning without the variables is as before. Verified 2026-10-23: archive and export of a manually signed app with a key from the environment.
 - File permissions set to 700 (dir) and 600 (files) — owner-only access
 - JWT tokens use ES256 (P256, CryptoKit) signing with a 20-minute expiry; ASCKit's `TokenStore` reuses a token until its last minute
 - The private key is read as PEM text from `privateKeyPath`
@@ -167,7 +168,7 @@ Config file at `~/.ascelerate/config.json`:
 ```
 ascelerate configure                                              # Interactive setup
 ascelerate configure --stdin                                      # Non-interactive: {"keyId","issuerId","privateKey"} JSON on stdin; keeps vendorNumber + ads
-ascelerate configure --show                                       # Print the key ID and issuer ID in use
+ascelerate configure --show                                       # Print the key ID and issuer ID in use (and whether they come from the environment)
 ascelerate apps list [--json]                                     # List all apps
 ascelerate apps info <bundle-id> [--json]                         # App details
 ascelerate apps versions <bundle-id> [--json]                     # List App Store versions

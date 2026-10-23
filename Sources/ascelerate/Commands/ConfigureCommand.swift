@@ -24,9 +24,12 @@ struct ConfigureCommand: ParsableCommand {
 
   func run() throws {
     if show {
-      let config = try Config.load()
-      print("Key ID:    \(config.keyId)")
-      print("Issuer ID: \(config.issuerId)")
+      let key = try APICredentials.current()
+      print("Key ID:    \(key.keyID)")
+      print("Issuer ID: \(key.issuerID)")
+      if key.isFromEnvironment {
+        print("Source:    environment (ASCELERATE_KEY_ID, ASCELERATE_ISSUER_ID, ASCELERATE_PRIVATE_KEY_PATH)")
+      }
       return
     }
     if stdin {

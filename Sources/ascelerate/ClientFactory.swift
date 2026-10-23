@@ -11,19 +11,9 @@ enum ClientFactory {
     if !autoConfirm {
       checkForUpdates()
     }
-    let config = try Config.load()
-    let keyPath = expandPath(config.privateKeyPath)
-
-    guard FileManager.default.fileExists(atPath: keyPath) else {
-      throw ConfigError.missingPrivateKey(keyPath)
-    }
-
+    let key = try APICredentials.current()
     return try .appStoreConnect(
-      credentials: ASCCredentials(
-        keyID: config.keyId,
-        issuerID: config.issuerId,
-        privateKeyPEM: String(contentsOfFile: keyPath, encoding: .utf8)
-      ),
+      credentials: ASCCredentials(keyID: key.keyID, issuerID: key.issuerID, privateKeyPEM: try key.privateKey()),
       dryRun: isDryRun,
       rateLimitWait: waitsForRateLimit ? rateLimitWait : nil
     )

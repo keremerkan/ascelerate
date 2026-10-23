@@ -31,6 +31,19 @@ The configuration is stored at `~/.ascelerate/config.json`:
 
 For [Apple Ads](../commands/ads.md), ascelerate needs separate credentials, which `ascelerate ads configure` sets up and stores in an `ads` section of the same file. Running `configure` again keeps them.
 
+### A key for one run
+
+To run a command with another key, for another team or in CI, set all three environment variables. They take precedence over `config.json` for that run, and the file stays as it is:
+
+```bash
+export ASCELERATE_KEY_ID=KEY_ID
+export ASCELERATE_ISSUER_ID=ISSUER_ID
+export ASCELERATE_PRIVATE_KEY_PATH=~/keys/AuthKey_KEY_ID.p8
+ascelerate apps list
+```
+
+`builds archive` and `builds upload` also hand this key to `xcodebuild` (`-authenticationKeyPath`, `-authenticationKeyID`, `-authenticationKeyIssuerID`), so profiles are fetched with the key instead of the Apple ID signed in to Xcode. That needs a key allowed to manage certificates, identifiers and profiles. `ascelerate configure --show` says which key a run uses.
+
 ## 3. Verify
 
 Run a quick command to verify everything is working:

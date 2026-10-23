@@ -524,7 +524,8 @@ public enum Subscriptions {
     return InAppPurchases.Image(
       id: screenshot.id, fileName: attributes?.fileName ?? "", fileSize: attributes?.fileSize ?? 0,
       templateURL: attributes?.imageAsset?.templateUrl.flatMap { $0.isEmpty ? nil : $0 }, width: attributes?.imageAsset?.width,
-      height: attributes?.imageAsset?.height, state: attributes?.assetDeliveryState?.state)
+      height: attributes?.imageAsset?.height, state: attributes?.assetDeliveryState?.state,
+      errors: mediaStateMessages(attributes?.assetDeliveryState?.errors))
   }
 
   @discardableResult

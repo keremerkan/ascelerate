@@ -120,7 +120,7 @@ func runProductImageDelete(
 /// prints the screenshot details returned by `fetch` (nil: none uploaded).
 func runReviewScreenshotView(
   productID: String,
-  fetch: () async throws -> (id: String, fileName: String?, fileSizeText: String?, stateText: String?)?
+  fetch: () async throws -> (id: String, fileName: String?, fileSizeText: String?, stateText: String?, errors: [String])?
 ) async throws {
   guard let shot = try await fetch() else {
     print("No review screenshot uploaded for \(productID).")
@@ -131,6 +131,9 @@ func runReviewScreenshotView(
   print("  File:  \(shot.fileName ?? "—")")
   print("  Size:  \(shot.fileSizeText ?? "—")")
   print("  State: \(shot.stateText ?? "—")")
+  for error in shot.errors {
+    print("         \(error)")
+  }
 }
 
 /// Shared driver for `iap review-screenshot delete` / `sub review-screenshot delete`:

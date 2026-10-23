@@ -275,3 +275,8 @@ public func mediaMimeType(for fileName: String) -> String {
   default: return "application/octet-stream"
   }
 }
+
+/// Apple's reasons for a media file it refused (an asset delivery state's errors), in its words.
+func mediaStateMessages(_ errors: [Components.Schemas.AppMediaStateError]?) -> [String] {
+  (errors ?? []).compactMap { $0.description ?? $0.code }
+}

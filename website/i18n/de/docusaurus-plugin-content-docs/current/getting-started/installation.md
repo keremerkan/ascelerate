@@ -27,10 +27,10 @@ Seit Homebrew 6.0 müssen Taps von Drittanbietern ausdrücklich als vertrauensw�
 ## Installationsskript
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
-Lädt die neueste Version herunter, installiert sie nach `/usr/local/bin` und entfernt automatisch das Quarantäne-Attribut. Nur für Apple Silicon.
+Lädt die neueste Version herunter, prüft, dass sie mit der Developer ID von ascelerate signiert ist, und installiert sie nach `/usr/local/bin` (legt den Ordner bei Bedarf an); dafür wird Ihr Passwort abgefragt. Nur für Apple Silicon. Später aktualisieren Sie mit `sudo ascelerate update`.
 
 ## Manueller Download
 
@@ -39,14 +39,11 @@ Laden Sie die neueste Version von [GitHub Releases](https://github.com/keremerka
 ```bash
 curl -L https://github.com/keremerkan/ascelerate/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
 tar xzf ascelerate.tar.gz
-mv ascelerate /usr/local/bin/
+sudo mkdir -p /usr/local/bin
+sudo mv ascelerate /usr/local/bin/
 ```
 
-Da die Binärdatei nicht signiert oder notarisiert ist, wird sie von macOS beim ersten Download unter Quarantäne gestellt. Entfernen Sie das Quarantäne-Attribut:
-
-```bash
-xattr -d com.apple.quarantine /usr/local/bin/ascelerate
-```
+Die Binärdatei ist mit der Developer ID von ascelerate (AKE Software GmbH) signiert und von Apple notarisiert, daher führt macOS sie ohne Warnung aus. `codesign -dv /usr/local/bin/ascelerate` zeigt die Signatur; `sudo ascelerate update` installiert spätere Versionen.
 
 :::note
 Vorgefertigte Binärdateien werden nur für Apple Silicon (arm64) bereitgestellt. Intel-Mac-Benutzer sollten aus dem Quellcode kompilieren.

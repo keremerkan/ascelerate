@@ -27,10 +27,10 @@ Since Homebrew 6.0, third-party taps must be explicitly trusted before their cod
 ## Install script
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
-Downloads the latest release, installs to `/usr/local/bin`, and removes the quarantine attribute automatically. Apple Silicon only.
+Downloads the latest release, checks that it's signed with ascelerate's Developer ID, and installs it to `/usr/local/bin` (creating the folder if needed), which asks for your password. Apple Silicon only. Update it later with `sudo ascelerate update`.
 
 ## Download manually
 
@@ -39,14 +39,11 @@ Download the latest release from [GitHub Releases](https://github.com/keremerkan
 ```bash
 curl -L https://github.com/keremerkan/ascelerate/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
 tar xzf ascelerate.tar.gz
-mv ascelerate /usr/local/bin/
+sudo mkdir -p /usr/local/bin
+sudo mv ascelerate /usr/local/bin/
 ```
 
-Since the binary is not signed or notarized, macOS will quarantine it on first download. Remove the quarantine attribute:
-
-```bash
-xattr -d com.apple.quarantine /usr/local/bin/ascelerate
-```
+The binary is signed with ascelerate's Developer ID (AKE Software GmbH) and notarized by Apple, so macOS runs it without a warning. `codesign -dv /usr/local/bin/ascelerate` shows the signature; `sudo ascelerate update` installs later releases.
 
 :::note
 Pre-built binaries are provided for Apple Silicon (arm64) only. Intel Mac users should build from source.

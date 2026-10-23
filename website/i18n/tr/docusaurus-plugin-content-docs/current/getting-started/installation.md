@@ -27,10 +27,10 @@ Homebrew 6.0'dan itibaren, üçüncü taraf tap'lerin kodu çalıştırılmadan 
 ## Kurulum betiği
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
-En son sürümü indirir, `/usr/local/bin` dizinine kurar ve karantina özniteliğini otomatik olarak kaldırır. Yalnızca Apple Silicon.
+En son sürümü indirir, ascelerate'in Developer ID'siyle imzalandığını doğrular ve `/usr/local/bin` dizinine kurar (gerekirse dizini oluşturur); bunun için parolanız sorulur. Yalnızca Apple Silicon. Daha sonra `sudo ascelerate update` ile güncelleyebilirsiniz.
 
 ## Manuel indirme
 
@@ -39,14 +39,11 @@ En son sürümü [GitHub Releases](https://github.com/keremerkan/ascelerate/rele
 ```bash
 curl -L https://github.com/keremerkan/ascelerate/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
 tar xzf ascelerate.tar.gz
-mv ascelerate /usr/local/bin/
+sudo mkdir -p /usr/local/bin
+sudo mv ascelerate /usr/local/bin/
 ```
 
-Binary imzalı veya notarize edilmiş olmadığından, macOS ilk indirmede karantinaya alır. Karantina özniteliğini kaldırın:
-
-```bash
-xattr -d com.apple.quarantine /usr/local/bin/ascelerate
-```
+Binary, ascelerate'in Developer ID'siyle (AKE Software GmbH) imzalanmış ve Apple tarafından notarize edilmiştir; bu nedenle macOS onu uyarı göstermeden çalıştırır. İmzayı `codesign -dv /usr/local/bin/ascelerate` gösterir; sonraki sürümleri `sudo ascelerate update` kurar.
 
 :::note
 Önceden derlenmiş binary'ler yalnızca Apple Silicon (arm64) için sağlanır. Intel Mac kullanıcıları kaynaktan derlemelidir.

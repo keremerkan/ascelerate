@@ -63,6 +63,8 @@ public enum InAppPurchases {
     /// Delivery state: AWAITING_UPLOAD, UPLOAD_COMPLETE, COMPLETE or FAILED; or, for a promotional
     /// image, its review state.
     public let state: String?
+    /// Why Apple refused an App Review screenshot (state FAILED), in Apple's words.
+    public var errors: [String]? = nil
   }
 
   /// Where the purchase is sold; nil when it follows the app's territories.
@@ -428,7 +430,8 @@ public enum InAppPurchases {
     return Image(
       id: screenshot.id, fileName: attributes?.fileName ?? "", fileSize: attributes?.fileSize ?? 0,
       templateURL: attributes?.imageAsset?.templateUrl.flatMap { $0.isEmpty ? nil : $0 }, width: attributes?.imageAsset?.width,
-      height: attributes?.imageAsset?.height, state: attributes?.assetDeliveryState?.state)
+      height: attributes?.imageAsset?.height, state: attributes?.assetDeliveryState?.state,
+      errors: mediaStateMessages(attributes?.assetDeliveryState?.errors))
   }
 
   /// Uploads the App Review screenshot (a purchase has one; delete the old one first).

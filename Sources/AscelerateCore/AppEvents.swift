@@ -227,7 +227,7 @@ public enum AppEvents {
       return Media(
         id: shot.id, isVideo: false, assetType: a?.appEventAssetType, state: a?.assetDeliveryState?.state, videoState: nil,
         fileName: a?.fileName, imageTemplate: a?.imageAsset?.templateUrl, width: a?.imageAsset?.width,
-        height: a?.imageAsset?.height, videoURL: nil, errors: messages(a?.assetDeliveryState?.errors))
+        height: a?.imageAsset?.height, videoURL: nil, errors: mediaStateMessages(a?.assetDeliveryState?.errors))
     }
     let videos = try await clips.map { clip in
       let a = clip.attributes
@@ -238,7 +238,7 @@ public enum AppEvents {
         imageTemplate: a?.previewImage?.templateUrl.flatMap { $0.isEmpty ? nil : $0 },
         width: a?.previewImage?.width, height: a?.previewImage?.height,
         videoURL: a?.videoUrl.flatMap { $0.isEmpty ? nil : $0 },
-        errors: messages(a?.videoDeliveryState?.errors) + messages(a?.assetDeliveryState?.errors))
+        errors: mediaStateMessages(a?.videoDeliveryState?.errors) + mediaStateMessages(a?.assetDeliveryState?.errors))
     }
     return images + videos
   }
@@ -319,9 +319,5 @@ public enum AppEvents {
     return Localization(
       id: localization.id, locale: locale, name: a.name, shortDescription: a.shortDescription,
       longDescription: a.longDescription)
-  }
-
-  private static func messages(_ errors: [Components.Schemas.AppMediaStateError]?) -> [String] {
-    (errors ?? []).compactMap { $0.description ?? $0.code }
   }
 }

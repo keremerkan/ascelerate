@@ -2214,7 +2214,7 @@ struct IAPCommand: AsyncParsableCommand {
 
         try await runReviewScreenshotView(productID: productID) {
           try await InAppPurchases.reviewScreenshot(purchaseID: iap.id, client: client).map {
-            ($0.id, $0.fileName, formatBytes($0.fileSize), $0.state.map { formatState($0) })
+            ($0.id, $0.fileName, formatBytes($0.fileSize), $0.state.map { formatState($0) }, $0.errors ?? [])
           }
         }
       }

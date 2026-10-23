@@ -120,7 +120,8 @@ public struct ReviewInformation: Codable, Hashable, Sendable {
 
   /// Saves a version's App Review information: the fields given that differ from `old` on the
   /// version's record (`detailID`), or every field given on a new one when the version has none.
-  /// Returns the record's ID.
+  /// A new record takes the sign-in setting given even when it's off: Apple creates one with it on
+  /// (seen 2026-10-23), so an off left out would turn on. Returns the record's ID.
   @discardableResult
   public static func saveAppStore(
     _ information: ReviewInformation, from old: ReviewInformation = .init(), detailID: String?, versionID: String,
@@ -132,7 +133,7 @@ public struct ReviewInformation: Codable, Hashable, Sendable {
         attributes: .init(
           contactEmail: v.contactEmail, contactFirstName: v.contactFirstName, contactLastName: v.contactLastName,
           contactPhone: v.contactPhone, demoAccountName: v.demoAccountName,
-          demoAccountPassword: v.demoAccountPassword, demoAccountRequired: v.demoAccountRequired, notes: v.notes),
+          demoAccountPassword: v.demoAccountPassword, demoAccountRequired: information.demoAccountRequired, notes: v.notes),
         relationships: .init(appStoreVersion: .init(data: .init(id: versionID, _type: "appStoreVersions"))),
         _type: "appStoreReviewDetails"
       )))).created.body.json.data.id

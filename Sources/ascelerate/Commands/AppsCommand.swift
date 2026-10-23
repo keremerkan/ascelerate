@@ -2244,8 +2244,7 @@ struct AppsCommand: AsyncParsableCommand {
         let appVersion = try await findVersion(
           appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
-        // The endpoint returns {"data": null} when no review detail exists yet.
-        let existing = try await Attachment.reviewDetail(versionID: appVersion.id, client: client)
+        let existing = try await ReviewInformation.appStore(versionID: appVersion.id, client: client)
 
         let hasUpdates =
           contactFirstName != nil || contactLastName != nil || contactPhone != nil
@@ -2255,7 +2254,7 @@ struct AppsCommand: AsyncParsableCommand {
         let versionString = appVersion.attributes?.versionString ?? "unknown"
 
         if !hasUpdates {
-          guard let detail = existing, let a = detail.attributes else {
+          guard let a = existing?.information else {
             print("No App Review Information set for version \(versionString).")
             return
           }
@@ -2276,32 +2275,12 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
 
-        if let detail = existing {
-          _ = try await client.appStoreReviewDetailsUpdateInstance(
-            path: .init(id: detail.id),
-            body: .json(.init(data: .init(
-              attributes: .init(
-                contactEmail: contactEmail, contactFirstName: contactFirstName,
-                contactLastName: contactLastName, contactPhone: contactPhone,
-                demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
-                demoAccountRequired: demoAccountRequired, notes: notes
-              ),
-              id: detail.id,
-              _type: "appStoreReviewDetails"
-            )))
-          ).ok
-        } else {
-          _ = try await client.appStoreReviewDetailsCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(
-              contactEmail: contactEmail, contactFirstName: contactFirstName,
-              contactLastName: contactLastName, contactPhone: contactPhone,
-              demoAccountName: demoAccountName, demoAccountPassword: demoAccountPassword,
-              demoAccountRequired: demoAccountRequired, notes: notes
-            ),
-            relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
-            _type: "appStoreReviewDetails"
-          )))).created
-        }
+        try await ReviewInformation.saveAppStore(
+          ReviewInformation(
+            contactFirstName: contactFirstName, contactLastName: contactLastName, contactPhone: contactPhone,
+            contactEmail: contactEmail, demoAccountRequired: demoAccountRequired, demoAccountName: demoAccountName,
+            demoAccountPassword: demoAccountPassword, notes: notes),
+          from: existing?.information ?? .init(), detailID: existing?.id, versionID: appVersion.id, client: client)
 
         print()
         success("Updated", "App Review Information for version \(versionString).")

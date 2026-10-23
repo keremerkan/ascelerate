@@ -30,6 +30,8 @@ public enum Builds {
     public let autoNotify: Bool?
     /// The beta groups that have it, when they were read with it (`list` and `page` read them).
     public let groupIDs: [String]
+    /// Its app, when that was read with it (`attention` reads it).
+    public let appID: String?
 
     public init(
       _ build: Components.Schemas.Build, train: Components.Schemas.PrereleaseVersion? = nil,
@@ -52,6 +54,7 @@ public enum Builds {
       externalState = detail?.attributes?.externalBuildState
       autoNotify = detail?.attributes?.autoNotifyEnabled
       groupIDs = build.relationships?.betaGroups?.data?.map(\.id) ?? []
+      appID = build.relationships?.app?.data?.id
     }
   }
 
@@ -150,6 +153,41 @@ public enum Builds {
         build, train: build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] },
         detail: build.relationships?.buildBetaDetail?.data.flatMap { details[$0.id] })
     }
+  }
+
+  /// Builds across the team that need attention or are with Apple, each with its app.
+  public struct Attention: Sendable {
+    /// Still processing after upload.
+    public let processing: [Build]
+    /// Processed, but testers can't install them until export compliance is answered (among the
+    /// team's 50 latest builds).
+    public let missingCompliance: [Build]
+    /// Waiting for or in beta review, or rejected there.
+    public let betaReview: [Build]
+  }
+
+  /// What the Overview shows of TestFlight, in three requests for every app at once.
+  public static func attention(client: ASCClient) async throws -> Attention {
+    func builds(
+      processing: Operations.BuildsGetCollection.Input.Query.filterProcessingStatePayload? = nil,
+      review: Operations.BuildsGetCollection.Input.Query.filterBetaAppReviewSubmissionBetaReviewStatePayload? = nil
+    ) async throws -> [Build] {
+      resolve(try await client.buildsGetCollection(query: .init(
+        filterExpired: ["false"],
+        filterProcessingState: processing,
+        filterBetaAppReviewSubmissionBetaReviewState: review,
+        sort: [.minusUploadedDate],
+        limit: 50,
+        include: [.preReleaseVersion, .buildBetaDetail, .app]
+      )).ok.body.json)
+    }
+    async let processing = builds(processing: [.processing])
+    async let review = builds(review: [.waitingForReview, .inReview, .rejected])
+    async let recent = builds(processing: [.valid])
+    return try await Attention(
+      processing: processing,
+      missingCompliance: recent.filter { $0.internalState == "MISSING_EXPORT_COMPLIANCE" },
+      betaReview: review)
   }
 
   /// A build by number, or the latest one that hasn't expired when `number` is nil (an explicit

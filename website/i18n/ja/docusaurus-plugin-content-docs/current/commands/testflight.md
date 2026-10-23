@@ -16,10 +16,11 @@ ascelerate testflight groups list <bundle-id>
 ascelerate testflight groups info <bundle-id> "External Testers"
 ascelerate testflight groups create <bundle-id> --name "Friends" --public-link --public-link-limit 100
 ascelerate testflight groups update <bundle-id> "Friends" --public-link false
+ascelerate testflight groups update <bundle-id> "Friends" --mac false --vision-pro true
 ascelerate testflight groups delete <bundle-id> "Friends"
 ```
 
-`groups list` は、各グループの種類、公開リンク、テスター数の上限、フィードバック設定を表示します。`groups info` は、さらにグループのテスターと割り当てられたビルドを表示します。`create` では、チームメンバー向けの内部グループを作成する `--internal` と、すべてのビルドへの自動アクセスを付与する `--all-builds` を指定できます。外部グループでは、テスター数の上限（任意）付きの公開招待リンクを有効にできます。
+`groups list` は、各グループの種類、公開リンク、テスター数の上限、フィードバック設定を表示します。`groups info` は、さらにグループのテスターと割り当てられたビルドを表示します。`create` では、チームメンバー向けの内部グループを作成する `--internal` と、すべてのビルドへの自動アクセスを付与する `--all-builds` を指定できます。外部グループでは、テスター数の上限（任意）付きの公開招待リンクを有効にできます。 `update` では `--mac` と `--vision-pro` も指定できます。グループの iPhone/iPad ビルドを Apple シリコン搭載 Mac や Apple Vision Pro でテスターが実行できるかどうかを設定します。
 
 グループ名は大文字・小文字を区別せずに照合されます。名前を省略すると、対話形式のリストから選択できます。
 
@@ -34,7 +35,7 @@ ascelerate testflight groups remove-build <bundle-id> "Friends" --build 123
 
 ### 募集条件
 
-公開リンクを使用するグループでは、デバイスファミリーと OS バージョンで参加を制限できます。
+募集条件が設定されている公開リンクのグループでは、その条件を変更または削除できます。Apple は新しい条件を追加できないようにしたため（App Store Connect にも表示されなくなりました）、`set` は既存の条件を置き換える場合にのみ使えます。
 
 ```bash
 # 現在の条件と、Apple が受け付けるデバイス/OS の選択肢を表示

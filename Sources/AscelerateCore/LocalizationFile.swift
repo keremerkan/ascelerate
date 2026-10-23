@@ -75,3 +75,24 @@ public struct WhatsNewFields: Codable, Equatable, Sendable {
     self.whatsNew = whatsNew
   }
 }
+
+/// An app's Test Information in one locale, as `testflight app-info export`/`import` write and
+/// read it. A nil field is left as it is.
+public struct BetaAppLocaleFields: Codable, Equatable, Sendable {
+  public var description: String?
+  public var feedbackEmail: String?
+  public var marketingURL: String?
+  public var privacyPolicyURL: String?
+  public var tvOsPrivacyPolicy: String?
+
+  public init(
+    description: String? = nil, feedbackEmail: String? = nil, marketingURL: String? = nil,
+    privacyPolicyURL: String? = nil, tvOsPrivacyPolicy: String? = nil
+  ) {
+    self.description = description
+    self.feedbackEmail = feedbackEmail
+    self.marketingURL = marketingURL
+    self.privacyPolicyURL = privacyPolicyURL
+    self.tvOsPrivacyPolicy = tvOsPrivacyPolicy
+  }
+}

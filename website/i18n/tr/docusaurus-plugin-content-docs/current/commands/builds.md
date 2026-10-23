@@ -25,6 +25,17 @@ ascelerate builds archive --scheme MyApp --output ./archives
 
 `archive` komutu geçerli dizindeki `.xcworkspace` veya `.xcodeproj` dosyasını otomatik olarak algılar ve yalnızca bir tane varsa scheme'i çözer.
 
+`--destination` verilmezse scheme'in platformu için arşivler (Mac uygulaması için `generic/platform=macOS`). Birden çok platform için derlenen bir uygulama, `--destination` verilmedikçe iOS için arşivlenir.
+
+## Arşivleri listeleme
+
+```bash
+ascelerate builds archives
+ascelerate builds archives --bundle-id com.example.MyApp --platform macos --limit 1 --json
+```
+
+Xcode'un arşiv konumundaki (`~/Library/Developer/Xcode/Archives`) arşivleri en yeniden başlayarak bundle ID, sürüm, build numarası, platform ve tarihleriyle listeler. `--bundle-id` ve `--platform` listeyi daraltır; `--json` her arşivin yolunu da verir.
+
 ## Doğrulama
 
 ```bash
@@ -38,6 +49,12 @@ ascelerate builds upload MyApp.ipa
 ```
 
 `.ipa`, `.pkg` veya `.xcarchive` dosyalarını kabul eder. `.xcarchive` verildiğinde arşivin platformunu algılar ve yüklemeden önce otomatik olarak `.ipa` (iOS ailesi) veya `.pkg` (macOS) biçimine dışa aktarır; eşleşen platform altool'a iletilir.
+
+```bash
+ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos
+```
+
+`--latest` ile Xcode'un arşiv konumundaki en yeni arşivi yükler: `--bundle-id` ile bir uygulamanın, `--platform` ile bir platformun en yenisini (iOS ve macOS'ta aynı bundle ID ile satılan bir uygulamanın her ikisi için de arşivleri olur).
 
 App Store dağıtım profilleriyle imzalanmış bir `.xcarchive` (elle imzalanan bir proje), uygulamanın ve uzantılarının yüklü App Store profilleriyle dışa aktarılır; böylece Xcode yeni profil oluşturmaz. Diğer arşivler otomatik imzalamayla dışa aktarılır. Bir dosya verildiğinde `--bundle-id`, başka bir uygulama içeren dosyayı hiçbir şey dışa aktarılmadan veya gönderilmeden önce reddeder.
 

@@ -916,12 +916,14 @@ ascelerate builds list --bundle-id <bundle-id> --platform macos
 ascelerate builds archive
 ascelerate builds archive --scheme MyApp --output ./archives
 ascelerate builds archive --scheme MyApp --json-events   # progress as JSON Lines on stdout for other tools
+ascelerate builds archives                    # Xcode's archives, newest first (--bundle-id, --platform, --json)
 
 # Validate a build before uploading
 ascelerate builds validate MyApp.ipa
 
 # Upload a build to App Store Connect
 ascelerate builds upload MyApp.ipa
+ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos   # the newest archive of an app for one platform
 ascelerate builds upload MyApp.ipa --api      # upload through the App Store Connect API instead of altool (.ipa or Mac .pkg)
 ascelerate builds upload MyApp.xcarchive --api --bundle-id com.example.MyApp   # refuse a file holding another app
 ascelerate builds upload MyApp.ipa --api --json-events   # progress as JSON Lines on stdout for other tools

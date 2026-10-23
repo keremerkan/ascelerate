@@ -225,7 +225,9 @@ ascelerate apps subscription-grace-period <bundle-id> [--opt-in true|false] [--s
 ascelerate apps streamlined-purchasing <bundle-id> [--enabled true|false] [-y]  # View/turn on or off buying subscriptions outside the app
 ascelerate builds list [--bundle-id <id>] [--version X] [--platform X] [--json]  # List builds
 ascelerate builds archive [--workspace X] [--scheme X] [--output X]  # Archive Xcode project
+ascelerate builds archives [--bundle-id X] [--platform X] [--limit N] [--json]  # Xcode's archives, newest first (bundle ID, version, build, platform, date, path)
 ascelerate builds upload [file] [--api]                           # Upload build via altool, or the App Store Connect API (--api, .ipa or Mac .pkg)
+ascelerate builds upload --latest [--bundle-id X] [--platform X]  # Upload the newest archive in Xcode's archive location (of an app, of a platform)
 ascelerate builds uploads <bundle-id> [--platform X] [--limit N] [--json]  # Recent uploads (API and altool) with state + Apple's errors/warnings
 ascelerate builds uploads <bundle-id> --delete-stale [-y]          # Delete upload records that will never complete
 ascelerate builds validate [file]                                 # Validate build via altool

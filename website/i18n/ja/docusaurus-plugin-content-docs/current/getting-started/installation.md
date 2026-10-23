@@ -27,10 +27,10 @@ Homebrew 6.0以降、サードパーティのtapはコードが実行される�
 ## インストールスクリプト
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
-最新リリースをダウンロードし、`/usr/local/bin` にインストールして、quarantine属性を自動的に削除します。Apple Siliconのみ対応です。
+最新リリースをダウンロードし、ascelerate の Developer ID で署名されていることを確認してから `/usr/local/bin` にインストールします（必要ならフォルダも作成します）。その際パスワードを求められます。Apple Siliconのみ対応です。以降の更新は `sudo ascelerate update` で行えます。
 
 ## 手動ダウンロード
 
@@ -39,14 +39,11 @@ curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.s
 ```bash
 curl -L https://github.com/keremerkan/ascelerate/releases/latest/download/ascelerate-macos-arm64.tar.gz -o ascelerate.tar.gz
 tar xzf ascelerate.tar.gz
-mv ascelerate /usr/local/bin/
+sudo mkdir -p /usr/local/bin
+sudo mv ascelerate /usr/local/bin/
 ```
 
-バイナリは署名・公証されていないため、macOSは初回ダウンロード時にquarantine属性を付与します。以下のコマンドで削除してください：
-
-```bash
-xattr -d com.apple.quarantine /usr/local/bin/ascelerate
-```
+バイナリは ascelerate の Developer ID（AKE Software GmbH）で署名され、Apple の公証を受けているため、macOS は警告なしで実行します。署名は `codesign -dv /usr/local/bin/ascelerate` で確認できます。以降のリリースは `sudo ascelerate update` でインストールできます。
 
 :::note
 ビルド済みバイナリはApple Silicon（arm64）のみ提供しています。Intel Macをお使いの方はソースからビルドしてください。

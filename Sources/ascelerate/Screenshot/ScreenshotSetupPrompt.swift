@@ -289,7 +289,7 @@ enum ScreenshotSetupPrompt {
 
       ## Afterwards
 
-      Tell the user what you set up, which screens the tests capture, how to capture again (`ascelerate screenshot`, or the Screenshots page of the ascelerate app), and anything left for them.
+      Tell the user what you set up, which screens the tests capture, how to capture again (`ascelerate screenshot`), and anything left for them.
 
       \(survey.hasDesignGenerator
         ? "The project has a design generator in `\(ScreenshotProjectSurvey.designFolder)/`: remind the user to frame (`ascelerate screenshot frame`), refresh its copies of the framed screenshots and export again after each capture."
@@ -331,7 +331,7 @@ enum ScreenshotSetupPrompt {
 
       ## Ground rules
 
-      - Put the web app in its own folder in the project, `\(ScreenshotProjectSurvey.designFolder)/` (that name lets ascelerate and the ascelerate app find it), apart from the app's code.
+      - Put the web app in its own folder in the project, `\(ScreenshotProjectSurvey.designFolder)/` (that name lets ascelerate find it), apart from the app's code.
       - Screenshots are advertisements, not documentation. Each slide sells one idea: a feeling, an outcome, or a problem gone. Showing the interface for its own sake is the most common mistake.
       - Get the copy approved before building the layouts, and show the user the first finished slide before doing the rest.
       - Commit nothing unless the user asks.
@@ -406,7 +406,7 @@ enum ScreenshotSetupPrompt {
 
       ## Afterwards
 
-      Tell the user how to change the copy and the design, how to export again, and how to upload: `ascelerate apps media upload <bundle ID> export --platform ios --replace`, or the ascelerate app.
+      Tell the user how to change the copy and the design, how to export again, and how to upload: `ascelerate apps media upload <bundle ID> export --platform ios --replace`.
 
       """
   }

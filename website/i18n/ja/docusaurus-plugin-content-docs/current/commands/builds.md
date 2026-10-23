@@ -25,6 +25,17 @@ ascelerate builds archive --scheme MyApp --output ./archives
 
 `archive` コマンドは、カレントディレクトリの `.xcworkspace` または `.xcodeproj` を自動検出し、スキームが1つしかない場合は自動的に解決します。
 
+`--destination` を指定しない場合は、スキームのプラットフォーム向けにアーカイブします（Mac アプリなら `generic/platform=macOS`）。複数のプラットフォーム向けにビルドされるアプリは、`--destination` を指定しない限り iOS 向けにアーカイブされます。
+
+## アーカイブ一覧
+
+```bash
+ascelerate builds archives
+ascelerate builds archives --bundle-id com.example.MyApp --platform macos --limit 1 --json
+```
+
+Xcode のアーカイブ保存場所（`~/Library/Developer/Xcode/Archives`）にあるアーカイブを、新しい順に Bundle ID、バージョン、ビルド番号、プラットフォーム、日付とともに一覧表示します。`--bundle-id` と `--platform` で絞り込めます。`--json` では各アーカイブのパスも出力されます。
+
 ## バリデーション
 
 ```bash
@@ -38,6 +49,12 @@ ascelerate builds upload MyApp.ipa
 ```
 
 `.ipa`、`.pkg`、`.xcarchive` ファイルを受け付けます。`.xcarchive` が指定された場合、アーカイブのプラットフォームを検出し、アップロード前に自動的に `.ipa`（iOS ファミリー）または `.pkg`（macOS）にエクスポートします。該当するプラットフォームは altool に渡されます。
+
+```bash
+ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos
+```
+
+`--latest` を指定すると、Xcode のアーカイブ保存場所にある最新のアーカイブをアップロードします。`--bundle-id` でアプリを、`--platform` でプラットフォームを絞り込めます（同じ Bundle ID で iOS と macOS に配信されるアプリには、両方のアーカイブがあります）。
 
 App Store 配布用プロファイルで署名された `.xcarchive`（手動署名のプロジェクト）は、アプリと拡張機能それぞれのインストール済み App Store プロファイルでエクスポートされるため、Xcode がプロファイルを新たに作成することはありません。それ以外のアーカイブは自動署名でエクスポートされます。ファイルを指定した場合、`--bundle-id` は別のアプリを含むファイルを、エクスポートや送信の前に拒否します。
 

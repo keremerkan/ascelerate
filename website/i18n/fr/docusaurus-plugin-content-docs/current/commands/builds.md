@@ -25,6 +25,17 @@ ascelerate builds archive --scheme MyApp --output ./archives
 
 La commande `archive` détecte automatiquement le `.xcworkspace` ou `.xcodeproj` dans le répertoire courant et résout le scheme s'il n'en existe qu'un seul.
 
+Sans `--destination`, l'archive est faite pour la plateforme du scheme (`generic/platform=macOS` pour une application Mac). Une application compilée pour plusieurs plateformes est archivée pour iOS, sauf si vous indiquez `--destination`.
+
+## Lister les archives
+
+```bash
+ascelerate builds archives
+ascelerate builds archives --bundle-id com.example.MyApp --platform macos --limit 1 --json
+```
+
+Liste les archives de l'emplacement d'archives d'Xcode (`~/Library/Developer/Xcode/Archives`), des plus récentes aux plus anciennes, avec leur bundle ID, leur version, leur numéro de build, leur plateforme et leur date. `--bundle-id` et `--platform` restreignent la liste ; `--json` donne aussi le chemin de chaque archive.
+
 ## Valider
 
 ```bash
@@ -38,6 +49,12 @@ ascelerate builds upload MyApp.ipa
 ```
 
 Accepte les fichiers `.ipa`, `.pkg` ou `.xcarchive`. Lorsqu'un `.xcarchive` est fourni, la plateforme de l'archive est détectée et l'export se fait automatiquement en `.ipa` (famille iOS) ou en `.pkg` (macOS) avant le téléversement, avec la plateforme correspondante transmise à altool.
+
+```bash
+ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos
+```
+
+Avec `--latest`, la commande téléverse l'archive la plus récente de l'emplacement d'archives d'Xcode : la plus récente d'une application avec `--bundle-id`, et d'une plateforme avec `--platform` (une application vendue sur iOS et macOS sous un même bundle ID a des archives pour les deux).
 
 Un `.xcarchive` signé avec des profils de distribution App Store (un projet à signature manuelle) est exporté avec les profils App Store installés de son application et de ses extensions, si bien qu'Xcode n'en crée aucun ; les autres archives sont exportées avec la signature automatique. Avec un fichier, `--bundle-id` refuse un fichier qui contient une autre application, avant tout export ou envoi.
 

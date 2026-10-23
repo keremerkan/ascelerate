@@ -7,7 +7,7 @@ struct BuildsCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "builds",
     abstract: "Manage builds.",
-    subcommands: [List.self, Uploads.self, AwaitProcessing.self, Archive.self, Upload.self, Validate.self]
+    subcommands: [List.self, Uploads.self, AwaitProcessing.self, Archive.self, Archives.self, Upload.self, Validate.self]
   )
 
   struct List: AsyncParsableCommand {
@@ -517,6 +517,56 @@ struct BuildsCommand: AsyncParsableCommand {
     }
   }
 
+  /// The archives in Xcode's archive location, newest first: what `upload --latest` picks from.
+  struct Archives: ParsableCommand {
+    static let configuration = CommandConfiguration(
+      abstract: "List the archives in Xcode's archive location, newest first."
+    )
+
+    @Option(name: .long, help: "Only the archives of this exact bundle identifier (or alias).")
+    var bundleID: String?
+
+    @Option(name: .long, help: "Only the archives of this platform: ios, macos, tvos, visionos.")
+    var platform: String?
+
+    @Option(name: .long, help: "Number of archives to show (default: all).")
+    var limit: Int?
+
+    @OptionGroup var jsonOption: JSONOption
+
+    struct Entry: Encodable {
+      let name: String
+      let path: String
+      let bundleID: String
+      let version: String
+      let build: String
+      let platform: String
+      let created: Date
+    }
+
+    func run() throws {
+      jsonOption.activate()
+      var archives = try xcodeArchives(
+        bundleID: bundleID.map(resolveAlias), platform: try platform.map { try ArchivePlatform(parsePlatform($0)) })
+      if let limit { archives = Array(archives.prefix(limit)) }
+      let entries = archives.map {
+        Entry(
+          name: (($0.path as NSString).lastPathComponent as NSString).deletingPathExtension, path: $0.path,
+          bundleID: $0.bundleID, version: $0.version, build: $0.buildNumber, platform: $0.platform.ascPlatform.rawValue,
+          created: $0.creationDate)
+      }
+      if jsonOption.json { try printJSON(entries); return }
+      guard !entries.isEmpty else {
+        print("No archives in ~/Library/Developer/Xcode/Archives/.")
+        return
+      }
+      Table.print(
+        headers: ["Archive", "Bundle ID", "Version", "Platform", "Created"],
+        rows: entries.map { [$0.name, $0.bundleID, "\($0.version) (\($0.build))", formatState($0.platform), formatDate($0.created)] }
+      )
+    }
+  }
+
   struct Upload: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "Upload a build to App Store Connect (xcrun altool, or the App Store Connect API with --api)."
@@ -531,6 +581,9 @@ struct BuildsCommand: AsyncParsableCommand {
 
     @Option(name: .long, help: "With --latest, the latest archive of this exact bundle identifier; with a file, refuse it unless the app in it has this bundle identifier.")
     var bundleID: String?
+
+    @Option(name: .long, help: "With --latest, the latest archive of this platform: ios, macos, tvos, visionos (an app sold on several platforms has archives of each).")
+    var platform: String?
 
     @Flag(name: .long, help: "Upload through the App Store Connect API's build uploads (.ipa or Mac .pkg) instead of altool.")
     var api = false
@@ -559,10 +612,14 @@ struct BuildsCommand: AsyncParsableCommand {
       if file != nil && latest {
         throw ValidationError("Cannot specify both a file path and --latest.")
       }
+      if platform != nil && !latest {
+        throw ValidationError("--platform goes with --latest.")
+      }
       let expandedPath: String
       var uploadedBuildNumber: String?
       if latest {
-        let archive = try findLatestArchive(bundleID: bundleID)
+        let archive = try findLatestArchive(
+          bundleID: bundleID, platform: try platform.map { try ArchivePlatform(parsePlatform($0)) })
         expandedPath = archive.path
         uploadedBuildNumber = archive.buildNumber
         EventOutput.log("Found archive: \((archive.path as NSString).lastPathComponent)")
@@ -782,25 +839,21 @@ private struct ArchiveInfo {
   let bundleID: String
   let version: String
   let buildNumber: String
+  let platform: ArchivePlatform
   let creationDate: Date
 }
 
-/// Finds the most recent .xcarchive in Xcode's default archive location.
-/// Reads each archive's Info.plist to extract bundle ID and creation date.
-private func findLatestArchive(bundleID: String?) throws -> ArchiveInfo {
+/// The archives in Xcode's default archive location, newest first, read from each one's Info.plist;
+/// only an exact bundle ID's and a platform's when given. Empty without the folder.
+private func xcodeArchives(bundleID: String?, platform: ArchivePlatform?) throws -> [ArchiveInfo] {
   // Xcode's folder, in the account's home whatever $HOME says (like DerivedData).
   let archivesDir = FileManager.default.homeDirectoryForCurrentUser
     .appendingPathComponent("Library/Developer/Xcode/Archives").path
   let fm = FileManager.default
+  guard fm.fileExists(atPath: archivesDir) else { return [] }
 
-  guard fm.fileExists(atPath: archivesDir) else {
-    throw ValidationError("No Xcode archives found at ~/Library/Developer/Xcode/Archives/")
-  }
-
-  let dateDirs = try fm.contentsOfDirectory(atPath: archivesDir)
   var archives: [ArchiveInfo] = []
-
-  for dateDir in dateDirs {
+  for dateDir in try fm.contentsOfDirectory(atPath: archivesDir) {
     let datePath = (archivesDir as NSString).appendingPathComponent(dateDir)
     var isDir: ObjCBool = false
     guard fm.fileExists(atPath: datePath, isDirectory: &isDir), isDir.boolValue else { continue }
@@ -819,29 +872,31 @@ private func findLatestArchive(bundleID: String?) throws -> ArchiveInfo {
 
       // Exact bundle ID match if filter is provided
       if let bundleID, archiveBundleID != bundleID { continue }
-
-      let version = appProps["CFBundleShortVersionString"] as? String ?? "—"
-      let build = appProps["CFBundleVersion"] as? String ?? "—"
+      let archivePlatform = detectArchivePlatform(archivePath)
+      if let platform, archivePlatform != platform { continue }
 
       archives.append(ArchiveInfo(
         path: archivePath,
         bundleID: archiveBundleID,
-        version: version,
-        buildNumber: build,
+        version: appProps["CFBundleShortVersionString"] as? String ?? "—",
+        buildNumber: appProps["CFBundleVersion"] as? String ?? "—",
+        platform: archivePlatform,
         creationDate: creationDate
       ))
     }
   }
+  return archives.sorted { $0.creationDate > $1.creationDate }
+}
 
-  archives.sort { $0.creationDate > $1.creationDate }
-
-  guard let latest = archives.first else {
-    if let bundleID {
-      throw ValidationError("No archives found matching bundle ID '\(bundleID)'.")
-    }
-    throw ValidationError("No archives found in ~/Library/Developer/Xcode/Archives/")
+/// The most recent archive in Xcode's default archive location (see `xcodeArchives`).
+private func findLatestArchive(bundleID: String?, platform: ArchivePlatform? = nil) throws -> ArchiveInfo {
+  guard let latest = try xcodeArchives(bundleID: bundleID, platform: platform).first else {
+    let filters = [bundleID.map { "bundle ID '\($0)'" }, platform.map { "platform \($0.label)" }].compactMap { $0 }
+    throw ValidationError(
+      filters.isEmpty
+        ? "No archives found in ~/Library/Developer/Xcode/Archives/"
+        : "No archives found matching \(filters.joined(separator: " and ")).")
   }
-
   return latest
 }
 
@@ -870,8 +925,16 @@ private func resolveFilePath(_ file: String?, prompt: String) throws -> String {
 }
 
 /// The platform of an .xcarchive, detected from the archived app's Info.plist.
-private enum ArchivePlatform {
+private enum ArchivePlatform: CaseIterable {
   case iOS, macOS, tvOS, visionOS
+
+  /// From the `--platform` value (`parsePlatform`).
+  init(_ platform: Platform) throws {
+    guard let match = Self.allCases.first(where: { $0.ascPlatform == platform }) else {
+      throw ValidationError("Archives can't be of platform \(formatState(platform.rawValue)).")
+    }
+    self = match
+  }
 
   /// The value for altool's `--type` flag.
   var altoolType: String {

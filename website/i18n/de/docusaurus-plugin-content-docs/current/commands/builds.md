@@ -25,6 +25,17 @@ ascelerate builds archive --scheme MyApp --output ./archives
 
 Der `archive`-Befehl erkennt automatisch den `.xcworkspace` oder `.xcodeproj` im aktuellen Verzeichnis und bestimmt das Scheme, wenn nur eines vorhanden ist.
 
+Ohne `--destination` wird für die Plattform des Schemes archiviert (`generic/platform=macOS` für eine Mac-App). Eine App, die für mehrere Plattformen gebaut wird, wird für iOS archiviert, sofern Sie kein `--destination` angeben.
+
+## Archive auflisten
+
+```bash
+ascelerate builds archives
+ascelerate builds archives --bundle-id com.example.MyApp --platform macos --limit 1 --json
+```
+
+Listet die Archive am Archivspeicherort von Xcode (`~/Library/Developer/Xcode/Archives`) auf, die neuesten zuerst, mit Bundle-ID, Version, Build-Nummer, Plattform und Datum. `--bundle-id` und `--platform` grenzen die Liste ein; `--json` liefert zusätzlich den Pfad jedes Archivs.
+
 ## Validieren
 
 ```bash
@@ -38,6 +49,12 @@ ascelerate builds upload MyApp.ipa
 ```
 
 Akzeptiert `.ipa`-, `.pkg`- oder `.xcarchive`-Dateien. Bei einem `.xcarchive` wird die Plattform des Archivs erkannt und vor dem Hochladen automatisch nach `.ipa` (iOS-Familie) bzw. `.pkg` (macOS) exportiert; die passende Plattform wird an altool übergeben.
+
+```bash
+ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos
+```
+
+Mit `--latest` wird das neueste Archiv am Archivspeicherort von Xcode hochgeladen: mit `--bundle-id` das neueste einer App, mit `--platform` das einer Plattform (eine App, die unter einer Bundle-ID für iOS und macOS angeboten wird, hat Archive für beide).
 
 Ein `.xcarchive`, das mit App-Store-Distributionsprofilen signiert ist (ein Projekt mit manueller Signierung), wird mit den installierten App-Store-Profilen seiner App und ihrer Erweiterungen exportiert, sodass Xcode keine neuen erstellt; andere Archive werden mit automatischer Signierung exportiert. Bei einer Datei lehnt `--bundle-id` eine Datei mit einer anderen App ab, bevor etwas exportiert oder gesendet wird.
 

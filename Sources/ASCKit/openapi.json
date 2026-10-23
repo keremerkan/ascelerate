@@ -15449,7 +15449,19 @@
                     "betaTesters" : {
                       "properties" : {
                         "data" : {
-                          "type" : "string"
+                          "properties" : {
+                            "id" : {
+                              "type" : "string"
+                            },
+                            "type" : {
+                              "type" : "string"
+                            }
+                          },
+                          "required" : [
+                            "type",
+                            "id"
+                          ],
+                          "type" : "object"
                         },
                         "links" : {
                           "properties" : {
@@ -25920,7 +25932,19 @@
                     "apps" : {
                       "properties" : {
                         "data" : {
-                          "type" : "string"
+                          "properties" : {
+                            "id" : {
+                              "type" : "string"
+                            },
+                            "type" : {
+                              "type" : "string"
+                            }
+                          },
+                          "required" : [
+                            "type",
+                            "id"
+                          ],
+                          "type" : "object"
                         },
                         "links" : {
                           "properties" : {
@@ -48965,7 +48989,19 @@
                     "gameCenterMatchmakingQueue" : {
                       "properties" : {
                         "data" : {
-                          "type" : "string"
+                          "properties" : {
+                            "id" : {
+                              "type" : "string"
+                            },
+                            "type" : {
+                              "type" : "string"
+                            }
+                          },
+                          "required" : [
+                            "type",
+                            "id"
+                          ],
+                          "type" : "object"
                         },
                         "links" : {
                           "properties" : {
@@ -49067,7 +49103,19 @@
                     "gameCenterMatchmakingQueue" : {
                       "properties" : {
                         "data" : {
-                          "type" : "string"
+                          "properties" : {
+                            "id" : {
+                              "type" : "string"
+                            },
+                            "type" : {
+                              "type" : "string"
+                            }
+                          },
+                          "required" : [
+                            "type",
+                            "id"
+                          ],
+                          "type" : "object"
                         },
                         "links" : {
                           "properties" : {
@@ -49321,7 +49369,19 @@
                     "gameCenterDetail" : {
                       "properties" : {
                         "data" : {
-                          "type" : "string"
+                          "properties" : {
+                            "id" : {
+                              "type" : "string"
+                            },
+                            "type" : {
+                              "type" : "string"
+                            }
+                          },
+                          "required" : [
+                            "type",
+                            "id"
+                          ],
+                          "type" : "object"
                         },
                         "links" : {
                           "properties" : {
@@ -49723,7 +49783,19 @@
                     "gameCenterMatchmakingQueue" : {
                       "properties" : {
                         "data" : {
-                          "type" : "string"
+                          "properties" : {
+                            "id" : {
+                              "type" : "string"
+                            },
+                            "type" : {
+                              "type" : "string"
+                            }
+                          },
+                          "required" : [
+                            "type",
+                            "id"
+                          ],
+                          "type" : "object"
                         },
                         "links" : {
                           "properties" : {

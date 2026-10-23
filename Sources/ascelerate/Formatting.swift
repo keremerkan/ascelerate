@@ -98,10 +98,17 @@ func setupSignalHandler() {
     processLock.unlock()
     for process in snapshot {
       let pid = process.processIdentifier
+      // Xcode's build service starts each compile in a process group of its own, so the group
+      // signal below doesn't reach them, and they kept compiling for a minute after the build
+      // stopped (seen 2026-10-23): list them before it stops.
+      let descendants = descendantProcesses(of: pid)
       // SIGTERM instead of SIGINT: xcodebuild ignores SIGINT during package resolution.
       // killpg to reach the entire process group (Foundation uses POSIX_SPAWN_SETPGROUP).
       if killpg(pid, SIGTERM) != 0 {
         kill(pid, SIGTERM)
+      }
+      for descendant in descendants {
+        kill(descendant, SIGTERM)
       }
     }
     _exit(130)
@@ -109,6 +116,23 @@ func setupSignalHandler() {
   source.resume()
   signalSource = source
   processLock.unlock()
+}
+
+/// Every process started under `pid`, children first, as they are now.
+private func descendantProcesses(of pid: pid_t) -> [pid_t] {
+  var result: [pid_t] = []
+  var pending = [pid]
+  while let parent = pending.popLast() {
+    let count = proc_listchildpids(parent, nil, 0)
+    guard count > 0 else { continue }
+    // Room for a few started meanwhile.
+    var children = [pid_t](repeating: 0, count: Int(count) + 16)
+    let found = proc_listchildpids(parent, &children, Int32(children.count * MemoryLayout<pid_t>.size))
+    let list = children.prefix(Int(max(found, 0))).filter { $0 > 0 }
+    result += list
+    pending += list
+  }
+  return result
 }
 
 /// Splits a string into arguments, respecting single and double quotes.

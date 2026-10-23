@@ -64,12 +64,12 @@ struct ScreenshotCommand: AsyncParsableCommand {
             }
 
             let runner = ScreenshotRunner(config: screenshotConfig)
-            try await ScreenshotOutput.$emitsEvents.withValue(jsonEvents) {
-                ScreenshotOutput.log("ascelerate screenshot")
-                ScreenshotOutput.log("  Scheme: \(screenshotConfig.scheme)")
-                ScreenshotOutput.log("  Devices: \(screenshotConfig.devices.map(\.simulator).joined(separator: ", "))")
-                ScreenshotOutput.log("  Languages: \(screenshotConfig.languages.joined(separator: ", "))")
-                ScreenshotOutput.log("  Output: \(screenshotConfig.outputDirectory)")
+            try await EventOutput.$emitsEvents.withValue(jsonEvents) {
+                EventOutput.log("ascelerate screenshot")
+                EventOutput.log("  Scheme: \(screenshotConfig.scheme)")
+                EventOutput.log("  Devices: \(screenshotConfig.devices.map(\.simulator).joined(separator: ", "))")
+                EventOutput.log("  Languages: \(screenshotConfig.languages.joined(separator: ", "))")
+                EventOutput.log("  Output: \(screenshotConfig.outputDirectory)")
                 try await runner.run()
             }
         }

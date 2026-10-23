@@ -52,14 +52,14 @@ struct ScreenshotCollector: Sendable {
         let screenshotsDir = screenshotsCache(for: udid)
 
         guard let files = try? fm.contentsOfDirectory(at: screenshotsDir, includingPropertiesForKeys: nil) else {
-            ScreenshotOutput.log("  [\(device.simulator)] Warning: No screenshots found in cache directory")
+            EventOutput.log("  [\(device.simulator)] Warning: No screenshots found in cache directory")
             return 0
         }
 
         let screenshots = files.filter { $0.pathExtension.lowercased() == "png" }
 
         guard !screenshots.isEmpty else {
-            ScreenshotOutput.log("  [\(device.simulator)] Warning: No PNG screenshots found")
+            EventOutput.log("  [\(device.simulator)] Warning: No PNG screenshots found")
             return 0
         }
 
@@ -69,7 +69,7 @@ struct ScreenshotCollector: Sendable {
             try fm.copyItem(at: file, to: destination)
         }
 
-        ScreenshotOutput.log("  [\(device.simulator)] Collected \(screenshots.count) screenshot(s) → \(language)/")
+        EventOutput.log("  [\(device.simulator)] Collected \(screenshots.count) screenshot(s) → \(language)/")
         return screenshots.count
     }
 

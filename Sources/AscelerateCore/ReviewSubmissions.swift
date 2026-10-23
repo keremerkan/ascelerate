@@ -192,8 +192,11 @@ public enum ReviewSubmissions {
     _ = try await client.reviewSubmissionItemsDeleteInstance(path: .init(id: id)).noContent
   }
 
-  /// What Add for Review puts in a draft submission besides an app version.
+  /// What Add for Review puts in a draft submission.
   public enum DraftItem: Sendable {
+    /// An App Store version, with its attached build. App Store Connect checks it when it's added:
+    /// a 409 lists what's missing in its associated errors.
+    case appStoreVersion(String)
     case appEvent(String)
     case customProductPageVersion(String)
     case experiment(String)
@@ -240,6 +243,8 @@ public enum ReviewSubmissions {
     var relationships = Components.Schemas.ReviewSubmissionItemCreateRequest.DataPayload.RelationshipsPayload(
       reviewSubmission: .init(data: .init(id: draftID, _type: "reviewSubmissions")))
     switch item {
+      case .appStoreVersion(let id):
+        relationships.appStoreVersion = .init(data: .init(id: id, _type: "appStoreVersions"))
       case .appEvent(let id):
         relationships.appEvent = .init(data: .init(id: id, _type: "appEvents"))
       case .customProductPageVersion(let id):

@@ -30,9 +30,17 @@ enum BuildUploader {
       else { throw ValidationError("Couldn't read the app's bundle version from \(name)'s Distribution file.") }
       return AppInfo(bundleID: bundleID, version: version, buildNumber: build, platform: "MAC_OS")
     }
-    // `unzip -p` with a wildcard prints the one Info.plist at the app bundle's root.
-    guard let plist = try? PropertyListSerialization.propertyList(
-        from: try output("/usr/bin/unzip", ["-p", path, "Payload/*.app/Info.plist"]), format: nil) as? [String: Any],
+    // The Info.plist at the app bundle's root, by its exact name: unzip's `*` crosses folders, so
+    // `Payload/*.app/Info.plist` also matched an embedded watch app's (Payload/X.app/Watch/Y.app/
+    // Info.plist) and printed two plists that read as none.
+    let entries = String(decoding: try output("/usr/bin/unzip", ["-Z1", path]), as: UTF8.self).split(separator: "\n")
+    let infoPlist = entries.first { entry in
+      let parts = entry.split(separator: "/")
+      return parts.count == 3 && parts[0] == "Payload" && parts[1].hasSuffix(".app") && parts[2] == "Info.plist"
+    }
+    guard let infoPlist,
+      let plist = try? PropertyListSerialization.propertyList(
+        from: try output("/usr/bin/unzip", ["-p", path, String(infoPlist)]), format: nil) as? [String: Any],
       let bundleID = plist["CFBundleIdentifier"] as? String,
       let version = plist["CFBundleShortVersionString"] as? String,
       let build = plist["CFBundleVersion"] as? String
@@ -67,7 +75,10 @@ enum BuildUploader {
     let app = try await findApp(bundleID: info.bundleID, client: client)
     let fileName = (path as NSString).lastPathComponent
     let size = try FileManager.default.attributesOfItem(atPath: path)[.size] as? Int ?? 0
-    print("Uploading \(fileName): \(info.bundleID) \(info.version) (\(info.buildNumber)), \(formatState(info.platform))")
+    EventOutput.log("Uploading \(fileName): \(info.bundleID) \(info.version) (\(info.buildNumber)), \(formatState(info.platform))")
+    EventOutput.emit(BuildEvent(
+      event: "uploading", path: path, bundleID: info.bundleID, version: info.version, build: info.buildNumber,
+      platform: info.platform, bytes: Int64(size)))
 
     let upload = try await client.buildUploadsCreateInstance(body: .json(.init(data: .init(
       attributes: .init(cfBundleShortVersionString: info.version, cfBundleVersion: info.buildNumber, platform: info.platform),
@@ -94,9 +105,14 @@ enum BuildUploader {
         )))
       ).ok
     }
-    print("Uploaded. Waiting for App Store Connect to take it in", terminator: "")
-    fflush(stdout)
-    try await waitForUpload(id: upload.id, client: client)
+    if EventOutput.emitsEvents {
+      EventOutput.log("Uploaded. Waiting for App Store Connect to take it in...")
+      EventOutput.emit(BuildEvent(event: "processing"))
+    } else {
+      print("Uploaded. Waiting for App Store Connect to take it in", terminator: "")
+      fflush(stdout)
+    }
+    let warnings = try await waitForUpload(id: upload.id, client: client)
 
     // Records of this build still waiting for a file can't complete any more: an earlier run's that
     // failed, or a second one made when a flaky connection sent the create request again (seen live).
@@ -104,11 +120,14 @@ enum BuildUploader {
       let stray = try await strayUploads(
         appID: app.id, version: info.version, build: info.buildNumber, platform: info.platform, client: client)
       if try await delete(stray, client: client) > 0 {
-        print("Removed \(stray.count) unused upload record\(stray.count == 1 ? "" : "s") of this build.")
+        EventOutput.log("Removed \(stray.count) unused upload record\(stray.count == 1 ? "" : "s") of this build.")
       }
     } catch {
-      print(yellow("Warning:") + " couldn't remove unused upload records of this build: \(describeError(error))")
+      EventOutput.log(yellow("Warning:") + " couldn't remove unused upload records of this build: \(describeError(error))")
     }
+    EventOutput.emit(BuildEvent(
+      event: "finished", bundleID: info.bundleID, version: info.version, build: info.buildNumber, platform: info.platform,
+      warnings: warnings))
     return info.buildNumber
   }
 
@@ -151,8 +170,9 @@ enum BuildUploader {
     return deleted
   }
 
-  /// Polls the build upload until COMPLETE (returns) or FAILED (throws with Apple's messages).
-  private static func waitForUpload(id: String, client: ASCClient) async throws {
+  /// Polls the build upload until COMPLETE (returns Apple's warnings) or FAILED (throws with Apple's
+  /// messages).
+  private static func waitForUpload(id: String, client: ASCClient) async throws -> [String] {
     let deadline = Date().addingTimeInterval(45 * 60)
     while Date() < deadline {
       let upload = try await withTransientRetry {
@@ -161,28 +181,30 @@ enum BuildUploader {
       let state = upload.attributes?.state
       switch state?.state {
       case "COMPLETE":
-        print(" done.")
+        if !EventOutput.emitsEvents { print(" done.") }
         printDetails(state?.warnings, label: "Warning")
         printDetails(state?.infos, label: "Note")
-        print(green("Upload complete.") + " Processing continues in App Store Connect ('ascelerate builds await-processing').")
-        return
+        EventOutput.log(green("Upload complete.") + " Processing continues in App Store Connect ('ascelerate builds await-processing').")
+        return (state?.warnings ?? []).map(describe)
       case "FAILED":
-        print()
+        if !EventOutput.emitsEvents { print() }
         let errors = (state?.errors ?? []).map(describe)
         throw ValidationError("App Store Connect rejected the upload:\n" + (errors.isEmpty ? "  (no details)" : errors.map { "  - \($0)" }.joined(separator: "\n")))
       default:
-        print(".", terminator: "")
-        fflush(stdout)
+        if !EventOutput.emitsEvents {
+          print(".", terminator: "")
+          fflush(stdout)
+        }
         // Each poll counts against the hourly API quota; Apple takes minutes, not seconds.
         try await Task.sleep(for: .seconds(30))
       }
     }
-    print()
+    if !EventOutput.emitsEvents { print() }
     throw ValidationError("The upload didn't finish within 45 minutes; check it in App Store Connect.")
   }
 
   private static func printDetails(_ details: [Components.Schemas.StateDetail]?, label: String) {
-    for detail in details ?? [] { print("  \(label): \(describe(detail))") }
+    for detail in details ?? [] { EventOutput.log("  \(label): \(describe(detail))") }
   }
 
   private static func describe(_ detail: Components.Schemas.StateDetail) -> String {

@@ -17,21 +17,6 @@ struct TestFlightCommand: AsyncParsableCommand {
 
   // MARK: - Shared helpers
 
-  /// A build's pre-release train description (e.g. "iOS 5.3") and label (e.g. "iOS 5.3 (42)").
-  protocol BuildTrainDescribing {
-    var platform: String? { get }  // raw API value, e.g. "IOS"
-    var version: String? { get }   // train version, e.g. "5.0"
-    var buildNumber: String? { get }
-  }
-
-  /// A build paired with its pre-release train.
-  struct ResolvedBuild: BuildTrainDescribing {
-    let build: Components.Schemas.Build
-    let platform: String?
-    let version: String?
-    var buildNumber: String? { build.attributes?.version }
-  }
-
   /// Resolves a beta group by name (case-insensitive), or prompts with a picker when omitted.
   static func findBetaGroup(name: String?, appID: String, client: ASCClient) async throws -> Components.Schemas.BetaGroup {
     let groups = try fetchAll(
@@ -59,56 +44,18 @@ struct TestFlightCommand: AsyncParsableCommand {
     return "\(a?.name ?? "?") (\(traits.joined(separator: ", ")))"
   }
 
-  /// Resolves a build by number, or the latest non-expired build when omitted.
-  /// A universal-purchase app can share build numbers across platforms, so an
-  /// ambiguous match prompts (or `--platform` disambiguates).
+  /// Resolves a build by number, or the latest non-expired build when omitted, prompting when a
+  /// build number matches on several platforms.
   static func findBuild(
     appID: String, buildVersion: String?, platform: Platform?, client: ASCClient
-  ) async throws -> ResolvedBuild {
-    let response = try await client.buildsGetCollection(query: .init(
-      filterVersion: buildVersion.map { [$0] },
-      // Only skip expired builds when defaulting to the latest — an explicit
-      // build number should still resolve after expiry (e.g. for status).
-      filterExpired: buildVersion == nil ? ["false"] : nil,
-      filterPreReleaseVersionPlatform: platformFilter(platform),
-      filterApp: [appID],
-      sort: [.minusUploadedDate],
-      limit: 10,
-      include: [.preReleaseVersion]
-    )).ok.body.json
-
-    var trains: [String: (platform: String?, version: String?)] = [:]
-    for item in response.included ?? [] {
-      if case .preReleaseVersions(let v) = item {
-        trains[v.id] = (v.attributes?.platform, v.attributes?.version)
+  ) async throws -> AscelerateCore.Builds.Build {
+    do {
+      return try await AscelerateCore.Builds.find(appID: appID, number: buildVersion, platform: platform, client: client) {
+        try promptSelection($0, items: $1, display: $2, nonInteractiveHint: "Pass --platform to disambiguate.")
       }
+    } catch let error as AscelerateCore.Builds.LookupError {
+      throw ValidationError(error.localizedDescription)
     }
-    func resolved(_ build: Components.Schemas.Build) -> ResolvedBuild {
-      let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] }
-      return ResolvedBuild(build: build, platform: train?.platform, version: train?.version)
-    }
-
-    let builds = response.data
-    guard !builds.isEmpty else {
-      if let buildVersion {
-        throw ValidationError("No build '\(buildVersion)' found for this app.")
-      }
-      throw ValidationError("No builds found for this app. Upload a build first.")
-    }
-
-    // An explicit build number can match one build per platform.
-    if buildVersion != nil, builds.count > 1 {
-      let pick = try promptSelection(
-        "Multiple builds numbered \(buildVersion ?? "?") found", items: builds,
-        display: { b in
-          let r = resolved(b)
-          let uploaded = b.attributes?.uploadedDate.map { formatDate($0) } ?? "?"
-          return "\(r.label) — uploaded \(uploaded)"
-        },
-        nonInteractiveHint: "Pass --platform to disambiguate.")
-      return resolved(pick)
-    }
-    return resolved(builds[0])
   }
 
   /// Shared `--build` / `--platform` options for build-scoped TestFlight commands.
@@ -118,7 +65,7 @@ struct TestFlightCommand: AsyncParsableCommand {
 
     @OptionGroup var platformOption: PlatformOption
 
-    func resolve(appID: String, client: ASCClient) async throws -> ResolvedBuild {
+    func resolve(appID: String, client: ASCClient) async throws -> AscelerateCore.Builds.Build {
       try await TestFlightCommand.findBuild(
         appID: appID, buildVersion: build, platform: try platformOption.parsed(), client: client)
     }
@@ -217,9 +164,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         print("Created:       \(a?.createdDate.map { formatDate($0) } ?? "—")")
         print("Group ID:      \(betaGroup.id)")
 
-        let testers = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.betaTestersGetCollection(query: .init(filterBetaGroups: [betaGroup.id], sort: [.email], limit: 200)).ok.body.json
-        }.flatMap(\.data)
+        let testers = try await BetaGroups.testers(groupID: betaGroup.id, client: client)
         print()
         if testers.isEmpty {
           print("No testers in this group.")
@@ -227,12 +172,11 @@ struct TestFlightCommand: AsyncParsableCommand {
           print("Testers (\(testers.count)):")
           var rows: [[String]] = []
           for tester in testers {
-            let ta = tester.attributes
-            let name = [ta?.firstName, ta?.lastName].compactMap { $0 }.joined(separator: " ")
+            let name = [tester.firstName, tester.lastName].compactMap { $0 }.joined(separator: " ")
             rows.append([
-              ta?.email ?? "—",
+              tester.email ?? "—",
               name.isEmpty ? "—" : name,
-              ta?.state.map { formatState($0) } ?? "—",
+              tester.state.map { formatState($0) } ?? "—",
             ])
           }
           Table.print(headers: ["Email", "Name", "State"], rows: rows)
@@ -241,30 +185,19 @@ struct TestFlightCommand: AsyncParsableCommand {
         // Internal groups with access to all builds have no explicit build list.
         guard a?.hasAccessToAllBuilds != true else { return }
 
-        let builds = try await client.buildsGetCollection(query: .init(
-          filterApp: [app.id], filterBetaGroups: [betaGroup.id], sort: [.minusUploadedDate], limit: 50, include: [.preReleaseVersion]
-        )).ok.body.json
-        var trains: [String: String] = [:]
-        for item in builds.included ?? [] {
-          if case .preReleaseVersions(let v) = item {
-            let p = v.attributes?.platform.map { formatState($0) } ?? "?"
-            trains[v.id] = "\(p) \(v.attributes?.version ?? "?")"
-          }
-        }
+        let builds = try await AscelerateCore.Builds.list(appID: app.id, groupID: betaGroup.id, limit: 50, client: client)
         print()
-        if builds.data.isEmpty {
+        if builds.isEmpty {
           print("No builds assigned to this group.")
         } else {
-          print("Builds (\(builds.data.count)):")
+          print("Builds (\(builds.count)):")
           var rows: [[String]] = []
-          for build in builds.data {
-            let ba = build.attributes
-            let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] } ?? "—"
+          for build in builds {
             rows.append([
-              ba?.version ?? "—",
-              train,
-              ba?.uploadedDate.map { formatDate($0) } ?? "—",
-              ba?.expired == true ? red("Expired") : ba?.expirationDate.map { formatDate($0) } ?? "—",
+              build.number ?? "—",
+              build.version == nil ? "—" : build.train,
+              build.uploadedDate.map { formatDate($0) } ?? "—",
+              build.expired ? red("Expired") : build.expirationDate.map { formatDate($0) } ?? "—",
             ])
           }
           Table.print(headers: ["Build", "Version", "Uploaded", "Expires"], rows: rows)
@@ -325,23 +258,13 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
 
-        let response = try await client.betaGroupsCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(
-            feedbackEnabled: feedback,
-            hasAccessToAllBuilds: allBuilds ? true : nil,
-            isInternalGroup: `internal` ? true : nil,
-            name: name,
-            publicLinkEnabled: linkEnabled ? true : nil,
-            publicLinkLimit: publicLinkLimit,
-            publicLinkLimitEnabled: publicLinkLimit != nil ? true : nil
-          ),
-          relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-          _type: "betaGroups"
-        )))).created.body.json
+        let created = try await BetaGroups.create(
+          appID: app.id, name: name, isInternal: `internal`, allBuilds: allBuilds, publicLink: publicLink,
+          publicLinkLimit: publicLinkLimit, feedback: feedback, client: client)
 
         print()
         success("Created", "beta group '\(name)'.")
-        if let link = response.data.attributes?.publicLink {
+        if let link = created.publicLink {
           print("  Public link: \(link)")
         }
       }
@@ -386,7 +309,6 @@ struct TestFlightCommand: AsyncParsableCommand {
           name: group, appID: app.id, client: client)
         let groupName = betaGroup.attributes?.name ?? "?"
 
-        let limitEnabled: Bool? = publicLinkLimit.map { $0 > 0 }
         var changes: [String] = []
         if let v = name { changes.append("Name: \(v)") }
         if let v = publicLink { changes.append("Public Link: \(v ? "Enabled" : "Disabled")") }
@@ -403,20 +325,9 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.betaGroupsUpdateInstance(
-          path: .init(id: betaGroup.id),
-          body: .json(.init(data: .init(
-            attributes: .init(
-              feedbackEnabled: feedback,
-              name: name,
-              publicLinkEnabled: publicLink,
-              publicLinkLimit: (publicLinkLimit ?? 0) > 0 ? publicLinkLimit : nil,
-              publicLinkLimitEnabled: limitEnabled
-            ),
-            id: betaGroup.id,
-            _type: "betaGroups"
-          )))
-        ).ok
+        try await BetaGroups.update(
+          groupID: betaGroup.id, name: name, publicLink: publicLink, publicLinkLimit: publicLinkLimit, feedback: feedback,
+          client: client)
 
         print()
         success("Updated", "beta group '\(name ?? groupName)'.")
@@ -453,7 +364,7 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.betaGroupsDeleteInstance(path: .init(id: betaGroup.id)).noContent
+        try await BetaGroups.delete(groupID: betaGroup.id, client: client)
         print()
         success("Deleted", "beta group '\(groupName)'.")
       }
@@ -492,10 +403,7 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.betaGroupsBuildsCreateToManyRelationship(
-          path: .init(id: betaGroup.id),
-          body: .json(.init(data: [.init(id: resolved.build.id, _type: "builds")]))
-        ).noContent
+        try await BetaGroups.addBuild(resolved.id, toGroup: betaGroup.id, client: client)
         print()
         success("Added", "build \(resolved.label) to group '\(groupName)'.")
       }
@@ -534,10 +442,7 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.betaGroupsBuildsDeleteToManyRelationship(
-          path: .init(id: betaGroup.id),
-          body: .json(.init(data: [.init(id: resolved.build.id, _type: "builds")]))
-        ).noContent
+        try await BetaGroups.removeBuild(resolved.id, fromGroup: betaGroup.id, client: client)
         print()
         success("Removed", "build \(resolved.label) from group '\(groupName)'.")
       }
@@ -754,27 +659,11 @@ struct TestFlightCommand: AsyncParsableCommand {
     /// Finds a tester by email within the app's testers.
     static func findTester(
       email: String, appID: String, client: ASCClient
-    ) async throws -> Components.Schemas.BetaTester {
-      let response = try await client.betaTestersGetCollection(
-        query: .init(filterEmail: [email], filterApps: [appID])
-      ).ok.body.json
-      guard let tester = response.data.first(where: {
-        $0.attributes?.email?.lowercased() == email.lowercased()
-      }) else {
+    ) async throws -> BetaTesters.Tester {
+      guard let tester = try await BetaTesters.find(email: email, appID: appID, client: client) else {
         throw ValidationError("No beta tester '\(email)' found for this app.")
       }
       return tester
-    }
-
-    /// Creates a tester in the given beta groups (sends an invite for external groups).
-    static func createTester(
-      email: String, firstName: String?, lastName: String?, groupIDs: [String], client: ASCClient
-    ) async throws {
-      _ = try await client.betaTestersCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(email: email, firstName: firstName, lastName: lastName),
-        relationships: .init(betaGroups: .init(data: groupIDs.map { .init(id: $0, _type: "betaGroups") })),
-        _type: "betaTesters"
-      )))).created
     }
 
     struct List: AsyncParsableCommand {
@@ -796,22 +685,12 @@ struct TestFlightCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
-        var groupFilter: [String]?
-        var appsFilter: [String]? = [app.id]
+        var groupID: String?
         if let group {
-          let betaGroup = try await TestFlightCommand.findBetaGroup(
-            name: group, appID: app.id, client: client)
-          groupFilter = [betaGroup.id]
-          // filterApps and filterBetaGroups are mutually exclusive on this endpoint;
-          // the group already scopes to the app.
-          appsFilter = nil
+          groupID = try await TestFlightCommand.findBetaGroup(name: group, appID: app.id, client: client).id
         }
 
-        let testers = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.betaTestersGetCollection(query: .init(
-            filterEmail: email.map { [$0] }, filterApps: appsFilter, filterBetaGroups: groupFilter, sort: [.email], limit: 200
-          )).ok.body.json
-        }.flatMap(\.data)
+        let testers = try await BetaTesters.list(appID: app.id, groupID: groupID, email: email, client: client)
 
         if testers.isEmpty {
           print("No beta testers found.")
@@ -820,13 +699,12 @@ struct TestFlightCommand: AsyncParsableCommand {
 
         var rows: [[String]] = []
         for tester in testers {
-          let a = tester.attributes
-          let name = [a?.firstName, a?.lastName].compactMap { $0 }.joined(separator: " ")
+          let name = [tester.firstName, tester.lastName].compactMap { $0 }.joined(separator: " ")
           rows.append([
-            a?.email ?? "—",
+            tester.email ?? "—",
             name.isEmpty ? "—" : name,
-            a?.state.map { formatState($0) } ?? "—",
-            a?.inviteType.map { formatState($0) } ?? "—",
+            tester.state.map { formatState($0) } ?? "—",
+            tester.inviteType.map { formatState($0) } ?? "—",
           ])
         }
 
@@ -885,7 +763,7 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
 
-        try await Testers.createTester(
+        try await BetaTesters.create(
           email: email, firstName: firstName, lastName: lastName, groupIDs: groups.map(\.id), client: client)
 
         print()
@@ -925,10 +803,7 @@ struct TestFlightCommand: AsyncParsableCommand {
             cancelled()
             return
           }
-          _ = try await client.betaGroupsBetaTestersDeleteToManyRelationship(
-            path: .init(id: betaGroup.id),
-            body: .json(.init(data: [.init(id: tester.id, _type: "betaTesters")]))
-          ).noContent
+          try await BetaGroups.removeTester(tester.id, fromGroup: betaGroup.id, client: client)
           print()
           success("Removed", "tester '\(email)' from group '\(groupName)'.")
         } else {
@@ -937,10 +812,7 @@ struct TestFlightCommand: AsyncParsableCommand {
             cancelled()
             return
           }
-          _ = try await client.betaTestersAppsDeleteToManyRelationship(
-            path: .init(id: tester.id),
-            body: .json(.init(data: [.init(id: app.id, _type: "apps")]))
-          ).noContent
+          try await BetaTesters.removeFromApp(testerID: tester.id, appID: app.id, client: client)
           print()
           success("Removed", "tester '\(email)' from the app.")
         }
@@ -968,7 +840,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let tester = try await Testers.findTester(email: email, appID: app.id, client: client)
 
-        let state = tester.attributes?.state.map { formatState($0) } ?? "?"
+        let state = tester.state.map { formatState($0) } ?? "?"
         print("Tester: \(email) (\(state))")
         print()
         guard confirm("Re-send the invitation email? [y/N] ") else {
@@ -976,13 +848,7 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.betaTesterInvitationsCreateInstance(body: .json(.init(data: .init(
-          relationships: .init(
-            app: .init(data: .init(id: app.id, _type: "apps")),
-            betaTester: .init(data: .init(id: tester.id, _type: "betaTesters"))
-          ),
-          _type: "betaTesterInvitations"
-        )))).created
+        try await BetaTesters.invite(testerID: tester.id, appID: app.id, client: client)
         print()
         success("Sent", "invitation to '\(email)'.")
       }
@@ -1027,19 +893,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let filePath = try resolveFile(file, extension: "csv", prompt: "Select a CSV file")
         let content = try String(contentsOf: URL(fileURLWithPath: filePath), encoding: .utf8)
 
-        var testers: [(email: String, firstName: String?, lastName: String?)] = []
-        for line in content.split(separator: "\n", omittingEmptySubsequences: true) {
-          let trimmed = line.trimmingCharacters(in: .whitespaces)
-          if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
-          let fields = trimmed.split(separator: ",", omittingEmptySubsequences: false)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-          guard fields[0].contains("@") else { continue }  // skips a header row
-          testers.append((
-            email: fields[0],
-            firstName: fields.count > 1 && !fields[1].isEmpty ? fields[1] : nil,
-            lastName: fields.count > 2 && !fields[2].isEmpty ? fields[2] : nil
-          ))
-        }
+        let testers = BetaTesters.parseCSV(content)
 
         guard !testers.isEmpty else {
           throw ValidationError("No testers found in \(filePath).")
@@ -1061,7 +915,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         var failed: [String] = []
         for t in testers {
           do {
-            try await Testers.createTester(
+            try await BetaTesters.create(
               email: t.email, firstName: t.firstName, lastName: t.lastName, groupIDs: groups.map(\.id), client: client)
             print("  \(t.email) \(green("Added."))")
           } catch {
@@ -1118,42 +972,21 @@ struct TestFlightCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let response = try await client.buildsGetCollection(query: .init(
-        filterPreReleaseVersionPlatform: platformFilter(try platformOption.parsed()),
-        filterApp: [app.id],
-        sort: [.minusUploadedDate],
-        limit: min(limit, 200),
-        include: [.preReleaseVersion, .buildBetaDetail]
-      )).ok.body.json
+      let builds = try await AscelerateCore.Builds.list(
+        appID: app.id, platform: try platformOption.parsed(), limit: min(limit, 200), client: client)
 
-      var trains: [String: (platform: String?, version: String?)] = [:]
-      var details: [String: Components.Schemas.BuildBetaDetail] = [:]
-      for item in response.included ?? [] {
-        switch item {
-          case .preReleaseVersions(let v):
-            trains[v.id] = (v.attributes?.platform, v.attributes?.version)
-          case .buildBetaDetails(let d):
-            details[d.id] = d
-          default:
-            break
-        }
-      }
-
-      let entries = response.data.map { build -> Entry in
-        let a = build.attributes
-        let train = build.relationships?.preReleaseVersion?.data.flatMap { trains[$0.id] }
-        let detail = build.relationships?.buildBetaDetail?.data.flatMap { details[$0.id] }
-        return Entry(
+      let entries = builds.map { build in
+        Entry(
           id: build.id,
-          buildNumber: a?.version,
-          version: train?.version,
-          platform: train?.platform,
-          uploadedDate: a?.uploadedDate,
-          expirationDate: a?.expirationDate,
-          isExpired: a?.expired,
-          processingState: a?.processingState,
-          internalBuildState: detail?.attributes?.internalBuildState,
-          externalBuildState: detail?.attributes?.externalBuildState
+          buildNumber: build.number,
+          version: build.version,
+          platform: build.platform,
+          uploadedDate: build.uploadedDate,
+          expirationDate: build.expirationDate,
+          isExpired: build.expired,
+          processingState: build.processingState,
+          internalBuildState: build.internalState,
+          externalBuildState: build.externalState
         )
       }
 
@@ -1208,17 +1041,16 @@ struct TestFlightCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let response = try await client.preReleaseVersionsGetCollection(query: .init(
-        filterPlatform: platformFilter(try platformOption.parsed()), filterApp: [app.id], sort: [.minusVersion], limit: min(limit, 200)
-      )).ok.body.json
+      let versions = try await AscelerateCore.Builds.preReleaseVersions(
+        appID: app.id, platform: try platformOption.parsed(), limit: limit, client: client)
 
-      if response.data.isEmpty {
+      if versions.isEmpty {
         print("No pre-release versions found.")
         return
       }
 
       var rows: [[String]] = []
-      for version in response.data {
+      for version in versions {
         rows.append([
           version.attributes?.version ?? "—",
           version.attributes?.platform.map { formatState($0) } ?? "—",
@@ -1250,22 +1082,19 @@ struct TestFlightCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let resolved = try await buildOptions.resolve(appID: app.id, client: client)
 
-      if resolved.build.attributes?.expired == true {
+      if resolved.expired {
         print("Build \(resolved.label) is already expired.")
         return
       }
 
-      print("Build: \(resolved.label), uploaded \(resolved.build.attributes?.uploadedDate.map { formatDate($0) } ?? "?")")
+      print("Build: \(resolved.label), uploaded \(resolved.uploadedDate.map { formatDate($0) } ?? "?")")
       print()
       guard confirm("Expire this build? Testers can no longer install it. [y/N] ") else {
         cancelled()
         return
       }
 
-      _ = try await client.buildsUpdateInstance(
-        path: .init(id: resolved.build.id),
-        body: .json(.init(data: .init(attributes: .init(expired: true), id: resolved.build.id, _type: "builds")))
-      ).ok
+      try await AscelerateCore.Builds.expire(id: resolved.id, client: client)
       print()
       success("Expired", "build \(resolved.label).")
     }
@@ -1298,10 +1127,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.buildBetaNotificationsCreateInstance(body: .json(.init(data: .init(
-        relationships: .init(build: .init(data: .init(id: resolved.build.id, _type: "builds"))),
-        _type: "buildBetaNotifications"
-      )))).created
+      try await AscelerateCore.Builds.notifyTesters(buildID: resolved.id, client: client)
       print()
       success("Notified", "testers about build \(resolved.label).")
     }
@@ -1333,9 +1159,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let resolved = try await buildOptions.resolve(appID: app.id, client: client)
 
-      guard let detail = try await client.buildBetaDetailsGetCollection(
-        query: .init(filterBuild: [resolved.build.id])
-      ).ok.body.json.data.first else {
+      guard let detail = try await AscelerateCore.Builds.betaDetail(buildID: resolved.id, client: client) else {
         throw ValidationError("No build beta detail found for build \(resolved.label).")
       }
 
@@ -1349,22 +1173,13 @@ struct TestFlightCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.buildBetaDetailsUpdateInstance(
-        path: .init(id: detail.id),
-        body: .json(.init(data: .init(
-          attributes: .init(autoNotifyEnabled: enabled), id: detail.id, _type: "buildBetaDetails")))
-      ).ok
+      try await AscelerateCore.Builds.setAutoNotify(enabled, detailID: detail.id, client: client)
       print()
       success("Updated", "auto-notify \(enabled ? "enabled" : "disabled") for build \(resolved.label).")
     }
   }
 
   // MARK: - What to Test
-
-  /// JSON schema for beta build localizations (What to Test).
-  struct WhatsNewFields: Codable {
-    var whatsNew: String?
-  }
 
   struct WhatsNew: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -1373,40 +1188,11 @@ struct TestFlightCommand: AsyncParsableCommand {
       subcommands: [View.self, Set.self, Export.self, Import.self]
     )
 
-    /// Fetches a build's beta localizations keyed by locale.
-    static func fetchLocalizations(buildID: String, client: ASCClient) async throws -> [Components.Schemas.BetaBuildLocalization] {
-      try await client.betaBuildLocalizationsGetCollection(query: .init(filterBuild: [buildID], limit: 50)).ok.body.json
-        .data.sorted { ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "") }
-    }
-
-    /// Applies What to Test text per locale — patching existing localizations,
-    /// creating missing ones.
-    static func apply(
-      updates: [(locale: String, text: String)],
-      buildID: String,
-      client: ASCClient
-    ) async throws {
-      let existing = try await fetchLocalizations(buildID: buildID, client: client)
-      let byLocale = Dictionary(
-        existing.compactMap { loc in loc.attributes?.locale.map { ($0, loc) } },
-        uniquingKeysWith: { first, _ in first })
-
-      for (locale, text) in updates {
-        if let loc = byLocale[locale] {
-          _ = try await client.betaBuildLocalizationsUpdateInstance(
-            path: .init(id: loc.id),
-            body: .json(.init(data: .init(
-              attributes: .init(whatsNew: text), id: loc.id, _type: "betaBuildLocalizations")))
-          ).ok
-          print("  [\(localeName(locale))] Updated.")
-        } else {
-          _ = try await client.betaBuildLocalizationsCreateInstance(body: .json(.init(data: .init(
-            attributes: .init(locale: locale, whatsNew: text),
-            relationships: .init(build: .init(data: .init(id: buildID, _type: "builds"))),
-            _type: "betaBuildLocalizations"
-          )))).created
-          print("  [\(localeName(locale))] \(green("Created."))")
-        }
+    /// Applies What to Test text per locale, patching existing localizations and creating missing
+    /// ones, and says which.
+    static func apply(updates: [(locale: String, text: String)], buildID: String, client: ASCClient) async throws {
+      try await AscelerateCore.Builds.setTestNotes(updates, buildID: buildID, client: client) { locale, created in
+        print("  [\(localeName(locale))] " + (created ? green("Created.") : "Updated."))
       }
     }
 
@@ -1426,8 +1212,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let resolved = try await buildOptions.resolve(appID: app.id, client: client)
 
-        let locs = try await WhatsNew.fetchLocalizations(
-          buildID: resolved.build.id, client: client)
+        let locs = try await AscelerateCore.Builds.testNotes(buildID: resolved.id, client: client)
         print("What to Test for build \(resolved.label):")
         print()
         if locs.isEmpty {
@@ -1435,8 +1220,8 @@ struct TestFlightCommand: AsyncParsableCommand {
           return
         }
         for loc in locs {
-          print("[\(localeName(loc.attributes?.locale ?? "?"))]")
-          let text = loc.attributes?.whatsNew ?? ""
+          print("[\(localeName(loc.locale))]")
+          let text = loc.text ?? ""
           print(text.isEmpty ? "  —" : text.split(separator: "\n", omittingEmptySubsequences: false)
             .map { "  \($0)" }.joined(separator: "\n"))
           print()
@@ -1474,9 +1259,8 @@ struct TestFlightCommand: AsyncParsableCommand {
         if let locale {
           targets = [locale]
         } else {
-          let existing = try await WhatsNew.fetchLocalizations(
-            buildID: resolved.build.id, client: client)
-          targets = existing.compactMap { $0.attributes?.locale }
+          let existing = try await AscelerateCore.Builds.testNotes(buildID: resolved.id, client: client)
+          targets = existing.map(\.locale)
           guard !targets.isEmpty else {
             throw ValidationError(
               "This build has no localizations yet. Pass --locale to create one.")
@@ -1494,7 +1278,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         print()
 
         try await WhatsNew.apply(
-          updates: targets.map { ($0, text) }, buildID: resolved.build.id, client: client)
+          updates: targets.map { ($0, text) }, buildID: resolved.id, client: client)
         print()
         success("Updated", "test notes for build \(resolved.label).")
       }
@@ -1520,12 +1304,10 @@ struct TestFlightCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let resolved = try await buildOptions.resolve(appID: app.id, client: client)
 
-        let locs = try await WhatsNew.fetchLocalizations(
-          buildID: resolved.build.id, client: client)
+        let locs = try await AscelerateCore.Builds.testNotes(buildID: resolved.id, client: client)
         var result: [String: WhatsNewFields] = [:]
         for loc in locs {
-          guard let locale = loc.attributes?.locale else { continue }
-          result[locale] = WhatsNewFields(whatsNew: loc.attributes?.whatsNew)
+          result[loc.locale] = WhatsNewFields(whatsNew: loc.text)
         }
 
         let encoder = JSONEncoder()
@@ -1584,7 +1366,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         }
         print()
 
-        try await WhatsNew.apply(updates: updates, buildID: resolved.build.id, client: client)
+        try await WhatsNew.apply(updates: updates, buildID: resolved.id, client: client)
         print()
         print("Done.")
       }
@@ -1613,21 +1395,18 @@ struct TestFlightCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
       let resolved = try await buildOptions.resolve(appID: app.id, client: client)
 
-      print("Build: \(resolved.label), uploaded \(resolved.build.attributes?.uploadedDate.map { formatDate($0) } ?? "?")")
+      print("Build: \(resolved.label), uploaded \(resolved.uploadedDate.map { formatDate($0) } ?? "?")")
       print()
       guard confirm("Submit this build for beta review? [y/N] ") else {
         cancelled()
         return
       }
 
-      let response = try await client.betaAppReviewSubmissionsCreateInstance(body: .json(.init(data: .init(
-        relationships: .init(build: .init(data: .init(id: resolved.build.id, _type: "builds"))),
-        _type: "betaAppReviewSubmissions"
-      )))).created.body.json
+      let reviewState = try await AscelerateCore.Builds.submitForBetaReview(buildID: resolved.id, client: client)
 
       print()
       success("Submitted", "build \(resolved.label) for beta review.")
-      if let state = response.data.attributes?.betaReviewState {
+      if let state = reviewState {
         print("  State: \(formatState(state))")
       }
     }
@@ -1668,25 +1447,21 @@ struct TestFlightCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
       let resolved = try await buildOptions.resolve(appID: app.id, client: client)
-      let a = resolved.build.attributes
-
-      let detail = try await client.buildBetaDetailsGetCollection(
-        query: .init(filterBuild: [resolved.build.id])
-      ).ok.body.json.data.first
+      let detail = try await AscelerateCore.Builds.betaDetail(buildID: resolved.id, client: client)
       let submission = try await client.betaAppReviewSubmissionsGetCollection(
-        query: .init(filterBuild: [resolved.build.id])
+        query: .init(filterBuild: [resolved.id])
       ).ok.body.json.data.first
 
       let d = detail?.attributes
       let status = Detail(
-        id: resolved.build.id,
-        buildNumber: a?.version,
+        id: resolved.id,
+        buildNumber: resolved.number,
         version: resolved.version,
         platform: resolved.platform,
-        uploadedDate: a?.uploadedDate,
-        expirationDate: a?.expirationDate,
-        isExpired: a?.expired,
-        processingState: a?.processingState,
+        uploadedDate: resolved.uploadedDate,
+        expirationDate: resolved.expirationDate,
+        isExpired: resolved.expired,
+        processingState: resolved.processingState,
         internalBuildState: d?.internalBuildState,
         externalBuildState: d?.externalBuildState,
         autoNotifyEnabled: d?.autoNotifyEnabled,
@@ -2643,7 +2418,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       guard let build else { return nil }
       let resolved = try await TestFlightCommand.findBuild(
         appID: appID, buildVersion: build, platform: try platformOption.parsed(), client: client)
-      return [resolved.build.id]
+      return [resolved.id]
     }
   }
 }
@@ -2654,12 +2429,3 @@ private extension String {
   }
 }
 
-extension TestFlightCommand.BuildTrainDescribing {
-  var train: String {
-    "\(platform.map { formatState($0) } ?? "?") \(version ?? "?")"
-  }
-
-  var label: String {
-    "\(train) (\(buildNumber ?? "?"))"
-  }
-}

@@ -16,6 +16,8 @@
 // - `anyOf` blocks that only restate required properties are dropped (they generate empty types).
 // - A discriminated `oneOf` whose discriminator property no branch declares becomes an `anyOf`
 //   (the asset library placement's `relationships`, which could never decode).
+// - A metric response's dimensions that name a resource (`betaTesters`) declare their `data` as a
+//   string, but Apple sends the resource's linkage (`{"type", "id"}`): those become objects.
 // - Operations keep only their success responses (the error middleware handles the rest).
 import Foundation
 
@@ -167,6 +169,49 @@ func dropEmptyEnums(_ value: Any) -> Any {
 
 spec["paths"] = dropEmptyEnums(spec["paths"] ?? [:])
 
+// Metric responses group their data points by dimensions, each with a `data` the spec declares as
+// a string. For a dimension named after a resource Apple sends that resource's linkage instead
+// (seen live 2026-10-23: `betaTesters` → {"type": "betaTesters", "id": …}), which can't decode
+// as a string. Others (Game Center's `result`) are left as declared.
+var fixedDimensions = 0
+let linkage: [String: Any] = [
+  "type": "object",
+  "properties": ["type": ["type": "string"], "id": ["type": "string"]],
+  "required": ["type", "id"],
+]
+if var allSchemas = components["schemas"] as? [String: Any] {
+  let resourceNames = Set(allSchemas.keys)
+  for (name, schema) in allSchemas where name.hasSuffix("MetricResponse") {
+    guard var schema = schema as? [String: Any], var properties = schema["properties"] as? [String: Any],
+      var dataProperty = properties["data"] as? [String: Any], var items = dataProperty["items"] as? [String: Any],
+      var itemProperties = items["properties"] as? [String: Any],
+      var dimensions = itemProperties["dimensions"] as? [String: Any],
+      var dimensionProperties = dimensions["properties"] as? [String: Any]
+    else { continue }
+    for (key, dimension) in dimensionProperties {
+      // A resource type's schema is its singular, capitalized name (betaTesters → BetaTester).
+      let resource = key.prefix(1).uppercased() + key.dropFirst()
+      guard resourceNames.contains(resource) || resourceNames.contains(String(resource.dropLast())),
+        var dimension = dimension as? [String: Any], var fields = dimension["properties"] as? [String: Any],
+        (fields["data"] as? [String: Any])?["type"] as? String == "string"
+      else { continue }
+      fields["data"] = linkage
+      dimension["properties"] = fields
+      dimensionProperties[key] = dimension
+      fixedDimensions += 1
+    }
+    dimensions["properties"] = dimensionProperties
+    itemProperties["dimensions"] = dimensions
+    items["properties"] = itemProperties
+    dataProperty["items"] = items
+    properties["data"] = dataProperty
+    schema["properties"] = properties
+    allSchemas[name] = schema
+  }
+  components["schemas"] = allSchemas
+  spec["components"] = components
+}
+
 // Only success responses are kept: ASCKit's error middleware throws every 4xx/5xx as `ASCError`
 // before the generated client decodes it, so the typed error responses (400, 401, 403, 404, 409,
 // 422 and 429 on most operations) were never used, and they made up most of the generated code.
@@ -193,7 +238,7 @@ spec["paths"] = keepSuccessResponses(spec["paths"] ?? [:])
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(droppedResponses) error responses dropped)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(fixedDimensions) metric dimensions made linkages, \(droppedResponses) error responses dropped)")
 
 // ASCEnums.swift: the enum catalog as Swift enums, for validating input (`parseEnum`) and
 // naming values in code; requests and responses carry the raw strings.

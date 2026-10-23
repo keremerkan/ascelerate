@@ -714,8 +714,8 @@ struct AppsCommand: AsyncParsableCommand {
         let build = try await selectBuild(
           appID: app.id, versionID: appVersion.id, versionString: versionString,
           platform: versionPlatform(appVersion), client: client)
-        let buildNumber = build.attributes?.version ?? "unknown"
-        let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
+        let buildNumber = build.number ?? "unknown"
+        let uploaded = build.uploadedDate.map { formatDate($0) } ?? "—"
         print()
         success("Attached", "build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
       }
@@ -760,7 +760,7 @@ struct AppsCommand: AsyncParsableCommand {
             platform: versionPlatform(appVersion),
             client: client
           )
-          let uploaded = awaitedBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
+          let uploaded = awaitedBuild.uploadedDate.map { formatDate($0) } ?? "—"
           print()
           print("Version: \(versionString)")
           print("Build:   \(pendingBuild)  VALID  \(uploaded)")
@@ -771,29 +771,24 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
           
-          try await attachBuild(awaitedBuild.id, toVersion: appVersion.id, client: client)
+          try await Builds.attach(buildID: awaitedBuild.id, toVersion: appVersion.id, client: client)
           
           print()
           success("Attached", "build \(pendingBuild) (uploaded \(uploaded)) to version \(versionString).")
           return
         }
         
-        let buildsResponse = try await client.buildsGetCollection(query: .init(
-          filterPreReleaseVersionVersion: [versionString],
-          filterPreReleaseVersionPlatform: platformFilter(versionPlatform(appVersion)),
-          filterApp: [app.id],
-          sort: [.minusUploadedDate],
-          limit: 1
-        )).ok.body.json
+        let builds = try await Builds.list(
+          appID: app.id, platform: versionPlatform(appVersion), version: versionString, limit: 1, client: client)
         
-        guard let build = buildsResponse.data.first else {
+        guard let build = builds.first else {
           throw ValidationError("No builds found for version \(versionString). Upload a build first via Xcode or Transporter.")
         }
         
         var latestBuild = build
-        let buildNumber = latestBuild.attributes?.version ?? "unknown"
-        let state = latestBuild.attributes?.processingState
-        let uploaded = latestBuild.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
+        let buildNumber = latestBuild.number ?? "unknown"
+        let state = latestBuild.processingState
+        let uploaded = latestBuild.uploadedDate.map { formatDate($0) } ?? "—"
         
         print("Version: \(versionString)")
         print("Build:   \(buildNumber)  \(state.map { formatState($0) } ?? "—")  \(uploaded)")
@@ -823,7 +818,7 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        try await attachBuild(latestBuild.id, toVersion: appVersion.id, client: client)
+        try await Builds.attach(buildID: latestBuild.id, toVersion: appVersion.id, client: client)
 
         print()
         success("Attached", "build \(buildNumber) (uploaded \(uploaded)) to version \(versionString).")
@@ -877,14 +872,7 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        // Detaching is a PATCH with `{"data": null}`; the generated linkage request requires
-        // `data`, so the placeholder linkage is replaced with null on the way out.
-        _ = try await ASCNulls.sending([["data"]]) {
-          try await client.appStoreVersionsBuildUpdateToOneRelationship(
-            path: .init(id: appVersion.id),
-            body: .json(.init(data: .init(id: "none", _type: "builds")))
-          ).noContent
-        }
+        try await Builds.detach(fromVersion: appVersion.id, client: client)
         
         print()
         success("Detached", "build \(buildNumber) from version \(versionString).")
@@ -1817,7 +1805,7 @@ struct AppsCommand: AsyncParsableCommand {
           let selected = try await selectBuild(
             appID: app.id, versionID: appVersion.id, versionString: versionString,
             platform: platformValue, client: client)
-          let buildNumber = selected.attributes?.version ?? "unknown"
+          let buildNumber = selected.number ?? "unknown"
           print()
           print("Build \(buildNumber) attached. Continuing with submission...")
           print()
@@ -3821,8 +3809,8 @@ struct PlatformOption: ParsableArguments {
   }
 }
 
-/// Polls until a build finishes processing. Returns the final build.
-/// Throws on timeout or if the build ends in a non-valid state.
+/// Polls until a build finishes processing, printing where it stands. Returns the final build.
+/// Exits with a failure on timeout or if the build ends in a non-valid state.
 func awaitBuildProcessing(
   appID: String,
   buildVersion: String?,
@@ -3830,55 +3818,43 @@ func awaitBuildProcessing(
   client: ASCClient,
   interval: Int = 30,
   timeout: Int = 30
-) async throws -> Components.Schemas.Build {
-  let deadline = Date().addingTimeInterval(Double(timeout * 60))
-  var waitingElapsed = 0
-  var waitingStarted = false
-
-  while Date() < deadline {
-    let response = try await client.buildsGetCollection(query: .init(
-      filterVersion: buildVersion.map { [$0] },
-      filterPreReleaseVersionPlatform: platformFilter(platform),
-      filterApp: [appID],
-      sort: [.minusUploadedDate],
-      limit: 1
-    )).ok.body.json
-
-    if let build = response.data.first, let state = build.attributes?.processingState {
-      let version = build.attributes?.version ?? "?"
-
-      // End the "not found" line if we were waiting
-      if waitingStarted {
-        print()
-        waitingStarted = false
-      }
-
-      switch state {
-        case "VALID":
-          print("Build \(version) is ready (VALID).")
-          return build
-        case "PROCESSING":
-          print("Build \(version): still processing...")
-        default:  // FAILED, INVALID
-          print("Build \(version) processing ended with state: \(state.lowercased())")
-          throw ExitCode.failure
-      }
-    } else {
-      waitingElapsed += interval
-      if !waitingStarted {
-        print("Build not found yet", terminator: "")
-        waitingStarted = true
-      }
-      print("...\(waitingElapsed)s", terminator: "")
-      fflush(stdout)
+) async throws -> Builds.Build {
+  // Whether the "not found" line is still open.
+  var waiting = false
+  func endWaitingLine() {
+    if waiting {
+      print()
+      waiting = false
     }
-
-    try await Task.sleep(nanoseconds: UInt64(interval) * 1_000_000_000)
   }
-
-  if waitingStarted { print() }
-  print("\nTimed out after \(timeout) minutes.")
-  throw ExitCode.failure
+  do {
+    let build = try await Builds.waitForProcessing(
+      appID: appID, number: buildVersion, platform: platform, interval: interval, timeout: timeout, client: client
+    ) { update in
+      switch update {
+        case .notFound(let elapsed):
+          if !waiting {
+            print("Build not found yet", terminator: "")
+            waiting = true
+          }
+          print("...\(elapsed)s", terminator: "")
+          fflush(stdout)
+        case .processing(let build):
+          endWaitingLine()
+          print("Build \(build.number ?? "?"): still processing...")
+      }
+    }
+    endWaitingLine()
+    print("Build \(build.number ?? "?") is ready (VALID).")
+    return build
+  } catch let error as Builds.ProcessingError {
+    endWaitingLine()
+    switch error {
+      case .ended(let number, let state): print("Build \(number) processing ended with state: \(state.lowercased())")
+      case .timedOut(let minutes): print("\nTimed out after \(minutes) minutes.")
+    }
+    throw ExitCode.failure
+  }
 }
 
 /// Picks a review submission from a response, prompting when more than one matches
@@ -3923,27 +3899,11 @@ private func selectSubmission(
   return (submission, versionString(submission))
 }
 
-/// Attaches a build to an App Store version.
-func attachBuild(_ buildID: String, toVersion versionID: String, client: ASCClient) async throws {
-  _ = try await client.appStoreVersionsBuildUpdateToOneRelationship(
-    path: .init(id: versionID),
-    body: .json(.init(data: .init(id: buildID, _type: "builds")))
-  ).noContent
-}
-
 /// Fetches builds for the app matching the given version, prompts the user to pick one, and attaches it.
 /// Returns the selected build.
 @discardableResult
-private func selectBuild(appID: String, versionID: String, versionString: String?, platform: Platform? = nil, client: ASCClient) async throws -> Components.Schemas.Build {
-  let buildsResponse = try await client.buildsGetCollection(query: .init(
-    filterPreReleaseVersionVersion: versionString.map { [$0] },
-    filterPreReleaseVersionPlatform: platformFilter(platform),
-    filterApp: [appID],
-    sort: [.minusUploadedDate],
-    limit: 10
-  )).ok.body.json
-  
-  let builds = buildsResponse.data
+private func selectBuild(appID: String, versionID: String, versionString: String?, platform: Platform? = nil, client: ASCClient) async throws -> Builds.Build {
+  let builds = try await Builds.list(appID: appID, platform: platform, version: versionString, limit: 10, client: client)
   guard !builds.isEmpty else {
     if let v = versionString {
       throw ValidationError("No builds found for version \(v). Upload a build first via Xcode or Transporter.")
@@ -3953,17 +3913,17 @@ private func selectBuild(appID: String, versionID: String, versionString: String
   
   print("Builds for version \(versionString ?? "all"):")
   for (i, build) in builds.enumerated() {
-    let number = build.attributes?.version ?? "—"
-    let state = build.attributes?.processingState.map { formatState($0) } ?? "—"
-    let uploaded = build.attributes?.uploadedDate.map { formatDate($0) } ?? "—"
+    let number = build.number ?? "—"
+    let state = build.processingState.map { formatState($0) } ?? "—"
+    let uploaded = build.uploadedDate.map { formatDate($0) } ?? "—"
     print("  [\(i + 1)] \(number)  \(state)  \(uploaded)")
   }
   print()
   
-  let selected: Components.Schemas.Build
+  let selected: Builds.Build
   if autoConfirm {
     selected = builds[0]
-    let number = selected.attributes?.version ?? "—"
+    let number = selected.number ?? "—"
     print("Auto-selected build \(number) (most recent).")
   } else {
     print("Select a build (1-\(builds.count)): ", terminator: "")
@@ -3976,7 +3936,7 @@ private func selectBuild(appID: String, versionID: String, versionString: String
   }
   
   // Attach the build to the version
-  try await attachBuild(selected.id, toVersion: versionID, client: client)
+  try await Builds.attach(buildID: selected.id, toVersion: versionID, client: client)
   
   return selected
 }

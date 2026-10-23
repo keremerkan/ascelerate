@@ -278,7 +278,7 @@ struct BuildsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Build configuration (default: Release).")
     var configuration: String?
 
-    @Option(name: .long, help: "Destination (default: generic/platform=iOS).")
+    @Option(name: .long, help: "Destination (default: the generic destination of the scheme's platform, such as generic/platform=macOS; generic/platform=iOS when the app builds for several).")
     var destination: String?
 
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -303,6 +303,8 @@ struct BuildsCommand: AsyncParsableCommand {
 
       // 2. Detect scheme
       let schemeName = try detectScheme(buildFlag: buildFlag, buildPath: buildPath)
+
+      let destination = destination ?? defaultDestination(buildFlag: buildFlag, buildPath: buildPath, scheme: schemeName)
 
       // 3. Clean before archiving
       EventOutput.log("Cleaning build...")
@@ -336,7 +338,7 @@ struct BuildsCommand: AsyncParsableCommand {
         buildFlag, buildPath,
         "-scheme", schemeName,
         "-configuration", configuration ?? "Release",
-        "-destination", destination ?? "generic/platform=iOS",
+        "-destination", destination,
         "-allowProvisioningUpdates",
       ] + quietFlag + (try APICredentials.fromEnvironment()?.xcodebuildArguments ?? [])
 
@@ -387,6 +389,42 @@ struct BuildsCommand: AsyncParsableCommand {
           EventOutput.emit(BuildEvent(event: "archived", path: latest.path))
         }
       }
+    }
+
+    /// The generic destination of the platform the scheme's app builds for, from its build settings
+    /// (`SUPPORTED_PLATFORMS` without the simulators), so a Mac, tvOS or visionOS app archives without
+    /// `--destination`. iOS when the app builds for several platforms or the settings can't be read,
+    /// as before.
+    private func defaultDestination(buildFlag: String, buildPath: String, scheme: String) -> String {
+      let fallback = "generic/platform=iOS"
+      let process = Process()
+      process.executableURL = URL(fileURLWithPath: "/usr/bin/xcodebuild")
+      process.arguments = [
+        "-showBuildSettings", "-json", buildFlag, buildPath, "-scheme", scheme, "-configuration", configuration ?? "Release",
+      ]
+      let pipe = Pipe()
+      process.standardOutput = pipe
+      process.standardError = FileHandle.nullDevice
+      do {
+        try process.run()
+      } catch {
+        return fallback
+      }
+      let data = pipe.fileHandleForReading.readDataToEndOfFile()
+      process.waitUntilExit()
+      guard process.terminationStatus == 0,
+        let targets = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]]
+      else { return fallback }
+      let settings = targets.compactMap { $0["buildSettings"] as? [String: Any] }
+      let app = settings.first { $0["WRAPPER_EXTENSION"] as? String == "app" } ?? settings.first
+      let platforms = ((app?["SUPPORTED_PLATFORMS"] as? String) ?? "").split(separator: " ").filter { !$0.hasSuffix("simulator") }
+      let destinations = ["macosx": "macOS", "iphoneos": "iOS", "appletvos": "tvOS", "xros": "visionOS", "watchos": "watchOS"]
+      guard platforms.count == 1, let platform = destinations[String(platforms[0])] else { return fallback }
+      let destination = "generic/platform=\(platform)"
+      if destination != fallback {
+        EventOutput.log("Destination: \(destination) (the scheme's platform)")
+      }
+      return destination
     }
 
     /// For another tool following the events, xcodebuild prints only warnings and errors: its full

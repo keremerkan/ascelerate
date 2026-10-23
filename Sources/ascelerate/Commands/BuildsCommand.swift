@@ -821,7 +821,9 @@ private func resolveFilePath(_ file: String?, prompt: String) throws -> String {
     filePath = line
   }
 
-  let expandedPath = expandPath(filePath)
+  // Without a trailing slash: an .xcarchive is a folder, which tab completion and apps passing a
+  // folder's URL end in one, and the type is told by the path's extension.
+  let expandedPath = (expandPath(filePath) as NSString).standardizingPath
   guard FileManager.default.fileExists(atPath: expandedPath) else {
     throw ValidationError("File not found at '\(expandedPath)'.")
   }

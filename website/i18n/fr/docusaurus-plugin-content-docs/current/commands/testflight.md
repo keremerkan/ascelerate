@@ -16,10 +16,11 @@ ascelerate testflight groups list <bundle-id>
 ascelerate testflight groups info <bundle-id> "External Testers"
 ascelerate testflight groups create <bundle-id> --name "Friends" --public-link --public-link-limit 100
 ascelerate testflight groups update <bundle-id> "Friends" --public-link false
+ascelerate testflight groups update <bundle-id> "Friends" --mac false --vision-pro true
 ascelerate testflight groups delete <bundle-id> "Friends"
 ```
 
-`groups list` affiche pour chaque groupe son type, son lien public, sa limite de testeurs et son réglage de retours. `groups info` y ajoute les testeurs du groupe et les builds qui lui sont associés. `create` accepte `--internal` pour un groupe interne (membres de l'équipe) et `--all-builds` pour lui donner un accès automatique à tous les builds ; les groupes externes peuvent activer un lien d'invitation public avec une limite de testeurs facultative.
+`groups list` affiche pour chaque groupe son type, son lien public, sa limite de testeurs et son réglage de retours. `groups info` y ajoute les testeurs du groupe et les builds qui lui sont associés. `create` accepte `--internal` pour un groupe interne (membres de l'équipe) et `--all-builds` pour lui donner un accès automatique à tous les builds ; les groupes externes peuvent activer un lien d'invitation public avec une limite de testeurs facultative. `update` accepte aussi `--mac` et `--vision-pro`, qui déterminent si les testeurs peuvent exécuter les builds iPhone et iPad du groupe sur les Mac avec puce Apple et sur l'Apple Vision Pro.
 
 Les noms de groupes sont comparés sans tenir compte de la casse. Omettez le nom pour choisir dans une liste interactive.
 
@@ -34,7 +35,7 @@ ascelerate testflight groups remove-build <bundle-id> "Friends" --build 123
 
 ### Critères de recrutement
 
-Les groupes disposant d'un lien public peuvent restreindre l'accès selon la famille d'appareils et la version du système :
+Les groupes à lien public qui ont des critères de recrutement peuvent les modifier ou les supprimer. Apple ne permet plus d'en ajouter de nouveaux (App Store Connect ne les affiche plus non plus), donc `set` ne remplace que des critères existants :
 
 ```bash
 # Afficher les critères actuels, ainsi que les options appareil/OS acceptées par Apple

@@ -16,10 +16,11 @@ ascelerate testflight groups list <bundle-id>
 ascelerate testflight groups info <bundle-id> "External Testers"
 ascelerate testflight groups create <bundle-id> --name "Friends" --public-link --public-link-limit 100
 ascelerate testflight groups update <bundle-id> "Friends" --public-link false
+ascelerate testflight groups update <bundle-id> "Friends" --mac false --vision-pro true
 ascelerate testflight groups delete <bundle-id> "Friends"
 ```
 
-`groups list` her grubun türünü, herkese açık bağlantısını, test kullanıcısı sınırını ve geri bildirim ayarını gösterir. `groups info` bunlara grubun test kullanıcılarını ve atanmış build'lerini ekler. `create` komutu, ekip üyelerinden oluşan dahili bir grup için `--internal` ve gruba tüm build'lere otomatik erişim vermek için `--all-builds` seçeneklerini kabul eder; harici gruplarda isteğe bağlı test kullanıcısı sınırıyla birlikte herkese açık bir davet bağlantısı etkinleştirilebilir.
+`groups list` her grubun türünü, herkese açık bağlantısını, test kullanıcısı sınırını ve geri bildirim ayarını gösterir. `groups info` bunlara grubun test kullanıcılarını ve atanmış build'lerini ekler. `create` komutu, ekip üyelerinden oluşan dahili bir grup için `--internal` ve gruba tüm build'lere otomatik erişim vermek için `--all-builds` seçeneklerini kabul eder; harici gruplarda isteğe bağlı test kullanıcısı sınırıyla birlikte herkese açık bir davet bağlantısı etkinleştirilebilir. `update`, `--mac` ve `--vision-pro` seçeneklerini de kabul eder. Bunlar, test kullanıcılarının grubun iPhone ve iPad build'lerini Apple çipli Mac'lerde ve Apple Vision Pro'da çalıştırıp çalıştıramayacağını belirler.
 
 Grup adları büyük/küçük harf ayrımı yapılmadan eşleştirilir. Adı boş bırakırsanız etkileşimli bir listeden seçim yapabilirsiniz.
 
@@ -34,7 +35,7 @@ ascelerate testflight groups remove-build <bundle-id> "Friends" --build 123
 
 ### Katılım ölçütleri
 
-Herkese açık bağlantı kullanan gruplar, katılımı cihaz ailesine ve işletim sistemi sürümüne göre sınırlayabilir:
+Katılım ölçütleri olan herkese açık bağlantılı gruplar bu ölçütleri değiştirebilir veya kaldırabilir. Apple artık gruplara yeni ölçüt eklenmesine izin vermiyor (App Store Connect de bunları artık göstermiyor); bu nedenle `set` yalnızca mevcut ölçütleri değiştirir:
 
 ```bash
 # Geçerli ölçütleri ve Apple'ın kabul ettiği cihaz/işletim sistemi seçeneklerini görüntüleyin

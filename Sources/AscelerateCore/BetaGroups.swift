@@ -15,6 +15,10 @@ public enum BetaGroups {
     /// The most testers the public link takes, when it's limited.
     public let publicLinkLimit: Int?
     public let feedbackEnabled: Bool
+    /// Whether testers can run the iOS builds on Apple silicon Macs and Apple Vision Pro (App
+    /// Store Connect's "Test iPhone and iPad Apps on …"; nil when Apple doesn't say).
+    public let iOSBuildsOnMac: Bool?
+    public let iOSBuildsOnVision: Bool?
     public let createdDate: Date?
 
     public init(_ group: Components.Schemas.BetaGroup) {
@@ -27,6 +31,8 @@ public enum BetaGroups {
       publicLink = attributes?.publicLink
       publicLinkLimit = attributes?.publicLinkLimitEnabled == true ? attributes?.publicLinkLimit : nil
       feedbackEnabled = attributes?.feedbackEnabled ?? false
+      iOSBuildsOnMac = attributes?.iosBuildsAvailableForAppleSiliconMac
+      iOSBuildsOnVision = attributes?.iosBuildsAvailableForAppleVision
       createdDate = attributes?.createdDate
     }
   }
@@ -61,18 +67,20 @@ public enum BetaGroups {
     return Group(response.data)
   }
 
-  /// Changes a group's name, public link and feedback; nil leaves one as it is. A limit of 0
-  /// removes the public link's limit.
+  /// Changes a group's name, public link, feedback and where its iOS builds run; nil leaves one as
+  /// it is. A limit of 0 removes the public link's limit.
   @discardableResult
   public static func update(
     groupID: String, name: String? = nil, publicLink: Bool? = nil, publicLinkLimit: Int? = nil, feedback: Bool? = nil,
-    client: ASCClient
+    iOSBuildsOnMac: Bool? = nil, iOSBuildsOnVision: Bool? = nil, client: ASCClient
   ) async throws -> Group {
     let response = try await client.betaGroupsUpdateInstance(
       path: .init(id: groupID),
       body: .json(.init(data: .init(
         attributes: .init(
           feedbackEnabled: feedback,
+          iosBuildsAvailableForAppleSiliconMac: iOSBuildsOnMac,
+          iosBuildsAvailableForAppleVision: iOSBuildsOnVision,
           name: name,
           publicLinkEnabled: publicLink,
           publicLinkLimit: (publicLinkLimit ?? 0) > 0 ? publicLinkLimit : nil,

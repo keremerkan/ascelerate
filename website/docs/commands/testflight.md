@@ -16,10 +16,11 @@ ascelerate testflight groups list <bundle-id>
 ascelerate testflight groups info <bundle-id> "External Testers"
 ascelerate testflight groups create <bundle-id> --name "Friends" --public-link --public-link-limit 100
 ascelerate testflight groups update <bundle-id> "Friends" --public-link false
+ascelerate testflight groups update <bundle-id> "Friends" --mac false --vision-pro true
 ascelerate testflight groups delete <bundle-id> "Friends"
 ```
 
-`groups list` shows each group's type, public link, tester limit, and feedback setting. `groups info` adds the group's testers and assigned builds. `create` accepts `--internal` for an internal group (team members) and `--all-builds` to give it automatic access to every build; external groups can enable a public invite link with an optional tester limit.
+`groups list` shows each group's type, public link, tester limit, and feedback setting. `groups info` adds the group's testers and assigned builds. `create` accepts `--internal` for an internal group (team members) and `--all-builds` to give it automatic access to every build; external groups can enable a public invite link with an optional tester limit. `update` also takes `--mac` and `--vision-pro`: whether testers can run the group's iPhone and iPad builds on Macs with Apple silicon and on Apple Vision Pro.
 
 Group names are matched case-insensitively. Omit the name to pick from an interactive list.
 
@@ -34,7 +35,7 @@ ascelerate testflight groups remove-build <bundle-id> "Friends" --build 123
 
 ### Recruitment criteria
 
-Public-link groups can restrict who joins by device family and OS version:
+Public-link groups that have recruitment criteria can change or clear them. Apple no longer lets a group get new criteria (App Store Connect doesn't show them anymore either), so `set` only replaces existing ones:
 
 ```bash
 # View current criteria, plus the device/OS options Apple accepts

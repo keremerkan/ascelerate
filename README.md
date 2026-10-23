@@ -934,6 +934,7 @@ ascelerate testflight groups list <bundle-id>
 ascelerate testflight groups info <bundle-id> "External Testers"
 ascelerate testflight groups create <bundle-id> --name "Friends" --public-link --public-link-limit 100
 ascelerate testflight groups update <bundle-id> "Friends" --public-link false
+ascelerate testflight groups update <bundle-id> "Friends" --mac false --vision-pro true  # iPhone/iPad builds on Apple silicon Macs, Vision Pro
 ascelerate testflight groups delete <bundle-id> "Friends"
 
 # Give a group access to a build (defaults to the latest)
@@ -941,7 +942,7 @@ ascelerate testflight groups add-build <bundle-id> "Friends"
 ascelerate testflight groups add-build <bundle-id> "Friends" --build 123
 ascelerate testflight groups remove-build <bundle-id> "Friends" --build 123
 
-# Public-link recruitment criteria (device/OS filters)
+# Public-link recruitment criteria (device/OS filters); Apple no longer adds new ones, set only replaces existing criteria
 ascelerate testflight groups criteria view <bundle-id> "Friends" --options
 ascelerate testflight groups criteria set <bundle-id> "Friends" --filter IPHONE:18.0 --filter IPAD:17.0:26
 ascelerate testflight groups criteria clear <bundle-id> "Friends"

@@ -16,10 +16,11 @@ ascelerate testflight groups list <bundle-id>
 ascelerate testflight groups info <bundle-id> "External Testers"
 ascelerate testflight groups create <bundle-id> --name "Friends" --public-link --public-link-limit 100
 ascelerate testflight groups update <bundle-id> "Friends" --public-link false
+ascelerate testflight groups update <bundle-id> "Friends" --mac false --vision-pro true
 ascelerate testflight groups delete <bundle-id> "Friends"
 ```
 
-`groups list` zeigt für jede Gruppe den Typ, den öffentlichen Link, das Tester-Limit und die Feedback-Einstellung. `groups info` ergänzt die Tester und die zugewiesenen Builds der Gruppe. `create` akzeptiert `--internal` für eine interne Gruppe (Teammitglieder) und `--all-builds`, um ihr automatischen Zugriff auf alle Builds zu geben; externe Gruppen können einen öffentlichen Einladungslink mit optionalem Tester-Limit aktivieren.
+`groups list` zeigt für jede Gruppe den Typ, den öffentlichen Link, das Tester-Limit und die Feedback-Einstellung. `groups info` ergänzt die Tester und die zugewiesenen Builds der Gruppe. `create` akzeptiert `--internal` für eine interne Gruppe (Teammitglieder) und `--all-builds`, um ihr automatischen Zugriff auf alle Builds zu geben; externe Gruppen können einen öffentlichen Einladungslink mit optionalem Tester-Limit aktivieren. `update` akzeptiert außerdem `--mac` und `--vision-pro`: ob Tester die iPhone- und iPad-Builds der Gruppe auf Macs mit Apple Chip und auf der Apple Vision Pro ausführen können.
 
 Gruppennamen werden ohne Beachtung der Groß-/Kleinschreibung abgeglichen. Lassen Sie den Namen weg, um aus einer interaktiven Liste zu wählen.
 
@@ -34,7 +35,7 @@ ascelerate testflight groups remove-build <bundle-id> "Friends" --build 123
 
 ### Aufnahmekriterien
 
-Gruppen mit öffentlichem Link können den Beitritt nach Gerätefamilie und Betriebssystemversion einschränken:
+Gruppen mit öffentlichem Link, die Aufnahmekriterien haben, können diese ändern oder entfernen. Apple lässt keine neuen Kriterien mehr zu (auch App Store Connect zeigt sie nicht mehr an), daher ersetzt `set` nur vorhandene Kriterien:
 
 ```bash
 # Aktuelle Kriterien anzeigen, samt der von Apple akzeptierten Geräte-/OS-Optionen

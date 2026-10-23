@@ -20,6 +20,10 @@ ascelerate apps info myapp    # Use alias anywhere
 
 Any argument without a dot is treated as an alias. Real bundle IDs work unchanged.
 
+### Another key for one run
+
+`ASCELERATE_KEY_ID`, `ASCELERATE_ISSUER_ID` and `ASCELERATE_PRIVATE_KEY_PATH` (all three) override the configured key for that run only (another team, CI); `config.json` stays as it is. `builds archive`/`upload` then also give the key to `xcodebuild` for provisioning (the key must be allowed to manage certificates and profiles). `ascelerate configure --show` prints the key in use and whether it comes from the environment.
+
 ### JSON output
 
 Read commands support `--json` for machine-readable output — prefer it over parsing tables:

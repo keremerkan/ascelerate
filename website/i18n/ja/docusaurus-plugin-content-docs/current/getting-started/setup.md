@@ -31,6 +31,19 @@ ascelerate configure
 
 [Apple Ads](../commands/ads.md) を利用するには別の認証情報が必要です。`ascelerate ads configure` で設定すると、同じファイルの `ads` セクションに保存されます。`configure` を再度実行しても、この認証情報は保持されます。
 
+### 1回の実行だけ別のキーを使う
+
+別のチームや CI など、別のキーでコマンドを実行するには、3つの環境変数をすべて設定します。その実行では `config.json` より優先され、ファイルは変更されません。
+
+```bash
+export ASCELERATE_KEY_ID=KEY_ID
+export ASCELERATE_ISSUER_ID=ISSUER_ID
+export ASCELERATE_PRIVATE_KEY_PATH=~/keys/AuthKey_KEY_ID.p8
+ascelerate apps list
+```
+
+`builds archive` と `builds upload` はこのキーを `xcodebuild` にも渡します (`-authenticationKeyPath`, `-authenticationKeyID`, `-authenticationKeyIssuerID`)。そのため、プロファイルは Xcode にサインインしている Apple アカウントではなく、このキーで取得されます。この場合、キーには証明書・ID・プロファイルを管理する権限が必要です。実行で使われるキーは `ascelerate configure --show` で確認できます。
+
 ## 3. 確認
 
 簡単なコマンドを実行して、すべてが正常に動作することを確認します：

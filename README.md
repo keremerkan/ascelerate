@@ -115,6 +115,19 @@ ascelerate configure
 
 This will prompt for your **Key ID**, **Issuer ID**, and the path to your `.p8` file, plus an optional **vendor number** (only needed for `reports sales`/`reports finance`). The private key is copied into `~/.ascelerate/` with strict file permissions (owner-only access).
 
+### A key for one run
+
+To run a command with another key, for another team or in CI, set all three environment variables. They take precedence over `config.json` for that run, and the file stays as it is:
+
+```bash
+export ASCELERATE_KEY_ID=KEY_ID
+export ASCELERATE_ISSUER_ID=ISSUER_ID
+export ASCELERATE_PRIVATE_KEY_PATH=~/keys/AuthKey_KEY_ID.p8
+ascelerate apps list
+```
+
+`builds archive` and `builds upload` also hand this key to `xcodebuild` (`-authenticationKeyPath`, `-authenticationKeyID`, `-authenticationKeyIssuerID`), so profiles are fetched with the key instead of the Apple ID signed in to Xcode. That needs a key allowed to manage certificates, identifiers and profiles. `ascelerate configure --show` says which key a run uses.
+
 ## Usage
 
 ### Aliases

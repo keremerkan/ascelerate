@@ -31,6 +31,19 @@ Yapılandırma `~/.ascelerate/config.json` dosyasında saklanır:
 
 [Apple Ads](../commands/ads.md) için ascelerate ayrı kimlik bilgilerine ihtiyaç duyar. Bunları `ascelerate ads configure` ayarlar ve aynı dosyadaki bir `ads` bölümüne kaydeder; `configure` komutunu yeniden çalıştırdığınızda bu bilgiler korunur.
 
+### Tek bir çalıştırma için anahtar
+
+Bir komutu başka bir anahtarla (başka bir ekip için ya da CI ortamında) çalıştırmak için üç ortam değişkeninin üçünü de ayarlayın. Bu değişkenler o çalıştırma için `config.json` dosyasının önüne geçer; dosya olduğu gibi kalır:
+
+```bash
+export ASCELERATE_KEY_ID=KEY_ID
+export ASCELERATE_ISSUER_ID=ISSUER_ID
+export ASCELERATE_PRIVATE_KEY_PATH=~/keys/AuthKey_KEY_ID.p8
+ascelerate apps list
+```
+
+`builds archive` ve `builds upload` bu anahtarı `xcodebuild` komutuna da iletir (`-authenticationKeyPath`, `-authenticationKeyID`, `-authenticationKeyIssuerID`); böylece profiller, Xcode'da oturum açmış Apple Kimliği yerine bu anahtarla alınır. Bunun için anahtarın sertifikaları, tanımlayıcıları ve profilleri yönetme yetkisi olmalıdır. Bir çalıştırmanın hangi anahtarı kullandığını `ascelerate configure --show` gösterir.
+
 ## 3. Doğrulama
 
 Her şeyin çalıştığını doğrulamak için hızlıca bir komut çalıştırın:

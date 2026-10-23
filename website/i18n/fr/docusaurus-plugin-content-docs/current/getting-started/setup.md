@@ -31,6 +31,19 @@ La configuration est stockée dans `~/.ascelerate/config.json` :
 
 Pour [Apple Ads](../commands/ads.md), ascelerate a besoin d'identifiants distincts, que `ascelerate ads configure` configure et enregistre dans une section `ads` du même fichier. Une nouvelle exécution de `configure` les conserve.
 
+### Une clé pour une seule exécution
+
+Pour exécuter une commande avec une autre clé (pour une autre équipe ou en CI), définissez les trois variables d'environnement. Elles priment sur `config.json` pour cette exécution, et le fichier reste inchangé :
+
+```bash
+export ASCELERATE_KEY_ID=KEY_ID
+export ASCELERATE_ISSUER_ID=ISSUER_ID
+export ASCELERATE_PRIVATE_KEY_PATH=~/keys/AuthKey_KEY_ID.p8
+ascelerate apps list
+```
+
+`builds archive` et `builds upload` transmettent aussi cette clé à `xcodebuild` (`-authenticationKeyPath`, `-authenticationKeyID`, `-authenticationKeyIssuerID`), afin que les profils soient récupérés avec la clé plutôt qu'avec l'identifiant Apple connecté dans Xcode. La clé doit alors pouvoir gérer les certificats, identifiants et profils. `ascelerate configure --show` indique quelle clé une exécution utilise.
+
 ## 3. Vérifier
 
 Exécutez une commande rapide pour vérifier que tout fonctionne :

@@ -284,7 +284,16 @@ struct BuildsCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
+    @Flag(
+      name: .customLong("json-events"),
+      help: "Report progress as JSON events on stdout, one per line (step, archived), for other tools. The readable progress and xcodebuild's output go to stderr.")
+    var jsonEvents = false
+
     func run() throws {
+      try EventOutput.$emitsEvents.withValue(jsonEvents) { try archive() }
+    }
+
+    private func archive() throws {
       if yes { autoConfirm = true }
 
       try ensureXcodebuild()
@@ -296,7 +305,8 @@ struct BuildsCommand: AsyncParsableCommand {
       let schemeName = try detectScheme(buildFlag: buildFlag, buildPath: buildPath)
 
       // 3. Clean before archiving
-      print("Cleaning build...")
+      EventOutput.log("Cleaning build...")
+      EventOutput.emit(BuildEvent(event: "step", step: "cleaning"))
       fflush(stdout)
 
       let cleanProcess = Process()
@@ -306,8 +316,8 @@ struct BuildsCommand: AsyncParsableCommand {
         buildFlag, buildPath,
         "-scheme", schemeName,
         "-configuration", configuration ?? "Release",
-      ]
-      cleanProcess.standardOutput = FileHandle.standardOutput
+      ] + quietFlag
+      cleanProcess.standardOutput = toolOutput
       cleanProcess.standardError = FileHandle.standardError
 
       try cleanProcess.run()
@@ -328,7 +338,7 @@ struct BuildsCommand: AsyncParsableCommand {
         "-configuration", configuration ?? "Release",
         "-destination", destination ?? "generic/platform=iOS",
         "-allowProvisioningUpdates",
-      ]
+      ] + quietFlag
 
       var archivePath: String?
       if let output {
@@ -342,14 +352,16 @@ struct BuildsCommand: AsyncParsableCommand {
       }
 
       // 5. Run xcodebuild archive
-      print("Archiving scheme '\(schemeName)'...")
-      print()
+      EventOutput.log("Archiving scheme '\(schemeName)'...")
+      EventOutput.log()
+      EventOutput.emit(BuildEvent(event: "step", step: "archiving"))
       fflush(stdout)
 
+      let started = Date()
       let process = Process()
       process.executableURL = URL(fileURLWithPath: "/usr/bin/xcodebuild")
       process.arguments = args
-      process.standardOutput = FileHandle.standardOutput
+      process.standardOutput = toolOutput
       process.standardError = FileHandle.standardError
 
       try process.run()
@@ -362,14 +374,30 @@ struct BuildsCommand: AsyncParsableCommand {
         throw ExitCode(process.terminationStatus)
       }
 
-      // 6. Print result
-      print()
+      // 6. Print result: without --output, xcodebuild names the archive in Xcode's archive
+      // location, where it's the newest one made since the run started.
+      EventOutput.log()
       if let archivePath {
-        print("Archive created at: \(archivePath)")
+        EventOutput.log("Archive created at: \(archivePath)")
+        EventOutput.emit(BuildEvent(event: "archived", path: archivePath))
       } else {
-        print("Archive complete. The .xcarchive is in Xcode's default archive location:")
-        print("  ~/Library/Developer/Xcode/Archives/")
+        EventOutput.log("Archive complete. The .xcarchive is in Xcode's default archive location:")
+        EventOutput.log("  ~/Library/Developer/Xcode/Archives/")
+        if let latest = try? findLatestArchive(bundleID: nil), latest.creationDate > started.addingTimeInterval(-60) {
+          EventOutput.emit(BuildEvent(event: "archived", path: latest.path))
+        }
       }
+    }
+
+    /// For another tool following the events, xcodebuild prints only warnings and errors: its full
+    /// output (every compile command, kilobytes a line) is more than a log view can follow.
+    private var quietFlag: [String] {
+      jsonEvents ? ["-quiet"] : []
+    }
+
+    /// Where xcodebuild's output goes: the terminal, or stderr when stdout carries events.
+    private var toolOutput: FileHandle {
+      jsonEvents ? .standardError : .standardOutput
     }
 
     /// Finds a .xcworkspace or .xcodeproj in the current directory, or uses the explicit flag.
@@ -388,12 +416,12 @@ struct BuildsCommand: AsyncParsableCommand {
       // Prefer workspace over project
       if let ws = contents.first(where: { $0.hasSuffix(".xcworkspace") && !$0.hasPrefix(".") }) {
         let path = (cwd as NSString).appendingPathComponent(ws)
-        print("Using workspace: \(ws)")
+        EventOutput.log("Using workspace: \(ws)")
         return ("-workspace", path)
       }
       if let proj = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
         let path = (cwd as NSString).appendingPathComponent(proj)
-        print("Using project: \(proj)")
+        EventOutput.log("Using project: \(proj)")
         return ("-project", path)
       }
 
@@ -438,7 +466,7 @@ struct BuildsCommand: AsyncParsableCommand {
       }
       if schemes.count == 1 {
         let name = schemes[0]
-        print("Using scheme: \(name)")
+        EventOutput.log("Using scheme: \(name)")
         return name
       }
 
@@ -463,7 +491,7 @@ struct BuildsCommand: AsyncParsableCommand {
     @Flag(name: .long, help: "Use the latest .xcarchive from Xcode's archive location.")
     var latest = false
 
-    @Option(name: .long, help: "Filter archives by exact bundle identifier (use with --latest).")
+    @Option(name: .long, help: "With --latest, the latest archive of this exact bundle identifier; with a file, refuse it unless the app in it has this bundle identifier.")
     var bundleID: String?
 
     @Flag(name: .long, help: "Upload through the App Store Connect API's build uploads (.ipa or Mac .pkg) instead of altool.")
@@ -472,34 +500,52 @@ struct BuildsCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
+    @Flag(
+      name: .customLong("json-events"),
+      help: "Report progress as JSON events on stdout, one per line (step, exported, uploading, progress, finished), for other tools. The readable progress goes to stderr.")
+    var jsonEvents = false
+
     func run() async throws {
+      guard jsonEvents else { return try await upload() }
+      try await EventOutput.$emitsEvents.withValue(true) {
+        try await UploadProgress.$observe.withValue({ total in UploadProgressEvents(total: total) }) {
+          try await upload()
+        }
+      }
+    }
+
+    private func upload() async throws {
       if yes { autoConfirm = true }
       if !api { try ensureAltool() }
 
       if file != nil && latest {
         throw ValidationError("Cannot specify both a file path and --latest.")
       }
-      if bundleID != nil && !latest {
-        throw ValidationError("--bundle-id requires --latest.")
-      }
-
       let expandedPath: String
       var uploadedBuildNumber: String?
       if latest {
         let archive = try findLatestArchive(bundleID: bundleID)
         expandedPath = archive.path
         uploadedBuildNumber = archive.buildNumber
-        print("Found archive: \((archive.path as NSString).lastPathComponent)")
-        print("  Bundle ID:  \(archive.bundleID)")
-        print("  Version:    \(archive.version) (\(archive.buildNumber))")
-        print("  Created:    \(formatDate(archive.creationDate))")
-        print()
+        EventOutput.log("Found archive: \((archive.path as NSString).lastPathComponent)")
+        EventOutput.log("  Bundle ID:  \(archive.bundleID)")
+        EventOutput.log("  Version:    \(archive.version) (\(archive.buildNumber))")
+        EventOutput.log("  Created:    \(formatDate(archive.creationDate))")
+        EventOutput.log()
         guard confirm("Upload this archive? [y/N] ") else { return }
       } else {
         expandedPath = try resolveFilePath(file, prompt: "Path to .ipa, .pkg, or .xcarchive file: ")
         // Try to extract build number from .xcarchive
         if expandedPath.hasSuffix(".xcarchive") {
           uploadedBuildNumber = buildNumberFromArchive(expandedPath)
+        }
+        // Before exporting or sending anything: the file must hold that app.
+        if let bundleID {
+          let found = expandedPath.hasSuffix(".xcarchive")
+            ? bundleIDFromArchive(expandedPath) : try BuildUploader.info(path: expandedPath).bundleID
+          guard found == bundleID else {
+            throw ValidationError("\((expandedPath as NSString).lastPathComponent) holds \(found ?? "an app of unknown bundle ID"), not \(bundleID).")
+          }
         }
       }
 
@@ -522,12 +568,13 @@ struct BuildsCommand: AsyncParsableCommand {
       // altool talks to Apple itself, outside the dry-run gate: skip the upload, and don't record
       // a build number a later await-processing or attach-latest would wait for in vain.
       if ClientFactory.isDryRun {
-        print(yellow("Dry run: \((uploadPath as NSString).lastPathComponent) was not uploaded."))
+        EventOutput.log(yellow("Dry run: \((uploadPath as NSString).lastPathComponent) was not uploaded."))
         return
       }
 
-      print("Uploading \((uploadPath as NSString).lastPathComponent)...")
-      print()
+      EventOutput.log("Uploading \((uploadPath as NSString).lastPathComponent)...")
+      EventOutput.log()
+      EventOutput.emit(BuildEvent(event: "uploading", path: uploadPath, platform: archivePlatform?.ascPlatform.rawValue))
       fflush(stdout)
 
       var altoolArgs = [
@@ -545,7 +592,7 @@ struct BuildsCommand: AsyncParsableCommand {
       let process = Process()
       process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
       process.arguments = altoolArgs
-      process.standardOutput = FileHandle.standardOutput
+      process.standardOutput = jsonEvents ? FileHandle.standardError : FileHandle.standardOutput
       process.standardError = FileHandle.standardError
 
       try process.run()
@@ -561,6 +608,7 @@ struct BuildsCommand: AsyncParsableCommand {
       if let buildNumber = uploadedBuildNumber {
         recordUploadedBuild(buildNumber, platform: archivePlatform?.ascPlatform)
       }
+      EventOutput.emit(BuildEvent(event: "finished", build: uploadedBuildNumber))
     }
   }
 
@@ -868,7 +916,8 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
   }
 
   let platform = detectArchivePlatform(path)
-  print("Exporting .xcarchive to .\(platform.exportExtension) (\(platform.label))...")
+  EventOutput.log("Exporting .xcarchive to .\(platform.exportExtension) (\(platform.label))...")
+  EventOutput.emit(BuildEvent(event: "step", step: "exporting", platform: platform.ascPlatform.rawValue))
   fflush(stdout)
 
   // UUID, not PID: a predictable path could pick up a stale export from a prior crashed run.
@@ -878,22 +927,23 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
 
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
 
-  // Write ExportOptions.plist for App Store export with automatic signing
-  let plist = """
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-        <key>method</key>
-        <string>app-store-connect</string>
-        <key>destination</key>
-        <string>export</string>
-        <key>signingStyle</key>
-        <string>automatic</string>
-    </dict>
-    </plist>
-    """
-  try plist.write(toFile: plistPath, atomically: true, encoding: .utf8)
+  // App Store export options: an archive signed with App Store distribution profiles (a project
+  // signed manually) exports with those same profiles, so Xcode creates none; any other archive
+  // (signed for development, as automatic signing does) exports with automatic signing.
+  var options: [String: Any] = ["method": "app-store-connect", "destination": "export", "signingStyle": "automatic"]
+  if let signing = distributionSigning(archivePath: path) {
+    EventOutput.log("Signing with the archive's App Store profiles (manual signing).")
+    options["signingStyle"] = "manual"
+    options["teamID"] = signing.teamID
+    options["provisioningProfiles"] = signing.profiles
+    // Xcode's selectors for the newest certificate of each kind; left out, it picked the installer
+    // certificate to sign the app (seen 2026-10-23: "profile doesn't include signing certificate
+    // 3rd Party Mac Developer Installer").
+    options["signingCertificate"] = "Apple Distribution"
+    if platform == .macOS { options["installerSigningCertificate"] = installerCertificateName() }
+  }
+  try PropertyListSerialization.data(fromPropertyList: options, format: .xml, options: 0)
+    .write(to: URL(fileURLWithPath: plistPath))
 
   let process = Process()
   process.executableURL = URL(fileURLWithPath: "/usr/bin/xcodebuild")
@@ -917,7 +967,7 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
     try? FileManager.default.removeItem(atPath: tempDir)
     if let output = String(data: stdoutData, encoding: .utf8)?
       .trimmingCharacters(in: .whitespacesAndNewlines), !output.isEmpty {
-      print(output)
+      EventOutput.log(output)
     }
     throw ValidationError(
       """
@@ -935,11 +985,121 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
   }
 
   let exportPath = exportDir + "/" + exportName
-  print("Exported \(exportName)")
-  print()
+  EventOutput.log("Exported \(exportName)")
+  EventOutput.log()
   fflush(stdout)
 
   return (exportPath, tempDir, platform)
+}
+
+/// The keychain's name for the Mac App Store installer certificate: "Mac Installer Distribution"
+/// for one made since Xcode 11, "3rd Party Mac Developer Installer" for an older one (Xcode's
+/// selector for the first doesn't match the second).
+private func installerCertificateName() -> String {
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
+  process.arguments = ["find-identity", "-v"]
+  let pipe = Pipe()
+  process.standardOutput = pipe
+  process.standardError = FileHandle.nullDevice
+  guard (try? process.run()) != nil else { return "Mac Installer Distribution" }
+  let output = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+  process.waitUntilExit()
+  let current = "Mac Installer Distribution"
+  return output.contains("\"\(current):") || !output.contains("\"3rd Party Mac Developer Installer:")
+    ? current : "3rd Party Mac Developer Installer"
+}
+
+/// A provisioning profile's contents, from its CMS envelope (`security cms -D`).
+private func decodeProfile(_ path: String) -> [String: Any]? {
+  let decode = Process()
+  decode.executableURL = URL(fileURLWithPath: "/usr/bin/security")
+  decode.arguments = ["cms", "-D", "-i", path]
+  let pipe = Pipe()
+  decode.standardOutput = pipe
+  decode.standardError = FileHandle.nullDevice
+  guard (try? decode.run()) != nil else { return nil }
+  let data = pipe.fileHandleForReading.readDataToEndOfFile()
+  decode.waitUntilExit()
+  guard decode.terminationStatus == 0 else { return nil }
+  return try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+}
+
+/// Whether a profile is for distribution (a development or ad hoc one lists devices; an
+/// enterprise one provisions all).
+private func isDistribution(_ profile: [String: Any]) -> Bool {
+  profile["ProvisionedDevices"] == nil && profile["ProvisionsAllDevices"] == nil
+}
+
+/// The profiles Xcode has installed (where it keeps them since Xcode 16), decoded.
+private func installedProfiles() -> [[String: Any]] {
+  let folder = FileManager.default.homeDirectoryForCurrentUser
+    .appendingPathComponent("Library/Developer/Xcode/UserData/Provisioning Profiles").path
+  return ((try? FileManager.default.contentsOfDirectory(atPath: folder)) ?? [])
+    .compactMap { decodeProfile((folder as NSString).appendingPathComponent($0)) }
+}
+
+/// The App Store profiles to export an archive with, by bundle identifier (the app's and each
+/// embedded bundle's), with their team; nil when the archive wasn't signed for distribution (a
+/// development profile lists devices) or a bundle has no installed profile to use. Each bundle
+/// gets the archive's own profile if it's still installed (by UUID, then by name: reissuing gives
+/// a profile a new UUID, and a rename a new name), else the newest installed App Store profile of
+/// its App ID and platform.
+private func distributionSigning(archivePath: String) -> (teamID: String, profiles: [String: String])? {
+  let fm = FileManager.default
+  let products = (archivePath as NSString).appendingPathComponent("Products/Applications")
+  guard let app = (try? fm.contentsOfDirectory(atPath: products))?.first(where: { $0.hasSuffix(".app") }) else { return nil }
+  let appPath = (products as NSString).appendingPathComponent(app)
+  // Every signed bundle: the app, its extensions, watch apps and helper apps.
+  let bundles = [appPath] + ((fm.enumerator(atPath: appPath)?.allObjects as? [String]) ?? [])
+    .filter { [".app", ".appex"].contains(where: $0.hasSuffix) }
+    .map { (appPath as NSString).appendingPathComponent($0) }
+  var installed: [[String: Any]]?
+  var profiles: [String: String] = [:]
+  var teamID: String?
+  for bundle in bundles {
+    let isMac = fm.fileExists(atPath: (bundle as NSString).appendingPathComponent("Contents/Info.plist"))
+    let root = isMac ? (bundle as NSString).appendingPathComponent("Contents") : bundle
+    let profilePath = (root as NSString).appendingPathComponent(isMac ? "embedded.provisionprofile" : "embedded.mobileprovision")
+    // A bundle without a profile (a helper signed without one) doesn't need one.
+    guard fm.fileExists(atPath: profilePath) else { continue }
+    guard let infoData = fm.contents(atPath: (root as NSString).appendingPathComponent("Info.plist")),
+      let info = try? PropertyListSerialization.propertyList(from: infoData, format: nil) as? [String: Any],
+      let bundleID = info["CFBundleIdentifier"] as? String,
+      let embedded = decodeProfile(profilePath), isDistribution(embedded),
+      let team = (embedded["TeamIdentifier"] as? [String])?.first
+    else { return nil }
+    let platforms = Set(embedded["Platform"] as? [String] ?? [])
+    func appID(_ profile: [String: Any]) -> String? {
+      let entitlements = profile["Entitlements"] as? [String: Any]
+      return (entitlements?["application-identifier"] ?? entitlements?["com.apple.application-identifier"]) as? String
+    }
+    if installed == nil { installed = installedProfiles() }
+    let candidates = (installed ?? []).filter { profile in
+      isDistribution(profile) && appID(profile) == "\(team).\(bundleID)"
+        && !platforms.isDisjoint(with: profile["Platform"] as? [String] ?? [])
+        && (profile["ExpirationDate"] as? Date ?? .distantPast) > Date()
+    }
+    guard let chosen = candidates.first(where: { $0["UUID"] as? String == embedded["UUID"] as? String })
+      ?? candidates.first(where: { $0["Name"] as? String == embedded["Name"] as? String })
+      ?? candidates.max(by: { ($0["CreationDate"] as? Date ?? .distantPast) < ($1["CreationDate"] as? Date ?? .distantPast) }),
+      let uuid = chosen["UUID"] as? String
+    else { return nil }
+    profiles[bundleID] = uuid
+    teamID = teamID ?? team
+  }
+  guard let teamID, !profiles.isEmpty else { return nil }
+  return (teamID, profiles)
+}
+
+/// The archived app's bundle identifier, from an .xcarchive's Info.plist, or nil if unavailable.
+private func bundleIDFromArchive(_ archivePath: String) -> String? {
+  let plistPath = (archivePath as NSString).appendingPathComponent("Info.plist")
+  guard let data = FileManager.default.contents(atPath: plistPath),
+        let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+        let appProps = plist["ApplicationProperties"] as? [String: Any]
+  else { return nil }
+  return appProps["CFBundleIdentifier"] as? String
 }
 
 /// Extracts CFBundleVersion from an .xcarchive's Info.plist, or nil if unavailable.
@@ -951,4 +1111,48 @@ private func buildNumberFromArchive(_ archivePath: String) -> String? {
         let buildNumber = appProps["CFBundleVersion"] as? String
   else { return nil }
   return buildNumber
+}
+
+// MARK: - Events
+
+/// A step of `builds archive` or `builds upload` as `--json-events` reports it. `event` is one of:
+/// - `step`: `step` is `cleaning` or `archiving` (archive), or `exporting` (upload of an
+///   .xcarchive, with its `platform`)
+/// - `archived`: the new .xcarchive's `path`
+/// - `uploading`: the file's `path`; through the API also `bundleID`, `version`, `build`,
+///   `platform` and `bytes`
+/// - `progress`: `sent` of `bytes` (API uploads, at most once per percent)
+/// - `processing`: the file is in; App Store Connect is taking it in (API uploads)
+/// - `finished`: the upload is complete, with its `build` and Apple's `warnings` (API uploads)
+struct BuildEvent: Encodable {
+  let event: String
+  var step: String?
+  var path: String?
+  var bundleID: String?
+  var version: String?
+  var build: String?
+  var platform: String?
+  var bytes: Int64?
+  var sent: Int64?
+  var warnings: [String]?
+}
+
+/// Reports an upload's acknowledged bytes as `progress` events, at most once per percent.
+private final class UploadProgressEvents: UploadProgressObserver, @unchecked Sendable {
+  private let lock = NSLock()
+  private var shownPercent = -1
+
+  init(total: Int64) {}
+
+  func progress(sent: Int64, total: Int64) {
+    lock.withLock {
+      guard total > 0 else { return }
+      let percent = Int(sent * 100 / total)
+      guard percent > shownPercent else { return }
+      shownPercent = percent
+      EventOutput.emit(BuildEvent(event: "progress", bytes: total, sent: sent))
+    }
+  }
+
+  func finish() {}
 }

@@ -39,6 +39,8 @@ ascelerate builds upload MyApp.ipa
 
 Accepte les fichiers `.ipa`, `.pkg` ou `.xcarchive`. Lorsqu'un `.xcarchive` est fourni, la plateforme de l'archive est détectée et l'export se fait automatiquement en `.ipa` (famille iOS) ou en `.pkg` (macOS) avant le téléversement, avec la plateforme correspondante transmise à altool.
 
+Un `.xcarchive` signé avec des profils de distribution App Store (un projet à signature manuelle) est exporté avec les profils App Store installés de son application et de ses extensions, si bien qu'Xcode n'en crée aucun ; les autres archives sont exportées avec la signature automatique. Avec un fichier, `--bundle-id` refuse un fichier qui contient une autre application, avant tout export ou envoi.
+
 ### Téléverser via l'API App Store Connect
 
 ```bash
@@ -49,6 +51,15 @@ ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 Avec `--api`, le build passe par les téléversements de builds de l'API App Store Connect au lieu d'altool, avec la même clé d'API que toutes les autres commandes. La commande accepte un `.ipa` ou un `.pkg` Mac (ou un `.xcarchive`, exporté au préalable), lit la version et le numéro de build dans l'application qu'il contient, téléverse le fichier par morceaux, un par un (voir [Téléversement par morceaux](../guides/automation.md#upload-chunks)), avec une barre de progression dans un terminal, puis attend qu'App Store Connect ait accepté le fichier. Si Apple le refuse, la commande échoue en affichant les codes et les descriptions d'erreur d'Apple ; les avertissements sont affichés après un téléversement réussi. Le traitement se poursuit ensuite comme d'habitude (voir [Attendre le traitement](#attendre-le-traitement)).
 
 altool reste pour l'instant l'outil par défaut.
+
+### Progression pour d'autres outils
+
+```bash
+ascelerate builds archive --scheme MyApp --json-events
+ascelerate builds upload MyApp.ipa --api --json-events
+```
+
+Avec `--json-events`, les deux commandes écrivent un objet JSON par ligne sur stdout (`step`, `archived` avec le chemin de l'archive, `uploading`, `progress`, `processing` et `finished` avec les avertissements d'Apple) et déplacent leur sortie lisible, celle de xcodebuild comprise, vers stderr, comme le fait `screenshot run --json-events`. Lors de l'archivage, xcodebuild n'affiche alors que les avertissements et les erreurs.
 
 ## Historique des téléversements
 

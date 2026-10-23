@@ -204,6 +204,10 @@ filter:
     - /v1/appCustomProductPageVersions
     - /v1/appCustomProductPageVersions/{id}
     - /v1/builds/{id}/icons
+    - /v1/builds/{id}/metrics/betaBuildUsages
+    - /v1/apps/{id}/metrics/betaTesterUsages
+    - /v1/builds/{id}/individualTesters
+    - /v1/builds/{id}/relationships/individualTesters
     - /v1/appCustomProductPageLocalizations/{id}/appScreenshotSets
     - /v1/appCustomProductPageLocalizations/{id}/appPreviewSets
     - /v1/apps/{id}/betaFeedbackCrashSubmissions

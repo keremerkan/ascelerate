@@ -541,8 +541,8 @@ struct JWTMiddleware: ClientMiddleware {
 
 // MARK: - Dates
 
-/// Apple's timestamps come with and without fractional seconds; the runtime's default
-/// transcoder accepts only the latter.
+/// Apple's timestamps come with and without fractional seconds, and some as plain days; the
+/// runtime's default transcoder accepts only the first kind.
 struct FlexibleISO8601DateTranscoder: DateTranscoder {
   func encode(_ date: Date) throws -> String {
     date.formatted(.iso8601)
@@ -551,6 +551,8 @@ struct FlexibleISO8601DateTranscoder: DateTranscoder {
   func decode(_ string: String) throws -> Date {
     if let date = try? Date(string, strategy: .iso8601) { return date }
     if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) { return date }
+    // Some fields the spec calls date-times come as plain days (a metric's `start` and `end`).
+    if let date = try? Date(string, strategy: Date.ISO8601FormatStyle().year().month().day()) { return date }
     throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid ISO 8601 date: \(string)"))
   }
 }

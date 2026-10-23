@@ -587,8 +587,11 @@ iPhone Duo simulator (Xcode 27.1+): `setHinge(.open)` / `setHinge(.closed)` unfo
 
 ```bash
 ascelerate builds archive                           # Auto-detects workspace/scheme
+ascelerate builds archive --scheme MyApp --json-events   # Progress as JSON Lines on stdout (step, archived with the path); readable log and xcodebuild's warnings/errors on stderr
 ascelerate builds upload MyApp.ipa
 ascelerate builds upload MyApp.ipa --api      # through the App Store Connect API instead of altool (.ipa or Mac .pkg; waits until App Store Connect has taken it in)
+ascelerate builds upload MyApp.xcarchive --api --bundle-id com.example.MyApp   # refuse a file holding another app, before exporting or sending
+ascelerate builds upload MyApp.ipa --api --json-events   # Progress as JSON Lines (uploading, progress, processing, finished with Apple's warnings)
 ascelerate builds uploads <app> [--json]       # recent uploads (any method) with state and Apple's errors/warnings: check here when an upload never became a build
 ascelerate builds uploads <app> --delete-stale # remove upload records that will never complete
 ascelerate builds await-processing <app>             # Wait for processing

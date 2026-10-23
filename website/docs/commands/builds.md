@@ -39,6 +39,8 @@ ascelerate builds upload MyApp.ipa
 
 Accepts `.ipa`, `.pkg`, or `.xcarchive` files. When given an `.xcarchive`, it detects the archive's platform and automatically exports to `.ipa` (iOS-family) or `.pkg` (macOS) before uploading, passing the matching platform to altool.
 
+An `.xcarchive` signed with App Store distribution profiles (a project signed manually) is exported with the installed App Store profiles of its app and its extensions, so Xcode creates none; other archives are exported with automatic signing. With a file, `--bundle-id` refuses one that holds another app, before anything is exported or sent.
+
 ### Upload through the App Store Connect API
 
 ```bash
@@ -49,6 +51,15 @@ ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 With `--api`, the build goes through the App Store Connect API's build uploads instead of altool, using the same API key as every other command. It takes an `.ipa` or a Mac `.pkg` (or an `.xcarchive`, exported first), reads the version and build number from the app inside, uploads the file in chunks with a progress bar on a terminal (one at a time; see [Upload chunks](../guides/automation.md#upload-chunks)), and then waits until App Store Connect has accepted the file. If Apple rejects it, the command fails with Apple's error codes and descriptions; warnings are printed after a successful upload. Processing then continues as usual (see [Await processing](#await-processing)).
 
 altool stays the default for now.
+
+### Progress for other tools
+
+```bash
+ascelerate builds archive --scheme MyApp --json-events
+ascelerate builds upload MyApp.ipa --api --json-events
+```
+
+With `--json-events`, both commands print one JSON object per line on stdout (`step`, `archived` with the archive's path, `uploading`, `progress`, `processing`, and `finished` with Apple's warnings) and move their readable output, xcodebuild's included, to stderr, as `screenshot run --json-events` does. When archiving, xcodebuild then prints only warnings and errors.
 
 ## Upload history
 

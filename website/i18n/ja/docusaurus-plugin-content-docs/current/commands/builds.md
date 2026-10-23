@@ -39,6 +39,8 @@ ascelerate builds upload MyApp.ipa
 
 `.ipa`、`.pkg`、`.xcarchive` ファイルを受け付けます。`.xcarchive` が指定された場合、アーカイブのプラットフォームを検出し、アップロード前に自動的に `.ipa`（iOS ファミリー）または `.pkg`（macOS）にエクスポートします。該当するプラットフォームは altool に渡されます。
 
+App Store 配布用プロファイルで署名された `.xcarchive`（手動署名のプロジェクト）は、アプリと拡張機能それぞれのインストール済み App Store プロファイルでエクスポートされるため、Xcode がプロファイルを新たに作成することはありません。それ以外のアーカイブは自動署名でエクスポートされます。ファイルを指定した場合、`--bundle-id` は別のアプリを含むファイルを、エクスポートや送信の前に拒否します。
+
 ### App Store Connect API を使ったアップロード
 
 ```bash
@@ -49,6 +51,15 @@ ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 `--api` を指定すると、altool の代わりに App Store Connect API のビルドアップロードを使ってビルドを送信します。認証には、他のコマンドと同じ API キーを使用します。`.ipa` または Mac の `.pkg`（あるいは先にエクスポートされる `.xcarchive`）を受け付け、中に含まれるアプリからバージョンとビルド番号を読み取り、ファイルをチャンクに分けて 1 つずつアップロードし（ターミナルではプログレスバーを表示します。[チャンク単位のアップロード](../guides/automation.md#upload-chunks)を参照）、App Store Connect がファイルを受け付けるまで待機します。Apple がファイルを拒否した場合は、Apple のエラーコードと説明を表示してコマンドが失敗します。警告はアップロードが成功した後に表示されます。その後の処理は通常どおり進みます（[処理の待機](#await-processing)を参照）。
 
 現時点では、引き続き altool がデフォルトです。
+
+### 他のツール向けの進行状況
+
+```bash
+ascelerate builds archive --scheme MyApp --json-events
+ascelerate builds upload MyApp.ipa --api --json-events
+```
+
+`--json-events` を指定すると、どちらのコマンドも標準出力に 1 行につき 1 つの JSON オブジェクトを出力し（`step`、アーカイブのパスを含む `archived`、`uploading`、`progress`、`processing`、Apple の警告を含む `finished`）、xcodebuild の出力を含む読みやすい出力は標準エラー出力に移ります。`screenshot run --json-events` と同じ方式です。アーカイブ時には、xcodebuild は警告とエラーのみを出力します。
 
 ## アップロード履歴
 

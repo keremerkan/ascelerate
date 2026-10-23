@@ -905,6 +905,7 @@ ascelerate builds list --bundle-id <bundle-id> --platform macos
 # Archive an Xcode project
 ascelerate builds archive
 ascelerate builds archive --scheme MyApp --output ./archives
+ascelerate builds archive --scheme MyApp --json-events   # progress as JSON Lines on stdout for other tools
 
 # Validate a build before uploading
 ascelerate builds validate MyApp.ipa
@@ -912,6 +913,8 @@ ascelerate builds validate MyApp.ipa
 # Upload a build to App Store Connect
 ascelerate builds upload MyApp.ipa
 ascelerate builds upload MyApp.ipa --api      # upload through the App Store Connect API instead of altool (.ipa or Mac .pkg)
+ascelerate builds upload MyApp.xcarchive --api --bundle-id com.example.MyApp   # refuse a file holding another app
+ascelerate builds upload MyApp.ipa --api --json-events   # progress as JSON Lines on stdout for other tools
 ascelerate builds uploads <bundle-id>         # recent uploads with their state and Apple's errors/warnings
 ascelerate builds uploads <bundle-id> --delete-stale   # remove upload records that will never complete
 
@@ -921,7 +924,7 @@ ascelerate builds await-processing <bundle-id> --build-version 903
 ascelerate builds await-processing <bundle-id> --build-version 903 --platform macos
 ```
 
-The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it detects the archive's platform and automatically exports to `.ipa` (iOS-family) or `.pkg` (macOS) before uploading, passing the matching platform to altool.
+The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the current directory and resolves the scheme if only one exists. It accepts `.ipa`, `.pkg`, or `.xcarchive` files for `upload` and `validate`. When given an `.xcarchive`, it detects the archive's platform and automatically exports to `.ipa` (iOS-family) or `.pkg` (macOS) before uploading, passing the matching platform to altool. An archive signed with App Store distribution profiles (a project signed manually) is exported with the installed App Store profiles of its app and extensions, so Xcode creates none; other archives are exported with automatic signing.
 
 ### TestFlight
 

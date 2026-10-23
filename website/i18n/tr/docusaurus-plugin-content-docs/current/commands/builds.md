@@ -39,6 +39,8 @@ ascelerate builds upload MyApp.ipa
 
 `.ipa`, `.pkg` veya `.xcarchive` dosyalarını kabul eder. `.xcarchive` verildiğinde arşivin platformunu algılar ve yüklemeden önce otomatik olarak `.ipa` (iOS ailesi) veya `.pkg` (macOS) biçimine dışa aktarır; eşleşen platform altool'a iletilir.
 
+App Store dağıtım profilleriyle imzalanmış bir `.xcarchive` (elle imzalanan bir proje), uygulamanın ve uzantılarının yüklü App Store profilleriyle dışa aktarılır; böylece Xcode yeni profil oluşturmaz. Diğer arşivler otomatik imzalamayla dışa aktarılır. Bir dosya verildiğinde `--bundle-id`, başka bir uygulama içeren dosyayı hiçbir şey dışa aktarılmadan veya gönderilmeden önce reddeder.
+
 ### App Store Connect API üzerinden yükleme
 
 ```bash
@@ -49,6 +51,15 @@ ascelerate builds upload --latest --bundle-id com.example.MyApp --api
 `--api` ile build, altool yerine App Store Connect API'nin build yükleme uç noktaları üzerinden, diğer tüm komutlarla aynı API anahtarı kullanılarak gönderilir. Bir `.ipa` veya Mac `.pkg` dosyası (ya da önce dışa aktarılan bir `.xcarchive`) kabul eder, sürümü ve build numarasını içindeki uygulamadan okur, dosyayı parçalar hâlinde tek tek yükler (terminalde bir ilerleme çubuğuyla; bkz. [Parça parça yükleme](../guides/automation.md#upload-chunks)) ve ardından App Store Connect dosyayı kabul edene kadar bekler. Apple dosyayı reddederse komut, Apple'ın hata kodları ve açıklamalarıyla başarısız olur; uyarılar ise başarılı bir yüklemenin ardından yazdırılır. Sonrasında işlenme her zamanki gibi devam eder (bkz. [İşlenmeyi bekleme](#await-processing)).
 
 Şimdilik varsayılan yöntem altool olmaya devam ediyor.
+
+### Diğer araçlar için ilerleme
+
+```bash
+ascelerate builds archive --scheme MyApp --json-events
+ascelerate builds upload MyApp.ipa --api --json-events
+```
+
+`--json-events` ile her iki komut da standart çıktıya her satıra bir JSON nesnesi yazar (`step`, arşivin yolunu içeren `archived`, `uploading`, `progress`, `processing` ve Apple'ın uyarılarını içeren `finished`) ve xcodebuild çıktısı dahil okunabilir çıktıyı standart hataya taşır; `screenshot run --json-events` de aynı şekilde çalışır. Arşivlemede xcodebuild bu durumda yalnızca uyarıları ve hataları yazar.
 
 ## Yükleme geçmişi
 

@@ -1118,8 +1118,8 @@ ascelerate sub availability <bundle-id> <product-id> --plan monthly   # the "Mon
 
 # Introductory offers (free trials and intro discounts for new subscribers)
 ascelerate sub intro-offer list <bundle-id> <product-id>
-ascelerate sub intro-offer create <bundle-id> <product-id> --mode FREE_TRIAL --duration ONE_WEEK --periods 1
-ascelerate sub intro-offer create <bundle-id> <product-id> --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --territory USA --price 0.99
+ascelerate sub intro-offer create <bundle-id> <product-id> --mode FREE_TRIAL --duration ONE_WEEK --periods 1 --territories all
+ascelerate sub intro-offer create <bundle-id> <product-id> --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --territories USA --price 0.99
 ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date 2026-12-31
 ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id>
 

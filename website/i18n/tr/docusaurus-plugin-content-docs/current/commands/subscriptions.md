@@ -141,7 +141,7 @@ ascelerate sub intro-offer create <bundle-id> <product-id> \
 # Pay-as-you-go indirimi (3 ay $0.99/ay, USA'ya özel)
 ascelerate sub intro-offer create <bundle-id> <product-id> \
   --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
-  --territory USA --price 0.99
+  --territories USA --price 0.99
 
 # Yalnızca bitiş tarihini güncelle (diğer alanlar için sil + yeniden oluştur)
 ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date 2026-12-31
@@ -149,7 +149,7 @@ ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date
 ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
-Modlar: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`. `--territory` belirtilmediğinde teklif global olarak uygulanır; belirtildiğinde yalnızca o bölgeye özeldir. `--price`, iki ücretli mod için zorunludur ve `FREE_TRIAL` için yasaktır.
+Modlar: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`. `--territories` zorunludur: `USA,TUR` gibi ülke veya bölge kodları ya da `all`. Apple her ülke veya bölge için ayrı bir teklif tutar; ascelerate bunları tek istekte oluşturur ve teklifin mevcut bir teklifle çakışacağı ya da zaten ileri tarihli bir teklifi olan ülke veya bölgeleri atlar. Ücretli bir teklifin `--price` değeri ilk ülke veya bölgenin para birimindedir; diğerlerine Apple'ın karşılık gelen fiyatı uygulanır. `--price`, iki ücretli mod için zorunludur ve `FREE_TRIAL` için kullanılamaz.
 
 ## Promosyon teklifleri
 

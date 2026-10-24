@@ -12,7 +12,7 @@ const build = join(root, 'build');
 
 const targets = [
   { src: join(root, 'docs'), out: join(build, 'docs') },
-  ...['de', 'fr', 'ja', 'tr'].map((l) => ({
+  ...['de', 'es', 'fr', 'ja', 'tr'].map((l) => ({
     src: join(root, 'i18n', l, 'docusaurus-plugin-content-docs', 'current'),
     out: join(build, l, 'docs'),
   })),

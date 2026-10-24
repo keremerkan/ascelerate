@@ -29,10 +29,11 @@ const config: Config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'de', 'fr', 'ja', 'tr'],
+    locales: ['en', 'de', 'es', 'fr', 'ja', 'tr'],
     localeConfigs: {
       en: { label: 'English' },
       de: { label: 'Deutsch' },
+      es: { label: 'Español' },
       fr: { label: 'Français' },
       ja: { label: '日本語' },
       tr: { label: 'Türkçe' },

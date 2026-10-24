@@ -900,13 +900,13 @@ ascelerate screenshot setup-prompt [--design] [--copy]  # Print a coding agent's
 
 ## Website (`website/`)
 
-Docusaurus 3 docs site (ascelerate.dev), 5 locales (en/de/fr/ja/tr, translations under `website/i18n/`), deployed via git-integrated **Cloudflare Pages** building from `main` (root `website/`, output `build/`). No local deploy step — pushing to `main` deploys.
+Docusaurus 3 docs site (ascelerate.dev), 6 locales (en/de/es/fr/ja/tr, translations under `website/i18n/`), deployed via git-integrated **Cloudflare Pages** building from `main` (root `website/`, output `build/`). No local deploy step — pushing to `main` deploys.
 
 ### Markdown for agents (2026-08)
 
 Every docs page has a `.md` twin served via `Accept: text/markdown` content negotiation (same workspace-wide pattern as the sites under `~/Developer/Web` — see that workspace's CLAUDE.md; reference implementation: keremerkan.dev):
 
-- `website/scripts/generate-md-twins.mjs` copies all docs source `.md` files (all 5 locales) into the build output at their route paths (`/docs/<page>.md`, `/de/docs/<page>.md`, …). It runs as part of `npm run build` — **the Pages build command must stay `npm run build`**, not `docusaurus build`, or twins won't generate.
+- `website/scripts/generate-md-twins.mjs` copies all docs source `.md` files (all 6 locales) into the build output at their route paths (`/docs/<page>.md`, `/de/docs/<page>.md`, …). It runs as part of `npm run build` — **the Pages build command must stay `npm run build`**, not `docusaurus build`, or twins won't generate.
 - `website/functions/_middleware.js` (Cloudflare Pages Function) does the negotiation: markdown-accepting requests get the twin with `Content-Type: text/markdown; charset=utf-8`; HTML responses get `Vary: Accept`. Pages HTML is never edge-cached, so there is no Vary/cache-poisoning risk here.
 - `website/static/index.md` is the **hand-written** homepage twin — update it when the homepage copy in `src/pages/index.tsx` changes. Docs twins are verbatim source and need no maintenance.
 - `website/scripts/generate-agent-skills.mjs` (also in `npm run build`) publishes the repo's `skills/*/SKILL.md` files at `/.well-known/agent-skills/` with an `index.json` manifest (Agent Skills discovery convention) — sourced from the repo's skills, so they can't drift.

@@ -53,24 +53,42 @@ nonisolated(unsafe) private var activeProcesses: [Process] = []
 /// The dispatch source for SIGINT handling. Stored globally to keep it alive.
 nonisolated(unsafe) private var signalSource: (any DispatchSourceSignal)?
 
-/// Serializes access to `activeProcesses` and `signalSource`. Required because
+/// Serializes access to `activeProcesses`, `interruptCleanup` and `signalSource`. Required because
 /// the screenshot runner spawns simctl/xcodebuild processes concurrently across
 /// devices via task groups; without locking, append/removeAll on the array races
 /// and corrupts memory (bus error).
 private let processLock = NSLock()
 
-/// Registers a child process for SIGINT forwarding.
-func trackProcess(_ process: Process) {
+/// Folders a Ctrl-C deletes before exiting (an export's temporary folder): the handler exits at
+/// once, so the `defer`s that would delete them don't run.
+nonisolated(unsafe) private var interruptCleanup: [String] = []
+
+/// Waits for a started child process with Ctrl-C forwarded to it: Foundation starts each child in
+/// a process group of its own, which neither the terminal's Ctrl-C nor a signal to this process
+/// reaches, so without this it goes on running (and writing to our output) after we exit.
+/// `pipe`, the process's standard output, is read to its end first and returned: output past the
+/// ~64 KB pipe buffer would otherwise block the child while this waits for it.
+@discardableResult
+func waitForwardingInterrupts(_ process: Process, reading pipe: Pipe? = nil) -> Data {
   processLock.lock()
-  defer { processLock.unlock() }
   activeProcesses.append(process)
+  processLock.unlock()
+  setupSignalHandler()
+  defer {
+    processLock.lock()
+    activeProcesses.removeAll { $0 === process }
+    processLock.unlock()
+  }
+  let data = pipe?.fileHandleForReading.readDataToEndOfFile() ?? Data()
+  process.waitUntilExit()
+  return data
 }
 
-/// Unregisters a child process after it exits.
-func untrackProcess(_ process: Process) {
+/// Has a Ctrl-C delete `path` (a temporary folder) before exiting.
+func removeOnInterrupt(_ path: String) {
   processLock.lock()
   defer { processLock.unlock() }
-  activeProcesses.removeAll { $0 === process }
+  interruptCleanup.append(path)
 }
 
 /// Installs a SIGINT handler using DispatchSource (kqueue-based).
@@ -81,7 +99,7 @@ func untrackProcess(_ process: Process) {
 /// SIG_IGN is inherited by child processes and preserved across exec/posix_spawn,
 /// which would cause xcodebuild to silently ignore SIGINT. A custom handler is
 /// reset to SIG_DFL in child processes, so they receive Ctrl-C normally.
-func setupSignalHandler() {
+private func setupSignalHandler() {
   processLock.lock()
   if signalSource != nil {
     processLock.unlock()
@@ -95,6 +113,7 @@ func setupSignalHandler() {
     // so a concurrent track/untrack can't deadlock with the kill syscall.
     processLock.lock()
     let snapshot = activeProcesses.filter { $0.isRunning }
+    let folders = interruptCleanup
     processLock.unlock()
     for process in snapshot {
       let pid = process.processIdentifier
@@ -110,6 +129,9 @@ func setupSignalHandler() {
       for descendant in descendants {
         kill(descendant, SIGTERM)
       }
+    }
+    for folder in folders {
+      try? FileManager.default.removeItem(atPath: folder)
     }
     _exit(130)
   }

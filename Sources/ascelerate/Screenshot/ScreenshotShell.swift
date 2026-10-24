@@ -12,14 +12,8 @@ enum ScreenshotShell {
         process.standardError = pipe
 
         try process.run()
-        trackProcess(process)
-        setupSignalHandler()
-        // Drain the pipe BEFORE waiting: output larger than the ~64 KB pipe buffer
-        // would otherwise block the child while we block in waitUntilExit — deadlock.
-        // (`simctl list devices -j` alone can exceed the buffer.)
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        untrackProcess(process)
+        // Reads the pipe before waiting (`simctl list devices -j` alone exceeds its buffer).
+        let data = waitForwardingInterrupts(process, reading: pipe)
 
         let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
@@ -38,10 +32,7 @@ enum ScreenshotShell {
         process.standardError = FileHandle.standardError
 
         try process.run()
-        trackProcess(process)
-        setupSignalHandler()
-        process.waitUntilExit()
-        untrackProcess(process)
+        waitForwardingInterrupts(process)
 
         return process.terminationStatus
     }
@@ -58,10 +49,7 @@ enum ScreenshotShell {
         process.standardError = fileHandle
 
         try process.run()
-        trackProcess(process)
-        setupSignalHandler()
-        process.waitUntilExit()
-        untrackProcess(process)
+        waitForwardingInterrupts(process)
 
         try fileHandle.close()
 

@@ -323,10 +323,7 @@ struct BuildsCommand: AsyncParsableCommand {
       cleanProcess.standardError = FileHandle.standardError
 
       try cleanProcess.run()
-      trackProcess(cleanProcess)
-      setupSignalHandler()
-      cleanProcess.waitUntilExit()
-      untrackProcess(cleanProcess)
+      waitForwardingInterrupts(cleanProcess)
 
       if cleanProcess.terminationStatus != 0 {
         throw ExitCode(cleanProcess.terminationStatus)
@@ -367,10 +364,7 @@ struct BuildsCommand: AsyncParsableCommand {
       process.standardError = FileHandle.standardError
 
       try process.run()
-      trackProcess(process)
-      setupSignalHandler()
-      process.waitUntilExit()
-      untrackProcess(process)
+      waitForwardingInterrupts(process)
 
       if process.terminationStatus != 0 {
         throw ExitCode(process.terminationStatus)
@@ -410,8 +404,7 @@ struct BuildsCommand: AsyncParsableCommand {
       } catch {
         return fallback
       }
-      let data = pipe.fileHandleForReading.readDataToEndOfFile()
-      process.waitUntilExit()
+      let data = waitForwardingInterrupts(process, reading: pipe)
       guard process.terminationStatus == 0,
         let targets = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]]
       else { return fallback }
@@ -481,13 +474,11 @@ struct BuildsCommand: AsyncParsableCommand {
       process.standardError = FileHandle.nullDevice
 
       try process.run()
-      process.waitUntilExit()
+      let data = waitForwardingInterrupts(process, reading: pipe)
 
       guard process.terminationStatus == 0 else {
         throw ValidationError("Failed to list schemes. Check that the project/workspace is valid.")
       }
-
-      let data = pipe.fileHandleForReading.readDataToEndOfFile()
 
       struct XcodeList: Decodable {
         struct Project: Decodable { var schemes: [String]? }
@@ -691,10 +682,7 @@ struct BuildsCommand: AsyncParsableCommand {
       process.standardError = FileHandle.standardError
 
       try process.run()
-      trackProcess(process)
-      setupSignalHandler()
-      process.waitUntilExit()
-      untrackProcess(process)
+      waitForwardingInterrupts(process)
 
       if process.terminationStatus != 0 {
         throw ExitCode(process.terminationStatus)
@@ -778,10 +766,7 @@ struct BuildsCommand: AsyncParsableCommand {
       process.standardError = FileHandle.standardError
 
       try process.run()
-      trackProcess(process)
-      setupSignalHandler()
-      process.waitUntilExit()
-      untrackProcess(process)
+      waitForwardingInterrupts(process)
 
       if process.terminationStatus != 0 {
         throw ExitCode(process.terminationStatus)
@@ -1029,6 +1014,8 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
   let plistPath = tempDir + "/ExportOptions.plist"
 
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
+  // The export (tens of MB) outlives this function until the upload is done.
+  removeOnInterrupt(tempDir)
 
   // App Store export options: an archive signed with App Store distribution profiles (a project
   // signed manually) exports with those same profiles, so Xcode creates none; any other archive
@@ -1063,8 +1050,7 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
   process.standardError = FileHandle.standardError
 
   try process.run()
-  let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-  process.waitUntilExit()
+  let stdoutData = waitForwardingInterrupts(process, reading: stdoutPipe)
 
   if process.terminationStatus != 0 {
     try? FileManager.default.removeItem(atPath: tempDir)

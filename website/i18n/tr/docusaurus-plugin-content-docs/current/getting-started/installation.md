@@ -13,15 +13,13 @@ title: Kurulum
 ## Homebrew
 
 ```bash
-brew tap keremerkan/tap
-brew trust keremerkan/tap
 brew install ascelerate
 ```
 
-Tap, Apple Silicon Mac'ler için önceden derlenmiş bir binary sağlar, bu yüzden kurulum anlıktır.
+Homebrew, Apple çipli Mac'lere hazır derlenmiş bir dosya kurar, Intel Mac'lerde ise kaynak koddan derler.
 
 :::note
-Homebrew 6.0'dan itibaren, üçüncü taraf tap'lerin kodu çalıştırılmadan önce açıkça güvenilir olarak işaretlenmelidir. Yukarıdaki `brew trust` adımı tap'i onaylar. Alternatif olarak, tam nitelikli bir kurulum (`brew install keremerkan/tap/ascelerate`) sizden tap'e etkileşimli olarak güvenmenizi ister.
+ascelerate'i daha önce `keremerkan/tap` tap'inden kurduysanız `brew update` onu Homebrew'un kendi formülüne taşır. Tap artık onu içermiyor.
 :::
 
 ## Kurulum betiği

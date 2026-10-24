@@ -14,7 +14,6 @@ Open source: https://github.com/keremerkan/ascelerate
 
 ```bash
 # Homebrew
-brew tap keremerkan/tap
 brew install ascelerate
 
 # curl

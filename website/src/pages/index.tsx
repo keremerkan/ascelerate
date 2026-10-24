@@ -16,7 +16,7 @@ function HomepageHeader() {
     <header className={styles.heroBanner}>
       <div className="container">
         <ThemedImage
-          alt="Ascelerate"
+          alt="ascelerate"
           className={styles.heroLogo}
           sources={{light: '/img/icon.png', dark: '/img/icon-dark.png'}}
         />

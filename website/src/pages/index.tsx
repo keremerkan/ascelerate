@@ -59,7 +59,7 @@ function InstallSection() {
               <Translate id="homepage.install.title">Install</Translate>
             </Heading>
             <CodeBlock language="bash" title="Homebrew">
-              {`brew tap keremerkan/tap\nbrew install ascelerate`}
+              {`brew install ascelerate`}
             </CodeBlock>
             <CodeBlock language="bash" title="curl">
               {`curl -sSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash`}

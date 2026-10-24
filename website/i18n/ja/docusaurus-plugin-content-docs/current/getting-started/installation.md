@@ -13,15 +13,13 @@ title: インストール
 ## Homebrew
 
 ```bash
-brew tap keremerkan/tap
-brew trust keremerkan/tap
 brew install ascelerate
 ```
 
-このtapはApple Silicon Mac向けのビルド済みバイナリを提供しているため、インストールは瞬時に完了します。
+Appleシリコン搭載のMacにはビルド済みのバイナリがインストールされ、Intel搭載のMacではソースからビルドされます。
 
 :::note
-Homebrew 6.0以降、サードパーティのtapはコードが実行される前に明示的に信頼する必要があります。上記の`brew trust`の手順でtapを承認します。または、完全修飾でのインストール（`brew install keremerkan/tap/ascelerate`）を使うと、対話的に信頼を求められます。
+以前に`keremerkan/tap`のtapからascelerateをインストールした場合は、`brew update`でHomebrew本体のformulaに移行されます。tapからは削除されました。
 :::
 
 ## インストールスクリプト

@@ -409,7 +409,7 @@ public enum AssetLibrary {
   public static func images(
     libraryID: String, specIDs: [String]? = nil, sort: ImageSort? = nil, client: ASCClient
   ) async throws -> [Components.Schemas.AppAssetLibraryImage] {
-    try await ASCPaging.allPages(next: { $0.links.next }) {
+    try await ASCPaging.allPagesConcurrently(next: { $0.links.next }) {
       try await withTransientRetry {
         try await client.appAssetLibrariesImagesGetToManyRelated(
           path: .init(id: libraryID),
@@ -422,7 +422,7 @@ public enum AssetLibrary {
 
   /// Every video in a library, like `images(libraryID:client:)`.
   public static func videos(libraryID: String, client: ASCClient) async throws -> [Components.Schemas.AppAssetLibraryVideo] {
-    try await ASCPaging.allPages(next: { $0.links.next }) {
+    try await ASCPaging.allPagesConcurrently(next: { $0.links.next }) {
       try await withTransientRetry {
         try await client.appAssetLibrariesVideosGetToManyRelated(
           path: .init(id: libraryID), query: .init(limit: 200, include: [.placements], limitPlacements: 1)
@@ -431,14 +431,44 @@ public enum AssetLibrary {
     }.flatMap(\.data)
   }
 
+  public typealias PlacedImage = (image: Components.Schemas.AppAssetLibraryImage, placementState: String?)
+  public typealias PlacedVideo = (video: Components.Schemas.AppAssetLibraryVideo, placementState: String?)
+
   /// A library's images and videos, each with the state of the one placement it comes with (nil
-  /// without one), newest first. An unreviewed asset whose placement is INACTIVE may be placed only
-  /// on owners that were deleted (`usage(of:)` tells); an ACTIVE one is in use.
-  public static func assetsWithPlacementState(libraryID: String, client: ASCClient) async throws -> (
-    images: [(image: Components.Schemas.AppAssetLibraryImage, placementState: String?)],
-    videos: [(video: Components.Schemas.AppAssetLibraryVideo, placementState: String?)]
-  ) {
-    async let imagePages = ASCPaging.allPages(next: { $0.links.next }) {
+  /// without one), images newest first. An unreviewed asset whose placement is INACTIVE may be
+  /// placed only on owners that were deleted (`usage(of:)` tells); an ACTIVE one is in use.
+  /// The image pages after the first load a few at a time; `progress` gets everything read so far
+  /// after each one (the videos with the first), and how many assets there are in all, so a large
+  /// library can show its newest images while the rest load.
+  public static func assetsWithPlacementState(
+    libraryID: String, client: ASCClient,
+    progress: (@Sendable (_ images: [PlacedImage], _ videos: [PlacedVideo], _ total: Int) async throws -> Void)? = nil
+  ) async throws -> (images: [PlacedImage], videos: [PlacedVideo]) {
+    let videoPages = Task {
+      try await ASCPaging.allPagesConcurrently(next: { $0.links.next }) {
+        try await withTransientRetry {
+          try await client.appAssetLibrariesVideosGetToManyRelated(
+            path: .init(id: libraryID),
+            query: .init(fieldsAppAssetLibraryPlacements: [.state], limit: 200, include: [.placements], limitPlacements: 1)
+          ).ok.body.json
+        }
+      }
+    }
+    defer { videoPages.cancel() }
+    var images: [PlacedImage] = []
+    var videos: [PlacedVideo]?
+    var total = 0
+    _ = try await ASCPaging.allPagesConcurrently(next: { $0.links.next }) { page in
+      if videos == nil {
+        let read = try await videoPages.value.flatMap { page in
+          page.data.map { ($0, placementState($0.relationships?.placements?.data?.first?.id, in: page.included)) }
+        }
+        videos = read
+        total = (page.meta?.paging.total ?? page.data.count) + read.count
+      }
+      images += page.data.map { ($0, placementState($0.relationships?.placements?.data?.first?.id, in: page.included)) }
+      try await progress?(images, videos ?? [], total)
+    } _: {
       try await withTransientRetry {
         try await client.appAssetLibrariesImagesGetToManyRelated(
           path: .init(id: libraryID),
@@ -448,26 +478,11 @@ public enum AssetLibrary {
         ).ok.body.json
       }
     }
-    let videoPages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await withTransientRetry {
-        try await client.appAssetLibrariesVideosGetToManyRelated(
-          path: .init(id: libraryID),
-          query: .init(fieldsAppAssetLibraryPlacements: [.state], limit: 200, include: [.placements], limitPlacements: 1)
-        ).ok.body.json
-      }
-    }
-    let images = try await imagePages
-    var states: [String: String] = [:]
-    for placement in images.flatMap({ $0.included ?? [] }) {
-      states[placement.id] = placement.attributes?.state
-    }
-    for placement in videoPages.flatMap({ $0.included ?? [] }) {
-      states[placement.id] = placement.attributes?.state
-    }
-    return (
-      images.flatMap(\.data).map { ($0, $0.relationships?.placements?.data?.first.flatMap { states[$0.id] }) },
-      videoPages.flatMap(\.data).map { ($0, $0.relationships?.placements?.data?.first.flatMap { states[$0.id] }) }
-    )
+    return (images, videos ?? [])
+  }
+
+  private static func placementState(_ id: String?, in included: [Components.Schemas.AppAssetLibraryPlacement]?) -> String? {
+    id.flatMap { id in included?.first { $0.id == id }?.attributes?.state }
   }
 
   /// The placement types and groups a `media library --only` kind covers: a library folder's

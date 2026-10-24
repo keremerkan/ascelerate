@@ -141,7 +141,7 @@ ascelerate sub intro-offer create <bundle-id> <product-id> \
 # Pay-as-you-go-Rabatt (3 Monate zu $0.99/Monat, auf USA beschränkt)
 ascelerate sub intro-offer create <bundle-id> <product-id> \
   --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
-  --territory USA --price 0.99
+  --territories USA --price 0.99
 
 # Nur das Enddatum aktualisieren (andere Felder erfordern Löschen + neu erstellen)
 ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date 2026-12-31
@@ -149,7 +149,7 @@ ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date
 ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
-Modi: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`. Ohne `--territory` gilt das Angebot global; mit `--territory` ist es auf diese eine Region beschränkt. `--price` ist für die beiden bezahlten Modi erforderlich und für `FREE_TRIAL` verboten.
+Modi: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`. `--territories` ist erforderlich: Ländercodes wie `USA,TUR` oder `all`. Apple speichert ein Angebot pro Land oder Region, und ascelerate legt sie in einer einzigen Anfrage an. Länder oder Regionen, in denen sich das Angebot mit einem bestehenden überschneiden würde oder die bereits ein künftiges Angebot haben, werden übersprungen. Der `--price` eines bezahlten Angebots gilt in der Währung des ersten Landes; die übrigen erhalten Apples vergleichbaren Preis. `--price` ist für die beiden bezahlten Modi erforderlich und für `FREE_TRIAL` nicht erlaubt.
 
 ## Werbeangebote
 

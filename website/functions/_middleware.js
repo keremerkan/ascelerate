@@ -30,7 +30,7 @@ export async function onRequest({ request, env, next }) {
     headers.append('Vary', 'Accept');
     // RFC 8288 discovery: the homepage advertises its machine-readable twin,
     // so agents can find /index.md from a HEAD request alone.
-    const home = url.pathname.match(/^\/(?:(de|fr|ja|tr)\/)?$/);
+    const home = url.pathname.match(/^\/(?:(de|es|fr|ja|tr)\/)?$/);
     if (home) {
       const prefix = home[1] ? `/${home[1]}` : '';
       headers.set('Link', `<${prefix}/index.md>; rel="describedby"; type="text/markdown"`);

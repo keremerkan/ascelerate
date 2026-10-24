@@ -267,7 +267,7 @@ ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [-
 # Introductory offers (free trials + intro discounts for NEW subscribers)
 ascelerate sub intro-offer list <app> <product-id>
 ascelerate sub intro-offer create <app> <product-id> --mode FREE_TRIAL --duration ONE_WEEK --periods 1 --territories all
-ascelerate sub intro-offer create <app> <product-id> --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --territory USA --price 0.99
+ascelerate sub intro-offer create <app> <product-id> --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --territories USA --price 0.99
 ascelerate sub intro-offer update <app> <product-id> <offer-id> --end-date 2026-12-31
 ascelerate sub intro-offer delete <app> <product-id> <offer-id>
 

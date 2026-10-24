@@ -141,7 +141,7 @@ ascelerate sub intro-offer create <bundle-id> <product-id> \
 # Pay-as-you-go割引（3ヶ月、月額$0.99、USA限定）
 ascelerate sub intro-offer create <bundle-id> <product-id> \
   --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
-  --territory USA --price 0.99
+  --territories USA --price 0.99
 
 # 終了日のみを更新（他のフィールドは削除＋再作成が必要）
 ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date 2026-12-31
@@ -149,7 +149,7 @@ ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date
 ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
-モード：`FREE_TRIAL`、`PAY_AS_YOU_GO`、`PAY_UP_FRONT`。`--territory` を指定しない場合、オファーはグローバルに適用されます。指定すると、その1つの地域のみに限定されます。`--price` は2つの有料モードでは必須で、`FREE_TRIAL` では使用できません。
+モード：`FREE_TRIAL`、`PAY_AS_YOU_GO`、`PAY_UP_FRONT`。`--territories` は必須です。`USA,TUR` のような国または地域のコード、または `all` を指定します。Appleは国または地域ごとに1つのオファーを保持し、ascelerateはそれらを1回のリクエストで作成します。既存のオファーと期間が重なる国や地域、または今後開始するオファーがすでにある国や地域はスキップされます。有料オファーの `--price` は最初の国または地域の通貨で指定し、その他の国や地域にはAppleの同等の価格が適用されます。`--price` は2つの有料モードでは必須で、`FREE_TRIAL` では使用できません。
 
 ## プロモーションオファー
 

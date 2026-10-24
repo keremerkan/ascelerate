@@ -144,7 +144,7 @@ ascelerate sub intro-offer create <bundle-id> <product-id> \
 # Pay-as-you-go discount (3 months at $0.99/mo, scoped to USA)
 ascelerate sub intro-offer create <bundle-id> <product-id> \
   --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
-  --territory USA --price 0.99
+  --territories USA --price 0.99
 
 # Update only the end date (other fields require delete + recreate)
 ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date 2026-12-31
@@ -152,7 +152,7 @@ ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date
 ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
-Modes: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`. Without `--territory`, the offer applies globally; with `--territory`, it's scoped to that one territory. `--price` is required for the two paid modes and forbidden for `FREE_TRIAL`.
+Modes: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`. `--territories` is required: territory codes such as `USA,TUR`, or `all`. Apple keeps one offer per territory, and ascelerate creates them in a single request, skipping territories where the offer would overlap an existing one or that already have a future offer. A paid offer's `--price` is in the first territory's currency; the other territories get Apple's comparable price. `--price` is required for the two paid modes and forbidden for `FREE_TRIAL`.
 
 ## Promotional offers
 

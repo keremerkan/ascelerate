@@ -417,6 +417,66 @@ public enum ASCPaging {
     return pages
   }
 
+  /// Like `allPages`, but fetches the pages after the first `concurrency` at a time when the list
+  /// pages by offset (see `offsetLinks`), else one by one as `allPages` does. `received` gets the
+  /// pages in order as they become available, the first one first, so a caller can show them
+  /// before the rest arrive. Returns the pages in order.
+  public static func allPagesConcurrently<Page: Sendable>(
+    concurrency: Int = 4, next: (Page) -> String?, received: ((Page) async throws -> Void)? = nil,
+    _ fetch: @escaping @Sendable () async throws -> Page
+  ) async throws -> [Page] {
+    let first = try await fetch()
+    try await received?(first)
+    guard let link = next(first) else { return [first] }
+    guard let links = offsetLinks(after: link) else {
+      var pages = [first]
+      while let link = next(pages[pages.count - 1]) {
+        let page = try await page(link, fetch)
+        pages.append(page)
+        try await received?(page)
+      }
+      return pages
+    }
+    var pages: [Int: Page] = [:]
+    var delivered = 0
+    try await withThrowingTaskGroup(of: (Int, Page).self) { group in
+      var waiting = links.enumerated().makeIterator()
+      func add() {
+        guard let (index, link) = waiting.next() else { return }
+        group.addTask { (index, try await page(link, fetch)) }
+      }
+      for _ in 0..<concurrency { add() }
+      while let (index, page) = try await group.next() {
+        pages[index] = page
+        add()
+        while let page = pages[delivered] {
+          try await received?(page)
+          delivered += 1
+        }
+      }
+    }
+    return [first] + links.indices.compactMap { pages[$0] }
+  }
+
+  /// The links to every page after the first when a list pages by offset: App Store Connect's
+  /// asset library lists name their pages `cursor=<offset>:<total>` (seen 2026-10-24, and a
+  /// cursor made for any offset is accepted), so all of them follow from the first `next` link.
+  /// Nil for any other cursor, which only `next` can follow.
+  public static func offsetLinks(after next: String) -> [String]? {
+    guard var components = URLComponents(string: next),
+      let items = components.percentEncodedQueryItems,
+      let index = items.firstIndex(where: { $0.name == "cursor" }),
+      let parts = items[index].value?.removingPercentEncoding?.split(separator: ":"), parts.count == 2,
+      let step = Int(parts[0]), let total = Int(parts[1]), step > 0, step < total
+    else { return nil }
+    return stride(from: step, to: total, by: step).compactMap { offset in
+      var items = items
+      items[index].value = "\(offset)%3A\(total)"
+      components.percentEncodedQueryItems = items
+      return components.string
+    }
+  }
+
   /// Fetches the page a `links.next` URL points to by replaying `fetch` (the first page when
   /// `link` is nil), for callers that load pages on demand.
   public static func page<Page: Sendable>(_ link: String?, _ fetch: () async throws -> Page) async throws -> Page {

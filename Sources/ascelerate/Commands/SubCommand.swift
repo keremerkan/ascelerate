@@ -2299,9 +2299,7 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let codes = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.subscriptionsOfferCodesGetToManyRelated(path: .init(id: sub.id), query: .init(limit: 200)).ok.body.json
-        }.flatMap(\.data)
+        let codes = try await OfferCodes.list(.subscription, productRecordID: sub.id, client: client)
 
         if codes.isEmpty {
           print("No offer codes for \(productID).")
@@ -2311,16 +2309,14 @@ struct SubCommand: AsyncParsableCommand {
         Table.print(
           headers: ["ID", "Name", "Active", "Mode", "Duration", "Periods", "Eligibilities"],
           rows: codes.map { c in
-            let attrs = c.attributes
-            let elig = attrs?.customerEligibilities?.joined(separator: ", ") ?? "—"
-            return [
+            [
               c.id,
-              attrs?.name ?? "—",
-              attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—",
-              attrs?.offerMode.map { formatState($0) } ?? "—",
-              attrs?.duration.map { formatState($0) } ?? "—",
-              attrs?.numberOfPeriods.map { "\($0)" } ?? "—",
-              elig,
+              c.name ?? "—",
+              c.isActive == true ? "Yes" : c.isActive == false ? "No" : "—",
+              c.mode.map { formatState($0) } ?? "—",
+              c.duration.map { formatState($0) } ?? "—",
+              c.periods.map { "\($0)" } ?? "—",
+              c.customerEligibilities.isEmpty ? "—" : c.customerEligibilities.joined(separator: ", "),
             ]
           }
         )
@@ -2350,28 +2346,23 @@ struct SubCommand: AsyncParsableCommand {
         _ = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let response = try await client.subscriptionOfferCodesGetInstance(
-          path: .init(id: offerCodeID),
-          query: .init(include: [.prices, .oneTimeUseCodes, .customCodes], limitCustomCodes: 50, limitOneTimeUseCodes: 50, limitPrices: 200)
-        ).ok.body.json
-        let attrs = response.data.attributes
-        print("Offer Code:    \(attrs?.name ?? "—")")
-        print("ID:            \(response.data.id)")
-        print("Active:        \(attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—")")
-        print("Eligibilities: \(attrs?.customerEligibilities?.joined(separator: ", ") ?? "—")")
-        print("Offer Eligib:  \(attrs?.offerEligibility.map { formatState($0) } ?? "—")")
-        print("Duration:      \(attrs?.numberOfPeriods.map { "\($0)" } ?? "—") × \(attrs?.duration.map { formatState($0) } ?? "—")")
-        print("Mode:          \(attrs?.offerMode.map { formatState($0) } ?? "—")")
-        print("Auto-Renew:    \(attrs?.autoRenewEnabled == true ? "Yes" : attrs?.autoRenewEnabled == false ? "No" : "—")")
+        let detail = try await OfferCodes.detail(.subscription, id: offerCodeID, client: client)
+        let offer = detail.offer
+        print("Offer Code:    \(offer.name ?? "—")")
+        print("ID:            \(offer.id)")
+        print("Active:        \(offer.isActive == true ? "Yes" : offer.isActive == false ? "No" : "—")")
+        print("Eligibilities: \(offer.customerEligibilities.isEmpty ? "—" : offer.customerEligibilities.joined(separator: ", "))")
+        print("Offer Eligib:  \(offer.offerEligibility.map { formatState($0) } ?? "—")")
+        print("Duration:      \(offer.periods.map { "\($0)" } ?? "—") × \(offer.duration.map { formatState($0) } ?? "—")")
+        print("Mode:          \(offer.mode.map { formatState($0) } ?? "—")")
+        print("Auto-Renew:    \(offer.autoRenew == true ? "Yes" : offer.autoRenew == false ? "No" : "—")")
 
-        let priceCount = response.data.relationships?.prices?.data?.count ?? 0
-        let oneTimeCount = response.data.relationships?.oneTimeUseCodes?.data?.count ?? 0
-        let customCount = response.data.relationships?.customCodes?.data?.count ?? 0
+        let (priceCount, oneTimeCount, customCount) = (detail.priceCount, detail.batchCount, detail.customCodeCount)
         print()
         print("Prices:                 \(priceCount) territor\(priceCount == 1 ? "y" : "ies")")
         print("One-Time Code Batches:  \(oneTimeCount)")
         print("Custom Codes:           \(customCount)")
-        print("Total Codes:   prod=\(attrs?.productionCodeCount ?? 0), sandbox=\(attrs?.sandboxCodeCount ?? 0)")
+        print("Total Codes:   prod=\(offer.productionCodeCount ?? 0), sandbox=\(offer.sandboxCodeCount ?? 0)")
       }
     }
 
@@ -2471,41 +2462,13 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        // Inline price entries, referenced from the offer code by local ID
-        let localIDs = resolved.entries.indices.map { "${price\($0)}" }
-        let inlines = zip(localIDs, resolved.entries).map { localID, entry in
-          Components.Schemas.SubscriptionOfferCodePriceInlineCreate(
-            id: localID,
-            relationships: .init(
-              subscriptionPricePoint: .init(data: .init(id: entry.pricePointID, _type: "subscriptionPricePoints")),
-              territory: .init(data: .init(id: entry.territoryID, _type: "territories"))
-            ),
-            _type: "subscriptionOfferCodePrices"
-          )
-        }
-
-        let response = try await client.subscriptionOfferCodesCreateInstance(body: .json(.init(
-          data: .init(
-            attributes: .init(
-              autoRenewEnabled: autoRenew,
-              customerEligibilities: eligibilities.map(\.rawValue),
-              duration: offerDuration.rawValue,
-              name: name,
-              numberOfPeriods: periods,
-              offerEligibility: offerElig.rawValue,
-              offerMode: offerMode.rawValue
-            ),
-            relationships: .init(
-              prices: .init(data: localIDs.map { .init(id: $0, _type: "subscriptionOfferCodePrices") }),
-              subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))
-            ),
-            _type: "subscriptionOfferCodes"
-          ),
-          included: inlines
-        ))).created.body.json
+        let created = try await OfferCodes.createForSubscription(
+          subscriptionID: sub.id, name: name, eligibilities: eligibilities.map(\.rawValue),
+          offerEligibility: offerElig.rawValue, mode: offerMode.rawValue, duration: offerDuration.rawValue, periods: periods,
+          autoRenew: autoRenew, prices: resolved.offerPrices, client: client)
 
         print()
-        success("Created", "offer code '\(name)' (id: \(response.data.id)).")
+        success("Created", "offer code '\(name)' (id: \(created.id)).")
       }
     }
 
@@ -2546,11 +2509,7 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.subscriptionOfferCodesUpdateInstance(
-          path: .init(id: offerCodeID),
-          body: .json(.init(data: .init(
-            attributes: .init(active: activeBool), id: offerCodeID, _type: "subscriptionOfferCodes")))
-        ).ok
+        try await OfferCodes.setActive(.subscription, id: offerCodeID, active: activeBool, client: client)
         print()
         success("Updated", "offer code \(offerCodeID) (active=\(activeBool)).")
       }
@@ -2609,13 +2568,9 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        let response = try await client.subscriptionOfferCodeOneTimeUseCodesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(environment: env?.rawValue, expirationDate: expires, numberOfCodes: count),
-          relationships: .init(offerCode: .init(data: .init(id: offerCodeID, _type: "subscriptionOfferCodes"))),
-          _type: "subscriptionOfferCodeOneTimeUseCodes"
-        )))).created.body.json
-
-        let batchID = response.data.id
+        let batchID = try await OfferCodes.generateCodes(
+          .subscription, offerCodeID: offerCodeID, count: count, expirationDate: expires, environment: env?.rawValue,
+          client: client)
         print()
         success("Created", "one-time-use code batch (id: \(batchID)).")
         print()
@@ -2675,14 +2630,11 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        let response = try await client.subscriptionOfferCodeCustomCodesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(customCode: code, expirationDate: expires, numberOfCodes: count),
-          relationships: .init(offerCode: .init(data: .init(id: offerCodeID, _type: "subscriptionOfferCodes"))),
-          _type: "subscriptionOfferCodeCustomCodes"
-        )))).created.body.json
+        let customCodeID = try await OfferCodes.addCustomCode(
+          .subscription, offerCodeID: offerCodeID, code: code, count: count, expirationDate: expires, client: client)
 
         print()
-        success("Created", "custom code '\(code)' (id: \(response.data.id)).")
+        success("Created", "custom code '\(code)' (id: \(customCodeID)).")
       }
     }
 
@@ -2708,9 +2660,7 @@ struct SubCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
 
         try await runOfferCodeViewCodes(output: output) {
-          try await String(
-            collecting: client.subscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated(path: .init(id: batchID)).ok.body.csv,
-            upTo: 50 << 20)
+          try await OfferCodes.codeValues(.subscription, batchID: batchID, client: client)
         }
       }
     }

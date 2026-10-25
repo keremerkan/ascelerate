@@ -131,39 +131,20 @@ enum BuildUploader {
     return info.buildNumber
   }
 
-  /// The app's upload records that will never complete: still waiting for their file while another
-  /// upload of the same build has moved past that, or for over a day. A slow upload in progress is
-  /// neither, so it's never included.
+  /// The app's upload records that will never complete (`BuildUploadRecords.stale`).
   static func strayUploads(
     appID: String, version: String? = nil, build: String? = nil, platform: String? = nil, client: ASCClient
-  ) async throws -> [Components.Schemas.BuildUpload] {
-    typealias PlatformFilter = Operations.AppsBuildUploadsGetToManyRelated.Input.Query.FilterPlatformPayloadPayload
-    let uploads = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.appsBuildUploadsGetToManyRelated(
-        path: .init(id: appID),
-        query: .init(
-          filterCfBundleShortVersionString: version.map { [$0] }, filterCfBundleVersion: build.map { [$0] },
-          filterPlatform: platform.flatMap(PlatformFilter.init(rawValue:)).map { [$0] }, limit: 200)
-      ).ok.body.json
-    }.flatMap(\.data)
-    let key = { (u: Components.Schemas.BuildUpload) in
-      [u.attributes?.cfBundleShortVersionString, u.attributes?.cfBundleVersion, u.attributes?.platform].map { $0 ?? "" }
-    }
-    let waiting = { (u: Components.Schemas.BuildUpload) in u.attributes?.state?.state == "AWAITING_UPLOAD" }
-    let movedOn = Set(uploads.filter { !waiting($0) }.map(key))
-    let dayAgo = Date().addingTimeInterval(-24 * 3600)
-    return uploads.filter { u in
-      waiting(u) && (movedOn.contains(key(u)) || (u.attributes?.createdDate ?? .distantFuture) < dayAgo)
-    }
+  ) async throws -> [BuildUploadRecords.Upload] {
+    try await BuildUploadRecords.stale(appID: appID, version: version, build: build, platform: platform, client: client)
   }
 
   /// Deletes upload records; returns how many went (none under dry run).
   @discardableResult
-  static func delete(_ uploads: [Components.Schemas.BuildUpload], client: ASCClient) async throws -> Int {
+  static func delete(_ uploads: [BuildUploadRecords.Upload], client: ASCClient) async throws -> Int {
     var deleted = 0
     for upload in uploads {
       let done = try await unlessDryRunStopped {
-        try await withTransientRetry { try await client.buildUploadsDeleteInstance(path: .init(id: upload.id)).noContent }
+        try await BuildUploadRecords.delete(id: upload.id, client: client)
       }
       if done != nil { deleted += 1 }
     }

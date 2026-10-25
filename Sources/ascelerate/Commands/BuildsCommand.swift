@@ -156,8 +156,7 @@ struct BuildsCommand: AsyncParsableCommand {
           return
         }
         for u in stale {
-          let a = u.attributes
-          print("  \(a?.cfBundleShortVersionString ?? "-") (\(a?.cfBundleVersion ?? "-")) \(formatState(a?.platform ?? "-")), created \(a?.createdDate.map { formatDate($0) } ?? "-")  \(u.id)")
+          print("  \(u.version ?? "-") (\(u.build ?? "-")) \(formatState(u.platform ?? "-")), created \(u.createdDate.map { formatDate($0) } ?? "-")  \(u.id)")
         }
         guard confirm("Delete \(stale.count == 1 ? "this record" : "these \(stale.count) records")? [y/N] ") else {
           print(yellow("Cancelled."))
@@ -167,22 +166,14 @@ struct BuildsCommand: AsyncParsableCommand {
         print(green("Deleted") + " \(deleted) stale upload record\(deleted == 1 ? "" : "s").")
         return
       }
-      // Apple sorts records without an uploadedDate (never finished) first whatever the order, so
-      // take them all and order by creation here.
-      let uploads = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.appsBuildUploadsGetToManyRelated(
-          path: .init(id: app.id), query: .init(filterPlatform: platformFilter(try platformOption.parsed()), limit: 200)
-        ).ok.body.json
-      }.flatMap(\.data)
-      let details = { (list: [Components.Schemas.StateDetail]?) in list.map { $0.map { Detail(code: $0.code, description: $0.description) } } }
-      let entries = uploads.map { u in
-        let a = u.attributes
-        return Entry(
-          id: u.id, version: a?.cfBundleShortVersionString, build: a?.cfBundleVersion, platform: a?.platform,
-          state: a?.state?.state, createdDate: a?.createdDate, uploadedDate: a?.uploadedDate,
-          errors: details(a?.state?.errors), warnings: details(a?.state?.warnings)
-        )
-      }.sorted { ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast) }.prefix(limit).map { $0 }
+      let uploads = try await BuildUploadRecords.list(
+        appID: app.id, platform: try platformOption.parsed()?.rawValue, client: client)
+      let details = { (list: [BuildUploadRecords.Detail]?) in list.map { $0.map { Detail(code: $0.code, description: $0.description) } } }
+      let entries = uploads.prefix(limit).map { u in
+        Entry(
+          id: u.id, version: u.version, build: u.build, platform: u.platform, state: u.state,
+          createdDate: u.createdDate, uploadedDate: u.uploadedDate, errors: details(u.errors), warnings: details(u.warnings))
+      }
       if jsonOption.json { try printJSON(entries); return }
       guard !entries.isEmpty else {
         print("No build uploads.")

@@ -363,29 +363,6 @@ struct LibraryEntry: Sendable {
   }
 }
 
-enum MediaDownloadError: LocalizedError {
-  case invalidURL(String)
-  case noURL(String)
-
-  var errorDescription: String? {
-    switch self {
-    case .invalidURL(let url):
-      return "Invalid download URL: \(url)"
-    case .noURL(let fileName):
-      return "No download URL available for '\(fileName)'."
-    }
-  }
-}
-
-func resolveImageURL(templateURL: String, width: Int, height: Int, fileName: String) -> String {
-  let ext = (fileName as NSString).pathExtension.lowercased()
-  let format = (ext == "jpg" || ext == "jpeg") ? "jpg" : "png"
-  return templateURL
-    .replacingOccurrences(of: "{w}", with: "\(width)")
-    .replacingOccurrences(of: "{h}", with: "\(height)")
-    .replacingOccurrences(of: "{f}", with: format)
-}
-
 // MARK: - UploadMedia Command
 
 extension AppsCommand {
@@ -805,11 +782,6 @@ extension AppsCommand {
         print("State:   \(versionState)")
         print()
 
-        // Fetch all localizations
-        let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: appVersion.id)
-        ).ok.body.json
-
         let outputFolder = expandPath(
           confirmOutputPath(folder ?? "\(bundleID)-media", isDirectory: true))
         let fm = FileManager.default
@@ -819,175 +791,24 @@ extension AppsCommand {
         var failureCount = 0
 
         let wanted = self.locale.map { Set($0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }) }
-        for loc in locsResponse.data {
-          guard let locale = loc.attributes?.locale, wanted?.contains(locale.lowercased()) ?? true else { continue }
-
-          // Fetch screenshot sets for this localization
-          let setsResponse = try await client.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-
-          for set in setsResponse.data {
-            // Library folders (iPhone Duo) are downloaded from their placements below; the classic
-            // API mirrors Duo screenshots only once they're active.
-            guard let displayType = set.attributes?.screenshotDisplayType, AssetLibrary.slots[displayType] == nil else { continue }
-
-            let screenshotsResponse = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
-              path: .init(id: set.id)
-            ).ok.body.json
-
-            if screenshotsResponse.data.isEmpty { continue }
-
-            let setFolder = "\(outputFolder)/\(locale)/\(displayType)"
-            try fm.createDirectory(atPath: setFolder, withIntermediateDirectories: true)
-
-            print("[\(localeName(locale))] \(displayType):")
-
-            for (i, screenshot) in screenshotsResponse.data.enumerated() {
-              // Server-supplied name — strip path separators before building a local path.
-              let originalName = (screenshot.attributes?.fileName ?? "\(screenshot.id).png")
-                .replacingOccurrences(of: "/", with: "_")
-              let fileName = String(format: "%02d_%@", i + 1, originalName)
-
-              print(
-                "  Screenshot \(i + 1)/\(screenshotsResponse.data.count): \(fileName)... ",
-                terminator: "")
-              fflush(stdout)
-
-              do {
-                guard let templateURL = screenshot.attributes?.imageAsset?.templateUrl else {
-                  throw MediaDownloadError.noURL(originalName)
-                }
-
-                let width = screenshot.attributes?.imageAsset?.width ?? 0
-                let height = screenshot.attributes?.imageAsset?.height ?? 0
-                let downloadURL = resolveImageURL(
-                  templateURL: templateURL, width: width, height: height, fileName: originalName)
-
-                guard let url = URL(string: downloadURL) else {
-                  throw MediaDownloadError.invalidURL(downloadURL)
-                }
-
-                let (tempURL, _) = try await URLSession.shared.download(from: url)
-                let destPath = "\(setFolder)/\(fileName)"
-                let destURL = URL(fileURLWithPath: destPath)
-                if fm.fileExists(atPath: destPath) {
-                  try fm.removeItem(at: destURL)
-                }
-                try fm.moveItem(at: tempURL, to: destURL)
-
-                print("Done.")
-                screenshotCount += 1
-              } catch {
-                print("Failed: \(describeError(error))")
-                failureCount += 1
-              }
+        let plan = try await MediaDownload.plan(versionID: appVersion.id, locales: wanted, client: client)
+        for (locale, sets) in plan {
+          for set in sets {
+            if set.skippedVideos > 0 {
+              print("[\(localeName(locale))] \(set.folder): skipped a video (App Store Connect gives no download URL for library videos).")
             }
-          }
-
-          // Asset library images (iPhone Duo screenshots, header, search results), from their
-          // placements. Library videos have no download URL (videoAsset stays empty, seen live), so
-          // header and search results videos are skipped; Duo previews come from the classic
-          // API's preview mirror below, which has one.
-          for (kind, slot) in AssetLibrary.slots.sorted(by: { $0.key < $1.key }) {
-            // The placements come with their images (one request per slot).
-            let placements = try await AssetLibrary.placementsWithMedia(
-              on: .versionLocalization(loc.id), type: slot.placementType, group: slot.group, client: client)
-            let images = placements.compactMap(\.image)
-            let skippedVideos = slot.isSingle ? placements.count - images.count : 0
-            if skippedVideos > 0 {
-              print("[\(localeName(locale))] \(kind): skipped a video (App Store Connect gives no download URL for library videos).")
-            }
-            guard !images.isEmpty else { continue }
-            let setFolder = "\(outputFolder)/\(locale)/\(kind)"
+            guard !set.files.isEmpty else { continue }
+            let setFolder = "\(outputFolder)/\(locale)/\(set.folder)"
             try fm.createDirectory(atPath: setFolder, withIntermediateDirectories: true)
-            print("[\(localeName(locale))] \(kind):")
-            // Look every image up first: names that are unique and already sort into display order
-            // are kept as they are, so the folder round-trips through upload and verify; otherwise
-            // each gets its position as a prefix, as classic sets do.
-            let found = images.map { (id: $0.id, common: $0.attributes?.common) }
-            // Server-supplied names: strip path separators before building local paths.
-            let names = found.map { ($0.common?.fileName ?? "\($0.id).png").replacingOccurrences(of: "/", with: "_") }
-            let keepNames = Set(names).count == names.count && names == names.sorted()
-            for (i, image) in found.enumerated() {
-              let fileName = keepNames ? names[i] : String(format: "%02d_%@", i + 1, names[i])
-              print("  Screenshot \(i + 1)/\(found.count): \(fileName)... ", terminator: "")
+            print("[\(localeName(locale))] \(set.folder):")
+            for (i, file) in set.files.enumerated() {
+              let label = set.kind == .previews ? "Preview   " : "Screenshot "
+              print("  \(label)\(i + 1)/\(set.files.count): \(file.fileName)... ", terminator: "")
               fflush(stdout)
               do {
-                guard let asset = image.common?.imageAsset, let templateURL = asset.templateUrl else {
-                  throw MediaDownloadError.noURL(names[i])
-                }
-                let downloadURL = resolveImageURL(
-                  templateURL: templateURL, width: asset.width ?? 0, height: asset.height ?? 0, fileName: names[i])
-                guard let url = URL(string: downloadURL) else {
-                  throw MediaDownloadError.invalidURL(downloadURL)
-                }
-                let (tempURL, _) = try await URLSession.shared.download(from: url)
-                let destPath = "\(setFolder)/\(fileName)"
-                if fm.fileExists(atPath: destPath) {
-                  try fm.removeItem(atPath: destPath)
-                }
-                try fm.moveItem(at: tempURL, to: URL(fileURLWithPath: destPath))
+                try await MediaDownload.download(file, to: URL(fileURLWithPath: "\(setFolder)/\(file.fileName)"))
                 print("Done.")
-                screenshotCount += 1
-              } catch {
-                print("Failed: \(describeError(error))")
-                failureCount += 1
-              }
-            }
-          }
-
-          // Fetch preview sets for this localization
-          let previewSetsResponse = try await client.appStoreVersionLocalizationsAppPreviewSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-
-          for set in previewSetsResponse.data {
-            guard let pvType = set.attributes?.previewType else { continue }
-
-            let previewsResponse = try await client.appPreviewSetsAppPreviewsGetToManyRelated(
-              path: .init(id: set.id)
-            ).ok.body.json
-
-            if previewsResponse.data.isEmpty { continue }
-
-            // Map preview type back to screenshot display type folder name
-            let folderName = "APP_\(pvType)"
-            let setFolder = "\(outputFolder)/\(locale)/\(folderName)"
-            try fm.createDirectory(atPath: setFolder, withIntermediateDirectories: true)
-
-            print("[\(localeName(locale))] \(folderName):")
-
-            for (i, preview) in previewsResponse.data.enumerated() {
-              // Server-supplied name — strip path separators before building a local path.
-              let originalName = (preview.attributes?.fileName ?? "\(preview.id).mp4")
-                .replacingOccurrences(of: "/", with: "_")
-              let fileName = String(format: "%02d_%@", i + 1, originalName)
-
-              print(
-                "  Preview   \(i + 1)/\(previewsResponse.data.count): \(fileName)... ",
-                terminator: "")
-              fflush(stdout)
-
-              do {
-                guard let videoURLString = preview.attributes?.videoUrl else {
-                  throw MediaDownloadError.noURL(originalName)
-                }
-
-                guard let url = URL(string: videoURLString) else {
-                  throw MediaDownloadError.invalidURL(videoURLString)
-                }
-
-                let (tempURL, _) = try await URLSession.shared.download(from: url)
-                let destPath = "\(setFolder)/\(fileName)"
-                let destURL = URL(fileURLWithPath: destPath)
-                if fm.fileExists(atPath: destPath) {
-                  try fm.removeItem(at: destURL)
-                }
-                try fm.moveItem(at: tempURL, to: destURL)
-
-                print("Done.")
-                previewCount += 1
+                if set.kind == .previews { previewCount += 1 } else { screenshotCount += 1 }
               } catch {
                 print("Failed: \(describeError(error))")
                 failureCount += 1

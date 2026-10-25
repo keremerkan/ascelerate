@@ -1647,9 +1647,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let codes = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.inAppPurchasesV2OfferCodesGetToManyRelated(path: .init(id: iap.id), query: .init(limit: 200)).ok.body.json
-        }.flatMap(\.data)
+        let codes = try await OfferCodes.list(.inAppPurchase, productRecordID: iap.id, client: client)
 
         if codes.isEmpty {
           print("No offer codes for \(productID).")
@@ -1659,13 +1657,11 @@ struct IAPCommand: AsyncParsableCommand {
         Table.print(
           headers: ["ID", "Name", "Active", "Eligibilities"],
           rows: codes.map { c in
-            let attrs = c.attributes
-            let elig = attrs?.customerEligibilities?.joined(separator: ", ") ?? "—"
-            return [
+            [
               c.id,
-              attrs?.name ?? "—",
-              attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—",
-              elig,
+              c.name ?? "—",
+              c.isActive == true ? "Yes" : c.isActive == false ? "No" : "—",
+              c.customerEligibilities.isEmpty ? "—" : c.customerEligibilities.joined(separator: ", "),
             ]
           }
         )
@@ -1694,19 +1690,14 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         _ = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let response = try await client.inAppPurchaseOfferCodesGetInstance(
-          path: .init(id: offerCodeID),
-          query: .init(include: [.prices, .oneTimeUseCodes, .customCodes], limitCustomCodes: 50, limitOneTimeUseCodes: 50, limitPrices: 200)
-        ).ok.body.json
-        let attrs = response.data.attributes
-        print("Offer Code:    \(attrs?.name ?? "—")")
-        print("ID:            \(response.data.id)")
-        print("Active:        \(attrs?.active == true ? "Yes" : attrs?.active == false ? "No" : "—")")
-        print("Eligibilities: \(attrs?.customerEligibilities?.joined(separator: ", ") ?? "—")")
+        let detail = try await OfferCodes.detail(.inAppPurchase, id: offerCodeID, client: client)
+        let offer = detail.offer
+        print("Offer Code:    \(offer.name ?? "—")")
+        print("ID:            \(offer.id)")
+        print("Active:        \(offer.isActive == true ? "Yes" : offer.isActive == false ? "No" : "—")")
+        print("Eligibilities: \(offer.customerEligibilities.isEmpty ? "—" : offer.customerEligibilities.joined(separator: ", "))")
 
-        let priceCount = response.data.relationships?.prices?.data?.count ?? 0
-        let oneTimeCount = response.data.relationships?.oneTimeUseCodes?.data?.count ?? 0
-        let customCount = response.data.relationships?.customCodes?.data?.count ?? 0
+        let (priceCount, oneTimeCount, customCount) = (detail.priceCount, detail.batchCount, detail.customCodeCount)
         print()
         print("Prices:        \(priceCount) territor\(priceCount == 1 ? "y" : "ies")")
         print("One-Time Codes Batches: \(oneTimeCount)")
@@ -1804,33 +1795,12 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        // Inline price entries, referenced from the offer code by local ID
-        let localIDs = priceEntries.indices.map { "${price\($0)}" }
-        let inlines = zip(localIDs, priceEntries).map { localID, entry in
-          Components.Schemas.InAppPurchaseOfferPriceInlineCreate(
-            id: localID,
-            relationships: .init(
-              pricePoint: .init(data: .init(id: entry.pricePointID, _type: "inAppPurchasePricePoints")),
-              territory: .init(data: .init(id: entry.territory, _type: "territories"))
-            ),
-            _type: "inAppPurchaseOfferPrices"
-          )
-        }
-
-        let response = try await client.inAppPurchaseOfferCodesCreateInstance(body: .json(.init(
-          data: .init(
-            attributes: .init(customerEligibilities: eligibilities.map(\.rawValue), name: name),
-            relationships: .init(
-              inAppPurchase: .init(data: .init(id: iap.id, _type: "inAppPurchases")),
-              prices: .init(data: localIDs.map { .init(id: $0, _type: "inAppPurchaseOfferPrices") })
-            ),
-            _type: "inAppPurchaseOfferCodes"
-          ),
-          included: inlines
-        ))).created.body.json
+        let created = try await OfferCodes.createForInAppPurchase(
+          purchaseID: iap.id, name: name, eligibilities: eligibilities.map(\.rawValue),
+          prices: priceEntries.map { .init(territoryID: $0.territory, pricePointID: $0.pricePointID) }, client: client)
 
         print()
-        success("Created", "offer code '\(name)' (id: \(response.data.id)).")
+        success("Created", "offer code '\(name)' (id: \(created.id)).")
       }
     }
 
@@ -1871,11 +1841,7 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.inAppPurchaseOfferCodesUpdateInstance(
-          path: .init(id: offerCodeID),
-          body: .json(.init(data: .init(
-            attributes: .init(active: activeBool), id: offerCodeID, _type: "inAppPurchaseOfferCodes")))
-        ).ok
+        try await OfferCodes.setActive(.inAppPurchase, id: offerCodeID, active: activeBool, client: client)
         print()
         success("Updated", "offer code \(offerCodeID) (active=\(activeBool)).")
       }
@@ -1934,13 +1900,9 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        let response = try await client.inAppPurchaseOfferCodeOneTimeUseCodesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(environment: env?.rawValue, expirationDate: expires, numberOfCodes: count),
-          relationships: .init(offerCode: .init(data: .init(id: offerCodeID, _type: "inAppPurchaseOfferCodes"))),
-          _type: "inAppPurchaseOfferCodeOneTimeUseCodes"
-        )))).created.body.json
-
-        let batchID = response.data.id
+        let batchID = try await OfferCodes.generateCodes(
+          .inAppPurchase, offerCodeID: offerCodeID, count: count, expirationDate: expires, environment: env?.rawValue,
+          client: client)
         print()
         success("Created", "one-time-use code batch (id: \(batchID)).")
         print()
@@ -2000,14 +1962,11 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        let response = try await client.inAppPurchaseOfferCodeCustomCodesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(customCode: code, expirationDate: expires, numberOfCodes: count),
-          relationships: .init(offerCode: .init(data: .init(id: offerCodeID, _type: "inAppPurchaseOfferCodes"))),
-          _type: "inAppPurchaseOfferCodeCustomCodes"
-        )))).created.body.json
+        let customCodeID = try await OfferCodes.addCustomCode(
+          .inAppPurchase, offerCodeID: offerCodeID, code: code, count: count, expirationDate: expires, client: client)
 
         print()
-        success("Created", "custom code '\(code)' (id: \(response.data.id)).")
+        success("Created", "custom code '\(code)' (id: \(customCodeID)).")
       }
     }
 
@@ -2033,9 +1992,7 @@ struct IAPCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
 
         try await runOfferCodeViewCodes(output: output) {
-          try await String(
-            collecting: client.inAppPurchaseOfferCodeOneTimeUseCodesValuesGetToOneRelated(path: .init(id: batchID)).ok.body.csv,
-            upTo: 50 << 20)
+          try await OfferCodes.codeValues(.inAppPurchase, batchID: batchID, client: client)
         }
       }
     }

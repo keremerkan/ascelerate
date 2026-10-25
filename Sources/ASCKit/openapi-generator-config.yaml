@@ -228,6 +228,8 @@ filter:
     - /v1/subscriptions/{id}/introductoryOffers
     - /v1/subscriptions/{id}/offerCodes
     - /v1/subscriptionOfferCodes/{id}
+    - /v1/subscriptionOfferCodes/{id}/oneTimeUseCodes
+    - /v1/subscriptionOfferCodes/{id}/customCodes
     - /v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values
     - /v1/subscriptions/{id}/promotionalOffers
     - /v1/subscriptionPromotionalOffers/{id}
@@ -238,6 +240,8 @@ filter:
     - /v2/inAppPurchases/{id}/pricePoints
     - /v2/inAppPurchases/{id}/offerCodes
     - /v1/inAppPurchaseOfferCodes/{id}
+    - /v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes
+    - /v1/inAppPurchaseOfferCodes/{id}/customCodes
     - /v1/inAppPurchaseOfferCodeOneTimeUseCodes/{id}/values
     - /v2/inAppPurchases/{id}/images
     - /v2/inAppPurchases/{id}/appStoreReviewScreenshot

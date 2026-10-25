@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-El comando comprueba el estado de la versión y la compilación asignada, y después recorre cada idioma para verificar los campos de la localización (descripción, novedades, palabras clave, URL de soporte), los campos de la información de la app (nombre, subtítulo, URL de la política de privacidad) y las capturas de pantalla:
+El comando comprueba el estado y la compilación de la versión (procesada y con el cumplimiento de exportación respondido), el copyright, el contacto y el inicio de sesión para la revisión, y la categoría principal, los derechos de contenido, el precio y la disponibilidad de la app. Después recorre cada idioma: la información de la app (nombre y, en el idioma principal, la URL de la política de privacidad), los textos de la versión (descripción y palabras clave en todos los idiomas, la URL de soporte en el idioma principal) y las capturas de pantalla. Un idioma sin capturas propias muestra en el App Store las del idioma principal, así que solo el idioma principal las necesita:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -117,6 +117,13 @@ Check                                Status
 ──────────────────────────────────────────────────────────────────
 Version state                        ✓ Prepare for Submission
 Build attached                       ✓ Build 42
+Copyright                            ✓ 2026 Your Name
+Review contact                       ✓ Jane Doe, jane@example.com
+Sign-in                              ✓ Not required
+Category                             ✓ Productivity
+Content rights                       ✓ Does Not Use Third Party Content
+Price                                ✓ Set
+Availability                         ✓ 175 territories
 
 en-US (English (United States))
   App info                           ✓ All fields filled
@@ -124,16 +131,16 @@ en-US (English (United States))
   Screenshots                        ✓ 2 sets, 10 screenshots
 
 de-DE (German (Germany))
-  App info                           ✗ Missing: Privacy Policy URL
-  Localizations                      ✗ Missing: What's New
-  Screenshots                        ✗ No screenshots
+  App info                           ✓ All fields filled
+  Localizations                      ✗ Missing: Keywords, What's New
+  Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 5 passed, 3 failed
+Result: 14 passed, 1 failed
 ```
 
 En las compras dentro de la app y las suscripciones se comprueba que tengan precios y un estado compatible con un envío. Un producto que haya retirado de la venta (Developer Removed from Sale) aparece como omitido (–) y no hace fallar la comprobación; la línea del resultado lo cuenta aparte.
 
-La comprobación de las novedades (What's New) se omite cuando la app no tiene ninguna versión publicada anteriormente, ya que ese campo solo existe para las actualizaciones, no para la primera versión.
+Las novedades (What's New) solo se comprueban en las actualizaciones, es decir, cuando ya se publicó una versión de la misma plataforma. Una publicación en otra plataforma no cuenta: la primera versión para Mac de una app de iOS no las necesita.
 
 El comando termina con un código de salida distinto de cero si falla alguna comprobación, lo que lo hace adecuado para pipelines de CI y archivos de workflow. Con `--json`, en lugar de la tabla emite un informe estructurado (un booleano `passed` y una entrada por comprobación con `group`, `name`, `passed` y `detail`) y mantiene el mismo comportamiento del código de salida, de modo que los controles de CI pueden indicar exactamente qué comprobación ha fallado.
 

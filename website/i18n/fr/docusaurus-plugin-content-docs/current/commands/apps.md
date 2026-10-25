@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-La commande vérifie l'état de la version, l'association du build, puis parcourt chaque langue pour vérifier les champs de localisation (description, nouveautés, mots-clés, URL d'assistance), les champs d'informations de l'application (nom, sous-titre, URL de politique de confidentialité) et les captures d'écran :
+La commande vérifie l'état et le build de la version (traité, avec la conformité à l'exportation renseignée), le copyright, le contact et la connexion pour App Review, ainsi que la catégorie principale, les droits sur le contenu, le prix et la disponibilité de l'application. Elle parcourt ensuite chaque langue : informations de l'application (nom et, dans la langue principale, URL de politique de confidentialité), textes de la version (description et mots-clés dans chaque langue, URL d'assistance dans la langue principale) et captures d'écran. Une langue sans captures d'écran propres affiche celles de la langue principale sur l'App Store : seule la langue principale en a donc besoin :
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -117,6 +117,13 @@ Check                                Status
 ──────────────────────────────────────────────────────────────────
 Version state                        ✓ Prepare for Submission
 Build attached                       ✓ Build 42
+Copyright                            ✓ 2026 Your Name
+Review contact                       ✓ Jane Doe, jane@example.com
+Sign-in                              ✓ Not required
+Category                             ✓ Productivity
+Content rights                       ✓ Does Not Use Third Party Content
+Price                                ✓ Set
+Availability                         ✓ 175 territories
 
 en-US (English (United States))
   App info                           ✓ All fields filled
@@ -124,16 +131,16 @@ en-US (English (United States))
   Screenshots                        ✓ 2 sets, 10 screenshots
 
 de-DE (German (Germany))
-  App info                           ✗ Missing: Privacy Policy URL
-  Localizations                      ✗ Missing: What's New
-  Screenshots                        ✗ No screenshots
+  App info                           ✓ All fields filled
+  Localizations                      ✗ Missing: Keywords, What's New
+  Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 5 passed, 3 failed
+Result: 14 passed, 1 failed
 ```
 
 Les achats intégrés et les abonnements sont vérifiés pour leurs prix et un état compatible avec une soumission. Un produit que vous avez retiré de la vente (Developer Removed from Sale) est indiqué comme ignoré (–) et ne fait pas échouer la vérification ; la ligne de résultat le compte à part.
 
-La vérification des nouveautés est ignorée lorsque l'application n'a pas encore de version publiée — ce champ n'existe que pour les mises à jour, pas pour une première version.
+Les nouveautés ne sont vérifiées que pour les mises à jour, c'est-à-dire lorsqu'une version de la même plateforme a déjà été publiée. Une publication sur une autre plateforme ne compte pas : la première version Mac d'une app iOS n'en a pas besoin.
 
 La commande se termine avec un code de sortie non nul lorsqu'une vérification échoue, ce qui la rend adaptée aux pipelines CI et aux fichiers de workflow. Avec `--json`, elle émet un rapport structuré au lieu du tableau — un booléen `passed` plus une entrée par vérification (`group`, `name`, `passed`, `detail`) — tout en conservant le même comportement de code de sortie, afin que les pipelines CI puissent signaler exactement quelle vérification a échoué.
 

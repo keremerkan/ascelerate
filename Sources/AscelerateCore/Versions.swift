@@ -86,3 +86,17 @@ public func updateVersion(
       attributes: .init(copyright: copyright, versionString: versionString), id: versionID, _type: "appStoreVersions")))
   ).ok.body.json.data
 }
+
+/// Whether a version of the platform (raw, e.g. MAC_OS) other than `except` was ever released,
+/// which makes a new one an update: App Store Connect asks for What's New and offers a phased
+/// release only then. Another platform's releases don't count.
+public func hasReleasedVersion(appID: String, platform: String?, except versionID: String, client: ASCClient) async throws -> Bool {
+  // Typed explicitly: Swift 6.2 infers the element as optional inside the array literal.
+  typealias PlatformFilter = Operations.AppsAppStoreVersionsGetToManyRelated.Input.Query.FilterPlatformPayloadPayload
+  let filter: PlatformFilter? = platform.flatMap(PlatformFilter.init(rawValue:))
+  return try await client.appsAppStoreVersionsGetToManyRelated(
+    path: .init(id: appID),
+    query: .init(
+      filterPlatform: filter.map { [$0] }, filterAppVersionState: [.readyForDistribution, .replacedWithNewVersion], limit: 2)
+  ).ok.body.json.data.contains { $0.id != versionID }
+}

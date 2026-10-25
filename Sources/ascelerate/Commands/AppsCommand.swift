@@ -930,23 +930,15 @@ struct AppsCommand: AsyncParsableCommand {
       let appName = app.attributes?.name ?? bundleID
       
       if enable {
-        let response = try await client.appStoreVersionPhasedReleasesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(phasedReleaseState: ASCEnum.PhasedReleaseState.inactive.rawValue),
-          relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
-          _type: "appStoreVersionPhasedReleases"
-        )))).created.body.json
-        let state = response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+        let release = try await Releases.enablePhasedRelease(versionID: appVersion.id, client: client)
+        let state = release.state.map { formatState($0) } ?? "—"
         success("Enabled", "phased release for version \(versionString).")
         print("  State: \(state)")
         return
       }
       
       // All other actions require an existing phased release
-      let existing = try await optionalRelated {
-        try await client.appStoreVersionsAppStoreVersionPhasedReleaseGetToOneRelated(
-          path: .init(id: appVersion.id)
-        ).ok.body.json.data
-      }
+      let existing = try await Releases.phasedRelease(versionID: appVersion.id, client: client)
       
       if pause {
         guard let pr = existing else {
@@ -991,7 +983,7 @@ struct AppsCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        _ = try await client.appStoreVersionPhasedReleasesDeleteInstance(path: .init(id: pr.id)).noContent
+        try await Releases.removePhasedRelease(id: pr.id, client: client)
         success("Removed", "phased release for version \(versionString).")
         return
       }
@@ -1004,11 +996,10 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
       
-      let attrs = pr.attributes
-      let state = attrs?.phasedReleaseState.map { formatState($0) } ?? "—"
-      let startDate = attrs?.startDate.map { formatDate($0) } ?? "—"
-      let day = attrs?.currentDayNumber.map { "\($0)" } ?? "—"
-      let pauseDuration = attrs?.totalPauseDuration ?? 0
+      let state = pr.state.map { formatState($0) } ?? "—"
+      let startDate = pr.startDate.map { formatDate($0) } ?? "—"
+      let day = pr.currentDayNumber.map { "\($0)" } ?? "—"
+      let pauseDuration = pr.totalPauseDuration ?? 0
       
       print("App:            \(appName)")
       print("Version:        \(versionString)")
@@ -1018,16 +1009,11 @@ struct AppsCommand: AsyncParsableCommand {
       print("  Paused:       \(pauseDuration) day\(pauseDuration == 1 ? "" : "s")")
     }
 
-    /// PATCHes a phased release's state; returns the new state for display.
+    /// Sets a phased release's state; returns the new state for display.
     private func setPhasedReleaseState(
       _ state: ASCEnum.PhasedReleaseState, id: String, client: ASCClient
     ) async throws -> String {
-      let response = try await client.appStoreVersionPhasedReleasesUpdateInstance(
-        path: .init(id: id),
-        body: .json(.init(data: .init(
-          attributes: .init(phasedReleaseState: state.rawValue), id: id, _type: "appStoreVersionPhasedReleases")))
-      ).ok.body.json
-      return response.data.attributes?.phasedReleaseState.map { formatState($0) } ?? "—"
+      try await Releases.setPhasedReleaseState(state, id: id, client: client).state.map { formatState($0) } ?? "—"
     }
   }
 
@@ -1085,10 +1071,7 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      _ = try await client.appStoreVersionReleaseRequestsCreateInstance(body: .json(.init(data: .init(
-        relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
-        _type: "appStoreVersionReleaseRequests"
-      )))).created
+      try await Releases.release(versionID: appVersion.id, client: client)
       success("Released", "\(appName) \(describe(appVersion)) — release request submitted.")
     }
   }
@@ -1275,102 +1258,9 @@ struct AppsCommand: AsyncParsableCommand {
         progress("Preflight checks for \(appName) v\(versionString) (\(stateStr))")
         progress("")
 
-        var checks: [Check] = []
-
-        // 1. Version state
-        progress("Checking version state...")
-        let editable = versionState.map { VersionLocalizations.editableStates.contains($0) } ?? false
-        checks.append(Check(
-          group: nil, name: "Version state", passed: editable,
-          detail: editable ? stateStr : "\(stateStr) (not editable)"
-        ))
-
-        // 2. Build attached
-        progress("Checking build...")
-        do {
-          let build = try await client.appStoreVersionsBuildGetToOneRelated(path: .init(id: appVersion.id)).ok.body.json.data
-          let buildNumber = build.attributes?.version ?? "unknown"
-          checks.append(Check(group: nil, name: "Build attached", passed: true, detail: "Build \(buildNumber)"))
-        } catch where ASCError.isMissingRelated(error) {
-          checks.append(Check(group: nil, name: "Build attached", passed: false, detail: "No build attached"))
-        }
-
-        // 3. Fetch version localizations
-        // What's New only exists for updates — if no earlier version of this platform
-        // was ever released, the field isn't required (or even settable).
-        // Typed explicitly: Swift 6.2 infers the element as optional inside the array literal.
-        typealias PlatformFilter = Operations.AppsAppStoreVersionsGetToManyRelated.Input.Query.FilterPlatformPayloadPayload
-        let platform: PlatformFilter? = appVersion.attributes?.platform.flatMap(PlatformFilter.init(rawValue:))
-        let releasedResponse = try await client.appsAppStoreVersionsGetToManyRelated(
-          path: .init(id: app.id),
-          query: .init(
-            filterPlatform: platform.map { [$0] },
-            filterAppVersionState: [.readyForDistribution, .replacedWithNewVersion],
-            limit: 2
-          )
-        ).ok.body.json
-        let hasReleasedVersion = releasedResponse.data.contains { $0.id != appVersion.id }
-        progress("Fetching localizations...")
-        let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: appVersion.id)
-        ).ok.body.json
-        let versionLocs = locsResponse.data.sorted {
-          ($0.attributes?.locale ?? "") < ($1.attributes?.locale ?? "")
-        }
-
-        // 4. Fetch app-info localizations
-        progress("Fetching app info...")
-        let appInfoResponse = try await client.appsAppInfosGetToManyRelated(
-          path: .init(id: app.id),
-          query: .init(include: [.appInfoLocalizations], limitAppInfoLocalizations: 50)
-        ).ok.body.json
-        var appInfoByLocale: [String: Components.Schemas.AppInfoLocalization] = [:]
-        if let appInfo = appInfoResponse.data.first(where: { $0.attributes?.state != "REPLACED_WITH_NEW_INFO" })
-            ?? appInfoResponse.data.first {
-          let locIDs = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
-          let infoLocs = appInfoResponse.included?.compactMap { item -> Components.Schemas.AppInfoLocalization? in
-            if case .appInfoLocalizations(let loc) = item, locIDs.contains(loc.id) {
-              return loc
-            }
-            return nil
-          } ?? []
-          for loc in infoLocs {
-            if let locale = loc.attributes?.locale {
-              appInfoByLocale[locale] = loc
-            }
-          }
-        }
-
-        // 5. Fetch screenshots per locale. Two bounded-concurrency phases (sets, then
-        // screenshots) replace the sequential L + L×S call chain with identical counts.
-        progress("Fetching screenshots...")
-        let setsByLocale = try await boundedConcurrentMap(versionLocs) { loc in
-          let setsResponse = try await client.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-          return (loc.attributes?.locale ?? "unknown", setsResponse.data.map(\.id))
-        }
-
-        let countsBySet = Dictionary(
-          try await boundedConcurrentMap(setsByLocale.flatMap(\.1)) { setID in
-            let screenshotsResponse = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
-              path: .init(id: setID)
-            ).ok.body.json
-            return (setID, screenshotsResponse.data.count)
-          },
-          uniquingKeysWith: { first, _ in first }
-        )
-
-        var screenshotsByLocale: [String: (sets: Int, count: Int)] = [:]
-        for (locale, setIDs) in setsByLocale {
-          let nonEmpty = setIDs.compactMap { countsBySet[$0] }.filter { $0 > 0 }
-          screenshotsByLocale[locale] = (nonEmpty.count, nonEmpty.reduce(0, +))
-        }
-
-        // 6. Per-locale checks
-        checks += buildLocaleChecks(
-          versionLocs: versionLocs, appInfoByLocale: appInfoByLocale,
-          screenshotsByLocale: screenshotsByLocale, requireWhatsNew: hasReleasedVersion)
+        progress("Reading the version, its languages and the app's information...")
+        let report = try await AscelerateCore.Preflight.report(appID: app.id, versionID: appVersion.id, client: client)
+        var checks = report.checks.map { Self.check($0, report: report) }
 
         // 7. In-app purchases
         progress("Checking in-app purchases...")
@@ -1437,85 +1327,63 @@ struct AppsCommand: AsyncParsableCommand {
         }
       }
 
-      /// Builds the per-locale app-info / localization / screenshot checks.
-      private func buildLocaleChecks(
-        versionLocs: [Components.Schemas.AppStoreVersionLocalization],
-        appInfoByLocale: [String: Components.Schemas.AppInfoLocalization],
-        screenshotsByLocale: [String: (sets: Int, count: Int)],
-        requireWhatsNew: Bool
-      ) -> [Check] {
-        var checks: [Check] = []
-        let allLocales = Set(versionLocs.compactMap { $0.attributes?.locale })
-          .union(appInfoByLocale.keys)
-          .sorted()
-
-        for locale in allLocales {
-          // App info
-          if let info = appInfoByLocale[locale] {
-            var missing: [String] = []
-            if info.attributes?.name == nil || info.attributes?.name?.isEmpty == true {
-              missing.append(formatFieldName("name"))
-            }
-            if info.attributes?.subtitle == nil || info.attributes?.subtitle?.isEmpty == true {
-              missing.append(formatFieldName("subtitle"))
-            }
-            if info.attributes?.privacyPolicyUrl == nil || info.attributes?.privacyPolicyUrl?.isEmpty == true {
-              missing.append(formatFieldName("privacyPolicyURL"))
-            }
-            checks.append(Check(
-              group: locale, name: "App info", passed: missing.isEmpty,
-              detail: missing.isEmpty ? "All fields filled" : "Missing: \(missing.joined(separator: ", "))"
-            ))
-          }
-
-          // Version localizations
-          if let loc = versionLocs.first(where: { $0.attributes?.locale == locale }) {
-            var missing: [String] = []
-            var invalid: [String] = []
-            let desc = loc.attributes?.description ?? ""
-            if desc.isEmpty {
-              missing.append(formatFieldName("description"))
-            } else if desc.count < 10 {
-              invalid.append("\(formatFieldName("description")) too short (<10 chars)")
-            } else if desc.count > 4000 {
-              invalid.append("\(formatFieldName("description")) too long (>4000 chars)")
-            }
-            if requireWhatsNew {
-              let whatsNew = loc.attributes?.whatsNew ?? ""
-              if whatsNew.isEmpty {
-                missing.append(formatFieldName("whatsNew"))
-              } else if whatsNew.count < 7 {
-                invalid.append("\(formatFieldName("whatsNew")) too short (<7 chars)")
-              } else if whatsNew.count > 4000 {
-                invalid.append("\(formatFieldName("whatsNew")) too long (>4000 chars)")
-              }
-            }
-            if loc.attributes?.keywords == nil || loc.attributes?.keywords?.isEmpty == true {
-              missing.append(formatFieldName("keywords"))
-            }
-            if loc.attributes?.supportUrl == nil {
-              missing.append(formatFieldName("supportURL"))
-            }
-            var parts: [String] = []
-            if !missing.isEmpty { parts.append("Missing: \(missing.joined(separator: ", "))") }
-            if !invalid.isEmpty { parts.append(invalid.joined(separator: ", ")) }
-            checks.append(Check(
-              group: locale, name: "Localizations", passed: parts.isEmpty,
-              detail: parts.isEmpty ? "All fields filled" : parts.joined(separator: "; ")
-            ))
-          }
-
-          // Screenshots
-          if let ss = screenshotsByLocale[locale] {
-            checks.append(Check(
-              group: locale, name: "Screenshots", passed: ss.count > 0,
-              detail: ss.count > 0
-                ? "\(ss.sets) set\(ss.sets == 1 ? "" : "s"), \(ss.count) screenshot\(ss.count == 1 ? "" : "s")"
-                : "No screenshots"
-            ))
+      /// A core check as a table row.
+      private static func check(_ check: AscelerateCore.Preflight.Check, report: AscelerateCore.Preflight.Report) -> Check {
+        func fields(_ fields: [AscelerateCore.Preflight.Field]) -> String {
+          fields.map { formatFieldName($0.rawValue) }.joined(separator: ", ")
+        }
+        var details: [String] = []
+        for problem in check.problems {
+          switch problem {
+            case .missingFields(let missing): details.append("Missing: \(fields(missing))")
+            case .tooLong(let field): details.append("\(formatFieldName(field.rawValue)) too long (>\(field.limit ?? 0) chars)")
+            case .notValid: details.append("Build \(report.build?.number ?? "?") is \(formatState(report.build?.processingState ?? "unknown"))")
+            case .exportCompliance: details.append("Export compliance not answered")
+            default: break
           }
         }
-        return checks
+        let language = report.languages.first { $0.locale == check.item.locale }
+        let review = report.review
+        let detail: String
+        let name: String
+        switch check.item {
+          case .versionState:
+            let state = formatState(report.state ?? "unknown")
+            (name, detail) = ("Version state", check.passed ? state : "\(state) (can't be submitted)")
+          case .build:
+            name = "Build attached"
+            detail = report.build == nil ? "No build attached" : check.passed ? "Build \(report.build?.number ?? "?")" : details.joined(separator: "; ")
+          case .copyright:
+            (name, detail) = ("Copyright", check.passed ? report.copyright ?? "" : "Missing")
+          case .reviewContact:
+            name = "Review contact"
+            detail = check.passed
+              ? "\(review?.contactFirstName ?? "") \(review?.contactLastName ?? ""), \(review?.contactEmail ?? "")"
+              : "Missing: a first and last name, a phone number and an email address are needed"
+          case .signIn:
+            name = "Sign-in"
+            detail = review?.demoAccountRequired == false ? "Not required" : check.passed ? "User name and password given" : "Required, but the user name or password is empty"
+          case .category:
+            (name, detail) = ("Category", report.primaryCategory.map(formatState) ?? "Not set")
+          case .contentRights:
+            (name, detail) = ("Content rights", report.contentRights.map(formatState) ?? "Not answered")
+          case .price:
+            (name, detail) = ("Price", check.passed ? "Set" : "Not set")
+          case .availability:
+            name = "Availability"
+            detail = report.availableTerritories.map { $0 == 0 ? "Not available anywhere" : "\($0) territor\($0 == 1 ? "y" : "ies")" } ?? "Not set up"
+          case .appInformation:
+            (name, detail) = ("App info", check.passed ? "All fields filled" : details.joined(separator: "; "))
+          case .localization:
+            (name, detail) = ("Localizations", check.passed ? "All fields filled" : details.joined(separator: "; "))
+          case .screenshots:
+            let sets = language?.screenshotSets ?? 0, count = language?.screenshots ?? 0
+            name = "Screenshots"
+            detail = count > 0
+              ? "\(sets) set\(sets == 1 ? "" : "s"), \(count) screenshot\(count == 1 ? "" : "s")"
+              : check.passed ? "None (uses \(report.primaryLocale)'s)" : "No screenshots"
+        }
+        return Check(group: check.item.locale, name: name, passed: check.passed, detail: detail)
       }
 
       /// IAP/subscription states that can ride along a submission.

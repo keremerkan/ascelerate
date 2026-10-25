@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-Der Befehl prüft den Versionsstatus, die Build-Zuordnung und geht dann jede Sprache durch, um Lokalisierungsfelder (Beschreibung, Neuigkeiten, Schlüsselwörter, Support-URL), App-Info-Felder (Name, Untertitel, Datenschutzrichtlinien-URL) und Screenshots zu überprüfen:
+Der Befehl prüft den Status und den Build der Version (verarbeitet, mit beantworteter Exportkonformität), das Copyright, den Kontakt und die Anmeldung für die App-Prüfung sowie die primäre Kategorie, die Inhaltsrechte, den Preis und die Verfügbarkeit der App. Dann geht er jede Sprache durch: App-Info (Name, in der Primärsprache auch die Datenschutzrichtlinien-URL), die Texte der Version (Beschreibung und Schlüsselwörter in jeder Sprache, die Support-URL in der Primärsprache) und Screenshots. Eine Sprache ohne eigene Screenshots zeigt im App Store die der Primärsprache, daher braucht nur die Primärsprache welche:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -117,6 +117,13 @@ Check                                Status
 ──────────────────────────────────────────────────────────────────
 Version state                        ✓ Prepare for Submission
 Build attached                       ✓ Build 42
+Copyright                            ✓ 2026 Your Name
+Review contact                       ✓ Jane Doe, jane@example.com
+Sign-in                              ✓ Not required
+Category                             ✓ Productivity
+Content rights                       ✓ Does Not Use Third Party Content
+Price                                ✓ Set
+Availability                         ✓ 175 territories
 
 en-US (English (United States))
   App info                           ✓ All fields filled
@@ -124,16 +131,16 @@ en-US (English (United States))
   Screenshots                        ✓ 2 sets, 10 screenshots
 
 de-DE (German (Germany))
-  App info                           ✗ Missing: Privacy Policy URL
-  Localizations                      ✗ Missing: What's New
-  Screenshots                        ✗ No screenshots
+  App info                           ✓ All fields filled
+  Localizations                      ✗ Missing: Keywords, What's New
+  Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 5 passed, 3 failed
+Result: 14 passed, 1 failed
 ```
 
 In-App-Käufe und Abonnements werden auf Preise und einen Status geprüft, der mit einer Einreichung mitgehen kann. Ein Produkt, das Sie aus dem Verkauf genommen haben (Developer Removed from Sale), wird als übersprungen (–) aufgeführt und lässt die Prüfung nicht fehlschlagen; die Ergebniszeile zählt es gesondert.
 
-Die Prüfung der Neuigkeiten wird übersprungen, wenn die App noch keine veröffentlichte Version hat — dieses Feld gibt es nur bei Updates, nicht bei einer Erstveröffentlichung.
+Die Neuigkeiten werden nur bei Updates geprüft, also wenn bereits eine Version derselben Plattform veröffentlicht wurde. Eine Veröffentlichung auf einer anderen Plattform zählt nicht: Die erste Mac-Version einer iOS-App braucht keine.
 
 Der Befehl gibt einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt — und ist damit geeignet für CI-Pipelines und Workflow-Dateien. Mit `--json` gibt der Befehl statt der Tabelle einen strukturierten Bericht aus — einen booleschen `passed`-Wert plus einen Eintrag pro Prüfung (`group`, `name`, `passed`, `detail`) — und behält dabei das gleiche Exit-Code-Verhalten bei, sodass CI-Gates genau melden können, welche Prüfung fehlgeschlagen ist.
 

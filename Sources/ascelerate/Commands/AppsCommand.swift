@@ -1109,17 +1109,16 @@ struct AppsCommand: AsyncParsableCommand {
       
       guard let filePath = file else {
         // View mode
-        guard let coverage = try await fetchCoverage(versionID: appVersion.id, client: client) else {
+        guard let coverage = try await AscelerateCore.RoutingCoverage.coverage(versionID: appVersion.id, client: client) else {
           print("App:              \(appName)")
           print("Version:          \(versionString)")
           print("Routing Coverage: Not configured")
           return
         }
         
-        let attrs = coverage.attributes
-        let fileName = attrs?.fileName ?? "—"
-        let state = attrs?.assetDeliveryState?.state.map { formatState($0) } ?? "—"
-        let fileSize = attrs?.fileSize.map { "\(formatBytes($0))" } ?? "—"
+        let fileName = coverage.fileName ?? "—"
+        let state = coverage.state.map { formatState($0) } ?? "—"
+        let fileSize = coverage.fileSize.map { "\(formatBytes($0))" } ?? "—"
         
         print("App:              \(appName)")
         print("Version:          \(versionString)")
@@ -1142,14 +1141,14 @@ struct AppsCommand: AsyncParsableCommand {
       let fileName = (expandedPath as NSString).lastPathComponent
       
       // Check for existing coverage
-      if let existingCoverage = try await fetchCoverage(versionID: appVersion.id, client: client) {
-        let existingName = existingCoverage.attributes?.fileName ?? "unknown"
+      if let existingCoverage = try await AscelerateCore.RoutingCoverage.coverage(versionID: appVersion.id, client: client) {
+        let existingName = existingCoverage.fileName ?? "unknown"
         print("Existing routing coverage: \(existingName)")
         guard confirm("Replace existing routing coverage with '\(fileName)'? [y/N] ") else {
           cancelled()
           return
         }
-        _ = try await client.routingAppCoveragesDeleteInstance(path: .init(id: existingCoverage.id)).noContent
+        try await AscelerateCore.RoutingCoverage.delete(id: existingCoverage.id, client: client)
         success("Deleted", "existing coverage.")
         print()
       }
@@ -1157,39 +1156,10 @@ struct AppsCommand: AsyncParsableCommand {
       print("Uploading \(fileName) (\(formatBytes(fileSize)))...")
       fflush(stdout)
       
-      // Reserve
-      let reserveResponse = try await client.routingAppCoveragesCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(fileName: fileName, fileSize: fileSize),
-        relationships: .init(appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions"))),
-        _type: "routingAppCoverages"
-      )))).created.body.json
-      
-      let coverageID = reserveResponse.data.id
-      guard let operations = reserveResponse.data.attributes?.uploadOperations,
-            !operations.isEmpty else {
-        throw MediaUploadError.noUploadOperations
-      }
-      
-      // Upload chunks
-      try await uploadChunks(filePath: expandedPath, operations: operations)
-      
-      // Commit
-      let checksum = try md5Hex(filePath: expandedPath)
-      _ = try await client.routingAppCoveragesUpdateInstance(
-        path: .init(id: coverageID),
-        body: .json(.init(data: .init(
-          attributes: .init(sourceFileChecksum: checksum, uploaded: true), id: coverageID, _type: "routingAppCoverages")))
-      ).ok
+      try await AscelerateCore.RoutingCoverage.upload(
+        MediaFile(path: expandedPath, fileName: fileName, fileSize: fileSize), versionID: appVersion.id, client: client)
       
       success("Uploaded", "routing coverage '\(fileName)' for version \(versionString).")
-    }
-
-    private func fetchCoverage(
-      versionID: String, client: ASCClient
-    ) async throws -> Components.Schemas.RoutingAppCoverage? {
-      try await optionalRelated {
-        try await client.appStoreVersionsRoutingAppCoverageGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
-      }
     }
   }
   
@@ -2164,27 +2134,6 @@ struct AppsCommand: AsyncParsableCommand {
         subcommands: [List.self, Upload.self, Delete.self]
       )
 
-      /// Fetches the version's App Review detail (nil when none exists yet).
-      static func reviewDetail(versionID: String, client: ASCClient) async throws -> Components.Schemas.AppStoreReviewDetail? {
-        try await optionalRelated {
-          try await client.appStoreVersionsAppStoreReviewDetailGetToOneRelated(path: .init(id: versionID)).ok.body.json.data
-        }
-      }
-
-      /// Returns the version's App Review detail ID, creating an empty detail if needed.
-      static func ensureReviewDetailID(
-        versionID: String, client: ASCClient
-      ) async throws -> String {
-        if let detail = try await reviewDetail(versionID: versionID, client: client) {
-          return detail.id
-        }
-        return try await client.appStoreReviewDetailsCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(),
-          relationships: .init(appStoreVersion: .init(data: .init(id: versionID, _type: "appStoreVersions"))),
-          _type: "appStoreReviewDetails"
-        )))).created.body.json.data.id
-      }
-
       struct List: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
           abstract: "List App Review attachment files for a version."
@@ -2205,27 +2154,23 @@ struct AppsCommand: AsyncParsableCommand {
           let appVersion = try await findVersion(
             appID: app.id, versionString: version, platform: try platformOption.parsed(), client: client)
 
-          guard let detail = try await Attachment.reviewDetail(
-            versionID: appVersion.id, client: client)
-          else {
+          guard let detailID = try await ReviewAttachments.detailID(versionID: appVersion.id, client: client) else {
             print("No App Review Information (or attachments) set for this version.")
             return
           }
 
-          let resp = try await client.appStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated(
-            path: .init(id: detail.id), query: .init(limit: 50)
-          ).ok.body.json
-          if resp.data.isEmpty {
+          let attachments = try await ReviewAttachments.list(detailID: detailID, client: client)
+          if attachments.isEmpty {
             print("No attachments found.")
             return
           }
 
           var rows: [[String]] = []
-          for att in resp.data {
+          for att in attachments {
             rows.append([
-              att.attributes?.fileName ?? "—",
-              att.attributes?.fileSize.map { formatBytes($0) } ?? "—",
-              att.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—",
+              att.fileName ?? "—",
+              att.fileSize.map { formatBytes($0) } ?? "—",
+              att.state.map { formatState($0) } ?? "—",
               att.id,
             ])
           }
@@ -2270,28 +2215,8 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
 
-          let detailID = try await Attachment.ensureReviewDetailID(
-            versionID: appVersion.id, client: client)
-
-          let attachmentID = try await uploadAsset(
-            filePath: media.path,
-            reserve: {
-              let r = try await client.appStoreReviewAttachmentsCreateInstance(body: .json(.init(data: .init(
-                attributes: .init(fileName: media.fileName, fileSize: media.fileSize),
-                relationships: .init(
-                  appStoreReviewDetail: .init(data: .init(id: detailID, _type: "appStoreReviewDetails"))),
-                _type: "appStoreReviewAttachments"
-              )))).created.body.json
-              return (r.data.id, r.data.attributes?.uploadOperations ?? [])
-            },
-            commit: { id, md5 in
-              _ = try await client.appStoreReviewAttachmentsUpdateInstance(
-                path: .init(id: id),
-                body: .json(.init(data: .init(
-                  attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id,
-                  _type: "appStoreReviewAttachments")))
-              ).ok
-            })
+          let detailID = try await ReviewAttachments.ensureDetailID(versionID: appVersion.id, client: client)
+          let attachmentID = try await ReviewAttachments.upload(media, detailID: detailID, client: client)
 
           print()
           success("Uploaded", "attachment \(media.fileName) (id: \(attachmentID)).")
@@ -2314,10 +2239,7 @@ struct AppsCommand: AsyncParsableCommand {
           let client = try ClientFactory.makeClient()
 
           // Only for display: a failed lookup falls back to the ID.
-          let name =
-            (try? await client.appStoreReviewAttachmentsGetInstance(
-              path: .init(id: attachmentID)
-            ).ok.body.json.data.attributes?.fileName) ?? nil
+          let name = (try? await ReviewAttachments.attachment(id: attachmentID, client: client))?.fileName
           print("Attachment: \(name ?? attachmentID)")
           print()
           guard confirm("Delete this attachment? [y/N] ") else {
@@ -2325,7 +2247,7 @@ struct AppsCommand: AsyncParsableCommand {
             return
           }
 
-          _ = try await client.appStoreReviewAttachmentsDeleteInstance(path: .init(id: attachmentID)).noContent
+          try await ReviewAttachments.delete(id: attachmentID, client: client)
           print()
           success("Deleted", "attachment \(name ?? attachmentID).")
         }
@@ -3261,20 +3183,11 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        let response = try await client.appEncryptionDeclarationsCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(
-            appDescription: desc,
-            availableOnFrenchStore: availableOnFrenchStore,
-            containsProprietaryCryptography: proprietaryCrypto,
-            containsThirdPartyCryptography: thirdPartyCrypto
-          ),
-          relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-          _type: "appEncryptionDeclarations"
-        )))).created.body.json
-        
-        let attrs = response.data.attributes
-        let state = attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—"
-        let exempt = attrs?.exempt.map { $0 ? "Yes" : "No" } ?? "—"
+        let created = try await EncryptionDeclarations.create(
+          appID: app.id, appDescription: desc, containsProprietaryCryptography: proprietaryCrypto,
+          containsThirdPartyCryptography: thirdPartyCrypto, availableOnFrenchStore: availableOnFrenchStore, client: client)
+        let state = created.state.map { formatState($0) } ?? "—"
+        let exempt = created.exempt.map { $0 ? "Yes" : "No" } ?? "—"
         print()
         success("Created", "encryption declaration.")
         print("  State:  \(state)")
@@ -3286,18 +3199,15 @@ struct AppsCommand: AsyncParsableCommand {
       print("App: \(appName)")
       print()
       
-      let declarations = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.appEncryptionDeclarationsGetCollection(query: .init(filterApp: [app.id])).ok.body.json
-      }.flatMap(\.data)
+      let declarations = try await EncryptionDeclarations.list(appID: app.id, client: client)
       let rows: [[String]] = declarations.map { decl in
-        let attrs = decl.attributes
-        return [
-          attrs?.appEncryptionDeclarationState.map { formatState($0) } ?? "—",
-          attrs?.platform.map { formatState($0) } ?? "—",
-          attrs?.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—",
-          attrs?.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—",
-          attrs?.exempt.map { $0 ? "Yes" : "No" } ?? "—",
-          attrs?.createdDate.map { formatDate($0) } ?? "—",
+        [
+          decl.state.map { formatState($0) } ?? "—",
+          decl.platform.map { formatState($0) } ?? "—",
+          decl.containsProprietaryCryptography.map { $0 ? "Yes" : "No" } ?? "—",
+          decl.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—",
+          decl.exempt.map { $0 ? "Yes" : "No" } ?? "—",
+          decl.createdDate.map { formatDate($0) } ?? "—",
         ]
       }
       

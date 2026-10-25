@@ -74,6 +74,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   ReviewSubmissions.swift             # Review submissions with actors and resolved items (version + build, product/event names, other kinds by relationship); submit, cancel, remove item (DELETE in a draft), resolve item, add an event, custom product page version, experiment or library asset to an open draft (or a given one), creating it when there's none
   Formatting.swift                    # formatFieldName/formatState, localeName, formatDate, formatBytes, boundedConcurrentMap
   Retry.swift                         # isTransientError, withTransientRetry, unlessDryRunStopped
+  SalesReports.swift                  # Sales and Trends summary reports: download (nil on 404), rows (kind, units, proceeds per unit, parent SKU), Pacific Time report days; TSV parsing; Gzip (in-process, no gzip binary)
 Sources/ascelerate/
   Ascelerate.swift                    # @main entry, root AsyncParsableCommand, central error handling
   Config.swift                        # ~/.ascelerate/config.json loader, ConfigError
@@ -90,7 +91,7 @@ Sources/ascelerate/
   BuildUpload.swift                   # builds upload --api: .ipa/.pkg through buildUploads/buildUploadFiles (reserve, PUT chunks, MD5 commit, poll state, stray-record cleanup)
   AssetLibrary.swift                  # extension AssetLibrary: validate (ImageIO/AVFoundation), uploadAndPlace, remove placements (deleting unused assets: core)
   LocalizationMedia.swift             # extension LocalizationMedia: one-file media for product page + experiment treatment localizations (list rows, upload, delete)
-  Reports.swift                       # Shared report plumbing: gunzip (gzip -dc), TSV parse, vendor-number resolve, sales/finance summarizers
+  Reports.swift                       # Shared report plumbing: report text (core Gzip), vendor-number resolve, sales/finance summarizers
   Commands/
     ConfigureCommand.swift            # Interactive credential setup, file permissions
     AppsCommand.swift                 # All app subcommands + findApp/findVersion helpers
@@ -628,7 +629,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - Live-verified 2026-10-13: list (no webhooks on the account); every write dry-run only.
 
 ### Reports (`reports sales` / `reports finance` / `reports analytics`)
-- **Sales/Finance endpoints return a gzipped TSV body (`application/a-gzip`), NOT JSON.** On ASCKit the operation exposes it as `.ok.body.applicationAGzip`; `Reports.reportText()` collects it and decompresses with `gzip -dc` (via `Process`, no new dependency; the `Compression` framework only does raw zlib, not gzip-with-header) → UTF-8 text. URLSession does NOT auto-decompress this content type.
+- **Sales/Finance endpoints return a gzipped TSV body (`application/a-gzip`), NOT JSON.** On ASCKit the operation exposes it as `.ok.body.applicationAGzip`; `Reports.reportText()` collects it and decompresses it with the core's `Gzip.decompress` (it skips the gzip header and trailer and inflates the DEFLATE body with Foundation's zlib decompression, which doesn't read the header itself; no `gzip` process) → UTF-8 text. Analytics segments use the same. `SalesReports` (core) downloads a summary report (nil on 404) and reads its rows (product type → download, re-download, update, in-app purchase, subscription; units; proceeds per unit; an in-app purchase's app by its SKU in `Parent Identifier`). URLSession does NOT auto-decompress this content type.
 - **Vendor number** is required for sales/finance (not analytics). Stored optionally in `config.json` (`vendorNumber`), overridable via `--vendor-number`, resolved by `Reports.resolveVendorNumber()`.
 - **Sales report summary** groups `Units` by (Title, SKU, Product Type Identifier); `--bundle-id` filters rows by the `Apple Identifier` column (== app's numeric ID from `findApp`). `--raw`/`--output` emit the unparsed TSV. Default `--date` is the most recent completed period in Apple's reporting time zone (`Reports.defaultSalesDate`); weekly keys off the Sunday ending the week.
 - **Finance report `--date` is a *fiscal* period** `YYYY-MM` (MM = Apple fiscal period 01–12, not a calendar month); `--region` is required. Summary sums `Quantity` by title and `Extended Partner Share` by currency, skipping footer/total lines (non-numeric `Quantity`).

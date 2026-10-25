@@ -280,7 +280,7 @@ extension ReportsCommand {
           throw ValidationError(
             "Segment \(i + 1) download failed (HTTP \(http.statusCode)). The presigned URL may have expired — re-run the command.")
         }
-        let text = String(decoding: try Reports.gunzip(data), as: UTF8.self)
+        let text = String(decoding: try Gzip.decompress(data), as: UTF8.self)
         totalRows += max(0, text.split(whereSeparator: \.isNewline).count - 1)
         let file = (outDir as NSString).appendingPathComponent("segment-\(i + 1).csv")
         try text.write(toFile: file, atomically: true, encoding: .utf8)

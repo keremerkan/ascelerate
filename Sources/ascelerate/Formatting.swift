@@ -977,18 +977,6 @@ private func padToVisible(_ str: String, width: Int) -> String {
 
 // MARK: - Shared Locale Fields
 
-/// Shared JSON schema for IAP and subscription localizations (name + description).
-struct ProductLocaleFields: Codable {
-  var name: String?
-  var description: String?
-}
-
-/// JSON schema for subscription group localizations (name + customAppName).
-struct GroupLocaleFields: Codable {
-  var name: String?
-  var customAppName: String?
-}
-
 /// A localization reduced to the fields the shared import/export helpers operate on.
 struct LocalizationRecord {
   let id: String

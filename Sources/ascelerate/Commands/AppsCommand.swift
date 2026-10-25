@@ -2686,34 +2686,7 @@ struct AppsCommand: AsyncParsableCommand {
       }
 
       static func toFields(attrs: Components.Schemas.AgeRatingDeclaration.AttributesPayload?) -> AgeRatingFields {
-        AgeRatingFields(
-          alcoholTobaccoOrDrugUseOrReferences: attrs?.alcoholTobaccoOrDrugUseOrReferences,
-          contests: attrs?.contests,
-          gamblingSimulated: attrs?.gamblingSimulated,
-          gunsOrOtherWeapons: attrs?.gunsOrOtherWeapons,
-          horrorOrFearThemes: attrs?.horrorOrFearThemes,
-          matureOrSuggestiveThemes: attrs?.matureOrSuggestiveThemes,
-          profanityOrCrudeHumor: attrs?.profanityOrCrudeHumor,
-          sexualContentOrNudity: attrs?.sexualContentOrNudity,
-          sexualContentGraphicAndNudity: attrs?.sexualContentGraphicAndNudity,
-          violenceCartoonOrFantasy: attrs?.violenceCartoonOrFantasy,
-          violenceRealistic: attrs?.violenceRealistic,
-          violenceRealisticProlongedGraphicOrSadistic: attrs?.violenceRealisticProlongedGraphicOrSadistic,
-          medicalOrTreatmentInformation: attrs?.medicalOrTreatmentInformation,
-          isAdvertising: attrs?.advertising,
-          isGambling: attrs?.gambling,
-          isUnrestrictedWebAccess: attrs?.unrestrictedWebAccess,
-          isUserGeneratedContent: attrs?.userGeneratedContent,
-          isMessagingAndChat: attrs?.messagingAndChat,
-          isLootBox: attrs?.lootBox,
-          isHealthOrWellnessTopics: attrs?.healthOrWellnessTopics,
-          isParentalControls: attrs?.parentalControls,
-          isAgeAssurance: attrs?.ageAssurance,
-          isSocialMedia: attrs?.socialMedia,
-          isSocialMediaAgeRestricted: attrs?.socialMediaAgeRestricted,
-          kidsAgeBand: attrs?.kidsAgeBand,
-          ageRatingOverride: attrs?.ageRatingOverrideV2
-        )
+        AgeRatingFields(attrs)
       }
 
       struct View: AsyncParsableCommand {
@@ -3482,40 +3455,6 @@ struct AppsCommand: AsyncParsableCommand {
   }
 }
 
-struct AgeRatingFields: Codable {
-  // Intensity-based (NONE, INFREQUENT_OR_MILD, FREQUENT_OR_INTENSE)
-  var alcoholTobaccoOrDrugUseOrReferences: String?
-  var contests: String?
-  var gamblingSimulated: String?
-  var gunsOrOtherWeapons: String?
-  var horrorOrFearThemes: String?
-  var matureOrSuggestiveThemes: String?
-  var profanityOrCrudeHumor: String?
-  var sexualContentOrNudity: String?
-  var sexualContentGraphicAndNudity: String?
-  var violenceCartoonOrFantasy: String?
-  var violenceRealistic: String?
-  var violenceRealisticProlongedGraphicOrSadistic: String?
-  var medicalOrTreatmentInformation: String?
-  
-  // Boolean
-  var isAdvertising: Bool?
-  var isGambling: Bool?
-  var isUnrestrictedWebAccess: Bool?
-  var isUserGeneratedContent: Bool?
-  var isMessagingAndChat: Bool?
-  var isLootBox: Bool?
-  var isHealthOrWellnessTopics: Bool?
-  var isParentalControls: Bool?
-  var isAgeAssurance: Bool?
-  var isSocialMedia: Bool?
-  var isSocialMediaAgeRestricted: Bool?
-  
-  // Other
-  var kidsAgeBand: String?
-  /// Apple's `ageRatingOverrideV2` (NINE_PLUS … EIGHTEEN_PLUS); the v1 field is deprecated.
-  var ageRatingOverride: String?
-}
 
 private func describeDecodingError(_ error: DecodingError) -> String {
   switch error {

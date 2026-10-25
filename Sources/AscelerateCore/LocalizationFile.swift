@@ -96,3 +96,51 @@ public struct BetaAppLocaleFields: Codable, Equatable, Sendable {
     self.tvOsPrivacyPolicy = tvOsPrivacyPolicy
   }
 }
+
+/// An in-app purchase's or subscription's language, as `iap`/`sub localizations export`/`import`
+/// write and read it. A nil field is left as it is.
+public struct ProductLocaleFields: Codable, Equatable, Sendable {
+  public var name: String?
+  public var description: String?
+
+  public init(name: String? = nil, description: String? = nil) {
+    self.name = name
+    self.description = description
+  }
+}
+
+/// A subscription group's language, as `sub group-localizations export`/`import` write and read
+/// it. A nil field is left as it is.
+public struct GroupLocaleFields: Codable, Equatable, Sendable {
+  public var name: String?
+  public var customAppName: String?
+
+  public init(name: String? = nil, customAppName: String? = nil) {
+    self.name = name
+    self.customAppName = customAppName
+  }
+}
+
+/// An in-app event's language, as `events localizations export`/`import` write and read it. A nil
+/// field is left as it is.
+public struct EventLocaleFields: Codable, Equatable, Sendable {
+  public var name: String?
+  public var shortDescription: String?
+  public var longDescription: String?
+
+  public init(name: String? = nil, shortDescription: String? = nil, longDescription: String? = nil) {
+    self.name = name
+    self.shortDescription = shortDescription
+    self.longDescription = longDescription
+  }
+}
+
+/// A custom product page's language, as `product-pages localizations export`/`import` write and
+/// read it. A nil field is left as it is.
+public struct ProductPageLocaleFields: Codable, Equatable, Sendable {
+  public var promotionalText: String?
+
+  public init(promotionalText: String? = nil) {
+    self.promotionalText = promotionalText
+  }
+}

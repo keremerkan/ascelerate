@@ -268,3 +268,129 @@ public enum AppInfos {
     }
   }
 }
+
+
+/// An app's age rating answers, as `apps app-info age-rating export`/`import` write and read them:
+/// Apple's raw values, flags named `is…`. A nil field is left as it is.
+public struct AgeRatingFields: Codable, Equatable, Sendable {
+  // Intensity-based (NONE, INFREQUENT_OR_MILD, FREQUENT_OR_INTENSE)
+  public var alcoholTobaccoOrDrugUseOrReferences: String?
+  public var contests: String?
+  public var gamblingSimulated: String?
+  public var gunsOrOtherWeapons: String?
+  public var horrorOrFearThemes: String?
+  public var matureOrSuggestiveThemes: String?
+  public var profanityOrCrudeHumor: String?
+  public var sexualContentOrNudity: String?
+  public var sexualContentGraphicAndNudity: String?
+  public var violenceCartoonOrFantasy: String?
+  public var violenceRealistic: String?
+  public var violenceRealisticProlongedGraphicOrSadistic: String?
+  public var medicalOrTreatmentInformation: String?
+
+  // Boolean
+  public var isAdvertising: Bool?
+  public var isGambling: Bool?
+  public var isUnrestrictedWebAccess: Bool?
+  public var isUserGeneratedContent: Bool?
+  public var isMessagingAndChat: Bool?
+  public var isLootBox: Bool?
+  public var isHealthOrWellnessTopics: Bool?
+  public var isParentalControls: Bool?
+  public var isAgeAssurance: Bool?
+  public var isSocialMedia: Bool?
+  public var isSocialMediaAgeRestricted: Bool?
+
+  // Other
+  public var kidsAgeBand: String?
+  /// Apple's `ageRatingOverrideV2` (NINE_PLUS … EIGHTEEN_PLUS); the v1 field is deprecated.
+  public var ageRatingOverride: String?
+
+  public init(
+    alcoholTobaccoOrDrugUseOrReferences: String? = nil,
+    contests: String? = nil,
+    gamblingSimulated: String? = nil,
+    gunsOrOtherWeapons: String? = nil,
+    horrorOrFearThemes: String? = nil,
+    matureOrSuggestiveThemes: String? = nil,
+    profanityOrCrudeHumor: String? = nil,
+    sexualContentOrNudity: String? = nil,
+    sexualContentGraphicAndNudity: String? = nil,
+    violenceCartoonOrFantasy: String? = nil,
+    violenceRealistic: String? = nil,
+    violenceRealisticProlongedGraphicOrSadistic: String? = nil,
+    medicalOrTreatmentInformation: String? = nil,
+    isAdvertising: Bool? = nil,
+    isGambling: Bool? = nil,
+    isUnrestrictedWebAccess: Bool? = nil,
+    isUserGeneratedContent: Bool? = nil,
+    isMessagingAndChat: Bool? = nil,
+    isLootBox: Bool? = nil,
+    isHealthOrWellnessTopics: Bool? = nil,
+    isParentalControls: Bool? = nil,
+    isAgeAssurance: Bool? = nil,
+    isSocialMedia: Bool? = nil,
+    isSocialMediaAgeRestricted: Bool? = nil,
+    kidsAgeBand: String? = nil,
+    ageRatingOverride: String? = nil
+  ) {
+    self.alcoholTobaccoOrDrugUseOrReferences = alcoholTobaccoOrDrugUseOrReferences
+    self.contests = contests
+    self.gamblingSimulated = gamblingSimulated
+    self.gunsOrOtherWeapons = gunsOrOtherWeapons
+    self.horrorOrFearThemes = horrorOrFearThemes
+    self.matureOrSuggestiveThemes = matureOrSuggestiveThemes
+    self.profanityOrCrudeHumor = profanityOrCrudeHumor
+    self.sexualContentOrNudity = sexualContentOrNudity
+    self.sexualContentGraphicAndNudity = sexualContentGraphicAndNudity
+    self.violenceCartoonOrFantasy = violenceCartoonOrFantasy
+    self.violenceRealistic = violenceRealistic
+    self.violenceRealisticProlongedGraphicOrSadistic = violenceRealisticProlongedGraphicOrSadistic
+    self.medicalOrTreatmentInformation = medicalOrTreatmentInformation
+    self.isAdvertising = isAdvertising
+    self.isGambling = isGambling
+    self.isUnrestrictedWebAccess = isUnrestrictedWebAccess
+    self.isUserGeneratedContent = isUserGeneratedContent
+    self.isMessagingAndChat = isMessagingAndChat
+    self.isLootBox = isLootBox
+    self.isHealthOrWellnessTopics = isHealthOrWellnessTopics
+    self.isParentalControls = isParentalControls
+    self.isAgeAssurance = isAgeAssurance
+    self.isSocialMedia = isSocialMedia
+    self.isSocialMediaAgeRestricted = isSocialMediaAgeRestricted
+    self.kidsAgeBand = kidsAgeBand
+    self.ageRatingOverride = ageRatingOverride
+  }
+
+  /// The answers of a declaration as Apple sends them.
+  public init(_ attributes: Components.Schemas.AgeRatingDeclaration.AttributesPayload?) {
+    self.init(
+      alcoholTobaccoOrDrugUseOrReferences: attributes?.alcoholTobaccoOrDrugUseOrReferences,
+      contests: attributes?.contests,
+      gamblingSimulated: attributes?.gamblingSimulated,
+      gunsOrOtherWeapons: attributes?.gunsOrOtherWeapons,
+      horrorOrFearThemes: attributes?.horrorOrFearThemes,
+      matureOrSuggestiveThemes: attributes?.matureOrSuggestiveThemes,
+      profanityOrCrudeHumor: attributes?.profanityOrCrudeHumor,
+      sexualContentOrNudity: attributes?.sexualContentOrNudity,
+      sexualContentGraphicAndNudity: attributes?.sexualContentGraphicAndNudity,
+      violenceCartoonOrFantasy: attributes?.violenceCartoonOrFantasy,
+      violenceRealistic: attributes?.violenceRealistic,
+      violenceRealisticProlongedGraphicOrSadistic: attributes?.violenceRealisticProlongedGraphicOrSadistic,
+      medicalOrTreatmentInformation: attributes?.medicalOrTreatmentInformation,
+      isAdvertising: attributes?.advertising,
+      isGambling: attributes?.gambling,
+      isUnrestrictedWebAccess: attributes?.unrestrictedWebAccess,
+      isUserGeneratedContent: attributes?.userGeneratedContent,
+      isMessagingAndChat: attributes?.messagingAndChat,
+      isLootBox: attributes?.lootBox,
+      isHealthOrWellnessTopics: attributes?.healthOrWellnessTopics,
+      isParentalControls: attributes?.parentalControls,
+      isAgeAssurance: attributes?.ageAssurance,
+      isSocialMedia: attributes?.socialMedia,
+      isSocialMediaAgeRestricted: attributes?.socialMediaAgeRestricted,
+      kidsAgeBand: attributes?.kidsAgeBand,
+      ageRatingOverride: attributes?.ageRatingOverrideV2
+    )
+  }
+}

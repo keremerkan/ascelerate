@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-The command checks version state, build attachment, and then goes through each locale to verify localization fields (description, what's new, keywords, support URL), app info fields (name, subtitle, privacy policy URL), and screenshots:
+The command checks the version's state and build (processed, with export compliance answered), its copyright, App Review contact and sign-in, and the app's primary category, content rights, price and availability. Then it goes through each language: app info (name, and the privacy policy URL in the primary language), the version's text (description and keywords in every language, the support URL in the primary language) and screenshots. A language without screenshots of its own shows the primary language's on the App Store, so only the primary language needs them:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -117,6 +117,13 @@ Check                                Status
 ──────────────────────────────────────────────────────────────────
 Version state                        ✓ Prepare for Submission
 Build attached                       ✓ Build 42
+Copyright                            ✓ 2026 Your Name
+Review contact                       ✓ Jane Doe, jane@example.com
+Sign-in                              ✓ Not required
+Category                             ✓ Productivity
+Content rights                       ✓ Does Not Use Third Party Content
+Price                                ✓ Set
+Availability                         ✓ 175 territories
 
 en-US (English (United States))
   App info                           ✓ All fields filled
@@ -124,16 +131,16 @@ en-US (English (United States))
   Screenshots                        ✓ 2 sets, 10 screenshots
 
 de-DE (German (Germany))
-  App info                           ✗ Missing: Privacy Policy URL
-  Localizations                      ✗ Missing: What's New
-  Screenshots                        ✗ No screenshots
+  App info                           ✓ All fields filled
+  Localizations                      ✗ Missing: Keywords, What's New
+  Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 5 passed, 3 failed
+Result: 14 passed, 1 failed
 ```
 
 In-app purchases and subscriptions are checked for prices and a state that can go with a submission. A product you removed from sale (Developer Removed from Sale) is listed as skipped (–) and doesn't fail the check; the result line counts it separately.
 
-The What's New check is skipped when the app has no previously released version — that field only exists for updates, not for a first release.
+What's New is checked only for updates: once a version of the same platform has been released. A release on another platform doesn't count, so the first Mac version of an iOS app needs none.
 
 Exits with a non-zero status when any check fails, making it suitable for CI pipelines and workflow files. With `--json`, the command emits a structured report instead of the table — a `passed` boolean plus one entry per check (`group`, `name`, `passed`, `detail`) — while keeping the same exit-code behavior, so CI gates can report exactly which check failed.
 

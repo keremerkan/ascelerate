@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-Komut; sürüm durumunu, build eklentisini kontrol eder ve ardından her locale'i inceleyerek yerelleştirme alanlarını (açıklama, yenilikler, anahtar kelimeler, destek URL'si), uygulama bilgi alanlarını (ad, alt başlık, gizlilik politikası URL'si) ve ekran görüntülerini doğrular:
+Komut; sürümün durumunu ve build'ini (işlenmiş ve ihracat uyumluluğu yanıtlanmış olmalı), telif hakkını, App Review iletişim ve giriş bilgilerini, ayrıca uygulamanın birincil kategorisini, içerik haklarını, fiyatını ve bulunabilirliğini denetler. Ardından her dili inceler: uygulama bilgileri (ad ve ana dilde gizlilik politikası URL'si), sürümün metinleri (her dilde açıklama ve anahtar kelimeler, ana dilde destek URL'si) ve ekran görüntüleri. Kendi ekran görüntüleri olmayan bir dil App Store'da ana dilin ekran görüntülerini gösterdiğinden yalnızca ana dilde ekran görüntüsü gerekir:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -117,6 +117,13 @@ Check                                Status
 ──────────────────────────────────────────────────────────────────
 Version state                        ✓ Prepare for Submission
 Build attached                       ✓ Build 42
+Copyright                            ✓ 2026 Your Name
+Review contact                       ✓ Jane Doe, jane@example.com
+Sign-in                              ✓ Not required
+Category                             ✓ Productivity
+Content rights                       ✓ Does Not Use Third Party Content
+Price                                ✓ Set
+Availability                         ✓ 175 territories
 
 en-US (English (United States))
   App info                           ✓ All fields filled
@@ -124,16 +131,16 @@ en-US (English (United States))
   Screenshots                        ✓ 2 sets, 10 screenshots
 
 de-DE (German (Germany))
-  App info                           ✗ Missing: Privacy Policy URL
-  Localizations                      ✗ Missing: What's New
-  Screenshots                        ✗ No screenshots
+  App info                           ✓ All fields filled
+  Localizations                      ✗ Missing: Keywords, What's New
+  Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 5 passed, 3 failed
+Result: 14 passed, 1 failed
 ```
 
 Uygulama içi satın almalar ve abonelikler, fiyat ve gönderimle birlikte gidebilecek bir durum açısından denetlenir. Satıştan kaldırdığınız bir ürün (Developer Removed from Sale) atlandı (–) olarak listelenir ve kontrolün başarısız olmasına yol açmaz; sonuç satırı onu ayrıca sayar.
 
-Uygulamanın daha önce yayınlanmış bir sürümü yoksa yenilikler denetimi atlanır; bu alan yalnızca güncellemelerde bulunur, ilk sürümde yer almaz.
+Yenilikler yalnızca güncellemelerde, yani aynı platformda daha önce bir sürüm yayınlandıysa denetlenir. Başka bir platformdaki yayın sayılmaz; bir iOS uygulamasının ilk Mac sürümü için yenilikler gerekmez.
 
 Herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu döndürür, bu da CI pipeline'larında ve workflow dosyalarında rahatlıkla kullanılmasını sağlar. `--json` ile komut, tablo yerine yapılandırılmış bir rapor üretir: bir `passed` boolean'ı ve her kontrol için bir kayıt (`group`, `name`, `passed`, `detail`). Çıkış kodu davranışı aynı kaldığından, CI kapıları tam olarak hangi kontrolün başarısız olduğunu raporlayabilir.
 

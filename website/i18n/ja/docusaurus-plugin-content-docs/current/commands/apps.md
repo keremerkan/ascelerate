@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-バージョンの状態、ビルドの添付、各ロケールのローカライゼーションフィールド（説明文、新機能、キーワード、サポートURL）、アプリ情報フィールド（名前、サブタイトル、プライバシーポリシーURL）、スクリーンショットを確認します：
+バージョンの状態とビルド（処理済みで、輸出コンプライアンスに回答済み）、著作権、App Reviewの連絡先とサインイン、アプリのプライマリカテゴリ、コンテンツ配信権、価格、配信状況を確認します。続いて各言語について、アプリ情報（名前と、主要言語ではプライバシーポリシーURL）、バージョンのテキスト（すべての言語の説明文とキーワード、主要言語のサポートURL）、スクリーンショットを確認します。独自のスクリーンショットがない言語ではApp Storeに主要言語のスクリーンショットが表示されるため、スクリーンショットが必要なのは主要言語だけです：
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -117,6 +117,13 @@ Check                                Status
 ──────────────────────────────────────────────────────────────────
 Version state                        ✓ Prepare for Submission
 Build attached                       ✓ Build 42
+Copyright                            ✓ 2026 Your Name
+Review contact                       ✓ Jane Doe, jane@example.com
+Sign-in                              ✓ Not required
+Category                             ✓ Productivity
+Content rights                       ✓ Does Not Use Third Party Content
+Price                                ✓ Set
+Availability                         ✓ 175 territories
 
 en-US (English (United States))
   App info                           ✓ All fields filled
@@ -124,16 +131,16 @@ en-US (English (United States))
   Screenshots                        ✓ 2 sets, 10 screenshots
 
 de-DE (German (Germany))
-  App info                           ✗ Missing: Privacy Policy URL
-  Localizations                      ✗ Missing: What's New
-  Screenshots                        ✗ No screenshots
+  App info                           ✓ All fields filled
+  Localizations                      ✗ Missing: Keywords, What's New
+  Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 5 passed, 3 failed
+Result: 14 passed, 1 failed
 ```
 
 App 内課金とサブスクリプションは、価格と、提出に含められる状態かどうかを確認します。販売を停止した商品（Developer Removed from Sale）はスキップ（–）として表示され、チェックの失敗にはなりません。結果行では別に数えられます。
 
-アプリにまだリリース済みのバージョンがない場合、新機能のチェックはスキップされます。このフィールドはアップデート時のみ存在し、初回リリースには存在しないためです。
+新機能は、同じプラットフォームのバージョンがすでにリリースされているアップデートの場合にのみ確認されます。別のプラットフォームでのリリースは数えないため、iOSアプリの最初のMacバージョンには不要です。
 
 チェックが失敗するとゼロ以外の終了コードを返すため、CIパイプラインやワークフローファイルでの使用に適しています。`--json` を指定すると、終了コードの動作はそのままに、テーブルの代わりに構造化されたレポート（`passed` ブール値と、チェックごとのエントリ：`group`、`name`、`passed`、`detail`）を出力するため、CIゲートでどのチェックが失敗したかを正確に報告できます。
 

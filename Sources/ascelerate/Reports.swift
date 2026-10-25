@@ -1,13 +1,14 @@
 import ArgumentParser
 import ASCKit
+import AscelerateCore
 import Foundation
 
 /// Shared plumbing for the `reports` commands (sales, finance, analytics).
 ///
 /// App Store Connect's Sales and Finance report endpoints return a **gzipped TSV** as the raw
 /// response body (content type `application/a-gzip`), not via HTTP transfer-encoding — so
-/// URLSession does not decompress it for us. We download to a temp file and run `gzip -dc`.
-/// Analytics report *segments* are likewise gzipped files at presigned URLs.
+/// URLSession does not decompress it for us; `Gzip` (AscelerateCore) does. Analytics report
+/// *segments* are likewise gzipped files at presigned URLs.
 enum Reports {
   // MARK: - Vendor number
 
@@ -25,60 +26,14 @@ enum Reports {
       """)
   }
 
-  // MARK: - Gzip
-
-  /// Runs `gzip -dc <file>` and returns the decompressed bytes.
-  static func gunzipFile(at url: URL) throws -> Data {
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/gzip")
-    process.arguments = ["-dc", url.path]
-    let stdout = Pipe()
-    let stderr = Pipe()
-    process.standardOutput = stdout
-    process.standardError = stderr
-    try process.run()
-    // readDataToEndOfFile drains the pipe as gzip streams, so this can't deadlock on buffer fill.
-    let data = stdout.fileHandleForReading.readDataToEndOfFile()
-    let errorData = stderr.fileHandleForReading.readDataToEndOfFile()
-    process.waitUntilExit()
-    guard process.terminationStatus == 0 else {
-      let detail = String(data: errorData, encoding: .utf8)?
-        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-      throw ValidationError(
-        "Failed to decompress report (gzip exited \(process.terminationStatus))\(detail.isEmpty ? "" : ": \(detail)").")
-    }
-    return data
-  }
-
-  /// Decompresses raw gzipped bytes by writing them to a temp file and running `gzip -dc`.
-  static func gunzip(_ data: Data) throws -> Data {
-    let tmp = URL(fileURLWithPath: NSTemporaryDirectory())
-      .appendingPathComponent("ascelerate-report-\(UUID().uuidString).gz")
-    try data.write(to: tmp)
-    defer { try? FileManager.default.removeItem(at: tmp) }
-    return try gunzipFile(at: tmp)
-  }
-
   // MARK: - Report download
 
   /// Decompresses a report download (an `application/a-gzip` body) into its TSV text.
   static func reportText(_ gzipped: Data) throws -> String {
-    let decompressed = try gunzip(gzipped)
-    guard let text = String(data: decompressed, encoding: .utf8) else {
+    guard let text = String(data: try Gzip.decompress(gzipped), encoding: .utf8) else {
       throw ValidationError("Report data was not valid UTF-8 text.")
     }
     return text
-  }
-
-  // MARK: - TSV
-
-  /// Splits TSV text into a header row and data rows, dropping empty lines.
-  static func parseTSV(_ text: String) -> (header: [String], rows: [[String]]) {
-    let lines = text.split(whereSeparator: \.isNewline).map(String.init)
-    guard let first = lines.first else { return ([], []) }
-    let header = first.components(separatedBy: "\t")
-    let rows = lines.dropFirst().map { $0.components(separatedBy: "\t") }
-    return (header, rows)
   }
 
   /// Reads a column value from a TSV row by header name, or nil if the column is absent/short.
@@ -152,7 +107,7 @@ enum Reports {
 
   /// Prints a units-by-(title, product type) summary for a Sales report, optionally filtered to one app.
   static func summarizeSales(_ text: String, appleID: String?) {
-    let (header, rows) = parseTSV(text)
+    let (header, rows) = TSV.parse(text)
     guard !rows.isEmpty else {
       print("Report is empty — no sales in this period.")
       return
@@ -210,7 +165,7 @@ enum Reports {
 
   /// Prints a quantity-by-title summary and proceeds-by-currency totals for a Finance report.
   static func summarizeFinance(_ text: String) {
-    let (header, rows) = parseTSV(text)
+    let (header, rows) = TSV.parse(text)
     guard header.contains("Quantity") else {
       // Unrecognized layout (e.g. an empty period) — show it verbatim.
       print(text, terminator: text.hasSuffix("\n") ? "" : "\n")

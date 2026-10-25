@@ -166,7 +166,7 @@ ascelerate apps review attachment upload <app> [--version X] <file>   # reserve/
 ascelerate apps review attachment delete <attachment-id>
 ```
 
-`preflight` checks build attachment, localizations, app info, screenshots across all locales, plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices; products in Developer Removed from Sale are skipped, not failed). Exits non-zero on failures. With `--json` it emits the structured check list (same exit code) — ideal as a CI gate.
+`preflight` checks the version state, the build (processed, export compliance answered), copyright, the App Review contact and sign-in, primary category, content rights, price and availability, then each locale's app info, text and screenshots (screenshots and the privacy policy/support URLs only in the primary language, which other locales fall back to; What's New only for an update of the same platform), plus IAP/subscription state and pricing (warns when an IAP has no price schedule or a sub has no prices; products in Developer Removed from Sale are skipped, not failed). Exits non-zero on failures. With `--json` it emits the structured check list (same exit code) — ideal as a CI gate.
 
 When submitting, the tool detects IAPs and subscriptions and offers to submit them alongside the app version.
 

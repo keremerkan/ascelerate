@@ -13,6 +13,8 @@ A command-line tool for building, archiving, and publishing apps to the App Stor
 
 > **Full documentation:** [ascelerate.dev](https://ascelerate.dev)
 
+> **Prefer a Mac app?** [Ascelerate](https://ascelerate.app) is App Store Connect in a native Mac app, built on ascelerate. [Join the beta on TestFlight](https://testflight.apple.com/join/K4Yvdfqh).
+
 ## Requirements
 
 - macOS 15+

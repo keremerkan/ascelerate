@@ -1,4 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#007AFF"/>
-  <text x="16" y="15" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle" dominant-baseline="central" letter-spacing="-0.5">asc</text>
+  <defs>
+    <linearGradient id="letters" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#a1a1a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="#111113"/>
+  <text x="16" y="15" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="url(#letters)" text-anchor="middle" dominant-baseline="central" letter-spacing="-0.5">asc</text>
 </svg>

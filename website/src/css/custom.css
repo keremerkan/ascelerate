@@ -1,24 +1,37 @@
 :root {
-  --ifm-color-primary: #007AFF;
-  --ifm-color-primary-dark: #006ee6;
-  --ifm-color-primary-darker: #0068d9;
-  --ifm-color-primary-darkest: #0056b3;
-  --ifm-color-primary-light: #1a87ff;
-  --ifm-color-primary-lighter: #2690ff;
-  --ifm-color-primary-lightest: #4da3ff;
+  /* A neutral graphite accent: links, buttons, the sidebar's current page. */
+  --ifm-color-primary: #3a3a3c;
+  --ifm-color-primary-dark: #343436;
+  --ifm-color-primary-darker: #313133;
+  --ifm-color-primary-darkest: #28282a;
+  --ifm-color-primary-light: #404042;
+  --ifm-color-primary-lighter: #434345;
+  --ifm-color-primary-lightest: #4c4c4f;
   --ifm-code-font-size: 90%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #0A84FF;
-  --ifm-color-primary-dark: #0077eb;
-  --ifm-color-primary-darker: #0070de;
-  --ifm-color-primary-darkest: #005cb7;
-  --ifm-color-primary-light: #2493ff;
-  --ifm-color-primary-lighter: #319aff;
-  --ifm-color-primary-lightest: #5bb1ff;
+  --ifm-color-primary: #d1d1d6;
+  --ifm-color-primary-dark: #bcbcc3;
+  --ifm-color-primary-darker: #b2b2ba;
+  --ifm-color-primary-darkest: #93939d;
+  --ifm-color-primary-light: #e6e6e9;
+  --ifm-color-primary-lighter: #f0f0f2;
+  --ifm-color-primary-lightest: #ffffff;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* A graphite link is close to the text around it: underlined, it still reads as a link. */
+.markdown a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* The table of contents' current heading: a neutral accent doesn't set it apart by colour. */
+.table-of-contents__link--active {
+  font-weight: 600;
 }
 
 [data-theme='dark'] .button--secondary {

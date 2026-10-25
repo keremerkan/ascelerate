@@ -369,39 +369,14 @@ struct IAPCommand: AsyncParsableCommand {
 
     /// Fetches the app's promoted purchases in display order, resolved to their products.
     static func fetchPromoted(appID: String, client: ASCClient) async throws -> [PromotedInfo] {
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.appsPromotedPurchasesGetToManyRelated(
-          path: .init(id: appID), query: .init(limit: 200, include: [.inAppPurchaseV2, .subscription])
-        ).ok.body.json
+      try await PromotedPurchases.list(appID: appID, client: client).map { promoted in
+        let found = promoted.kind != nil
+        return PromotedInfo(
+          promotedID: promoted.id, productID: found ? promoted.productID ?? "—" : "—", name: found ? promoted.name ?? "—" : "—",
+          kind: promoted.kind.map { $0 == .inAppPurchase ? "IAP" : "Subscription" } ?? "—",
+          state: promoted.state.map { formatState($0) } ?? "—",
+          isVisible: promoted.isVisibleForAllUsers, isEnabled: promoted.isEnabled)
       }
-      var result: [PromotedInfo] = []
-      for page in pages {
-        var iapInfo: [String: (productID: String, name: String)] = [:]
-        var subInfo: [String: (productID: String, name: String)] = [:]
-        for item in page.included ?? [] {
-          switch item {
-          case .inAppPurchases(let iap):
-            iapInfo[iap.id] = (iap.attributes?.productId ?? "—", iap.attributes?.name ?? "—")
-          case .subscriptions(let sub):
-            subInfo[sub.id] = (sub.attributes?.productId ?? "—", sub.attributes?.name ?? "—")
-          }
-        }
-        for promo in page.data {
-          let a = promo.attributes
-          var productID = "—", name = "—", kind = "—"
-          if let iapID = promo.relationships?.inAppPurchaseV2?.data?.id, let info = iapInfo[iapID] {
-            productID = info.productID; name = info.name; kind = "IAP"
-          } else if let subID = promo.relationships?.subscription?.data?.id, let info = subInfo[subID] {
-            productID = info.productID; name = info.name; kind = "Subscription"
-          }
-          result.append(
-            PromotedInfo(
-              promotedID: promo.id, productID: productID, name: name, kind: kind,
-              state: a?.state.map { formatState($0) } ?? "—",
-              isVisible: a?.visibleForAllUsers == true, isEnabled: a?.enabled == true))
-        }
-      }
-      return result
     }
 
     struct List: AsyncParsableCommand {
@@ -467,19 +442,16 @@ struct IAPCommand: AsyncParsableCommand {
           iap = nil
         }
 
-        let relationships: Components.Schemas.PromotedPurchaseCreateRequest.DataPayload.RelationshipsPayload
+        let kind: PromotedPurchases.Promoted.Kind
+        let recordID: String
         let label: String
         if let iap {
-          relationships = .init(
-            app: .init(data: .init(id: app.id, _type: "apps")),
-            inAppPurchaseV2: .init(data: .init(id: iap.id, _type: "inAppPurchases")))
+          (kind, recordID) = (.inAppPurchase, iap.id)
           label = "IAP '\(iap.name)'"
         } else {
           let (sub, _) = try await SubCommand.findSubscription(
             productID: productID, appID: app.id, client: client)
-          relationships = .init(
-            app: .init(data: .init(id: app.id, _type: "apps")),
-            subscription: .init(data: .init(id: sub.id, _type: "subscriptions")))
+          (kind, recordID) = (.subscription, sub.id)
           label = "subscription '\(sub.name)'"
         }
 
@@ -488,14 +460,11 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        let resp = try await client.promotedPurchasesCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(enabled: enabled, visibleForAllUsers: visibleForAll),
-          relationships: relationships,
-          _type: "promotedPurchases"
-        )))).created.body.json
+        let promotedID = try await PromotedPurchases.add(
+          kind, productRecordID: recordID, appID: app.id, enabled: enabled, visibleForAllUsers: visibleForAll, client: client)
 
         print()
-        success("Promoted", "\(label) (id: \(resp.data.id)).")
+        success("Promoted", "\(label) (id: \(promotedID)).")
       }
     }
 
@@ -527,7 +496,7 @@ struct IAPCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        _ = try await client.promotedPurchasesDeleteInstance(path: .init(id: target.promotedID)).noContent
+        try await PromotedPurchases.delete(id: target.promotedID, client: client)
         print()
         success("Removed", "promoted purchase '\(target.name)'.")
       }
@@ -564,11 +533,7 @@ struct IAPCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        _ = try await client.promotedPurchasesUpdateInstance(
-          path: .init(id: target.promotedID),
-          body: .json(.init(data: .init(
-            attributes: .init(enabled: enabled), id: target.promotedID, _type: "promotedPurchases")))
-        ).ok
+        try await PromotedPurchases.update(id: target.promotedID, enabled: enabled, client: client)
         print()
         success("Updated", "'\(target.name)' (enabled=\(enabled)).")
       }
@@ -619,10 +584,7 @@ struct IAPCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        _ = try await client.appsPromotedPurchasesReplaceToManyRelationship(
-          path: .init(id: app.id),
-          body: .json(.init(data: orderedIDs.map { .init(id: $0, _type: "promotedPurchases") }))
-        ).noContent
+        try await PromotedPurchases.reorder(appID: app.id, ids: orderedIDs, client: client)
         print()
         success("Reordered", "promoted purchases.")
       }

@@ -505,6 +505,11 @@ struct SubCommand: AsyncParsableCommand {
     let sourceCustomerPrice: String
     let sourceCurrency: String?
     let isEqualized: Bool
+
+    /// The entries as the core's offer prices, in order.
+    var offerPrices: [Subscriptions.OfferPrice] {
+      entries.map { .init(territoryID: $0.territoryID, pricePointID: $0.pricePointID) }
+    }
   }
 
   /// Resolves `customerPrice` to a SubscriptionPricePoint in `sourceTerritory`. If
@@ -539,25 +544,6 @@ struct SubCommand: AsyncParsableCommand {
       sourceCurrency: sourceCurrency,
       isEqualized: true
     )
-  }
-
-  /// A promotional offer's prices as inline creates plus the local IDs the offer references
-  /// them by (shared by `promo-offer create` and `update`).
-  static func promotionalOfferPrices(
-    _ resolved: ResolvedOfferPrices
-  ) -> (localIDs: [String], inlines: [Components.Schemas.SubscriptionPromotionalOfferPriceInlineCreate]) {
-    let localIDs = resolved.entries.indices.map { "${price\($0)}" }
-    let inlines = zip(localIDs, resolved.entries).map { localID, entry in
-      Components.Schemas.SubscriptionPromotionalOfferPriceInlineCreate(
-        id: localID,
-        relationships: .init(
-          subscriptionPricePoint: .init(data: .init(id: entry.pricePointID, _type: "subscriptionPricePoints")),
-          territory: .init(data: .init(id: entry.territoryID, _type: "territories"))
-        ),
-        _type: "subscriptionPromotionalOfferPrices"
-      )
-    }
-    return (localIDs, inlines)
   }
 
   static func pickGroup(appID: String, client: ASCClient) async throws -> GroupInfo {
@@ -2759,9 +2745,7 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let offers = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.subscriptionsPromotionalOffersGetToManyRelated(path: .init(id: sub.id), query: .init(limit: 200)).ok.body.json
-        }.flatMap(\.data)
+        let offers = try await Subscriptions.promotionalOffers(subscriptionID: sub.id, client: client)
 
         if offers.isEmpty {
           print("No promotional offers for \(productID).")
@@ -2771,14 +2755,13 @@ struct SubCommand: AsyncParsableCommand {
         Table.print(
           headers: ["ID", "Name", "Offer Code", "Mode", "Duration", "Periods"],
           rows: offers.map { o in
-            let attrs = o.attributes
-            return [
+            [
               o.id,
-              attrs?.name ?? "—",
-              attrs?.offerCode ?? "—",
-              attrs?.offerMode.map { formatState($0) } ?? "—",
-              attrs?.duration.map { formatState($0) } ?? "—",
-              attrs?.numberOfPeriods.map { "\($0)" } ?? "—",
+              o.name ?? "—",
+              o.offerCode ?? "—",
+              o.mode.map { formatState($0) } ?? "—",
+              o.duration.map { formatState($0) } ?? "—",
+              o.periods.map { "\($0)" } ?? "—",
             ]
           }
         )
@@ -2808,16 +2791,12 @@ struct SubCommand: AsyncParsableCommand {
         _ = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let response = try await client.subscriptionPromotionalOffersGetInstance(
-          path: .init(id: offerID), query: .init(include: [.prices], limitPrices: 200)
-        ).ok.body.json
-        let attrs = response.data.attributes
-        print("Promotional Offer: \(attrs?.name ?? "—")")
-        print("ID:                \(response.data.id)")
-        print("Offer Code:        \(attrs?.offerCode ?? "—")")
-        print("Mode:              \(attrs?.offerMode.map { formatState($0) } ?? "—")")
-        print("Duration:          \(attrs?.numberOfPeriods.map { "\($0)" } ?? "—") × \(attrs?.duration.map { formatState($0) } ?? "—")")
-        let priceCount = response.data.relationships?.prices?.data?.count ?? 0
+        let (offer, priceCount) = try await Subscriptions.promotionalOffer(id: offerID, client: client)
+        print("Promotional Offer: \(offer.name ?? "—")")
+        print("ID:                \(offer.id)")
+        print("Offer Code:        \(offer.offerCode ?? "—")")
+        print("Mode:              \(offer.mode.map { formatState($0) } ?? "—")")
+        print("Duration:          \(offer.periods.map { "\($0)" } ?? "—") × \(offer.duration.map { formatState($0) } ?? "—")")
         print("Prices:            \(priceCount) territor\(priceCount == 1 ? "y" : "ies")")
       }
     }
@@ -2904,27 +2883,12 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        let (localIDs, inlines) = SubCommand.promotionalOfferPrices(resolved)
-        let response = try await client.subscriptionPromotionalOffersCreateInstance(body: .json(.init(
-          data: .init(
-            attributes: .init(
-              duration: offerDuration.rawValue,
-              name: name,
-              numberOfPeriods: periods,
-              offerCode: code,
-              offerMode: offerMode.rawValue
-            ),
-            relationships: .init(
-              prices: .init(data: localIDs.map { .init(id: $0, _type: "subscriptionPromotionalOfferPrices") }),
-              subscription: .init(data: .init(id: sub.id, _type: "subscriptions"))
-            ),
-            _type: "subscriptionPromotionalOffers"
-          ),
-          included: inlines
-        ))).created.body.json
+        let created = try await Subscriptions.createPromotionalOffer(
+          subscriptionID: sub.id, name: name, offerCode: code, mode: offerMode.rawValue, duration: offerDuration.rawValue,
+          periods: periods, prices: resolved.offerPrices, client: client)
 
         print()
-        success("Created", "promotional offer '\(name)' (id: \(response.data.id)).")
+        success("Created", "promotional offer '\(name)' (id: \(created.id)).")
       }
     }
 
@@ -2984,19 +2948,7 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        let (localIDs, inlines) = SubCommand.promotionalOfferPrices(resolved)
-        _ = try await client.subscriptionPromotionalOffersUpdateInstance(
-          path: .init(id: offerID),
-          body: .json(.init(
-            data: .init(
-              id: offerID,
-              relationships: .init(
-                prices: .init(data: localIDs.map { .init(id: $0, _type: "subscriptionPromotionalOfferPrices") })),
-              _type: "subscriptionPromotionalOffers"
-            ),
-            included: inlines
-          ))
-        ).ok
+        try await Subscriptions.setPromotionalOfferPrices(id: offerID, prices: resolved.offerPrices, client: client)
 
         print()
         success("Updated", "promotional offer prices.")
@@ -3034,7 +2986,7 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        _ = try await client.subscriptionPromotionalOffersDeleteInstance(path: .init(id: offerID)).noContent
+        try await Subscriptions.deletePromotionalOffer(id: offerID, client: client)
         print()
         success("Deleted", "promotional offer \(offerID).")
       }

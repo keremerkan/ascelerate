@@ -257,11 +257,6 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
   // MARK: - Localizations
 
-  /// JSON schema for custom product page localizations.
-  struct ProductPageLocaleFields: Codable {
-    var promotionalText: String?
-  }
-
   struct Localizations: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "localizations",

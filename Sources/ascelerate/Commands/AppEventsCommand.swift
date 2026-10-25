@@ -400,13 +400,6 @@ struct AppEventsCommand: AsyncParsableCommand {
 
   // MARK: - Localizations
 
-  /// JSON schema for in-app event localizations.
-  struct EventLocaleFields: Codable {
-    var name: String?
-    var shortDescription: String?
-    var longDescription: String?
-  }
-
   struct Localizations: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "localizations",

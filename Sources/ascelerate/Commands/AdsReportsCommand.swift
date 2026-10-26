@@ -148,15 +148,7 @@ extension AdsCommand {
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
-            try await Ads.reportRows { pagination in
-              let json = try await client.appsAdGroupReports(
-                headers: .init(xApContext: Ads.context(ads)),
-                body: .json(Ads.reportRequest(
-                  start: start, end: end, filters: Ads.campaignFilter(campaignID), pagination: pagination
-                ))
-              ).ok.body.json
-              return (json.result?.rows ?? [], json.pagination?.totalCount)
-            }
+            try await Ads.adGroupReportRows(campaignID: campaignID, start: start, end: end, context: Ads.context(ads), client: client)
           }
         }
 
@@ -268,15 +260,7 @@ extension AdsCommand {
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
-            try await Ads.reportRows { pagination in
-              let json = try await client.appsKeywordReports(
-                headers: .init(xApContext: Ads.context(ads)),
-                body: .json(Ads.reportRequest(
-                  start: start, end: end, filters: Ads.campaignFilter(campaignID), pagination: pagination
-                ))
-              ).ok.body.json
-              return (json.result?.rows ?? [], json.pagination?.totalCount)
-            }
+            try await Ads.keywordReportRows(campaignID: campaignID, start: start, end: end, context: Ads.context(ads), client: client)
           }
         }
 
@@ -336,15 +320,7 @@ extension AdsCommand {
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
-            try await Ads.reportRows { pagination in
-              let json = try await client.appsSearchTermReports(
-                headers: .init(xApContext: Ads.context(ads)),
-                body: .json(Ads.reportRequest(
-                  start: start, end: end, filters: Ads.campaignFilter(campaignID), pagination: pagination
-                ))
-              ).ok.body.json
-              return (json.result?.rows ?? [], json.pagination?.totalCount)
-            }
+            try await Ads.searchTermReportRows(campaignID: campaignID, start: start, end: end, context: Ads.context(ads), client: client)
           }
         }
 

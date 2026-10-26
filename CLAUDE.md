@@ -40,7 +40,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   Releases.swift                      # Release type and date, phased release (read, enable, pause/resume/complete, remove), release request
   Preflight.swift                     # What App Review needs before a submission: one report (build, copyright, contact, sign-in, category, content rights, price, availability, per-language text and screenshots) turned into checks; screenshots, privacy and support URLs required in the primary language only
   AssetLibrary.swift                  # App Asset Library: slots + specs, displayTypeGroups, screenshotSpecs, previewSpecs, previewType, images/videos listing, single image/video, uploadImage/uploadVideo, placements (also with their images and videos), place, deletePlacement, clearPlacements (before deleting an owner), assets with their placement state, placedAsset, isUnused, deleteIfUnused, rename, archive, usage (an asset's placements with their owners) (validation and replacing: CLI extension)
-  LocalizationMedia.swift             # A localization's screenshot/preview sets (classic ones skip the Duo mirrors)
+  LocalizationMedia.swift             # A localization's screenshot/preview sets (classic ones skip the Duo mirrors), a set's screenshots/previews
   MediaUpload.swift                   # MediaFile, chunk upload (UploadProgress observer), md5Hex, uploadAsset (reserve → PUT → commit), MediaUploadError
   ClassicMedia.swift                  # Screenshot/preview set writes: create sets, upload, delete, reorder
   VersionLocalizations.swift          # LocaleFields (localizations JSON format), validURL, editableStates, update/create a version localization
@@ -78,6 +78,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   Certificates.swift                  # Signing certificates: list (types, display name), find (serial or name), create from a CSR, revoke, CSR from a private key (X509) or a keychain SecKey
   AppPricing.swift                    # App price schedule: read (manual + automatic prices, currencies), tiers per territory, equalizations, replace; edits (base price now or dated, manual prices, planned changes)
   ReviewSubmissions.swift             # Review submissions with actors and resolved items (version + build, product/event names, other kinds by relationship); submit, cancel, remove item (DELETE in a draft), resolve item, add an event, custom product page version, experiment or library asset to an open draft (or a given one), creating it when there's none
+  CSV.swift                           # CSV.rows: comma, semicolon or tab separated (from the first line), quoted fields, BOM; used by BetaTesters.parseCSV
   Formatting.swift                    # formatFieldName/formatState, localeName, formatDate, formatBytes, boundedConcurrentMap
   Retry.swift                         # isTransientError, withTransientRetry, unlessDryRunStopped
   BuildUploadRecords.swift            # Build upload records (buildUploads, any tool's): list (newest first by creation date, Apple's errors/warnings/notes), stale ones (waiting while a sibling of the same build moved on, or a day old), delete

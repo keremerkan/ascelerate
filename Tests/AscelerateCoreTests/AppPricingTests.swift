@@ -94,3 +94,13 @@ import Testing
     ])
   }
 }
+
+@Suite struct TesterCSVTests {
+  @Test func quotedNamesKeepTheirCommas() {
+    let testers = BetaTesters.parseCSV("email,first,last\n# comment\na@b.com,\"Mary Jane, Ann\",Appleseed\r\nc@d.com\n\n")
+    #expect(testers == [
+      BetaTesters.NewTester(email: "a@b.com", firstName: "Mary Jane, Ann", lastName: "Appleseed"),
+      BetaTesters.NewTester(email: "c@d.com"),
+    ])
+  }
+}

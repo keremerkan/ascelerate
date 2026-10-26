@@ -45,6 +45,17 @@ extension Ads {
     ).ok
   }
 
+  /// Renames an ad group or turns its Search Match on or off, by ID: neither needs the ad group's
+  /// current settings (a default bid does, see the other `updateAdGroup`).
+  public static func updateAdGroup(
+    id: Int64, name: String? = nil, searchMatch: Bool? = nil, context: String, client: Client
+  ) async throws {
+    _ = try await client.putAdgroupsId(
+      path: .init(id: String(id)), headers: .init(xApContext: context),
+      body: .json(.init(name: name, automatedKeywordsOptIn: searchMatch))
+    ).ok
+  }
+
   /// Changes an ad group's name, Search Match, default bid or CPA goal; what's nil stays. A default
   /// bid goes with the ad group's bid strategy type and goal, which Apple requires with any bid
   /// strategy update.

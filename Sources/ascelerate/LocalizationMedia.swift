@@ -14,15 +14,15 @@ extension LocalizationMedia {
     for set in try await classicScreenshotSets(on: owner, client: client) {
       // Raw, as `--display-type` takes it.
       let displayType = set.attributes?.screenshotDisplayType ?? "—"
-      let shots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: set.id), query: .init(limit: 50)).ok.body.json
-      for s in shots.data {
+      let shots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
+      for s in shots {
         rows.append([locale, "Screenshot", displayType, s.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", s.id])
       }
     }
     for set in try await classicPreviewSets(on: owner, client: client) {
       let previewType = set.attributes?.previewType ?? "—"
-      let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: set.id), query: .init(limit: 50)).ok.body.json
-      for p in previews.data {
+      let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
+      for p in previews {
         rows.append([locale, "Preview", previewType, p.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", p.id])
       }
     }
@@ -118,8 +118,8 @@ extension LocalizationMedia {
   static func delete(mediaID: String, among owners: [Owner], client: ASCClient) async throws {
     for owner in owners {
       for set in try await classicScreenshotSets(on: owner, client: client) {
-        let shots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: set.id), query: .init(limit: 50)).ok.body.json
-        if shots.data.contains(where: { $0.id == mediaID }) {
+        let shots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
+        if shots.contains(where: { $0.id == mediaID }) {
           guard confirm("Delete this screenshot? [y/N] ") else { return cancelled() }
           try await ClassicMedia.deleteScreenshot(mediaID, client: client)
           print()
@@ -127,8 +127,8 @@ extension LocalizationMedia {
         }
       }
       for set in try await classicPreviewSets(on: owner, client: client) {
-        let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: set.id), query: .init(limit: 50)).ok.body.json
-        if previews.data.contains(where: { $0.id == mediaID }) {
+        let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
+        if previews.contains(where: { $0.id == mediaID }) {
           guard confirm("Delete this preview? [y/N] ") else { return cancelled() }
           try await ClassicMedia.deletePreview(mediaID, client: client)
           print()

@@ -236,6 +236,17 @@ public enum Ads {
     }
   }
 
+  /// A report's steps: each row then also has its numbers per day or hour (`granularMetrics`).
+  /// Apple takes it as `timeRange.granularity`, which its published spec leaves out (seen live
+  /// 2026-10-26: DAILY and HOURLY accepted; HOURLY needs a range starting in the last 7 days).
+  public enum Granularity: String, Sendable {
+    case hourly = "HOURLY"
+    case daily = "DAILY"
+  }
+
+  /// The steps the middleware adds to report requests made under it.
+  @TaskLocal static var granularity: Granularity?
+
   /// The raw body of the last successful response, for `bulk` (see there).
   final class CapturedBody: @unchecked Sendable {
     private let lock = NSLock()
@@ -308,10 +319,22 @@ public enum Ads {
       _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
       next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
     ) async throws -> (HTTPResponse, HTTPBody?) {
+      var request = request
       // Collected so a request that hit the rate limit can be sent again.
       var requestData: Data?
       if let body { requestData = try await Data(collecting: body, upTo: .max) }
       let path = request.path ?? "?"
+      if let granularity = Ads.granularity, path.contains("/reports/"), let data = requestData,
+        var json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+        var range = json["timeRange"] as? [String: Any]
+      {
+        range["granularity"] = granularity.rawValue
+        json["timeRange"] = range
+        let patched = try JSONSerialization.data(withJSONObject: json)
+        requestData = patched
+        // The longer body needs its own length: with the old one, Apple's front end answers 400.
+        request.headerFields[.contentLength] = String(patched.count)
+      }
       let isRead = request.method == .get || path.hasSuffix("/query") || path.hasPrefix("/search/")
       if !isRead { try await options.gateWrite?(request.method.rawValue, path, requestData) }
       var attempt = 1

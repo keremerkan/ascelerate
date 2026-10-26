@@ -10,6 +10,17 @@ import Foundation
 /// offer is deleted on its own. A territory's offers can't overlap (an offer without a start
 /// date starts today, one without an end date never ends), and it takes one future offer at most.
 extension Subscriptions {
+  /// The lengths App Store Connect offers for an offer type (introductory, promotional or an
+  /// offer code's): a free trial's and paying up front's; paying as you go bills the subscription's
+  /// own period (`subscriptionPeriod`).
+  public static func offerDurations(mode: String, subscriptionPeriod: String?) -> [String] {
+    switch mode {
+      case "FREE_TRIAL": ["THREE_DAYS", "ONE_WEEK", "TWO_WEEKS", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR"]
+      case "PAY_UP_FRONT": ["ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR"]
+      default: [subscriptionPeriod ?? "ONE_MONTH"]
+    }
+  }
+
   public struct IntroductoryOffer: Codable, Hashable, Identifiable, Sendable {
     public let id: String
     public let territoryID: String

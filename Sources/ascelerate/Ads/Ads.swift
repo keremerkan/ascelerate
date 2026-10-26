@@ -1,6 +1,7 @@
 import AppleAdsClient
 import ArgumentParser
 import AscelerateAds
+import AscelerateCore
 import Foundation
 
 /// Apple Ads plumbing for the `ads` commands: the config's credentials, prompts and the dry-run
@@ -25,6 +26,13 @@ extension Ads {
   /// Runs `body` with a client signed in with the config's credentials. Writes stop at the
   /// dry-run gate (`--dry-run`, `ASCELERATE_DRY_RUN=1`), which prints them; rate limit waits are
   /// announced on stderr.
+  /// The ad account's time zone, which Apple Ads reports days in; this Mac's if it can't be read.
+  static func accountTimeZone(_ ads: AdsConfig) async throws -> TimeZone {
+    guard let id = ads.adAccountId else { return .current }
+    let identifier = try await withClient(ads) { client in try await adAccount(id: id, client: client)?.timezone }
+    return identifier.flatMap(TimeZone.init(identifier:)) ?? .current
+  }
+
   static func withClient<T>(_ ads: AdsConfig, _ body: (Client) async throws -> T) async throws -> T {
     let pem = try String(contentsOfFile: expandPath(ads.privateKeyPath), encoding: .utf8)
     let credentials = Credentials(
@@ -143,23 +151,7 @@ extension Ads {
   static func perCampaign<Row: Sendable>(
     _ scope: Scope, _ fetch: @escaping @Sendable (Int64) async throws -> [Row]
   ) async throws -> [Row] {
-    let ids = scope.campaigns.compactMap(\.id)
-    var results: [Int: [Row]] = [:]
-    try await withThrowingTaskGroup(of: (Int, [Row]).self) { group in
-      var next = 0
-      func addNext() {
-        guard next < ids.count else { return }
-        let index = next, id = ids[index]
-        group.addTask { (index, try await fetch(id)) }
-        next += 1
-      }
-      for _ in 0..<4 { addNext() }
-      for try await (index, rows) in group {
-        results[index] = rows
-        addNext()
-      }
-    }
-    return ids.indices.flatMap { results[$0] ?? [] }
+    try await boundedConcurrentMap(scope.campaigns.compactMap(\.id), maxConcurrent: 4, fetch).flatMap { $0 }
   }
 
   /// The campaigns a command works on (`--app`, `--campaign`, or all), with names for display.

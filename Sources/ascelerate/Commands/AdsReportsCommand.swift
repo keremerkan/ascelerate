@@ -41,7 +41,7 @@ extension AdsCommand {
       func run() async throws {
         jsonOption.activate()
         let ads = try Ads.config()
-        let (start, end) = try options.range.resolved()
+        let (start, end) = try await options.range.resolved(ads)
         let dimensions = try Ads.unique(by).map { name in
           guard let field = Ads.breakdowns[name.lowercased()] else {
             throw ValidationError("Invalid --by '\(name)'. Use: \(Ads.breakdowns.keys.sorted().joined(separator: ", ")).")
@@ -144,7 +144,7 @@ extension AdsCommand {
       func run() async throws {
         jsonOption.activate()
         let ads = try Ads.config()
-        let (start, end) = try options.range.resolved()
+        let (start, end) = try await options.range.resolved(ads)
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
@@ -194,7 +194,7 @@ extension AdsCommand {
       func run() async throws {
         jsonOption.activate()
         let ads = try Ads.config()
-        let (start, end) = try options.range.resolved()
+        let (start, end) = try await options.range.resolved(ads)
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
@@ -257,7 +257,7 @@ extension AdsCommand {
       func run() async throws {
         jsonOption.activate()
         let ads = try Ads.config()
-        let (start, end) = try options.range.resolved()
+        let (start, end) = try await options.range.resolved(ads)
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
@@ -318,7 +318,7 @@ extension AdsCommand {
       func run() async throws {
         jsonOption.activate()
         let ads = try Ads.config()
-        let (start, end) = try options.range.resolved()
+        let (start, end) = try await options.range.resolved(ads)
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in

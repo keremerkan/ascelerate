@@ -74,7 +74,7 @@ extension AdsCommand {
     func run() async throws {
       jsonOption.activate()
       let ads = try Ads.config()
-      let (start, end) = try range.resolved(defaultDays: 30, endingYesterday: true)
+      let (start, end) = try await range.resolved(ads, defaultDays: 30, endingYesterday: true)
       let scope = try await self.scope.resolve(ads)
       let data = try await Ads.withClient(ads) { client in
         try await Ads.perCampaign(scope) { campaignID in
@@ -215,7 +215,7 @@ extension AdsCommand {
         entries.append(Entry(
           kind: kind, reason: reason, campaignId: data.campaignID, campaignName: campaignName,
           searchTerm: rows.first?.metadata?.searchTermText ?? term, metrics: m,
-          servedBy: serving.values.sorted { $0.keyword < $1.keyword }
+          servedBy: serving.values.sorted { ($0.keyword, $0.matchType ?? "") < ($1.keyword, $1.matchType ?? "") }
         ))
       }
       return entries.sorted { $0.metrics.spendValue > $1.metrics.spendValue }

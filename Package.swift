@@ -9,6 +9,7 @@ let package = Package(
         .executable(name: "ascelerate", targets: ["ascelerate"]),
         .library(name: "ASCKit", targets: ["ASCKit"]),
         .library(name: "AscelerateCore", targets: ["AscelerateCore"]),
+        .library(name: "AscelerateAds", targets: ["AscelerateAds"]),
     ],
     dependencies: [
         // Apple Ads Platform API client. Its traits add swift-service-lifecycle and
@@ -29,6 +30,7 @@ let package = Package(
             dependencies: [
                 "ASCKit",
                 "AscelerateCore",
+                "AscelerateAds",
                 .product(name: "AppleAdsClient", package: "apple-ads-platform-api-swift"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
@@ -45,6 +47,17 @@ let package = Package(
         .target(
             name: "AscelerateCore",
             dependencies: ["ASCKit", .product(name: "X509", package: "swift-certificates")]
+        ),
+        // Apple Ads logic, likewise free of terminal I/O. Its own target: AppleAdsClient and ASCKit
+        // both generate top-level `Client`, `Components` and `Operations` types.
+        .target(
+            name: "AscelerateAds",
+            dependencies: [
+                .product(name: "AppleAdsClient", package: "apple-ads-platform-api-swift"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
+            ]
         ),
         .target(
             name: "ASCKit",

@@ -1,4 +1,5 @@
 import AppleAdsClient
+import AscelerateAds
 import ArgumentParser
 import AscelerateCore
 import Foundation
@@ -48,18 +49,12 @@ extension AdsCommand {
           return field
         }
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
+        // Apple requires countryCode next to region (adminArea) and city (locality).
+        let needsCountry = dimensions.contains { $0 == .adminArea || $0 == .locality }
         let rows = try await Ads.withClient(ads) { client in
-          try await Ads.reportRows { pagination in
-            var request = Ads.reportRequest(start: start, end: end, pagination: pagination)
-            // Apple requires countryCode next to region (adminArea) and city (locality).
-            let needsCountry = dimensions.contains { $0 == .adminArea || $0 == .locality }
-            if !dimensions.isEmpty { request.groupBy = dimensions + (needsCountry ? [.countryCode] : []) }
-            let json = try await client.appsCampaignReports(
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(request)
-            ).ok.body.json
-            return (json.result?.rows ?? [], json.pagination?.totalCount)
-          }
+          try await Ads.campaignReportRows(
+            start: start, end: end, groupBy: dimensions.isEmpty ? [] : dimensions + (needsCountry ? [.countryCode] : []),
+            context: Ads.context(ads), client: client)
         }
 
         let report = Ads.Report(

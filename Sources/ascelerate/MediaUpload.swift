@@ -1445,12 +1445,10 @@ extension AppsCommand {
             guard let raw = set.attributes?.screenshotDisplayType,
                   ASCEnum.ScreenshotDisplayType(rawValue: raw) != nil else { continue }
             if localScreenshotTypes[key]?.contains(raw) != true {
-              let assets = try await ascClient.appScreenshotSetsAppScreenshotsGetToManyRelated(
-                path: .init(id: set.id)
-              ).ok.body.json
+              let assets = try await LocalizationMedia.screenshots(setID: set.id, client: ascClient)
               orphans.append(OrphanSet(
                 locale: locale, typeName: raw, kind: "Screenshots",
-                setID: set.id, isScreenshot: true, assetCount: assets.data.count))
+                setID: set.id, isScreenshot: true, assetCount: assets.count))
             }
           }
 
@@ -1460,12 +1458,10 @@ extension AppsCommand {
           for set in previewSets.data {
             guard let raw = set.attributes?.previewType, ASCEnum.PreviewType(rawValue: raw) != nil else { continue }
             if localPreviewTypes[key]?.contains(raw) != true {
-              let assets = try await ascClient.appPreviewSetsAppPreviewsGetToManyRelated(
-                path: .init(id: set.id)
-              ).ok.body.json
+              let assets = try await LocalizationMedia.previews(setID: set.id, client: ascClient)
               orphans.append(OrphanSet(
                 locale: locale, typeName: raw, kind: "Previews",
-                setID: set.id, isScreenshot: false, assetCount: assets.data.count))
+                setID: set.id, isScreenshot: false, assetCount: assets.count))
             }
           }
         }
@@ -1609,9 +1605,7 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
       guard let displayType = set.attributes?.screenshotDisplayType,
         AssetLibrary.slots[displayType] == nil
       else { continue }
-      let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(
-        path: .init(id: set.id)
-      ).ok.body.json.data
+      let screenshots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
       let allIDs = screenshots.map(\.id)
       // A classic screenshot is also an asset library placement, which can stay PENDING after
       // the screenshot reads COMPLETE (seen live 2026-10-09: 17 hours, and App Review refused
@@ -1645,9 +1639,7 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
     for set in previewSetsResponse.data {
       // Library folders' previews (iPhone Duo) are listed from their placements above.
       guard let pvType = set.attributes?.previewType, AssetLibrary.slots["APP_\(pvType)"] == nil else { continue }
-      let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(
-        path: .init(id: set.id)
-      ).ok.body.json.data
+      let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
       let allIDs = previews.map(\.id)
       for (i, preview) in previews.enumerated() {
         items.append(item(

@@ -73,7 +73,7 @@ public enum MediaDownload {
       // Library folders (iPhone Duo) come from their placements below; the classic API mirrors
       // Duo screenshots only once they're active.
       guard let displayType = set.attributes?.screenshotDisplayType, AssetLibrary.slots[displayType] == nil, wanted(displayType) else { continue }
-      let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: set.id)).ok.body.json.data
+      let screenshots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
       guard !screenshots.isEmpty else { continue }
       let files = screenshots.enumerated().map { i, screenshot in
         // Server-supplied name: path separators go before it makes a local path.
@@ -113,7 +113,7 @@ public enum MediaDownload {
     ).ok.body.json.data
     for set in previewSets {
       guard let previewType = set.attributes?.previewType, wanted("APP_\(previewType)") else { continue }
-      let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: set.id)).ok.body.json.data
+      let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
       guard !previews.isEmpty else { continue }
       let files = previews.enumerated().map { i, preview in
         let originalName = (preview.attributes?.fileName ?? "\(preview.id).mp4").replacingOccurrences(of: "/", with: "_")

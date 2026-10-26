@@ -121,7 +121,7 @@ public enum ClassicMedia {
   /// Deletes every screenshot in a set; returns how many there were. Under dry run the
   /// stopped deletes count as done.
   public static func deleteAllScreenshots(inSet setID: String, client: ASCClient) async throws -> Int {
-    let screenshots = try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
+    let screenshots = try await LocalizationMedia.screenshots(setID: setID, client: client)
     for screenshot in screenshots { _ = try await unlessDryRunStopped { try await deleteScreenshot(screenshot.id, client: client) } }
     return screenshots.count
   }
@@ -129,7 +129,7 @@ public enum ClassicMedia {
   /// Deletes every preview in a set; returns how many there were. Under dry run the
   /// stopped deletes count as done.
   public static func deleteAllPreviews(inSet setID: String, client: ASCClient) async throws -> Int {
-    let previews = try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: setID)).ok.body.json.data
+    let previews = try await LocalizationMedia.previews(setID: setID, client: client)
     for preview in previews { _ = try await unlessDryRunStopped { try await deletePreview(preview.id, client: client) } }
     return previews.count
   }

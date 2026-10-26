@@ -33,6 +33,16 @@ public enum LocalizationMedia {
     }
   }
 
+  /// A screenshot set's screenshots, in their order (a set holds ten at most).
+  public static func screenshots(setID: String, client: ASCClient) async throws -> [Components.Schemas.AppScreenshot] {
+    try await client.appScreenshotSetsAppScreenshotsGetToManyRelated(path: .init(id: setID), query: .init(limit: 50)).ok.body.json.data
+  }
+
+  /// A preview set's previews, in their order.
+  public static func previews(setID: String, client: ASCClient) async throws -> [Components.Schemas.AppPreview] {
+    try await client.appPreviewSetsAppPreviewsGetToManyRelated(path: .init(id: setID), query: .init(limit: 50)).ok.body.json.data
+  }
+
   /// The classic sets apart from the API's mirrors of library slots (iPhone Duo), which list the
   /// same media as the slot's placements.
   public static func classicScreenshotSets(on owner: Owner, client: ASCClient) async throws -> [Components.Schemas.AppScreenshotSet] {

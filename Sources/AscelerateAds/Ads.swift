@@ -52,8 +52,10 @@ public enum Ads {
     XApContext(adAccountID: adAccountID).rawValue
   }
 
-  /// Runs `body` with an authenticated client. Failures come out as `AdsError`, not wrapped in
-  /// the runtime's `ClientError` (whose description dumps the whole request).
+  /// Runs `body` with an authenticated client. The access token comes from `TokenStore`, shared
+  /// by every client of these credentials until it nearly expires. Failures come out as
+  /// `AdsError`, not wrapped in the runtime's `ClientError` (whose description dumps the whole
+  /// request).
   public static func withClient<T>(
     _ credentials: Credentials, options: Options = Options(), _ body: (Client) async throws -> T
   ) async throws -> T {
@@ -61,9 +63,7 @@ public enum Ads {
       return try await AppleAdsClient.withClient(
         configuration: .init(
           clientId: credentials.clientID,
-          authMode: .key(teamId: credentials.teamID, keyId: credentials.keyID, privateKeyPEM: credentials.privateKeyPEM),
-          // The SDK's 5 s default timed out against appleid.apple.com in normal use.
-          authTimeout: .seconds(30),
+          authMode: .tokenProvider(SharedTokenProvider(credentials: credentials)),
           middleware: [Middleware(options: options)]
         ),
         transport: URLSessionTransport(),
@@ -71,6 +71,8 @@ public enum Ads {
       )
     } catch {
       let underlying = (error as? ClientError)?.underlyingError ?? error
+      // A refused token (revoked, say) is fetched again next time.
+      if (underlying as? AdsError)?.status == 401 { await TokenStore.shared.invalidate(credentials) }
       if let auth = underlying as? AppleAdsAuthError {
         throw AdsError(status: nil, code: nil, message: auth.description, details: [])
       }
@@ -129,16 +131,32 @@ public enum Ads {
   ) async throws -> [Components.Schemas.NegativeKeyword] {
     var conditions: [Components.Schemas.QueryFilter] = [.init(field: "adGroupId", _operator: .isNull)]
     conditions += try adGroupIDs.map { try filter("adGroupId", equals: $0) }
-    var negatives: [Components.Schemas.NegativeKeyword] = []
-    for condition in conditions {
-      negatives += try await query(Components.Schemas.NegativeKeyword.self) { pagination in
-        try await client.postNegativeKeywordsQuery(
-          headers: .init(xApContext: context),
-          body: .json(.init(filters: [filter("campaignId", equals: campaignID), condition], pagination: pagination))
-        ).ok.body.json.value1
+    let campaign = try filter("campaignId", equals: campaignID)
+    // Four queries at a time, the campaign's own first and then the ad groups' in their order.
+    var results: [Int: [Components.Schemas.NegativeKeyword]] = [:]
+    try await withThrowingTaskGroup(of: (Int, [Components.Schemas.NegativeKeyword]).self) { group in
+      var next = 0
+      func addNext() {
+        guard next < conditions.count else { return }
+        let (index, condition) = (next, conditions[next])
+        next += 1
+        group.addTask {
+          let negatives = try await query(Components.Schemas.NegativeKeyword.self) { pagination in
+            try await client.postNegativeKeywordsQuery(
+              headers: .init(xApContext: context),
+              body: .json(.init(filters: [campaign, condition], pagination: pagination))
+            ).ok.body.json.value1
+          }
+          return (index, negatives)
+        }
+      }
+      for _ in 0..<4 { addNext() }
+      for try await (index, negatives) in group {
+        results[index] = negatives
+        addNext()
       }
     }
-    return negatives.filter { $0.deleted != true }
+    return conditions.indices.flatMap { results[$0] ?? [] }.filter { $0.deleted != true }
   }
 
   /// Whether Apple sets the campaign's bids itself (Maximize Conversions), so keyword bids don't apply.

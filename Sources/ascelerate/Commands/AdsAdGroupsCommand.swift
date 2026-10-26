@@ -258,18 +258,8 @@ extension AdsCommand {
           let campaign = try await Ads.campaign(self.campaign, ads, client: client)
           let currency = try Ads.currency(of: campaign)
           let group = try Ads.adGroup(adGroup, in: await Ads.adGroups(campaignID: campaign.id ?? 0, ads, client: client))
-          // Apple requires the type and goal with every bid strategy update.
-          let bidStrategy: Components.Schemas.BidStrategyUpdate? = try settings.defaultBid.map {
-            let current = group.bidStrategy?.value1
-            return .init(
-              bidStrategyType: current?.bidStrategyType.map { .init(value1: $0.value1) },
-              bidStrategyGoal: current?.bidStrategyGoal.map { .init(value1: $0.value1) },
-              bid: try Ads.money($0, currency: currency)
-            )
-          }
-          let cpaGoal: Components.Schemas.CPAGoalUpdate? = try settings.cpaGoal.map {
-            .init(value: try Ads.money($0, currency: currency))
-          }
+          let defaultBid = try settings.defaultBid.map { try Ads.money($0, currency: currency) }
+          let cpaGoal = try settings.cpaGoal.map { try Ads.money($0, currency: currency) }
 
           var changes = settings.summary(currency: currency)
           if let name { changes.insert("name '\(name)'", at: 0) }
@@ -283,14 +273,9 @@ extension AdsCommand {
             print(yellow("Cancelled."))
             return
           }
-          _ = try await client.putAdgroupsId(
-            path: .init(id: String(group.id ?? 0)),
-            headers: .init(xApContext: Ads.context(ads)),
-            body: .json(.init(
-              name: name, automatedKeywordsOptIn: searchMatch,
-              bidStrategy: bidStrategy.map { .init(value1: $0) }, cpaCap: cpaGoal.map { .init(value1: $0) }
-            ))
-          ).ok
+          try await Ads.updateAdGroup(
+            group, name: name, searchMatch: searchMatch, defaultBid: defaultBid, cpaGoal: cpaGoal,
+            context: Ads.context(ads), client: client)
           print(green("Updated") + " \(group.name ?? "-").")
         }
       }
@@ -339,11 +324,7 @@ extension AdsCommand {
         for group in changing {
           // Under dry run every request is shown, not only the first.
           guard try await unlessDryRunStopped({
-            try await client.putAdgroupsId(
-              path: .init(id: String(group.id ?? 0)),
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(.init(status: .init(value1: status)))
-            ).ok
+            try await Ads.setStatus(status, adGroupID: group.id ?? 0, context: Ads.context(ads), client: client)
           }) != nil else { continue }
           print(green(verb == "Pause" ? "Paused" : "Resumed") + " \(group.name ?? "-").")
         }

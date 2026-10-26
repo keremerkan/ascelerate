@@ -121,21 +121,15 @@ extension AdsCommand {
             print(yellow("Cancelled."))
             return
           }
-          let items = new.enumerated().map { i, text in
-            Components.Schemas.KeywordCreateBulkRequestItem(
-              correlationId: Int64(i + 1),
-              data: .init(
+          let results = try await Ads.createKeywords(
+            new.map { text in
+              .init(
                 adGroupId: group.id ?? 0, text: text, matchType: .init(value1: matchType),
                 bid: money.map { .init(value1: $0) }, status: .init(value1: .enabled)
               )
-            )
-          }
-          let results = try await Ads.bulk(Components.Schemas.Keyword.self) {
-            _ = try await client.postKeywordsBulkCreate(
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(.init(value1: Ads.bulkBase, value2: .init(items: items)))
-            )
-          }
+            },
+            context: Ads.context(ads), client: client
+          )
           try Ads.report(results, labels: new, verb: "Added")
         }
       }
@@ -194,21 +188,15 @@ extension AdsCommand {
           let labels = copies.map { k in
             "\(k.text ?? "-") (\(formatState(k.matchType?.value1.rawValue ?? "").lowercased()), \(k.bid.map { Ads.Amount($0).formatted } ?? "ad group bid"))"
           }
-          let items = copies.enumerated().map { i, k in
-            Components.Schemas.KeywordCreateBulkRequestItem(
-              correlationId: Int64(i + 1),
-              data: .init(
+          let results = try await Ads.createKeywords(
+            copies.map { k in
+              .init(
                 adGroupId: target.id ?? 0, text: k.text ?? "", matchType: k.matchType.map { .init(value1: $0.value1) },
                 bid: k.bid.map { .init(value1: $0) }, status: k.status.map { .init(value1: $0.value1) }
               )
-            )
-          }
-          let results = try await Ads.bulk(Components.Schemas.Keyword.self) {
-            _ = try await client.postKeywordsBulkCreate(
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(.init(value1: Ads.bulkBase, value2: .init(items: items)))
-            )
-          }
+            },
+            context: Ads.context(ads), client: client
+          )
           try Ads.report(results, labels: labels, verb: "Copied")
         }
       }
@@ -309,15 +297,8 @@ extension AdsCommand {
             print(yellow("Cancelled."))
             return
           }
-          let items = targets.enumerated().map { i, k in
-            Components.Schemas.KeywordUpdateBulkRequestItem(correlationId: Int64(i + 1), data: data(k.id ?? 0, money))
-          }
-          let results = try await Ads.bulk(Components.Schemas.Keyword.self) {
-            _ = try await client.postKeywordsBulkUpdate(
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(.init(value1: Ads.bulkBase, value2: .init(items: items)))
-            )
-          }
+          let results = try await Ads.updateKeywords(
+            targets.map { data($0.id ?? 0, money) }, context: Ads.context(ads), client: client)
           try Ads.report(results, labels: labels, verb: done)
         }
       }
@@ -439,21 +420,15 @@ extension AdsCommand {
             return
           }
           // Campaign level: campaignId only; ad group level: adGroupId only.
-          let items = new.enumerated().map { i, text in
-            Components.Schemas.NegativeKeywordCreateBulkRequestItem(
-              correlationId: Int64(i + 1),
-              data: .init(
+          let results = try await Ads.createNegativeKeywords(
+            new.map { text in
+              .init(
                 campaignId: group == nil ? campaignID : nil, adGroupId: group?.id, text: text,
                 matchType: .init(value1: matchType), status: .init(value1: .enabled)
               )
-            )
-          }
-          let results = try await Ads.bulk(Components.Schemas.NegativeKeyword.self) {
-            _ = try await client.postNegativeKeywordsBulkCreate(
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(.init(value1: Ads.bulkBase, value2: .init(items: items)))
-            )
-          }
+            },
+            context: Ads.context(ads), client: client
+          )
           try Ads.report(results, labels: new, verb: "Added")
         }
       }
@@ -502,9 +477,7 @@ extension AdsCommand {
           for n in targets {
             // Under dry run every request is shown, not only the first.
             guard try await unlessDryRunStopped({
-              try await client.deleteNegativeKeywordsId(
-                path: .init(id: String(n.id ?? 0)), headers: .init(xApContext: Ads.context(ads))
-              ).ok
+              try await Ads.deleteNegativeKeyword(id: n.id ?? 0, context: Ads.context(ads), client: client)
             }) != nil else { continue }
             print(green("Removed") + " \(n.text ?? "-").")
           }
@@ -527,9 +500,6 @@ extension Ads {
       try await Scope.resolve(ads, app: app, campaign: campaign)
     }
   }
-
-  /// A bulk request's own fields: apply the items that succeed even when others fail.
-  static let bulkBase = Components.Schemas.BulkOperationRequest(value1: .init(allowPartialSuccess: true), value2: .init())
 
   /// Prints each bulk item's outcome (labels in request order, matched by `correlationId`) and
   /// fails the command if any item failed.

@@ -155,11 +155,7 @@ struct AdsCommand: AsyncParsableCommand {
         for campaign in changing {
           // Under dry run every request is shown, not only the first.
           guard try await unlessDryRunStopped({
-            try await client.putCampaignsId(
-              path: .init(id: String(campaign.id ?? 0)),
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(.init(status: .init(value1: status)))
-            ).ok
+            try await Ads.setStatus(status, campaignID: campaign.id ?? 0, context: Ads.context(ads), client: client)
           }) != nil else { continue }
           print(green(verb == "Pause" ? "Paused" : "Resumed") + " \(campaign.name ?? "-").")
         }
@@ -441,11 +437,7 @@ struct AdsCommand: AsyncParsableCommand {
             print(yellow("Cancelled."))
             return
           }
-          _ = try await client.putCampaignsId(
-            path: .init(id: String(campaign.id ?? 0)),
-            headers: .init(xApContext: Ads.context(ads)),
-            body: .json(.init(dailyBudget: .init(value1: .init(value: budget))))
-          ).ok
+          try await Ads.setDailyBudget(budget, campaignID: campaign.id ?? 0, context: Ads.context(ads), client: client)
           print(green("Updated") + " the daily budget of \(campaign.name ?? "-") to \(new).")
         }
       }

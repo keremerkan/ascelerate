@@ -3,10 +3,21 @@ import Foundation
 
 extension Ads {
   /// A campaign's ad groups with their numbers for the range (those without impressions or spend
-  /// only with `includesEmptyRows`).
+  /// only with `includesEmptyRows`), and with `granularity`, per day or hour too.
   public static func adGroupReportRows(
     campaignID: Int64, start: String, end: String, timeZone: Components.Schemas.TimeRange.TimeZonePayload = .ortz,
-    includesEmptyRows: Bool = false, context: String, client: Client
+    includesEmptyRows: Bool = false, granularity: Granularity? = nil, context: String, client: Client
+  ) async throws -> [Components.Schemas.AppsAdGroupReportRow] {
+    try await $granularity.withValue(granularity) {
+      try await adGroupReportPages(
+        campaignID: campaignID, start: start, end: end, timeZone: timeZone, includesEmptyRows: includesEmptyRows,
+        context: context, client: client)
+    }
+  }
+
+  private static func adGroupReportPages(
+    campaignID: Int64, start: String, end: String, timeZone: Components.Schemas.TimeRange.TimeZonePayload,
+    includesEmptyRows: Bool, context: String, client: Client
   ) async throws -> [Components.Schemas.AppsAdGroupReportRow] {
     try await reportRows { pagination in
       let json = try await client.appsAdGroupReports(

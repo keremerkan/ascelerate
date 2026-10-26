@@ -60,7 +60,7 @@ extension AdsCommand {
     func run() async throws {
       jsonOption.activate()
       let ads = try Ads.config()
-      let (start, end) = try range.resolved()
+      let (start, end) = try await range.resolved(ads)
       let scope = try await self.scope.resolve(ads)
       let endExclusive = Ads.dayAfter(end)
 
@@ -159,30 +159,15 @@ extension Ads {
   static func detailChanges(
     _ ids: [String], _ ads: AdsConfig, client: Client
   ) async throws -> [String: [(field: String, old: [String], new: [String])]] {
-    var result: [String: [(field: String, old: [String], new: [String])]] = [:]
-    try await withThrowingTaskGroup(of: (String, [(field: String, old: [String], new: [String])]).self) { group in
-      var next = 0
-      func addNext() {
-        guard next < ids.count else { return }
-        let id = ids[next]
-        next += 1
-        group.addTask {
-          let details = try await client.getChangeDetails(
-            path: .init(detailId: id), headers: .init(xApContext: context(ads))
-          ).ok.body.json.value2.result ?? []
-          let changes = details.flatMap { $0.details ?? [] }.flatMap { $0.changes ?? [] }.map {
-            (field: $0.field ?? "-", old: $0.oldValues ?? [], new: $0.newValues ?? [])
-          }
-          return (id, changes)
-        }
-      }
-      for _ in 0..<4 { addNext() }
-      for try await (id, changes) in group {
-        result[id] = changes
-        addNext()
+    let changes = try await boundedConcurrentMap(ids, maxConcurrent: 4) { id in
+      let details = try await client.getChangeDetails(
+        path: .init(detailId: id), headers: .init(xApContext: context(ads))
+      ).ok.body.json.value2.result ?? []
+      return details.flatMap { $0.details ?? [] }.flatMap { $0.changes ?? [] }.map {
+        (field: $0.field ?? "-", old: $0.oldValues ?? [], new: $0.newValues ?? [])
       }
     }
-    return result
+    return Dictionary(zip(ids, changes)) { first, _ in first }
   }
 
   /// The day after a yyyy-MM-dd date, as yyyy-MM-dd.

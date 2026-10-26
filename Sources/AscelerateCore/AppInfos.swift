@@ -55,6 +55,30 @@ public enum AppInfos {
   }
 
   /// Throws `AppInfoError.notEditable` unless the app info's localizations and categories can change.
+  /// The active app info (with its categories) and its own localizations: the included ones are
+  /// every info's, and the info's own list says which are its (they carry no back-reference).
+  public static func activeWithLocalizations(
+    appID: String, client: ASCClient
+  ) async throws -> (appInfo: Components.Schemas.AppInfo, localizations: [Components.Schemas.AppInfoLocalization]) {
+    let response = try await client.appsAppInfosGetToManyRelated(
+      path: .init(id: appID),
+      query: .init(
+        limit: 50,
+        include: [
+          .appInfoLocalizations, .primaryCategory, .primarySubcategoryOne, .primarySubcategoryTwo, .secondaryCategory,
+          .secondarySubcategoryOne, .secondarySubcategoryTwo,
+        ],
+        limitAppInfoLocalizations: 50)
+    ).ok.body.json
+    let appInfo = try pickActive(from: response.data)
+    let ids = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
+    let localizations = (response.included ?? []).compactMap { item -> Components.Schemas.AppInfoLocalization? in
+      if case .appInfoLocalizations(let localization) = item, ids.contains(localization.id) { return localization }
+      return nil
+    }
+    return (appInfo, localizations)
+  }
+
   public static func checkEditable(_ appInfo: Components.Schemas.AppInfo) throws {
     guard let state = appInfo.attributes?.state, editableStates.contains(state) else {
       throw AppInfoError.notEditable(state: appInfo.attributes?.state)

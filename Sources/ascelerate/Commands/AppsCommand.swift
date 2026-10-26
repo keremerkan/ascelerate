@@ -2325,12 +2325,13 @@ struct AppsCommand: AsyncParsableCommand {
         
         let app = try await findApp(bundleID: bundleID, client: client)
         
-        let response = try await client.appsAppInfosGetToManyRelated(
-          path: .init(id: app.id),
-          query: .init(include: [.primaryCategory, .secondaryCategory, .appInfoLocalizations], limitAppInfoLocalizations: 50)
-        ).ok.body.json
-        
-        let appInfo = try AppInfoCommand.pickActiveAppInfo(from: response.data)
+        let appInfo: Components.Schemas.AppInfo
+        let localizations: [Components.Schemas.AppInfoLocalization]
+        do {
+          (appInfo, localizations) = try await AppInfos.activeWithLocalizations(appID: app.id, client: client)
+        } catch let error as AppInfos.AppInfoError {
+          throw ValidationError(error.localizedDescription)
+        }
         
         let appName = app.attributes?.name ?? bundleID
         let attrs = appInfo.attributes
@@ -2344,15 +2345,6 @@ struct AppsCommand: AsyncParsableCommand {
         print("Age Rating:         \(ageRating)")
         print("Primary Category:   \(primaryCatID)")
         print("Secondary Category: \(secondaryCatID)")
-        
-        // Filter localizations to only those belonging to the selected AppInfo
-        let locIDs = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
-        let localizations = response.included?.compactMap { item -> Components.Schemas.AppInfoLocalization? in
-          if case .appInfoLocalizations(let loc) = item, locIDs.contains(loc.id) {
-            return loc
-          }
-          return nil
-        } ?? []
         
         if !localizations.isEmpty {
           print()

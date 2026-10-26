@@ -1,4 +1,5 @@
 import AppleAdsClient
+import AscelerateCore
 import Foundation
 import HTTPTypes
 import OpenAPIRuntime
@@ -133,30 +134,14 @@ public enum Ads {
     conditions += try adGroupIDs.map { try filter("adGroupId", equals: $0) }
     let campaign = try filter("campaignId", equals: campaignID)
     // Four queries at a time, the campaign's own first and then the ad groups' in their order.
-    var results: [Int: [Components.Schemas.NegativeKeyword]] = [:]
-    try await withThrowingTaskGroup(of: (Int, [Components.Schemas.NegativeKeyword]).self) { group in
-      var next = 0
-      func addNext() {
-        guard next < conditions.count else { return }
-        let (index, condition) = (next, conditions[next])
-        next += 1
-        group.addTask {
-          let negatives = try await query(Components.Schemas.NegativeKeyword.self) { pagination in
-            try await client.postNegativeKeywordsQuery(
-              headers: .init(xApContext: context),
-              body: .json(.init(filters: [campaign, condition], pagination: pagination))
-            ).ok.body.json.value1
-          }
-          return (index, negatives)
-        }
+    return try await boundedConcurrentMap(conditions, maxConcurrent: 4) { condition in
+      try await query(Components.Schemas.NegativeKeyword.self) { pagination in
+        try await client.postNegativeKeywordsQuery(
+          headers: .init(xApContext: context),
+          body: .json(.init(filters: [campaign, condition], pagination: pagination))
+        ).ok.body.json.value1
       }
-      for _ in 0..<4 { addNext() }
-      for try await (index, negatives) in group {
-        results[index] = negatives
-        addNext()
-      }
-    }
-    return conditions.indices.flatMap { results[$0] ?? [] }.filter { $0.deleted != true }
+    }.joined().filter { $0.deleted != true }
   }
 
   /// Whether Apple sets the campaign's bids itself (Maximize Conversions), so keyword bids don't apply.

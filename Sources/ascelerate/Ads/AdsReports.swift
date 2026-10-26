@@ -132,26 +132,37 @@ extension Ads {
     @Option(name: .long, help: "End date (YYYY-MM-DD, default: today).")
     var to: String?
 
-    /// `defaultDays` and `endingYesterday` apply only without --from/--to (yesterday: complete days only).
-    func resolved(defaultDays: Int = 7, endingYesterday: Bool = false) throws -> (start: String, end: String) {
+    /// `defaultDays` and `endingYesterday` apply only without --from/--to (yesterday: complete days
+    /// only). A range without --to ends today in the ad account's time zone, the days Apple Ads
+    /// reports in (one request reads the zone).
+    func resolved(_ ads: AdsConfig, defaultDays: Int = 7, endingYesterday: Bool = false) async throws -> (start: String, end: String) {
       let formatter = DateFormatter()
       formatter.dateFormat = "yyyy-MM-dd"
       formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.timeZone = TimeZone(identifier: "UTC")
       if from != nil, days != nil {
         throw ValidationError("Use either --days or --from/--to.")
       }
       for date in [from, to].compactMap({ $0 }) where formatter.date(from: date) == nil {
         throw ValidationError("Invalid date '\(date)'. Use YYYY-MM-DD.")
       }
-      let today = endingYesterday && to == nil && from == nil
-        ? Calendar.current.date(byAdding: .day, value: -1, to: Date())!
-        : Date()
-      let end = to ?? formatter.string(from: today)
-      if let from { return (from, end) }
       let days = days ?? defaultDays
-      guard days >= 1 else { throw ValidationError("--days must be at least 1.") }
-      let start = Calendar.current.date(byAdding: .day, value: -(days - 1), to: formatter.date(from: end) ?? today) ?? today
-      return (formatter.string(from: start), end)
+      guard from != nil || days >= 1 else { throw ValidationError("--days must be at least 1.") }
+      if let from, let to { return (from, to) }
+      let end: String
+      if let to {
+        end = to
+      } else {
+        let zone = try await Ads.accountTimeZone(ads)
+        guard from != nil else { return Ads.days(count: days, endingYesterday: endingYesterday, in: zone) }
+        end = Ads.days(count: 1, in: zone).end
+      }
+      if let from { return (from, end) }
+      // --to with --days: the days before it, counted on the calendar alone.
+      var calendar = Calendar(identifier: .gregorian)
+      calendar.timeZone = formatter.timeZone
+      let last = formatter.date(from: end) ?? Date()
+      return (formatter.string(from: calendar.date(byAdding: .day, value: -(days - 1), to: last) ?? last), end)
     }
   }
 }

@@ -24,9 +24,11 @@ public enum Preflight {
     /// The most characters App Store Connect takes, where it limits the field.
     public var limit: Int? {
       switch self {
-        case .description, .whatsNew: 4000
-        case .keywords: 100
-        case .name, .subtitle: 30
+        case .description: FieldLimits.description
+        case .whatsNew: FieldLimits.whatsNew
+        case .keywords: FieldLimits.keywords
+        case .name: FieldLimits.appName
+        case .subtitle: FieldLimits.subtitle
         case .privacyPolicyURL, .supportURL: nil
       }
     }
@@ -232,17 +234,7 @@ public enum Preflight {
   private static func appInformation(
     appID: String, client: ASCClient
   ) async throws -> (category: String?, localizations: [Components.Schemas.AppInfoLocalization]) {
-    let response = try await client.appsAppInfosGetToManyRelated(
-      path: .init(id: appID),
-      query: .init(include: [.appInfoLocalizations, .primaryCategory], limitAppInfoLocalizations: 50)
-    ).ok.body.json
-    let appInfo = try AppInfos.pickActive(from: response.data)
-    // Included localizations carry no back-reference: the app info's own list says which are its.
-    let ids = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
-    let localizations = (response.included ?? []).compactMap { item -> Components.Schemas.AppInfoLocalization? in
-      if case .appInfoLocalizations(let localization) = item, ids.contains(localization.id) { return localization }
-      return nil
-    }
+    let (appInfo, localizations) = try await AppInfos.activeWithLocalizations(appID: appID, client: client)
     return (appInfo.relationships?.primaryCategory?.data?.id, localizations)
   }
 

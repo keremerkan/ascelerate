@@ -195,22 +195,28 @@ public enum Ads {
   }()
 
   /// A report request for the range (yyyy-MM-dd), its days in the ad account's time zone (ORTZ)
-  /// or UTC (which search term reports don't take).
+  /// or UTC (which search term reports don't take). Rows without impressions or spend come only
+  /// with `includesEmptyRows`: without it, a paused campaign's ad groups and keywords have none.
   public static func reportRequest(
     start: String, end: String, timeZone: Components.Schemas.TimeRange.TimeZonePayload = .ortz,
-    filters: [Components.Schemas.Filter]? = nil, pagination: Components.Schemas.RequestPagination
+    includesEmptyRows: Bool = false, filters: [Components.Schemas.Filter]? = nil,
+    pagination: Components.Schemas.RequestPagination
   ) -> Components.Schemas.AppsReportingRequest {
-    .init(pagination: pagination, filters: filters, timeRange: .init(start: start, end: end, timeZone: timeZone))
+    .init(
+      pagination: pagination, filters: filters, timeRange: .init(start: start, end: end, timeZone: timeZone),
+      options: includesEmptyRows ? .init(includeRows: [.emptyMetrics]) : nil)
   }
 
   /// The campaign report's rows for the range, every campaign's (`campaignId` filters take only
   /// EQUALS for API users), optionally broken down by `groupBy` dimensions.
   public static func campaignReportRows(
     start: String, end: String, timeZone: Components.Schemas.TimeRange.TimeZonePayload = .ortz,
-    groupBy: [Components.Schemas.AppsReportingRequest.GroupByPayloadPayload] = [], context: String, client: Client
+    includesEmptyRows: Bool = false, groupBy: [Components.Schemas.AppsReportingRequest.GroupByPayloadPayload] = [],
+    context: String, client: Client
   ) async throws -> [Components.Schemas.AppsCampaignReportRow] {
     try await reportRows { pagination in
-      var request = reportRequest(start: start, end: end, timeZone: timeZone, pagination: pagination)
+      var request = reportRequest(
+        start: start, end: end, timeZone: timeZone, includesEmptyRows: includesEmptyRows, pagination: pagination)
       if !groupBy.isEmpty { request.groupBy = groupBy }
       let json = try await client.appsCampaignReports(headers: .init(xApContext: context), body: .json(request)).ok.body.json
       return (json.result?.rows ?? [], json.pagination?.totalCount)
@@ -258,7 +264,7 @@ public enum Ads {
   /// Runs a bulk create/update and returns its per-item results. Apple's spec types a bulk
   /// response's `result` as an object while it is an array, so the generated operation fails to
   /// decode a response whose writes went through.
-  public static func bulk<T: Decodable>(_ type: T.Type, _ send: () async throws -> Void) async throws -> [BulkItem<T>] {
+  public static func bulk<T: Decodable & Sendable>(_ type: T.Type, _ send: () async throws -> Void) async throws -> [BulkItem<T>] {
     let response = try await decodeRaw(BulkResponse<T>.self, send)
     if let error = response.error {
       throw AdsError(status: nil, code: error.code, message: error.message, details: error.details ?? [])
@@ -266,7 +272,7 @@ public enum Ads {
     return response.result ?? []
   }
 
-  private struct BulkResponse<T: Decodable>: Decodable {
+  private struct BulkResponse<T: Decodable & Sendable>: Decodable {
     let result: [BulkItem<T>]?
     let error: ItemError?
   }
@@ -282,7 +288,7 @@ public enum Ads {
   }
 
   /// One item of a bulk response, matched to its request item by `correlationId`.
-  public struct BulkItem<T: Decodable>: Decodable {
+  public struct BulkItem<T: Decodable & Sendable>: Decodable, Sendable {
     public let correlationId: Int64?
     public let success: Bool?
     public let result: T?

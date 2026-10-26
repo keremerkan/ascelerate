@@ -53,7 +53,7 @@ extension AdsCommand {
         let needsCountry = dimensions.contains { $0 == .adminArea || $0 == .locality }
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.campaignReportRows(
-            start: start, end: end, groupBy: dimensions.isEmpty ? [] : dimensions + (needsCountry ? [.countryCode] : []),
+            start: start, end: end, includesEmptyRows: options.all, groupBy: dimensions.isEmpty ? [] : dimensions + (needsCountry ? [.countryCode] : []),
             context: Ads.context(ads), client: client)
         }
 
@@ -148,7 +148,8 @@ extension AdsCommand {
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
-            try await Ads.adGroupReportRows(campaignID: campaignID, start: start, end: end, context: Ads.context(ads), client: client)
+            try await Ads.adGroupReportRows(
+              campaignID: campaignID, start: start, end: end, includesEmptyRows: options.all, context: Ads.context(ads), client: client)
           }
         }
 
@@ -260,7 +261,8 @@ extension AdsCommand {
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
         let rows = try await Ads.withClient(ads) { client in
           try await Ads.perCampaign(scope) { campaignID in
-            try await Ads.keywordReportRows(campaignID: campaignID, start: start, end: end, context: Ads.context(ads), client: client)
+            try await Ads.keywordReportRows(
+              campaignID: campaignID, start: start, end: end, includesEmptyRows: options.all, context: Ads.context(ads), client: client)
           }
         }
 

@@ -20,7 +20,7 @@ cp .build/release/ascelerate /usr/local/bin/
 ## Project Structure
 
 ```
-Package.swift                         # SPM manifest (Swift tools 6.2, macOS 15+; the Apple Ads client needs both)
+Package.swift                         # SPM manifest (Swift tools 6.2, macOS 15+; the Apple Ads client needs both); the libraries also declare iOS 27 (ASCKit and AscelerateCore build for it; AscelerateAds needs Apple's Ads package to declare iOS, which declares macOS only)
 Scripts/
   prepare-asc-spec.swift              # Apple spec → Sources/ASCKit/openapi.json + nameOverrides
   compare-with-release.sh             # Diff read-only command output: released binary vs debug build

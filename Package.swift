@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "ascelerate",
-    platforms: [.macOS(.v15)],
+    platforms: [.macOS(.v15), .iOS("27.0")],
     products: [
         .executable(name: "ascelerate", targets: ["ascelerate"]),
         .library(name: "ASCKit", targets: ["ASCKit"]),

@@ -206,11 +206,9 @@ extension ReportsCommand {
       else { return }
 
       // 2. Pick the report within the requested category.
-      var reports = try await client.analyticsReportRequestsReportsGetToManyRelated(
-        path: .init(id: requestID), query: .init(filterCategory: [cat], limit: 200)
-      ).ok.body.json.data
+      var reports = try await AscelerateCore.Analytics.reports(requestID: requestID, category: cat, client: client)
       if let reportName {
-        reports = reports.filter { $0.attributes?.name == reportName }
+        reports = reports.filter { $0.name == reportName }
       }
       guard !reports.isEmpty else {
         print(
@@ -219,45 +217,31 @@ extension ReportsCommand {
         return
       }
 
-      let report: Components.Schemas.AnalyticsReport
+      let report: AscelerateCore.Analytics.Report
       if reports.count == 1 {
         report = reports[0]
       } else if autoConfirm {
-        let names = reports.compactMap { $0.attributes?.name }.joined(separator: ", ")
+        let names = reports.map(\.name).joined(separator: ", ")
         throw ValidationError(
           "Multiple reports in \(category). Pass --report-name. Available: \(names)")
       } else {
-        report = try promptSelection(
-          "Multiple reports in \(category)", items: reports.sorted {
-            ($0.attributes?.name ?? "") < ($1.attributes?.name ?? "")
-          }
-        ) { $0.attributes?.name ?? $0.id }
+        report = try promptSelection("Multiple reports in \(category)", items: reports.sorted { $0.name < $1.name }) { $0.name }
       }
-      let displayName = report.attributes?.name ?? report.id
+      let displayName = report.name
 
       // 3. Pick the instance (processing date) at the requested granularity.
-      let instances = try await client.analyticsReportsInstancesGetToManyRelated(
-        path: .init(id: report.id),
-        query: .init(filterGranularity: [gran], filterProcessingDate: processingDate.map { [$0] }, limit: 200)
-      ).ok.body.json.data
-      guard
-        let instance = instances.max(by: {
-          ($0.attributes?.processingDate ?? "") < ($1.attributes?.processingDate ?? "")
-        })
-      else {
+      let instances = try await AscelerateCore.Analytics.instances(
+        reportID: report.id, granularity: gran, processingDate: processingDate, client: client)
+      guard let instance = instances.max(by: { ($0.processingDate ?? "") < ($1.processingDate ?? "") }) else {
         print(
           "No \(granularity) instances available yet for \"\(displayName)\"\(processingDate.map { " on \($0)" } ?? "").")
         print("The snapshot may still be processing — re-run later.")
         return
       }
-      let instanceDate = instance.attributes?.processingDate ?? "unknown"
+      let instanceDate = instance.processingDate ?? "unknown"
 
       // 4. Collect the instance's segments.
-      let segments = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.analyticsReportInstancesSegmentsGetToManyRelated(
-          path: .init(id: instance.id), query: .init(limit: 200)
-        ).ok.body.json
-      }.flatMap(\.data)
+      let segments = try await AscelerateCore.Analytics.segments(instanceID: instance.id, client: client)
       guard !segments.isEmpty else {
         print("Instance \(instanceDate) has no segments yet — re-run later.")
         return
@@ -273,14 +257,8 @@ extension ReportsCommand {
       print("Downloading \"\(displayName)\" (\(granularity), processed \(instanceDate)) — \(segments.count) segment(s)…")
       var totalRows = 0
       var savedFiles: [String] = []
-      for (i, segment) in segments.enumerated() {
-        guard let url = segment.attributes?.url.flatMap(URL.init(string:)) else { continue }
-        let (data, response) = try await URLSession.shared.data(from: url)
-        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
-          throw ValidationError(
-            "Segment \(i + 1) download failed (HTTP \(http.statusCode)). The presigned URL may have expired — re-run the command.")
-        }
-        let text = String(decoding: try Gzip.decompress(data), as: UTF8.self)
+      for (i, segment) in segments.enumerated() where segment.url != nil {
+        let text = String(decoding: try await AscelerateCore.Analytics.download(segment, number: i + 1), as: UTF8.self)
         totalRows += max(0, text.split(whereSeparator: \.isNewline).count - 1)
         let file = (outDir as NSString).appendingPathComponent("segment-\(i + 1).csv")
         try text.write(toFile: file, atomically: true, encoding: .utf8)
@@ -296,11 +274,8 @@ extension ReportsCommand {
     private func findOrCreateRequest(
       appID: String, appName: String, client: ASCClient
     ) async throws -> String? {
-      let existing = try await client.appsAnalyticsReportRequestsGetToManyRelated(
-        path: .init(id: appID),
-        query: .init(filterAccessType: ongoing ? [.ongoing] : [.oneTimeSnapshot], limit: 50)
-      ).ok.body.json.data
-      if let request = existing.first(where: { $0.attributes?.stoppedDueToInactivity != true }) {
+      let accessType: AscelerateCore.Analytics.AccessType = ongoing ? .ongoing : .oneTimeSnapshot
+      if let request = try await AscelerateCore.Analytics.activeRequest(appID: appID, accessType: accessType, client: client) {
         return request.id
       }
 
@@ -313,15 +288,10 @@ extension ReportsCommand {
         return nil
       }
 
-      let accessType: ASCEnum.AnalyticsReportRequestCreateRequestAccessType = ongoing ? .ongoing : .oneTimeSnapshot
-      let created = try await client.analyticsReportRequestsCreateInstance(body: .json(.init(data: .init(
-        attributes: .init(accessType: accessType.rawValue),
-        relationships: .init(app: .init(data: .init(id: appID, _type: "apps"))),
-        _type: "analyticsReportRequests"
-      )))).created.body.json
-      success("Created", "report request \(created.data.id).")
+      let created = try await AscelerateCore.Analytics.createRequest(appID: appID, accessType: accessType, client: client)
+      success("Created", "report request \(created.id).")
       print("Apple is now generating the report. This can take a while — re-run this command later to download it.")
-      return created.data.id
+      return created.id
     }
   }
 }

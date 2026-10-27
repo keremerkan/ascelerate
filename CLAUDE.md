@@ -85,6 +85,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   Retry.swift                         # isTransientError, withTransientRetry, unlessDryRunStopped
   BuildUploadRecords.swift            # Build upload records (buildUploads, any tool's): list (newest first by creation date, Apple's errors/warnings/notes), stale ones (waiting while a sibling of the same build moved on, or a day old), delete
   MediaDownload.swift                 # A version's screenshots, previews and library images as download sets in the upload folder layout (all languages or some, all folders or some), file download
+  Analytics.swift                     # App Analytics: report requests (ongoing, one-time snapshot; find, create), reports per category, instances per granularity, segments, a segment's data unzipped (used by reports analytics)
   SalesReports.swift                  # Sales and Trends summary reports: download (nil on 404), rows (kind, units, proceeds per unit, parent SKU), Pacific Time report days; TSV parsing; Gzip (in-process, no gzip binary)
 Sources/AscelerateAds/                # Apple Ads logic without terminal I/O, on AppleAdsClient and AscelerateCore (see "Apple Ads")
   Ads.swift                           # Credentials, Options (write gate, rate limit notice), withClient, middleware (AdsError, 429 waits, read retries), access control list, ad account, campaigns/ad groups/keywords/negatives, paged /query, report request/paging (ORTZ or UTC), campaign report rows, bulk/decodeRaw

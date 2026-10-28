@@ -162,4 +162,58 @@ final class FakeServer: @unchecked Sendable {
     #expect(server.requests == 8)
     #expect(elapsed >= 0.45 && elapsed < 1.5)
   }
+
+  @Test func pacingLetsOtherRequestsGoAheadOfBackgroundOnes() async throws {
+    let pacing = PacingMiddleware(pacing: ASCRequestPacing(burst: 1, perSecond: 20), gate: PacingGate())
+    let order = Order()
+    try await withThrowingTaskGroup(of: Void.self) { group in
+      // Ten background requests queue up first; the one that comes after them goes next.
+      for index in 0..<10 {
+        group.addTask {
+          try await ASCRequestPacing.$isBackground.withValue(true) {
+            _ = try await pacing.intercept(
+              request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test"
+            ) { _, _, _ in order.add("background \(index)"); return (HTTPResponse(status: .ok), nil) }
+          }
+        }
+      }
+      try await Task.sleep(for: .milliseconds(30))
+      group.addTask {
+        _ = try await pacing.intercept(
+          request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test"
+        ) { _, _, _ in order.add("page"); return (HTTPResponse(status: .ok), nil) }
+      }
+      try await group.waitForAll()
+    }
+    let all = order.all
+    #expect(all.count == 11)
+    // The burst's one request and at most one more background request went before it.
+    #expect((all.firstIndex(of: "page") ?? 99) <= 2)
+  }
+
+  @Test func pacingCancelsAWaitingRequest() async throws {
+    let pacing = PacingMiddleware(pacing: ASCRequestPacing(burst: 1, perSecond: 1), gate: PacingGate())
+    let send: @Sendable () async throws -> Void = {
+      _ = try await pacing.intercept(
+        request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test"
+      ) { _, _, _ in (HTTPResponse(status: .ok), nil) }
+    }
+    try await send()
+    let waiting = Task { try await send() }
+    try await Task.sleep(for: .milliseconds(50))
+    waiting.cancel()
+    await #expect(throws: CancellationError.self) { try await waiting.value }
+  }
+}
+
+/// What reached the server, in order.
+private final class Order: @unchecked Sendable {
+  private let lock = NSLock()
+  private var items: [String] = []
+
+  func add(_ item: String) {
+    lock.withLock { items.append(item) }
+  }
+
+  var all: [String] { lock.withLock { items } }
 }

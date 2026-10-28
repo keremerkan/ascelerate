@@ -191,6 +191,32 @@ final class FakeServer: @unchecked Sendable {
     #expect((all.firstIndex(of: "page") ?? 99) <= 2)
   }
 
+  @Test func pacingLetsTheNewestRequestGoFirst() async throws {
+    let pacing = PacingMiddleware(pacing: ASCRequestPacing(burst: 1, perSecond: 20), gate: PacingGate())
+    let order = Order()
+    try await withThrowingTaskGroup(of: Void.self) { group in
+      // Ten requests of a page queue up; one of a page opened after them goes next.
+      for index in 0..<10 {
+        group.addTask {
+          _ = try await pacing.intercept(
+            request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test"
+          ) { _, _, _ in order.add("earlier \(index)"); return (HTTPResponse(status: .ok), nil) }
+        }
+      }
+      try await Task.sleep(for: .milliseconds(30))
+      group.addTask {
+        _ = try await pacing.intercept(
+          request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test"
+        ) { _, _, _ in order.add("newest"); return (HTTPResponse(status: .ok), nil) }
+      }
+      try await group.waitForAll()
+    }
+    let all = order.all
+    #expect(all.count == 11)
+    // The burst's one request and at most one more earlier request went before it.
+    #expect((all.firstIndex(of: "newest") ?? 99) <= 2)
+  }
+
   @Test func pacingCancelsAWaitingRequest() async throws {
     let pacing = PacingMiddleware(pacing: ASCRequestPacing(burst: 1, perSecond: 1), gate: PacingGate())
     let send: @Sendable () async throws -> Void = {

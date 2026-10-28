@@ -119,14 +119,42 @@ public enum Analytics {
   }
 
   /// A segment's data as Apple sends it, gzipped (a tenth of its size unzipped), for a client
-  /// that reads it more than once.
-  public static func downloadZipped(_ segment: Segment, number: Int = 1) async throws -> Data {
+  /// that reads it more than once. With `received`, it reports the bytes in so far and the
+  /// segment's size (-1 when Apple doesn't send it) as they arrive, for a large segment's progress.
+  public static func downloadZipped(
+    _ segment: Segment, number: Int = 1, received: (@Sendable (_ bytes: Int64, _ expected: Int64) -> Void)? = nil
+  ) async throws -> Data {
     guard let url = segment.url else { return Data() }
-    let (data, response) = try await URLSession.shared.data(from: url)
+    guard let received else {
+      let (data, response) = try await URLSession.shared.data(from: url)
+      try check(response, number: number)
+      return data
+    }
+    let (bytes, response) = try await URLSession.shared.bytes(from: url)
+    try check(response, number: number)
+    let expected = response.expectedContentLength
+    var data = Data()
+    if expected > 0 { data.reserveCapacity(Int(expected)) }
+    // Collected in chunks: appending to Data a byte at a time is slow for segments of many MB.
+    var chunk: [UInt8] = []
+    chunk.reserveCapacity(1 << 16)
+    for try await byte in bytes {
+      chunk.append(byte)
+      if chunk.count == 1 << 16 {
+        data.append(contentsOf: chunk)
+        chunk.removeAll(keepingCapacity: true)
+        received(Int64(data.count), expected)
+      }
+    }
+    data.append(contentsOf: chunk)
+    received(Int64(data.count), expected)
+    return data
+  }
+
+  private static func check(_ response: URLResponse, number: Int) throws {
     if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
       throw AnalyticsError.download(segment: number, status: http.statusCode)
     }
-    return data
   }
 }
 

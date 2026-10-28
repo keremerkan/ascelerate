@@ -357,7 +357,8 @@ struct RateLimitWaitMiddleware: ClientMiddleware {
 /// 2026-10-22, four price tier reads at a time, each paging). A token bucket shared by every
 /// client of the process: `burst` requests at once, then `perSecond`. Requests made while
 /// `isBackground` is set (a long download the user isn't waiting on) go only when no other request
-/// waits, so a page opened meanwhile isn't queued behind it.
+/// waits, so a page opened meanwhile isn't queued behind it. The other requests wait newest
+/// first: the latest are what the user just asked for (a page opened over others still loading).
 public struct ASCRequestPacing: Sendable {
   public var burst: Int
   public var perSecond: Double
@@ -369,6 +370,21 @@ public struct ASCRequestPacing: Sendable {
     self.burst = burst
     self.perSecond = perSecond
   }
+
+  /// What the process's requests are doing now, for a debug display.
+  public static func activity() async -> ASCRequestActivity {
+    await PacingGate.shared.activity()
+  }
+}
+
+/// The process's requests at a moment: those waiting for a turn, those sent and not answered
+/// yet, and the one waiting longest for its answer.
+public struct ASCRequestActivity: Sendable {
+  public let waiting: Int
+  public let waitingInBackground: Int
+  public let running: Int
+  /// The request waiting longest for its answer: its operation and when it was sent.
+  public let longestRunning: (operationID: String, since: Date)?
 }
 
 actor PacingGate {
@@ -377,18 +393,37 @@ actor PacingGate {
   private var tokens: Double?
   private var refilled = Date()
   private var pacing = ASCRequestPacing(burst: 1, perSecond: 1)
-  /// The requests waiting for a turn, in order: those that aren't background work first.
+  /// The requests waiting for a turn, in order: those that aren't background work first, the
+  /// newest of them first; then the background ones, oldest first.
   private var waiting: [(id: UUID, isBackground: Bool, turn: CheckedContinuation<Void, any Error>)] = []
   /// Waits cancelled before they were queued.
   private var cancelled: Set<UUID> = []
   private var isHandingOut = false
+  /// The requests sent and not answered yet: their operations and when they were sent.
+  private var running: [UUID: (operationID: String, since: Date)] = [:]
+
+  func started(_ id: UUID, operationID: String) {
+    running[id] = (operationID, Date())
+  }
+
+  func ended(_ id: UUID) {
+    running[id] = nil
+  }
+
+  func activity() -> ASCRequestActivity {
+    let background = waiting.count { $0.isBackground }
+    return ASCRequestActivity(
+      waiting: waiting.count - background, waitingInBackground: background, running: running.count,
+      longestRunning: running.values.min { $0.since < $1.since })
+  }
 
   /// Waits for a request's turn: at once while the bucket has a token and nothing that goes
-  /// first waits; else in line, a background request behind every other one.
+  /// first waits; else in line, a background request behind every other one, another ahead of
+  /// all.
   func acquire(_ pacing: ASCRequestPacing, isBackground: Bool) async throws {
     self.pacing = pacing
     refill()
-    let isAhead = !waiting.contains { !$0.isBackground || isBackground }
+    let isAhead = !isBackground || waiting.isEmpty
     if isAhead, let tokens, tokens >= 1 {
       self.tokens = tokens - 1
       return
@@ -403,17 +438,13 @@ actor PacingGate {
     }
   }
 
-  /// Puts a request in line: a background one last, another one ahead of the background ones.
+  /// Puts a request in line: a background one last, another one first.
   private func enqueue(_ id: UUID, isBackground: Bool, turn: CheckedContinuation<Void, any Error>) {
     if cancelled.remove(id) != nil {
       turn.resume(throwing: CancellationError())
       return
     }
-    var place = waiting.endIndex
-    if !isBackground, let firstBackground = waiting.firstIndex(where: { $0.isBackground }) {
-      place = firstBackground
-    }
-    waiting.insert((id, isBackground, turn), at: place)
+    waiting.insert((id, isBackground, turn), at: isBackground ? waiting.endIndex : 0)
     if !isHandingOut {
       isHandingOut = true
       Task { await handOut() }
@@ -460,6 +491,9 @@ struct PacingMiddleware: ClientMiddleware {
     next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
     try await gate.acquire(pacing, isBackground: ASCRequestPacing.isBackground)
+    let id = UUID()
+    await gate.started(id, operationID: operationID)
+    defer { Task { [gate] in await gate.ended(id) } }
     return try await next(request, body, baseURL)
   }
 }

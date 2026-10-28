@@ -70,6 +70,18 @@ public enum BetaTesters {
     return true
   }
 
+  /// Deletes the tester itself, from every app of the team, as App Store Connect's All Testers
+  /// does. A tester who joined through a public link without an email can only go this way: their
+  /// removal from the app is accepted (202) but never carried out (seen 2026-10, still listed days
+  /// later). Returns false when App Store Connect took the request to do later (202).
+  @discardableResult
+  public static func delete(testerID: String, client: ASCClient) async throws -> Bool {
+    let output = try await client.betaTestersDeleteInstance(path: .init(id: testerID))
+    if case .accepted = output { return false }
+    _ = try output.noContent
+    return true
+  }
+
   /// Sends the tester's invitation email again.
   public static func invite(testerID: String, appID: String, client: ASCClient) async throws {
     _ = try await client.betaTesterInvitationsCreateInstance(body: .json(.init(data: .init(

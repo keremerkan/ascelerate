@@ -355,10 +355,15 @@ struct RateLimitWaitMiddleware: ClientMiddleware {
 /// Spaces requests out. Besides the hourly quota, App Store Connect refuses bursts: a 429 "The
 /// request rate limit has been reached" with nearly all of the hour's requests left (seen
 /// 2026-10-22, four price tier reads at a time, each paging). A token bucket shared by every
-/// client of the process: `burst` requests at once, then `perSecond`.
+/// client of the process: `burst` requests at once, then `perSecond`. Requests made while
+/// `isBackground` is set (a long download the user isn't waiting on) go only when no other request
+/// waits, so a page opened meanwhile isn't queued behind it.
 public struct ASCRequestPacing: Sendable {
   public var burst: Int
   public var perSecond: Double
+
+  /// Whether the requests of the task (and the tasks it starts) are background work.
+  @TaskLocal public static var isBackground = false
 
   public init(burst: Int, perSecond: Double) {
     self.burst = burst
@@ -371,16 +376,78 @@ actor PacingGate {
 
   private var tokens: Double?
   private var refilled = Date()
+  private var pacing = ASCRequestPacing(burst: 1, perSecond: 1)
+  /// The requests waiting for a turn, in order: those that aren't background work first.
+  private var waiting: [(id: UUID, isBackground: Bool, turn: CheckedContinuation<Void, any Error>)] = []
+  /// Waits cancelled before they were queued.
+  private var cancelled: Set<UUID> = []
+  private var isHandingOut = false
 
-  /// Takes a request's token, returning how long to wait for it (tokens taken ahead go negative,
-  /// so concurrent requests queue up one after another).
-  func reserve(_ pacing: ASCRequestPacing) -> TimeInterval {
+  /// Waits for a request's turn: at once while the bucket has a token and nothing that goes
+  /// first waits; else in line, a background request behind every other one.
+  func acquire(_ pacing: ASCRequestPacing, isBackground: Bool) async throws {
+    self.pacing = pacing
+    refill()
+    let isAhead = !waiting.contains { !$0.isBackground || isBackground }
+    if isAhead, let tokens, tokens >= 1 {
+      self.tokens = tokens - 1
+      return
+    }
+    let id = UUID()
+    try await withTaskCancellationHandler {
+      try await withCheckedThrowingContinuation { (turn: CheckedContinuation<Void, any Error>) in
+        enqueue(id, isBackground: isBackground, turn: turn)
+      }
+    } onCancel: {
+      Task { await self.cancel(id) }
+    }
+  }
+
+  /// Puts a request in line: a background one last, another one ahead of the background ones.
+  private func enqueue(_ id: UUID, isBackground: Bool, turn: CheckedContinuation<Void, any Error>) {
+    if cancelled.remove(id) != nil {
+      turn.resume(throwing: CancellationError())
+      return
+    }
+    var place = waiting.endIndex
+    if !isBackground, let firstBackground = waiting.firstIndex(where: { $0.isBackground }) {
+      place = firstBackground
+    }
+    waiting.insert((id, isBackground, turn), at: place)
+    if !isHandingOut {
+      isHandingOut = true
+      Task { await handOut() }
+    }
+  }
+
+  /// Gives the waiting requests their turns as tokens come in, until none waits.
+  private func handOut() async {
+    defer { isHandingOut = false }
+    while !waiting.isEmpty {
+      refill()
+      let available = tokens ?? 0
+      if available >= 1 {
+        tokens = available - 1
+        waiting.removeFirst().turn.resume()
+      } else {
+        try? await Task.sleep(for: .seconds((1 - available) / pacing.perSecond))
+      }
+    }
+  }
+
+  private func cancel(_ id: UUID) {
+    if let index = waiting.firstIndex(where: { $0.id == id }) {
+      waiting.remove(at: index).turn.resume(throwing: CancellationError())
+    } else {
+      cancelled.insert(id)
+    }
+  }
+
+  private func refill() {
     let now = Date()
     let burst = Double(max(pacing.burst, 1))
-    let available = min(burst, (tokens ?? burst) + now.timeIntervalSince(refilled) * pacing.perSecond)
+    tokens = min(burst, (tokens ?? burst) + now.timeIntervalSince(refilled) * pacing.perSecond)
     refilled = now
-    tokens = available - 1
-    return available >= 1 ? 0 : (1 - available) / pacing.perSecond
   }
 }
 
@@ -392,8 +459,7 @@ struct PacingMiddleware: ClientMiddleware {
     _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
     next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
-    let wait = await gate.reserve(pacing)
-    if wait > 0 { try await Task.sleep(for: .seconds(wait)) }
+    try await gate.acquire(pacing, isBackground: ASCRequestPacing.isBackground)
     return try await next(request, body, baseURL)
   }
 }

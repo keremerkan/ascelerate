@@ -596,6 +596,7 @@ iPhone Duo simulator (Xcode 27.1+): `setHinge(.open)` / `setHinge(.closed)` unfo
 ```bash
 ascelerate builds archive                           # Auto-detects workspace/scheme
 ascelerate builds archive --scheme MyApp --json-events   # Progress as JSON Lines on stdout (step, archived with the path); readable log and xcodebuild's warnings/errors on stderr
+ascelerate builds archive --scheme MyApp --build-number 9   # Archive with build number 9 (app, extensions, watch app) when the project's number was already uploaded; the project is left as it is
 ascelerate builds archives [--bundle-id X] [--platform macos] [--json]   # Xcode's archives, newest first (path, version, build, platform, date); archive picks the scheme's platform when --destination is omitted
 ascelerate builds upload MyApp.ipa
 ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos   # the newest archive of an app for one platform

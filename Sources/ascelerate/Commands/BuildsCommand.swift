@@ -272,6 +272,11 @@ struct BuildsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Destination (default: the generic destination of the scheme's platform, such as generic/platform=macOS; generic/platform=iOS when the app builds for several).")
     var destination: String?
 
+    @Option(
+      name: .customLong("build-number"),
+      help: "Build number of everything built into the archive (the app, its extensions, its watch app): sets CURRENT_PROJECT_VERSION for this archive only, leaving the project as it is. A target whose Info.plist names its own number keeps it.")
+    var buildNumber: String?
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
@@ -286,6 +291,11 @@ struct BuildsCommand: AsyncParsableCommand {
 
     private func archive() throws {
       if yes { autoConfirm = true }
+
+      // App Store Connect's form: up to three period-separated integers.
+      if let buildNumber, buildNumber.wholeMatch(of: /[0-9]+(\.[0-9]+){0,2}/) == nil {
+        throw ValidationError("The build number must be up to three numbers separated by periods, such as 9 or 1.0.9.")
+      }
 
       try ensureXcodebuild()
 
@@ -329,6 +339,10 @@ struct BuildsCommand: AsyncParsableCommand {
         "-destination", destination,
         "-allowProvisioningUpdates",
       ] + quietFlag + (try APICredentials.fromEnvironment()?.xcodebuildArguments ?? [])
+      if let buildNumber {
+        EventOutput.log("Build number: \(buildNumber)")
+        args.append("CURRENT_PROJECT_VERSION=\(buildNumber)")
+      }
 
       var archivePath: String?
       if let output {

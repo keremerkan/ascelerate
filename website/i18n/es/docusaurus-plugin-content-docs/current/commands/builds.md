@@ -27,6 +27,12 @@ El comando `archive` detecta automáticamente el `.xcworkspace` o el `.xcodeproj
 
 Sin `--destination`, archiva para la plataforma del esquema (`generic/platform=macOS` en una app de macOS). Una app que se compila para varias plataformas se archiva para iOS, salvo que indique `--destination`.
 
+Con `--build-number`, todo lo que se compila en el archivo (la app, sus extensiones, su app de Apple Watch) recibe ese número de compilación: la opción fija `CURRENT_PROJECT_VERSION` solo para este archivo y el proyecto no cambia. Úsela cuando el número del proyecto ya se haya subido. Un target cuyo Info.plist fije su propio número en lugar de `$(CURRENT_PROJECT_VERSION)` lo conserva.
+
+```bash
+ascelerate builds archive --scheme MyApp --build-number 9
+```
+
 ## Archivos de Xcode
 
 ```bash

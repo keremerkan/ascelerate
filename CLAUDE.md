@@ -244,7 +244,7 @@ ascelerate apps eula <bundle-id> [--file X] [--delete]            # View/manage 
 ascelerate apps subscription-grace-period <bundle-id> [--opt-in true|false] [--sandbox-opt-in true|false] [--duration X] [--renewal-type X] [-y]  # View/update app-level subscription grace period
 ascelerate apps streamlined-purchasing <bundle-id> [--enabled true|false] [-y]  # View/turn on or off buying subscriptions outside the app
 ascelerate builds list [--bundle-id <id>] [--version X] [--platform X] [--json]  # List builds
-ascelerate builds archive [--workspace X] [--scheme X] [--output X]  # Archive Xcode project
+ascelerate builds archive [--workspace X] [--scheme X] [--output X] [--build-number N]  # Archive Xcode project (--build-number: CURRENT_PROJECT_VERSION for this archive only, every embedded target)
 ascelerate builds archives [--bundle-id X] [--platform X] [--limit N] [--json]  # Xcode's archives, newest first (bundle ID, version, build, platform, date, path)
 ascelerate builds upload [file] [--api]                           # Upload build via altool, or the App Store Connect API (--api, .ipa or Mac .pkg)
 ascelerate builds upload --latest [--bundle-id X] [--platform X]  # Upload the newest archive in Xcode's archive location (of an app, of a platform)

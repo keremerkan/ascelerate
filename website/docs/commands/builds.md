@@ -27,6 +27,12 @@ The `archive` command auto-detects the `.xcworkspace` or `.xcodeproj` in the cur
 
 Without `--destination`, it archives for the scheme's platform (`generic/platform=macOS` for a macOS app). An app that builds for several platforms archives for iOS unless you pass `--destination`.
 
+With `--build-number`, everything built into the archive (the app, its extensions, its watch app) gets that build number: it sets `CURRENT_PROJECT_VERSION` for this archive only, and the project stays as it is. Use it when the project's number was already uploaded. A target whose Info.plist sets its own number instead of `$(CURRENT_PROJECT_VERSION)` keeps it.
+
+```bash
+ascelerate builds archive --scheme MyApp --build-number 9
+```
+
 ## Archives
 
 ```bash

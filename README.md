@@ -921,6 +921,7 @@ ascelerate builds list --bundle-id <bundle-id> --platform macos
 ascelerate builds archive
 ascelerate builds archive --scheme MyApp --output ./archives
 ascelerate builds archive --scheme MyApp --json-events   # progress as JSON Lines on stdout for other tools
+ascelerate builds archive --scheme MyApp --build-number 9   # build 9 for the app, its extensions and watch app (the project is left as it is)
 ascelerate builds archives                    # Xcode's archives, newest first (--bundle-id, --platform, --json)
 
 # Validate a build before uploading

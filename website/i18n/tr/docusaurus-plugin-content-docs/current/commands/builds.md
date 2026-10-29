@@ -27,6 +27,12 @@ ascelerate builds archive --scheme MyApp --output ./archives
 
 `--destination` verilmezse scheme'in platformu için arşivler (Mac uygulaması için `generic/platform=macOS`). Birden çok platform için derlenen bir uygulama, `--destination` verilmedikçe iOS için arşivlenir.
 
+`--build-number` ile arşive derlenen her şey (uygulama, uzantıları, Apple Watch uygulaması) bu derleme numarasını alır: seçenek `CURRENT_PROJECT_VERSION` değerini yalnızca bu arşiv için ayarlar, proje olduğu gibi kalır. Projedeki numara zaten yüklendiyse kullanın. Info.plist dosyasında `$(CURRENT_PROJECT_VERSION)` yerine kendi numarasını belirten bir target, o numarayı korur.
+
+```bash
+ascelerate builds archive --scheme MyApp --build-number 9
+```
+
 ## Arşivleri listeleme
 
 ```bash

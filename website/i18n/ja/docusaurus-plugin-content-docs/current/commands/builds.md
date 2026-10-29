@@ -27,6 +27,12 @@ ascelerate builds archive --scheme MyApp --output ./archives
 
 `--destination` を指定しない場合は、スキームのプラットフォーム向けにアーカイブします（Mac アプリなら `generic/platform=macOS`）。複数のプラットフォーム向けにビルドされるアプリは、`--destination` を指定しない限り iOS 向けにアーカイブされます。
 
+`--build-number` を指定すると、アーカイブにビルドされるすべて（アプリ、その機能拡張、Apple Watch アプリ）にそのビルド番号が付きます。このアーカイブに限って `CURRENT_PROJECT_VERSION` を設定し、プロジェクトは変更しません。プロジェクトの番号がすでにアップロード済みの場合に使います。Info.plist で `$(CURRENT_PROJECT_VERSION)` ではなく独自の番号を指定しているターゲットは、その番号のままです。
+
+```bash
+ascelerate builds archive --scheme MyApp --build-number 9
+```
+
 ## アーカイブ一覧
 
 ```bash

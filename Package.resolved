@@ -1,5 +1,5 @@
 {
-  "originHash" : "30f6d0f9351960afcbbe2065476ecdd541fecd7c6a5592fa525377ba733a32bf",
+  "originHash" : "a0c2374c98d39f879d8c8daf97a44b4a272f15f1ac314d29b52b5e9be53ac811",
   "pins" : [
     {
       "identity" : "apple-ads-platform-api-swift",
@@ -17,15 +17,6 @@
       "state" : {
         "revision" : "4c005f955e83f888d5616e579717a36d2dfc6301",
         "version" : "1.36.2"
-      }
-    },
-    {
-      "identity" : "openapikit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mattpolzin/OpenAPIKit",
-      "state" : {
-        "revision" : "5b72eb9a6b23b1fec439d9a0bf38f115400421f9",
-        "version" : "6.4.0"
       }
     },
     {
@@ -206,15 +197,6 @@
       "state" : {
         "revision" : "3681f659d9417652b8119f0adbdf57c04b6cb292",
         "version" : "1.5.0"
-      }
-    },
-    {
-      "identity" : "swift-openapi-generator",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-openapi-generator",
-      "state" : {
-        "revision" : "e7763eec2153ac2843c6d4496b082b5de91aa26a",
-        "version" : "1.14.0"
       }
     },
     {

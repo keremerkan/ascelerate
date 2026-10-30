@@ -4,8 +4,8 @@
 //
 //   swift Scripts/prepare-asc-spec.swift ~/Downloads/openapi.oas.json
 //
-// Download the spec from https://developer.apple.com/documentation/appstoreconnectapi (OpenAPI
-// specification link). Changes made to it:
+// Usually run by Scripts/update-asc-spec.sh, which downloads Apple's spec and regenerates the
+// client afterwards. Changes made to the spec:
 // - String enums inside components/schemas become plain strings. The generator's enums are
 //   closed, so a value Apple's spec does not list (it has happened: placement state ACTIVE in
 //   4.5.1) would fail decoding of the whole response. Enums in query parameters stay typed:

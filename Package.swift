@@ -19,7 +19,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-certificates", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-crypto", from: "4.2.0"),
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.6.0"),
         .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-openapi-urlsession", from: "1.0.0"),
         .package(url: "https://github.com/jpsim/Yams", from: "5.0.0"),
@@ -67,10 +66,12 @@ let package = Package(
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
             ],
+            // The client in Generated/ comes from openapi.json and the config through
+            // Scripts/update-asc-spec.sh, which splits it into files that compile in parallel.
+            exclude: ["openapi.json", "openapi-generator-config.yaml"],
             // The generated client warns about every attribute and parameter Apple deprecated, from
             // its own Codable and query code. Our use of them still warns in the ascelerate target.
-            swiftSettings: [.unsafeFlags(["-suppress-warnings"])],
-            plugins: [.plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")]
+            swiftSettings: [.unsafeFlags(["-suppress-warnings"])]
         ),
         .testTarget(
             name: "ASCKitTests",

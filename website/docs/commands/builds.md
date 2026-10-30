@@ -82,7 +82,7 @@ ascelerate builds archive --scheme MyApp --json-events
 ascelerate builds upload MyApp.ipa --api --json-events
 ```
 
-With `--json-events`, both commands print one JSON object per line on stdout (`step`, `archived` with the archive's path, `uploading`, `progress`, `processing`, and `finished` with Apple's warnings) and move their readable output, xcodebuild's included, to stderr, as `screenshot run --json-events` does. When archiving, xcodebuild then prints only warnings and errors.
+With `--json-events`, both commands print one JSON object per line on stdout (`step`, `archived` with the archive's path, `uploading`, `progress`, `uploaded`, and `finished` with Apple's warnings) and move their readable output, xcodebuild's included, to stderr, as `screenshot run --json-events` does. When archiving, xcodebuild then prints only warnings and errors.
 
 ## Upload history
 

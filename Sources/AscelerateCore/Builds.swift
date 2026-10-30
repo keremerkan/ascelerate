@@ -395,11 +395,16 @@ public enum Builds {
 
   public enum ProcessingError: LocalizedError {
     case ended(number: String, state: String)
+    /// App Store Connect refused the uploaded file (its upload record FAILED), with Apple's reasons.
+    case rejected(number: String, reasons: [String])
     case timedOut(minutes: Int)
 
     public var errorDescription: String? {
       switch self {
         case .ended(let number, let state): "Build \(number) processing ended with state: \(state.lowercased())"
+        case .rejected(let number, let reasons):
+          "App Store Connect rejected build \(number):\n"
+            + (reasons.isEmpty ? "  (no details)" : reasons.map { "  - \($0)" }.joined(separator: "\n"))
         case .timedOut(let minutes): "Timed out after \(minutes) minutes."
       }
     }
@@ -407,7 +412,8 @@ public enum Builds {
 
   /// Polls until the latest build (by `number` and `platform` when given) is processed, every
   /// `interval` seconds for up to `timeout` minutes. Returns it once VALID; throws when it ends in
-  /// another state or the time runs out.
+  /// another state, when App Store Connect rejected the uploaded file (no build appears then) or
+  /// when the time runs out.
   public static func waitForProcessing(
     appID: String, number: String?, platform: Platform? = nil, interval: Int = 30, timeout: Int = 30,
     client: ASCClient, report: (ProcessingUpdate) -> Void = { _ in }
@@ -424,12 +430,25 @@ public enum Builds {
           default: throw ProcessingError.ended(number: build.number ?? "?", state: state)
         }
       } else {
+        if let number, let reasons = try await rejectedUpload(appID: appID, number: number, platform: platform, client: client) {
+          throw ProcessingError.rejected(number: number, reasons: reasons)
+        }
         elapsed += interval
         report(.notFound(elapsed: elapsed))
       }
       try await Task.sleep(for: .seconds(interval))
     }
     throw ProcessingError.timedOut(minutes: timeout)
+  }
+
+  /// Apple's reasons when the newest upload of build `number` that got its file failed: an upload
+  /// ends once App Store Connect has the file, and a file it then refuses never becomes a build.
+  private static func rejectedUpload(
+    appID: String, number: String, platform: Platform?, client: ASCClient
+  ) async throws -> [String]? {
+    let uploads = try await BuildUploadRecords.list(appID: appID, build: number, platform: platform?.rawValue, client: client)
+    guard let latest = uploads.first(where: { $0.state != "AWAITING_UPLOAD" }), latest.state == "FAILED" else { return nil }
+    return (latest.errors ?? []).map(\.text)
   }
 }
 

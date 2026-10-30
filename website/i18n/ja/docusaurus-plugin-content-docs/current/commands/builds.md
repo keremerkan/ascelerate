@@ -82,7 +82,7 @@ ascelerate builds archive --scheme MyApp --json-events
 ascelerate builds upload MyApp.ipa --api --json-events
 ```
 
-`--json-events` を指定すると、どちらのコマンドも標準出力に 1 行につき 1 つの JSON オブジェクトを出力し（`step`、アーカイブのパスを含む `archived`、`uploading`、`progress`、`processing`、Apple の警告を含む `finished`）、xcodebuild の出力を含む読みやすい出力は標準エラー出力に移ります。`screenshot run --json-events` と同じ方式です。アーカイブ時には、xcodebuild は警告とエラーのみを出力します。
+`--json-events` を指定すると、どちらのコマンドも標準出力に 1 行につき 1 つの JSON オブジェクトを出力し（`step`、アーカイブのパスを含む `archived`、`uploading`、`progress`、`uploaded`、Apple の警告を含む `finished`）、xcodebuild の出力を含む読みやすい出力は標準エラー出力に移ります。`screenshot run --json-events` と同じ方式です。アーカイブ時には、xcodebuild は警告とエラーのみを出力します。
 
 ## アップロード履歴
 

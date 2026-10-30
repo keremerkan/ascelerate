@@ -1216,8 +1216,9 @@ private func buildNumberFromArchive(_ archivePath: String) -> String? {
 /// - `uploading`: the file's `path`; through the API also `bundleID`, `version`, `build`,
 ///   `platform` and `bytes`
 /// - `progress`: `sent` of `bytes` (API uploads, at most once per percent)
-/// - `processing`: the file is in; App Store Connect is taking it in (API uploads)
-/// - `finished`: the upload is complete, with its `build` and Apple's `warnings` (API uploads)
+/// - `uploaded`: the whole file is sent (API uploads)
+/// - `finished`: App Store Connect is processing the file (its upload state PROCESSING), with the
+///   `build` and Apple's `warnings` (API uploads); the build appears once processing is done
 struct BuildEvent: Encodable {
   let event: String
   var step: String?

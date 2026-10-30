@@ -3539,6 +3539,7 @@ func awaitBuildProcessing(
     endWaitingLine()
     switch error {
       case .ended(let number, let state): print("Build \(number) processing ended with state: \(state.lowercased())")
+      case .rejected: print(error.localizedDescription)
       case .timedOut(let minutes): print("\nTimed out after \(minutes) minutes.")
     }
     throw ExitCode.failure

@@ -82,7 +82,7 @@ ascelerate builds archive --scheme MyApp --json-events
 ascelerate builds upload MyApp.ipa --api --json-events
 ```
 
-`--json-events` ile her iki komut da standart çıktıya her satıra bir JSON nesnesi yazar (`step`, arşivin yolunu içeren `archived`, `uploading`, `progress`, `processing` ve Apple'ın uyarılarını içeren `finished`) ve xcodebuild çıktısı dahil okunabilir çıktıyı standart hataya taşır; `screenshot run --json-events` de aynı şekilde çalışır. Arşivlemede xcodebuild bu durumda yalnızca uyarıları ve hataları yazar.
+`--json-events` ile her iki komut da standart çıktıya her satıra bir JSON nesnesi yazar (`step`, arşivin yolunu içeren `archived`, `uploading`, `progress`, `uploaded` ve Apple'ın uyarılarını içeren `finished`) ve xcodebuild çıktısı dahil okunabilir çıktıyı standart hataya taşır; `screenshot run --json-events` de aynı şekilde çalışır. Arşivlemede xcodebuild bu durumda yalnızca uyarıları ve hataları yazar.
 
 ## Yükleme geçmişi
 

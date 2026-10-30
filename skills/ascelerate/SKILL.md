@@ -600,9 +600,9 @@ ascelerate builds archive --scheme MyApp --build-number 9   # Archive with build
 ascelerate builds archives [--bundle-id X] [--platform macos] [--json]   # Xcode's archives, newest first (path, version, build, platform, date); archive picks the scheme's platform when --destination is omitted
 ascelerate builds upload MyApp.ipa
 ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos   # the newest archive of an app for one platform
-ascelerate builds upload MyApp.ipa --api      # through the App Store Connect API instead of altool (.ipa or Mac .pkg; waits until App Store Connect has taken it in)
+ascelerate builds upload MyApp.ipa --api      # through the App Store Connect API instead of altool (.ipa or Mac .pkg; ends once App Store Connect has the file, before its processing: use builds await-processing for the build)
 ascelerate builds upload MyApp.xcarchive --api --bundle-id com.example.MyApp   # refuse a file holding another app, before exporting or sending
-ascelerate builds upload MyApp.ipa --api --json-events   # Progress as JSON Lines (uploading, progress, processing, finished with Apple's warnings)
+ascelerate builds upload MyApp.ipa --api --json-events   # Progress as JSON Lines (uploading, progress, uploaded, finished with Apple's warnings)
 ascelerate builds uploads <app> [--json]       # recent uploads (any method) with state and Apple's errors/warnings: check here when an upload never became a build
 ascelerate builds uploads <app> --delete-stale # remove upload records that will never complete
 ascelerate builds await-processing <app>             # Wait for processing

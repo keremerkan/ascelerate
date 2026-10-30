@@ -5,7 +5,9 @@ import Foundation
 
 /// Uploads an .ipa or a Mac .pkg through the App Store Connect API's build upload resources instead
 /// of altool: create a build upload, reserve its file, PUT the chunks to the presigned URLs, commit the
-/// file with its MD5, then wait until Apple has taken the upload in (state COMPLETE) or rejected it (FAILED).
+/// file with its MD5, then wait until Apple processes the file (state PROCESSING, or already COMPLETE). The
+/// upload ends there: Apple's processing takes minutes more, and `builds await-processing` waits for
+/// the build (and reports a file Apple rejects then).
 enum BuildUploader {
   /// What the upload needs to know about the app.
   struct AppInfo {
@@ -106,10 +108,10 @@ enum BuildUploader {
       ).ok
     }
     if EventOutput.emitsEvents {
-      EventOutput.log("Uploaded. Waiting for App Store Connect to take it in...")
-      EventOutput.emit(BuildEvent(event: "processing"))
+      EventOutput.log("Uploaded. Waiting for App Store Connect to start processing it...")
+      EventOutput.emit(BuildEvent(event: "uploaded"))
     } else {
-      print("Uploaded. Waiting for App Store Connect to take it in", terminator: "")
+      print("Uploaded. Waiting for App Store Connect to start processing it", terminator: "")
       fflush(stdout)
     }
     let warnings = try await waitForUpload(id: upload.id, client: client)
@@ -151,21 +153,24 @@ enum BuildUploader {
     return deleted
   }
 
-  /// Polls the build upload until COMPLETE (returns Apple's warnings) or FAILED (throws with Apple's
-  /// messages).
+  /// Polls the build upload until App Store Connect processes the file, PROCESSING or COMPLETE
+  /// (returns Apple's warnings), or refused it, FAILED (throws with Apple's messages).
   private static func waitForUpload(id: String, client: ASCClient) async throws -> [String] {
-    let deadline = Date().addingTimeInterval(45 * 60)
+    let deadline = Date().addingTimeInterval(15 * 60)
     while Date() < deadline {
       let upload = try await withTransientRetry {
         try await client.buildUploadsGetInstance(path: .init(id: id)).ok.body.json.data
       }
       let state = upload.attributes?.state
       switch state?.state {
-      case "COMPLETE":
+      case "PROCESSING", "COMPLETE":
         if !EventOutput.emitsEvents { print(" done.") }
         printDetails(state?.warnings, label: "Warning")
         printDetails(state?.infos, label: "Note")
-        EventOutput.log(green("Upload complete.") + " Processing continues in App Store Connect ('ascelerate builds await-processing').")
+        EventOutput.log(
+          green("Upload complete.")
+            + " App Store Connect processes the build next, usually within 15 minutes ('ascelerate builds await-processing')."
+        )
         return (state?.warnings ?? []).map(describe)
       case "FAILED":
         if !EventOutput.emitsEvents { print() }
@@ -176,12 +181,12 @@ enum BuildUploader {
           print(".", terminator: "")
           fflush(stdout)
         }
-        // Each poll counts against the hourly API quota; Apple takes minutes, not seconds.
-        try await Task.sleep(for: .seconds(30))
+        // Apple starts processing a committed file within seconds to a few minutes.
+        try await Task.sleep(for: .seconds(5))
       }
     }
     if !EventOutput.emitsEvents { print() }
-    throw ValidationError("The upload didn't finish within 45 minutes; check it in App Store Connect.")
+    throw ValidationError("App Store Connect didn't start processing the file within 15 minutes; check it in App Store Connect.")
   }
 
   private static func printDetails(_ details: [Components.Schemas.StateDetail]?, label: String) {

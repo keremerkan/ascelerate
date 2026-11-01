@@ -32,11 +32,13 @@ extension Client {
   /// `rateLimitObserver` gets the hourly limit, the requests left and the operation with every
   /// response that carries them (most do; the subscription endpoints neither report nor count
   /// requests, seen 2026-10-22).
+  /// `serverURL` sends the requests to another server than Apple's (a mock or a proxy with the same
+  /// paths after its own), and `headers` go with every request.
   public static func appStoreConnect(
     credentials: ASCCredentials, dryRun: Bool = false, rateLimitWait: ASCRateLimitWait? = nil,
     writeGate: (@Sendable (_ method: String, _ path: String) async throws -> Void)? = nil,
     rateLimitObserver: (@Sendable (_ limit: Int, _ remaining: Int, _ operationID: String) -> Void)? = nil,
-    pacing: ASCRequestPacing? = nil
+    pacing: ASCRequestPacing? = nil, serverURL: URL? = nil, headers: [String: String] = [:]
   ) throws -> Client {
     let key = try P256.Signing.PrivateKey(pemRepresentation: credentials.privateKeyPEM)
     var middlewares: [any ClientMiddleware] = [ErrorMiddleware(rateLimitObserver: rateLimitObserver)]
@@ -52,8 +54,9 @@ extension Client {
     ]
     if let writeGate { middlewares.append(WriteGateMiddleware(gate: writeGate)) }
     if dryRun { middlewares.append(DryRunMiddleware()) }
+    if !headers.isEmpty { middlewares.append(HeadersMiddleware(headers: headers)) }
     return Client(
-      serverURL: try Servers.Server1.url(),
+      serverURL: try serverURL ?? Servers.Server1.url(),
       configuration: Configuration(dateTranscoder: FlexibleISO8601DateTranscoder()),
       transport: URLSessionTransport(),
       middlewares: middlewares
@@ -585,6 +588,22 @@ public enum ASCPaging {
   }
 }
 
+/// Adds the client's extra headers to every request.
+struct HeadersMiddleware: ClientMiddleware {
+  let headers: [String: String]
+
+  func intercept(
+    _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
+    next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+  ) async throws -> (HTTPResponse, HTTPBody?) {
+    var request = request
+    for (name, value) in headers {
+      if let field = HTTPField.Name(name) { request.headerFields[field] = value }
+    }
+    return try await next(request, body, baseURL)
+  }
+}
+
 struct PagingMiddleware: ClientMiddleware {
   func intercept(
     _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
@@ -596,7 +615,12 @@ struct PagingMiddleware: ClientMiddleware {
       return try await next(request, body, baseURL)
     }
     var request = request
-    request.path = components.percentEncodedPath + (components.percentEncodedQuery.map { "?" + $0 } ?? "")
+    // The path is sent after the server URL's own (a server other than Apple's can have one).
+    var path = components.percentEncodedPath
+    var basePath = baseURL.path(percentEncoded: true)
+    if basePath.hasSuffix("/") { basePath.removeLast() }
+    if !basePath.isEmpty, path.hasPrefix(basePath + "/") { path.removeFirst(basePath.count) }
+    request.path = path + (components.percentEncodedQuery.map { "?" + $0 } ?? "")
     return try await next(request, body, baseURL)
   }
 }

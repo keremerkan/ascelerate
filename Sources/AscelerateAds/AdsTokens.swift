@@ -99,4 +99,13 @@ extension Ads {
       try await TokenStore.shared.token(for: credentials)
     }
   }
+
+  /// A token given up front (`Options.server`'s).
+  struct FixedTokenProvider: TokenProvider {
+    let accessToken: String
+
+    nonisolated(nonsending) func token() async throws -> String {
+      accessToken
+    }
+  }
 }

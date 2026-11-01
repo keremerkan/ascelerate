@@ -13,7 +13,22 @@ A command-line tool for building, archiving, and publishing apps to the App Stor
 
 > **Full documentation:** [ascelerate.dev](https://ascelerate.dev)
 
-> **Prefer a Mac app?** [Ascelerate](https://ascelerate.app) is App Store Connect in a native Mac app, built on ascelerate. [Join the beta on TestFlight](https://testflight.apple.com/join/K4Yvdfqh).
+> **Prefer an app?** Ascelerate brings App Store Connect to Mac, iPhone and iPad, built on ascelerate. See [Ascelerate: the app](#ascelerate-the-app).
+
+## Ascelerate: the app
+
+[Ascelerate](https://ascelerate.app) is App Store Connect as a native app for Mac, iPhone and iPad, built on ascelerate's App Store Connect client. It's in beta: [join on TestFlight](https://testflight.apple.com/join/K4Yvdfqh). Coming soon to the App Store, for macOS 27 and iOS and iPadOS 27 or later.
+
+- **Versions and product pages:** descriptions, what's new, keywords, screenshots and app previews in every language, with a check of what App Review needs before you submit.
+- **TestFlight:** builds, groups and testers, What to Test, beta review and tester feedback.
+- **In-app purchases and subscriptions:** prices in every territory, introductory and promotional offers, offer codes and promoted purchases.
+- **Growth:** in-app events, custom product pages, product page optimization tests, featuring nominations, and ratings and reviews with your responses.
+- **Certificates, Identifiers & Profiles:** certificates, bundle IDs and their capabilities, devices and provisioning profiles.
+- **Reports:** Sales and Trends and App Analytics, and an overview of what needs your attention across your apps.
+- **Apple Ads:** campaigns, ad groups, keywords and their performance.
+- **On iPhone and iPad:** keep up with your apps wherever you are, and have your Mac archive and send a build while you're away.
+
+Archiving and uploading builds and capturing screenshots run Xcode and the simulators, which a Mac App Store app can't do on its own. The free [Ascelerate Helper](https://ascelerate.app/helper) installs ascelerate for the Mac app to run them.
 
 ## Requirements
 

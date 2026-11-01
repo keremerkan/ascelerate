@@ -1,4 +1,5 @@
 import ASCKit
+import Compression
 import Foundation
 
 /// Sales and Trends reports (`salesReports`): what was downloaded and bought, per day, week, month
@@ -166,21 +167,61 @@ public enum Gzip {
   }
 
   public static func decompress(_ data: Data) throws -> Data {
-    let bytes = [UInt8](data)
-    guard bytes.count >= 18, bytes[0] == 0x1F, bytes[1] == 0x8B, bytes[2] == 8 else { throw GzipError.notGzip }
-    let flags = bytes[3]
+    try (data.subdata(in: payload(of: data)) as NSData).decompressed(using: .zlib) as Data
+  }
+
+  /// Decompresses to a file a megabyte at a time, for data whose decompressed copy is too large to
+  /// hold in memory beside it (an App Analytics report's segment unzips to tens of megabytes).
+  public static func decompress(_ data: Data, to url: URL) throws {
+    let payload = try payload(of: data)
+    guard FileManager.default.createFile(atPath: url.path, contents: nil) else { throw CocoaError(.fileWriteUnknown) }
+    let handle = try FileHandle(forWritingTo: url)
+    defer { try? handle.close() }
+    let source = Source(data: data, position: payload.lowerBound, end: payload.upperBound)
+    let filter = try InputFilter(.decompress, using: .zlib) { length in source.next(length) }
+    while let chunk = try filter.readData(ofLength: 1 << 20), !chunk.isEmpty {
+      try handle.write(contentsOf: chunk)
+    }
+  }
+
+  /// The compressed data `InputFilter` reads, a piece at a time.
+  private final class Source {
+    let data: Data
+    var position: Data.Index
+    let end: Data.Index
+
+    init(data: Data, position: Data.Index, end: Data.Index) {
+      (self.data, self.position, self.end) = (data, position, end)
+    }
+
+    func next(_ length: Int) -> Data? {
+      guard position < end else { return nil }
+      let next = min(position + length, end)
+      defer { position = next }
+      return data.subdata(in: position..<next)
+    }
+  }
+
+  /// Where a gzip member's deflate stream is: after its header (with its optional fields) and
+  /// before its CRC-32 and size (8 bytes).
+  private static func payload(of data: Data) throws -> Range<Data.Index> {
+    let start = data.startIndex
+    func byte(_ offset: Int) throws -> UInt8 {
+      guard start + offset < data.endIndex else { throw GzipError.truncated }
+      return data[start + offset]
+    }
+    guard data.count >= 18, try byte(0) == 0x1F, try byte(1) == 0x8B, try byte(2) == 8 else { throw GzipError.notGzip }
+    let flags = try byte(3)
     var offset = 10
     if flags & 0x04 != 0 {  // FEXTRA: a length, then that many bytes
-      guard offset + 2 <= bytes.count else { throw GzipError.truncated }
-      offset += 2 + Int(bytes[offset]) + Int(bytes[offset + 1]) << 8
+      offset += 2 + Int(try byte(offset)) + Int(try byte(offset + 1)) << 8
     }
     for flag: UInt8 in [0x08, 0x10] where flags & flag != 0 {  // FNAME, FCOMMENT: zero-terminated
-      guard let end = bytes[offset...].firstIndex(of: 0) else { throw GzipError.truncated }
-      offset = end + 1
+      while try byte(offset) != 0 { offset += 1 }
+      offset += 1
     }
     if flags & 0x02 != 0 { offset += 2 }  // FHCRC
-    // The member ends with its CRC-32 and size (8 bytes).
-    guard offset < bytes.count - 8 else { throw GzipError.truncated }
-    return try (Data(bytes[offset..<(bytes.count - 8)]) as NSData).decompressed(using: .zlib) as Data
+    guard offset < data.count - 8 else { throw GzipError.truncated }
+    return (start + offset)..<(data.endIndex - 8)
   }
 }

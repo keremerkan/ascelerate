@@ -38,13 +38,22 @@ public enum Ads {
     public var gateWrite: (@Sendable (_ method: String, _ path: String, _ body: Data?) async throws -> Void)?
     /// Called before waiting out a rate limit (429), with the seconds to wait.
     public var onRateLimitWait: (@Sendable (_ seconds: Int) -> Void)?
+    /// Another server than Apple's (a mock or a proxy serving the same paths), and the access
+    /// token it takes instead of one fetched with the credentials.
+    public var server: (url: URL, accessToken: String)?
+    /// Headers sent with every request.
+    public var headers: [String: String]
 
     public init(
       gateWrite: (@Sendable (String, String, Data?) async throws -> Void)? = nil,
-      onRateLimitWait: (@Sendable (Int) -> Void)? = nil
+      onRateLimitWait: (@Sendable (Int) -> Void)? = nil,
+      server: (url: URL, accessToken: String)? = nil,
+      headers: [String: String] = [:]
     ) {
       self.gateWrite = gateWrite
       self.onRateLimitWait = onRateLimitWait
+      self.server = server
+      self.headers = headers
     }
   }
 
@@ -64,7 +73,10 @@ public enum Ads {
       return try await AppleAdsClient.withClient(
         configuration: .init(
           clientId: credentials.clientID,
-          authMode: .tokenProvider(SharedTokenProvider(credentials: credentials)),
+          authMode: .tokenProvider(
+            options.server.map { FixedTokenProvider(accessToken: $0.accessToken) as any TokenProvider }
+              ?? SharedTokenProvider(credentials: credentials)),
+          baseURL: options.server?.url,
           middleware: [Middleware(options: options)]
         ),
         transport: URLSessionTransport(),
@@ -323,6 +335,9 @@ public enum Ads {
       next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
     ) async throws -> (HTTPResponse, HTTPBody?) {
       var request = request
+      for (name, value) in options.headers {
+        if let field = HTTPField.Name(name) { request.headerFields[field] = value }
+      }
       // Collected so a request that hit the rate limit can be sent again.
       var requestData: Data?
       if let body { requestData = try await Data(collecting: body, upTo: .max) }

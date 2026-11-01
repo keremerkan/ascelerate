@@ -1,4 +1,5 @@
 import Foundation
+import HTTPTypes
 import Testing
 @testable import ASCKit
 
@@ -36,5 +37,22 @@ import Testing
     }
     #expect(pages == Array(stride(from: 0, to: total, by: 100)))
     #expect(await received.pages == pages)
+  }
+
+  /// A next page goes to the same server: its path is sent after the server URL's own, once.
+  @Test(arguments: [
+    ("https://api.appstoreconnect.apple.com", "https://api.appstoreconnect.apple.com/v1/apps?cursor=Mg"),
+    ("https://mock.example.com/asc", "https://mock.example.com/asc/v1/apps?cursor=Mg"),
+    ("https://mock.example.com/asc/", "https://mock.example.com/asc/v1/apps?cursor=Mg"),
+  ])
+  func nextPagePathAfterServerPath(server: String, next: String) async throws {
+    let base = try #require(URL(string: server))
+    let sent = try await ASCPaging.$nextPageURL.withValue(URL(string: next)) {
+      try await PagingMiddleware().intercept(
+        HTTPRequest(method: .get, scheme: nil, authority: nil, path: "/v1/apps"), body: nil, baseURL: base,
+        operationID: "appsGetCollection"
+      ) { request, _, _ in (HTTPResponse(status: .ok, headerFields: [.location: request.path ?? ""]), nil) }
+    }
+    #expect(sent.0.headerFields[.location] == "/v1/apps?cursor=Mg")
   }
 }

@@ -16,7 +16,19 @@ public enum BundleIDs {
     public let capabilityTypes: [String]?
 
     public var isWildcard: Bool { identifier.hasSuffix("*") }
+
+    /// Whether the API can remove a capability of this type (`fixedOnUniversal`).
+    public func canRemove(_ capabilityType: String) -> Bool {
+      platform != "UNIVERSAL" || !BundleIDs.fixedOnUniversal.contains(capabilityType)
+    }
   }
+
+  /// Capabilities that can't be removed from a universal App ID anywhere: In-App Purchase, on
+  /// from the start (403 FORBIDDEN_ERROR "UNIVERSAL AppId '…' does not allow changes to the
+  /// 'In-App Purchase' feature", seen 2026-11-02, and the developer portal can't either). The API
+  /// refuses Game Center too, but the portal removes it, so a client offers it and shows the
+  /// refusal.
+  public static let fixedOnUniversal: Set<String> = ["IN_APP_PURCHASE"]
 
   /// A capability enabled on a bundle ID, with its settings (key → chosen option keys).
   public struct Capability: Codable, Hashable, Identifiable, Sendable {

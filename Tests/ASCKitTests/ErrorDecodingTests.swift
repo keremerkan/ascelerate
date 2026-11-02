@@ -28,4 +28,17 @@ import Testing
     #expect(entry.reasons.isEmpty)
     #expect(entry.detail == "Gone")
   }
+
+  @Test func onlyARoleForbiddenIsMissingPermission() throws {
+    struct Document: Decodable { let errors: [ASCError.Entry] }
+    func error(_ status: Int, _ json: String) throws -> ASCError {
+      ASCError(statusCode: status, errors: try JSONDecoder().decode(Document.self, from: Data(json.utf8)).errors, rateLimit: nil)
+    }
+    // The key's role.
+    #expect(try error(403, #"{"errors": [{"code": "FORBIDDEN_ERROR", "title": "The request cannot be fulfilled because of permission issues.", "detail": "The API key in use does not allow this request"}]}"#).isMissingPermission)
+    // The request itself, whatever the role (seen 2026-11-02).
+    #expect(try !error(403, #"{"errors": [{"code": "FORBIDDEN_ERROR", "title": "This request is forbidden for security reasons", "detail": "UNIVERSAL AppId 'ABC123' does not allow changes to the 'In-App Purchase' feature."}]}"#).isMissingPermission)
+    #expect(ASCError(statusCode: 403, errors: [], rateLimit: nil).isMissingPermission)
+    #expect(!ASCError(statusCode: 409, errors: [], rateLimit: nil).isMissingPermission)
+  }
 }

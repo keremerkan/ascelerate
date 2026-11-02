@@ -354,9 +354,15 @@ struct BundleIDsCommand: AsyncParsableCommand {
     private func promptCapability(
       bundleID: BundleIDs.BundleID, client: ASCClient
     ) async throws -> BundleIDs.Capability {
-      let caps = try await fetchCapabilities(bundleID: bundleID, client: client)
-      guard !caps.isEmpty else {
+      let enabled = try await fetchCapabilities(bundleID: bundleID, client: client)
+      guard !enabled.isEmpty else {
         throw ValidationError("No capabilities enabled on this bundle identifier.")
+      }
+      // App Store Connect refuses to remove some from a universal bundle ID.
+      let caps = enabled.filter { bundleID.canRemove($0.type) }
+      guard !caps.isEmpty else {
+        let kept = enabled.map { formatState($0.type) }.formatted(.list(type: .and))
+        throw ValidationError("\(kept) can't be removed from a universal bundle identifier, here or in the developer portal.")
       }
 
       return try promptSelection(

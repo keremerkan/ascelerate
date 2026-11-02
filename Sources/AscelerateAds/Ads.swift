@@ -223,18 +223,21 @@ public enum Ads {
   }
 
   /// The campaign report's rows for the range, every campaign's (`campaignId` filters take only
-  /// EQUALS for API users), optionally broken down by `groupBy` dimensions.
+  /// EQUALS for API users), optionally broken down by `groupBy` dimensions, and with
+  /// `granularity`, per day or hour too.
   public static func campaignReportRows(
     start: String, end: String, timeZone: Components.Schemas.TimeRange.TimeZonePayload = .ortz,
     includesEmptyRows: Bool = false, groupBy: [Components.Schemas.AppsReportingRequest.GroupByPayloadPayload] = [],
-    context: String, client: Client
+    granularity: Granularity? = nil, context: String, client: Client
   ) async throws -> [Components.Schemas.AppsCampaignReportRow] {
-    try await reportRows { pagination in
-      var request = reportRequest(
-        start: start, end: end, timeZone: timeZone, includesEmptyRows: includesEmptyRows, pagination: pagination)
-      if !groupBy.isEmpty { request.groupBy = groupBy }
-      let json = try await client.appsCampaignReports(headers: .init(xApContext: context), body: .json(request)).ok.body.json
-      return (json.result?.rows ?? [], json.pagination?.totalCount)
+    try await $granularity.withValue(granularity) {
+      try await reportRows { pagination in
+        var request = reportRequest(
+          start: start, end: end, timeZone: timeZone, includesEmptyRows: includesEmptyRows, pagination: pagination)
+        if !groupBy.isEmpty { request.groupBy = groupBy }
+        let json = try await client.appsCampaignReports(headers: .init(xApContext: context), body: .json(request)).ok.body.json
+        return (json.result?.rows ?? [], json.pagination?.totalCount)
+      }
     }
   }
 

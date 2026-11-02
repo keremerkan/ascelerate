@@ -175,6 +175,16 @@ public struct ASCError: Error, Sendable {
     }
   }
 
+  /// A 403 for the key's role ("The API key in use does not allow this request"). Apple's other
+  /// 403s refuse the request itself and say why, whatever the role: "UNIVERSAL AppId '…' does not
+  /// allow changes to the 'In-App Purchase' feature" (seen 2026-11-02).
+  public var isMissingPermission: Bool {
+    statusCode == 403 && (errors.isEmpty || errors.contains {
+      $0.detail.localizedCaseInsensitiveContains("does not allow this request")
+        || $0.title.localizedCaseInsensitiveContains("permission")
+    })
+  }
+
   public let statusCode: Int
   public let errors: [Entry]
   /// Hourly limit and remaining requests from the `X-Rate-Limit` header, when present.

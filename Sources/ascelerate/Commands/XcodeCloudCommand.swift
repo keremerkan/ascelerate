@@ -202,7 +202,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       valueName: "action"))
     var action: [String] = []
 
-    @Option(name: .long, help: "Archive actions' distribution: internal (TestFlight internal testing), app-store (TestFlight and App Store), or none.")
+    @Option(name: .long, help: "Archive actions' distribution preparation: internal (TestFlight internal testing only), app-store (App Store Connect: TestFlight and the App Store, nothing submitted), or none.")
     var distribution: String?
 
     /// Applies the options; returns the Xcode and macOS versions' names by ID, for the change list.
@@ -371,15 +371,15 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       return lines
     }
 
-    /// "Archive - iOS (MyApp, TestFlight and App Store); Build - macOS (MyApp-macOS)".
+    /// "Archive - iOS (MyApp, App Store Connect); Build - macOS (MyApp-macOS)".
     static func actions(_ actions: [XcodeCloud.WorkflowAction]) -> String {
       guard !actions.isEmpty else { return "-" }
       return actions.map { action in
         var details = [action.scheme]
         if action.type == "ARCHIVE" {
           let distribution = switch action.distribution {
-            case "INTERNAL_ONLY": "TestFlight internal testing"
-            case "APP_STORE_ELIGIBLE": "TestFlight and App Store"
+            case "INTERNAL_ONLY": "TestFlight internal testing only"
+            case "APP_STORE_ELIGIBLE": "App Store Connect"
             default: "no distribution"
           }
           details.append(distribution)
@@ -484,8 +484,9 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           Environment variables and post-actions (TestFlight groups, notifications) aren't in the \
           API: add them in App Store Connect. Xcode makes a product with its first \
           workflow, so there is always one to copy. Options as for update; --action replaces the \
-          actions: archive:MyApp:ios archives the MyApp scheme for iOS (for TestFlight and the \
-          App Store unless --distribution says otherwise).
+          actions: archive:MyApp:ios archives the MyApp scheme for iOS and \
+          uploads it for TestFlight and the App Store unless --distribution says otherwise; \
+          nothing goes to review on its own.
 
           ascelerate xcode-cloud workflows create MyApp --like Default --name "TestFlight" \\
             --action archive:MyApp:ios --manual-branches main
@@ -886,7 +887,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Only this action's logs (its name).")
       var action: String?
 
-      @Option(name: .long, help: "Print this log (its file name, e.g. ci_post_clone.log).")
+      @Option(name: .long, help: "Print this log (its name as listed, e.g. ci_post_clone.log or app-store/xcodebuild-export-archive.log).")
       var show: String?
 
       func run() async throws {

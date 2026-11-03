@@ -27,6 +27,11 @@ public func formatFieldName(_ name: String) -> String {
     "MAC_OS": "macOS",
     "TV_OS": "tvOS",
     "VISION_OS": "visionOS",
+    // Xcode Cloud's actions name platforms without the underscore.
+    "MACOS": "macOS",
+    "TVOS": "tvOS",
+    "WATCHOS": "watchOS",
+    "VISIONOS": "visionOS",
   ]
   if let override = overrides[name] { return override }
 

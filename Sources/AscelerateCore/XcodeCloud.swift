@@ -21,29 +21,27 @@ public enum XcodeCloud {
     public let repositories: [String]
   }
 
-  /// Every product of the team.
+  /// Every product of the team. Each product's repositories are read on their own:
+  /// `include=primaryRepositories` on the list answers HTTP 500 (seen 2026-11-03, with or
+  /// without its limit), while the product's own `primaryRepositories` endpoint works.
   public static func products(client: ASCClient) async throws -> [Product] {
-    try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.ciProductsGetCollection(query: .init(
-        limit: 200, include: [.app, .primaryRepositories], limitPrimaryRepositories: 50
-      )).ok.body.json
-    }.flatMap { page in
-      var bundleIDs: [String: String] = [:]
-      var repositories: [String: String] = [:]
-      for item in page.included ?? [] {
-        switch item {
-          case .apps(let app): bundleIDs[app.id] = app.attributes?.bundleId
-          case .scmRepositories(let repository): repositories[repository.id] = repositoryName(repository)
-          default: break
-        }
-      }
-      return page.data.map { product in
-        let appID = product.relationships?.app?.data?.id
-        return Product(
-          id: product.id, name: product.attributes?.name, type: product.attributes?.productType,
-          createdDate: product.attributes?.createdDate, appID: appID, bundleID: appID.flatMap { bundleIDs[$0] },
-          repositories: (product.relationships?.primaryRepositories?.data ?? []).compactMap { repositories[$0.id] })
-      }
+    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.ciProductsGetCollection(query: .init(limit: 200, include: [.app])).ok.body.json
+    }
+    var bundleIDs: [String: String] = [:]
+    for case .apps(let app) in pages.flatMap({ $0.included ?? [] }) { bundleIDs[app.id] = app.attributes?.bundleId }
+    let products = pages.flatMap(\.data)
+    let repositories = try await boundedConcurrentMap(products) { product in
+      try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.ciProductsPrimaryRepositoriesGetToManyRelated(path: .init(id: product.id), query: .init(limit: 200)).ok.body.json
+      }.flatMap(\.data).map(repositoryName)
+    }
+    return zip(products, repositories).map { product, repositories in
+      let appID = product.relationships?.app?.data?.id
+      return Product(
+        id: product.id, name: product.attributes?.name, type: product.attributes?.productType,
+        createdDate: product.attributes?.createdDate, appID: appID, bundleID: appID.flatMap { bundleIDs[$0] },
+        repositories: repositories)
     }
   }
 

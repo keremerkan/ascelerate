@@ -1262,6 +1262,7 @@ ascelerate xcode-cloud runs <bundle-id> [--workflow "Release"]   # build runs, n
 ascelerate xcode-cloud runs info <bundle-id> 42              # details and actions
 ascelerate xcode-cloud runs issues <bundle-id> 42            # errors and warnings
 ascelerate xcode-cloud runs tests <bundle-id> 42 --failed
+ascelerate xcode-cloud runs logs <bundle-id> 42 --show ci_post_clone.log   # log bundle: post-clone, packages, xcodebuild
 ascelerate xcode-cloud runs artifacts <bundle-id> 42 --download ./artifacts
 ascelerate xcode-cloud start <bundle-id> "Release" --branch main   # or --tag, --pull-request
 ascelerate xcode-cloud rerun <bundle-id> 42

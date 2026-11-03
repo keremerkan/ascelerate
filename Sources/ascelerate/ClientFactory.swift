@@ -8,7 +8,8 @@ enum ClientFactory {
   /// An App Store Connect client (ASCKit, generated from Apple's spec). It waits out the hourly
   /// API limit (see `rateLimitWait`) unless `waitsForRateLimit` is false.
   static func makeClient(waitsForRateLimit: Bool = true) throws -> ASCClient {
-    if !autoConfirm {
+    // Not in output read by a program (--json, --json-events) or with -y (scripts and agents).
+    if !autoConfirm, !jsonMode, !EventOutput.emitsEvents {
       checkForUpdates()
     }
     let key = try APICredentials.current()

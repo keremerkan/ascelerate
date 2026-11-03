@@ -201,7 +201,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         let product = try await XcodeCloudCommand.findProduct(product, client: client)
         let w = try await XcodeCloudCommand.findWorkflow(workflow, product: product, client: client)
         if jsonOption.json { try printJSON(w); return }
-        print(bold(w.name ?? w.id) + (w.isEnabled ? "" : yellow(" disabled")) + (w.isLockedForEditing ? yellow(" (being edited)") : ""))
+        print(bold(w.name ?? w.id) + (w.isEnabled ? "" : yellow(" disabled")) + (w.isLockedForEditing ? yellow(" (editing restricted)") : ""))
         if let description = w.description, !description.isEmpty { print(description) }
         print()
         Table.print(

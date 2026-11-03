@@ -347,6 +347,7 @@ ascelerate xcode-cloud products [--json]                     # the team's produc
 ascelerate xcode-cloud workflows <app> [--json]              # app = bundle ID, alias, product name or ID
 ascelerate xcode-cloud workflows info <app> "Release" [--json]   # start conditions, actions, Xcode/macOS
 ascelerate xcode-cloud workflows enable|disable|delete <app> "Release"
+ascelerate xcode-cloud workflows update <app> "Release" --manual-only   # no automatic starts; manual ones kept
 ascelerate xcode-cloud runs <app> [--workflow X] [--limit N] [--json]   # newest first
 ascelerate xcode-cloud runs info <app> <number> [--json]     # run + actions
 ascelerate xcode-cloud runs issues <app> <number> [--errors] [--json]

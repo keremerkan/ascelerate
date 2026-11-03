@@ -22,12 +22,13 @@ Muestra los productos del equipo (apps y frameworks) con su Bundle ID y su repos
 ```bash
 ascelerate xcode-cloud workflows <bundle-id>
 ascelerate xcode-cloud workflows info <bundle-id> "Release"
+ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only
 ascelerate xcode-cloud workflows disable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows enable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows delete <bundle-id> "Old workflow"
 ```
 
-`info` muestra las condiciones de inicio de un workflow (cambios en ramas y etiquetas, pull requests, programaciones y lo que se puede iniciar manualmente), sus acciones (compilar, probar, analizar y archivar, con esquema, plataforma y distribución) y el repositorio, el proyecto y las versiones de Xcode y macOS que utiliza. Un workflow desactivado no inicia compilaciones. Al eliminar un workflow se conservan sus ejecuciones de compilación.
+`info` muestra las condiciones de inicio de un workflow (cambios en ramas y etiquetas, pull requests, programaciones y lo que se puede iniciar manualmente), sus acciones (compilar, probar, analizar y archivar, con esquema, plataforma y distribución) y el repositorio, el proyecto y las versiones de Xcode y macOS que utiliza. `update --manual-only` hace que un workflow deje de iniciarse por sí solo (cambios en ramas y etiquetas, pull requests, programación) y conserva lo que se puede iniciar manualmente. Un workflow desactivado no inicia compilaciones. Al eliminar un workflow se conservan sus ejecuciones de compilación.
 
 ## Ejecuciones de compilación
 

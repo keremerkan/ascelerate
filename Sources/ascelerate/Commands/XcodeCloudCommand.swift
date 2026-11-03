@@ -149,7 +149,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
   struct Workflows: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "A product's workflows.",
-      subcommands: [List.self, Info.self, Enable.self, Disable.self, Delete.self],
+      subcommands: [List.self, Info.self, Update.self, Enable.self, Disable.self, Delete.self],
       defaultSubcommand: List.self
     )
 
@@ -228,6 +228,53 @@ struct XcodeCloudCommand: AsyncParsableCommand {
               a.isRequiredToPass ? "Yes" : "No", a.distribution.map { formatState($0) } ?? a.testPlan.map { "Test plan \($0)" } ?? "-",
             ]
           })
+      }
+    }
+
+    struct Update: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(abstract: "Change a workflow.")
+
+      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      var product: String
+
+      @Argument(help: "The workflow's name or ID.")
+      var workflow: String
+
+      @Flag(name: .long, help: "Start it only by hand: removes its branch, tag, pull request and schedule start conditions.")
+      var manualOnly = false
+
+      @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
+      var yes = false
+
+      func validate() throws {
+        guard manualOnly else { throw ValidationError("Nothing to change. Pass --manual-only.") }
+      }
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let product = try await XcodeCloudCommand.findProduct(product, client: client)
+        let w = try await XcodeCloudCommand.findWorkflow(workflow, product: product, client: client)
+        let automatic = w.startConditions.filter { XcodeCloud.automaticStartKinds.contains($0.kind) }
+        let manual = w.startConditions.filter { !XcodeCloud.automaticStartKinds.contains($0.kind) }
+        guard !automatic.isEmpty else {
+          print("Workflow '\(w.name ?? w.id)' already starts only by hand.")
+          return
+        }
+        guard !manual.isEmpty else {
+          throw ValidationError(
+            "Workflow '\(w.name ?? w.id)' has no manual start condition, and Xcode Cloud wants at least one. Add one in Xcode or App Store Connect first.")
+        }
+        print("Workflow '\(w.name ?? w.id)' stops starting on:")
+        for condition in automatic { print("  \(XcodeCloudCommand.startConditionText(condition))") }
+        print("It can still be started:")
+        for condition in manual { print("  \(XcodeCloudCommand.startConditionText(condition))") }
+        guard confirm("Change it? [y/N] ") else {
+          print(yellow("Cancelled."))
+          return
+        }
+        try await XcodeCloud.removeAutomaticStarts(workflowID: w.id, client: client)
+        print(green("Updated") + " workflow '\(w.name ?? w.id)': it starts only by hand now.")
       }
     }
 

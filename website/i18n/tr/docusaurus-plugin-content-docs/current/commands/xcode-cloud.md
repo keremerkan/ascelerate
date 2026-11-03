@@ -22,12 +22,13 @@ Ekibin ürünlerini (uygulamalar ve framework'ler) bundle ID'leri ve depolarıyl
 ```bash
 ascelerate xcode-cloud workflows <bundle-id>
 ascelerate xcode-cloud workflows info <bundle-id> "Release"
+ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only
 ascelerate xcode-cloud workflows disable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows enable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows delete <bundle-id> "Old workflow"
 ```
 
-`info`, bir workflow'un başlatma koşullarını (branch ve tag değişiklikleri, pull request'ler, zamanlamalar ve elle başlatılabilecekler), eylemlerini (scheme, platform ve dağıtım bilgisiyle build, test, analiz ve arşivleme) ve kullandığı depoyu, projeyi, Xcode ve macOS sürümlerini gösterir. Kapatılmış bir workflow build başlatmaz. Bir workflow silindiğinde build çalıştırmaları silinmez.
+`info`, bir workflow'un başlatma koşullarını (branch ve tag değişiklikleri, pull request'ler, zamanlamalar ve elle başlatılabilecekler), eylemlerini (scheme, platform ve dağıtım bilgisiyle build, test, analiz ve arşivleme) ve kullandığı depoyu, projeyi, Xcode ve macOS sürümlerini gösterir. `update --manual-only`, bir workflow'un kendiliğinden başlamasını durdurur (branch ve tag değişiklikleri, pull request'ler, zamanlama); elle başlatılabilecekler korunur. Kapatılmış bir workflow build başlatmaz. Bir workflow silindiğinde build çalıştırmaları silinmez.
 
 ## Build çalıştırmaları
 

@@ -25,15 +25,18 @@ public enum XcodeCloud {
   /// Every product of the team. Each product's repositories are read on their own:
   /// `include=primaryRepositories` on the list answers HTTP 500 (seen 2026-11-03, with or
   /// without its limit), while the product's own `primaryRepositories` endpoint works.
-  public static func products(client: ASCClient) async throws -> [Product] {
+  /// The team's products; `includingRepositories: false` leaves out their repositories, which
+  /// take a request per product (`include=primaryRepositories` answers HTTP 500).
+  public static func products(includingRepositories: Bool = true, client: ASCClient) async throws -> [Product] {
     let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
       try await client.ciProductsGetCollection(query: .init(limit: 200, include: [.app])).ok.body.json
     }
     var bundleIDs: [String: String] = [:]
     for case .apps(let app) in pages.flatMap({ $0.included ?? [] }) { bundleIDs[app.id] = app.attributes?.bundleId }
     let products = pages.flatMap(\.data)
-    let repositories = try await boundedConcurrentMap(products) { product in
-      try await ASCPaging.allPages(next: { $0.links.next }) {
+    let repositories = try await boundedConcurrentMap(products) { product -> [String] in
+      guard includingRepositories else { return [] }
+      return try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.ciProductsPrimaryRepositoriesGetToManyRelated(path: .init(id: product.id), query: .init(limit: 200)).ok.body.json
       }.flatMap(\.data).map(repositoryName)
     }
@@ -885,7 +888,8 @@ public enum XcodeCloud {
 
   /// An action's log, from its log bundle.
   public struct LogFile: Hashable, Identifiable, Sendable {
-    /// The file's name (`ci_post_clone.log`, `xcodebuild-build.log`).
+    /// The file's name (`ci_post_clone.log`, `xcodebuild-build.log`); an export's logs after the
+    /// export (`app-store/xcodebuild-export-archive.log`), since each export has the same files.
     public let name: String
     public let text: String
     public var id: String { name }
@@ -903,13 +907,25 @@ public enum XcodeCloud {
       throw DownloadError.status(response.statusCode)
     }
     let order = ["ci_post_clone", "resolve_package_dependencies", "ci_pre_xcodebuild", "ci_post_xcodebuild"]
+    let rank = { (name: String) in order.firstIndex { name.hasPrefix($0) } ?? (name.hasPrefix("xcodebuild") ? order.count + 1 : order.count) }
     return try ZipReader.files(in: data)
       .filter { $0.path.hasSuffix(".log") || $0.path.hasSuffix(".txt") }
-      .map { LogFile(name: ($0.path as NSString).lastPathComponent, text: String(decoding: $0.data, as: UTF8.self)) }
-      .sorted { a, b in
-        let rank = { (name: String) in order.firstIndex { name.hasPrefix($0) } ?? (name.hasPrefix("xcodebuild") ? order.count + 1 : order.count) }
-        return (rank(a.name), a.name) < (rank(b.name), b.name)
+      .map { file -> (export: String, file: String, log: LogFile) in
+        let name = (file.path as NSString).lastPathComponent
+        let export = exportName(file.path)
+        return (export ?? "", name, LogFile(name: export.map { "\($0)/\(name)" } ?? name, text: String(decoding: file.data, as: UTF8.self)))
       }
+      // The archive's or build's own logs first, then each export's.
+      .sorted { a, b in (a.export, rank(a.file), a.file) < (b.export, rank(b.file), b.file) }
+      .map(\.log)
+  }
+
+  /// The export a log in the bundle belongs to: Xcode Cloud puts each export's logs in a folder
+  /// of its own (`app-store-export-archive-logs/`, `development-export-archive-logs/`, seen
+  /// 2026-11-03 on an archive with no distribution, which exported both).
+  private static func exportName(_ path: String) -> String? {
+    let suffix = "-export-archive-logs"
+    return path.split(separator: "/").first { $0.hasSuffix(suffix) }.map { String($0.dropLast(suffix.count)) }
   }
 
   // MARK: Repositories and versions

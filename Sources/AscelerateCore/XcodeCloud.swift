@@ -246,8 +246,89 @@ public enum XcodeCloud {
     }
   }
 
-  /// A workflow's settings that can be edited. What it doesn't hold (actions, a schedule's times,
-  /// files-and-folders rules, test destinations) goes back as the workflow has it.
+  /// A workflow's build, test, analyze or archive step, to edit. One read from a workflow keeps
+  /// what it doesn't show (its destination, a test's plan and destinations) while its type and
+  /// platform stay; a new one gets Xcode Cloud's usual destination for its platform.
+  public struct WorkflowAction: Hashable, Sendable {
+    /// `BUILD`, `TEST`, `ANALYZE` or `ARCHIVE`.
+    public var type: String
+    public var name: String
+    public var scheme: String
+    /// `MACOS`, `IOS`, `TVOS`, `WATCHOS`, `VISIONOS`.
+    public var platform: String
+    public var isRequiredToPass: Bool
+    /// An archive's distribution: `INTERNAL_ONLY` (TestFlight internal testing), `APP_STORE_ELIGIBLE`
+    /// (TestFlight and the App Store), or nil (none).
+    public var distribution: String?
+    var template: Components.Schemas.CiAction?
+
+    public init(type: String, name: String? = nil, scheme: String, platform: String, isRequiredToPass: Bool = true, distribution: String? = nil) {
+      self.type = type
+      self.name = name ?? Self.defaultName(type: type, platform: platform)
+      self.scheme = scheme
+      self.platform = platform
+      self.isRequiredToPass = isRequiredToPass
+      self.distribution = distribution
+    }
+
+    init(_ action: Components.Schemas.CiAction) {
+      type = action.actionType ?? "BUILD"
+      name = action.name ?? ""
+      scheme = action.scheme ?? ""
+      platform = action.platform ?? "IOS"
+      isRequiredToPass = action.isRequiredToPass ?? false
+      distribution = action.buildDistributionAudience
+      template = action
+    }
+
+    /// App Store Connect's name for a new action: "Archive - iOS".
+    public static func defaultName(type: String, platform: String) -> String {
+      "\(formatState(type)) - \(formatState(platform))"
+    }
+
+    public static let types = ["BUILD", "TEST", "ANALYZE", "ARCHIVE"]
+    public static let platforms = ["IOS", "MACOS", "TVOS", "WATCHOS", "VISIONOS"]
+    public static let distributions = ["INTERNAL_ONLY", "APP_STORE_ELIGIBLE"]
+
+    /// Whether its destination and test settings come from the workflow it was read from: they fit
+    /// only their own type and platform.
+    var keepsDetails: Bool { template?.platform == platform && template?.actionType == type }
+
+    /// A test that runs with its scheme's test plan and destinations: a new one, or one whose type
+    /// or platform changed.
+    public var usesSchemeTestSettings: Bool { type == "TEST" && !keepsDetails }
+
+    /// The action as Xcode Cloud takes it.
+    var ciAction: Components.Schemas.CiAction {
+      var action = template ?? .init()
+      if !keepsDetails {
+        action.destination = Self.destination(type: type, platform: platform)
+        action.testConfiguration = type == "TEST" ? .init(kind: "USE_SCHEME_SETTINGS") : nil
+      }
+      action.actionType = type
+      action.name = name
+      action.scheme = scheme
+      action.platform = platform
+      action.isRequiredToPass = isRequiredToPass
+      action.buildDistributionAudience = type == "ARCHIVE" ? distribution : nil
+      return action
+    }
+
+    /// Any device of the platform, or any simulator for tests (the Mac: any Mac).
+    static func destination(type: String, platform: String) -> String {
+      let device = type == "TEST" ? "SIMULATOR" : "DEVICE"
+      return switch platform {
+        case "MACOS": "ANY_MAC"
+        case "TVOS": "ANY_TVOS_\(device)"
+        case "WATCHOS": "ANY_WATCHOS_\(device)"
+        case "VISIONOS": "ANY_VISIONOS_\(device)"
+        default: "ANY_IOS_\(device)"
+      }
+    }
+  }
+
+  /// A workflow's settings that can be edited. What it doesn't hold (a schedule's times,
+  /// files-and-folders rules, environment variables, post-actions) goes back as the workflow has it.
   public struct WorkflowEdit: Hashable, Sendable {
     public var name: String
     public var description: String
@@ -266,6 +347,7 @@ public enum XcodeCloud {
     public var manualBranch: NamePatterns?
     public var manualTag: NamePatterns?
     public var manualPullRequest: PullRequestStart?
+    public var actions: [WorkflowAction]
 
     /// Whether at least one start condition is left: Xcode Cloud wants one.
     public var hasStartCondition: Bool {
@@ -297,7 +379,8 @@ public enum XcodeCloud {
       manualTag: a?.manualTagStartCondition.map { patterns($0.source) },
       manualPullRequest: a?.manualPullRequestStartCondition.map {
         PullRequestStart(source: patterns($0.source), destination: patterns($0.destination), autoCancel: false)
-      })
+      },
+      actions: (a?.actions ?? []).map(WorkflowAction.init))
   }
 
   private static func patterns(_ patterns: Components.Schemas.CiBranchPatterns?) -> NamePatterns {
@@ -322,11 +405,62 @@ public enum XcodeCloud {
       : .init(isAllMatch: false, patterns: patterns.patterns.map { .init(isPrefix: $0.isPrefix, pattern: $0.pattern) })
   }
 
+  /// A workflow's start conditions as Xcode Cloud takes them: each one `current` has (as read)
+  /// with the edit on top, so what the edit doesn't hold (a files-and-folders rule, a schedule's
+  /// times) stays; nil for those the edit leaves out.
+  struct Conditions {
+    var branch: Components.Schemas.CiBranchStartCondition?
+    var tag: Components.Schemas.CiTagStartCondition?
+    var pullRequest: Components.Schemas.CiPullRequestStartCondition?
+    var schedule: Components.Schemas.CiScheduledStartCondition?
+    var manualBranch: Components.Schemas.CiManualBranchStartCondition?
+    var manualTag: Components.Schemas.CiManualTagStartCondition?
+    var manualPullRequest: Components.Schemas.CiManualPullRequestStartCondition?
+
+    /// The JSON keys of those left out, to send as null.
+    var missing: [String] {
+      [
+        ("branchStartCondition", branch == nil), ("tagStartCondition", tag == nil),
+        ("pullRequestStartCondition", pullRequest == nil), ("scheduledStartCondition", schedule == nil),
+        ("manualBranchStartCondition", manualBranch == nil), ("manualTagStartCondition", manualTag == nil),
+        ("manualPullRequestStartCondition", manualPullRequest == nil),
+      ].filter(\.1).map(\.0)
+    }
+  }
+
+  static func conditions(_ edit: WorkflowEdit, current: Components.Schemas.CiWorkflow.AttributesPayload?) -> Conditions {
+    var conditions = Conditions()
+    if let branch = edit.branch {
+      var condition = current?.branchStartCondition ?? .init()
+      condition.source = branchPatterns(branch.source)
+      condition.autoCancel = branch.autoCancel
+      conditions.branch = condition
+    }
+    if let tag = edit.tag {
+      var condition = current?.tagStartCondition ?? .init()
+      condition.source = tagPatterns(tag.source)
+      condition.autoCancel = tag.autoCancel
+      conditions.tag = condition
+    }
+    if let pullRequest = edit.pullRequest {
+      var condition = current?.pullRequestStartCondition ?? .init()
+      condition.source = branchPatterns(pullRequest.source)
+      condition.destination = branchPatterns(pullRequest.destination)
+      condition.autoCancel = pullRequest.autoCancel
+      conditions.pullRequest = condition
+    }
+    if edit.hasSchedule { conditions.schedule = current?.scheduledStartCondition }
+    conditions.manualBranch = edit.manualBranch.map { .init(source: branchPatterns($0)) }
+    conditions.manualTag = edit.manualTag.map { .init(source: tagPatterns($0)) }
+    conditions.manualPullRequest = edit.manualPullRequest.map {
+      .init(destination: branchPatterns($0.destination), source: branchPatterns($0.source))
+    }
+    return conditions
+  }
+
   /// Saves what changed from `original`. Start conditions go as a set whenever one of them
   /// changed: Apple ignores a condition sent as null on its own but replaces the set when the
-  /// update carries one (seen 2026-11-03). Each condition is the workflow's as read fresh with the
-  /// edit on top, so what the edit doesn't hold (a files-and-folders rule, a schedule's times)
-  /// stays.
+  /// update carries one (seen 2026-11-03).
   public static func save(_ edit: WorkflowEdit, original: WorkflowEdit, workflowID: String, client: ASCClient) async throws {
     let current = try await withTransientRetry {
       try await client.ciWorkflowsGetInstance(path: .init(id: workflowID)).ok.body.json.data.attributes
@@ -338,57 +472,21 @@ public enum XcodeCloud {
     if edit.isEnabled != original.isEnabled { attributes.isEnabled = edit.isEnabled }
     if edit.isLockedForEditing != original.isLockedForEditing { attributes.isLockedForEditing = edit.isLockedForEditing }
     if edit.clean != original.clean { attributes.clean = edit.clean }
+    if edit.actions != original.actions { attributes.actions = edit.actions.map(\.ciAction) }
     var nulls: [[String]] = []
     let conditionsChanged = edit.branch != original.branch || edit.tag != original.tag || edit.pullRequest != original.pullRequest
       || edit.hasSchedule != original.hasSchedule || edit.manualBranch != original.manualBranch
       || edit.manualTag != original.manualTag || edit.manualPullRequest != original.manualPullRequest
     if conditionsChanged {
-      if let branch = edit.branch {
-        var condition = current?.branchStartCondition ?? .init()
-        condition.source = branchPatterns(branch.source)
-        condition.autoCancel = branch.autoCancel
-        attributes.branchStartCondition = condition
-      } else {
-        nulls.append(["data", "attributes", "branchStartCondition"])
-      }
-      if let tag = edit.tag {
-        var condition = current?.tagStartCondition ?? .init()
-        condition.source = tagPatterns(tag.source)
-        condition.autoCancel = tag.autoCancel
-        attributes.tagStartCondition = condition
-      } else {
-        nulls.append(["data", "attributes", "tagStartCondition"])
-      }
-      if let pullRequest = edit.pullRequest {
-        var condition = current?.pullRequestStartCondition ?? .init()
-        condition.source = branchPatterns(pullRequest.source)
-        condition.destination = branchPatterns(pullRequest.destination)
-        condition.autoCancel = pullRequest.autoCancel
-        attributes.pullRequestStartCondition = condition
-      } else {
-        nulls.append(["data", "attributes", "pullRequestStartCondition"])
-      }
-      if edit.hasSchedule, let schedule = current?.scheduledStartCondition {
-        attributes.scheduledStartCondition = schedule
-      } else {
-        nulls.append(["data", "attributes", "scheduledStartCondition"])
-      }
-      if let manual = edit.manualBranch {
-        attributes.manualBranchStartCondition = .init(source: branchPatterns(manual))
-      } else {
-        nulls.append(["data", "attributes", "manualBranchStartCondition"])
-      }
-      if let manual = edit.manualTag {
-        attributes.manualTagStartCondition = .init(source: tagPatterns(manual))
-      } else {
-        nulls.append(["data", "attributes", "manualTagStartCondition"])
-      }
-      if let manual = edit.manualPullRequest {
-        attributes.manualPullRequestStartCondition = .init(
-          destination: branchPatterns(manual.destination), source: branchPatterns(manual.source))
-      } else {
-        nulls.append(["data", "attributes", "manualPullRequestStartCondition"])
-      }
+      let conditions = conditions(edit, current: current)
+      attributes.branchStartCondition = conditions.branch
+      attributes.tagStartCondition = conditions.tag
+      attributes.pullRequestStartCondition = conditions.pullRequest
+      attributes.scheduledStartCondition = conditions.schedule
+      attributes.manualBranchStartCondition = conditions.manualBranch
+      attributes.manualTagStartCondition = conditions.manualTag
+      attributes.manualPullRequestStartCondition = conditions.manualPullRequest
+      nulls = conditions.missing.map { ["data", "attributes", $0] }
     }
     typealias Relationships = Components.Schemas.CiWorkflowUpdateRequest.DataPayload.RelationshipsPayload
     var relationships: Relationships?
@@ -401,6 +499,52 @@ public enum XcodeCloud {
       _ = try await client.ciWorkflowsUpdateInstance(path: .init(id: workflowID), body: .json(.init(data: .init(
         attributes: attributes, id: workflowID, relationships: relationships, _type: "ciWorkflows")))).ok
     }
+  }
+
+  public enum WorkflowCreationError: LocalizedError {
+    case incomplete(String)
+
+    public var errorDescription: String? {
+      switch self {
+        case .incomplete(let what): "The workflow to copy has no \(what)."
+      }
+    }
+  }
+
+  /// Makes a new workflow as a copy of `sourceID` (product, repository, project or workspace, and
+  /// what the edit doesn't hold of its start conditions) with `edit`'s settings, start conditions
+  /// and actions. Environment variables and post-actions (TestFlight groups, notifications) aren't
+  /// in the API, so the copy has none. Xcode makes a product with its first workflow, so a product
+  /// always has one to copy. Returns the new workflow's ID.
+  public static func createWorkflow(_ edit: WorkflowEdit, copying sourceID: String, client: ASCClient) async throws -> String {
+    // The relationships carry their IDs only when included.
+    let source = try await withTransientRetry {
+      try await client.ciWorkflowsGetInstance(
+        path: .init(id: sourceID), query: .init(include: [.product, .repository, .xcodeVersion, .macOsVersion])
+      ).ok.body.json.data
+    }
+    let r = source.relationships
+    guard let productID = r?.product?.data?.id else { throw WorkflowCreationError.incomplete("product") }
+    guard let repositoryID = r?.repository?.data?.id else { throw WorkflowCreationError.incomplete("repository") }
+    guard let containerFilePath = source.attributes?.containerFilePath else { throw WorkflowCreationError.incomplete("project or workspace") }
+    guard let xcodeID = edit.xcodeVersionID ?? r?.xcodeVersion?.data?.id else { throw WorkflowCreationError.incomplete("Xcode version") }
+    guard let macOSID = edit.macOSVersionID ?? r?.macOsVersion?.data?.id else { throw WorkflowCreationError.incomplete("macOS version") }
+    let conditions = conditions(edit, current: source.attributes)
+    let request = Components.Schemas.CiWorkflowCreateRequest(data: .init(
+      attributes: .init(
+        actions: edit.actions.map(\.ciAction), branchStartCondition: conditions.branch, clean: edit.clean,
+        containerFilePath: containerFilePath, description: edit.description, isEnabled: edit.isEnabled,
+        isLockedForEditing: edit.isLockedForEditing, manualBranchStartCondition: conditions.manualBranch,
+        manualPullRequestStartCondition: conditions.manualPullRequest, manualTagStartCondition: conditions.manualTag,
+        name: edit.name, pullRequestStartCondition: conditions.pullRequest, scheduledStartCondition: conditions.schedule,
+        tagStartCondition: conditions.tag),
+      relationships: .init(
+        macOsVersion: .init(data: .init(id: macOSID, _type: "ciMacOsVersions")),
+        product: .init(data: .init(id: productID, _type: "ciProducts")),
+        repository: .init(data: .init(id: repositoryID, _type: "scmRepositories")),
+        xcodeVersion: .init(data: .init(id: xcodeID, _type: "ciXcodeVersions"))),
+      _type: "ciWorkflows"))
+    return try await client.ciWorkflowsCreateInstance(body: .json(request)).created.body.json.data.id
   }
 
   /// Deletes a workflow; its build runs stay.

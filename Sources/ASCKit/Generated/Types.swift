@@ -320,6 +320,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/apps/{id}/buildUploads`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/buildUploads/get(apps_buildUploads_getToManyRelated)`.
     func appsBuildUploadsGetToManyRelated(_ input: Operations.AppsBuildUploadsGetToManyRelated.Input) async throws -> Operations.AppsBuildUploadsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/apps/{id}/ciProduct`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/ciProduct/get(apps_ciProduct_getToOneRelated)`.
+    func appsCiProductGetToOneRelated(_ input: Operations.AppsCiProductGetToOneRelated.Input) async throws -> Operations.AppsCiProductGetToOneRelated.Output
     /// - Remark: HTTP `GET /v1/apps/{id}/customerReviews`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/customerReviews/get(apps_customerReviews_getToManyRelated)`.
     func appsCustomerReviewsGetToManyRelated(_ input: Operations.AppsCustomerReviewsGetToManyRelated.Input) async throws -> Operations.AppsCustomerReviewsGetToManyRelated.Output
@@ -749,6 +752,78 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/certificates/{id}`.
     /// - Remark: Generated from `#/paths//v1/certificates/{id}/delete(certificates_deleteInstance)`.
     func certificatesDeleteInstance(_ input: Operations.CertificatesDeleteInstance.Input) async throws -> Operations.CertificatesDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/ciArtifacts/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciArtifacts/{id}/get(ciArtifacts_getInstance)`.
+    func ciArtifactsGetInstance(_ input: Operations.CiArtifactsGetInstance.Input) async throws -> Operations.CiArtifactsGetInstance.Output
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/get(ciBuildActions_getInstance)`.
+    func ciBuildActionsGetInstance(_ input: Operations.CiBuildActionsGetInstance.Input) async throws -> Operations.CiBuildActionsGetInstance.Output
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}/artifacts`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/artifacts/get(ciBuildActions_artifacts_getToManyRelated)`.
+    func ciBuildActionsArtifactsGetToManyRelated(_ input: Operations.CiBuildActionsArtifactsGetToManyRelated.Input) async throws -> Operations.CiBuildActionsArtifactsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}/issues`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/issues/get(ciBuildActions_issues_getToManyRelated)`.
+    func ciBuildActionsIssuesGetToManyRelated(_ input: Operations.CiBuildActionsIssuesGetToManyRelated.Input) async throws -> Operations.CiBuildActionsIssuesGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}/testResults`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/testResults/get(ciBuildActions_testResults_getToManyRelated)`.
+    func ciBuildActionsTestResultsGetToManyRelated(_ input: Operations.CiBuildActionsTestResultsGetToManyRelated.Input) async throws -> Operations.CiBuildActionsTestResultsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/ciBuildRuns`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/post(ciBuildRuns_createInstance)`.
+    func ciBuildRunsCreateInstance(_ input: Operations.CiBuildRunsCreateInstance.Input) async throws -> Operations.CiBuildRunsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/ciBuildRuns/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/{id}/get(ciBuildRuns_getInstance)`.
+    func ciBuildRunsGetInstance(_ input: Operations.CiBuildRunsGetInstance.Input) async throws -> Operations.CiBuildRunsGetInstance.Output
+    /// - Remark: HTTP `GET /v1/ciBuildRuns/{id}/actions`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/{id}/actions/get(ciBuildRuns_actions_getToManyRelated)`.
+    func ciBuildRunsActionsGetToManyRelated(_ input: Operations.CiBuildRunsActionsGetToManyRelated.Input) async throws -> Operations.CiBuildRunsActionsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/ciBuildRuns/{id}/builds`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/{id}/builds/get(ciBuildRuns_builds_getToManyRelated)`.
+    func ciBuildRunsBuildsGetToManyRelated(_ input: Operations.CiBuildRunsBuildsGetToManyRelated.Input) async throws -> Operations.CiBuildRunsBuildsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/ciMacOsVersions`.
+    /// - Remark: Generated from `#/paths//v1/ciMacOsVersions/get(ciMacOsVersions_getCollection)`.
+    func ciMacOsVersionsGetCollection(_ input: Operations.CiMacOsVersionsGetCollection.Input) async throws -> Operations.CiMacOsVersionsGetCollection.Output
+    /// - Remark: HTTP `GET /v1/ciProducts`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/get(ciProducts_getCollection)`.
+    func ciProductsGetCollection(_ input: Operations.CiProductsGetCollection.Input) async throws -> Operations.CiProductsGetCollection.Output
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/get(ciProducts_getInstance)`.
+    func ciProductsGetInstance(_ input: Operations.CiProductsGetInstance.Input) async throws -> Operations.CiProductsGetInstance.Output
+    /// - Remark: HTTP `DELETE /v1/ciProducts/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/delete(ciProducts_deleteInstance)`.
+    func ciProductsDeleteInstance(_ input: Operations.CiProductsDeleteInstance.Input) async throws -> Operations.CiProductsDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/app`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/app/get(ciProducts_app_getToOneRelated)`.
+    func ciProductsAppGetToOneRelated(_ input: Operations.CiProductsAppGetToOneRelated.Input) async throws -> Operations.CiProductsAppGetToOneRelated.Output
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/buildRuns`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/buildRuns/get(ciProducts_buildRuns_getToManyRelated)`.
+    func ciProductsBuildRunsGetToManyRelated(_ input: Operations.CiProductsBuildRunsGetToManyRelated.Input) async throws -> Operations.CiProductsBuildRunsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/primaryRepositories`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/primaryRepositories/get(ciProducts_primaryRepositories_getToManyRelated)`.
+    func ciProductsPrimaryRepositoriesGetToManyRelated(_ input: Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Input) async throws -> Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/workflows`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/workflows/get(ciProducts_workflows_getToManyRelated)`.
+    func ciProductsWorkflowsGetToManyRelated(_ input: Operations.CiProductsWorkflowsGetToManyRelated.Input) async throws -> Operations.CiProductsWorkflowsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/ciWorkflows`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/post(ciWorkflows_createInstance)`.
+    func ciWorkflowsCreateInstance(_ input: Operations.CiWorkflowsCreateInstance.Input) async throws -> Operations.CiWorkflowsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/get(ciWorkflows_getInstance)`.
+    func ciWorkflowsGetInstance(_ input: Operations.CiWorkflowsGetInstance.Input) async throws -> Operations.CiWorkflowsGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/ciWorkflows/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/patch(ciWorkflows_updateInstance)`.
+    func ciWorkflowsUpdateInstance(_ input: Operations.CiWorkflowsUpdateInstance.Input) async throws -> Operations.CiWorkflowsUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/ciWorkflows/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/delete(ciWorkflows_deleteInstance)`.
+    func ciWorkflowsDeleteInstance(_ input: Operations.CiWorkflowsDeleteInstance.Input) async throws -> Operations.CiWorkflowsDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}/buildRuns`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/buildRuns/get(ciWorkflows_buildRuns_getToManyRelated)`.
+    func ciWorkflowsBuildRunsGetToManyRelated(_ input: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input) async throws -> Operations.CiWorkflowsBuildRunsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}/repository`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/repository/get(ciWorkflows_repository_getToOneRelated)`.
+    func ciWorkflowsRepositoryGetToOneRelated(_ input: Operations.CiWorkflowsRepositoryGetToOneRelated.Input) async throws -> Operations.CiWorkflowsRepositoryGetToOneRelated.Output
+    /// - Remark: HTTP `GET /v1/ciXcodeVersions`.
+    /// - Remark: Generated from `#/paths//v1/ciXcodeVersions/get(ciXcodeVersions_getCollection)`.
+    func ciXcodeVersionsGetCollection(_ input: Operations.CiXcodeVersionsGetCollection.Input) async throws -> Operations.CiXcodeVersionsGetCollection.Output
     /// - Remark: HTTP `POST /v1/customerReviewResponses`.
     /// - Remark: Generated from `#/paths//v1/customerReviewResponses/post(customerReviewResponses_createInstance)`.
     func customerReviewResponsesCreateInstance(_ input: Operations.CustomerReviewResponsesCreateInstance.Input) async throws -> Operations.CustomerReviewResponsesCreateInstance.Output
@@ -968,6 +1043,21 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/salesReports`.
     /// - Remark: Generated from `#/paths//v1/salesReports/get(salesReports_getCollection)`.
     func salesReportsGetCollection(_ input: Operations.SalesReportsGetCollection.Input) async throws -> Operations.SalesReportsGetCollection.Output
+    /// - Remark: HTTP `GET /v1/scmProviders`.
+    /// - Remark: Generated from `#/paths//v1/scmProviders/get(scmProviders_getCollection)`.
+    func scmProvidersGetCollection(_ input: Operations.ScmProvidersGetCollection.Input) async throws -> Operations.ScmProvidersGetCollection.Output
+    /// - Remark: HTTP `GET /v1/scmRepositories`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/get(scmRepositories_getCollection)`.
+    func scmRepositoriesGetCollection(_ input: Operations.ScmRepositoriesGetCollection.Input) async throws -> Operations.ScmRepositoriesGetCollection.Output
+    /// - Remark: HTTP `GET /v1/scmRepositories/{id}`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/get(scmRepositories_getInstance)`.
+    func scmRepositoriesGetInstance(_ input: Operations.ScmRepositoriesGetInstance.Input) async throws -> Operations.ScmRepositoriesGetInstance.Output
+    /// - Remark: HTTP `GET /v1/scmRepositories/{id}/gitReferences`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/gitReferences/get(scmRepositories_gitReferences_getToManyRelated)`.
+    func scmRepositoriesGitReferencesGetToManyRelated(_ input: Operations.ScmRepositoriesGitReferencesGetToManyRelated.Input) async throws -> Operations.ScmRepositoriesGitReferencesGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/scmRepositories/{id}/pullRequests`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/pullRequests/get(scmRepositories_pullRequests_getToManyRelated)`.
+    func scmRepositoriesPullRequestsGetToManyRelated(_ input: Operations.ScmRepositoriesPullRequestsGetToManyRelated.Input) async throws -> Operations.ScmRepositoriesPullRequestsGetToManyRelated.Output
     /// - Remark: HTTP `POST /v1/subscriptionAppStoreReviewScreenshots`.
     /// - Remark: Generated from `#/paths//v1/subscriptionAppStoreReviewScreenshots/post(subscriptionAppStoreReviewScreenshots_createInstance)`.
     func subscriptionAppStoreReviewScreenshotsCreateInstance(_ input: Operations.SubscriptionAppStoreReviewScreenshotsCreateInstance.Input) async throws -> Operations.SubscriptionAppStoreReviewScreenshotsCreateInstance.Output
@@ -2446,6 +2536,19 @@ extension APIProtocol {
         headers: Operations.AppsBuildUploadsGetToManyRelated.Input.Headers = .init()
     ) async throws -> Operations.AppsBuildUploadsGetToManyRelated.Output {
         try await appsBuildUploadsGetToManyRelated(Operations.AppsBuildUploadsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/apps/{id}/ciProduct`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/ciProduct/get(apps_ciProduct_getToOneRelated)`.
+    public func appsCiProductGetToOneRelated(
+        path: Operations.AppsCiProductGetToOneRelated.Input.Path,
+        query: Operations.AppsCiProductGetToOneRelated.Input.Query = .init(),
+        headers: Operations.AppsCiProductGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppsCiProductGetToOneRelated.Output {
+        try await appsCiProductGetToOneRelated(Operations.AppsCiProductGetToOneRelated.Input(
             path: path,
             query: query,
             headers: headers
@@ -4066,6 +4169,292 @@ extension APIProtocol {
     public func certificatesDeleteInstance(path: Operations.CertificatesDeleteInstance.Input.Path) async throws -> Operations.CertificatesDeleteInstance.Output {
         try await certificatesDeleteInstance(Operations.CertificatesDeleteInstance.Input(path: path))
     }
+    /// - Remark: HTTP `GET /v1/ciArtifacts/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciArtifacts/{id}/get(ciArtifacts_getInstance)`.
+    public func ciArtifactsGetInstance(
+        path: Operations.CiArtifactsGetInstance.Input.Path,
+        query: Operations.CiArtifactsGetInstance.Input.Query = .init(),
+        headers: Operations.CiArtifactsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.CiArtifactsGetInstance.Output {
+        try await ciArtifactsGetInstance(Operations.CiArtifactsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/get(ciBuildActions_getInstance)`.
+    public func ciBuildActionsGetInstance(
+        path: Operations.CiBuildActionsGetInstance.Input.Path,
+        query: Operations.CiBuildActionsGetInstance.Input.Query = .init(),
+        headers: Operations.CiBuildActionsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.CiBuildActionsGetInstance.Output {
+        try await ciBuildActionsGetInstance(Operations.CiBuildActionsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}/artifacts`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/artifacts/get(ciBuildActions_artifacts_getToManyRelated)`.
+    public func ciBuildActionsArtifactsGetToManyRelated(
+        path: Operations.CiBuildActionsArtifactsGetToManyRelated.Input.Path,
+        query: Operations.CiBuildActionsArtifactsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiBuildActionsArtifactsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiBuildActionsArtifactsGetToManyRelated.Output {
+        try await ciBuildActionsArtifactsGetToManyRelated(Operations.CiBuildActionsArtifactsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}/issues`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/issues/get(ciBuildActions_issues_getToManyRelated)`.
+    public func ciBuildActionsIssuesGetToManyRelated(
+        path: Operations.CiBuildActionsIssuesGetToManyRelated.Input.Path,
+        query: Operations.CiBuildActionsIssuesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiBuildActionsIssuesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiBuildActionsIssuesGetToManyRelated.Output {
+        try await ciBuildActionsIssuesGetToManyRelated(Operations.CiBuildActionsIssuesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciBuildActions/{id}/testResults`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildActions/{id}/testResults/get(ciBuildActions_testResults_getToManyRelated)`.
+    public func ciBuildActionsTestResultsGetToManyRelated(
+        path: Operations.CiBuildActionsTestResultsGetToManyRelated.Input.Path,
+        query: Operations.CiBuildActionsTestResultsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiBuildActionsTestResultsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiBuildActionsTestResultsGetToManyRelated.Output {
+        try await ciBuildActionsTestResultsGetToManyRelated(Operations.CiBuildActionsTestResultsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/ciBuildRuns`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/post(ciBuildRuns_createInstance)`.
+    public func ciBuildRunsCreateInstance(
+        headers: Operations.CiBuildRunsCreateInstance.Input.Headers = .init(),
+        body: Operations.CiBuildRunsCreateInstance.Input.Body
+    ) async throws -> Operations.CiBuildRunsCreateInstance.Output {
+        try await ciBuildRunsCreateInstance(Operations.CiBuildRunsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciBuildRuns/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/{id}/get(ciBuildRuns_getInstance)`.
+    public func ciBuildRunsGetInstance(
+        path: Operations.CiBuildRunsGetInstance.Input.Path,
+        query: Operations.CiBuildRunsGetInstance.Input.Query = .init(),
+        headers: Operations.CiBuildRunsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.CiBuildRunsGetInstance.Output {
+        try await ciBuildRunsGetInstance(Operations.CiBuildRunsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciBuildRuns/{id}/actions`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/{id}/actions/get(ciBuildRuns_actions_getToManyRelated)`.
+    public func ciBuildRunsActionsGetToManyRelated(
+        path: Operations.CiBuildRunsActionsGetToManyRelated.Input.Path,
+        query: Operations.CiBuildRunsActionsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiBuildRunsActionsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiBuildRunsActionsGetToManyRelated.Output {
+        try await ciBuildRunsActionsGetToManyRelated(Operations.CiBuildRunsActionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciBuildRuns/{id}/builds`.
+    /// - Remark: Generated from `#/paths//v1/ciBuildRuns/{id}/builds/get(ciBuildRuns_builds_getToManyRelated)`.
+    public func ciBuildRunsBuildsGetToManyRelated(
+        path: Operations.CiBuildRunsBuildsGetToManyRelated.Input.Path,
+        query: Operations.CiBuildRunsBuildsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiBuildRunsBuildsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiBuildRunsBuildsGetToManyRelated.Output {
+        try await ciBuildRunsBuildsGetToManyRelated(Operations.CiBuildRunsBuildsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciMacOsVersions`.
+    /// - Remark: Generated from `#/paths//v1/ciMacOsVersions/get(ciMacOsVersions_getCollection)`.
+    public func ciMacOsVersionsGetCollection(
+        query: Operations.CiMacOsVersionsGetCollection.Input.Query = .init(),
+        headers: Operations.CiMacOsVersionsGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.CiMacOsVersionsGetCollection.Output {
+        try await ciMacOsVersionsGetCollection(Operations.CiMacOsVersionsGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/get(ciProducts_getCollection)`.
+    public func ciProductsGetCollection(
+        query: Operations.CiProductsGetCollection.Input.Query = .init(),
+        headers: Operations.CiProductsGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.CiProductsGetCollection.Output {
+        try await ciProductsGetCollection(Operations.CiProductsGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/get(ciProducts_getInstance)`.
+    public func ciProductsGetInstance(
+        path: Operations.CiProductsGetInstance.Input.Path,
+        query: Operations.CiProductsGetInstance.Input.Query = .init(),
+        headers: Operations.CiProductsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.CiProductsGetInstance.Output {
+        try await ciProductsGetInstance(Operations.CiProductsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/ciProducts/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/delete(ciProducts_deleteInstance)`.
+    public func ciProductsDeleteInstance(path: Operations.CiProductsDeleteInstance.Input.Path) async throws -> Operations.CiProductsDeleteInstance.Output {
+        try await ciProductsDeleteInstance(Operations.CiProductsDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/app`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/app/get(ciProducts_app_getToOneRelated)`.
+    public func ciProductsAppGetToOneRelated(
+        path: Operations.CiProductsAppGetToOneRelated.Input.Path,
+        query: Operations.CiProductsAppGetToOneRelated.Input.Query = .init(),
+        headers: Operations.CiProductsAppGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiProductsAppGetToOneRelated.Output {
+        try await ciProductsAppGetToOneRelated(Operations.CiProductsAppGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/buildRuns`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/buildRuns/get(ciProducts_buildRuns_getToManyRelated)`.
+    public func ciProductsBuildRunsGetToManyRelated(
+        path: Operations.CiProductsBuildRunsGetToManyRelated.Input.Path,
+        query: Operations.CiProductsBuildRunsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiProductsBuildRunsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiProductsBuildRunsGetToManyRelated.Output {
+        try await ciProductsBuildRunsGetToManyRelated(Operations.CiProductsBuildRunsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/primaryRepositories`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/primaryRepositories/get(ciProducts_primaryRepositories_getToManyRelated)`.
+    public func ciProductsPrimaryRepositoriesGetToManyRelated(
+        path: Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Input.Path,
+        query: Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Output {
+        try await ciProductsPrimaryRepositoriesGetToManyRelated(Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}/workflows`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/workflows/get(ciProducts_workflows_getToManyRelated)`.
+    public func ciProductsWorkflowsGetToManyRelated(
+        path: Operations.CiProductsWorkflowsGetToManyRelated.Input.Path,
+        query: Operations.CiProductsWorkflowsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiProductsWorkflowsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiProductsWorkflowsGetToManyRelated.Output {
+        try await ciProductsWorkflowsGetToManyRelated(Operations.CiProductsWorkflowsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/ciWorkflows`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/post(ciWorkflows_createInstance)`.
+    public func ciWorkflowsCreateInstance(
+        headers: Operations.CiWorkflowsCreateInstance.Input.Headers = .init(),
+        body: Operations.CiWorkflowsCreateInstance.Input.Body
+    ) async throws -> Operations.CiWorkflowsCreateInstance.Output {
+        try await ciWorkflowsCreateInstance(Operations.CiWorkflowsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/get(ciWorkflows_getInstance)`.
+    public func ciWorkflowsGetInstance(
+        path: Operations.CiWorkflowsGetInstance.Input.Path,
+        query: Operations.CiWorkflowsGetInstance.Input.Query = .init(),
+        headers: Operations.CiWorkflowsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.CiWorkflowsGetInstance.Output {
+        try await ciWorkflowsGetInstance(Operations.CiWorkflowsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/ciWorkflows/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/patch(ciWorkflows_updateInstance)`.
+    public func ciWorkflowsUpdateInstance(
+        path: Operations.CiWorkflowsUpdateInstance.Input.Path,
+        headers: Operations.CiWorkflowsUpdateInstance.Input.Headers = .init(),
+        body: Operations.CiWorkflowsUpdateInstance.Input.Body
+    ) async throws -> Operations.CiWorkflowsUpdateInstance.Output {
+        try await ciWorkflowsUpdateInstance(Operations.CiWorkflowsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/ciWorkflows/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/delete(ciWorkflows_deleteInstance)`.
+    public func ciWorkflowsDeleteInstance(path: Operations.CiWorkflowsDeleteInstance.Input.Path) async throws -> Operations.CiWorkflowsDeleteInstance.Output {
+        try await ciWorkflowsDeleteInstance(Operations.CiWorkflowsDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}/buildRuns`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/buildRuns/get(ciWorkflows_buildRuns_getToManyRelated)`.
+    public func ciWorkflowsBuildRunsGetToManyRelated(
+        path: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Path,
+        query: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiWorkflowsBuildRunsGetToManyRelated.Output {
+        try await ciWorkflowsBuildRunsGetToManyRelated(Operations.CiWorkflowsBuildRunsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}/repository`.
+    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/repository/get(ciWorkflows_repository_getToOneRelated)`.
+    public func ciWorkflowsRepositoryGetToOneRelated(
+        path: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Path,
+        query: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query = .init(),
+        headers: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.CiWorkflowsRepositoryGetToOneRelated.Output {
+        try await ciWorkflowsRepositoryGetToOneRelated(Operations.CiWorkflowsRepositoryGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/ciXcodeVersions`.
+    /// - Remark: Generated from `#/paths//v1/ciXcodeVersions/get(ciXcodeVersions_getCollection)`.
+    public func ciXcodeVersionsGetCollection(
+        query: Operations.CiXcodeVersionsGetCollection.Input.Query = .init(),
+        headers: Operations.CiXcodeVersionsGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.CiXcodeVersionsGetCollection.Output {
+        try await ciXcodeVersionsGetCollection(Operations.CiXcodeVersionsGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
     /// - Remark: HTTP `POST /v1/customerReviewResponses`.
     /// - Remark: Generated from `#/paths//v1/customerReviewResponses/post(customerReviewResponses_createInstance)`.
     public func customerReviewResponsesCreateInstance(
@@ -4877,6 +5266,67 @@ extension APIProtocol {
         headers: Operations.SalesReportsGetCollection.Input.Headers = .init()
     ) async throws -> Operations.SalesReportsGetCollection.Output {
         try await salesReportsGetCollection(Operations.SalesReportsGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/scmProviders`.
+    /// - Remark: Generated from `#/paths//v1/scmProviders/get(scmProviders_getCollection)`.
+    public func scmProvidersGetCollection(
+        query: Operations.ScmProvidersGetCollection.Input.Query = .init(),
+        headers: Operations.ScmProvidersGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.ScmProvidersGetCollection.Output {
+        try await scmProvidersGetCollection(Operations.ScmProvidersGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/scmRepositories`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/get(scmRepositories_getCollection)`.
+    public func scmRepositoriesGetCollection(
+        query: Operations.ScmRepositoriesGetCollection.Input.Query = .init(),
+        headers: Operations.ScmRepositoriesGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.ScmRepositoriesGetCollection.Output {
+        try await scmRepositoriesGetCollection(Operations.ScmRepositoriesGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/scmRepositories/{id}`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/get(scmRepositories_getInstance)`.
+    public func scmRepositoriesGetInstance(
+        path: Operations.ScmRepositoriesGetInstance.Input.Path,
+        query: Operations.ScmRepositoriesGetInstance.Input.Query = .init(),
+        headers: Operations.ScmRepositoriesGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.ScmRepositoriesGetInstance.Output {
+        try await scmRepositoriesGetInstance(Operations.ScmRepositoriesGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/scmRepositories/{id}/gitReferences`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/gitReferences/get(scmRepositories_gitReferences_getToManyRelated)`.
+    public func scmRepositoriesGitReferencesGetToManyRelated(
+        path: Operations.ScmRepositoriesGitReferencesGetToManyRelated.Input.Path,
+        query: Operations.ScmRepositoriesGitReferencesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.ScmRepositoriesGitReferencesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.ScmRepositoriesGitReferencesGetToManyRelated.Output {
+        try await scmRepositoriesGitReferencesGetToManyRelated(Operations.ScmRepositoriesGitReferencesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/scmRepositories/{id}/pullRequests`.
+    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/pullRequests/get(scmRepositories_pullRequests_getToManyRelated)`.
+    public func scmRepositoriesPullRequestsGetToManyRelated(
+        path: Operations.ScmRepositoriesPullRequestsGetToManyRelated.Input.Path,
+        query: Operations.ScmRepositoriesPullRequestsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.ScmRepositoriesPullRequestsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.ScmRepositoriesPullRequestsGetToManyRelated.Output {
+        try await scmRepositoriesPullRequestsGetToManyRelated(Operations.ScmRepositoriesPullRequestsGetToManyRelated.Input(
+            path: path,
             query: query,
             headers: headers
         ))

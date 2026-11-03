@@ -2071,6 +2071,299 @@ extension Operations {
             }
         }
     }
+    /// - Remark: HTTP `GET /v1/apps/{id}/ciProduct`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/ciProduct/get(apps_ciProduct_getToOneRelated)`.
+    public enum AppsCiProductGetToOneRelated {
+        public static let id: Swift.String = "apps_ciProduct_getToOneRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppsCiProductGetToOneRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fieldsCiProductsPayload`.
+                @frozen public enum FieldsCiProductsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case createdDate = "createdDate"
+                    case productType = "productType"
+                    case app = "app"
+                    case bundleId = "bundleId"
+                    case workflows = "workflows"
+                    case primaryRepositories = "primaryRepositories"
+                    case additionalRepositories = "additionalRepositories"
+                    case buildRuns = "buildRuns"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[ciProducts]`.
+                public typealias fieldsCiProductsPayload = [Operations.AppsCiProductGetToOneRelated.Input.Query.FieldsCiProductsPayloadPayload]
+                /// the fields to include for returned resources of type ciProducts
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[ciProducts]`.
+                public var fieldsCiProducts: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsCiProductsPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fieldsAppsPayload`.
+                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case accessibilityUrl = "accessibilityUrl"
+                    case name = "name"
+                    case bundleId = "bundleId"
+                    case sku = "sku"
+                    case primaryLocale = "primaryLocale"
+                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
+                    case subscriptionStatusUrl = "subscriptionStatusUrl"
+                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
+                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
+                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
+                    case contentRightsDeclaration = "contentRightsDeclaration"
+                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case accessibilityDeclarations = "accessibilityDeclarations"
+                    case appEncryptionDeclarations = "appEncryptionDeclarations"
+                    case appStoreIcon = "appStoreIcon"
+                    case ciProduct = "ciProduct"
+                    case betaTesters = "betaTesters"
+                    case betaGroups = "betaGroups"
+                    case appStoreVersions = "appStoreVersions"
+                    case appTags = "appTags"
+                    case preReleaseVersions = "preReleaseVersions"
+                    case betaAppLocalizations = "betaAppLocalizations"
+                    case builds = "builds"
+                    case betaLicenseAgreement = "betaLicenseAgreement"
+                    case betaAppReviewDetail = "betaAppReviewDetail"
+                    case appInfos = "appInfos"
+                    case appClips = "appClips"
+                    case appPricePoints = "appPricePoints"
+                    case endUserLicenseAgreement = "endUserLicenseAgreement"
+                    case appPriceSchedule = "appPriceSchedule"
+                    case appAvailabilityV2 = "appAvailabilityV2"
+                    case inAppPurchases = "inAppPurchases"
+                    case subscriptionGroups = "subscriptionGroups"
+                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
+                    case performanceOverviews = "performanceOverviews"
+                    case perfPowerMetrics = "perfPowerMetrics"
+                    case appCustomProductPages = "appCustomProductPages"
+                    case inAppPurchasesV2 = "inAppPurchasesV2"
+                    case promotedPurchases = "promotedPurchases"
+                    case appEvents = "appEvents"
+                    case reviewSubmissions = "reviewSubmissions"
+                    case subscriptionGracePeriod = "subscriptionGracePeriod"
+                    case customerReviews = "customerReviews"
+                    case customerReviewSummarizations = "customerReviewSummarizations"
+                    case gameCenterDetail = "gameCenterDetail"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case alternativeDistributionKey = "alternativeDistributionKey"
+                    case analyticsReportRequests = "analyticsReportRequests"
+                    case marketplaceSearchDetail = "marketplaceSearchDetail"
+                    case buildUploads = "buildUploads"
+                    case backgroundAssets = "backgroundAssets"
+                    case assetLibrary = "assetLibrary"
+                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
+                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
+                    case searchKeywords = "searchKeywords"
+                    case webhooks = "webhooks"
+                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[apps]`.
+                public typealias fieldsAppsPayload = [Operations.AppsCiProductGetToOneRelated.Input.Query.FieldsAppsPayloadPayload]
+                /// the fields to include for returned resources of type apps
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[apps]`.
+                public var fieldsApps: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsAppsPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fieldsBundleIdsPayload`.
+                @frozen public enum FieldsBundleIdsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case platform = "platform"
+                    case identifier = "identifier"
+                    case seedId = "seedId"
+                    case profiles = "profiles"
+                    case bundleIdCapabilities = "bundleIdCapabilities"
+                    case app = "app"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[bundleIds]`.
+                public typealias fieldsBundleIdsPayload = [Operations.AppsCiProductGetToOneRelated.Input.Query.FieldsBundleIdsPayloadPayload]
+                /// the fields to include for returned resources of type bundleIds
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[bundleIds]`.
+                public var fieldsBundleIds: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsBundleIdsPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fieldsScmRepositoriesPayload`.
+                @frozen public enum FieldsScmRepositoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case lastAccessedDate = "lastAccessedDate"
+                    case httpCloneUrl = "httpCloneUrl"
+                    case sshCloneUrl = "sshCloneUrl"
+                    case ownerName = "ownerName"
+                    case repositoryName = "repositoryName"
+                    case scmProvider = "scmProvider"
+                    case defaultBranch = "defaultBranch"
+                    case gitReferences = "gitReferences"
+                    case pullRequests = "pullRequests"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[scmRepositories]`.
+                public typealias fieldsScmRepositoriesPayload = [Operations.AppsCiProductGetToOneRelated.Input.Query.FieldsScmRepositoriesPayloadPayload]
+                /// the fields to include for returned resources of type scmRepositories
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/fields[scmRepositories]`.
+                public var fieldsScmRepositories: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsScmRepositoriesPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case app = "app"
+                    case bundleId = "bundleId"
+                    case primaryRepositories = "primaryRepositories"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppsCiProductGetToOneRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/include`.
+                public var include: Operations.AppsCiProductGetToOneRelated.Input.Query.IncludePayload?
+                /// maximum number of related primaryRepositories returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/query/limit[primaryRepositories]`.
+                public var limitPrimaryRepositories: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsCiProducts: the fields to include for returned resources of type ciProducts
+                ///   - fieldsApps: the fields to include for returned resources of type apps
+                ///   - fieldsBundleIds: the fields to include for returned resources of type bundleIds
+                ///   - fieldsScmRepositories: the fields to include for returned resources of type scmRepositories
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitPrimaryRepositories: maximum number of related primaryRepositories returned (when they are included)
+                public init(
+                    fieldsCiProducts: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsCiProductsPayload? = nil,
+                    fieldsApps: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsAppsPayload? = nil,
+                    fieldsBundleIds: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsBundleIdsPayload? = nil,
+                    fieldsScmRepositories: Operations.AppsCiProductGetToOneRelated.Input.Query.fieldsScmRepositoriesPayload? = nil,
+                    include: Operations.AppsCiProductGetToOneRelated.Input.Query.IncludePayload? = nil,
+                    limitPrimaryRepositories: Swift.Int? = nil
+                ) {
+                    self.fieldsCiProducts = fieldsCiProducts
+                    self.fieldsApps = fieldsApps
+                    self.fieldsBundleIds = fieldsBundleIds
+                    self.fieldsScmRepositories = fieldsScmRepositories
+                    self.include = include
+                    self.limitPrimaryRepositories = limitPrimaryRepositories
+                }
+            }
+            public var query: Operations.AppsCiProductGetToOneRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsCiProductGetToOneRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsCiProductGetToOneRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppsCiProductGetToOneRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppsCiProductGetToOneRelated.Input.Path,
+                query: Operations.AppsCiProductGetToOneRelated.Input.Query = .init(),
+                headers: Operations.AppsCiProductGetToOneRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/apps/{id}/ciProduct/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.CiProductResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.CiProductResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppsCiProductGetToOneRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppsCiProductGetToOneRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single CiProduct
+            ///
+            /// - Remark: Generated from `#/paths//v1/apps/{id}/ciProduct/get(apps_ciProduct_getToOneRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppsCiProductGetToOneRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppsCiProductGetToOneRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/apps/{id}/customerReviews`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/customerReviews/get(apps_customerReviews_getToManyRelated)`.
     public enum AppsCustomerReviewsGetToManyRelated {
@@ -2735,614 +3028,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.AppsCustomerReviewSummarizationsGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/apps/{id}/endUserLicenseAgreement`.
-    /// - Remark: Generated from `#/paths//v1/apps/{id}/endUserLicenseAgreement/get(apps_endUserLicenseAgreement_getToOneRelated)`.
-    public enum AppsEndUserLicenseAgreementGetToOneRelated {
-        public static let id: Swift.String = "apps_endUserLicenseAgreement_getToOneRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/query/fieldsEndUserLicenseAgreementsPayload`.
-                @frozen public enum FieldsEndUserLicenseAgreementsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case agreementText = "agreementText"
-                    case app = "app"
-                    case territories = "territories"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/query/fields[endUserLicenseAgreements]`.
-                public typealias fieldsEndUserLicenseAgreementsPayload = [Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Query.FieldsEndUserLicenseAgreementsPayloadPayload]
-                /// the fields to include for returned resources of type endUserLicenseAgreements
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/query/fields[endUserLicenseAgreements]`.
-                public var fieldsEndUserLicenseAgreements: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Query.fieldsEndUserLicenseAgreementsPayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsEndUserLicenseAgreements: the fields to include for returned resources of type endUserLicenseAgreements
-                public init(fieldsEndUserLicenseAgreements: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Query.fieldsEndUserLicenseAgreementsPayload? = nil) {
-                    self.fieldsEndUserLicenseAgreements = fieldsEndUserLicenseAgreements
-                }
-            }
-            public var query: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsEndUserLicenseAgreementGetToOneRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsEndUserLicenseAgreementGetToOneRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Path,
-                query: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Query = .init(),
-                headers: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/apps/{id}/endUserLicenseAgreement/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.EndUserLicenseAgreementWithoutIncludesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.EndUserLicenseAgreementWithoutIncludesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single EndUserLicenseAgreement with get
-            ///
-            /// - Remark: Generated from `#/paths//v1/apps/{id}/endUserLicenseAgreement/get(apps_endUserLicenseAgreement_getToOneRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppsEndUserLicenseAgreementGetToOneRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/apps/{id}/inAppPurchasesV2`.
-    /// - Remark: Generated from `#/paths//v1/apps/{id}/inAppPurchasesV2/get(apps_inAppPurchasesV2_getToManyRelated)`.
-    public enum AppsInAppPurchasesV2GetToManyRelated {
-        public static let id: Swift.String = "apps_inAppPurchasesV2_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// filter by attribute 'productId'
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filter[productId]`.
-                public var filterProductId: [Swift.String]?
-                /// filter by attribute 'name'
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filter[name]`.
-                public var filterName: [Swift.String]?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filterStatePayload`.
-                @frozen public enum FilterStatePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case missingMetadata = "MISSING_METADATA"
-                    case waitingForUpload = "WAITING_FOR_UPLOAD"
-                    case processingContent = "PROCESSING_CONTENT"
-                    case readyToSubmit = "READY_TO_SUBMIT"
-                    case waitingForReview = "WAITING_FOR_REVIEW"
-                    case inReview = "IN_REVIEW"
-                    case developerActionNeeded = "DEVELOPER_ACTION_NEEDED"
-                    case pendingBinaryApproval = "PENDING_BINARY_APPROVAL"
-                    case approved = "APPROVED"
-                    case developerRemovedFromSale = "DEVELOPER_REMOVED_FROM_SALE"
-                    case removedFromSale = "REMOVED_FROM_SALE"
-                    case rejected = "REJECTED"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filter[state]`.
-                public typealias filterStatePayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FilterStatePayloadPayload]
-                /// filter by attribute 'state'
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filter[state]`.
-                public var filterState: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.filterStatePayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filterInAppPurchaseTypePayload`.
-                @frozen public enum FilterInAppPurchaseTypePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case consumable = "CONSUMABLE"
-                    case nonConsumable = "NON_CONSUMABLE"
-                    case nonRenewingSubscription = "NON_RENEWING_SUBSCRIPTION"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filter[inAppPurchaseType]`.
-                public typealias filterInAppPurchaseTypePayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FilterInAppPurchaseTypePayloadPayload]
-                /// filter by attribute 'inAppPurchaseType'
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/filter[inAppPurchaseType]`.
-                public var filterInAppPurchaseType: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.filterInAppPurchaseTypePayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/SortPayload`.
-                @frozen public enum SortPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case minusName = "-name"
-                    case inAppPurchaseType = "inAppPurchaseType"
-                    case minusInAppPurchaseType = "-inAppPurchaseType"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/sort`.
-                public typealias SortPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.SortPayloadPayload]
-                /// comma-separated list of sort expressions; resources will be sorted as specified
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/sort`.
-                public var sort: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.SortPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchasesPayload`.
-                @frozen public enum FieldsInAppPurchasesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case productId = "productId"
-                    case inAppPurchaseType = "inAppPurchaseType"
-                    case state = "state"
-                    case reviewNote = "reviewNote"
-                    case familySharable = "familySharable"
-                    case contentHosting = "contentHosting"
-                    case inAppPurchaseLocalizations = "inAppPurchaseLocalizations"
-                    case pricePoints = "pricePoints"
-                    case content = "content"
-                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
-                    case promotedPurchase = "promotedPurchase"
-                    case iapPriceSchedule = "iapPriceSchedule"
-                    case inAppPurchaseAvailability = "inAppPurchaseAvailability"
-                    case images = "images"
-                    case offerCodes = "offerCodes"
-                    case versions = "versions"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchases]`.
-                public typealias fieldsInAppPurchasesPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchasesPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchases
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchases]`.
-                public var fieldsInAppPurchases: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchasesPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchaseLocalizationsPayload`.
-                @frozen public enum FieldsInAppPurchaseLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case locale = "locale"
-                    case description = "description"
-                    case state = "state"
-                    case inAppPurchaseV2 = "inAppPurchaseV2"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseLocalizations]`.
-                public typealias fieldsInAppPurchaseLocalizationsPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchaseLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseLocalizations]`.
-                public var fieldsInAppPurchaseLocalizations: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchaseContentsPayload`.
-                @frozen public enum FieldsInAppPurchaseContentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileName = "fileName"
-                    case fileSize = "fileSize"
-                    case url = "url"
-                    case lastModifiedDate = "lastModifiedDate"
-                    case inAppPurchaseV2 = "inAppPurchaseV2"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseContents]`.
-                public typealias fieldsInAppPurchaseContentsPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchaseContentsPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseContents
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseContents]`.
-                public var fieldsInAppPurchaseContents: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseContentsPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchaseAppStoreReviewScreenshotsPayload`.
-                @frozen public enum FieldsInAppPurchaseAppStoreReviewScreenshotsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case sourceFileChecksum = "sourceFileChecksum"
-                    case imageAsset = "imageAsset"
-                    case assetToken = "assetToken"
-                    case assetType = "assetType"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case inAppPurchaseV2 = "inAppPurchaseV2"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseAppStoreReviewScreenshots]`.
-                public typealias fieldsInAppPurchaseAppStoreReviewScreenshotsPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchaseAppStoreReviewScreenshotsPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseAppStoreReviewScreenshots
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseAppStoreReviewScreenshots]`.
-                public var fieldsInAppPurchaseAppStoreReviewScreenshots: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseAppStoreReviewScreenshotsPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsPromotedPurchasesPayload`.
-                @frozen public enum FieldsPromotedPurchasesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case visibleForAllUsers = "visibleForAllUsers"
-                    case enabled = "enabled"
-                    case state = "state"
-                    case inAppPurchaseV2 = "inAppPurchaseV2"
-                    case subscription = "subscription"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[promotedPurchases]`.
-                public typealias fieldsPromotedPurchasesPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsPromotedPurchasesPayloadPayload]
-                /// the fields to include for returned resources of type promotedPurchases
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[promotedPurchases]`.
-                public var fieldsPromotedPurchases: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsPromotedPurchasesPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchasePriceSchedulesPayload`.
-                @frozen public enum FieldsInAppPurchasePriceSchedulesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case baseTerritory = "baseTerritory"
-                    case manualPrices = "manualPrices"
-                    case automaticPrices = "automaticPrices"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchasePriceSchedules]`.
-                public typealias fieldsInAppPurchasePriceSchedulesPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchasePriceSchedulesPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchasePriceSchedules
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchasePriceSchedules]`.
-                public var fieldsInAppPurchasePriceSchedules: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchasePriceSchedulesPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchaseAvailabilitiesPayload`.
-                @frozen public enum FieldsInAppPurchaseAvailabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case availableInNewTerritories = "availableInNewTerritories"
-                    case availableTerritories = "availableTerritories"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseAvailabilities]`.
-                public typealias fieldsInAppPurchaseAvailabilitiesPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchaseAvailabilitiesPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseAvailabilities
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseAvailabilities]`.
-                public var fieldsInAppPurchaseAvailabilities: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseAvailabilitiesPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchaseImagesPayload`.
-                @frozen public enum FieldsInAppPurchaseImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case sourceFileChecksum = "sourceFileChecksum"
-                    case assetToken = "assetToken"
-                    case imageAsset = "imageAsset"
-                    case uploadOperations = "uploadOperations"
-                    case state = "state"
-                    case inAppPurchase = "inAppPurchase"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseImages]`.
-                public typealias fieldsInAppPurchaseImagesPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchaseImagesPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseImages
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseImages]`.
-                public var fieldsInAppPurchaseImages: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseImagesPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchaseOfferCodesPayload`.
-                @frozen public enum FieldsInAppPurchaseOfferCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case customerEligibilities = "customerEligibilities"
-                    case productionCodeCount = "productionCodeCount"
-                    case sandboxCodeCount = "sandboxCodeCount"
-                    case active = "active"
-                    case oneTimeUseCodes = "oneTimeUseCodes"
-                    case customCodes = "customCodes"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseOfferCodes]`.
-                public typealias fieldsInAppPurchaseOfferCodesPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchaseOfferCodesPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseOfferCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseOfferCodes]`.
-                public var fieldsInAppPurchaseOfferCodes: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseOfferCodesPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fieldsInAppPurchaseVersionsPayload`.
-                @frozen public enum FieldsInAppPurchaseVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case inAppPurchase = "inAppPurchase"
-                    case image = "image"
-                    case images = "images"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseVersions]`.
-                public typealias fieldsInAppPurchaseVersionsPayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.FieldsInAppPurchaseVersionsPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/fields[inAppPurchaseVersions]`.
-                public var fieldsInAppPurchaseVersions: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseVersionsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case inAppPurchaseLocalizations = "inAppPurchaseLocalizations"
-                    case content = "content"
-                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
-                    case promotedPurchase = "promotedPurchase"
-                    case iapPriceSchedule = "iapPriceSchedule"
-                    case inAppPurchaseAvailability = "inAppPurchaseAvailability"
-                    case images = "images"
-                    case offerCodes = "offerCodes"
-                    case versions = "versions"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/include`.
-                public var include: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.IncludePayload?
-                /// maximum number of related inAppPurchaseLocalizations returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/limit[inAppPurchaseLocalizations]`.
-                public var limitInAppPurchaseLocalizations: Swift.Int?
-                /// maximum number of related images returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/limit[images]`.
-                public var limitImages: Swift.Int?
-                /// maximum number of related offerCodes returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/limit[offerCodes]`.
-                public var limitOfferCodes: Swift.Int?
-                /// maximum number of related versions returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/query/limit[versions]`.
-                public var limitVersions: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterProductId: filter by attribute 'productId'
-                ///   - filterName: filter by attribute 'name'
-                ///   - filterState: filter by attribute 'state'
-                ///   - filterInAppPurchaseType: filter by attribute 'inAppPurchaseType'
-                ///   - sort: comma-separated list of sort expressions; resources will be sorted as specified
-                ///   - fieldsInAppPurchases: the fields to include for returned resources of type inAppPurchases
-                ///   - fieldsInAppPurchaseLocalizations: the fields to include for returned resources of type inAppPurchaseLocalizations
-                ///   - fieldsInAppPurchaseContents: the fields to include for returned resources of type inAppPurchaseContents
-                ///   - fieldsInAppPurchaseAppStoreReviewScreenshots: the fields to include for returned resources of type inAppPurchaseAppStoreReviewScreenshots
-                ///   - fieldsPromotedPurchases: the fields to include for returned resources of type promotedPurchases
-                ///   - fieldsInAppPurchasePriceSchedules: the fields to include for returned resources of type inAppPurchasePriceSchedules
-                ///   - fieldsInAppPurchaseAvailabilities: the fields to include for returned resources of type inAppPurchaseAvailabilities
-                ///   - fieldsInAppPurchaseImages: the fields to include for returned resources of type inAppPurchaseImages
-                ///   - fieldsInAppPurchaseOfferCodes: the fields to include for returned resources of type inAppPurchaseOfferCodes
-                ///   - fieldsInAppPurchaseVersions: the fields to include for returned resources of type inAppPurchaseVersions
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitInAppPurchaseLocalizations: maximum number of related inAppPurchaseLocalizations returned (when they are included)
-                ///   - limitImages: maximum number of related images returned (when they are included)
-                ///   - limitOfferCodes: maximum number of related offerCodes returned (when they are included)
-                ///   - limitVersions: maximum number of related versions returned (when they are included)
-                public init(
-                    filterProductId: [Swift.String]? = nil,
-                    filterName: [Swift.String]? = nil,
-                    filterState: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.filterStatePayload? = nil,
-                    filterInAppPurchaseType: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.filterInAppPurchaseTypePayload? = nil,
-                    sort: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.SortPayload? = nil,
-                    fieldsInAppPurchases: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchasesPayload? = nil,
-                    fieldsInAppPurchaseLocalizations: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseLocalizationsPayload? = nil,
-                    fieldsInAppPurchaseContents: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseContentsPayload? = nil,
-                    fieldsInAppPurchaseAppStoreReviewScreenshots: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseAppStoreReviewScreenshotsPayload? = nil,
-                    fieldsPromotedPurchases: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsPromotedPurchasesPayload? = nil,
-                    fieldsInAppPurchasePriceSchedules: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchasePriceSchedulesPayload? = nil,
-                    fieldsInAppPurchaseAvailabilities: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseAvailabilitiesPayload? = nil,
-                    fieldsInAppPurchaseImages: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseImagesPayload? = nil,
-                    fieldsInAppPurchaseOfferCodes: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseOfferCodesPayload? = nil,
-                    fieldsInAppPurchaseVersions: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.fieldsInAppPurchaseVersionsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query.IncludePayload? = nil,
-                    limitInAppPurchaseLocalizations: Swift.Int? = nil,
-                    limitImages: Swift.Int? = nil,
-                    limitOfferCodes: Swift.Int? = nil,
-                    limitVersions: Swift.Int? = nil
-                ) {
-                    self.filterProductId = filterProductId
-                    self.filterName = filterName
-                    self.filterState = filterState
-                    self.filterInAppPurchaseType = filterInAppPurchaseType
-                    self.sort = sort
-                    self.fieldsInAppPurchases = fieldsInAppPurchases
-                    self.fieldsInAppPurchaseLocalizations = fieldsInAppPurchaseLocalizations
-                    self.fieldsInAppPurchaseContents = fieldsInAppPurchaseContents
-                    self.fieldsInAppPurchaseAppStoreReviewScreenshots = fieldsInAppPurchaseAppStoreReviewScreenshots
-                    self.fieldsPromotedPurchases = fieldsPromotedPurchases
-                    self.fieldsInAppPurchasePriceSchedules = fieldsInAppPurchasePriceSchedules
-                    self.fieldsInAppPurchaseAvailabilities = fieldsInAppPurchaseAvailabilities
-                    self.fieldsInAppPurchaseImages = fieldsInAppPurchaseImages
-                    self.fieldsInAppPurchaseOfferCodes = fieldsInAppPurchaseOfferCodes
-                    self.fieldsInAppPurchaseVersions = fieldsInAppPurchaseVersions
-                    self.limit = limit
-                    self.include = include
-                    self.limitInAppPurchaseLocalizations = limitInAppPurchaseLocalizations
-                    self.limitImages = limitImages
-                    self.limitOfferCodes = limitOfferCodes
-                    self.limitVersions = limitVersions
-                }
-            }
-            public var query: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsInAppPurchasesV2GetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsInAppPurchasesV2GetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Path,
-                query: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Query = .init(),
-                headers: Operations.AppsInAppPurchasesV2GetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/apps/{id}/inAppPurchasesV2/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.InAppPurchasesV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.InAppPurchasesV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppsInAppPurchasesV2GetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppsInAppPurchasesV2GetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of InAppPurchases
-            ///
-            /// - Remark: Generated from `#/paths//v1/apps/{id}/inAppPurchasesV2/get(apps_inAppPurchasesV2_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppsInAppPurchasesV2GetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppsInAppPurchasesV2GetToManyRelated.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

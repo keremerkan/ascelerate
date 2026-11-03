@@ -1250,6 +1250,23 @@ ascelerate webhooks delete <bundle-id> "Release bot"
 
 Without `--secret`, `create` generates a signing secret and prints it once. `--events all` subscribes to every event type.
 
+### Xcode Cloud
+
+Follow and start Xcode Cloud builds. A product is set up once in Xcode (Integrate > Create Workflow); after that:
+
+```bash
+ascelerate xcode-cloud products                              # apps and frameworks
+ascelerate xcode-cloud workflows <bundle-id>                 # list; also info, enable, disable, delete
+ascelerate xcode-cloud runs <bundle-id> [--workflow "Release"]   # build runs, newest first
+ascelerate xcode-cloud runs info <bundle-id> 42              # details and actions
+ascelerate xcode-cloud runs issues <bundle-id> 42            # errors and warnings
+ascelerate xcode-cloud runs tests <bundle-id> 42 --failed
+ascelerate xcode-cloud runs artifacts <bundle-id> 42 --download ./artifacts
+ascelerate xcode-cloud start <bundle-id> "Release" --branch main   # or --tag, --pull-request
+ascelerate xcode-cloud rerun <bundle-id> 42
+ascelerate xcode-cloud xcode-versions                        # Xcode and macOS versions offered
+```
+
 ### In-App Events
 
 ```bash

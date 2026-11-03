@@ -24,12 +24,13 @@ ascelerate xcode-cloud workflows <bundle-id>
 ascelerate xcode-cloud workflows info <bundle-id> "Release"
 ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only
 ascelerate xcode-cloud workflows update <bundle-id> "Release" --branch-changes "main,release/*" --xcode "Xcode 27.2" --clean false
+ascelerate xcode-cloud workflows create <bundle-id> --like "Default" --name "TestFlight" --action archive:MyApp:ios --manual-branches main
 ascelerate xcode-cloud workflows disable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows enable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows delete <bundle-id> "Old workflow"
 ```
 
-`info` は、ワークフローの開始条件（ブランチやタグの変更、プルリクエスト、スケジュール、手動で開始できる対象）、アクション（ビルド、テスト、解析、アーカイブと、それぞれのスキーム、プラットフォーム、配布方法）、使用するリポジトリ、プロジェクト、Xcode と macOS のバージョンを表示します。`update --manual-only` は、ワークフローが自動で開始しないようにします（ブランチやタグの変更、プルリクエスト、スケジュール）。手動で開始できる対象はそのまま残ります。`update` では、名前、説明、クリーンビルド、「Restrict Editing」、Xcode と macOS のバージョン、各開始条件も変更できます。`--branch-changes`、`--tag-changes`、`--pull-requests`（`--pull-request-source` と組み合わせ）、`--manual-branches`、`--manual-tags`、`--manual-pull-requests` には名前（前方一致は `release/*`）、`any`、`off` を指定します。`--auto-cancel` と `--remove-schedule` も使えます。保存の前に変更点を表示して確認します。無効にしたワークフローはビルドを開始しません。ワークフローを削除しても、そのビルド実行は残ります。
+`info` は、ワークフローの開始条件（ブランチやタグの変更、プルリクエスト、スケジュール、手動で開始できる対象）、アクション（ビルド、テスト、解析、アーカイブと、それぞれのスキーム、プラットフォーム、配布方法）、使用するリポジトリ、プロジェクト、Xcode と macOS のバージョンを表示します。`update --manual-only` は、ワークフローが自動で開始しないようにします（ブランチやタグの変更、プルリクエスト、スケジュール）。手動で開始できる対象はそのまま残ります。`update` では、名前、説明、クリーンビルド、「Restrict Editing」、Xcode と macOS のバージョン、各開始条件も変更できます。`--branch-changes`、`--tag-changes`、`--pull-requests`（`--pull-request-source` と組み合わせ）、`--manual-branches`、`--manual-tags`、`--manual-pull-requests` には名前（前方一致は `release/*`）、`any`、`off` を指定します。`--auto-cancel` と `--remove-schedule` も使えます。保存の前に変更点を表示して確認します。`--action TYPE:SCHEME[:PLATFORM]`（複数指定可）はアクションを置き換え、`--distribution internal|app-store|none` はアーカイブの配信先を設定します。`create` は別のワークフローのコピーとして新しいワークフローを作成し（`--like`。プロダクトのワークフローが1つだけなら不要）、同じオプションを使えます。API には環境変数とポストアクションがないため、それら（TestFlight グループなど）は App Store Connect で追加してください。無効にしたワークフローはビルドを開始しません。ワークフローを削除しても、そのビルド実行は残ります。
 
 ## ビルド実行
 

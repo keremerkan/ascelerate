@@ -57,7 +57,7 @@ public enum XcodeCloud {
     public let name: String?
     public let description: String?
     public let isEnabled: Bool
-    /// Edited in Xcode or App Store Connect right now.
+    /// App Store Connect's "Restrict Editing": only Admins and App Managers may change it.
     public let isLockedForEditing: Bool
     /// Builds start from a clean state (no cached derived data).
     public let clean: Bool

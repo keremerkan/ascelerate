@@ -1,13 +1,13 @@
 {
-  "originHash" : "a0c2374c98d39f879d8c8daf97a44b4a272f15f1ac314d29b52b5e9be53ac811",
+  "originHash" : "ef2360a3ed3491509e70232310752feb44a153872e288c894b914ea7d8b63fcd",
   "pins" : [
     {
       "identity" : "apple-ads-platform-api-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/apple-ads-platform-api-swift",
+      "location" : "https://github.com/keremerkan/apple-ads-platform-api-swift",
       "state" : {
-        "revision" : "588b7b2a501f9bfe00880e5a4db095bcafa69520",
-        "version" : "1.109.0"
+        "revision" : "80ad74323bc33f1f1ff34ad330844542a19508b7",
+        "version" : "1.109.0-ios.1"
       }
     },
     {

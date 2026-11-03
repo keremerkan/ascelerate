@@ -738,6 +738,8 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         let actions: [XcodeCloud.BuildAction]
         /// Each action's, in the same order, counted from its issues.
         let issueCounts: [XcodeCloud.IssueCounts]
+        /// The App Store Connect builds it uploaded, with their processing and TestFlight states.
+        let builds: [Builds.Build]
       }
 
       func run() async throws {
@@ -745,13 +747,15 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let product = try await XcodeCloudCommand.findProduct(product, client: client)
         let r = try await XcodeCloudCommand.findRun(run, product: product, client: client)
+        async let uploaded = XcodeCloud.builds(runID: r.id, client: client)
         let actions = try await XcodeCloud.actions(runID: r.id, client: client)
         // Apple sends no counts (seen 2026-11-03): each action's are counted from its issues.
         let counts = try await boundedConcurrentMap(actions) { action in
           if let counts = action.issues { return counts }
           return XcodeCloud.IssueCounts(issues: try await XcodeCloud.issues(actionID: action.id, client: client))
         }
-        if jsonOption.json { try printJSON(Result(run: r, actions: actions, issueCounts: counts)); return }
+        let builds = try await uploaded
+        if jsonOption.json { try printJSON(Result(run: r, actions: actions, issueCounts: counts, builds: builds)); return }
         print(bold("Build \(r.number.map(String.init) ?? r.id)") + " · \(r.workflowName ?? "-") · "
           + XcodeCloudCommand.state(progress: r.progress, status: r.status))
         let sha: String? = r.commit?.sha.map { String($0.prefix(7)) }
@@ -768,6 +772,17 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           ["Issues", XcodeCloudCommand.issueSummary(.total(counts))],
         ]
         if let reason = r.cancelReason { rows.append(["Cancelled", reason]) }
+        // What it uploaded: "1.0 (21) iOS · Processing · TestFlight internal: Ready to Test, external: Ready to Submit".
+        for build in builds {
+          let name = "\(build.version ?? "-") (\(build.number ?? "-"))" + (build.platform.map { " " + formatState($0) } ?? "")
+          let testFlight = [build.internalState.map { "internal: \(formatState($0))" }, build.externalState.map { "external: \(formatState($0))" }]
+            .compactMap { $0 }.joined(separator: ", ")
+          rows.append([
+            "Uploaded build",
+            [name, build.processingState.map { formatState($0) }, testFlight.isEmpty ? nil : "TestFlight \(testFlight)"]
+              .compactMap { $0 }.joined(separator: " · "),
+          ])
+        }
         if let url = r.commit?.url { rows.append(["Commit link", url]) }
         Table.print(headers: ["", ""], rows: rows)
         print()

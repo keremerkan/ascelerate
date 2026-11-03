@@ -351,7 +351,7 @@ ascelerate xcode-cloud workflows update <app> "Release" --manual-only   # no aut
 ascelerate xcode-cloud workflows update <app> "Release" [--name X] [--description X] [--clean true|false] [--restrict-editing true|false] [--xcode "Xcode 27.2"] [--macos X] [--branch-changes "main,release/*"|any|off] [--tag-changes X] [--pull-requests TARGETS] [--pull-request-source X] [--auto-cancel true|false] [--remove-schedule] [--manual-branches X] [--manual-tags X] [--manual-pull-requests X] [--action TYPE:SCHEME[:PLATFORM]]... [--distribution internal|app-store|none]   # lists the changes, asks
 ascelerate xcode-cloud workflows create <app> [--like "Default"] --name "TestFlight" [--action archive:MyApp:ios]... [same options as update] [--disabled]   # copy of a workflow; no env variables/post-actions in the API (add TestFlight groups in App Store Connect)
 ascelerate xcode-cloud runs <app> [--workflow X] [--limit N] [--json]   # newest first
-ascelerate xcode-cloud runs info <app> <number> [--json]     # run + actions
+ascelerate xcode-cloud runs info <app> <number> [--json]     # run + actions + the App Store Connect build it uploaded (processing, TestFlight states)
 ascelerate xcode-cloud runs issues <app> <number> [--errors] [--json]
 ascelerate xcode-cloud runs tests <app> <number> [--failed] [--json]
 ascelerate xcode-cloud runs logs <app> <number> [--action "Build - iOS"] [--show xcodebuild-build.log]   # each action's log bundle

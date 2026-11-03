@@ -720,6 +720,18 @@ public enum XcodeCloud {
 
   // MARK: A run's actions
 
+  /// The App Store Connect builds a run uploaded (an archive action distributing to App Store
+  /// Connect), with their processing and TestFlight states; none until App Store Connect has one.
+  /// One request: the run's builds with their versions and TestFlight details included.
+  public static func builds(runID: String, client: ASCClient) async throws -> [Builds.Build] {
+    let response = try await withTransientRetry {
+      try await client.ciBuildRunsBuildsGetToManyRelated(
+        path: .init(id: runID), query: .init(limit: 50, include: [.preReleaseVersion, .buildBetaDetail])
+      ).ok.body.json
+    }
+    return Builds.resolve(response)
+  }
+
   public struct BuildAction: Codable, Hashable, Identifiable, Sendable {
     public let id: String
     public let name: String?

@@ -232,7 +232,15 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     }
 
     struct Update: AsyncParsableCommand {
-      static let configuration = CommandConfiguration(abstract: "Change a workflow.")
+      static let configuration = CommandConfiguration(
+        abstract: "Change a workflow's settings and start conditions.",
+        discussion: """
+          Start condition options take a comma-separated list of branch or tag names, a name \
+          ending in * for names that begin with it (release/*), 'any', or 'off' to remove the \
+          condition. Actions, environment variables, post-actions and a schedule's times are \
+          changed in App Store Connect.
+          """
+      )
 
       @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
       var product: String
@@ -240,41 +248,187 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       @Argument(help: "The workflow's name or ID.")
       var workflow: String
 
+      @Option(name: .long, help: "New name.")
+      var name: String?
+
+      @Option(name: .long, help: "New description ('' clears it).")
+      var description: String?
+
+      @Option(name: .long, help: "Build without Xcode Cloud's cache: true or false.")
+      var clean: Bool?
+
+      @Option(name: .long, help: "Only Admins and App Managers may change it: true or false.")
+      var restrictEditing: Bool?
+
+      @Option(name: .long, help: "Xcode version: its name or version (Latest Release, Xcode 27.2, 27B52).")
+      var xcode: String?
+
+      @Option(name: .long, help: "macOS version: its name or version, among those the Xcode version runs on.")
+      var macos: String?
+
+      @Option(name: .long, help: "Start on changes to these branches, 'any', or 'off'.")
+      var branchChanges: String?
+
+      @Option(name: .long, help: "Start on changes to these tags, 'any', or 'off'.")
+      var tagChanges: String?
+
+      @Option(name: .long, help: "Start on pull requests into these branches, 'any', or 'off'.")
+      var pullRequests: String?
+
+      @Option(name: .long, help: "The pull requests' source branches (with --pull-requests), or 'any'.")
+      var pullRequestSource: String?
+
+      @Option(name: .long, help: "A newer change cancels a running build (branch, tag and pull request conditions): true or false.")
+      var autoCancel: Bool?
+
+      @Flag(name: .long, help: "Remove its schedule.")
+      var removeSchedule = false
+
+      @Option(name: .long, help: "May be started by hand on these branches, 'any', or 'off'.")
+      var manualBranches: String?
+
+      @Option(name: .long, help: "May be started by hand on these tags, 'any', or 'off'.")
+      var manualTags: String?
+
+      @Option(name: .long, help: "May be started by hand on pull requests into these branches, 'any', or 'off'.")
+      var manualPullRequests: String?
+
       @Flag(name: .long, help: "Start it only by hand: removes its branch, tag, pull request and schedule start conditions.")
       var manualOnly = false
 
       @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
       var yes = false
 
-      func validate() throws {
-        guard manualOnly else { throw ValidationError("Nothing to change. Pass --manual-only.") }
-      }
-
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let product = try await XcodeCloudCommand.findProduct(product, client: client)
         let w = try await XcodeCloudCommand.findWorkflow(workflow, product: product, client: client)
-        let automatic = w.startConditions.filter { XcodeCloud.automaticStartKinds.contains($0.kind) }
-        let manual = w.startConditions.filter { !XcodeCloud.automaticStartKinds.contains($0.kind) }
-        guard !automatic.isEmpty else {
-          print("Workflow '\(w.name ?? w.id)' already starts only by hand.")
+        let original = try await XcodeCloud.edit(workflowID: w.id, client: client)
+        var edit = original
+        /// Xcode and macOS versions' names by ID, for the change list.
+        var versionNames: [String: String] = [:]
+        if let name { edit.name = name }
+        if let description { edit.description = description }
+        if let clean { edit.clean = clean }
+        if let restrictEditing { edit.isLockedForEditing = restrictEditing }
+        if xcode != nil || macos != nil {
+          let versions = try await XcodeCloud.xcodeVersions(client: client)
+          for version in versions {
+            versionNames[version.id] = version.name
+            for option in version.macOSOptions { versionNames[option.id] = option.name }
+          }
+          if let xcode {
+            guard let match = versions.first(where: { [$0.id, $0.name, $0.version].contains(xcode) }) else {
+              throw ValidationError("No Xcode version '\(xcode)'. Versions: \(versions.compactMap(\.name).joined(separator: ", ")).")
+            }
+            edit.xcodeVersionID = match.id
+          }
+          let options = versions.first { $0.id == edit.xcodeVersionID }?.macOSOptions ?? []
+          if let macos {
+            guard let match = options.first(where: { [$0.id, $0.name].contains(macos) || $0.name.hasSuffix(macos) }) else {
+              throw ValidationError("No macOS version '\(macos)' for this Xcode version. Versions: \(options.map(\.name).joined(separator: ", ")).")
+            }
+            edit.macOSVersionID = match.id
+          } else if !options.contains(where: { $0.id == edit.macOSVersionID }) {
+            // The new Xcode version doesn't run on the current macOS version.
+            edit.macOSVersionID = options.first?.id
+          }
+        }
+        if manualOnly {
+          (edit.branch, edit.tag, edit.pullRequest, edit.hasSchedule) = (nil, nil, nil, false)
+        }
+        if let branchChanges {
+          edit.branch = try Self.patterns(branchChanges).map { XcodeCloud.ChangeStart(source: $0, autoCancel: edit.branch?.autoCancel ?? true) }
+        }
+        if let tagChanges {
+          edit.tag = try Self.patterns(tagChanges).map { XcodeCloud.ChangeStart(source: $0, autoCancel: edit.tag?.autoCancel ?? true) }
+        }
+        if let pullRequests {
+          edit.pullRequest = try Self.patterns(pullRequests).map {
+            XcodeCloud.PullRequestStart(source: edit.pullRequest?.source ?? .any, destination: $0, autoCancel: edit.pullRequest?.autoCancel ?? true)
+          }
+        }
+        if let pullRequestSource {
+          guard edit.pullRequest != nil else { throw ValidationError("--pull-request-source needs a pull request condition (--pull-requests).") }
+          guard let source = try Self.patterns(pullRequestSource) else { throw ValidationError("--pull-request-source takes branches or 'any'.") }
+          edit.pullRequest?.source = source
+        }
+        if let autoCancel {
+          edit.branch?.autoCancel = autoCancel
+          edit.tag?.autoCancel = autoCancel
+          edit.pullRequest?.autoCancel = autoCancel
+        }
+        if removeSchedule { edit.hasSchedule = false }
+        if let manualBranches { edit.manualBranch = try Self.patterns(manualBranches) }
+        if let manualTags { edit.manualTag = try Self.patterns(manualTags) }
+        if let manualPullRequests {
+          edit.manualPullRequest = try Self.patterns(manualPullRequests).map {
+            XcodeCloud.PullRequestStart(source: edit.manualPullRequest?.source ?? .any, destination: $0, autoCancel: false)
+          }
+        }
+        guard edit != original else {
+          print("Nothing to change.")
           return
         }
-        guard !manual.isEmpty else {
-          throw ValidationError(
-            "Workflow '\(w.name ?? w.id)' has no manual start condition, and Xcode Cloud wants at least one. Add one in Xcode or App Store Connect first.")
+        guard edit.hasStartCondition else {
+          throw ValidationError("A workflow needs a start condition; this would leave '\(w.name ?? w.id)' with none.")
         }
-        print("Workflow '\(w.name ?? w.id)' stops starting on:")
-        for condition in automatic { print("  \(XcodeCloudCommand.startConditionText(condition))") }
-        print("It can still be started:")
-        for condition in manual { print("  \(XcodeCloudCommand.startConditionText(condition))") }
-        guard confirm("Change it? [y/N] ") else {
+        print("Workflow '\(w.name ?? w.id)':")
+        for line in Self.changes(from: original, to: edit, names: versionNames) { print("  \(line)") }
+        guard confirm("Save? [y/N] ") else {
           print(yellow("Cancelled."))
           return
         }
-        try await XcodeCloud.removeAutomaticStarts(workflowID: w.id, client: client)
-        print(green("Updated") + " workflow '\(w.name ?? w.id)': it starts only by hand now.")
+        try await XcodeCloud.save(edit, original: original, workflowID: w.id, client: client)
+        print(green("Updated") + " workflow '\(edit.name)'.")
+      }
+
+      /// 'off' for none, 'any', or names (a trailing * for names that begin with it).
+      static func patterns(_ value: String) throws -> XcodeCloud.NamePatterns? {
+        switch value.lowercased() {
+          case "off", "none": return nil
+          case "any", "all": return .any
+          default:
+            let names = value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            guard !names.isEmpty else { throw ValidationError("Give branch or tag names, 'any', or 'off'.") }
+            return XcodeCloud.NamePatterns(isAny: false, patterns: names.map {
+              $0.hasSuffix("*") ? .init(pattern: String($0.dropLast()), isPrefix: true) : .init(pattern: $0, isPrefix: false)
+            })
+        }
+      }
+
+      static func text(_ patterns: XcodeCloud.NamePatterns?) -> String {
+        guard let patterns else { return "off" }
+        return patterns.isAny ? "any" : patterns.patterns.map { $0.pattern + ($0.isPrefix ? "*" : "") }.joined(separator: ", ")
+      }
+
+      /// What a save would change, a line each.
+      static func changes(from old: XcodeCloud.WorkflowEdit, to new: XcodeCloud.WorkflowEdit, names: [String: String]) -> [String] {
+        var lines: [String] = []
+        func line(_ title: String, _ a: String, _ b: String) { if a != b { lines.append("\(title): \(a) → \(b)") } }
+        line("Name", old.name, new.name)
+        line("Description", old.description.isEmpty ? "-" : old.description, new.description.isEmpty ? "-" : new.description)
+        line("Clean builds", "\(old.clean)", "\(new.clean)")
+        line("Restrict editing", "\(old.isLockedForEditing)", "\(new.isLockedForEditing)")
+        let name = { (id: String?) in id.map { names[$0] ?? $0 } ?? "-" }
+        line("Xcode", name(old.xcodeVersionID), name(new.xcodeVersionID))
+        line("macOS", name(old.macOSVersionID), name(new.macOSVersionID))
+        // A change condition with "(auto-cancel)" when a newer change cancels a running build.
+        let change = { (patterns: XcodeCloud.NamePatterns?, autoCancel: Bool?) in
+          text(patterns) + (patterns != nil && autoCancel == true ? " (auto-cancel)" : "")
+        }
+        line("Branch changes", change(old.branch?.source, old.branch?.autoCancel), change(new.branch?.source, new.branch?.autoCancel))
+        line("Tag changes", change(old.tag?.source, old.tag?.autoCancel), change(new.tag?.source, new.tag?.autoCancel))
+        line(
+          "Pull requests into", change(old.pullRequest?.destination, old.pullRequest?.autoCancel),
+          change(new.pullRequest?.destination, new.pullRequest?.autoCancel))
+        line("Pull requests from", text(old.pullRequest?.source), text(new.pullRequest?.source))
+        line("Schedule", old.hasSchedule ? (old.scheduleText ?? "on") : "off", new.hasSchedule ? (new.scheduleText ?? "on") : "off")
+        line("By hand, branches", text(old.manualBranch), text(new.manualBranch))
+        line("By hand, tags", text(old.manualTag), text(new.manualTag))
+        line("By hand, pull requests into", text(old.manualPullRequest?.destination), text(new.manualPullRequest?.destination))
+        return lines
       }
     }
 

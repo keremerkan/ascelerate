@@ -417,7 +417,7 @@ ascelerate xcode-cloud products [--json]                           # Xcode Cloud
 ascelerate xcode-cloud workflows <product> [--json]                # Workflows (product: bundle ID/alias, name or ID)
 ascelerate xcode-cloud workflows info <product> <workflow> [--json]   # Start conditions, actions, repository, Xcode/macOS
 ascelerate xcode-cloud workflows enable|disable|delete <product> <workflow> [-y]
-ascelerate xcode-cloud workflows update <product> <workflow> --manual-only [-y]   # Remove automatic start conditions, keep manual ones
+ascelerate xcode-cloud workflows update <product> <workflow> [--manual-only] [--name X] [--description X] [--clean true|false] [--restrict-editing true|false] [--xcode X] [--macos X] [--branch-changes|--tag-changes|--pull-requests|--manual-branches|--manual-tags|--manual-pull-requests NAMES|any|off] [--pull-request-source X] [--auto-cancel true|false] [--remove-schedule] [-y]   # XcodeCloud.edit/save: lists the changes, asks; start conditions go as a set
 ascelerate xcode-cloud runs <product> [--workflow X] [--limit N] [--json]   # Build runs, newest first
 ascelerate xcode-cloud runs info|issues|tests|artifacts <product> <number> [--errors|--failed|--type X --download DIR] [--json]
 ascelerate xcode-cloud runs logs <product> <number> [--action X] [--show FILE]   # Each action's log bundle (ZipReader): list, or print one

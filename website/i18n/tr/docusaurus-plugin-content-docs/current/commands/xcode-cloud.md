@@ -23,12 +23,13 @@ Ekibin ürünlerini (uygulamalar ve framework'ler) bundle ID'leri ve repository'
 ascelerate xcode-cloud workflows <bundle-id>
 ascelerate xcode-cloud workflows info <bundle-id> "Release"
 ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only
+ascelerate xcode-cloud workflows update <bundle-id> "Release" --branch-changes "main,release/*" --xcode "Xcode 27.2" --clean false
 ascelerate xcode-cloud workflows disable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows enable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows delete <bundle-id> "Old workflow"
 ```
 
-`info`, bir workflow'un başlatma koşullarını (branch ve tag değişiklikleri, pull request'ler, zamanlamalar ve elle başlatılabilecekler), eylemlerini (scheme, platform ve dağıtım bilgisiyle build, test, analiz ve arşivleme) ve kullandığı repository'yi, projeyi, Xcode ve macOS sürümlerini gösterir. `update --manual-only`, bir workflow'un kendiliğinden başlamasını durdurur (branch ve tag değişiklikleri, pull request'ler, zamanlama); elle başlatılabilecekler korunur. Kapatılmış bir workflow build başlatmaz. Bir workflow silindiğinde build çalıştırmaları silinmez.
+`info`, bir workflow'un başlatma koşullarını (branch ve tag değişiklikleri, pull request'ler, zamanlamalar ve elle başlatılabilecekler), eylemlerini (scheme, platform ve dağıtım bilgisiyle build, test, analiz ve arşivleme) ve kullandığı repository'yi, projeyi, Xcode ve macOS sürümlerini gösterir. `update --manual-only`, bir workflow'un kendiliğinden başlamasını durdurur (branch ve tag değişiklikleri, pull request'ler, zamanlama); elle başlatılabilecekler korunur. `update` ayrıca adı, açıklamayı, temiz derlemeyi, “Restrict Editing” ayarını, Xcode ve macOS sürümlerini ve her başlatma koşulunu değiştirir: `--branch-changes`, `--tag-changes`, `--pull-requests` (`--pull-request-source` ile), `--manual-branches`, `--manual-tags` ve `--manual-pull-requests` adlar (`release/*` ile başlayan adlar için), `any` veya `off` alır; bunlara `--auto-cancel` ve `--remove-schedule` eşlik eder. Kaydetmeden önce değişiklikleri listeler ve onay ister. Kapatılmış bir workflow build başlatmaz. Bir workflow silindiğinde build çalıştırmaları silinmez.
 
 ## Build çalıştırmaları
 

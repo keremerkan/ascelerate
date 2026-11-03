@@ -1258,6 +1258,7 @@ Follow and start Xcode Cloud builds. A product is set up once in Xcode (Integrat
 ascelerate xcode-cloud products                              # apps and frameworks
 ascelerate xcode-cloud workflows <bundle-id>                 # list; also info, enable, disable, delete
 ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only   # stop automatic builds
+ascelerate xcode-cloud workflows update <bundle-id> "Release" --branch-changes "main,release/*" --xcode "Xcode 27.2"
 ascelerate xcode-cloud runs <bundle-id> [--workflow "Release"]   # build runs, newest first
 ascelerate xcode-cloud runs info <bundle-id> 42              # details and actions
 ascelerate xcode-cloud runs issues <bundle-id> 42            # errors and warnings

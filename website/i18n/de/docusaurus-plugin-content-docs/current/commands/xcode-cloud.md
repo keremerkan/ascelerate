@@ -23,12 +23,13 @@ Listet die Produkte des Teams (Apps und Frameworks) mit ihrer Bundle-ID und ihre
 ascelerate xcode-cloud workflows <bundle-id>
 ascelerate xcode-cloud workflows info <bundle-id> "Release"
 ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only
+ascelerate xcode-cloud workflows update <bundle-id> "Release" --branch-changes "main,release/*" --xcode "Xcode 27.2" --clean false
 ascelerate xcode-cloud workflows disable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows enable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows delete <bundle-id> "Old workflow"
 ```
 
-`info` zeigt die Startbedingungen eines Workflows (Änderungen an Branches und Tags, Pull Requests, Zeitpläne und was von Hand gestartet werden darf), seine Aktionen (Build, Test, Analyse, Archivierung mit Scheme, Plattform und Distribution) sowie das Repository, das Projekt und die Xcode- und macOS-Versionen, die er verwendet. `update --manual-only` sorgt dafür, dass ein Workflow nicht mehr von selbst startet (Änderungen an Branches und Tags, Pull Requests, Zeitplan); was von Hand gestartet werden darf, bleibt. Ein deaktivierter Workflow startet keine Builds. Wenn Sie einen Workflow löschen, bleiben seine Build-Läufe erhalten.
+`info` zeigt die Startbedingungen eines Workflows (Änderungen an Branches und Tags, Pull Requests, Zeitpläne und was von Hand gestartet werden darf), seine Aktionen (Build, Test, Analyse, Archivierung mit Scheme, Plattform und Distribution) sowie das Repository, das Projekt und die Xcode- und macOS-Versionen, die er verwendet. `update --manual-only` sorgt dafür, dass ein Workflow nicht mehr von selbst startet (Änderungen an Branches und Tags, Pull Requests, Zeitplan); was von Hand gestartet werden darf, bleibt. `update` ändert außerdem Name, Beschreibung, saubere Builds, „Restrict Editing“, die Xcode- und macOS-Version und jede Startbedingung: `--branch-changes`, `--tag-changes`, `--pull-requests` (mit `--pull-request-source`), `--manual-branches`, `--manual-tags` und `--manual-pull-requests` nehmen Namen (`release/*` für Namen, die damit beginnen), `any` oder `off`; dazu kommen `--auto-cancel` und `--remove-schedule`. Vor dem Speichern listet es die Änderungen auf und fragt nach. Ein deaktivierter Workflow startet keine Builds. Wenn Sie einen Workflow löschen, bleiben seine Build-Läufe erhalten.
 
 ## Build-Läufe
 

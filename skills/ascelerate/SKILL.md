@@ -348,6 +348,7 @@ ascelerate xcode-cloud workflows <app> [--json]              # app = bundle ID, 
 ascelerate xcode-cloud workflows info <app> "Release" [--json]   # start conditions, actions, Xcode/macOS
 ascelerate xcode-cloud workflows enable|disable|delete <app> "Release"
 ascelerate xcode-cloud workflows update <app> "Release" --manual-only   # no automatic starts; manual ones kept
+ascelerate xcode-cloud workflows update <app> "Release" [--name X] [--description X] [--clean true|false] [--restrict-editing true|false] [--xcode "Xcode 27.2"] [--macos X] [--branch-changes "main,release/*"|any|off] [--tag-changes X] [--pull-requests TARGETS] [--pull-request-source X] [--auto-cancel true|false] [--remove-schedule] [--manual-branches X] [--manual-tags X] [--manual-pull-requests X]   # lists the changes, asks
 ascelerate xcode-cloud runs <app> [--workflow X] [--limit N] [--json]   # newest first
 ascelerate xcode-cloud runs info <app> <number> [--json]     # run + actions
 ascelerate xcode-cloud runs issues <app> <number> [--errors] [--json]

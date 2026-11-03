@@ -352,13 +352,14 @@ ascelerate xcode-cloud runs <app> [--workflow X] [--limit N] [--json]   # newest
 ascelerate xcode-cloud runs info <app> <number> [--json]     # run + actions
 ascelerate xcode-cloud runs issues <app> <number> [--errors] [--json]
 ascelerate xcode-cloud runs tests <app> <number> [--failed] [--json]
+ascelerate xcode-cloud runs logs <app> <number> [--action "Build - iOS"] [--show xcodebuild-build.log]   # each action's log bundle
 ascelerate xcode-cloud runs artifacts <app> <number> [--type LOG_BUNDLE,ARCHIVE] [--download DIR] [--json]
 ascelerate xcode-cloud start <app> "Release" [--branch X | --tag X | --pull-request N] [--clean]
 ascelerate xcode-cloud rerun <app> <number> [--clean]       # same commit, same workflow
 ascelerate xcode-cloud repositories | xcode-versions [--json]
 ```
 
-The API can't create a product or cancel a build. To diagnose a failed run: `runs info` for the failed action, then `runs issues --errors` and `runs tests --failed`; `runs artifacts --type LOG_BUNDLE --download` for full logs.
+The API can't create a product or cancel a build. To diagnose a failed run: `runs info` for the failed action, then `runs issues --errors` and `runs tests --failed`; `runs logs --show xcodebuild-build.log` (or `ci_post_clone.log`) for the full logs.
 
 ### Reports (downloads, proceeds, analytics)
 

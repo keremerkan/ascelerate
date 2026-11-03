@@ -38,11 +38,12 @@ ascelerate xcode-cloud runs <bundle-id> --workflow "Release" --limit 50
 ascelerate xcode-cloud runs info <bundle-id> 42                 # Details und Aktionen
 ascelerate xcode-cloud runs issues <bundle-id> 42 [--errors]
 ascelerate xcode-cloud runs tests <bundle-id> 42 [--failed]
+ascelerate xcode-cloud runs logs <bundle-id> 42 [--action "Build - iOS"] [--show ci_post_clone.log]
 ascelerate xcode-cloud runs artifacts <bundle-id> 42
 ascelerate xcode-cloud runs artifacts <bundle-id> 42 --type LOG_BUNDLE --download ./logs
 ```
 
-Jeder Lauf zeigt seinen Status, den gebauten Branch, Tag oder Pull Request, den Commit, die Dauer sowie die Anzahl der Fehler, Warnungen und fehlgeschlagenen Tests. `issues` listet die Fehler und Warnungen jeder Aktion mit Datei und Zeile auf; `tests` listet die Testergebnisse pro Ziel (Gerät und Betriebssystem) auf, mit der Fehlermeldung jedes fehlgeschlagenen Tests. `artifacts` listet Logs, Archive, Result Bundles und Produkte auf; `--download` speichert sie (`--type` grenzt die Auswahl ein).
+Jeder Lauf zeigt seinen Status, den gebauten Branch, Tag oder Pull Request, den Commit und die Dauer; `runs info` ergänzt seine Aktionen mit der Anzahl ihrer Fehler, Warnungen und fehlgeschlagenen Tests (Apple liefert keine Zahlen, daher werden sie aus den Problemen jeder Aktion gezählt). `issues` listet die Fehler und Warnungen jeder Aktion mit Datei und Zeile auf; `tests` listet die Testergebnisse pro Ziel (Gerät und Betriebssystem) auf, mit der Fehlermeldung jedes fehlgeschlagenen Tests. `logs` liest das Log-Paket jeder Aktion: die Logs des Post-Clone-Skripts, der Paketauflösung und von xcodebuild, aufgelistet mit ihrer Zeilenzahl oder mit `--show` ausgegeben. `artifacts` listet Logs, Archive, Result Bundles und Produkte auf; `--download` speichert sie (`--type` grenzt die Auswahl ein).
 
 ## Einen Build starten
 

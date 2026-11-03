@@ -361,7 +361,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
   struct Runs: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "A product's build runs and what each one produced.",
-      subcommands: [List.self, Info.self, Issues.self, Tests.self, Artifacts.self],
+      subcommands: [List.self, Info.self, Issues.self, Tests.self, Logs.self, Artifacts.self],
       defaultSubcommand: List.self
     )
 
@@ -392,14 +392,14 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           return
         }
         Table.print(
-          headers: ["#", "Workflow", "State", "Source", "Commit", "Started", "Duration", "Issues"],
+          headers: ["#", "Workflow", "State", "Source", "Commit", "Started", "Duration"],
           rows: runs.map { r in
             [
               r.number.map(String.init) ?? "-", r.workflowName ?? "-",
               XcodeCloudCommand.state(progress: r.progress, status: r.status), XcodeCloudCommand.source(r),
               r.commit?.sha.map { String($0.prefix(7)) } ?? "-",
               (r.startedDate ?? r.createdDate).map(formatDate) ?? "-",
-              XcodeCloudCommand.duration(from: r.startedDate, to: r.finishedDate), XcodeCloudCommand.issueSummary(r.issues),
+              XcodeCloudCommand.duration(from: r.startedDate, to: r.finishedDate),
             ]
           })
       }
@@ -419,6 +419,8 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       private struct Result: Encodable {
         let run: XcodeCloud.Run
         let actions: [XcodeCloud.BuildAction]
+        /// Each action's, in the same order, counted from its issues.
+        let issueCounts: [XcodeCloud.IssueCounts]
       }
 
       func run() async throws {
@@ -427,7 +429,12 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         let product = try await XcodeCloudCommand.findProduct(product, client: client)
         let r = try await XcodeCloudCommand.findRun(run, product: product, client: client)
         let actions = try await XcodeCloud.actions(runID: r.id, client: client)
-        if jsonOption.json { try printJSON(Result(run: r, actions: actions)); return }
+        // Apple sends no counts (seen 2026-11-03): each action's are counted from its issues.
+        let counts = try await boundedConcurrentMap(actions) { action in
+          if let counts = action.issues { return counts }
+          return XcodeCloud.IssueCounts(issues: try await XcodeCloud.issues(actionID: action.id, client: client))
+        }
+        if jsonOption.json { try printJSON(Result(run: r, actions: actions, issueCounts: counts)); return }
         print(bold("Build \(r.number.map(String.init) ?? r.id)") + " · \(r.workflowName ?? "-") · "
           + XcodeCloudCommand.state(progress: r.progress, status: r.status))
         let sha: String? = r.commit?.sha.map { String($0.prefix(7)) }
@@ -441,7 +448,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           ["Started by", r.startReason.map { formatState($0) } ?? "-"],
           ["Started", started.map(formatDate) ?? "-"],
           ["Duration", XcodeCloudCommand.duration(from: r.startedDate, to: r.finishedDate)],
-          ["Issues", XcodeCloudCommand.issueSummary(r.issues)],
+          ["Issues", XcodeCloudCommand.issueSummary(.total(counts))],
         ]
         if let reason = r.cancelReason { rows.append(["Cancelled", reason]) }
         if let url = r.commit?.url { rows.append(["Commit link", url]) }
@@ -449,10 +456,10 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         print()
         Table.print(
           headers: ["Action", "Type", "State", "Duration", "Issues"],
-          rows: actions.map { a in
+          rows: zip(actions, counts).map { a, count in
             [
               a.name ?? "-", formatState(a.type ?? "-"), XcodeCloudCommand.state(progress: a.progress, status: a.status),
-              XcodeCloudCommand.duration(from: a.startedDate, to: a.finishedDate), XcodeCloudCommand.issueSummary(a.issues),
+              XcodeCloudCommand.duration(from: a.startedDate, to: a.finishedDate), XcodeCloudCommand.issueSummary(count),
             ]
           })
       }
@@ -496,7 +503,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         for e in entries {
           let type = e.issue.type ?? "-"
           let label = type == "ERROR" || type == "TEST_FAILURE" ? red(formatState(type)) : yellow(formatState(type))
-          let place = e.issue.path.map { $0 + (e.issue.line.map { ":\($0)" } ?? "") }
+          let place = e.issue.projectPath.map { $0 + (e.issue.line.map { ":\($0)" } ?? "") }
           print("\(label) [\(e.action ?? "-")]" + (place.map { " \($0)" } ?? ""))
           print("  \(e.issue.message ?? "-")")
         }
@@ -544,8 +551,55 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           })
         for t in results where t.message != nil && t.status != "SUCCESS" {
           print()
-          print(red([t.className, t.name].compactMap { $0 }.joined(separator: ".")) + (t.path.map { " \($0)" + (t.line.map { ":\($0)" } ?? "") } ?? ""))
+          print(red([t.className, t.name].compactMap { $0 }.joined(separator: ".")) + (t.projectPath.map { " \($0)" + (t.line.map { ":\($0)" } ?? "") } ?? ""))
           print("  \(t.message ?? "")")
+        }
+      }
+    }
+
+    struct Logs: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "A build run's logs, from each action's log bundle: list them, or print one.")
+
+      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      var product: String
+
+      @Argument(help: "The run's number or ID.")
+      var run: String
+
+      @Option(name: .long, help: "Only this action's logs (its name).")
+      var action: String?
+
+      @Option(name: .long, help: "Print this log (its file name, e.g. ci_post_clone.log).")
+      var show: String?
+
+      func run() async throws {
+        let client = try ClientFactory.makeClient()
+        let product = try await XcodeCloudCommand.findProduct(product, client: client)
+        let r = try await XcodeCloudCommand.findRun(run, product: product, client: client)
+        var actions = try await XcodeCloud.actions(runID: r.id, client: client)
+        if let action {
+          actions = actions.filter { $0.name?.lowercased() == action.lowercased() }
+          guard !actions.isEmpty else { throw ValidationError("No action '\(action)' in build \(run).") }
+        }
+        var rows: [[String]] = []
+        for a in actions {
+          for log in try await XcodeCloud.logs(actionID: a.id, client: client) {
+            if let show {
+              guard log.name == show else { continue }
+              if actions.count > 1 { print(bold("\(a.name ?? "-") · \(log.name)")) }
+              print(log.text)
+            } else {
+              rows.append([a.name ?? "-", log.name, "\(log.text.split(separator: "\n", omittingEmptySubsequences: false).count)"])
+            }
+          }
+        }
+        if show == nil {
+          guard !rows.isEmpty else {
+            print("No logs yet.")
+            return
+          }
+          Table.print(headers: ["Action", "Log", "Lines"], rows: rows)
         }
       }
     }
@@ -591,7 +645,14 @@ struct XcodeCloudCommand: AsyncParsableCommand {
             let name = e.artifact.fileName ?? e.artifact.id
             print("Downloading \(name)…", terminator: "")
             fflush(stdout)
-            try await XcodeCloud.download(artifactID: e.artifact.id, to: folder.appending(path: name), client: client)
+            // On a terminal, the share received so far after the name, redrawn as it grows.
+            let showsProgress = isTerminal
+            try await XcodeCloud.download(artifactID: e.artifact.id, to: folder.appending(path: name), client: client) { bytes, expected in
+              guard showsProgress, expected > 0 else { return }
+              print("\r\u{1B}[KDownloading \(name)… \(bytes * 100 / expected)%", terminator: "")
+              fflush(stdout)
+            }
+            if showsProgress { print("\r\u{1B}[KDownloading \(name)…", terminator: "") }
             print(" " + green("done"))
           }
           print("\(entries.count) artifact\(entries.count == 1 ? "" : "s") in \(folder.path(percentEncoded: false))")

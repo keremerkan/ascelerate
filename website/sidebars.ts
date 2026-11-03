@@ -34,6 +34,7 @@ const sidebars: SidebarsConfig = {
         'commands/ads',
         'commands/nominations',
         'commands/webhooks',
+        'commands/xcode-cloud',
         'commands/devices',
         'commands/certificates',
         'commands/bundle-ids',

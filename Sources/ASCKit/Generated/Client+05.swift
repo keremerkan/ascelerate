@@ -11,6 +11,73 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `POST /v1/appStoreVersionExperimentTreatmentLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatmentLocalizations/post(appStoreVersionExperimentTreatmentLocalizations_createInstance)`.
+    public func appStoreVersionExperimentTreatmentLocalizationsCreateInstance(_ input: Operations.AppStoreVersionExperimentTreatmentLocalizationsCreateInstance.Input) async throws -> Operations.AppStoreVersionExperimentTreatmentLocalizationsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.AppStoreVersionExperimentTreatmentLocalizationsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/appStoreVersionExperimentTreatmentLocalizations",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.AppStoreVersionExperimentTreatmentLocalizationsCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.AppStoreVersionExperimentTreatmentLocalizationResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `GET /v1/appStoreVersionExperimentTreatmentLocalizations/{id}`.
     /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatmentLocalizations/{id}/get(appStoreVersionExperimentTreatmentLocalizations_getInstance)`.
     public func appStoreVersionExperimentTreatmentLocalizationsGetInstance(_ input: Operations.AppStoreVersionExperimentTreatmentLocalizationsGetInstance.Input) async throws -> Operations.AppStoreVersionExperimentTreatmentLocalizationsGetInstance.Output {
@@ -2942,132 +3009,6 @@ extension Client {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
                             Components.Schemas.AppStoreVersionBuildLinkageResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `PATCH /v1/appStoreVersions/{id}/relationships/build`.
-    /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/relationships/build/patch(appStoreVersions_build_updateToOneRelationship)`.
-    public func appStoreVersionsBuildUpdateToOneRelationship(_ input: Operations.AppStoreVersionsBuildUpdateToOneRelationship.Input) async throws -> Operations.AppStoreVersionsBuildUpdateToOneRelationship.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppStoreVersionsBuildUpdateToOneRelationship.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appStoreVersions/{}/relationships/build",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .patch
-                )
-                suppressMutabilityWarning(&request)
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 204:
-                    return .noContent(.init())
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/appStoreVersions/{id}/routingAppCoverage`.
-    /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/routingAppCoverage/get(appStoreVersions_routingAppCoverage_getToOneRelated)`.
-    public func appStoreVersionsRoutingAppCoverageGetToOneRelated(_ input: Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Input) async throws -> Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appStoreVersions/{}/routingAppCoverage",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[routingAppCoverages]",
-                    value: input.query.fieldsRoutingAppCoverages
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreVersions]",
-                    value: input.query.fieldsAppStoreVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.RoutingAppCoverageResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

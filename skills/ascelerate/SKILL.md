@@ -340,6 +340,25 @@ ascelerate webhooks redeliver <delivery-id>
 
 Event types (`--events`, or `all`): `app-store-version-app-version-state-updated` (review/release state), `build-upload-state-updated`, `build-beta-detail-external-build-state-updated` (TestFlight external), `beta-feedback-crash-submission-created`, `beta-feedback-screenshot-submission-created`, plus background asset and alternative distribution events. Without `--secret`, `create` generates the signing secret and prints it once: tell the user to store it on the receiving server. To debug a receiver: `ping`, then `deliveries --state failed` for the HTTP status and error, fix, `redeliver`.
 
+### Xcode Cloud (products, workflows, build runs)
+
+```bash
+ascelerate xcode-cloud products [--json]                     # the team's products; set up first in Xcode (Integrate > Create Workflow)
+ascelerate xcode-cloud workflows <app> [--json]              # app = bundle ID, alias, product name or ID
+ascelerate xcode-cloud workflows info <app> "Release" [--json]   # start conditions, actions, Xcode/macOS
+ascelerate xcode-cloud workflows enable|disable|delete <app> "Release"
+ascelerate xcode-cloud runs <app> [--workflow X] [--limit N] [--json]   # newest first
+ascelerate xcode-cloud runs info <app> <number> [--json]     # run + actions
+ascelerate xcode-cloud runs issues <app> <number> [--errors] [--json]
+ascelerate xcode-cloud runs tests <app> <number> [--failed] [--json]
+ascelerate xcode-cloud runs artifacts <app> <number> [--type LOG_BUNDLE,ARCHIVE] [--download DIR] [--json]
+ascelerate xcode-cloud start <app> "Release" [--branch X | --tag X | --pull-request N] [--clean]
+ascelerate xcode-cloud rerun <app> <number> [--clean]       # same commit, same workflow
+ascelerate xcode-cloud repositories | xcode-versions [--json]
+```
+
+The API can't create a product or cancel a build. To diagnose a failed run: `runs info` for the failed action, then `runs issues --errors` and `runs tests --failed`; `runs artifacts --type LOG_BUNDLE --download` for full logs.
+
 ### Reports (downloads, proceeds, analytics)
 
 ```bash

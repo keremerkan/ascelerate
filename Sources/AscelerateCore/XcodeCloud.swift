@@ -170,6 +170,30 @@ public enum XcodeCloud {
       attributes: .init(isEnabled: isEnabled), id: workflowID, _type: "ciWorkflows")))).ok
   }
 
+  /// The start conditions that start a workflow on their own (as `StartCondition.kind`).
+  public static let automaticStartKinds: Set<String> = ["branch", "tag", "pullRequest", "schedule"]
+
+  /// Takes away a workflow's automatic start conditions (branch and tag changes, pull requests,
+  /// the schedule); the manual ones stay, so it's started only by hand. Xcode Cloud wants a
+  /// workflow to keep at least one start condition.
+  ///
+  /// Apple ignores a start condition sent as null on its own (the update answers 200 and changes
+  /// nothing), but replaces the start conditions as a set when the update also carries one of
+  /// them (seen 2026-11-03). So the workflow's manual conditions are read and sent back as they
+  /// are, with the automatic ones as null.
+  public static func removeAutomaticStarts(workflowID: String, client: ASCClient) async throws {
+    let current = try await client.ciWorkflowsGetInstance(path: .init(id: workflowID)).ok.body.json.data.attributes
+    let automatic = ["branchStartCondition", "tagStartCondition", "pullRequestStartCondition", "scheduledStartCondition"]
+    try await ASCNulls.sending(automatic.map { ["data", "attributes", $0] }) {
+      _ = try await client.ciWorkflowsUpdateInstance(path: .init(id: workflowID), body: .json(.init(data: .init(
+        attributes: .init(
+          manualBranchStartCondition: current?.manualBranchStartCondition,
+          manualPullRequestStartCondition: current?.manualPullRequestStartCondition,
+          manualTagStartCondition: current?.manualTagStartCondition),
+        id: workflowID, _type: "ciWorkflows")))).ok
+    }
+  }
+
   /// Deletes a workflow; its build runs stay.
   public static func deleteWorkflow(id: String, client: ASCClient) async throws {
     _ = try await client.ciWorkflowsDeleteInstance(path: .init(id: id)).noContent

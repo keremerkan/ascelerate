@@ -22,12 +22,13 @@ ascelerate xcode-cloud products
 ```bash
 ascelerate xcode-cloud workflows <bundle-id>
 ascelerate xcode-cloud workflows info <bundle-id> "Release"
+ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only
 ascelerate xcode-cloud workflows disable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows enable <bundle-id> "Nightly"
 ascelerate xcode-cloud workflows delete <bundle-id> "Old workflow"
 ```
 
-`info` は、ワークフローの開始条件（ブランチやタグの変更、プルリクエスト、スケジュール、手動で開始できる対象）、アクション（ビルド、テスト、解析、アーカイブと、それぞれのスキーム、プラットフォーム、配布方法）、使用するリポジトリ、プロジェクト、Xcode と macOS のバージョンを表示します。無効にしたワークフローはビルドを開始しません。ワークフローを削除しても、そのビルド実行は残ります。
+`info` は、ワークフローの開始条件（ブランチやタグの変更、プルリクエスト、スケジュール、手動で開始できる対象）、アクション（ビルド、テスト、解析、アーカイブと、それぞれのスキーム、プラットフォーム、配布方法）、使用するリポジトリ、プロジェクト、Xcode と macOS のバージョンを表示します。`update --manual-only` は、ワークフローが自動で開始しないようにします（ブランチやタグの変更、プルリクエスト、スケジュール）。手動で開始できる対象はそのまま残ります。無効にしたワークフローはビルドを開始しません。ワークフローを削除しても、そのビルド実行は残ります。
 
 ## ビルド実行
 

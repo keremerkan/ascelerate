@@ -1261,7 +1261,7 @@ ascelerate xcode-cloud workflows update <bundle-id> "Default" --manual-only   # 
 ascelerate xcode-cloud workflows update <bundle-id> "Release" --branch-changes "main,release/*" --xcode "Xcode 27.2"
 ascelerate xcode-cloud workflows create <bundle-id> --like "Default" --name "TestFlight" --action archive:MyApp:ios
 ascelerate xcode-cloud runs <bundle-id> [--workflow "Release"]   # build runs, newest first
-ascelerate xcode-cloud runs info <bundle-id> 42              # details and actions
+ascelerate xcode-cloud runs info <bundle-id> 42              # details, actions, the build it uploaded
 ascelerate xcode-cloud runs issues <bundle-id> 42            # errors and warnings
 ascelerate xcode-cloud runs tests <bundle-id> 42 --failed
 ascelerate xcode-cloud runs logs <bundle-id> 42 --show ci_post_clone.log   # log bundle: post-clone, packages, xcodebuild

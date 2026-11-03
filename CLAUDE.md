@@ -420,7 +420,7 @@ ascelerate xcode-cloud workflows enable|disable|delete <product> <workflow> [-y]
 ascelerate xcode-cloud workflows update <product> <workflow> [--manual-only] [--name X] [--description X] [--clean true|false] [--restrict-editing true|false] [--xcode X] [--macos X] [--branch-changes|--tag-changes|--pull-requests|--manual-branches|--manual-tags|--manual-pull-requests NAMES|any|off] [--pull-request-source X] [--auto-cancel true|false] [--remove-schedule] [--action TYPE:SCHEME[:PLATFORM]]... [--distribution internal|app-store|none] [-y]   # XcodeCloud.edit/save: lists the changes, asks; start conditions go as a set
 ascelerate xcode-cloud workflows create <product> [--like <workflow>] --name X [same options as update] [--disabled] [-y]   # XcodeCloud.createWorkflow: a copy of a workflow (always one: Xcode makes the product with it)
 ascelerate xcode-cloud runs <product> [--workflow X] [--limit N] [--json]   # Build runs, newest first
-ascelerate xcode-cloud runs info|issues|tests|artifacts <product> <number> [--errors|--failed|--type X --download DIR] [--json]
+ascelerate xcode-cloud runs info|issues|tests|artifacts <product> <number> [--errors|--failed|--type X --download DIR] [--json]   # info: + the build it uploaded (XcodeCloud.builds(runID:), one request with its version and TestFlight details)
 ascelerate xcode-cloud runs logs <product> <number> [--action X] [--show FILE]   # Each action's log bundle (ZipReader): list, or print one
 ascelerate xcode-cloud start <product> <workflow> [--branch X | --tag X | --pull-request N] [--clean] [-y]
 ascelerate xcode-cloud rerun <product> <number> [--clean] [-y]      # Same commit and workflow again

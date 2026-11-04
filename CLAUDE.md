@@ -75,6 +75,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   Subscriptions.swift                 # Subscription groups (create, rename, delete, submit, localizations) and subscriptions (list by group, find/get, create, update, delete, submit, localizations, upfront plan prices current/planned, tiers, equalizations, price set/delete, plan availability, promotional images, App Review screenshot)
   IntroductoryOffers.swift            # Subscription introductory offers: list, conflicts (overlap, one future offer per territory), create in many territories in one request, end date, delete; offerDurations (lengths per offer type)
   SubscriptionSettings.swift          # App-wide subscription settings: billing grace period (read, update), streamlined purchasing (read, set)
+  Users.swift                         # Team users and invitations: list (apps read per person: an include caps them at 50), find, update (roles, all apps or a list, Certificates/IDs/Profiles access), remove; invitations list, invite, cancel
   SandboxTesters.swift                # Sandbox testers (/v2): list, find by Apple Account or ID, update (storefront, interrupted purchases, renewal rate), clear purchase history (one request for many)
   BundleIDs.swift                     # Bundle IDs (App IDs): list (platform, identifier prefix, capability types in the same request), find, register, rename, delete; capabilities with their settings, enable (with settings), update settings, disable
   Devices.swift                       # Registered devices: list (name, platforms, statuses), find (UDID or name), register, update (name, status), UDID check
@@ -128,6 +129,7 @@ Sources/ascelerate/
     IAPCommand.swift                  # In-app purchase subcommands
     SubCommand.swift                 # Subscription subcommands
     SandboxTestersCommand.swift       # sandbox-testers (list/update/clear-history)
+    UsersCommand.swift                # users (list/info/update/remove/invitations/invite/cancel-invitation)
     CustomerReviewsCommand.swift      # Customer reviews + developer responses (list, info, respond, delete-response)
     AppEventsCommand.swift            # In-app events: CRUD + scheduling + localizations + media (screenshots/video clips); findAppEvent helper
     ProductPagesCommand.swift         # Custom product pages: CRUD (compound create) + localizations + media (screenshot/preview sets); findProductPage helper
@@ -343,6 +345,13 @@ ascelerate sub review-screenshot delete <bundle-id> <product-id> [-y]  # Delete
 ascelerate sandbox-testers [--json]                               # Sandbox testers: Apple Account, storefront, renewal rate, interrupted purchases, Apple Pay
 ascelerate sandbox-testers update <email-or-id> [--territory X] [--interrupt-purchases true|false] [--renewal-rate 1h|30m|15m|5m|3m] [-y]  # Lists the changes, asks
 ascelerate sandbox-testers clear-history <email-or-id>... | --all [-y]  # Clear purchase history (one request)
+ascelerate users [--json]                                         # Team: email, name, roles, apps, Certificates/IDs/Profiles access
+ascelerate users info <email-or-id> [--json]
+ascelerate users update <email-or-id> [--roles a,b] [--apps X,Y | --all-apps] [--provisioning true|false] [-y]   # Lists the changes, asks
+ascelerate users remove <email-or-id> [-y]
+ascelerate users invitations [--json]                             # Pending, with expiry
+ascelerate users invite --email X --first-name X --last-name X --roles a,b [--apps X,Y] [--provisioning] [-y]   # Emailed at once
+ascelerate users cancel-invitation <email-or-id> [-y]
 ascelerate devices list [--name X] [--platform X] [--status X]   # List registered devices
 ascelerate devices info [name-or-udid]                            # Device details (interactive picker if omitted)
 ascelerate devices register [--name X] [--udid X] [--platform X] [-y]  # Register a new device (interactive if omitted)
@@ -735,6 +744,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - **Custom EULA (`endUserLicenseAgreements`, verified live 2026-10-20):** a PATCH with `territories` replaces the whole list; empty text or an empty territory list is refused (409); DELETE brings back Apple's standard agreement (the app's related GET answers `{"data": null}`). The territories come from `endUserLicenseAgreements/{id}/territories` (limit 200; the include on the agreement caps at 50).
 - **App Store Server Notifications endpoints** are app attributes (`subscriptionStatusUrl`/`subscriptionStatusUrlVersion` and the `ForSandbox` pair; verified live 2026-10-20): a URL without its version is refused (409 INVALID_STATE), so `updateApp` sends both, with V2 for a new endpoint; an empty URL fails the URI check, and only sending URL and version as null removes one. Reading the app right after the PATCH still returns the old values for about a second.
 - **App languages (verified live 2026-10-22 on a test app):** app info and version localizations stay in step. Creating an app info localization (`AppInfos.createLocalization`, locale + name required) also adds the locale to the version being prepared, and deleting that version localization also deletes the app info's. So adding a language is one app info POST (a version POST after it answers 409 "already exists"), and removing one deletes the version localization first (`VersionLocalizations.delete`, which clears its asset library placements), then the app info localization only if it's still there. Locale codes are `AppInfos.locales`: bare `tr`, `ca`, `ja`, region-qualified `de-DE`, `en-US`, scripts `zh-Hans`.
+- **Users and invitations (`users`, `userInvitations`; reads verified live 2026-11-04, writes dry run only):** roles are `ASCEnum.UserRole` (Account Holder can't be given); `allAppsVisible` false needs `visibleApps` (sent as the update's relationship, which replaces them); `provisioningAllowed` is "Access to Certificates, Identifiers & Profiles". An invitation is emailed when it's created. The CLI reads each person's apps from `users/{id}/visibleApps` rather than an include (capped at 50).
 - **Sandbox testers (`/v2/sandboxTesters`, verified live 2026-11-04):** list (no filters), PATCH of storefront (`territory`), `interruptPurchases` and `subscriptionRenewalRate` (a monthly subscription renewing every 1 h, 30, 15, 5 or 3 minutes), and `sandboxTestersClearPurchaseHistoryRequest` taking many testers in one POST. Creating and deleting testers isn't in the API. Verified: a renewal rate changed and changed back, one tester's history cleared.
 - **Encryption declarations use top-level endpoint** — `apps/{id}/appEncryptionDeclarations` returns 404 for some apps. Use `appEncryptionDeclarationsGetCollection(query: .init(filterApp: [appID]))` instead. Legacy declarations can report their platform in lowercase (`ios`).
 - **Territory availability limit is 50** — The v1 `include: [.territoryAvailabilities]` has a max limit of 50. Use the v2 sub-resource endpoint (`appAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated`, `limit: 50, include: [.territory]`) and page it with `ASCPaging.allPages`.
@@ -991,7 +1001,7 @@ Counts are approximate top-level resources from the 1.7.0 surface.
 - **Background Assets** (6) — assets, versions, upload files, app-store/internal/external beta releases.
 - **Alternative distribution / EU** (~8) — `alternativeDistribution*` (domains, keys, packages + variants/deltas/versions) and `marketplace*` (search details, webhooks).
 - **Analytics / Sales / Finance** — **covered** via `reports sales/finance/analytics` (Sales & Trends, Financial, and App Analytics reports; gzipped TSV/CSV downloaded + summarized). Remaining: analytics-report `segments`/`instances` are exposed only through the `analytics` flow (no standalone commands), and **diagnostic signatures** (`diagnosticSignatures`) are untouched.
-- **Users & access** (3) — users, user invitations, actors (team management).
+- **Users & access** — **covered** via `users` (people, roles, app access, invitations). `actors` (who did something, read through review submissions) has no command of its own.
 - **App-level pricing & release** — `appStoreVersionPromotions`; `appPriceSchedules` is covered by `apps pricing`; `endAppAvailabilityPreOrders` is in AscelerateCore (`AppAvailability`) without a CLI command yet. (`appStoreVersionReleaseRequests` is covered via `apps release`.)
 - **Provisioning extras** — `merchantIDs` (Apple Pay), `passTypeIDs` (Wallet).
 - **Niche** — `appEncryptionDeclarationDocuments`, Android-to-iOS app mapping.

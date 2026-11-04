@@ -40,6 +40,7 @@ const sidebars: SidebarsConfig = {
         'commands/certificates',
         'commands/bundle-ids',
         'commands/profiles',
+        'commands/users',
       ],
     },
     {

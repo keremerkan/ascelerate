@@ -304,6 +304,35 @@ extension Components.Schemas {
             case data
         }
     }
+    /// - Remark: Generated from `#/components/schemas/AppsWithoutIncludesResponse`.
+    public struct AppsWithoutIncludesResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppsWithoutIncludesResponse/data`.
+        public var data: [Components.Schemas.App]
+        /// - Remark: Generated from `#/components/schemas/AppsWithoutIncludesResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/AppsWithoutIncludesResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `AppsWithoutIncludesResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.App],
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case links
+            case meta
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppUpdateRequest`.
     public struct AppUpdateRequest: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/AppUpdateRequest/data`.

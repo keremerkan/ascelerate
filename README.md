@@ -1243,6 +1243,19 @@ ascelerate nominations delete <id>
 
 `create` saves a draft unless you pass `--submit`. Types: `launch`, `enhancements`, `new-content`.
 
+### Users
+
+The team's people and invitations: roles, the apps they see, access to Certificates, Identifiers & Profiles:
+
+```bash
+ascelerate users                                             # everyone, with roles and app access
+ascelerate users info someone@example.com
+ascelerate users update someone@example.com --roles developer,marketing --apps com.example.app
+ascelerate users invite --email new@example.com --first-name Ada --last-name Lovelace --roles developer
+ascelerate users invitations                                 # pending, with expiry; cancel-invitation withdraws one
+ascelerate users remove someone@example.com
+```
+
 ### Webhooks
 
 Have App Store Connect POST an app's events (review state changes, build uploads, TestFlight feedback, …) to your server:

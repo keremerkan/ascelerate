@@ -336,6 +336,20 @@ ascelerate nominations delete <id>
 
 `create` saves a draft unless `--submit`; review the draft with the user before submitting. When drafting the description, lead with what's new and why it matters to users (the editors read it), mention localization and accessibility work, and nominate well ahead of the publish date.
 
+### Users and invitations
+
+```bash
+ascelerate users [--json]                       # email, name, roles, apps (all or a count), Certificates/IDs/Profiles access
+ascelerate users info <email-or-id> [--json]    # with the apps they see
+ascelerate users update <email-or-id> [--roles developer,marketing] [--apps <bundle-id>,<alias> | --all-apps] [--provisioning true|false]
+ascelerate users remove <email-or-id>
+ascelerate users invitations [--json]           # not accepted yet, with expiry
+ascelerate users invite --email X --first-name X --last-name X --roles developer[,…] [--apps <bundle-id>,…] [--provisioning]
+ascelerate users cancel-invitation <email-or-id>
+```
+
+Roles: admin, finance, sales, marketing, app-manager, developer, access-to-reports, customer-support, create-apps, cloud-managed-developer-id, cloud-managed-app-distribution, generate-individual-keys (Account Holder can't be given). `--roles` and `--apps` replace what the person has. An invitation is emailed at once and removing someone takes effect at once, so confirm both with the user. Changing roles or removing someone needs an Admin key.
+
 ### Webhooks (App Store Connect event notifications)
 
 ```bash

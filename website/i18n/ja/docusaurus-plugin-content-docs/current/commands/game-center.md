@@ -88,3 +88,36 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 ```
 
 `reorder` は指定したものをその順序で先頭に置き、残りは今の順序のまま続きます。`submit` は項目の新しいバージョンをアプリの下書きの提出に追加します（なければ作成します）。下書きを `ascelerate apps review submit` で提出すると App Review に送られます。
+
+## マッチメイキング
+
+ルールベースのマッチメイキングは 1 つのアプリではなくチームに属するため、これらのコマンドには Bundle ID を指定しません。**ルールセット**はプレイヤー数、ルール、チームを定め、**キュー**はゲームがマッチリクエストを送る先で、1 つのルールセットでマッチングします。ルールセットとキューは参照名または ID で指定します。
+
+```bash
+ascelerate game-center matchmaking rule-sets [--json]
+ascelerate game-center matchmaking rule-sets create --name Ranked --min 2 --max 4
+ascelerate game-center matchmaking rule-sets info Ranked
+ascelerate game-center matchmaking rules add Ranked --name SameVersion --type compatible \
+  --expression "requests[0].appVersion == requests[1].appVersion" --description "Same app version"
+ascelerate game-center matchmaking rules add Ranked --name Skill --type distance \
+  --expression "requests[0].properties.skill" --description "Close skill" --weight 2
+ascelerate game-center matchmaking teams add Ranked --name Red --min 1 --max 2
+ascelerate game-center matchmaking queues create --name RankedQueue --rule-set Ranked [--experiment-rule-set RankedB] [--classic-apps com.example.MyApp]
+ascelerate game-center matchmaking queues update RankedQueue --experiment-rule-set none
+ascelerate game-center matchmaking test Ranked --file requests.json
+```
+
+ルールは JMESPath をベースにした Apple のルール言語で書きます（JMESPath には算術演算子がありません）。互換性ルール（compatible）は `requests[0]` と `requests[1]` を比較し、距離ルール（distance）は `requests[0]` について数値を返し、数値の近いリクエストから先にマッチします。プレイヤーのプロパティは `requests[0].properties.<キー>` として読み取られます。App Store Connect は保存時に式の構文しか確認しないので、ルールセットを使う前にテストしてください。
+
+`test` はサンプルのリクエストをルールセットに通し、Apple が作るマッチを各プレイヤーのチームとともに表示します。何も保存されません。ファイルは JSON 配列です。
+
+```json
+[
+  {"requestName": "alice", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 5, "locale": "EN-US", "players": [{"playerId": "alice", "properties": {"skill": "10"}}]},
+  {"requestName": "bob", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 8, "locale": "EN-US", "players": [{"playerId": "bob", "properties": {"skill": "12"}}]}
+]
+```
+
+リクエストには `latitude`、`longitude`、`playerCount`、`minPlayers`、`maxPlayers` も指定できます。キューが使っているルールセットは削除できないため、先にキューを変更するか削除してください。

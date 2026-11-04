@@ -11,6 +11,1448 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/post(gameCenterLeaderboardSetVersionsV2_createInstance)`.
+    public func gameCenterLeaderboardSetVersionsV2CreateInstance(_ input: Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/gameCenterLeaderboardSetVersions",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterLeaderboardSetVersionV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/{id}/get(gameCenterLeaderboardSetVersionsV2_getInstance)`.
+    public func gameCenterLeaderboardSetVersionsV2GetInstance(_ input: Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GameCenterLeaderboardSetVersionsV2GetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/gameCenterLeaderboardSetVersions/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSetVersions]",
+                    value: input.query.fieldsGameCenterLeaderboardSetVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSets]",
+                    value: input.query.fieldsGameCenterLeaderboardSets
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSetLocalizations]",
+                    value: input.query.fieldsGameCenterLeaderboardSetLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[localizations]",
+                    value: input.query.limitLocalizations
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterLeaderboardSetVersionV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/{id}/localizations/get(gameCenterLeaderboardSetVersionsV2_localizations_getToManyRelated)`.
+    public func gameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated(_ input: Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Input) async throws -> Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/gameCenterLeaderboardSetVersions/{}/localizations",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSetLocalizations]",
+                    value: input.query.fieldsGameCenterLeaderboardSetLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSetVersions]",
+                    value: input.query.fieldsGameCenterLeaderboardSetVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSetImages]",
+                    value: input.query.fieldsGameCenterLeaderboardSetImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterLeaderboardSetLocalizationsV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/post(gameCenterLeaderboardVersionsV2_createInstance)`.
+    public func gameCenterLeaderboardVersionsV2CreateInstance(_ input: Operations.GameCenterLeaderboardVersionsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardVersionsV2CreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GameCenterLeaderboardVersionsV2CreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/gameCenterLeaderboardVersions",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GameCenterLeaderboardVersionsV2CreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterLeaderboardVersionV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/{id}/get(gameCenterLeaderboardVersionsV2_getInstance)`.
+    public func gameCenterLeaderboardVersionsV2GetInstance(_ input: Operations.GameCenterLeaderboardVersionsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardVersionsV2GetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GameCenterLeaderboardVersionsV2GetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/gameCenterLeaderboardVersions/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardVersions]",
+                    value: input.query.fieldsGameCenterLeaderboardVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboards]",
+                    value: input.query.fieldsGameCenterLeaderboards
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardLocalizations]",
+                    value: input.query.fieldsGameCenterLeaderboardLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[localizations]",
+                    value: input.query.limitLocalizations
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GameCenterLeaderboardVersionsV2GetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterLeaderboardVersionV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/{id}/localizations/get(gameCenterLeaderboardVersionsV2_localizations_getToManyRelated)`.
+    public func gameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated(_ input: Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Input) async throws -> Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/gameCenterLeaderboardVersions/{}/localizations",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardLocalizations]",
+                    value: input.query.fieldsGameCenterLeaderboardLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardVersions]",
+                    value: input.query.fieldsGameCenterLeaderboardVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardImages]",
+                    value: input.query.fieldsGameCenterLeaderboardImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterLeaderboardLocalizationsV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v2/inAppPurchases`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/post(inAppPurchasesV2_createInstance)`.
+    public func inAppPurchasesV2CreateInstance(_ input: Operations.InAppPurchasesV2CreateInstance.Input) async throws -> Operations.InAppPurchasesV2CreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2CreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2CreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/get(inAppPurchasesV2_getInstance)`.
+    public func inAppPurchasesV2GetInstance(_ input: Operations.InAppPurchasesV2GetInstance.Input) async throws -> Operations.InAppPurchasesV2GetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2GetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchases]",
+                    value: input.query.fieldsInAppPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseLocalizations]",
+                    value: input.query.fieldsInAppPurchaseLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchasePricePoints]",
+                    value: input.query.fieldsInAppPurchasePricePoints
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseContents]",
+                    value: input.query.fieldsInAppPurchaseContents
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseAppStoreReviewScreenshots]",
+                    value: input.query.fieldsInAppPurchaseAppStoreReviewScreenshots
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[promotedPurchases]",
+                    value: input.query.fieldsPromotedPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchasePriceSchedules]",
+                    value: input.query.fieldsInAppPurchasePriceSchedules
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseAvailabilities]",
+                    value: input.query.fieldsInAppPurchaseAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseImages]",
+                    value: input.query.fieldsInAppPurchaseImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseOfferCodes]",
+                    value: input.query.fieldsInAppPurchaseOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseVersions]",
+                    value: input.query.fieldsInAppPurchaseVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[images]",
+                    value: input.query.limitImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[inAppPurchaseLocalizations]",
+                    value: input.query.limitInAppPurchaseLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[offerCodes]",
+                    value: input.query.limitOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[pricePoints]",
+                    value: input.query.limitPricePoints
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[versions]",
+                    value: input.query.limitVersions
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2GetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v2/inAppPurchases/{id}`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/patch(inAppPurchasesV2_updateInstance)`.
+    public func inAppPurchasesV2UpdateInstance(_ input: Operations.InAppPurchasesV2UpdateInstance.Input) async throws -> Operations.InAppPurchasesV2UpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2UpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2UpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `DELETE /v2/inAppPurchases/{id}`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/delete(inAppPurchasesV2_deleteInstance)`.
+    public func inAppPurchasesV2DeleteInstance(_ input: Operations.InAppPurchasesV2DeleteInstance.Input) async throws -> Operations.InAppPurchasesV2DeleteInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2DeleteInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/appStoreReviewScreenshot`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/appStoreReviewScreenshot/get(inAppPurchasesV2_appStoreReviewScreenshot_getToOneRelated)`.
+    public func inAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated(_ input: Operations.InAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated.Input) async throws -> Operations.InAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/appStoreReviewScreenshot",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseAppStoreReviewScreenshots]",
+                    value: input.query.fieldsInAppPurchaseAppStoreReviewScreenshots
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchases]",
+                    value: input.query.fieldsInAppPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2AppStoreReviewScreenshotGetToOneRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseAppStoreReviewScreenshotResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/iapPriceSchedule`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/iapPriceSchedule/get(inAppPurchasesV2_iapPriceSchedule_getToOneRelated)`.
+    public func inAppPurchasesV2IapPriceScheduleGetToOneRelated(_ input: Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.Input) async throws -> Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/iapPriceSchedule",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchasePriceSchedules]",
+                    value: input.query.fieldsInAppPurchasePriceSchedules
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[territories]",
+                    value: input.query.fieldsTerritories
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchasePrices]",
+                    value: input.query.fieldsInAppPurchasePrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[manualPrices]",
+                    value: input.query.limitManualPrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[automaticPrices]",
+                    value: input.query.limitAutomaticPrices
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchasePriceScheduleResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/images`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/images/get(inAppPurchasesV2_images_getToManyRelated)`.
+    public func inAppPurchasesV2ImagesGetToManyRelated(_ input: Operations.InAppPurchasesV2ImagesGetToManyRelated.Input) async throws -> Operations.InAppPurchasesV2ImagesGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2ImagesGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/images",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseImages]",
+                    value: input.query.fieldsInAppPurchaseImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchases]",
+                    value: input.query.fieldsInAppPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2ImagesGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseImagesResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/inAppPurchaseAvailability`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/inAppPurchaseAvailability/get(inAppPurchasesV2_inAppPurchaseAvailability_getToOneRelated)`.
+    public func inAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated(_ input: Operations.InAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated.Input) async throws -> Operations.InAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/inAppPurchaseAvailability",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseAvailabilities]",
+                    value: input.query.fieldsInAppPurchaseAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[territories]",
+                    value: input.query.fieldsTerritories
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[availableTerritories]",
+                    value: input.query.limitAvailableTerritories
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseAvailabilityResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/inAppPurchaseLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/inAppPurchaseLocalizations/get(inAppPurchasesV2_inAppPurchaseLocalizations_getToManyRelated)`.
+    public func inAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated(_ input: Operations.InAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated.Input) async throws -> Operations.InAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/inAppPurchaseLocalizations",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseLocalizations]",
+                    value: input.query.fieldsInAppPurchaseLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchases]",
+                    value: input.query.fieldsInAppPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2InAppPurchaseLocalizationsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseLocalizationsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/offerCodes`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/offerCodes/get(inAppPurchasesV2_offerCodes_getToManyRelated)`.
+    public func inAppPurchasesV2OfferCodesGetToManyRelated(_ input: Operations.InAppPurchasesV2OfferCodesGetToManyRelated.Input) async throws -> Operations.InAppPurchasesV2OfferCodesGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2OfferCodesGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/offerCodes",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[territory]",
+                    value: input.query.filterTerritory
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseOfferCodes]",
+                    value: input.query.fieldsInAppPurchaseOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseOfferCodeOneTimeUseCodes]",
+                    value: input.query.fieldsInAppPurchaseOfferCodeOneTimeUseCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseOfferCodeCustomCodes]",
+                    value: input.query.fieldsInAppPurchaseOfferCodeCustomCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseOfferPrices]",
+                    value: input.query.fieldsInAppPurchaseOfferPrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[oneTimeUseCodes]",
+                    value: input.query.limitOneTimeUseCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[customCodes]",
+                    value: input.query.limitCustomCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[prices]",
+                    value: input.query.limitPrices
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2OfferCodesGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseOfferCodesResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/pricePoints`.
     /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/pricePoints/get(inAppPurchasesV2_pricePoints_getToManyRelated)`.
     public func inAppPurchasesV2PricePointsGetToManyRelated(_ input: Operations.InAppPurchasesV2PricePointsGetToManyRelated.Input) async throws -> Operations.InAppPurchasesV2PricePointsGetToManyRelated.Output {

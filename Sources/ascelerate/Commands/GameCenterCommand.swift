@@ -14,7 +14,7 @@ struct GameCenterCommand: AsyncParsableCommand {
       starts in Prepare for Submission and goes to App Review with the app (submit adds it to the \
       app's draft submission). Changing one that is live makes its next version first.
       """,
-    subcommands: [Status.self, Enable.self, AppVersion.self, Achievements.self, Leaderboards.self, Sets.self],
+    subcommands: [Status.self, Enable.self, AppVersion.self, Achievements.self, Leaderboards.self, Sets.self, Matchmaking.self],
     defaultSubcommand: Status.self
   )
 

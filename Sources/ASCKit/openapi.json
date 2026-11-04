@@ -50248,7 +50248,6 @@
           }
         },
         "required" : [
-          "id",
           "type"
         ],
         "title" : "GameCenterMatchmakingRuleSetTest",

@@ -971,6 +971,66 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
     /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/delete(gameCenterLeaderboardSetMemberLocalizations_deleteInstance)`.
     func gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/get(gameCenterMatchmakingQueues_getCollection)`.
+    func gameCenterMatchmakingQueuesGetCollection(_ input: Operations.GameCenterMatchmakingQueuesGetCollection.Input) async throws -> Operations.GameCenterMatchmakingQueuesGetCollection.Output
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/post(gameCenterMatchmakingQueues_createInstance)`.
+    func gameCenterMatchmakingQueuesCreateInstance(_ input: Operations.GameCenterMatchmakingQueuesCreateInstance.Input) async throws -> Operations.GameCenterMatchmakingQueuesCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/{id}/get(gameCenterMatchmakingQueues_getInstance)`.
+    func gameCenterMatchmakingQueuesGetInstance(_ input: Operations.GameCenterMatchmakingQueuesGetInstance.Input) async throws -> Operations.GameCenterMatchmakingQueuesGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingQueues/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/{id}/patch(gameCenterMatchmakingQueues_updateInstance)`.
+    func gameCenterMatchmakingQueuesUpdateInstance(_ input: Operations.GameCenterMatchmakingQueuesUpdateInstance.Input) async throws -> Operations.GameCenterMatchmakingQueuesUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingQueues/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/{id}/delete(gameCenterMatchmakingQueues_deleteInstance)`.
+    func gameCenterMatchmakingQueuesDeleteInstance(_ input: Operations.GameCenterMatchmakingQueuesDeleteInstance.Input) async throws -> Operations.GameCenterMatchmakingQueuesDeleteInstance.Output
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingRules`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRules/post(gameCenterMatchmakingRules_createInstance)`.
+    func gameCenterMatchmakingRulesCreateInstance(_ input: Operations.GameCenterMatchmakingRulesCreateInstance.Input) async throws -> Operations.GameCenterMatchmakingRulesCreateInstance.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingRules/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRules/{id}/patch(gameCenterMatchmakingRules_updateInstance)`.
+    func gameCenterMatchmakingRulesUpdateInstance(_ input: Operations.GameCenterMatchmakingRulesUpdateInstance.Input) async throws -> Operations.GameCenterMatchmakingRulesUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingRules/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRules/{id}/delete(gameCenterMatchmakingRules_deleteInstance)`.
+    func gameCenterMatchmakingRulesDeleteInstance(_ input: Operations.GameCenterMatchmakingRulesDeleteInstance.Input) async throws -> Operations.GameCenterMatchmakingRulesDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/get(gameCenterMatchmakingRuleSets_getCollection)`.
+    func gameCenterMatchmakingRuleSetsGetCollection(_ input: Operations.GameCenterMatchmakingRuleSetsGetCollection.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsGetCollection.Output
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingRuleSets`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/post(gameCenterMatchmakingRuleSets_createInstance)`.
+    func gameCenterMatchmakingRuleSetsCreateInstance(_ input: Operations.GameCenterMatchmakingRuleSetsCreateInstance.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/get(gameCenterMatchmakingRuleSets_getInstance)`.
+    func gameCenterMatchmakingRuleSetsGetInstance(_ input: Operations.GameCenterMatchmakingRuleSetsGetInstance.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingRuleSets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/patch(gameCenterMatchmakingRuleSets_updateInstance)`.
+    func gameCenterMatchmakingRuleSetsUpdateInstance(_ input: Operations.GameCenterMatchmakingRuleSetsUpdateInstance.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingRuleSets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/delete(gameCenterMatchmakingRuleSets_deleteInstance)`.
+    func gameCenterMatchmakingRuleSetsDeleteInstance(_ input: Operations.GameCenterMatchmakingRuleSetsDeleteInstance.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}/matchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/matchmakingQueues/get(gameCenterMatchmakingRuleSets_matchmakingQueues_getToManyRelated)`.
+    func gameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated(_ input: Operations.GameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}/rules`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/rules/get(gameCenterMatchmakingRuleSets_rules_getToManyRelated)`.
+    func gameCenterMatchmakingRuleSetsRulesGetToManyRelated(_ input: Operations.GameCenterMatchmakingRuleSetsRulesGetToManyRelated.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsRulesGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}/teams`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/teams/get(gameCenterMatchmakingRuleSets_teams_getToManyRelated)`.
+    func gameCenterMatchmakingRuleSetsTeamsGetToManyRelated(_ input: Operations.GameCenterMatchmakingRuleSetsTeamsGetToManyRelated.Input) async throws -> Operations.GameCenterMatchmakingRuleSetsTeamsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingRuleSetTests`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSetTests/post(gameCenterMatchmakingRuleSetTests_createInstance)`.
+    func gameCenterMatchmakingRuleSetTestsCreateInstance(_ input: Operations.GameCenterMatchmakingRuleSetTestsCreateInstance.Input) async throws -> Operations.GameCenterMatchmakingRuleSetTestsCreateInstance.Output
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingTeams`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingTeams/post(gameCenterMatchmakingTeams_createInstance)`.
+    func gameCenterMatchmakingTeamsCreateInstance(_ input: Operations.GameCenterMatchmakingTeamsCreateInstance.Input) async throws -> Operations.GameCenterMatchmakingTeamsCreateInstance.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingTeams/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingTeams/{id}/patch(gameCenterMatchmakingTeams_updateInstance)`.
+    func gameCenterMatchmakingTeamsUpdateInstance(_ input: Operations.GameCenterMatchmakingTeamsUpdateInstance.Input) async throws -> Operations.GameCenterMatchmakingTeamsUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingTeams/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingTeams/{id}/delete(gameCenterMatchmakingTeams_deleteInstance)`.
+    func gameCenterMatchmakingTeamsDeleteInstance(_ input: Operations.GameCenterMatchmakingTeamsDeleteInstance.Input) async throws -> Operations.GameCenterMatchmakingTeamsDeleteInstance.Output
     /// - Remark: HTTP `POST /v1/inAppPurchaseAppStoreReviewScreenshots`.
     /// - Remark: Generated from `#/paths//v1/inAppPurchaseAppStoreReviewScreenshots/post(inAppPurchaseAppStoreReviewScreenshots_createInstance)`.
     func inAppPurchaseAppStoreReviewScreenshotsCreateInstance(_ input: Operations.InAppPurchaseAppStoreReviewScreenshotsCreateInstance.Input) async throws -> Operations.InAppPurchaseAppStoreReviewScreenshotsCreateInstance.Output
@@ -5348,6 +5408,220 @@ extension APIProtocol {
     /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/delete(gameCenterLeaderboardSetMemberLocalizations_deleteInstance)`.
     public func gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(path: Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Output {
         try await gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/get(gameCenterMatchmakingQueues_getCollection)`.
+    public func gameCenterMatchmakingQueuesGetCollection(
+        query: Operations.GameCenterMatchmakingQueuesGetCollection.Input.Query = .init(),
+        headers: Operations.GameCenterMatchmakingQueuesGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterMatchmakingQueuesGetCollection.Output {
+        try await gameCenterMatchmakingQueuesGetCollection(Operations.GameCenterMatchmakingQueuesGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/post(gameCenterMatchmakingQueues_createInstance)`.
+    public func gameCenterMatchmakingQueuesCreateInstance(
+        headers: Operations.GameCenterMatchmakingQueuesCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingQueuesCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingQueuesCreateInstance.Output {
+        try await gameCenterMatchmakingQueuesCreateInstance(Operations.GameCenterMatchmakingQueuesCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/{id}/get(gameCenterMatchmakingQueues_getInstance)`.
+    public func gameCenterMatchmakingQueuesGetInstance(
+        path: Operations.GameCenterMatchmakingQueuesGetInstance.Input.Path,
+        query: Operations.GameCenterMatchmakingQueuesGetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterMatchmakingQueuesGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterMatchmakingQueuesGetInstance.Output {
+        try await gameCenterMatchmakingQueuesGetInstance(Operations.GameCenterMatchmakingQueuesGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingQueues/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/{id}/patch(gameCenterMatchmakingQueues_updateInstance)`.
+    public func gameCenterMatchmakingQueuesUpdateInstance(
+        path: Operations.GameCenterMatchmakingQueuesUpdateInstance.Input.Path,
+        headers: Operations.GameCenterMatchmakingQueuesUpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingQueuesUpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingQueuesUpdateInstance.Output {
+        try await gameCenterMatchmakingQueuesUpdateInstance(Operations.GameCenterMatchmakingQueuesUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingQueues/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/{id}/delete(gameCenterMatchmakingQueues_deleteInstance)`.
+    public func gameCenterMatchmakingQueuesDeleteInstance(path: Operations.GameCenterMatchmakingQueuesDeleteInstance.Input.Path) async throws -> Operations.GameCenterMatchmakingQueuesDeleteInstance.Output {
+        try await gameCenterMatchmakingQueuesDeleteInstance(Operations.GameCenterMatchmakingQueuesDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingRules`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRules/post(gameCenterMatchmakingRules_createInstance)`.
+    public func gameCenterMatchmakingRulesCreateInstance(
+        headers: Operations.GameCenterMatchmakingRulesCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingRulesCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingRulesCreateInstance.Output {
+        try await gameCenterMatchmakingRulesCreateInstance(Operations.GameCenterMatchmakingRulesCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingRules/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRules/{id}/patch(gameCenterMatchmakingRules_updateInstance)`.
+    public func gameCenterMatchmakingRulesUpdateInstance(
+        path: Operations.GameCenterMatchmakingRulesUpdateInstance.Input.Path,
+        headers: Operations.GameCenterMatchmakingRulesUpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingRulesUpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingRulesUpdateInstance.Output {
+        try await gameCenterMatchmakingRulesUpdateInstance(Operations.GameCenterMatchmakingRulesUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingRules/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRules/{id}/delete(gameCenterMatchmakingRules_deleteInstance)`.
+    public func gameCenterMatchmakingRulesDeleteInstance(path: Operations.GameCenterMatchmakingRulesDeleteInstance.Input.Path) async throws -> Operations.GameCenterMatchmakingRulesDeleteInstance.Output {
+        try await gameCenterMatchmakingRulesDeleteInstance(Operations.GameCenterMatchmakingRulesDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/get(gameCenterMatchmakingRuleSets_getCollection)`.
+    public func gameCenterMatchmakingRuleSetsGetCollection(
+        query: Operations.GameCenterMatchmakingRuleSetsGetCollection.Input.Query = .init(),
+        headers: Operations.GameCenterMatchmakingRuleSetsGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetsGetCollection.Output {
+        try await gameCenterMatchmakingRuleSetsGetCollection(Operations.GameCenterMatchmakingRuleSetsGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingRuleSets`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/post(gameCenterMatchmakingRuleSets_createInstance)`.
+    public func gameCenterMatchmakingRuleSetsCreateInstance(
+        headers: Operations.GameCenterMatchmakingRuleSetsCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingRuleSetsCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetsCreateInstance.Output {
+        try await gameCenterMatchmakingRuleSetsCreateInstance(Operations.GameCenterMatchmakingRuleSetsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/get(gameCenterMatchmakingRuleSets_getInstance)`.
+    public func gameCenterMatchmakingRuleSetsGetInstance(
+        path: Operations.GameCenterMatchmakingRuleSetsGetInstance.Input.Path,
+        query: Operations.GameCenterMatchmakingRuleSetsGetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterMatchmakingRuleSetsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetsGetInstance.Output {
+        try await gameCenterMatchmakingRuleSetsGetInstance(Operations.GameCenterMatchmakingRuleSetsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingRuleSets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/patch(gameCenterMatchmakingRuleSets_updateInstance)`.
+    public func gameCenterMatchmakingRuleSetsUpdateInstance(
+        path: Operations.GameCenterMatchmakingRuleSetsUpdateInstance.Input.Path,
+        headers: Operations.GameCenterMatchmakingRuleSetsUpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingRuleSetsUpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetsUpdateInstance.Output {
+        try await gameCenterMatchmakingRuleSetsUpdateInstance(Operations.GameCenterMatchmakingRuleSetsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingRuleSets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/delete(gameCenterMatchmakingRuleSets_deleteInstance)`.
+    public func gameCenterMatchmakingRuleSetsDeleteInstance(path: Operations.GameCenterMatchmakingRuleSetsDeleteInstance.Input.Path) async throws -> Operations.GameCenterMatchmakingRuleSetsDeleteInstance.Output {
+        try await gameCenterMatchmakingRuleSetsDeleteInstance(Operations.GameCenterMatchmakingRuleSetsDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}/matchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/matchmakingQueues/get(gameCenterMatchmakingRuleSets_matchmakingQueues_getToManyRelated)`.
+    public func gameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated(
+        path: Operations.GameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated.Input.Path,
+        query: Operations.GameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated.Output {
+        try await gameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated(Operations.GameCenterMatchmakingRuleSetsMatchmakingQueuesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}/rules`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/rules/get(gameCenterMatchmakingRuleSets_rules_getToManyRelated)`.
+    public func gameCenterMatchmakingRuleSetsRulesGetToManyRelated(
+        path: Operations.GameCenterMatchmakingRuleSetsRulesGetToManyRelated.Input.Path,
+        query: Operations.GameCenterMatchmakingRuleSetsRulesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterMatchmakingRuleSetsRulesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetsRulesGetToManyRelated.Output {
+        try await gameCenterMatchmakingRuleSetsRulesGetToManyRelated(Operations.GameCenterMatchmakingRuleSetsRulesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingRuleSets/{id}/teams`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSets/{id}/teams/get(gameCenterMatchmakingRuleSets_teams_getToManyRelated)`.
+    public func gameCenterMatchmakingRuleSetsTeamsGetToManyRelated(
+        path: Operations.GameCenterMatchmakingRuleSetsTeamsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterMatchmakingRuleSetsTeamsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterMatchmakingRuleSetsTeamsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetsTeamsGetToManyRelated.Output {
+        try await gameCenterMatchmakingRuleSetsTeamsGetToManyRelated(Operations.GameCenterMatchmakingRuleSetsTeamsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingRuleSetTests`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingRuleSetTests/post(gameCenterMatchmakingRuleSetTests_createInstance)`.
+    public func gameCenterMatchmakingRuleSetTestsCreateInstance(
+        headers: Operations.GameCenterMatchmakingRuleSetTestsCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingRuleSetTestsCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingRuleSetTestsCreateInstance.Output {
+        try await gameCenterMatchmakingRuleSetTestsCreateInstance(Operations.GameCenterMatchmakingRuleSetTestsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingTeams`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingTeams/post(gameCenterMatchmakingTeams_createInstance)`.
+    public func gameCenterMatchmakingTeamsCreateInstance(
+        headers: Operations.GameCenterMatchmakingTeamsCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingTeamsCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingTeamsCreateInstance.Output {
+        try await gameCenterMatchmakingTeamsCreateInstance(Operations.GameCenterMatchmakingTeamsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterMatchmakingTeams/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingTeams/{id}/patch(gameCenterMatchmakingTeams_updateInstance)`.
+    public func gameCenterMatchmakingTeamsUpdateInstance(
+        path: Operations.GameCenterMatchmakingTeamsUpdateInstance.Input.Path,
+        headers: Operations.GameCenterMatchmakingTeamsUpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterMatchmakingTeamsUpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterMatchmakingTeamsUpdateInstance.Output {
+        try await gameCenterMatchmakingTeamsUpdateInstance(Operations.GameCenterMatchmakingTeamsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/gameCenterMatchmakingTeams/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingTeams/{id}/delete(gameCenterMatchmakingTeams_deleteInstance)`.
+    public func gameCenterMatchmakingTeamsDeleteInstance(path: Operations.GameCenterMatchmakingTeamsDeleteInstance.Input.Path) async throws -> Operations.GameCenterMatchmakingTeamsDeleteInstance.Output {
+        try await gameCenterMatchmakingTeamsDeleteInstance(Operations.GameCenterMatchmakingTeamsDeleteInstance.Input(path: path))
     }
     /// - Remark: HTTP `POST /v1/inAppPurchaseAppStoreReviewScreenshots`.
     /// - Remark: Generated from `#/paths//v1/inAppPurchaseAppStoreReviewScreenshots/post(inAppPurchaseAppStoreReviewScreenshots_createInstance)`.

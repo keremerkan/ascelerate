@@ -343,6 +343,20 @@ ascelerate game-center <kind> image upload|delete <app> <item> --locale X [file]
 ascelerate game-center <kind> submit <app> <item> [--platform ios]   # adds the version to the draft submission (apps review submit sends it)
 ```
 
+Matchmaking (team-wide, no app argument; rule sets and queues by reference name or ID):
+
+```bash
+ascelerate game-center matchmaking [rule-sets] [--json]           # player counts, rule/team counts, queues
+ascelerate game-center matchmaking rule-sets info|create|update|delete ...   # create --name X --min N --max N; update --min/--max
+ascelerate game-center matchmaking rules add <set> --name X --type compatible|distance|match|team --expression "…" --description "…" [--weight N]
+ascelerate game-center matchmaking rules update|delete <set> <rule> ...
+ascelerate game-center matchmaking teams add|update|delete <set> ... [--name X] --min N --max N
+ascelerate game-center matchmaking queues [create|update|delete] ... --rule-set X [--experiment-rule-set X|none] [--classic-apps a,b|none]
+ascelerate game-center matchmaking test <set> --file requests.json [--json]   # Apple's matches + teams; nothing saved
+```
+
+Rule language = JMESPath (no arithmetic). Compatible rules compare `requests[0]` with `requests[1]`; distance rules return a number for `requests[0]`; player properties are `requests[0].properties.<key>`. Saving only checks syntax (a `request.` path compiles but evaluates null), so always `test` a rule set with sample requests (JSON array: requestName, bundleId, platform, appVersion, players [{playerId, properties}], optional secondsInQueue, locale like EN-US, latitude/longitude, playerCount, min/maxPlayers). A rule set used by a queue can't be deleted.
+
 Items are named by vendor identifier, reference name or Apple ID. Text and images live on a version (Prepare for Submission until reviewed); editing a live item makes its next version after a prompt, an item in review can't change. Achievement languages need name, `--before-earned`, `--after-earned`; leaderboard languages: name, description, `--formatter` override, `--suffix`/`--suffix-singular`. Recurring leaderboards: duration in hours/minutes only (`PT24H`; Apple refuses `P7D`), rule `FREQ=MINUTELY|HOURLY|DAILY;INTERVAL=n`. A score range clears only as a whole (`--min "" --max ""`). The first leaderboard becomes the default.
 
 ### Featuring nominations

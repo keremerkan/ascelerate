@@ -88,3 +88,36 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 ```
 
 `reorder` puts the ones listed first, in that order; the rest follow as they are. `submit` adds the item's new version to the app's draft submission (making one when there's none). It goes to App Review when you submit the draft with `ascelerate apps review submit`.
+
+## Matchmaking
+
+Rule-based matchmaking belongs to the team, not to one app, so these commands take no bundle ID. A **rule set** sets the player count, the rules and the teams; a **queue** is where games send their match requests, matched with one rule set. Rule sets and queues are named by reference name or ID.
+
+```bash
+ascelerate game-center matchmaking rule-sets [--json]
+ascelerate game-center matchmaking rule-sets create --name Ranked --min 2 --max 4
+ascelerate game-center matchmaking rule-sets info Ranked
+ascelerate game-center matchmaking rules add Ranked --name SameVersion --type compatible \
+  --expression "requests[0].appVersion == requests[1].appVersion" --description "Same app version"
+ascelerate game-center matchmaking rules add Ranked --name Skill --type distance \
+  --expression "requests[0].properties.skill" --description "Close skill" --weight 2
+ascelerate game-center matchmaking teams add Ranked --name Red --min 1 --max 2
+ascelerate game-center matchmaking queues create --name RankedQueue --rule-set Ranked [--experiment-rule-set RankedB] [--classic-apps com.example.MyApp]
+ascelerate game-center matchmaking queues update RankedQueue --experiment-rule-set none
+ascelerate game-center matchmaking test Ranked --file requests.json
+```
+
+Rules are written in Apple's rule language, based on JMESPath (which has no arithmetic operators). A compatible rule compares `requests[0]` with `requests[1]`; a distance rule gives a number for `requests[0]`, and requests with closer numbers match first. A player's properties are read as `requests[0].properties.<key>`. App Store Connect only checks an expression's syntax when it's saved, so run a test before using a rule set.
+
+`test` runs sample requests through a rule set and shows the matches Apple would make, with each player's team; nothing is saved. The file is a JSON array:
+
+```json
+[
+  {"requestName": "alice", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 5, "locale": "EN-US", "players": [{"playerId": "alice", "properties": {"skill": "10"}}]},
+  {"requestName": "bob", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 8, "locale": "EN-US", "players": [{"playerId": "bob", "properties": {"skill": "12"}}]}
+]
+```
+
+A request can also give `latitude`, `longitude`, `playerCount`, `minPlayers` and `maxPlayers`. A rule set that a queue uses can't be deleted; change or delete the queue first.

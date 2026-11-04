@@ -1265,6 +1265,36 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /v1/territoryAvailabilities/{id}`.
     /// - Remark: Generated from `#/paths//v1/territoryAvailabilities/{id}/patch(territoryAvailabilities_updateInstance)`.
     func territoryAvailabilitiesUpdateInstance(_ input: Operations.TerritoryAvailabilitiesUpdateInstance.Input) async throws -> Operations.TerritoryAvailabilitiesUpdateInstance.Output
+    /// - Remark: HTTP `GET /v1/userInvitations`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/get(userInvitations_getCollection)`.
+    func userInvitationsGetCollection(_ input: Operations.UserInvitationsGetCollection.Input) async throws -> Operations.UserInvitationsGetCollection.Output
+    /// - Remark: HTTP `POST /v1/userInvitations`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/post(userInvitations_createInstance)`.
+    func userInvitationsCreateInstance(_ input: Operations.UserInvitationsCreateInstance.Input) async throws -> Operations.UserInvitationsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/userInvitations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/get(userInvitations_getInstance)`.
+    func userInvitationsGetInstance(_ input: Operations.UserInvitationsGetInstance.Input) async throws -> Operations.UserInvitationsGetInstance.Output
+    /// - Remark: HTTP `DELETE /v1/userInvitations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/delete(userInvitations_deleteInstance)`.
+    func userInvitationsDeleteInstance(_ input: Operations.UserInvitationsDeleteInstance.Input) async throws -> Operations.UserInvitationsDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/userInvitations/{id}/visibleApps`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/visibleApps/get(userInvitations_visibleApps_getToManyRelated)`.
+    func userInvitationsVisibleAppsGetToManyRelated(_ input: Operations.UserInvitationsVisibleAppsGetToManyRelated.Input) async throws -> Operations.UserInvitationsVisibleAppsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/users`.
+    /// - Remark: Generated from `#/paths//v1/users/get(users_getCollection)`.
+    func usersGetCollection(_ input: Operations.UsersGetCollection.Input) async throws -> Operations.UsersGetCollection.Output
+    /// - Remark: HTTP `GET /v1/users/{id}`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/get(users_getInstance)`.
+    func usersGetInstance(_ input: Operations.UsersGetInstance.Input) async throws -> Operations.UsersGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/users/{id}`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/patch(users_updateInstance)`.
+    func usersUpdateInstance(_ input: Operations.UsersUpdateInstance.Input) async throws -> Operations.UsersUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/users/{id}`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/delete(users_deleteInstance)`.
+    func usersDeleteInstance(_ input: Operations.UsersDeleteInstance.Input) async throws -> Operations.UsersDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/users/{id}/visibleApps`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/visibleApps/get(users_visibleApps_getToManyRelated)`.
+    func usersVisibleAppsGetToManyRelated(_ input: Operations.UsersVisibleAppsGetToManyRelated.Input) async throws -> Operations.UsersVisibleAppsGetToManyRelated.Output
     /// - Remark: HTTP `POST /v1/webhookDeliveries`.
     /// - Remark: Generated from `#/paths//v1/webhookDeliveries/post(webhookDeliveries_createInstance)`.
     func webhookDeliveriesCreateInstance(_ input: Operations.WebhookDeliveriesCreateInstance.Input) async throws -> Operations.WebhookDeliveriesCreateInstance.Output
@@ -6129,6 +6159,114 @@ extension APIProtocol {
             path: path,
             headers: headers,
             body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/userInvitations`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/get(userInvitations_getCollection)`.
+    public func userInvitationsGetCollection(
+        query: Operations.UserInvitationsGetCollection.Input.Query = .init(),
+        headers: Operations.UserInvitationsGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.UserInvitationsGetCollection.Output {
+        try await userInvitationsGetCollection(Operations.UserInvitationsGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/userInvitations`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/post(userInvitations_createInstance)`.
+    public func userInvitationsCreateInstance(
+        headers: Operations.UserInvitationsCreateInstance.Input.Headers = .init(),
+        body: Operations.UserInvitationsCreateInstance.Input.Body
+    ) async throws -> Operations.UserInvitationsCreateInstance.Output {
+        try await userInvitationsCreateInstance(Operations.UserInvitationsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/userInvitations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/get(userInvitations_getInstance)`.
+    public func userInvitationsGetInstance(
+        path: Operations.UserInvitationsGetInstance.Input.Path,
+        query: Operations.UserInvitationsGetInstance.Input.Query = .init(),
+        headers: Operations.UserInvitationsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.UserInvitationsGetInstance.Output {
+        try await userInvitationsGetInstance(Operations.UserInvitationsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/userInvitations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/delete(userInvitations_deleteInstance)`.
+    public func userInvitationsDeleteInstance(path: Operations.UserInvitationsDeleteInstance.Input.Path) async throws -> Operations.UserInvitationsDeleteInstance.Output {
+        try await userInvitationsDeleteInstance(Operations.UserInvitationsDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/userInvitations/{id}/visibleApps`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/visibleApps/get(userInvitations_visibleApps_getToManyRelated)`.
+    public func userInvitationsVisibleAppsGetToManyRelated(
+        path: Operations.UserInvitationsVisibleAppsGetToManyRelated.Input.Path,
+        query: Operations.UserInvitationsVisibleAppsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.UserInvitationsVisibleAppsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.UserInvitationsVisibleAppsGetToManyRelated.Output {
+        try await userInvitationsVisibleAppsGetToManyRelated(Operations.UserInvitationsVisibleAppsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/users`.
+    /// - Remark: Generated from `#/paths//v1/users/get(users_getCollection)`.
+    public func usersGetCollection(
+        query: Operations.UsersGetCollection.Input.Query = .init(),
+        headers: Operations.UsersGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.UsersGetCollection.Output {
+        try await usersGetCollection(Operations.UsersGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/users/{id}`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/get(users_getInstance)`.
+    public func usersGetInstance(
+        path: Operations.UsersGetInstance.Input.Path,
+        query: Operations.UsersGetInstance.Input.Query = .init(),
+        headers: Operations.UsersGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.UsersGetInstance.Output {
+        try await usersGetInstance(Operations.UsersGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/users/{id}`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/patch(users_updateInstance)`.
+    public func usersUpdateInstance(
+        path: Operations.UsersUpdateInstance.Input.Path,
+        headers: Operations.UsersUpdateInstance.Input.Headers = .init(),
+        body: Operations.UsersUpdateInstance.Input.Body
+    ) async throws -> Operations.UsersUpdateInstance.Output {
+        try await usersUpdateInstance(Operations.UsersUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/users/{id}`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/delete(users_deleteInstance)`.
+    public func usersDeleteInstance(path: Operations.UsersDeleteInstance.Input.Path) async throws -> Operations.UsersDeleteInstance.Output {
+        try await usersDeleteInstance(Operations.UsersDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/users/{id}/visibleApps`.
+    /// - Remark: Generated from `#/paths//v1/users/{id}/visibleApps/get(users_visibleApps_getToManyRelated)`.
+    public func usersVisibleAppsGetToManyRelated(
+        path: Operations.UsersVisibleAppsGetToManyRelated.Input.Path,
+        query: Operations.UsersVisibleAppsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.UsersVisibleAppsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.UsersVisibleAppsGetToManyRelated.Output {
+        try await usersVisibleAppsGetToManyRelated(Operations.UsersVisibleAppsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
         ))
     }
     /// - Remark: HTTP `POST /v1/webhookDeliveries`.

@@ -1162,6 +1162,736 @@ extension Components.Schemas {
             case url
         }
     }
+    /// - Remark: Generated from `#/components/schemas/User`.
+    public struct User: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/User/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/User/attributes/allAppsVisible`.
+            public var allAppsVisible: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/User/attributes/firstName`.
+            public var firstName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/User/attributes/lastName`.
+            public var lastName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/User/attributes/provisioningAllowed`.
+            public var provisioningAllowed: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/User/attributes/roles`.
+            public var roles: [Components.Schemas.UserRole]?
+            /// - Remark: Generated from `#/components/schemas/User/attributes/username`.
+            public var username: Swift.String?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - allAppsVisible:
+            ///   - firstName:
+            ///   - lastName:
+            ///   - provisioningAllowed:
+            ///   - roles:
+            ///   - username:
+            public init(
+                allAppsVisible: Swift.Bool? = nil,
+                firstName: Swift.String? = nil,
+                lastName: Swift.String? = nil,
+                provisioningAllowed: Swift.Bool? = nil,
+                roles: [Components.Schemas.UserRole]? = nil,
+                username: Swift.String? = nil
+            ) {
+                self.allAppsVisible = allAppsVisible
+                self.firstName = firstName
+                self.lastName = lastName
+                self.provisioningAllowed = provisioningAllowed
+                self.roles = roles
+                self.username = username
+            }
+            public enum CodingKeys: String, CodingKey {
+                case allAppsVisible
+                case firstName
+                case lastName
+                case provisioningAllowed
+                case roles
+                case username
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/User/attributes`.
+        public var attributes: Components.Schemas.User.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/User/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/User/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/User/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps`.
+            public struct VisibleAppsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps/data`.
+                public typealias DataPayload = [Components.Schemas.User.RelationshipsPayload.VisibleAppsPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps/data`.
+                public var data: Components.Schemas.User.RelationshipsPayload.VisibleAppsPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `VisibleAppsPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.User.RelationshipsPayload.VisibleAppsPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/User/relationships/visibleApps`.
+            public var visibleApps: Components.Schemas.User.RelationshipsPayload.VisibleAppsPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - visibleApps:
+            public init(visibleApps: Components.Schemas.User.RelationshipsPayload.VisibleAppsPayload? = nil) {
+                self.visibleApps = visibleApps
+            }
+            public enum CodingKeys: String, CodingKey {
+                case visibleApps
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/User/relationships`.
+        public var relationships: Components.Schemas.User.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/User/type`.
+        public var _type: Swift.String
+        /// Creates a new `User`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.User.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.User.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserInvitation`.
+    public struct UserInvitation: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes/allAppsVisible`.
+            public var allAppsVisible: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes/email`.
+            public var email: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes/expirationDate`.
+            public var expirationDate: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes/firstName`.
+            public var firstName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes/lastName`.
+            public var lastName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes/provisioningAllowed`.
+            public var provisioningAllowed: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes/roles`.
+            public var roles: [Components.Schemas.UserRole]?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - allAppsVisible:
+            ///   - email:
+            ///   - expirationDate:
+            ///   - firstName:
+            ///   - lastName:
+            ///   - provisioningAllowed:
+            ///   - roles:
+            public init(
+                allAppsVisible: Swift.Bool? = nil,
+                email: Swift.String? = nil,
+                expirationDate: Foundation.Date? = nil,
+                firstName: Swift.String? = nil,
+                lastName: Swift.String? = nil,
+                provisioningAllowed: Swift.Bool? = nil,
+                roles: [Components.Schemas.UserRole]? = nil
+            ) {
+                self.allAppsVisible = allAppsVisible
+                self.email = email
+                self.expirationDate = expirationDate
+                self.firstName = firstName
+                self.lastName = lastName
+                self.provisioningAllowed = provisioningAllowed
+                self.roles = roles
+            }
+            public enum CodingKeys: String, CodingKey {
+                case allAppsVisible
+                case email
+                case expirationDate
+                case firstName
+                case lastName
+                case provisioningAllowed
+                case roles
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UserInvitation/attributes`.
+        public var attributes: Components.Schemas.UserInvitation.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/UserInvitation/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/UserInvitation/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps`.
+            public struct VisibleAppsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps/data`.
+                public typealias DataPayload = [Components.Schemas.UserInvitation.RelationshipsPayload.VisibleAppsPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps/data`.
+                public var data: Components.Schemas.UserInvitation.RelationshipsPayload.VisibleAppsPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `VisibleAppsPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.UserInvitation.RelationshipsPayload.VisibleAppsPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships/visibleApps`.
+            public var visibleApps: Components.Schemas.UserInvitation.RelationshipsPayload.VisibleAppsPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - visibleApps:
+            public init(visibleApps: Components.Schemas.UserInvitation.RelationshipsPayload.VisibleAppsPayload? = nil) {
+                self.visibleApps = visibleApps
+            }
+            public enum CodingKeys: String, CodingKey {
+                case visibleApps
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UserInvitation/relationships`.
+        public var relationships: Components.Schemas.UserInvitation.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/UserInvitation/type`.
+        public var _type: Swift.String
+        /// Creates a new `UserInvitation`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.UserInvitation.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.UserInvitation.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest`.
+    public struct UserInvitationCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes/allAppsVisible`.
+                public var allAppsVisible: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes/email`.
+                public var email: Swift.String
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes/firstName`.
+                public var firstName: Swift.String
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes/lastName`.
+                public var lastName: Swift.String
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes/provisioningAllowed`.
+                public var provisioningAllowed: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes/roles`.
+                public var roles: [Components.Schemas.UserRole]
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - allAppsVisible:
+                ///   - email:
+                ///   - firstName:
+                ///   - lastName:
+                ///   - provisioningAllowed:
+                ///   - roles:
+                public init(
+                    allAppsVisible: Swift.Bool? = nil,
+                    email: Swift.String,
+                    firstName: Swift.String,
+                    lastName: Swift.String,
+                    provisioningAllowed: Swift.Bool? = nil,
+                    roles: [Components.Schemas.UserRole]
+                ) {
+                    self.allAppsVisible = allAppsVisible
+                    self.email = email
+                    self.firstName = firstName
+                    self.lastName = lastName
+                    self.provisioningAllowed = provisioningAllowed
+                    self.roles = roles
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case allAppsVisible
+                    case email
+                    case firstName
+                    case lastName
+                    case provisioningAllowed
+                    case roles
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.UserInvitationCreateRequest.DataPayload.AttributesPayload
+            /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships/visibleApps`.
+                public struct VisibleAppsPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships/visibleApps/DataPayload`.
+                    public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships/visibleApps/DataPayload/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships/visibleApps/DataPayload/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayloadPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships/visibleApps/data`.
+                    public typealias DataPayload = [Components.Schemas.UserInvitationCreateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayloadPayload]
+                    /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships/visibleApps/data`.
+                    public var data: Components.Schemas.UserInvitationCreateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayload?
+                    /// Creates a new `VisibleAppsPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.UserInvitationCreateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships/visibleApps`.
+                public var visibleApps: Components.Schemas.UserInvitationCreateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload?
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - visibleApps:
+                public init(visibleApps: Components.Schemas.UserInvitationCreateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload? = nil) {
+                    self.visibleApps = visibleApps
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case visibleApps
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.UserInvitationCreateRequest.DataPayload.RelationshipsPayload?
+            /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.UserInvitationCreateRequest.DataPayload.AttributesPayload,
+                relationships: Components.Schemas.UserInvitationCreateRequest.DataPayload.RelationshipsPayload? = nil,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UserInvitationCreateRequest/data`.
+        public var data: Components.Schemas.UserInvitationCreateRequest.DataPayload
+        /// Creates a new `UserInvitationCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.UserInvitationCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserInvitationResponse`.
+    public struct UserInvitationResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserInvitationResponse/data`.
+        public var data: Components.Schemas.UserInvitation
+        /// - Remark: Generated from `#/components/schemas/UserInvitationResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UserInvitationResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `UserInvitationResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.UserInvitation,
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse`.
+    public struct UserInvitationsResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/data`.
+        public var data: [Components.Schemas.UserInvitation]
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `UserInvitationsResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.UserInvitation],
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserResponse`.
+    public struct UserResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserResponse/data`.
+        public var data: Components.Schemas.User
+        /// - Remark: Generated from `#/components/schemas/UserResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UserResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `UserResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.User,
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserRole`.
+    public typealias UserRole = Swift.String
+    /// - Remark: Generated from `#/components/schemas/UsersResponse`.
+    public struct UsersResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/data`.
+        public var data: [Components.Schemas.User]
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `UsersResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.User],
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest`.
+    public struct UserUpdateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes/allAppsVisible`.
+                public var allAppsVisible: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes/provisioningAllowed`.
+                public var provisioningAllowed: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes/roles`.
+                public var roles: [Components.Schemas.UserRole]?
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - allAppsVisible:
+                ///   - provisioningAllowed:
+                ///   - roles:
+                public init(
+                    allAppsVisible: Swift.Bool? = nil,
+                    provisioningAllowed: Swift.Bool? = nil,
+                    roles: [Components.Schemas.UserRole]? = nil
+                ) {
+                    self.allAppsVisible = allAppsVisible
+                    self.provisioningAllowed = provisioningAllowed
+                    self.roles = roles
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case allAppsVisible
+                    case provisioningAllowed
+                    case roles
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes`.
+            public var attributes: Components.Schemas.UserUpdateRequest.DataPayload.AttributesPayload?
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps`.
+                public struct VisibleAppsPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/DataPayload`.
+                    public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/DataPayload/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/DataPayload/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayloadPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/data`.
+                    public typealias DataPayload = [Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayloadPayload]
+                    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/data`.
+                    public var data: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayload?
+                    /// Creates a new `VisibleAppsPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps`.
+                public var visibleApps: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload?
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - visibleApps:
+                public init(visibleApps: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload? = nil) {
+                    self.visibleApps = visibleApps
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case visibleApps
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships`.
+            public var relationships: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload?
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - id:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.UserUpdateRequest.DataPayload.AttributesPayload? = nil,
+                id: Swift.String,
+                relationships: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload? = nil,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.id = id
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case id
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data`.
+        public var data: Components.Schemas.UserUpdateRequest.DataPayload
+        /// Creates a new `UserUpdateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.UserUpdateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/Webhook`.
     public struct Webhook: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/Webhook/attributes`.

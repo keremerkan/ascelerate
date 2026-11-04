@@ -26,6 +26,7 @@ const sidebars: SidebarsConfig = {
         'commands/app-info',
         'commands/iap',
         'commands/subscriptions',
+        'commands/sandbox-testers',
         'commands/reviews',
         'commands/events',
         'commands/product-pages',

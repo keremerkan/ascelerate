@@ -1197,6 +1197,16 @@ Apple treats price changes differently for existing subscribers depending on dir
 
 Multi-territory price writes retry transient App Store Connect errors (HTTP 429/5xx) automatically — first in place with backoff, then in a second sweep at the end of the run. Territories that still fail are listed in the final report and the command exits non-zero; re-running the same command retries just those, since already-updated territories are skipped as unchanged.
 
+### Sandbox Testers
+
+The Apple Accounts that buy in-app purchases and subscriptions in the sandbox (created in App Store Connect; the API lists and changes them):
+
+```bash
+ascelerate sandbox-testers                                   # list: storefront, renewal rate, interrupted purchases
+ascelerate sandbox-testers update tester@example.com --renewal-rate 3m --territory DEU
+ascelerate sandbox-testers clear-history tester@example.com  # or --all
+```
+
 ### Customer Reviews
 
 ```bash

@@ -2533,6 +2533,411 @@ extension Operations {
             }
         }
     }
+    /// - Remark: HTTP `GET /v2/sandboxTesters`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/get(sandboxTestersV2_getCollection)`.
+    public enum SandboxTestersV2GetCollection {
+        public static let id: Swift.String = "sandboxTestersV2_getCollection"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/query/fieldsSandboxTestersPayload`.
+                @frozen public enum FieldsSandboxTestersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case firstName = "firstName"
+                    case lastName = "lastName"
+                    case acAccountName = "acAccountName"
+                    case territory = "territory"
+                    case applePayCompatible = "applePayCompatible"
+                    case interruptPurchases = "interruptPurchases"
+                    case subscriptionRenewalRate = "subscriptionRenewalRate"
+                }
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/query/fields[sandboxTesters]`.
+                public typealias fieldsSandboxTestersPayload = [Operations.SandboxTestersV2GetCollection.Input.Query.FieldsSandboxTestersPayloadPayload]
+                /// the fields to include for returned resources of type sandboxTesters
+                ///
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/query/fields[sandboxTesters]`.
+                public var fieldsSandboxTesters: Operations.SandboxTestersV2GetCollection.Input.Query.fieldsSandboxTestersPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsSandboxTesters: the fields to include for returned resources of type sandboxTesters
+                ///   - limit: maximum resources per page
+                public init(
+                    fieldsSandboxTesters: Operations.SandboxTestersV2GetCollection.Input.Query.fieldsSandboxTestersPayload? = nil,
+                    limit: Swift.Int? = nil
+                ) {
+                    self.fieldsSandboxTesters = fieldsSandboxTesters
+                    self.limit = limit
+                }
+            }
+            public var query: Operations.SandboxTestersV2GetCollection.Input.Query
+            /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SandboxTestersV2GetCollection.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SandboxTestersV2GetCollection.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SandboxTestersV2GetCollection.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.SandboxTestersV2GetCollection.Input.Query = .init(),
+                headers: Operations.SandboxTestersV2GetCollection.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/sandboxTesters/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SandboxTestersV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SandboxTestersV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SandboxTestersV2GetCollection.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SandboxTestersV2GetCollection.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of SandboxTesters
+            ///
+            /// - Remark: Generated from `#/paths//v2/sandboxTesters/get(sandboxTestersV2_getCollection)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SandboxTestersV2GetCollection.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SandboxTestersV2GetCollection.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `PATCH /v2/sandboxTesters/{id}`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/{id}/patch(sandboxTestersV2_updateInstance)`.
+    public enum SandboxTestersV2UpdateInstance {
+        public static let id: Swift.String = "sandboxTestersV2_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/sandboxTesters/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SandboxTestersV2UpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v2/sandboxTesters/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SandboxTestersV2UpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SandboxTestersV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SandboxTestersV2UpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/sandboxTesters/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.SandboxTesterV2UpdateRequest)
+            }
+            public var body: Operations.SandboxTestersV2UpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.SandboxTestersV2UpdateInstance.Input.Path,
+                headers: Operations.SandboxTestersV2UpdateInstance.Input.Headers = .init(),
+                body: Operations.SandboxTestersV2UpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/sandboxTesters/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/sandboxTesters/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SandboxTesterV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SandboxTesterV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SandboxTestersV2UpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SandboxTestersV2UpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SandboxTester
+            ///
+            /// - Remark: Generated from `#/paths//v2/sandboxTesters/{id}/patch(sandboxTestersV2_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SandboxTestersV2UpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SandboxTestersV2UpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /v2/sandboxTestersClearPurchaseHistoryRequest`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTestersClearPurchaseHistoryRequest/post(sandboxTestersClearPurchaseHistoryRequestV2_createInstance)`.
+    public enum SandboxTestersClearPurchaseHistoryRequestV2CreateInstance {
+        public static let id: Swift.String = "sandboxTestersClearPurchaseHistoryRequestV2_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/sandboxTestersClearPurchaseHistoryRequest/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/sandboxTestersClearPurchaseHistoryRequest/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/sandboxTestersClearPurchaseHistoryRequest/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SandboxTestersClearPurchaseHistoryRequestV2CreateRequest)
+            }
+            public var body: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input.Headers = .init(),
+                body: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/sandboxTestersClearPurchaseHistoryRequest/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/sandboxTestersClearPurchaseHistoryRequest/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.SandboxTestersClearPurchaseHistoryRequestV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SandboxTestersClearPurchaseHistoryRequestV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SandboxTestersClearPurchaseHistoryRequest
+            ///
+            /// - Remark: Generated from `#/paths//v2/sandboxTestersClearPurchaseHistoryRequest/post(sandboxTestersClearPurchaseHistoryRequestV2_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v3/appPricePoints/{id}/equalizations`.
     /// - Remark: Generated from `#/paths//v3/appPricePoints/{id}/equalizations/get(appPricePointsV3_equalizations_getToManyRelated)`.
     public enum AppPricePointsV3EqualizationsGetToManyRelated {

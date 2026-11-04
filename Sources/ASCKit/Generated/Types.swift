@@ -1343,6 +1343,15 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/versions`.
     /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/versions/get(inAppPurchasesV2_versions_getToManyRelated)`.
     func inAppPurchasesV2VersionsGetToManyRelated(_ input: Operations.InAppPurchasesV2VersionsGetToManyRelated.Input) async throws -> Operations.InAppPurchasesV2VersionsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v2/sandboxTesters`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/get(sandboxTestersV2_getCollection)`.
+    func sandboxTestersV2GetCollection(_ input: Operations.SandboxTestersV2GetCollection.Input) async throws -> Operations.SandboxTestersV2GetCollection.Output
+    /// - Remark: HTTP `PATCH /v2/sandboxTesters/{id}`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/{id}/patch(sandboxTestersV2_updateInstance)`.
+    func sandboxTestersV2UpdateInstance(_ input: Operations.SandboxTestersV2UpdateInstance.Input) async throws -> Operations.SandboxTestersV2UpdateInstance.Output
+    /// - Remark: HTTP `POST /v2/sandboxTestersClearPurchaseHistoryRequest`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTestersClearPurchaseHistoryRequest/post(sandboxTestersClearPurchaseHistoryRequestV2_createInstance)`.
+    func sandboxTestersClearPurchaseHistoryRequestV2CreateInstance(_ input: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input) async throws -> Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output
     /// - Remark: HTTP `GET /v3/appPricePoints/{id}/equalizations`.
     /// - Remark: Generated from `#/paths//v3/appPricePoints/{id}/equalizations/get(appPricePointsV3_equalizations_getToManyRelated)`.
     func appPricePointsV3EqualizationsGetToManyRelated(_ input: Operations.AppPricePointsV3EqualizationsGetToManyRelated.Input) async throws -> Operations.AppPricePointsV3EqualizationsGetToManyRelated.Output
@@ -6422,6 +6431,41 @@ extension APIProtocol {
             path: path,
             query: query,
             headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/sandboxTesters`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/get(sandboxTestersV2_getCollection)`.
+    public func sandboxTestersV2GetCollection(
+        query: Operations.SandboxTestersV2GetCollection.Input.Query = .init(),
+        headers: Operations.SandboxTestersV2GetCollection.Input.Headers = .init()
+    ) async throws -> Operations.SandboxTestersV2GetCollection.Output {
+        try await sandboxTestersV2GetCollection(Operations.SandboxTestersV2GetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/sandboxTesters/{id}`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/{id}/patch(sandboxTestersV2_updateInstance)`.
+    public func sandboxTestersV2UpdateInstance(
+        path: Operations.SandboxTestersV2UpdateInstance.Input.Path,
+        headers: Operations.SandboxTestersV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.SandboxTestersV2UpdateInstance.Input.Body
+    ) async throws -> Operations.SandboxTestersV2UpdateInstance.Output {
+        try await sandboxTestersV2UpdateInstance(Operations.SandboxTestersV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/sandboxTestersClearPurchaseHistoryRequest`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTestersClearPurchaseHistoryRequest/post(sandboxTestersClearPurchaseHistoryRequestV2_createInstance)`.
+    public func sandboxTestersClearPurchaseHistoryRequestV2CreateInstance(
+        headers: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input.Headers = .init(),
+        body: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input.Body
+    ) async throws -> Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output {
+        try await sandboxTestersClearPurchaseHistoryRequestV2CreateInstance(Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input(
+            headers: headers,
+            body: body
         ))
     }
     /// - Remark: HTTP `GET /v3/appPricePoints/{id}/equalizations`.

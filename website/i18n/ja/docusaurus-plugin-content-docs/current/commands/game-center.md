@@ -114,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder`（アチーブメント、リーダーボード、セット）は指定したものをその順序で先頭に置き、残りは今の順序のまま続きます。`submit` は項目の新しいバージョンをアプリの下書きの提出に追加します（なければ作成します）。下書きを `ascelerate apps review submit` で提出すると App Review に送られます。
+`reorder`（アチーブメント、リーダーボード、セット）は指定したものをその順序で先頭に置き、残りは今の順序のまま続きます。`submit` は項目の新しいバージョンをアプリの下書きの提出に追加します（なければ作成します）。下書きを `ascelerate apps review submit` で提出すると App Review に送られます。 `apps review submit` も審査待ちの変更があるすべての項目を表示し、提出に追加するか確認します。件数は `game-center <bundle-id>` で確認できます。
 
 ## グループ
 

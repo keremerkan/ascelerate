@@ -10,904 +10,6 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
-    /// - Remark: Generated from `#/components/schemas/StringToStringMap`.
-    public struct StringToStringMap: Codable, Hashable, Sendable {
-        /// A container of undocumented properties.
-        public var additionalProperties: [String: Swift.String]
-        /// Creates a new `StringToStringMap`.
-        ///
-        /// - Parameters:
-        ///   - additionalProperties: A container of undocumented properties.
-        public init(additionalProperties: [String: Swift.String] = .init()) {
-            self.additionalProperties = additionalProperties
-        }
-        public init(from decoder: any Swift.Decoder) throws {
-            additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [])
-        }
-        public func encode(to encoder: any Swift.Encoder) throws {
-            try encoder.encodeAdditionalProperties(additionalProperties)
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/Subscription`.
-    public struct Subscription: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/Subscription/attributes`.
-        public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/familySharable`.
-            public var familySharable: Swift.Bool?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/groupLevel`.
-            public var groupLevel: Swift.Int?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/marketSettings`.
-            public var marketSettings: [Swift.String]?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/multiSeatStatus`.
-            public var multiSeatStatus: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/name`.
-            public var name: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/productId`.
-            public var productId: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/reviewNote`.
-            public var reviewNote: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/state`.
-            public var state: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/Subscription/attributes/subscriptionPeriod`.
-            public var subscriptionPeriod: Swift.String?
-            /// Creates a new `AttributesPayload`.
-            ///
-            /// - Parameters:
-            ///   - familySharable:
-            ///   - groupLevel:
-            ///   - marketSettings:
-            ///   - multiSeatStatus:
-            ///   - name:
-            ///   - productId:
-            ///   - reviewNote:
-            ///   - state:
-            ///   - subscriptionPeriod:
-            public init(
-                familySharable: Swift.Bool? = nil,
-                groupLevel: Swift.Int? = nil,
-                marketSettings: [Swift.String]? = nil,
-                multiSeatStatus: Swift.String? = nil,
-                name: Swift.String? = nil,
-                productId: Swift.String? = nil,
-                reviewNote: Swift.String? = nil,
-                state: Swift.String? = nil,
-                subscriptionPeriod: Swift.String? = nil
-            ) {
-                self.familySharable = familySharable
-                self.groupLevel = groupLevel
-                self.marketSettings = marketSettings
-                self.multiSeatStatus = multiSeatStatus
-                self.name = name
-                self.productId = productId
-                self.reviewNote = reviewNote
-                self.state = state
-                self.subscriptionPeriod = subscriptionPeriod
-            }
-            public enum CodingKeys: String, CodingKey {
-                case familySharable
-                case groupLevel
-                case marketSettings
-                case multiSeatStatus
-                case name
-                case productId
-                case reviewNote
-                case state
-                case subscriptionPeriod
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/Subscription/attributes`.
-        public var attributes: Components.Schemas.Subscription.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/Subscription/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/Subscription/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/Subscription/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/appStoreReviewScreenshot`.
-            public struct AppStoreReviewScreenshotPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/appStoreReviewScreenshot/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/appStoreReviewScreenshot/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/appStoreReviewScreenshot/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/appStoreReviewScreenshot/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.AppStoreReviewScreenshotPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/appStoreReviewScreenshot/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// Creates a new `AppStoreReviewScreenshotPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.AppStoreReviewScreenshotPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/appStoreReviewScreenshot`.
-            public var appStoreReviewScreenshot: Components.Schemas.Subscription.RelationshipsPayload.AppStoreReviewScreenshotPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/group`.
-            public struct GroupPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/group/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/group/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/group/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/group/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.GroupPayload.DataPayload?
-                /// Creates a new `GroupPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.Subscription.RelationshipsPayload.GroupPayload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/group`.
-            public var group: Components.Schemas.Subscription.RelationshipsPayload.GroupPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images`.
-            public struct ImagesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.ImagesPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.ImagesPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `ImagesPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.ImagesPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/images`.
-            public var images: Components.Schemas.Subscription.RelationshipsPayload.ImagesPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers`.
-            public struct IntroductoryOffersPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.IntroductoryOffersPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.IntroductoryOffersPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `IntroductoryOffersPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.IntroductoryOffersPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/introductoryOffers`.
-            public var introductoryOffers: Components.Schemas.Subscription.RelationshipsPayload.IntroductoryOffersPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes`.
-            public struct OfferCodesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.OfferCodesPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.OfferCodesPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `OfferCodesPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.OfferCodesPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/offerCodes`.
-            public var offerCodes: Components.Schemas.Subscription.RelationshipsPayload.OfferCodesPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities`.
-            public struct PlanAvailabilitiesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.PlanAvailabilitiesPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.PlanAvailabilitiesPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `PlanAvailabilitiesPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.PlanAvailabilitiesPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/planAvailabilities`.
-            public var planAvailabilities: Components.Schemas.Subscription.RelationshipsPayload.PlanAvailabilitiesPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/pricePoints`.
-            public struct PricePointsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/pricePoints/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// Creates a new `PricePointsPayload`.
-                ///
-                /// - Parameters:
-                ///   - links:
-                public init(links: Components.Schemas.RelationshipLinks? = nil) {
-                    self.links = links
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case links
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/pricePoints`.
-            public var pricePoints: Components.Schemas.Subscription.RelationshipsPayload.PricePointsPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices`.
-            public struct PricesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.PricesPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.PricesPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `PricesPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.PricesPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/prices`.
-            public var prices: Components.Schemas.Subscription.RelationshipsPayload.PricesPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotedPurchase`.
-            public struct PromotedPurchasePayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotedPurchase/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotedPurchase/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotedPurchase/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotedPurchase/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.PromotedPurchasePayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotedPurchase/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// Creates a new `PromotedPurchasePayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.PromotedPurchasePayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotedPurchase`.
-            public var promotedPurchase: Components.Schemas.Subscription.RelationshipsPayload.PromotedPurchasePayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers`.
-            public struct PromotionalOffersPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.PromotionalOffersPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.PromotionalOffersPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `PromotionalOffersPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.PromotionalOffersPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/promotionalOffers`.
-            public var promotionalOffers: Components.Schemas.Subscription.RelationshipsPayload.PromotionalOffersPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionAvailability`.
-            @available(*, deprecated)
-            public struct SubscriptionAvailabilityPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionAvailability/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionAvailability/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionAvailability/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionAvailability/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionAvailabilityPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionAvailability/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// Creates a new `SubscriptionAvailabilityPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionAvailabilityPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionAvailability`.
-            @available(*, deprecated)
-            public var subscriptionAvailability: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionAvailabilityPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations`.
-            public struct SubscriptionLocalizationsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.SubscriptionLocalizationsPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionLocalizationsPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `SubscriptionLocalizationsPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionLocalizationsPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/subscriptionLocalizations`.
-            public var subscriptionLocalizations: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionLocalizationsPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions`.
-            public struct VersionsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.VersionsPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.VersionsPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `VersionsPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.VersionsPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/versions`.
-            public var versions: Components.Schemas.Subscription.RelationshipsPayload.VersionsPayload?
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers`.
-            public struct WinBackOffersPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers/data`.
-                public typealias DataPayload = [Components.Schemas.Subscription.RelationshipsPayload.WinBackOffersPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers/data`.
-                public var data: Components.Schemas.Subscription.RelationshipsPayload.WinBackOffersPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `WinBackOffersPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.Subscription.RelationshipsPayload.WinBackOffersPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/Subscription/relationships/winBackOffers`.
-            public var winBackOffers: Components.Schemas.Subscription.RelationshipsPayload.WinBackOffersPayload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - appStoreReviewScreenshot:
-            ///   - group:
-            ///   - images:
-            ///   - introductoryOffers:
-            ///   - offerCodes:
-            ///   - planAvailabilities:
-            ///   - pricePoints:
-            ///   - prices:
-            ///   - promotedPurchase:
-            ///   - promotionalOffers:
-            ///   - subscriptionAvailability:
-            ///   - subscriptionLocalizations:
-            ///   - versions:
-            ///   - winBackOffers:
-            public init(
-                appStoreReviewScreenshot: Components.Schemas.Subscription.RelationshipsPayload.AppStoreReviewScreenshotPayload? = nil,
-                group: Components.Schemas.Subscription.RelationshipsPayload.GroupPayload? = nil,
-                images: Components.Schemas.Subscription.RelationshipsPayload.ImagesPayload? = nil,
-                introductoryOffers: Components.Schemas.Subscription.RelationshipsPayload.IntroductoryOffersPayload? = nil,
-                offerCodes: Components.Schemas.Subscription.RelationshipsPayload.OfferCodesPayload? = nil,
-                planAvailabilities: Components.Schemas.Subscription.RelationshipsPayload.PlanAvailabilitiesPayload? = nil,
-                pricePoints: Components.Schemas.Subscription.RelationshipsPayload.PricePointsPayload? = nil,
-                prices: Components.Schemas.Subscription.RelationshipsPayload.PricesPayload? = nil,
-                promotedPurchase: Components.Schemas.Subscription.RelationshipsPayload.PromotedPurchasePayload? = nil,
-                promotionalOffers: Components.Schemas.Subscription.RelationshipsPayload.PromotionalOffersPayload? = nil,
-                subscriptionAvailability: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionAvailabilityPayload? = nil,
-                subscriptionLocalizations: Components.Schemas.Subscription.RelationshipsPayload.SubscriptionLocalizationsPayload? = nil,
-                versions: Components.Schemas.Subscription.RelationshipsPayload.VersionsPayload? = nil,
-                winBackOffers: Components.Schemas.Subscription.RelationshipsPayload.WinBackOffersPayload? = nil
-            ) {
-                self.appStoreReviewScreenshot = appStoreReviewScreenshot
-                self.group = group
-                self.images = images
-                self.introductoryOffers = introductoryOffers
-                self.offerCodes = offerCodes
-                self.planAvailabilities = planAvailabilities
-                self.pricePoints = pricePoints
-                self.prices = prices
-                self.promotedPurchase = promotedPurchase
-                self.promotionalOffers = promotionalOffers
-                self.subscriptionAvailability = subscriptionAvailability
-                self.subscriptionLocalizations = subscriptionLocalizations
-                self.versions = versions
-                self.winBackOffers = winBackOffers
-            }
-            public enum CodingKeys: String, CodingKey {
-                case appStoreReviewScreenshot
-                case group
-                case images
-                case introductoryOffers
-                case offerCodes
-                case planAvailabilities
-                case pricePoints
-                case prices
-                case promotedPurchase
-                case promotionalOffers
-                case subscriptionAvailability
-                case subscriptionLocalizations
-                case versions
-                case winBackOffers
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/Subscription/relationships`.
-        public var relationships: Components.Schemas.Subscription.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/Subscription/type`.
-        public var _type: Swift.String
-        /// Creates a new `Subscription`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.Subscription.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.Subscription.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case relationships
-            case _type = "type"
-        }
-    }
     /// - Remark: Generated from `#/components/schemas/SubscriptionAppStoreReviewScreenshot`.
     public struct SubscriptionAppStoreReviewScreenshot: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/SubscriptionAppStoreReviewScreenshot/attributes`.
@@ -3145,6 +2247,859 @@ extension Components.Schemas {
             id: Swift.String,
             links: Components.Schemas.ResourceLinks? = nil,
             relationships: Components.Schemas.SubscriptionGroupVersion.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse`.
+    public struct SubscriptionGroupVersionResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse/data`.
+        public var data: Components.Schemas.SubscriptionGroupVersion
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse/IncludedPayload/SubscriptionGroupLocalizationV2`.
+            case subscriptionGroupLocalizations(Components.Schemas.SubscriptionGroupLocalizationV2)
+            /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse/IncludedPayload/SubscriptionGroup`.
+            case subscriptionGroups(Components.Schemas.SubscriptionGroup)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "subscriptionGroupLocalizations":
+                    self = .subscriptionGroupLocalizations(try .init(from: decoder))
+                case "subscriptionGroups":
+                    self = .subscriptionGroups(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .subscriptionGroupLocalizations(value):
+                    try value.encode(to: encoder)
+                case let .subscriptionGroups(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.SubscriptionGroupVersionResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse/included`.
+        public var included: Components.Schemas.SubscriptionGroupVersionResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `SubscriptionGroupVersionResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.SubscriptionGroupVersion,
+            included: Components.Schemas.SubscriptionGroupVersionResponse.IncludedPayload? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse`.
+    public struct SubscriptionGroupVersionsResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/data`.
+        public var data: [Components.Schemas.SubscriptionGroupVersion]
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/IncludedPayload/SubscriptionGroupLocalizationV2`.
+            case subscriptionGroupLocalizations(Components.Schemas.SubscriptionGroupLocalizationV2)
+            /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/IncludedPayload/SubscriptionGroup`.
+            case subscriptionGroups(Components.Schemas.SubscriptionGroup)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "subscriptionGroupLocalizations":
+                    self = .subscriptionGroupLocalizations(try .init(from: decoder))
+                case "subscriptionGroups":
+                    self = .subscriptionGroups(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .subscriptionGroupLocalizations(value):
+                    try value.encode(to: encoder)
+                case let .subscriptionGroups(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.SubscriptionGroupVersionsResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/included`.
+        public var included: Components.Schemas.SubscriptionGroupVersionsResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/SubscriptionGroupVersionsResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `SubscriptionGroupVersionsResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.SubscriptionGroupVersion],
+            included: Components.Schemas.SubscriptionGroupVersionsResponse.IncludedPayload? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionImage`.
+    public struct SubscriptionImage: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes/assetToken`.
+            public var assetToken: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes/fileName`.
+            public var fileName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes/fileSize`.
+            public var fileSize: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes/imageAsset`.
+            public var imageAsset: Components.Schemas.ImageAsset?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes/sourceFileChecksum`.
+            public var sourceFileChecksum: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes/state`.
+            public var state: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes/uploadOperations`.
+            public var uploadOperations: [Components.Schemas.UploadOperation]?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - assetToken:
+            ///   - fileName:
+            ///   - fileSize:
+            ///   - imageAsset:
+            ///   - sourceFileChecksum:
+            ///   - state:
+            ///   - uploadOperations:
+            public init(
+                assetToken: Swift.String? = nil,
+                fileName: Swift.String? = nil,
+                fileSize: Swift.Int? = nil,
+                imageAsset: Components.Schemas.ImageAsset? = nil,
+                sourceFileChecksum: Swift.String? = nil,
+                state: Swift.String? = nil,
+                uploadOperations: [Components.Schemas.UploadOperation]? = nil
+            ) {
+                self.assetToken = assetToken
+                self.fileName = fileName
+                self.fileSize = fileSize
+                self.imageAsset = imageAsset
+                self.sourceFileChecksum = sourceFileChecksum
+                self.state = state
+                self.uploadOperations = uploadOperations
+            }
+            public enum CodingKeys: String, CodingKey {
+                case assetToken
+                case fileName
+                case fileSize
+                case imageAsset
+                case sourceFileChecksum
+                case state
+                case uploadOperations
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImage/attributes`.
+        public var attributes: Components.Schemas.SubscriptionImage.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImage/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImage/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships/subscription`.
+            public struct SubscriptionPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships/subscription/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships/subscription/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships/subscription/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships/subscription/data`.
+                public var data: Components.Schemas.SubscriptionImage.RelationshipsPayload.SubscriptionPayload.DataPayload?
+                /// Creates a new `SubscriptionPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.SubscriptionImage.RelationshipsPayload.SubscriptionPayload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships/subscription`.
+            public var subscription: Components.Schemas.SubscriptionImage.RelationshipsPayload.SubscriptionPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - subscription:
+            public init(subscription: Components.Schemas.SubscriptionImage.RelationshipsPayload.SubscriptionPayload? = nil) {
+                self.subscription = subscription
+            }
+            public enum CodingKeys: String, CodingKey {
+                case subscription
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImage/relationships`.
+        public var relationships: Components.Schemas.SubscriptionImage.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImage/type`.
+        public var _type: Swift.String
+        /// Creates a new `SubscriptionImage`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.SubscriptionImage.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.SubscriptionImage.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest`.
+    public struct SubscriptionImageCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/attributes/fileName`.
+                public var fileName: Swift.String
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/attributes/fileSize`.
+                public var fileSize: Swift.Int
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - fileName:
+                ///   - fileSize:
+                public init(
+                    fileName: Swift.String,
+                    fileSize: Swift.Int
+                ) {
+                    self.fileName = fileName
+                    self.fileSize = fileSize
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case fileName
+                    case fileSize
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.AttributesPayload
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships/subscription`.
+                public struct SubscriptionPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships/subscription/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships/subscription/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships/subscription/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships/subscription/data`.
+                    public var data: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.RelationshipsPayload.SubscriptionPayload.DataPayload
+                    /// Creates a new `SubscriptionPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.RelationshipsPayload.SubscriptionPayload.DataPayload) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships/subscription`.
+                public var subscription: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.RelationshipsPayload.SubscriptionPayload
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - subscription:
+                public init(subscription: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.RelationshipsPayload.SubscriptionPayload) {
+                    self.subscription = subscription
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case subscription
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.RelationshipsPayload
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.AttributesPayload,
+                relationships: Components.Schemas.SubscriptionImageCreateRequest.DataPayload.RelationshipsPayload,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageCreateRequest/data`.
+        public var data: Components.Schemas.SubscriptionImageCreateRequest.DataPayload
+        /// Creates a new `SubscriptionImageCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.SubscriptionImageCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionImageResponse`.
+    public struct SubscriptionImageResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageResponse/data`.
+        public var data: Components.Schemas.SubscriptionImage
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageResponse/included`.
+        public var included: [Components.Schemas.Subscription]?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `SubscriptionImageResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.SubscriptionImage,
+            included: [Components.Schemas.Subscription]? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionImagesResponse`.
+    public struct SubscriptionImagesResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImagesResponse/data`.
+        public var data: [Components.Schemas.SubscriptionImage]
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImagesResponse/included`.
+        public var included: [Components.Schemas.Subscription]?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImagesResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImagesResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `SubscriptionImagesResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.SubscriptionImage],
+            included: [Components.Schemas.Subscription]? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest`.
+    public struct SubscriptionImageUpdateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data/attributes/sourceFileChecksum`.
+                public var sourceFileChecksum: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data/attributes/uploaded`.
+                public var uploaded: Swift.Bool?
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - sourceFileChecksum:
+                ///   - uploaded:
+                public init(
+                    sourceFileChecksum: Swift.String? = nil,
+                    uploaded: Swift.Bool? = nil
+                ) {
+                    self.sourceFileChecksum = sourceFileChecksum
+                    self.uploaded = uploaded
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case sourceFileChecksum
+                    case uploaded
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data/attributes`.
+            public var attributes: Components.Schemas.SubscriptionImageUpdateRequest.DataPayload.AttributesPayload?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - id:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.SubscriptionImageUpdateRequest.DataPayload.AttributesPayload? = nil,
+                id: Swift.String,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.id = id
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case id
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageUpdateRequest/data`.
+        public var data: Components.Schemas.SubscriptionImageUpdateRequest.DataPayload
+        /// Creates a new `SubscriptionImageUpdateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.SubscriptionImageUpdateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2`.
+    public struct SubscriptionImageV2: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes/assetDeliveryState`.
+            public var assetDeliveryState: Components.Schemas.AppMediaAssetState?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes/assetToken`.
+            public var assetToken: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes/fileName`.
+            public var fileName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes/fileSize`.
+            public var fileSize: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes/imageAsset`.
+            public var imageAsset: Components.Schemas.ImageAsset?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes/uploadOperations`.
+            public var uploadOperations: [Components.Schemas.UploadOperation]?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - assetDeliveryState:
+            ///   - assetToken:
+            ///   - fileName:
+            ///   - fileSize:
+            ///   - imageAsset:
+            ///   - uploadOperations:
+            public init(
+                assetDeliveryState: Components.Schemas.AppMediaAssetState? = nil,
+                assetToken: Swift.String? = nil,
+                fileName: Swift.String? = nil,
+                fileSize: Swift.Int? = nil,
+                imageAsset: Components.Schemas.ImageAsset? = nil,
+                uploadOperations: [Components.Schemas.UploadOperation]? = nil
+            ) {
+                self.assetDeliveryState = assetDeliveryState
+                self.assetToken = assetToken
+                self.fileName = fileName
+                self.fileSize = fileSize
+                self.imageAsset = imageAsset
+                self.uploadOperations = uploadOperations
+            }
+            public enum CodingKeys: String, CodingKey {
+                case assetDeliveryState
+                case assetToken
+                case fileName
+                case fileSize
+                case imageAsset
+                case uploadOperations
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/attributes`.
+        public var attributes: Components.Schemas.SubscriptionImageV2.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionImageV2/type`.
+        public var _type: Swift.String
+        /// Creates a new `SubscriptionImageV2`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.SubscriptionImageV2.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer`.
+    public struct SubscriptionIntroductoryOffer: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes/duration`.
+            public var duration: Components.Schemas.SubscriptionOfferDuration?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes/endDate`.
+            public var endDate: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes/numberOfPeriods`.
+            public var numberOfPeriods: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes/offerMode`.
+            public var offerMode: Components.Schemas.SubscriptionOfferMode?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes/startDate`.
+            public var startDate: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes/targetSubscriptionPlanType`.
+            public var targetSubscriptionPlanType: Components.Schemas.SubscriptionPlanType?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - duration:
+            ///   - endDate:
+            ///   - numberOfPeriods:
+            ///   - offerMode:
+            ///   - startDate:
+            ///   - targetSubscriptionPlanType:
+            public init(
+                duration: Components.Schemas.SubscriptionOfferDuration? = nil,
+                endDate: Swift.String? = nil,
+                numberOfPeriods: Swift.Int? = nil,
+                offerMode: Components.Schemas.SubscriptionOfferMode? = nil,
+                startDate: Swift.String? = nil,
+                targetSubscriptionPlanType: Components.Schemas.SubscriptionPlanType? = nil
+            ) {
+                self.duration = duration
+                self.endDate = endDate
+                self.numberOfPeriods = numberOfPeriods
+                self.offerMode = offerMode
+                self.startDate = startDate
+                self.targetSubscriptionPlanType = targetSubscriptionPlanType
+            }
+            public enum CodingKeys: String, CodingKey {
+                case duration
+                case endDate
+                case numberOfPeriods
+                case offerMode
+                case startDate
+                case targetSubscriptionPlanType
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/attributes`.
+        public var attributes: Components.Schemas.SubscriptionIntroductoryOffer.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscription`.
+            public struct SubscriptionPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscription/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscription/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscription/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscription/data`.
+                public var data: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPayload.DataPayload?
+                /// Creates a new `SubscriptionPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPayload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscription`.
+            public var subscription: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPayload?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscriptionPricePoint`.
+            public struct SubscriptionPricePointPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscriptionPricePoint/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscriptionPricePoint/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscriptionPricePoint/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscriptionPricePoint/data`.
+                public var data: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPricePointPayload.DataPayload?
+                /// Creates a new `SubscriptionPricePointPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPricePointPayload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/subscriptionPricePoint`.
+            public var subscriptionPricePoint: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPricePointPayload?
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/territory`.
+            public struct TerritoryPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/territory/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/territory/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/territory/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/territory/data`.
+                public var data: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.TerritoryPayload.DataPayload?
+                /// Creates a new `TerritoryPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.TerritoryPayload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships/territory`.
+            public var territory: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.TerritoryPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - subscription:
+            ///   - subscriptionPricePoint:
+            ///   - territory:
+            public init(
+                subscription: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPayload? = nil,
+                subscriptionPricePoint: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.SubscriptionPricePointPayload? = nil,
+                territory: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload.TerritoryPayload? = nil
+            ) {
+                self.subscription = subscription
+                self.subscriptionPricePoint = subscriptionPricePoint
+                self.territory = territory
+            }
+            public enum CodingKeys: String, CodingKey {
+                case subscription
+                case subscriptionPricePoint
+                case territory
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/relationships`.
+        public var relationships: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionIntroductoryOffer/type`.
+        public var _type: Swift.String
+        /// Creates a new `SubscriptionIntroductoryOffer`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.SubscriptionIntroductoryOffer.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.SubscriptionIntroductoryOffer.RelationshipsPayload? = nil,
             _type: Swift.String
         ) {
             self.attributes = attributes

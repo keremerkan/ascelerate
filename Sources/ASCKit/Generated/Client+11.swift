@@ -2847,15 +2847,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `GET /v1/gameCenterLeaderboardSetMemberLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/get(gameCenterLeaderboardSetMemberLocalizations_getCollection)`.
-    public func gameCenterLeaderboardSetMemberLocalizationsGetCollection(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Output {
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/get(gameCenterMatchmakingQueues_getCollection)`.
+    public func gameCenterMatchmakingQueuesGetCollection(_ input: Operations.GameCenterMatchmakingQueuesGetCollection.Input) async throws -> Operations.GameCenterMatchmakingQueuesGetCollection.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.id,
+            forOperation: Operations.GameCenterMatchmakingQueuesGetCollection.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/gameCenterLeaderboardSetMemberLocalizations",
+                    template: "/v1/gameCenterMatchmakingQueues",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -2867,36 +2867,15 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "filter[gameCenterLeaderboardSet]",
-                    value: input.query.filterGameCenterLeaderboardSet
+                    name: "fields[gameCenterMatchmakingQueues]",
+                    value: input.query.fieldsGameCenterMatchmakingQueues
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "filter[gameCenterLeaderboard]",
-                    value: input.query.filterGameCenterLeaderboard
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterLeaderboardSetMemberLocalizations]",
-                    value: input.query.fieldsGameCenterLeaderboardSetMemberLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterLeaderboardSets]",
-                    value: input.query.fieldsGameCenterLeaderboardSets
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterLeaderboards]",
-                    value: input.query.fieldsGameCenterLeaderboards
+                    name: "fields[gameCenterMatchmakingRuleSets]",
+                    value: input.query.fieldsGameCenterMatchmakingRuleSets
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2922,7 +2901,7 @@ extension Client {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Output.Ok.Body
+                    let body: Operations.GameCenterMatchmakingQueuesGetCollection.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2932,7 +2911,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.GameCenterLeaderboardSetMemberLocalizationsResponse.self,
+                            Components.Schemas.GameCenterMatchmakingQueuesResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -2954,15 +2933,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `POST /v1/gameCenterLeaderboardSetMemberLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/post(gameCenterLeaderboardSetMemberLocalizations_createInstance)`.
-    public func gameCenterLeaderboardSetMemberLocalizationsCreateInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Output {
+    /// - Remark: HTTP `POST /v1/gameCenterMatchmakingQueues`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/post(gameCenterMatchmakingQueues_createInstance)`.
+    public func gameCenterMatchmakingQueuesCreateInstance(_ input: Operations.GameCenterMatchmakingQueuesCreateInstance.Input) async throws -> Operations.GameCenterMatchmakingQueuesCreateInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.id,
+            forOperation: Operations.GameCenterMatchmakingQueuesCreateInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/gameCenterLeaderboardSetMemberLocalizations",
+                    template: "/v1/gameCenterMatchmakingQueues",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -2989,7 +2968,7 @@ extension Client {
                 switch response.status.code {
                 case 201:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Output.Created.Body
+                    let body: Operations.GameCenterMatchmakingQueuesCreateInstance.Output.Created.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2999,7 +2978,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.GameCenterLeaderboardSetMemberLocalizationResponse.self,
+                            Components.Schemas.GameCenterMatchmakingQueueResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -3009,6 +2988,87 @@ extension Client {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/{id}/get(gameCenterMatchmakingQueues_getInstance)`.
+    public func gameCenterMatchmakingQueuesGetInstance(_ input: Operations.GameCenterMatchmakingQueuesGetInstance.Input) async throws -> Operations.GameCenterMatchmakingQueuesGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.GameCenterMatchmakingQueuesGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/gameCenterMatchmakingQueues/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterMatchmakingQueues]",
+                    value: input.query.fieldsGameCenterMatchmakingQueues
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterMatchmakingRuleSets]",
+                    value: input.query.fieldsGameCenterMatchmakingRuleSets
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GameCenterMatchmakingQueuesGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterMatchmakingQueueResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,

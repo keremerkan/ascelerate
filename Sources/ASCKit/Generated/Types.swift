@@ -1145,18 +1145,6 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardsV2`.
     /// - Remark: Generated from `#/paths//v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardsV2/patch(gameCenterGroups_gameCenterLeaderboardsV2_replaceToManyRelationship)`.
     func gameCenterGroupsGameCenterLeaderboardsV2ReplaceToManyRelationship(_ input: Operations.GameCenterGroupsGameCenterLeaderboardsV2ReplaceToManyRelationship.Input) async throws -> Operations.GameCenterGroupsGameCenterLeaderboardsV2ReplaceToManyRelationship.Output
-    /// - Remark: HTTP `GET /v1/gameCenterLeaderboardSetMemberLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/get(gameCenterLeaderboardSetMemberLocalizations_getCollection)`.
-    func gameCenterLeaderboardSetMemberLocalizationsGetCollection(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Output
-    /// - Remark: HTTP `POST /v1/gameCenterLeaderboardSetMemberLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/post(gameCenterLeaderboardSetMemberLocalizations_createInstance)`.
-    func gameCenterLeaderboardSetMemberLocalizationsCreateInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Output
-    /// - Remark: HTTP `PATCH /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/patch(gameCenterLeaderboardSetMemberLocalizations_updateInstance)`.
-    func gameCenterLeaderboardSetMemberLocalizationsUpdateInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Output
-    /// - Remark: HTTP `DELETE /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/delete(gameCenterLeaderboardSetMemberLocalizations_deleteInstance)`.
-    func gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Output
     /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues`.
     /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/get(gameCenterMatchmakingQueues_getCollection)`.
     func gameCenterMatchmakingQueuesGetCollection(_ input: Operations.GameCenterMatchmakingQueuesGetCollection.Input) async throws -> Operations.GameCenterMatchmakingQueuesGetCollection.Output
@@ -6268,46 +6256,6 @@ extension APIProtocol {
             path: path,
             body: body
         ))
-    }
-    /// - Remark: HTTP `GET /v1/gameCenterLeaderboardSetMemberLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/get(gameCenterLeaderboardSetMemberLocalizations_getCollection)`.
-    public func gameCenterLeaderboardSetMemberLocalizationsGetCollection(
-        query: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input.Query,
-        headers: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input.Headers = .init()
-    ) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Output {
-        try await gameCenterLeaderboardSetMemberLocalizationsGetCollection(Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input(
-            query: query,
-            headers: headers
-        ))
-    }
-    /// - Remark: HTTP `POST /v1/gameCenterLeaderboardSetMemberLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/post(gameCenterLeaderboardSetMemberLocalizations_createInstance)`.
-    public func gameCenterLeaderboardSetMemberLocalizationsCreateInstance(
-        headers: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input.Headers = .init(),
-        body: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input.Body
-    ) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Output {
-        try await gameCenterLeaderboardSetMemberLocalizationsCreateInstance(Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input(
-            headers: headers,
-            body: body
-        ))
-    }
-    /// - Remark: HTTP `PATCH /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/patch(gameCenterLeaderboardSetMemberLocalizations_updateInstance)`.
-    public func gameCenterLeaderboardSetMemberLocalizationsUpdateInstance(
-        path: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input.Path,
-        headers: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input.Headers = .init(),
-        body: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input.Body
-    ) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Output {
-        try await gameCenterLeaderboardSetMemberLocalizationsUpdateInstance(Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input(
-            path: path,
-            headers: headers,
-            body: body
-        ))
-    }
-    /// - Remark: HTTP `DELETE /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/delete(gameCenterLeaderboardSetMemberLocalizations_deleteInstance)`.
-    public func gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(path: Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Output {
-        try await gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input(path: path))
     }
     /// - Remark: HTTP `GET /v1/gameCenterMatchmakingQueues`.
     /// - Remark: Generated from `#/paths//v1/gameCenterMatchmakingQueues/get(gameCenterMatchmakingQueues_getCollection)`.

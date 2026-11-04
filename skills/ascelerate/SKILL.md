@@ -300,6 +300,16 @@ Offer code eligibilities for subs: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibili
 
 NOT YET IMPLEMENTED: `sub win-back-offer` is blocked by Apple's API spec (win-back offer price entries have no territory or price point relationships). Custom product page search-keyword linkages are blocked the same way (the spec's `AppKeyword` exposes no keyword text). `iap hosted-content` is intentionally skipped.
 
+### Sandbox testers
+
+```bash
+ascelerate sandbox-testers [--json]     # Apple Account, storefront, renewal rate, interrupted purchases, Apple Pay
+ascelerate sandbox-testers update <email-or-id> [--territory DEU] [--interrupt-purchases true|false] [--renewal-rate 1h|30m|15m|5m|3m]
+ascelerate sandbox-testers clear-history <email-or-id>... | --all   # purchases can be made again from the start
+```
+
+Testers are created and deleted in App Store Connect (Users and Access > Sandbox); the API can't. A faster renewal rate (`3m`) makes monthly subscriptions renew every 3 minutes for that tester, which is how to test renewals and expirations.
+
 ### Customer reviews
 
 ```bash

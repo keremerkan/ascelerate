@@ -1373,6 +1373,214 @@ extension Client {
             }
         )
     }
+    /// - Remark: HTTP `GET /v2/sandboxTesters`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/get(sandboxTestersV2_getCollection)`.
+    public func sandboxTestersV2GetCollection(_ input: Operations.SandboxTestersV2GetCollection.Input) async throws -> Operations.SandboxTestersV2GetCollection.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SandboxTestersV2GetCollection.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/sandboxTesters",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[sandboxTesters]",
+                    value: input.query.fieldsSandboxTesters
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SandboxTestersV2GetCollection.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SandboxTestersV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v2/sandboxTesters/{id}`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTesters/{id}/patch(sandboxTestersV2_updateInstance)`.
+    public func sandboxTestersV2UpdateInstance(_ input: Operations.SandboxTestersV2UpdateInstance.Input) async throws -> Operations.SandboxTestersV2UpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SandboxTestersV2UpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/sandboxTesters/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SandboxTestersV2UpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SandboxTesterV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v2/sandboxTestersClearPurchaseHistoryRequest`.
+    /// - Remark: Generated from `#/paths//v2/sandboxTestersClearPurchaseHistoryRequest/post(sandboxTestersClearPurchaseHistoryRequestV2_createInstance)`.
+    public func sandboxTestersClearPurchaseHistoryRequestV2CreateInstance(_ input: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Input) async throws -> Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/sandboxTestersClearPurchaseHistoryRequest",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SandboxTestersClearPurchaseHistoryRequestV2CreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SandboxTestersClearPurchaseHistoryRequestV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `GET /v3/appPricePoints/{id}/equalizations`.
     /// - Remark: Generated from `#/paths//v3/appPricePoints/{id}/equalizations/get(appPricePointsV3_equalizations_getToManyRelated)`.
     public func appPricePointsV3EqualizationsGetToManyRelated(_ input: Operations.AppPricePointsV3EqualizationsGetToManyRelated.Input) async throws -> Operations.AppPricePointsV3EqualizationsGetToManyRelated.Output {

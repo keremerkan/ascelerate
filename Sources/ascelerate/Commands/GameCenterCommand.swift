@@ -14,7 +14,7 @@ struct GameCenterCommand: AsyncParsableCommand {
       starts in Prepare for Submission and goes to App Review with the app (submit adds it to the \
       app's draft submission). Changing one that is live makes its next version first.
       """,
-    subcommands: [Status.self, Enable.self, AppVersion.self, Achievements.self, Leaderboards.self, Sets.self, Activities.self, Challenges.self, Matchmaking.self],
+    subcommands: [Status.self, Enable.self, AppVersion.self, Achievements.self, Leaderboards.self, Sets.self, Activities.self, Challenges.self, Groups.self, Matchmaking.self],
     defaultSubcommand: Status.self
   )
 
@@ -106,9 +106,9 @@ struct GameCenterCommand: AsyncParsableCommand {
         print("Game Center is off for this app. Turn it on with: ascelerate game-center enable \(self.app)")
         return
       }
-      async let achievements = GameCenter.achievements(detailID: detail.id, client: client)
-      async let leaderboards = GameCenter.leaderboards(detailID: detail.id, client: client)
-      async let sets = GameCenter.leaderboardSets(detailID: detail.id, client: client)
+      async let achievements = GameCenter.achievements(owner: detail.owner, client: client)
+      async let leaderboards = GameCenter.leaderboards(owner: detail.owner, client: client)
+      async let sets = GameCenter.leaderboardSets(owner: detail.owner, client: client)
       let (a, l, s) = try await (achievements, leaderboards, sets)
       if jsonOption.json {
         try printJSON(Result(enabled: true, detail: detail, achievements: a.count, leaderboards: l.count, leaderboardSets: s.count))
@@ -228,7 +228,7 @@ struct GameCenterDelete<Item: GameCenterItem>: AsyncParsableCommand {
     if yes { autoConfirm = true }
     let client = try ClientFactory.makeClient()
     let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
     guard confirm("Delete the \(Item.noun) '\(item.displayName)'? [y/N] ") else {
       print(yellow("Cancelled."))
       return
@@ -259,7 +259,7 @@ struct GameCenterReorder<Item: GameCenterOrderedItem>: AsyncParsableCommand {
     if yes { autoConfirm = true }
     let client = try ClientFactory.makeClient()
     let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-    let items = try await Item.list(detailID: detail.id, client: client)
+    let items = try await Item.list(owner: detail.owner, client: client)
     let first = try GameCenterCommand.ids(order, in: items)
     let ordered = first + items.map(\.id).filter { !first.contains($0) }
     guard ordered != items.map(\.id) else {
@@ -272,7 +272,7 @@ struct GameCenterReorder<Item: GameCenterOrderedItem>: AsyncParsableCommand {
       print(yellow("Cancelled."))
       return
     }
-    try await Item.reorder(detailID: detail.id, ids: ordered, client: client)
+    try await Item.reorder(owner: detail.owner, ids: ordered, client: client)
     print(green("Reordered") + ".")
   }
 }
@@ -297,7 +297,7 @@ struct GameCenterSubmit<Item: GameCenterItem>: AsyncParsableCommand {
     if yes { autoConfirm = true }
     let client = try ClientFactory.makeClient()
     let (appID, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
     guard let version = item.latestVersion, version.state == "PREPARE_FOR_SUBMISSION" || version.state == "REJECTED"
       || version.state == "DEVELOPER_REJECTED"
     else {
@@ -332,7 +332,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
       guard let version = item.latestVersion else {
         print("No version.")
         return
@@ -365,7 +365,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
       var localizations: [Item.Localization] = []
       if let version = item.latestVersion { localizations = try await Item.localizations(versionID: version.id, client: client) }
       guard !localizations.isEmpty else { throw ValidationError("'\(item.displayName)' has no languages to export.") }
@@ -397,7 +397,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
       let updates = try LocalizationFile.decode(try Data(contentsOf: URL(fileURLWithPath: path)), as: Item.Localization.Fields.self)
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
       guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return }
       let existing = version.id.hasPrefix("DRY-RUN") ? [] : try await Item.localizations(versionID: version.id, client: client)
       let byLocale = Dictionary(existing.map { ($0.locale.lowercased(), $0) }, uniquingKeysWith: { a, _ in a })
@@ -443,7 +443,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
       guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return }
       let existing = version.id.hasPrefix("DRY-RUN") ? [] : try await Item.localizations(versionID: version.id, client: client)
       guard let localization = existing.first(where: { $0.locale.lowercased() == locale.lowercased() }) else {
@@ -498,7 +498,7 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
     let defaultKind = Item.self as? any GameCenterDefaultImageItem.Type
     if isDefault, defaultKind == nil { throw ValidationError("\(GameCenterCommand.article(Item.noun).prefix(1).uppercased() + GameCenterCommand.article(Item.noun).dropFirst()) has no default image; give --locale.") }
     let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
     guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return nil }
     if version.id.hasPrefix("DRY-RUN") {
       throw ValidationError("Dry run: the new version wasn't made, so there's nothing to add an image to yet.")
@@ -611,7 +611,7 @@ func saveGameCenterLocale<Item: GameCenterItem>(
   if yes { autoConfirm = true }
   let client = try ClientFactory.makeClient()
   let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-  let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
+  let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
   guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return }
   let existing = version.id.hasPrefix("DRY-RUN")
     ? nil : try await Item.localizations(versionID: version.id, client: client).first { $0.locale.lowercased() == locale.lowercased() }
@@ -656,7 +656,7 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        let achievements = try await GameCenter.achievements(detailID: detail.id, client: client)
+        let achievements = try await GameCenter.achievements(owner: detail.owner, client: client)
         if jsonOption.json { try printJSON(achievements); return }
         guard !achievements.isEmpty else {
           print("No achievements.")
@@ -691,7 +691,7 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        let found = try GameCenterCommand.find(arguments.item, in: try await GameCenter.achievements(detailID: detail.id, client: client))
+        let found = try GameCenterCommand.find(arguments.item, in: try await GameCenter.achievements(owner: detail.owner, client: client))
         var localizations: [GameCenter.AchievementLocalization] = []
         if let version = found.latestVersion {
           localizations = try await GameCenter.achievementLocalizations(versionID: version.id, client: client)
@@ -752,7 +752,7 @@ extension GameCenterCommand {
         guard (1...100).contains(points) else { throw ValidationError("--points must be from 1 to 100.") }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        let existing = try await GameCenter.achievements(detailID: detail.id, client: client)
+        let existing = try await GameCenter.achievements(owner: detail.owner, client: client)
         let total = existing.filter { !$0.archived }.compactMap(\.points).reduce(0, +)
         if total + points > 1000 {
           throw ValidationError("The app's achievements already give \(total) points; \(points) more would pass 1,000.")
@@ -763,7 +763,7 @@ extension GameCenterCommand {
           return
         }
         let created = try await GameCenter.createAchievement(
-          detailID: detail.id, vendorIdentifier: id, referenceName: name, points: points, showBeforeEarned: !hidden,
+          owner: detail.owner, vendorIdentifier: id, referenceName: name, points: points, showBeforeEarned: !hidden,
           repeatable: repeatable, client: client)
         print(green("Created") + " '\(created.displayName)' (version \(GameCenterCommand.versionText(created.latestVersion))).")
       }
@@ -800,7 +800,7 @@ extension GameCenterCommand {
         if let points, !(1...100).contains(points) { throw ValidationError("--points must be from 1 to 100.") }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        let a = try GameCenterCommand.find(arguments.item, in: try await GameCenter.achievements(detailID: detail.id, client: client))
+        let a = try GameCenterCommand.find(arguments.item, in: try await GameCenter.achievements(owner: detail.owner, client: client))
         var lines: [String] = []
         if let name, name != a.referenceName { lines.append("Reference name: \(a.referenceName ?? "-") → \(name)") }
         if let points, points != a.points { lines.append("Points: \(a.points.map(String.init) ?? "-") → \(points)") }
@@ -976,7 +976,7 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        let leaderboards = try await GameCenter.leaderboards(detailID: detail.id, client: client)
+        let leaderboards = try await GameCenter.leaderboards(owner: detail.owner, client: client)
         if jsonOption.json { try printJSON(leaderboards); return }
         guard !leaderboards.isEmpty else {
           print("No leaderboards.")
@@ -1012,7 +1012,7 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        let l = try GameCenterCommand.find(arguments.item, in: try await GameCenter.leaderboards(detailID: detail.id, client: client))
+        let l = try GameCenterCommand.find(arguments.item, in: try await GameCenter.leaderboards(owner: detail.owner, client: client))
         var localizations: [GameCenter.LeaderboardLocalization] = []
         if let version = l.latestVersion {
           localizations = try await GameCenter.leaderboardLocalizations(versionID: version.id, client: client)
@@ -1082,7 +1082,7 @@ extension GameCenterCommand {
           print(yellow("Cancelled."))
           return
         }
-        let created = try await GameCenter.createLeaderboard(detailID: detail.id, vendorIdentifier: id, settings: settings, client: client)
+        let created = try await GameCenter.createLeaderboard(owner: detail.owner, vendorIdentifier: id, settings: settings, client: client)
         print(green("Created") + " '\(created.displayName)' (version \(GameCenterCommand.versionText(created.latestVersion))).")
       }
     }
@@ -1108,7 +1108,7 @@ extension GameCenterCommand {
         let settings = try options.settings(referenceName: name, archived: archived)
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        let l = try GameCenterCommand.find(arguments.item, in: try await GameCenter.leaderboards(detailID: detail.id, client: client))
+        let l = try GameCenterCommand.find(arguments.item, in: try await GameCenter.leaderboards(owner: detail.owner, client: client))
         // Apple refuses to clear one end of a score range while the other stays (seen 2026-11-04).
         func clearsOnly(_ cleared: String?, keeping other: String?, current: String?) -> Bool {
           cleared == "" && other != "" && (other ?? current) != nil
@@ -1162,7 +1162,7 @@ extension GameCenterCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        let l = try GameCenterCommand.find(arguments.item, in: try await GameCenter.leaderboards(detailID: detail.id, client: client))
+        let l = try GameCenterCommand.find(arguments.item, in: try await GameCenter.leaderboards(owner: detail.owner, client: client))
         guard l.id != detail.defaultLeaderboardID else {
           print("'\(l.displayName)' is already the default leaderboard.")
           return
@@ -1171,7 +1171,7 @@ extension GameCenterCommand {
           print(yellow("Cancelled."))
           return
         }
-        try await GameCenter.setDefaultLeaderboard(detailID: detail.id, leaderboardID: l.id, client: client)
+        try await GameCenter.setDefaultLeaderboard(detail: detail, leaderboardID: l.id, client: client)
         print(green("Made") + " '\(l.displayName)' the default leaderboard.")
       }
     }
@@ -1259,8 +1259,8 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        async let sets = GameCenter.leaderboardSets(detailID: detail.id, client: client)
-        async let leaderboards = GameCenter.leaderboards(detailID: detail.id, client: client)
+        async let sets = GameCenter.leaderboardSets(owner: detail.owner, client: client)
+        async let leaderboards = GameCenter.leaderboards(owner: detail.owner, client: client)
         let (all, boards) = try await (sets, leaderboards)
         if jsonOption.json { try printJSON(all); return }
         guard !all.isEmpty else {
@@ -1302,7 +1302,7 @@ extension GameCenterCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        let boards = try await GameCenter.leaderboards(detailID: detail.id, client: client)
+        let boards = try await GameCenter.leaderboards(owner: detail.owner, client: client)
         let ids = try leaderboards.map { try GameCenterCommand.ids($0, in: boards) } ?? []
         print("Leaderboard set \(id) '\(name)'\(ids.isEmpty ? "" : " with \(ids.count) leaderboard\(ids.count == 1 ? "" : "s")").")
         guard confirm("Create it? [y/N] ") else {
@@ -1310,7 +1310,7 @@ extension GameCenterCommand {
           return
         }
         let created = try await GameCenter.createLeaderboardSet(
-          detailID: detail.id, vendorIdentifier: id, referenceName: name, leaderboardIDs: ids, client: client)
+          owner: detail.owner, vendorIdentifier: id, referenceName: name, leaderboardIDs: ids, client: client)
         print(green("Created") + " '\(created.displayName)' (version \(GameCenterCommand.versionText(created.latestVersion))).")
       }
     }
@@ -1334,8 +1334,8 @@ extension GameCenterCommand {
         guard name != nil || leaderboards != nil else { throw ValidationError("Give --name or --leaderboards.") }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        async let sets = GameCenter.leaderboardSets(detailID: detail.id, client: client)
-        async let leaderboardList = GameCenter.leaderboards(detailID: detail.id, client: client)
+        async let sets = GameCenter.leaderboardSets(owner: detail.owner, client: client)
+        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
         let (all, boards) = try await (sets, leaderboardList)
         let set = try GameCenterCommand.find(arguments.item, in: all)
         let ids = try leaderboards.map { try GameCenterCommand.ids($0, in: boards) }

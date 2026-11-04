@@ -12,6 +12,19 @@ public enum GameCenter {
     public let defaultLeaderboardID: String?
     /// The group whose achievements and leaderboards the app shares with others.
     public let groupID: String?
+
+    /// Where its achievements, leaderboards and the rest live: the group's when the app is in one.
+    public var owner: Owner { groupID.map(Owner.group) ?? .detail(id) }
+  }
+
+  /// What achievements, leaderboards, sets, activities and challenges belong to: an app's Game
+  /// Center record, or the group it shares them through.
+  public enum Owner: Hashable, Sendable {
+    case detail(String)
+    case group(String)
+
+    var detailID: String? { if case .detail(let id) = self { id } else { nil } }
+    var groupID: String? { if case .group(let id) = self { id } else { nil } }
   }
 
   /// The app's Game Center record; nil when Game Center isn't on for the app.
@@ -21,14 +34,14 @@ public enum GameCenter {
         try await client.appsGameCenterDetailGetToOneRelated(
           path: .init(id: appID),
           query: .init(
-            fieldsGameCenterDetails: [.arcadeEnabled, .defaultLeaderboardV2, .gameCenterGroup],
-            include: [.defaultLeaderboardV2, .gameCenterGroup])
+            fieldsGameCenterDetails: [.arcadeEnabled, .defaultLeaderboardV2, .defaultGroupLeaderboardV2, .gameCenterGroup],
+            include: [.defaultLeaderboardV2, .defaultGroupLeaderboardV2, .gameCenterGroup])
         ).ok.body.json.data
       }
     }) else { return nil }
     return Detail(
       id: detail.id, arcadeEnabled: detail.attributes?.arcadeEnabled ?? false,
-      defaultLeaderboardID: detail.relationships?.defaultLeaderboardV2?.data?.id,
+      defaultLeaderboardID: detail.relationships?.defaultLeaderboardV2?.data?.id ?? detail.relationships?.defaultGroupLeaderboardV2?.data?.id,
       groupID: detail.relationships?.gameCenterGroup?.data?.id)
   }
 
@@ -119,7 +132,7 @@ public protocol GameCenterItem: Codable, Sendable {
   /// Oldest first.
   var versions: [GameCenter.Version] { get }
 
-  static func list(detailID: String, client: ASCClient) async throws -> [Self]
+  static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self]
   static func delete(id: String, client: ASCClient) async throws
   static func createVersion(itemID: String, client: ASCClient) async throws -> GameCenter.Version
   static func localizations(versionID: String, client: ASCClient) async throws -> [Localization]
@@ -139,7 +152,7 @@ public protocol GameCenterItem: Codable, Sendable {
 /// A kind whose items have a display order (achievements, leaderboards, leaderboard sets).
 public protocol GameCenterOrderedItem: GameCenterItem {
   /// Puts the app's items of this kind in this order (every one, by Apple ID).
-  static func reorder(detailID: String, ids: [String], client: ASCClient) async throws
+  static func reorder(owner: GameCenter.Owner, ids: [String], client: ASCClient) async throws
 }
 
 /// A kind whose versions have a default image besides each language's (activities, challenges).
@@ -195,8 +208,8 @@ extension GameCenterItem {
 
 extension GameCenter.Achievement: GameCenterOrderedItem {
   public static let noun = "achievement"
-  public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
-    try await GameCenter.achievements(detailID: detailID, client: client)
+  public static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
+    try await GameCenter.achievements(owner: owner, client: client)
   }
   public static func delete(id: String, client: ASCClient) async throws { try await GameCenter.deleteAchievement(id: id, client: client) }
   public static func createVersion(itemID: String, client: ASCClient) async throws -> GameCenter.Version {
@@ -217,8 +230,8 @@ extension GameCenter.Achievement: GameCenterOrderedItem {
     try await GameCenter.uploadAchievementImage(localizationID: localizationID, filePath: filePath, client: client)
   }
   public static func deleteImage(id: String, client: ASCClient) async throws { try await GameCenter.deleteAchievementImage(id: id, client: client) }
-  public static func reorder(detailID: String, ids: [String], client: ASCClient) async throws {
-    try await GameCenter.reorderAchievements(detailID: detailID, ids: ids, client: client)
+  public static func reorder(owner: GameCenter.Owner, ids: [String], client: ASCClient) async throws {
+    try await GameCenter.reorderAchievements(owner: owner, ids: ids, client: client)
   }
   public static func reviewItem(versionID: String) -> ReviewSubmissions.DraftItem { .gameCenterAchievementVersion(versionID) }
 }
@@ -231,8 +244,8 @@ extension GameCenter.AchievementLocalization: GameCenterLocalization {
 
 extension GameCenter.Leaderboard: GameCenterOrderedItem {
   public static let noun = "leaderboard"
-  public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
-    try await GameCenter.leaderboards(detailID: detailID, client: client)
+  public static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
+    try await GameCenter.leaderboards(owner: owner, client: client)
   }
   public static func delete(id: String, client: ASCClient) async throws { try await GameCenter.deleteLeaderboard(id: id, client: client) }
   public static func createVersion(itemID: String, client: ASCClient) async throws -> GameCenter.Version {
@@ -253,8 +266,8 @@ extension GameCenter.Leaderboard: GameCenterOrderedItem {
     try await GameCenter.uploadLeaderboardImage(localizationID: localizationID, filePath: filePath, client: client)
   }
   public static func deleteImage(id: String, client: ASCClient) async throws { try await GameCenter.deleteLeaderboardImage(id: id, client: client) }
-  public static func reorder(detailID: String, ids: [String], client: ASCClient) async throws {
-    try await GameCenter.reorderLeaderboards(detailID: detailID, ids: ids, client: client)
+  public static func reorder(owner: GameCenter.Owner, ids: [String], client: ASCClient) async throws {
+    try await GameCenter.reorderLeaderboards(owner: owner, ids: ids, client: client)
   }
   public static func reviewItem(versionID: String) -> ReviewSubmissions.DraftItem { .gameCenterLeaderboardVersion(versionID) }
 }
@@ -269,8 +282,8 @@ extension GameCenter.LeaderboardLocalization: GameCenterLocalization {
 
 extension GameCenter.LeaderboardSet: GameCenterOrderedItem {
   public static let noun = "leaderboard set"
-  public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
-    try await GameCenter.leaderboardSets(detailID: detailID, client: client)
+  public static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
+    try await GameCenter.leaderboardSets(owner: owner, client: client)
   }
   public static func delete(id: String, client: ASCClient) async throws { try await GameCenter.deleteLeaderboardSet(id: id, client: client) }
   public static func createVersion(itemID: String, client: ASCClient) async throws -> GameCenter.Version {
@@ -291,8 +304,8 @@ extension GameCenter.LeaderboardSet: GameCenterOrderedItem {
     try await GameCenter.uploadLeaderboardSetImage(localizationID: localizationID, filePath: filePath, client: client)
   }
   public static func deleteImage(id: String, client: ASCClient) async throws { try await GameCenter.deleteLeaderboardSetImage(id: id, client: client) }
-  public static func reorder(detailID: String, ids: [String], client: ASCClient) async throws {
-    try await GameCenter.reorderLeaderboardSets(detailID: detailID, ids: ids, client: client)
+  public static func reorder(owner: GameCenter.Owner, ids: [String], client: ASCClient) async throws {
+    try await GameCenter.reorderLeaderboardSets(owner: owner, ids: ids, client: client)
   }
   public static func reviewItem(versionID: String) -> ReviewSubmissions.DraftItem { .gameCenterLeaderboardSetVersion(versionID) }
 }

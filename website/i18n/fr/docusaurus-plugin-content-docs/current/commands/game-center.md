@@ -116,6 +116,20 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 
 `reorder` (succès, classements et groupes) place en tête ceux qui sont indiqués, dans cet ordre ; les autres suivent tels quels. `submit` ajoute la nouvelle version de l’élément au brouillon de soumission de l’app (en créant un s’il n’y en a pas). Elle part en App Review quand vous soumettez le brouillon avec `ascelerate apps review submit`.
 
+## Groupes Game Center
+
+Un groupe Game Center partage succès, classements, groupes de classements, activités et défis entre les apps d’une équipe. Les groupes Game Center sont désignés par leur nom de référence ou leur ID.
+
+```bash
+ascelerate game-center groups [--json]                  # the team's groups with their apps
+ascelerate game-center groups create --name "My Games"
+ascelerate game-center groups rename "My Games" --name "Our Games"
+ascelerate game-center groups delete "Our Games"
+ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
+```
+
+Ajouter une app à un groupe Game Center est irréversible : l’app ne peut plus quitter le groupe, et ses succès, classements et autres éléments passent dans le groupe. `add-app` le signale et demande d’abord ; essayez-le avec `--dry-run`. Pour une app d’un groupe, les autres commandes `game-center` listent, créent et ordonnent les éléments du groupe, et `leaderboards default` définit le classement du groupe sur lequel s’ouvre Game Center pour cette app.
+
 ## Matchmaking
 
 Le matchmaking à base de règles appartient à l’équipe, pas à une app, donc ces commandes ne prennent pas de bundle ID. Un **ensemble de règles** fixe le nombre de joueurs, les règles et les équipes ; une **file d’attente** est l’endroit où les jeux envoient leurs demandes de partie, qu’elle met en relation avec un ensemble de règles. Ensembles de règles et files d’attente sont désignés par leur nom de référence ou leur ID.

@@ -10,6 +10,510 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule`.
+    public struct GameCenterMatchmakingRule: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/attributes/description`.
+            public var description: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/attributes/expression`.
+            public var expression: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/attributes/referenceName`.
+            public var referenceName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/attributes/type`.
+            public var _type: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/attributes/weight`.
+            public var weight: Swift.Double?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - description:
+            ///   - expression:
+            ///   - referenceName:
+            ///   - _type:
+            ///   - weight:
+            public init(
+                description: Swift.String? = nil,
+                expression: Swift.String? = nil,
+                referenceName: Swift.String? = nil,
+                _type: Swift.String? = nil,
+                weight: Swift.Double? = nil
+            ) {
+                self.description = description
+                self.expression = expression
+                self.referenceName = referenceName
+                self._type = _type
+                self.weight = weight
+            }
+            public enum CodingKeys: String, CodingKey {
+                case description
+                case expression
+                case referenceName
+                case _type = "type"
+                case weight
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/attributes`.
+        public var attributes: Components.Schemas.GameCenterMatchmakingRule.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRule/type`.
+        public var _type: Swift.String
+        /// Creates a new `GameCenterMatchmakingRule`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.GameCenterMatchmakingRule.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest`.
+    public struct GameCenterMatchmakingRuleCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/attributes/description`.
+                public var description: Swift.String
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/attributes/expression`.
+                public var expression: Swift.String
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/attributes/referenceName`.
+                public var referenceName: Swift.String
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/attributes/type`.
+                public var _type: Swift.String
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/attributes/weight`.
+                public var weight: Swift.Double?
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - description:
+                ///   - expression:
+                ///   - referenceName:
+                ///   - _type:
+                ///   - weight:
+                public init(
+                    description: Swift.String,
+                    expression: Swift.String,
+                    referenceName: Swift.String,
+                    _type: Swift.String,
+                    weight: Swift.Double? = nil
+                ) {
+                    self.description = description
+                    self.expression = expression
+                    self.referenceName = referenceName
+                    self._type = _type
+                    self.weight = weight
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case description
+                    case expression
+                    case referenceName
+                    case _type = "type"
+                    case weight
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.AttributesPayload
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships/ruleSet`.
+                public struct RuleSetPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships/ruleSet/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships/ruleSet/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships/ruleSet/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships/ruleSet/data`.
+                    public var data: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.RelationshipsPayload.RuleSetPayload.DataPayload
+                    /// Creates a new `RuleSetPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.RelationshipsPayload.RuleSetPayload.DataPayload) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships/ruleSet`.
+                public var ruleSet: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.RelationshipsPayload.RuleSetPayload
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - ruleSet:
+                public init(ruleSet: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.RelationshipsPayload.RuleSetPayload) {
+                    self.ruleSet = ruleSet
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case ruleSet
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.RelationshipsPayload
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.AttributesPayload,
+                relationships: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload.RelationshipsPayload,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleCreateRequest/data`.
+        public var data: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload
+        /// Creates a new `GameCenterMatchmakingRuleCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.GameCenterMatchmakingRuleCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleResponse`.
+    public struct GameCenterMatchmakingRuleResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleResponse/data`.
+        public var data: Components.Schemas.GameCenterMatchmakingRule
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `GameCenterMatchmakingRuleResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - links:
+        public init(
+            data: Components.Schemas.GameCenterMatchmakingRule,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet`.
+    public struct GameCenterMatchmakingRuleSet: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/attributes/maxPlayers`.
+            public var maxPlayers: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/attributes/minPlayers`.
+            public var minPlayers: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/attributes/referenceName`.
+            public var referenceName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/attributes/ruleLanguageVersion`.
+            public var ruleLanguageVersion: Swift.Int?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - maxPlayers:
+            ///   - minPlayers:
+            ///   - referenceName:
+            ///   - ruleLanguageVersion:
+            public init(
+                maxPlayers: Swift.Int? = nil,
+                minPlayers: Swift.Int? = nil,
+                referenceName: Swift.String? = nil,
+                ruleLanguageVersion: Swift.Int? = nil
+            ) {
+                self.maxPlayers = maxPlayers
+                self.minPlayers = minPlayers
+                self.referenceName = referenceName
+                self.ruleLanguageVersion = ruleLanguageVersion
+            }
+            public enum CodingKeys: String, CodingKey {
+                case maxPlayers
+                case minPlayers
+                case referenceName
+                case ruleLanguageVersion
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/attributes`.
+        public var attributes: Components.Schemas.GameCenterMatchmakingRuleSet.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues`.
+            public struct MatchmakingQueuesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues/data`.
+                public typealias DataPayload = [Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.MatchmakingQueuesPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues/data`.
+                public var data: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.MatchmakingQueuesPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `MatchmakingQueuesPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.MatchmakingQueuesPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/matchmakingQueues`.
+            public var matchmakingQueues: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.MatchmakingQueuesPayload?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules`.
+            public struct RulesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules/data`.
+                public typealias DataPayload = [Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.RulesPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules/data`.
+                public var data: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.RulesPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `RulesPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.RulesPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/rules`.
+            public var rules: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.RulesPayload?
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams`.
+            public struct TeamsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams/data`.
+                public typealias DataPayload = [Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.TeamsPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams/data`.
+                public var data: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.TeamsPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `TeamsPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.TeamsPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships/teams`.
+            public var teams: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.TeamsPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - matchmakingQueues:
+            ///   - rules:
+            ///   - teams:
+            public init(
+                matchmakingQueues: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.MatchmakingQueuesPayload? = nil,
+                rules: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.RulesPayload? = nil,
+                teams: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload.TeamsPayload? = nil
+            ) {
+                self.matchmakingQueues = matchmakingQueues
+                self.rules = rules
+                self.teams = teams
+            }
+            public enum CodingKeys: String, CodingKey {
+                case matchmakingQueues
+                case rules
+                case teams
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/relationships`.
+        public var relationships: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSet/type`.
+        public var _type: Swift.String
+        /// Creates a new `GameCenterMatchmakingRuleSet`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.GameCenterMatchmakingRuleSet.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.GameCenterMatchmakingRuleSet.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSetCreateRequest`.
     public struct GameCenterMatchmakingRuleSetCreateRequest: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/GameCenterMatchmakingRuleSetCreateRequest/data`.
@@ -2609,474 +3113,6 @@ extension Components.Schemas {
         /// - Parameters:
         ///   - data:
         public init(data: Components.Schemas.InAppPurchaseImageCreateRequest.DataPayload) {
-            self.data = data
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageResponse`.
-    public struct InAppPurchaseImageResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageResponse/data`.
-        public var data: Components.Schemas.InAppPurchaseImage
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageResponse/included`.
-        public var included: [Components.Schemas.InAppPurchaseV2]?
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `InAppPurchaseImageResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        public init(
-            data: Components.Schemas.InAppPurchaseImage,
-            included: [Components.Schemas.InAppPurchaseV2]? = nil,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/InAppPurchaseImagesResponse`.
-    public struct InAppPurchaseImagesResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImagesResponse/data`.
-        public var data: [Components.Schemas.InAppPurchaseImage]
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImagesResponse/included`.
-        public var included: [Components.Schemas.InAppPurchaseV2]?
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImagesResponse/links`.
-        public var links: Components.Schemas.PagedDocumentLinks
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImagesResponse/meta`.
-        public var meta: Components.Schemas.PagingInformation?
-        /// Creates a new `InAppPurchaseImagesResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        ///   - meta:
-        public init(
-            data: [Components.Schemas.InAppPurchaseImage],
-            included: [Components.Schemas.InAppPurchaseV2]? = nil,
-            links: Components.Schemas.PagedDocumentLinks,
-            meta: Components.Schemas.PagingInformation? = nil
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-            self.meta = meta
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-            case meta
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest`.
-    public struct InAppPurchaseImageUpdateRequest: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data`.
-        public struct DataPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data/attributes`.
-            public struct AttributesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data/attributes/sourceFileChecksum`.
-                public var sourceFileChecksum: Swift.String?
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data/attributes/uploaded`.
-                public var uploaded: Swift.Bool?
-                /// Creates a new `AttributesPayload`.
-                ///
-                /// - Parameters:
-                ///   - sourceFileChecksum:
-                ///   - uploaded:
-                public init(
-                    sourceFileChecksum: Swift.String? = nil,
-                    uploaded: Swift.Bool? = nil
-                ) {
-                    self.sourceFileChecksum = sourceFileChecksum
-                    self.uploaded = uploaded
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case sourceFileChecksum
-                    case uploaded
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data/attributes`.
-            public var attributes: Components.Schemas.InAppPurchaseImageUpdateRequest.DataPayload.AttributesPayload?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data/id`.
-            public var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data/type`.
-            public var _type: Swift.String
-            /// Creates a new `DataPayload`.
-            ///
-            /// - Parameters:
-            ///   - attributes:
-            ///   - id:
-            ///   - _type:
-            public init(
-                attributes: Components.Schemas.InAppPurchaseImageUpdateRequest.DataPayload.AttributesPayload? = nil,
-                id: Swift.String,
-                _type: Swift.String
-            ) {
-                self.attributes = attributes
-                self.id = id
-                self._type = _type
-            }
-            public enum CodingKeys: String, CodingKey {
-                case attributes
-                case id
-                case _type = "type"
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageUpdateRequest/data`.
-        public var data: Components.Schemas.InAppPurchaseImageUpdateRequest.DataPayload
-        /// Creates a new `InAppPurchaseImageUpdateRequest`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        public init(data: Components.Schemas.InAppPurchaseImageUpdateRequest.DataPayload) {
-            self.data = data
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2`.
-    public struct InAppPurchaseImageV2: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes`.
-        public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes/assetDeliveryState`.
-            public var assetDeliveryState: Components.Schemas.AppMediaAssetState?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes/assetToken`.
-            public var assetToken: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes/fileName`.
-            public var fileName: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes/fileSize`.
-            public var fileSize: Swift.Int?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes/imageAsset`.
-            public var imageAsset: Components.Schemas.ImageAsset?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes/uploadOperations`.
-            public var uploadOperations: [Components.Schemas.UploadOperation]?
-            /// Creates a new `AttributesPayload`.
-            ///
-            /// - Parameters:
-            ///   - assetDeliveryState:
-            ///   - assetToken:
-            ///   - fileName:
-            ///   - fileSize:
-            ///   - imageAsset:
-            ///   - uploadOperations:
-            public init(
-                assetDeliveryState: Components.Schemas.AppMediaAssetState? = nil,
-                assetToken: Swift.String? = nil,
-                fileName: Swift.String? = nil,
-                fileSize: Swift.Int? = nil,
-                imageAsset: Components.Schemas.ImageAsset? = nil,
-                uploadOperations: [Components.Schemas.UploadOperation]? = nil
-            ) {
-                self.assetDeliveryState = assetDeliveryState
-                self.assetToken = assetToken
-                self.fileName = fileName
-                self.fileSize = fileSize
-                self.imageAsset = imageAsset
-                self.uploadOperations = uploadOperations
-            }
-            public enum CodingKeys: String, CodingKey {
-                case assetDeliveryState
-                case assetToken
-                case fileName
-                case fileSize
-                case imageAsset
-                case uploadOperations
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/attributes`.
-        public var attributes: Components.Schemas.InAppPurchaseImageV2.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseImageV2/type`.
-        public var _type: Swift.String
-        /// Creates a new `InAppPurchaseImageV2`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.InAppPurchaseImageV2.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization`.
-    public struct InAppPurchaseLocalization: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/attributes`.
-        public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/attributes/description`.
-            public var description: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/attributes/locale`.
-            public var locale: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/attributes/name`.
-            public var name: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/attributes/state`.
-            public var state: Swift.String?
-            /// Creates a new `AttributesPayload`.
-            ///
-            /// - Parameters:
-            ///   - description:
-            ///   - locale:
-            ///   - name:
-            ///   - state:
-            public init(
-                description: Swift.String? = nil,
-                locale: Swift.String? = nil,
-                name: Swift.String? = nil,
-                state: Swift.String? = nil
-            ) {
-                self.description = description
-                self.locale = locale
-                self.name = name
-                self.state = state
-            }
-            public enum CodingKeys: String, CodingKey {
-                case description
-                case locale
-                case name
-                case state
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/attributes`.
-        public var attributes: Components.Schemas.InAppPurchaseLocalization.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships/inAppPurchaseV2`.
-            public struct InAppPurchaseV2Payload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships/inAppPurchaseV2/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships/inAppPurchaseV2/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships/inAppPurchaseV2/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships/inAppPurchaseV2/data`.
-                public var data: Components.Schemas.InAppPurchaseLocalization.RelationshipsPayload.InAppPurchaseV2Payload.DataPayload?
-                /// Creates a new `InAppPurchaseV2Payload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.InAppPurchaseLocalization.RelationshipsPayload.InAppPurchaseV2Payload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships/inAppPurchaseV2`.
-            public var inAppPurchaseV2: Components.Schemas.InAppPurchaseLocalization.RelationshipsPayload.InAppPurchaseV2Payload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - inAppPurchaseV2:
-            public init(inAppPurchaseV2: Components.Schemas.InAppPurchaseLocalization.RelationshipsPayload.InAppPurchaseV2Payload? = nil) {
-                self.inAppPurchaseV2 = inAppPurchaseV2
-            }
-            public enum CodingKeys: String, CodingKey {
-                case inAppPurchaseV2
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/relationships`.
-        public var relationships: Components.Schemas.InAppPurchaseLocalization.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalization/type`.
-        public var _type: Swift.String
-        /// Creates a new `InAppPurchaseLocalization`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.InAppPurchaseLocalization.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.InAppPurchaseLocalization.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case relationships
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest`.
-    public struct InAppPurchaseLocalizationCreateRequest: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data`.
-        public struct DataPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/attributes`.
-            public struct AttributesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/attributes/description`.
-                public var description: Swift.String?
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/attributes/locale`.
-                public var locale: Swift.String
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/attributes/name`.
-                public var name: Swift.String
-                /// Creates a new `AttributesPayload`.
-                ///
-                /// - Parameters:
-                ///   - description:
-                ///   - locale:
-                ///   - name:
-                public init(
-                    description: Swift.String? = nil,
-                    locale: Swift.String,
-                    name: Swift.String
-                ) {
-                    self.description = description
-                    self.locale = locale
-                    self.name = name
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case description
-                    case locale
-                    case name
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/attributes`.
-            public var attributes: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.AttributesPayload
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships`.
-            public struct RelationshipsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships/inAppPurchaseV2`.
-                public struct InAppPurchaseV2Payload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships/inAppPurchaseV2/data`.
-                    public struct DataPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships/inAppPurchaseV2/data/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships/inAppPurchaseV2/data/type`.
-                        public var _type: Swift.String
-                        /// Creates a new `DataPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - id:
-                        ///   - _type:
-                        public init(
-                            id: Swift.String,
-                            _type: Swift.String
-                        ) {
-                            self.id = id
-                            self._type = _type
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case id
-                            case _type = "type"
-                        }
-                    }
-                    /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships/inAppPurchaseV2/data`.
-                    public var data: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.RelationshipsPayload.InAppPurchaseV2Payload.DataPayload
-                    /// Creates a new `InAppPurchaseV2Payload`.
-                    ///
-                    /// - Parameters:
-                    ///   - data:
-                    public init(data: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.RelationshipsPayload.InAppPurchaseV2Payload.DataPayload) {
-                        self.data = data
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case data
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships/inAppPurchaseV2`.
-                public var inAppPurchaseV2: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.RelationshipsPayload.InAppPurchaseV2Payload
-                /// Creates a new `RelationshipsPayload`.
-                ///
-                /// - Parameters:
-                ///   - inAppPurchaseV2:
-                public init(inAppPurchaseV2: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.RelationshipsPayload.InAppPurchaseV2Payload) {
-                    self.inAppPurchaseV2 = inAppPurchaseV2
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case inAppPurchaseV2
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/relationships`.
-            public var relationships: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.RelationshipsPayload
-            /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data/type`.
-            public var _type: Swift.String
-            /// Creates a new `DataPayload`.
-            ///
-            /// - Parameters:
-            ///   - attributes:
-            ///   - relationships:
-            ///   - _type:
-            public init(
-                attributes: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.AttributesPayload,
-                relationships: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload.RelationshipsPayload,
-                _type: Swift.String
-            ) {
-                self.attributes = attributes
-                self.relationships = relationships
-                self._type = _type
-            }
-            public enum CodingKeys: String, CodingKey {
-                case attributes
-                case relationships
-                case _type = "type"
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/InAppPurchaseLocalizationCreateRequest/data`.
-        public var data: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload
-        /// Creates a new `InAppPurchaseLocalizationCreateRequest`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        public init(data: Components.Schemas.InAppPurchaseLocalizationCreateRequest.DataPayload) {
             self.data = data
         }
         public enum CodingKeys: String, CodingKey {

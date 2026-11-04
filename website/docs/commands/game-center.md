@@ -116,6 +116,20 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 
 `reorder` (achievements, leaderboards and sets) puts the ones listed first, in that order; the rest follow as they are. `submit` adds the item's new version to the app's draft submission (making one when there's none). It goes to App Review when you submit the draft with `ascelerate apps review submit`.
 
+## Groups
+
+A group shares achievements, leaderboards, sets, activities and challenges between a team's apps. Groups are named by reference name or ID.
+
+```bash
+ascelerate game-center groups [--json]                  # the team's groups with their apps
+ascelerate game-center groups create --name "My Games"
+ascelerate game-center groups rename "My Games" --name "Our Games"
+ascelerate game-center groups delete "Our Games"
+ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
+```
+
+Adding an app to a group can't be undone: the app can't leave it, and its achievements, leaderboards and the rest move into the group. `add-app` says so and asks first; try it with `--dry-run`. For an app in a group, the other `game-center` commands list, create and order the group's items, and `leaderboards default` sets the group leaderboard Game Center opens on for that app.
+
 ## Matchmaking
 
 Rule-based matchmaking belongs to the team, not to one app, so these commands take no bundle ID. A **rule set** sets the player count, the rules and the teams; a **queue** is where games send their match requests, matched with one rule set. Rule sets and queues are named by reference name or ID.

@@ -116,6 +116,20 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 
 `reorder`（アチーブメント、リーダーボード、セット）は指定したものをその順序で先頭に置き、残りは今の順序のまま続きます。`submit` は項目の新しいバージョンをアプリの下書きの提出に追加します（なければ作成します）。下書きを `ascelerate apps review submit` で提出すると App Review に送られます。
 
+## グループ
+
+グループは、チームのアプリ間でアチーブメント、リーダーボード、リーダーボードセット、アクティビティ、チャレンジを共有します。グループは参照名または ID で指定します。
+
+```bash
+ascelerate game-center groups [--json]                  # the team's groups with their apps
+ascelerate game-center groups create --name "My Games"
+ascelerate game-center groups rename "My Games" --name "Our Games"
+ascelerate game-center groups delete "Our Games"
+ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
+```
+
+アプリをグループに追加すると元に戻せません。アプリはグループから外れることができず、アチーブメントやリーダーボードなどはグループに移ります。`add-app` はその旨を表示してから確認するので、まず `--dry-run` で試してください。グループに属するアプリでは、ほかの `game-center` コマンドがグループの項目を一覧、作成、並べ替えし、`leaderboards default` はそのアプリで Game Center を開いたときのグループのリーダーボードを設定します。
+
 ## マッチメイキング
 
 ルールベースのマッチメイキングは 1 つのアプリではなくチームに属するため、これらのコマンドには Bundle ID を指定しません。**ルールセット**はプレイヤー数、ルール、チームを定め、**キュー**はゲームがマッチリクエストを送る先で、1 つのルールセットでマッチングします。ルールセットとキューは参照名または ID で指定します。

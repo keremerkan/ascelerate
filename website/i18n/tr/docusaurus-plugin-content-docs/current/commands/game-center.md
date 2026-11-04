@@ -116,6 +116,20 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 
 `reorder` (başarılar, puan tabloları ve setler), listelenenleri bu sırayla başa koyar; diğerleri oldukları gibi ardından gelir. `submit`, öğenin yeni sürümünü uygulamanın taslak gönderimine ekler (yoksa bir tane oluşturur). Taslağı `ascelerate apps review submit` ile gönderdiğinizde App Review'a gider.
 
+## Gruplar
+
+Bir grup; başarıları, puan tablolarını, setleri, etkinlikleri ve meydan okumaları ekibin uygulamaları arasında paylaştırır. Gruplar referans adıyla veya kimliğiyle belirtilir.
+
+```bash
+ascelerate game-center groups [--json]                  # the team's groups with their apps
+ascelerate game-center groups create --name "My Games"
+ascelerate game-center groups rename "My Games" --name "Our Games"
+ascelerate game-center groups delete "Our Games"
+ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
+```
+
+Bir uygulamayı gruba eklemek geri alınamaz: Uygulama gruptan çıkamaz ve başarıları, puan tabloları ve diğer öğeleri gruba taşınır. `add-app` bunu belirtir ve önce sorar; `--dry-run` ile deneyin. Bir gruptaki uygulama için diğer `game-center` komutları grubun öğelerini listeler, oluşturur ve sıralar; `leaderboards default` ise Game Center'ın o uygulama için açtığı grup puan tablosunu belirler.
+
 ## Eşleştirme
 
 Kurala dayalı eşleştirme tek bir uygulamaya değil ekibe aittir; bu yüzden bu komutlar bundle ID almaz. Bir **kural seti** oyuncu sayısını, kuralları ve takımları belirler; bir **kuyruk**, oyunların eşleşme isteklerini gönderdiği yerdir ve tek bir kural setiyle eşleştirir. Kural setleri ve kuyruklar referans adıyla veya kimliğiyle belirtilir.

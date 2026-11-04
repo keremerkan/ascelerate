@@ -94,12 +94,15 @@ extension GameCenter {
   }
 
   /// The app's leaderboards in the order Game Center shows them.
-  public static func leaderboards(detailID: String, client: ASCClient) async throws -> [Leaderboard] {
+  public static func leaderboards(owner: Owner, client: ASCClient) async throws -> [Leaderboard] {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated(
-          path: .init(id: detailID), query: .init(limit: 200, include: [.versions], limitVersions: 50)
-        ).ok.body.json
+        switch owner {
+          case .detail(let id):
+            try await client.gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions], limitVersions: 50)).ok.body.json
+          case .group(let id):
+            try await client.gameCenterGroupsGameCenterLeaderboardsV2GetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions], limitVersions: 50)).ok.body.json
+          }
       }
     }
     var versions: [String: Version] = [:]
@@ -136,7 +139,7 @@ extension GameCenter {
   /// Creates a leaderboard with its first version. `settings` needs the formatter, the
   /// submission and sort types and the reference name.
   public static func createLeaderboard(
-    detailID: String, vendorIdentifier: String, settings s: LeaderboardSettings, client: ASCClient
+    owner: Owner, vendorIdentifier: String, settings s: LeaderboardSettings, client: ASCClient
   ) async throws -> Leaderboard {
     let created = try await client.gameCenterLeaderboardsV2CreateInstance(body: .json(.init(data: .init(
       attributes: .init(
@@ -145,7 +148,8 @@ extension GameCenter {
         scoreRangeEnd: s.value(s.scoreRangeEnd), scoreRangeStart: s.value(s.scoreRangeStart), scoreSortType: s.scoreSortType ?? "DESC",
         submissionType: s.submissionType ?? "BEST_SCORE", vendorIdentifier: vendorIdentifier, visibility: s.visibility),
       relationships: .init(
-        gameCenterDetail: .init(data: .init(id: detailID, _type: "gameCenterDetails")),
+        gameCenterDetail: owner.detailID.map { .init(data: .init(id: $0, _type: "gameCenterDetails")) },
+        gameCenterGroup: owner.groupID.map { .init(data: .init(id: $0, _type: "gameCenterGroups")) },
         versions: .init(data: [.init(id: "${version}", _type: "gameCenterLeaderboardVersions")])),
       _type: "gameCenterLeaderboards"),
       included: [.init(id: "${version}", _type: "gameCenterLeaderboardVersions")]))).created.body.json.data
@@ -252,16 +256,28 @@ extension GameCenter {
     _ = try await client.gameCenterLeaderboardImagesV2DeleteInstance(path: .init(id: id)).noContent
   }
 
-  public static func reorderLeaderboards(detailID: String, ids: [String], client: ASCClient) async throws {
-    _ = try await client.gameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship(
-      path: .init(id: detailID), body: .json(.init(data: ids.map { .init(id: $0, _type: "gameCenterLeaderboards") }))).noContent
+  public static func reorderLeaderboards(owner: Owner, ids: [String], client: ASCClient) async throws {
+    let data = ids.map { (id: String) in (id: id, type: "gameCenterLeaderboards") }
+    switch owner {
+      case .detail(let id):
+        _ = try await client.gameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship(path: .init(id: id), body: .json(.init(data: data.map { .init(id: $0.id, _type: $0.type) }))).noContent
+      case .group(let id):
+        _ = try await client.gameCenterGroupsGameCenterLeaderboardsV2ReplaceToManyRelationship(path: .init(id: id), body: .json(.init(data: data.map { .init(id: $0.id, _type: $0.type) }))).noContent
+    }
   }
 
-  /// Makes a leaderboard the one the Game Center dashboard opens on.
-  public static func setDefaultLeaderboard(detailID: String, leaderboardID: String, client: ASCClient) async throws {
-    _ = try await client.gameCenterDetailsUpdateInstance(path: .init(id: detailID), body: .json(.init(data: .init(
-      id: detailID,
-      relationships: .init(defaultLeaderboardV2: .init(data: .init(id: leaderboardID, _type: "gameCenterLeaderboards"))),
+
+  /// Makes a leaderboard the one the Game Center dashboard opens on; for an app in a group, the
+  /// group's leaderboard it opens on (`defaultGroupLeaderboardV2`).
+  public static func setDefaultLeaderboard(detail: Detail, leaderboardID: String, client: ASCClient) async throws {
+    let link = Components.Schemas.GameCenterDetailUpdateRequest.DataPayload.RelationshipsPayload.DefaultLeaderboardV2Payload(
+      data: .init(id: leaderboardID, _type: "gameCenterLeaderboards"))
+    _ = try await client.gameCenterDetailsUpdateInstance(path: .init(id: detail.id), body: .json(.init(data: .init(
+      id: detail.id,
+      relationships: detail.groupID == nil
+        ? .init(defaultLeaderboardV2: link)
+        : .init(defaultGroupLeaderboardV2: .init(data: .init(id: leaderboardID, _type: "gameCenterLeaderboards"))),
       _type: "gameCenterDetails")))).ok
   }
+
 }

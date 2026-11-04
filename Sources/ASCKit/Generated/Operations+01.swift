@@ -2844,148 +2844,14 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `POST /v1/appAssetLibraryPlacements`.
-    /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacements/post(appAssetLibraryPlacements_createInstance)`.
-    public enum AppAssetLibraryPlacementsCreateInstance {
-        public static let id: Swift.String = "appAssetLibraryPlacements_createInstance"
+    /// - Remark: HTTP `POST /v1/appAssetLibraryPlacementOrderingRequests`.
+    /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacementOrderingRequests/post(appAssetLibraryPlacementOrderingRequests_createInstance)`.
+    public enum AppAssetLibraryPlacementOrderingRequestsCreateInstance {
+        public static let id: Swift.String = "appAssetLibraryPlacementOrderingRequests_createInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAssetLibraryPlacementsCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAssetLibraryPlacementsCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppAssetLibraryPlacementsCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.AppAssetLibraryPlacementCreateRequest)
-            }
-            public var body: Operations.AppAssetLibraryPlacementsCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.AppAssetLibraryPlacementsCreateInstance.Input.Headers = .init(),
-                body: Operations.AppAssetLibraryPlacementsCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.AppAssetLibraryPlacementResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppAssetLibraryPlacementResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppAssetLibraryPlacementsCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppAssetLibraryPlacementsCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppAssetLibraryPlacement
-            ///
-            /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacements/post(appAssetLibraryPlacements_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.AppAssetLibraryPlacementsCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.AppAssetLibraryPlacementsCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/appAssetLibraryPlacements/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacements/{id}/get(appAssetLibraryPlacements_getInstance)`.
-    public enum AppAssetLibraryPlacementsGetInstance {
-        public static let id: Swift.String = "appAssetLibraryPlacements_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppAssetLibraryPlacementsGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query`.
+            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fieldsAppAssetLibraryPlacementsPayload`.
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/fieldsAppAssetLibraryPlacementsPayload`.
                 @frozen public enum FieldsAppAssetLibraryPlacementsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case mediaType = "mediaType"
                     case placementType = "placementType"
@@ -3001,210 +2867,101 @@ extension Operations {
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
                 }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appAssetLibraryPlacements]`.
-                public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/fields[appAssetLibraryPlacements]`.
+                public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
                 /// the fields to include for returned resources of type appAssetLibraryPlacements
                 ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appAssetLibraryPlacements]`.
-                public var fieldsAppAssetLibraryPlacements: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload?
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fieldsAppAssetLibraryImagesPayload`.
-                @frozen public enum FieldsAppAssetLibraryImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case category = "category"
-                    case createdDate = "createdDate"
-                    case lastModifiedDate = "lastModifiedDate"
-                    case fileName = "fileName"
-                    case fileSize = "fileSize"
-                    case imageAsset = "imageAsset"
-                    case referenceName = "referenceName"
-                    case specId = "specId"
-                    case state = "state"
-                    case stateDetails = "stateDetails"
-                    case uploadOperations = "uploadOperations"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appAssetLibraryImages]`.
-                public typealias fieldsAppAssetLibraryImagesPayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.FieldsAppAssetLibraryImagesPayloadPayload]
-                /// the fields to include for returned resources of type appAssetLibraryImages
-                ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appAssetLibraryImages]`.
-                public var fieldsAppAssetLibraryImages: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppAssetLibraryImagesPayload?
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fieldsAppAssetLibraryVideosPayload`.
-                @frozen public enum FieldsAppAssetLibraryVideosPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case category = "category"
-                    case createdDate = "createdDate"
-                    case lastModifiedDate = "lastModifiedDate"
-                    case fileName = "fileName"
-                    case fileSize = "fileSize"
-                    case previewFrameImage = "previewFrameImage"
-                    case previewFrameTimeCode = "previewFrameTimeCode"
-                    case referenceName = "referenceName"
-                    case specId = "specId"
-                    case state = "state"
-                    case stateDetails = "stateDetails"
-                    case uploadOperations = "uploadOperations"
-                    case videoAsset = "videoAsset"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appAssetLibraryVideos]`.
-                public typealias fieldsAppAssetLibraryVideosPayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.FieldsAppAssetLibraryVideosPayloadPayload]
-                /// the fields to include for returned resources of type appAssetLibraryVideos
-                ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appAssetLibraryVideos]`.
-                public var fieldsAppAssetLibraryVideos: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppAssetLibraryVideosPayload?
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fieldsAppEventLocalizationsPayload`.
-                @frozen public enum FieldsAppEventLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case shortDescription = "shortDescription"
-                    case longDescription = "longDescription"
-                    case appEvent = "appEvent"
-                    case appEventScreenshots = "appEventScreenshots"
-                    case appEventVideoClips = "appEventVideoClips"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appEventLocalizations]`.
-                public typealias fieldsAppEventLocalizationsPayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.FieldsAppEventLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appEventLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appEventLocalizations]`.
-                public var fieldsAppEventLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppEventLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fieldsAppStoreVersionLocalizationsPayload`.
-                @frozen public enum FieldsAppStoreVersionLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case description = "description"
-                    case locale = "locale"
-                    case keywords = "keywords"
-                    case marketingUrl = "marketingUrl"
-                    case promotionalText = "promotionalText"
-                    case supportUrl = "supportUrl"
-                    case whatsNew = "whatsNew"
-                    case appStoreVersion = "appStoreVersion"
-                    case appScreenshotSets = "appScreenshotSets"
-                    case appPreviewSets = "appPreviewSets"
-                    case searchKeywords = "searchKeywords"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appStoreVersionLocalizations]`.
-                public typealias fieldsAppStoreVersionLocalizationsPayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.FieldsAppStoreVersionLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appStoreVersionLocalizations]`.
-                public var fieldsAppStoreVersionLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppStoreVersionLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fieldsAppCustomProductPageLocalizationsPayload`.
-                @frozen public enum FieldsAppCustomProductPageLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case promotionalText = "promotionalText"
-                    case appCustomProductPageVersion = "appCustomProductPageVersion"
-                    case appScreenshotSets = "appScreenshotSets"
-                    case appPreviewSets = "appPreviewSets"
-                    case searchKeywords = "searchKeywords"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appCustomProductPageLocalizations]`.
-                public typealias fieldsAppCustomProductPageLocalizationsPayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.FieldsAppCustomProductPageLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appCustomProductPageLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appCustomProductPageLocalizations]`.
-                public var fieldsAppCustomProductPageLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppCustomProductPageLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload`.
-                @frozen public enum FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case appStoreVersionExperimentTreatment = "appStoreVersionExperimentTreatment"
-                    case appScreenshotSets = "appScreenshotSets"
-                    case appPreviewSets = "appPreviewSets"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
-                public typealias fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
-                public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/IncludePayload`.
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/fields[appAssetLibraryPlacements]`.
+                public var fieldsAppAssetLibraryPlacements: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload?
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/IncludePayload`.
                 @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case image = "image"
-                    case video = "video"
-                    case appEventLocalization = "appEventLocalization"
-                    case appStoreVersionLocalization = "appStoreVersionLocalization"
-                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
-                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case orderedPlacements = "orderedPlacements"
                 }
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.IncludePayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/include`.
+                public typealias IncludePayload = [Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.IncludePayloadPayload]
                 /// comma-separated list of relationships to include
                 ///
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/query/include`.
-                public var include: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.IncludePayload?
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/include`.
+                public var include: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.IncludePayload?
+                /// maximum number of related orderedPlacements returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/limit[orderedPlacements]`.
+                public var limitOrderedPlacements: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/fieldsAppAssetLibraryPlacementOrderingRequestsPayload`.
+                @frozen public enum FieldsAppAssetLibraryPlacementOrderingRequestsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case orderedPlacements = "orderedPlacements"
+                }
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/fields[appAssetLibraryPlacementOrderingRequests]`.
+                public typealias fieldsAppAssetLibraryPlacementOrderingRequestsPayload = [Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.FieldsAppAssetLibraryPlacementOrderingRequestsPayloadPayload]
+                /// the fields to include for returned resources of type appAssetLibraryPlacementOrderingRequests
+                ///
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/query/fields[appAssetLibraryPlacementOrderingRequests]`.
+                public var fieldsAppAssetLibraryPlacementOrderingRequests: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.fieldsAppAssetLibraryPlacementOrderingRequestsPayload?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
                 ///   - fieldsAppAssetLibraryPlacements: the fields to include for returned resources of type appAssetLibraryPlacements
-                ///   - fieldsAppAssetLibraryImages: the fields to include for returned resources of type appAssetLibraryImages
-                ///   - fieldsAppAssetLibraryVideos: the fields to include for returned resources of type appAssetLibraryVideos
-                ///   - fieldsAppEventLocalizations: the fields to include for returned resources of type appEventLocalizations
-                ///   - fieldsAppStoreVersionLocalizations: the fields to include for returned resources of type appStoreVersionLocalizations
-                ///   - fieldsAppCustomProductPageLocalizations: the fields to include for returned resources of type appCustomProductPageLocalizations
-                ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
                 ///   - include: comma-separated list of relationships to include
+                ///   - limitOrderedPlacements: maximum number of related orderedPlacements returned (when they are included)
+                ///   - fieldsAppAssetLibraryPlacementOrderingRequests: the fields to include for returned resources of type appAssetLibraryPlacementOrderingRequests
                 public init(
-                    fieldsAppAssetLibraryPlacements: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload? = nil,
-                    fieldsAppAssetLibraryImages: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppAssetLibraryImagesPayload? = nil,
-                    fieldsAppAssetLibraryVideos: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppAssetLibraryVideosPayload? = nil,
-                    fieldsAppEventLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppEventLocalizationsPayload? = nil,
-                    fieldsAppStoreVersionLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppStoreVersionLocalizationsPayload? = nil,
-                    fieldsAppCustomProductPageLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppCustomProductPageLocalizationsPayload? = nil,
-                    fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
-                    include: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query.IncludePayload? = nil
+                    fieldsAppAssetLibraryPlacements: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload? = nil,
+                    include: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.IncludePayload? = nil,
+                    limitOrderedPlacements: Swift.Int? = nil,
+                    fieldsAppAssetLibraryPlacementOrderingRequests: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query.fieldsAppAssetLibraryPlacementOrderingRequestsPayload? = nil
                 ) {
                     self.fieldsAppAssetLibraryPlacements = fieldsAppAssetLibraryPlacements
-                    self.fieldsAppAssetLibraryImages = fieldsAppAssetLibraryImages
-                    self.fieldsAppAssetLibraryVideos = fieldsAppAssetLibraryVideos
-                    self.fieldsAppEventLocalizations = fieldsAppEventLocalizations
-                    self.fieldsAppStoreVersionLocalizations = fieldsAppStoreVersionLocalizations
-                    self.fieldsAppCustomProductPageLocalizations = fieldsAppCustomProductPageLocalizations
-                    self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
                     self.include = include
+                    self.limitOrderedPlacements = limitOrderedPlacements
+                    self.fieldsAppAssetLibraryPlacementOrderingRequests = fieldsAppAssetLibraryPlacementOrderingRequests
                 }
             }
-            public var query: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/header`.
+            public var query: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAssetLibraryPlacementsGetInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAssetLibraryPlacementsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.AppAssetLibraryPlacementsGetInstance.Input.Headers
+            public var headers: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest)
+            }
+            public var body: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
-            ///   - path:
             ///   - query:
             ///   - headers:
+            ///   - body:
             public init(
-                path: Operations.AppAssetLibraryPlacementsGetInstance.Input.Path,
-                query: Operations.AppAssetLibraryPlacementsGetInstance.Input.Query = .init(),
-                headers: Operations.AppAssetLibraryPlacementsGetInstance.Input.Headers = .init()
+                query: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query = .init(),
+                headers: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Headers = .init(),
+                body: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Body
             ) {
-                self.path = path
                 self.query = query
                 self.headers = headers
+                self.body = body
             }
         }
         @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/responses/200/content`.
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/responses/201/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacements/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppAssetLibraryPlacementResponse)
+                    /// - Remark: Generated from `#/paths/v1/appAssetLibraryPlacementOrderingRequests/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.AppAssetLibraryPlacementOrderingRequestResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppAssetLibraryPlacementResponse {
+                    public var json: Components.Schemas.AppAssetLibraryPlacementOrderingRequestResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3214,33 +2971,33 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.AppAssetLibraryPlacementsGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
+                public var body: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.AppAssetLibraryPlacementsGetInstance.Output.Ok.Body) {
+                public init(body: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output.Created.Body) {
                     self.body = body
                 }
             }
-            /// Single AppAssetLibraryPlacement
+            /// Single AppAssetLibraryPlacementOrderingRequest
             ///
-            /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacements/{id}/get(appAssetLibraryPlacements_getInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacementOrderingRequests/post(appAssetLibraryPlacementOrderingRequests_createInstance)/responses/201`.
             ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppAssetLibraryPlacementsGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
+            /// HTTP response code: `201 created`.
+            case created(Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
             ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppAssetLibraryPlacementsGetInstance.Output.Ok {
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output.Created {
                 get throws {
                     switch self {
-                    case let .ok(response):
+                    case let .created(response):
                         return response
                     default:
                         try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
+                            expectedStatus: "created",
                             response: self
                         )
                     }

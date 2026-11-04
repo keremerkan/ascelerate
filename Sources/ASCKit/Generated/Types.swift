@@ -59,6 +59,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/appAssetLibraryImages/{id}/placements`.
     /// - Remark: Generated from `#/paths//v1/appAssetLibraryImages/{id}/placements/get(appAssetLibraryImages_placements_getToManyRelated)`.
     func appAssetLibraryImagesPlacementsGetToManyRelated(_ input: Operations.AppAssetLibraryImagesPlacementsGetToManyRelated.Input) async throws -> Operations.AppAssetLibraryImagesPlacementsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/appAssetLibraryPlacementOrderingRequests`.
+    /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacementOrderingRequests/post(appAssetLibraryPlacementOrderingRequests_createInstance)`.
+    func appAssetLibraryPlacementOrderingRequestsCreateInstance(_ input: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input) async throws -> Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output
     /// - Remark: HTTP `POST /v1/appAssetLibraryPlacements`.
     /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacements/post(appAssetLibraryPlacements_createInstance)`.
     func appAssetLibraryPlacementsCreateInstance(_ input: Operations.AppAssetLibraryPlacementsCreateInstance.Input) async throws -> Operations.AppAssetLibraryPlacementsCreateInstance.Output
@@ -137,12 +140,24 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/appCustomProductPageVersions/{id}/appCustomProductPageLocalizations`.
     /// - Remark: Generated from `#/paths//v1/appCustomProductPageVersions/{id}/appCustomProductPageLocalizations/get(appCustomProductPageVersions_appCustomProductPageLocalizations_getToManyRelated)`.
     func appCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated(_ input: Operations.AppCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated.Input) async throws -> Operations.AppCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/appEncryptionDeclarationDocuments`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarationDocuments/post(appEncryptionDeclarationDocuments_createInstance)`.
+    func appEncryptionDeclarationDocumentsCreateInstance(_ input: Operations.AppEncryptionDeclarationDocumentsCreateInstance.Input) async throws -> Operations.AppEncryptionDeclarationDocumentsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/appEncryptionDeclarationDocuments/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarationDocuments/{id}/get(appEncryptionDeclarationDocuments_getInstance)`.
+    func appEncryptionDeclarationDocumentsGetInstance(_ input: Operations.AppEncryptionDeclarationDocumentsGetInstance.Input) async throws -> Operations.AppEncryptionDeclarationDocumentsGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/appEncryptionDeclarationDocuments/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarationDocuments/{id}/patch(appEncryptionDeclarationDocuments_updateInstance)`.
+    func appEncryptionDeclarationDocumentsUpdateInstance(_ input: Operations.AppEncryptionDeclarationDocumentsUpdateInstance.Input) async throws -> Operations.AppEncryptionDeclarationDocumentsUpdateInstance.Output
     /// - Remark: HTTP `GET /v1/appEncryptionDeclarations`.
     /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarations/get(appEncryptionDeclarations_getCollection)`.
     func appEncryptionDeclarationsGetCollection(_ input: Operations.AppEncryptionDeclarationsGetCollection.Input) async throws -> Operations.AppEncryptionDeclarationsGetCollection.Output
     /// - Remark: HTTP `POST /v1/appEncryptionDeclarations`.
     /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarations/post(appEncryptionDeclarations_createInstance)`.
     func appEncryptionDeclarationsCreateInstance(_ input: Operations.AppEncryptionDeclarationsCreateInstance.Input) async throws -> Operations.AppEncryptionDeclarationsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/appEncryptionDeclarations/{id}/appEncryptionDeclarationDocument`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarations/{id}/appEncryptionDeclarationDocument/get(appEncryptionDeclarations_appEncryptionDeclarationDocument_getToOneRelated)`.
+    func appEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated(_ input: Operations.AppEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated.Input) async throws -> Operations.AppEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated.Output
     /// - Remark: HTTP `POST /v1/appEventLocalizations`.
     /// - Remark: Generated from `#/paths//v1/appEventLocalizations/post(appEventLocalizations_createInstance)`.
     func appEventLocalizationsCreateInstance(_ input: Operations.AppEventLocalizationsCreateInstance.Input) async throws -> Operations.AppEventLocalizationsCreateInstance.Output
@@ -308,6 +323,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/apps/{id}/appStoreVersions`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/appStoreVersions/get(apps_appStoreVersions_getToManyRelated)`.
     func appsAppStoreVersionsGetToManyRelated(_ input: Operations.AppsAppStoreVersionsGetToManyRelated.Input) async throws -> Operations.AppsAppStoreVersionsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/apps/{id}/appTags`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/appTags/get(apps_appTags_getToManyRelated)`.
+    func appsAppTagsGetToManyRelated(_ input: Operations.AppsAppTagsGetToManyRelated.Input) async throws -> Operations.AppsAppTagsGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/apps/{id}/assetLibrary`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/assetLibrary/get(apps_assetLibrary_getToOneRelated)`.
     func appsAssetLibraryGetToOneRelated(_ input: Operations.AppsAssetLibraryGetToOneRelated.Input) async throws -> Operations.AppsAssetLibraryGetToOneRelated.Output
@@ -518,6 +536,12 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/appStoreVersions/{id}/routingAppCoverage`.
     /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/routingAppCoverage/get(appStoreVersions_routingAppCoverage_getToOneRelated)`.
     func appStoreVersionsRoutingAppCoverageGetToOneRelated(_ input: Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Input) async throws -> Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Output
+    /// - Remark: HTTP `PATCH /v1/appTags/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appTags/{id}/patch(appTags_updateInstance)`.
+    func appTagsUpdateInstance(_ input: Operations.AppTagsUpdateInstance.Input) async throws -> Operations.AppTagsUpdateInstance.Output
+    /// - Remark: HTTP `GET /v1/appTags/{id}/territories`.
+    /// - Remark: Generated from `#/paths//v1/appTags/{id}/territories/get(appTags_territories_getToManyRelated)`.
+    func appTagsTerritoriesGetToManyRelated(_ input: Operations.AppTagsTerritoriesGetToManyRelated.Input) async throws -> Operations.AppTagsTerritoriesGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/betaAppLocalizations`.
     /// - Remark: Generated from `#/paths//v1/betaAppLocalizations/get(betaAppLocalizations_getCollection)`.
     func betaAppLocalizationsGetCollection(_ input: Operations.BetaAppLocalizationsGetCollection.Input) async throws -> Operations.BetaAppLocalizationsGetCollection.Output
@@ -1587,6 +1611,19 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// - Remark: HTTP `POST /v1/appAssetLibraryPlacementOrderingRequests`.
+    /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacementOrderingRequests/post(appAssetLibraryPlacementOrderingRequests_createInstance)`.
+    public func appAssetLibraryPlacementOrderingRequestsCreateInstance(
+        query: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Query = .init(),
+        headers: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Headers = .init(),
+        body: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input.Body
+    ) async throws -> Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output {
+        try await appAssetLibraryPlacementOrderingRequestsCreateInstance(Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input(
+            query: query,
+            headers: headers,
+            body: body
+        ))
+    }
     /// - Remark: HTTP `POST /v1/appAssetLibraryPlacements`.
     /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacements/post(appAssetLibraryPlacements_createInstance)`.
     public func appAssetLibraryPlacementsCreateInstance(
@@ -1879,6 +1916,43 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// - Remark: HTTP `POST /v1/appEncryptionDeclarationDocuments`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarationDocuments/post(appEncryptionDeclarationDocuments_createInstance)`.
+    public func appEncryptionDeclarationDocumentsCreateInstance(
+        headers: Operations.AppEncryptionDeclarationDocumentsCreateInstance.Input.Headers = .init(),
+        body: Operations.AppEncryptionDeclarationDocumentsCreateInstance.Input.Body
+    ) async throws -> Operations.AppEncryptionDeclarationDocumentsCreateInstance.Output {
+        try await appEncryptionDeclarationDocumentsCreateInstance(Operations.AppEncryptionDeclarationDocumentsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/appEncryptionDeclarationDocuments/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarationDocuments/{id}/get(appEncryptionDeclarationDocuments_getInstance)`.
+    public func appEncryptionDeclarationDocumentsGetInstance(
+        path: Operations.AppEncryptionDeclarationDocumentsGetInstance.Input.Path,
+        query: Operations.AppEncryptionDeclarationDocumentsGetInstance.Input.Query = .init(),
+        headers: Operations.AppEncryptionDeclarationDocumentsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.AppEncryptionDeclarationDocumentsGetInstance.Output {
+        try await appEncryptionDeclarationDocumentsGetInstance(Operations.AppEncryptionDeclarationDocumentsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/appEncryptionDeclarationDocuments/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarationDocuments/{id}/patch(appEncryptionDeclarationDocuments_updateInstance)`.
+    public func appEncryptionDeclarationDocumentsUpdateInstance(
+        path: Operations.AppEncryptionDeclarationDocumentsUpdateInstance.Input.Path,
+        headers: Operations.AppEncryptionDeclarationDocumentsUpdateInstance.Input.Headers = .init(),
+        body: Operations.AppEncryptionDeclarationDocumentsUpdateInstance.Input.Body
+    ) async throws -> Operations.AppEncryptionDeclarationDocumentsUpdateInstance.Output {
+        try await appEncryptionDeclarationDocumentsUpdateInstance(Operations.AppEncryptionDeclarationDocumentsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
     /// - Remark: HTTP `GET /v1/appEncryptionDeclarations`.
     /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarations/get(appEncryptionDeclarations_getCollection)`.
     public func appEncryptionDeclarationsGetCollection(
@@ -1899,6 +1973,19 @@ extension APIProtocol {
         try await appEncryptionDeclarationsCreateInstance(Operations.AppEncryptionDeclarationsCreateInstance.Input(
             headers: headers,
             body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/appEncryptionDeclarations/{id}/appEncryptionDeclarationDocument`.
+    /// - Remark: Generated from `#/paths//v1/appEncryptionDeclarations/{id}/appEncryptionDeclarationDocument/get(appEncryptionDeclarations_appEncryptionDeclarationDocument_getToOneRelated)`.
+    public func appEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated(
+        path: Operations.AppEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated.Input.Path,
+        query: Operations.AppEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated.Input.Query = .init(),
+        headers: Operations.AppEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated.Output {
+        try await appEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated(Operations.AppEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
         ))
     }
     /// - Remark: HTTP `POST /v1/appEventLocalizations`.
@@ -2535,6 +2622,19 @@ extension APIProtocol {
         headers: Operations.AppsAppStoreVersionsGetToManyRelated.Input.Headers = .init()
     ) async throws -> Operations.AppsAppStoreVersionsGetToManyRelated.Output {
         try await appsAppStoreVersionsGetToManyRelated(Operations.AppsAppStoreVersionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/apps/{id}/appTags`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/appTags/get(apps_appTags_getToManyRelated)`.
+    public func appsAppTagsGetToManyRelated(
+        path: Operations.AppsAppTagsGetToManyRelated.Input.Path,
+        query: Operations.AppsAppTagsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.AppsAppTagsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppsAppTagsGetToManyRelated.Output {
+        try await appsAppTagsGetToManyRelated(Operations.AppsAppTagsGetToManyRelated.Input(
             path: path,
             query: query,
             headers: headers
@@ -3353,6 +3453,32 @@ extension APIProtocol {
         headers: Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Input.Headers = .init()
     ) async throws -> Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Output {
         try await appStoreVersionsRoutingAppCoverageGetToOneRelated(Operations.AppStoreVersionsRoutingAppCoverageGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/appTags/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appTags/{id}/patch(appTags_updateInstance)`.
+    public func appTagsUpdateInstance(
+        path: Operations.AppTagsUpdateInstance.Input.Path,
+        headers: Operations.AppTagsUpdateInstance.Input.Headers = .init(),
+        body: Operations.AppTagsUpdateInstance.Input.Body
+    ) async throws -> Operations.AppTagsUpdateInstance.Output {
+        try await appTagsUpdateInstance(Operations.AppTagsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/appTags/{id}/territories`.
+    /// - Remark: Generated from `#/paths//v1/appTags/{id}/territories/get(appTags_territories_getToManyRelated)`.
+    public func appTagsTerritoriesGetToManyRelated(
+        path: Operations.AppTagsTerritoriesGetToManyRelated.Input.Path,
+        query: Operations.AppTagsTerritoriesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.AppTagsTerritoriesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppTagsTerritoriesGetToManyRelated.Output {
+        try await appTagsTerritoriesGetToManyRelated(Operations.AppTagsTerritoriesGetToManyRelated.Input(
             path: path,
             query: query,
             headers: headers

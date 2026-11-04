@@ -10,6 +10,2581 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `DELETE /v1/subscriptionGroups/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/delete(subscriptionGroups_deleteInstance)`.
+    public enum SubscriptionGroupsDeleteInstance {
+        public static let id: Swift.String = "subscriptionGroups_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionGroupsDeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.SubscriptionGroupsDeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/delete(subscriptionGroups_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.SubscriptionGroupsDeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/delete(subscriptionGroups_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.SubscriptionGroupsDeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroups/{id}/subscriptionGroupLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/get(subscriptionGroups_subscriptionGroupLocalizations_getToManyRelated)`.
+    public enum SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated {
+        public static let id: Swift.String = "subscriptionGroups_subscriptionGroupLocalizations_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/fieldsSubscriptionGroupLocalizationsPayload`.
+                @frozen public enum FieldsSubscriptionGroupLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case customAppName = "customAppName"
+                    case locale = "locale"
+                    case state = "state"
+                    case subscriptionGroup = "subscriptionGroup"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/fields[subscriptionGroupLocalizations]`.
+                public typealias fieldsSubscriptionGroupLocalizationsPayload = [Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.FieldsSubscriptionGroupLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/fields[subscriptionGroupLocalizations]`.
+                public var fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/fieldsSubscriptionGroupsPayload`.
+                @frozen public enum FieldsSubscriptionGroupsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case subscriptions = "subscriptions"
+                    case subscriptionGroupLocalizations = "subscriptionGroupLocalizations"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/fields[subscriptionGroups]`.
+                public typealias fieldsSubscriptionGroupsPayload = [Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.FieldsSubscriptionGroupsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroups
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/fields[subscriptionGroups]`.
+                public var fieldsSubscriptionGroups: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case subscriptionGroup = "subscriptionGroup"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/include`.
+                public typealias IncludePayload = [Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/query/include`.
+                public var include: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsSubscriptionGroupLocalizations: the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupLocalizationsPayload? = nil,
+                    fieldsSubscriptionGroups: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsSubscriptionGroupLocalizations = fieldsSubscriptionGroupLocalizations
+                    self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Path,
+                query: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionGroupLocalizationsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionGroupLocalizationsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of SubscriptionGroupLocalizations
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/get(subscriptionGroups_subscriptionGroupLocalizations_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroups/{id}/subscriptions`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/subscriptions/get(subscriptionGroups_subscriptions_getToManyRelated)`.
+    public enum SubscriptionGroupsSubscriptionsGetToManyRelated {
+        public static let id: Swift.String = "subscriptionGroups_subscriptions_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// filter by attribute 'productId'
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/filter[productId]`.
+                public var filterProductId: [Swift.String]?
+                /// filter by attribute 'name'
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/filter[name]`.
+                public var filterName: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/filterStatePayload`.
+                @frozen public enum FilterStatePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case missingMetadata = "MISSING_METADATA"
+                    case readyToSubmit = "READY_TO_SUBMIT"
+                    case waitingForReview = "WAITING_FOR_REVIEW"
+                    case inReview = "IN_REVIEW"
+                    case developerActionNeeded = "DEVELOPER_ACTION_NEEDED"
+                    case pendingBinaryApproval = "PENDING_BINARY_APPROVAL"
+                    case approved = "APPROVED"
+                    case developerRemovedFromSale = "DEVELOPER_REMOVED_FROM_SALE"
+                    case removedFromSale = "REMOVED_FROM_SALE"
+                    case rejected = "REJECTED"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/filter[state]`.
+                public typealias filterStatePayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FilterStatePayloadPayload]
+                /// filter by attribute 'state'
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/filter[state]`.
+                public var filterState: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.filterStatePayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/SortPayload`.
+                @frozen public enum SortPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case minusName = "-name"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/sort`.
+                public typealias SortPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.SortPayloadPayload]
+                /// comma-separated list of sort expressions; resources will be sorted as specified
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/sort`.
+                public var sort: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.SortPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionsPayload`.
+                @frozen public enum FieldsSubscriptionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case productId = "productId"
+                    case familySharable = "familySharable"
+                    case state = "state"
+                    case subscriptionPeriod = "subscriptionPeriod"
+                    case reviewNote = "reviewNote"
+                    case groupLevel = "groupLevel"
+                    case multiSeatStatus = "multiSeatStatus"
+                    case marketSettings = "marketSettings"
+                    case subscriptionLocalizations = "subscriptionLocalizations"
+                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
+                    case group = "group"
+                    case introductoryOffers = "introductoryOffers"
+                    case promotionalOffers = "promotionalOffers"
+                    case offerCodes = "offerCodes"
+                    case prices = "prices"
+                    case pricePoints = "pricePoints"
+                    case promotedPurchase = "promotedPurchase"
+                    case subscriptionAvailability = "subscriptionAvailability"
+                    case winBackOffers = "winBackOffers"
+                    case images = "images"
+                    case planAvailabilities = "planAvailabilities"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptions]`.
+                public typealias fieldsSubscriptionsPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptions
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptions]`.
+                public var fieldsSubscriptions: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionLocalizationsPayload`.
+                @frozen public enum FieldsSubscriptionLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case locale = "locale"
+                    case description = "description"
+                    case state = "state"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionLocalizations]`.
+                public typealias fieldsSubscriptionLocalizationsPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionLocalizations]`.
+                public var fieldsSubscriptionLocalizations: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionAppStoreReviewScreenshotsPayload`.
+                @frozen public enum FieldsSubscriptionAppStoreReviewScreenshotsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case sourceFileChecksum = "sourceFileChecksum"
+                    case imageAsset = "imageAsset"
+                    case assetToken = "assetToken"
+                    case assetType = "assetType"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionAppStoreReviewScreenshots]`.
+                public typealias fieldsSubscriptionAppStoreReviewScreenshotsPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionAppStoreReviewScreenshotsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionAppStoreReviewScreenshots
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionAppStoreReviewScreenshots]`.
+                public var fieldsSubscriptionAppStoreReviewScreenshots: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAppStoreReviewScreenshotsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionGroupsPayload`.
+                @frozen public enum FieldsSubscriptionGroupsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case subscriptions = "subscriptions"
+                    case subscriptionGroupLocalizations = "subscriptionGroupLocalizations"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionGroups]`.
+                public typealias fieldsSubscriptionGroupsPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionGroupsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroups
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionGroups]`.
+                public var fieldsSubscriptionGroups: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionIntroductoryOffersPayload`.
+                @frozen public enum FieldsSubscriptionIntroductoryOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case startDate = "startDate"
+                    case endDate = "endDate"
+                    case duration = "duration"
+                    case offerMode = "offerMode"
+                    case numberOfPeriods = "numberOfPeriods"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case subscription = "subscription"
+                    case territory = "territory"
+                    case subscriptionPricePoint = "subscriptionPricePoint"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionIntroductoryOffers]`.
+                public typealias fieldsSubscriptionIntroductoryOffersPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionIntroductoryOffersPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionIntroductoryOffers
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionIntroductoryOffers]`.
+                public var fieldsSubscriptionIntroductoryOffers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionIntroductoryOffersPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionPromotionalOffersPayload`.
+                @frozen public enum FieldsSubscriptionPromotionalOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case duration = "duration"
+                    case name = "name"
+                    case numberOfPeriods = "numberOfPeriods"
+                    case offerCode = "offerCode"
+                    case offerMode = "offerMode"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case subscription = "subscription"
+                    case prices = "prices"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionPromotionalOffers]`.
+                public typealias fieldsSubscriptionPromotionalOffersPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionPromotionalOffersPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionPromotionalOffers
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionPromotionalOffers]`.
+                public var fieldsSubscriptionPromotionalOffers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPromotionalOffersPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionOfferCodesPayload`.
+                @frozen public enum FieldsSubscriptionOfferCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case customerEligibilities = "customerEligibilities"
+                    case offerEligibility = "offerEligibility"
+                    case duration = "duration"
+                    case offerMode = "offerMode"
+                    case numberOfPeriods = "numberOfPeriods"
+                    case totalNumberOfCodes = "totalNumberOfCodes"
+                    case productionCodeCount = "productionCodeCount"
+                    case sandboxCodeCount = "sandboxCodeCount"
+                    case active = "active"
+                    case autoRenewEnabled = "autoRenewEnabled"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case subscription = "subscription"
+                    case oneTimeUseCodes = "oneTimeUseCodes"
+                    case customCodes = "customCodes"
+                    case prices = "prices"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionOfferCodes]`.
+                public typealias fieldsSubscriptionOfferCodesPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionOfferCodesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionOfferCodes
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionOfferCodes]`.
+                public var fieldsSubscriptionOfferCodes: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionPricesPayload`.
+                @frozen public enum FieldsSubscriptionPricesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case startDate = "startDate"
+                    case preserved = "preserved"
+                    case planType = "planType"
+                    case territory = "territory"
+                    case subscriptionPricePoint = "subscriptionPricePoint"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionPrices]`.
+                public typealias fieldsSubscriptionPricesPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionPricesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionPrices
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionPrices]`.
+                public var fieldsSubscriptionPrices: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPricesPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsPromotedPurchasesPayload`.
+                @frozen public enum FieldsPromotedPurchasesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case visibleForAllUsers = "visibleForAllUsers"
+                    case enabled = "enabled"
+                    case state = "state"
+                    case inAppPurchaseV2 = "inAppPurchaseV2"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[promotedPurchases]`.
+                public typealias fieldsPromotedPurchasesPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsPromotedPurchasesPayloadPayload]
+                /// the fields to include for returned resources of type promotedPurchases
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[promotedPurchases]`.
+                public var fieldsPromotedPurchases: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsPromotedPurchasesPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionAvailabilitiesPayload`.
+                @frozen public enum FieldsSubscriptionAvailabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case availableInNewTerritories = "availableInNewTerritories"
+                    case availableTerritories = "availableTerritories"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionAvailabilities]`.
+                public typealias fieldsSubscriptionAvailabilitiesPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionAvailabilitiesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionAvailabilities
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionAvailabilities]`.
+                public var fieldsSubscriptionAvailabilities: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAvailabilitiesPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsWinBackOffersPayload`.
+                @frozen public enum FieldsWinBackOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case offerId = "offerId"
+                    case duration = "duration"
+                    case offerMode = "offerMode"
+                    case periodCount = "periodCount"
+                    case customerEligibilityPaidSubscriptionDurationInMonths = "customerEligibilityPaidSubscriptionDurationInMonths"
+                    case customerEligibilityTimeSinceLastSubscribedInMonths = "customerEligibilityTimeSinceLastSubscribedInMonths"
+                    case customerEligibilityWaitBetweenOffersInMonths = "customerEligibilityWaitBetweenOffersInMonths"
+                    case startDate = "startDate"
+                    case endDate = "endDate"
+                    case priority = "priority"
+                    case promotionIntent = "promotionIntent"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case prices = "prices"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[winBackOffers]`.
+                public typealias fieldsWinBackOffersPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsWinBackOffersPayloadPayload]
+                /// the fields to include for returned resources of type winBackOffers
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[winBackOffers]`.
+                public var fieldsWinBackOffers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsWinBackOffersPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionImagesPayload`.
+                @frozen public enum FieldsSubscriptionImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case sourceFileChecksum = "sourceFileChecksum"
+                    case assetToken = "assetToken"
+                    case imageAsset = "imageAsset"
+                    case uploadOperations = "uploadOperations"
+                    case state = "state"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionImages]`.
+                public typealias fieldsSubscriptionImagesPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionImagesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionImages
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionImages]`.
+                public var fieldsSubscriptionImages: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionImagesPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionPlanAvailabilitiesPayload`.
+                @frozen public enum FieldsSubscriptionPlanAvailabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case availableInNewTerritories = "availableInNewTerritories"
+                    case planType = "planType"
+                    case availableTerritories = "availableTerritories"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionPlanAvailabilities]`.
+                public typealias fieldsSubscriptionPlanAvailabilitiesPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionPlanAvailabilitiesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionPlanAvailabilities
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionPlanAvailabilities]`.
+                public var fieldsSubscriptionPlanAvailabilities: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPlanAvailabilitiesPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fieldsSubscriptionVersionsPayload`.
+                @frozen public enum FieldsSubscriptionVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case state = "state"
+                    case subscription = "subscription"
+                    case image = "image"
+                    case images = "images"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionVersions]`.
+                public typealias fieldsSubscriptionVersionsPayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionVersionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/fields[subscriptionVersions]`.
+                public var fieldsSubscriptionVersions: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionVersionsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case subscriptionLocalizations = "subscriptionLocalizations"
+                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
+                    case group = "group"
+                    case introductoryOffers = "introductoryOffers"
+                    case promotionalOffers = "promotionalOffers"
+                    case offerCodes = "offerCodes"
+                    case prices = "prices"
+                    case promotedPurchase = "promotedPurchase"
+                    case subscriptionAvailability = "subscriptionAvailability"
+                    case winBackOffers = "winBackOffers"
+                    case images = "images"
+                    case planAvailabilities = "planAvailabilities"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/include`.
+                public typealias IncludePayload = [Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/include`.
+                public var include: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.IncludePayload?
+                /// maximum number of related subscriptionLocalizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[subscriptionLocalizations]`.
+                public var limitSubscriptionLocalizations: Swift.Int?
+                /// maximum number of related introductoryOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[introductoryOffers]`.
+                public var limitIntroductoryOffers: Swift.Int?
+                /// maximum number of related promotionalOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[promotionalOffers]`.
+                public var limitPromotionalOffers: Swift.Int?
+                /// maximum number of related offerCodes returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[offerCodes]`.
+                public var limitOfferCodes: Swift.Int?
+                /// maximum number of related prices returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[prices]`.
+                public var limitPrices: Swift.Int?
+                /// maximum number of related winBackOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[winBackOffers]`.
+                public var limitWinBackOffers: Swift.Int?
+                /// maximum number of related images returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[images]`.
+                public var limitImages: Swift.Int?
+                /// maximum number of related planAvailabilities returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[planAvailabilities]`.
+                public var limitPlanAvailabilities: Swift.Int?
+                /// maximum number of related versions returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/query/limit[versions]`.
+                public var limitVersions: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterProductId: filter by attribute 'productId'
+                ///   - filterName: filter by attribute 'name'
+                ///   - filterState: filter by attribute 'state'
+                ///   - sort: comma-separated list of sort expressions; resources will be sorted as specified
+                ///   - fieldsSubscriptions: the fields to include for returned resources of type subscriptions
+                ///   - fieldsSubscriptionLocalizations: the fields to include for returned resources of type subscriptionLocalizations
+                ///   - fieldsSubscriptionAppStoreReviewScreenshots: the fields to include for returned resources of type subscriptionAppStoreReviewScreenshots
+                ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - fieldsSubscriptionIntroductoryOffers: the fields to include for returned resources of type subscriptionIntroductoryOffers
+                ///   - fieldsSubscriptionPromotionalOffers: the fields to include for returned resources of type subscriptionPromotionalOffers
+                ///   - fieldsSubscriptionOfferCodes: the fields to include for returned resources of type subscriptionOfferCodes
+                ///   - fieldsSubscriptionPrices: the fields to include for returned resources of type subscriptionPrices
+                ///   - fieldsPromotedPurchases: the fields to include for returned resources of type promotedPurchases
+                ///   - fieldsSubscriptionAvailabilities: the fields to include for returned resources of type subscriptionAvailabilities
+                ///   - fieldsWinBackOffers: the fields to include for returned resources of type winBackOffers
+                ///   - fieldsSubscriptionImages: the fields to include for returned resources of type subscriptionImages
+                ///   - fieldsSubscriptionPlanAvailabilities: the fields to include for returned resources of type subscriptionPlanAvailabilities
+                ///   - fieldsSubscriptionVersions: the fields to include for returned resources of type subscriptionVersions
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitSubscriptionLocalizations: maximum number of related subscriptionLocalizations returned (when they are included)
+                ///   - limitIntroductoryOffers: maximum number of related introductoryOffers returned (when they are included)
+                ///   - limitPromotionalOffers: maximum number of related promotionalOffers returned (when they are included)
+                ///   - limitOfferCodes: maximum number of related offerCodes returned (when they are included)
+                ///   - limitPrices: maximum number of related prices returned (when they are included)
+                ///   - limitWinBackOffers: maximum number of related winBackOffers returned (when they are included)
+                ///   - limitImages: maximum number of related images returned (when they are included)
+                ///   - limitPlanAvailabilities: maximum number of related planAvailabilities returned (when they are included)
+                ///   - limitVersions: maximum number of related versions returned (when they are included)
+                public init(
+                    filterProductId: [Swift.String]? = nil,
+                    filterName: [Swift.String]? = nil,
+                    filterState: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.filterStatePayload? = nil,
+                    sort: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.SortPayload? = nil,
+                    fieldsSubscriptions: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionsPayload? = nil,
+                    fieldsSubscriptionLocalizations: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionLocalizationsPayload? = nil,
+                    fieldsSubscriptionAppStoreReviewScreenshots: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAppStoreReviewScreenshotsPayload? = nil,
+                    fieldsSubscriptionGroups: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    fieldsSubscriptionIntroductoryOffers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionIntroductoryOffersPayload? = nil,
+                    fieldsSubscriptionPromotionalOffers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPromotionalOffersPayload? = nil,
+                    fieldsSubscriptionOfferCodes: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload? = nil,
+                    fieldsSubscriptionPrices: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPricesPayload? = nil,
+                    fieldsPromotedPurchases: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsPromotedPurchasesPayload? = nil,
+                    fieldsSubscriptionAvailabilities: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAvailabilitiesPayload? = nil,
+                    fieldsWinBackOffers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsWinBackOffersPayload? = nil,
+                    fieldsSubscriptionImages: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionImagesPayload? = nil,
+                    fieldsSubscriptionPlanAvailabilities: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPlanAvailabilitiesPayload? = nil,
+                    fieldsSubscriptionVersions: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionVersionsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query.IncludePayload? = nil,
+                    limitSubscriptionLocalizations: Swift.Int? = nil,
+                    limitIntroductoryOffers: Swift.Int? = nil,
+                    limitPromotionalOffers: Swift.Int? = nil,
+                    limitOfferCodes: Swift.Int? = nil,
+                    limitPrices: Swift.Int? = nil,
+                    limitWinBackOffers: Swift.Int? = nil,
+                    limitImages: Swift.Int? = nil,
+                    limitPlanAvailabilities: Swift.Int? = nil,
+                    limitVersions: Swift.Int? = nil
+                ) {
+                    self.filterProductId = filterProductId
+                    self.filterName = filterName
+                    self.filterState = filterState
+                    self.sort = sort
+                    self.fieldsSubscriptions = fieldsSubscriptions
+                    self.fieldsSubscriptionLocalizations = fieldsSubscriptionLocalizations
+                    self.fieldsSubscriptionAppStoreReviewScreenshots = fieldsSubscriptionAppStoreReviewScreenshots
+                    self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.fieldsSubscriptionIntroductoryOffers = fieldsSubscriptionIntroductoryOffers
+                    self.fieldsSubscriptionPromotionalOffers = fieldsSubscriptionPromotionalOffers
+                    self.fieldsSubscriptionOfferCodes = fieldsSubscriptionOfferCodes
+                    self.fieldsSubscriptionPrices = fieldsSubscriptionPrices
+                    self.fieldsPromotedPurchases = fieldsPromotedPurchases
+                    self.fieldsSubscriptionAvailabilities = fieldsSubscriptionAvailabilities
+                    self.fieldsWinBackOffers = fieldsWinBackOffers
+                    self.fieldsSubscriptionImages = fieldsSubscriptionImages
+                    self.fieldsSubscriptionPlanAvailabilities = fieldsSubscriptionPlanAvailabilities
+                    self.fieldsSubscriptionVersions = fieldsSubscriptionVersions
+                    self.limit = limit
+                    self.include = include
+                    self.limitSubscriptionLocalizations = limitSubscriptionLocalizations
+                    self.limitIntroductoryOffers = limitIntroductoryOffers
+                    self.limitPromotionalOffers = limitPromotionalOffers
+                    self.limitOfferCodes = limitOfferCodes
+                    self.limitPrices = limitPrices
+                    self.limitWinBackOffers = limitWinBackOffers
+                    self.limitImages = limitImages
+                    self.limitPlanAvailabilities = limitPlanAvailabilities
+                    self.limitVersions = limitVersions
+                }
+            }
+            public var query: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Path,
+                query: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/subscriptions/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of Subscriptions
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/subscriptions/get(subscriptionGroups_subscriptions_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroups/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/versions/get(subscriptionGroups_versions_getToManyRelated)`.
+    public enum SubscriptionGroupsVersionsGetToManyRelated {
+        public static let id: Swift.String = "subscriptionGroups_versions_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/filterStatePayload`.
+                @frozen public enum FilterStatePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case prepareForSubmission = "PREPARE_FOR_SUBMISSION"
+                    case readyForReview = "READY_FOR_REVIEW"
+                    case waitingForReview = "WAITING_FOR_REVIEW"
+                    case inReview = "IN_REVIEW"
+                    case accepted = "ACCEPTED"
+                    case approved = "APPROVED"
+                    case replacedWithNewVersion = "REPLACED_WITH_NEW_VERSION"
+                    case rejected = "REJECTED"
+                    case developerRejected = "DEVELOPER_REJECTED"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/filter[state]`.
+                public typealias filterStatePayload = [Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.FilterStatePayloadPayload]
+                /// filter by attribute 'state'
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/filter[state]`.
+                public var filterState: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.filterStatePayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fieldsSubscriptionGroupVersionsPayload`.
+                @frozen public enum FieldsSubscriptionGroupVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case state = "state"
+                    case subscriptionGroup = "subscriptionGroup"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fields[subscriptionGroupVersions]`.
+                public typealias fieldsSubscriptionGroupVersionsPayload = [Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.FieldsSubscriptionGroupVersionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroupVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fields[subscriptionGroupVersions]`.
+                public var fieldsSubscriptionGroupVersions: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fieldsSubscriptionGroupsPayload`.
+                @frozen public enum FieldsSubscriptionGroupsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case subscriptions = "subscriptions"
+                    case subscriptionGroupLocalizations = "subscriptionGroupLocalizations"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fields[subscriptionGroups]`.
+                public typealias fieldsSubscriptionGroupsPayload = [Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.FieldsSubscriptionGroupsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroups
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fields[subscriptionGroups]`.
+                public var fieldsSubscriptionGroups: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fieldsSubscriptionGroupLocalizationsPayload`.
+                @frozen public enum FieldsSubscriptionGroupLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case customAppName = "customAppName"
+                    case locale = "locale"
+                    case version = "version"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fields[subscriptionGroupLocalizations]`.
+                public typealias fieldsSubscriptionGroupLocalizationsPayload = [Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.FieldsSubscriptionGroupLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/fields[subscriptionGroupLocalizations]`.
+                public var fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupLocalizationsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case subscriptionGroup = "subscriptionGroup"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/include`.
+                public typealias IncludePayload = [Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/include`.
+                public var include: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.IncludePayload?
+                /// maximum number of related localizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/query/limit[localizations]`.
+                public var limitLocalizations: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterState: filter by attribute 'state'
+                ///   - fieldsSubscriptionGroupVersions: the fields to include for returned resources of type subscriptionGroupVersions
+                ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - fieldsSubscriptionGroupLocalizations: the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitLocalizations: maximum number of related localizations returned (when they are included)
+                public init(
+                    filterState: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.filterStatePayload? = nil,
+                    fieldsSubscriptionGroupVersions: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload? = nil,
+                    fieldsSubscriptionGroups: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupLocalizationsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query.IncludePayload? = nil,
+                    limitLocalizations: Swift.Int? = nil
+                ) {
+                    self.filterState = filterState
+                    self.fieldsSubscriptionGroupVersions = fieldsSubscriptionGroupVersions
+                    self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.fieldsSubscriptionGroupLocalizations = fieldsSubscriptionGroupLocalizations
+                    self.limit = limit
+                    self.include = include
+                    self.limitLocalizations = limitLocalizations
+                }
+            }
+            public var query: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupsVersionsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupsVersionsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Path,
+                query: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionGroups/{id}/versions/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionGroupVersionsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionGroupVersionsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionGroupsVersionsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionGroupsVersionsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of SubscriptionGroupVersions
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/versions/get(subscriptionGroups_versions_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionGroupsVersionsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionGroupsVersionsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionGroupSubmissions`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupSubmissions/post(subscriptionGroupSubmissions_createInstance)`.
+    public enum SubscriptionGroupSubmissionsCreateInstance {
+        public static let id: Swift.String = "subscriptionGroupSubmissions_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupSubmissions/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupSubmissionsCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupSubmissionsCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionGroupSubmissionsCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupSubmissions/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupSubmissions/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SubscriptionGroupSubmissionCreateRequest)
+            }
+            public var body: Operations.SubscriptionGroupSubmissionsCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.SubscriptionGroupSubmissionsCreateInstance.Input.Headers = .init(),
+                body: Operations.SubscriptionGroupSubmissionsCreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupSubmissions/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionGroupSubmissions/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionGroupSubmissionResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionGroupSubmissionResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionGroupSubmissionsCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionGroupSubmissionsCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionGroupSubmission
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroupSubmissions/post(subscriptionGroupSubmissions_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.SubscriptionGroupSubmissionsCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.SubscriptionGroupSubmissionsCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroupVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupVersions/{id}/get(subscriptionGroupVersions_getInstance)`.
+    public enum SubscriptionGroupVersionsGetInstance {
+        public static let id: Swift.String = "subscriptionGroupVersions_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionGroupVersionsGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fieldsSubscriptionGroupVersionsPayload`.
+                @frozen public enum FieldsSubscriptionGroupVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case state = "state"
+                    case subscriptionGroup = "subscriptionGroup"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fields[subscriptionGroupVersions]`.
+                public typealias fieldsSubscriptionGroupVersionsPayload = [Operations.SubscriptionGroupVersionsGetInstance.Input.Query.FieldsSubscriptionGroupVersionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroupVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fields[subscriptionGroupVersions]`.
+                public var fieldsSubscriptionGroupVersions: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.fieldsSubscriptionGroupVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fieldsSubscriptionGroupsPayload`.
+                @frozen public enum FieldsSubscriptionGroupsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case subscriptions = "subscriptions"
+                    case subscriptionGroupLocalizations = "subscriptionGroupLocalizations"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fields[subscriptionGroups]`.
+                public typealias fieldsSubscriptionGroupsPayload = [Operations.SubscriptionGroupVersionsGetInstance.Input.Query.FieldsSubscriptionGroupsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroups
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fields[subscriptionGroups]`.
+                public var fieldsSubscriptionGroups: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fieldsSubscriptionGroupLocalizationsPayload`.
+                @frozen public enum FieldsSubscriptionGroupLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case customAppName = "customAppName"
+                    case locale = "locale"
+                    case version = "version"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fields[subscriptionGroupLocalizations]`.
+                public typealias fieldsSubscriptionGroupLocalizationsPayload = [Operations.SubscriptionGroupVersionsGetInstance.Input.Query.FieldsSubscriptionGroupLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/fields[subscriptionGroupLocalizations]`.
+                public var fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.fieldsSubscriptionGroupLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case subscriptionGroup = "subscriptionGroup"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.SubscriptionGroupVersionsGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/include`.
+                public var include: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.IncludePayload?
+                /// maximum number of related localizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/query/limit[localizations]`.
+                public var limitLocalizations: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsSubscriptionGroupVersions: the fields to include for returned resources of type subscriptionGroupVersions
+                ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - fieldsSubscriptionGroupLocalizations: the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitLocalizations: maximum number of related localizations returned (when they are included)
+                public init(
+                    fieldsSubscriptionGroupVersions: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.fieldsSubscriptionGroupVersionsPayload? = nil,
+                    fieldsSubscriptionGroups: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.fieldsSubscriptionGroupLocalizationsPayload? = nil,
+                    include: Operations.SubscriptionGroupVersionsGetInstance.Input.Query.IncludePayload? = nil,
+                    limitLocalizations: Swift.Int? = nil
+                ) {
+                    self.fieldsSubscriptionGroupVersions = fieldsSubscriptionGroupVersions
+                    self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.fieldsSubscriptionGroupLocalizations = fieldsSubscriptionGroupLocalizations
+                    self.include = include
+                    self.limitLocalizations = limitLocalizations
+                }
+            }
+            public var query: Operations.SubscriptionGroupVersionsGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupVersionsGetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupVersionsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionGroupVersionsGetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.SubscriptionGroupVersionsGetInstance.Input.Path,
+                query: Operations.SubscriptionGroupVersionsGetInstance.Input.Query = .init(),
+                headers: Operations.SubscriptionGroupVersionsGetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionGroupVersionResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionGroupVersionResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionGroupVersionsGetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionGroupVersionsGetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionGroupVersion
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroupVersions/{id}/get(subscriptionGroupVersions_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionGroupVersionsGetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionGroupVersionsGetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroupVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupVersions/{id}/localizations/get(subscriptionGroupVersions_localizations_getToManyRelated)`.
+    public enum SubscriptionGroupVersionsLocalizationsGetToManyRelated {
+        public static let id: Swift.String = "subscriptionGroupVersions_localizations_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/fieldsSubscriptionGroupLocalizationsPayload`.
+                @frozen public enum FieldsSubscriptionGroupLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case customAppName = "customAppName"
+                    case locale = "locale"
+                    case version = "version"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/fields[subscriptionGroupLocalizations]`.
+                public typealias fieldsSubscriptionGroupLocalizationsPayload = [Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.FieldsSubscriptionGroupLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/fields[subscriptionGroupLocalizations]`.
+                public var fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/fieldsSubscriptionGroupVersionsPayload`.
+                @frozen public enum FieldsSubscriptionGroupVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case state = "state"
+                    case subscriptionGroup = "subscriptionGroup"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/fields[subscriptionGroupVersions]`.
+                public typealias fieldsSubscriptionGroupVersionsPayload = [Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.FieldsSubscriptionGroupVersionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroupVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/fields[subscriptionGroupVersions]`.
+                public var fieldsSubscriptionGroupVersions: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/include`.
+                public typealias IncludePayload = [Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/query/include`.
+                public var include: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsSubscriptionGroupLocalizations: the fields to include for returned resources of type subscriptionGroupLocalizations
+                ///   - fieldsSubscriptionGroupVersions: the fields to include for returned resources of type subscriptionGroupVersions
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsSubscriptionGroupLocalizations: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupLocalizationsPayload? = nil,
+                    fieldsSubscriptionGroupVersions: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsSubscriptionGroupLocalizations = fieldsSubscriptionGroupLocalizations
+                    self.fieldsSubscriptionGroupVersions = fieldsSubscriptionGroupVersions
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Path,
+                query: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionGroupVersions/{id}/localizations/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionGroupLocalizationsV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionGroupLocalizationsV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of SubscriptionGroupLocalizations
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionGroupVersions/{id}/localizations/get(subscriptionGroupVersions_localizations_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionImages`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/post(subscriptionImages_createInstance)`.
+    public enum SubscriptionImagesCreateInstance {
+        public static let id: Swift.String = "subscriptionImages_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionImagesCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionImagesCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionImagesCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SubscriptionImageCreateRequest)
+            }
+            public var body: Operations.SubscriptionImagesCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.SubscriptionImagesCreateInstance.Input.Headers = .init(),
+                body: Operations.SubscriptionImagesCreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionImages/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionImageResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionImageResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionImagesCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionImagesCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionImage
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionImages/post(subscriptionImages_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.SubscriptionImagesCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.SubscriptionImagesCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionImages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/get(subscriptionImages_getInstance)`.
+    public enum SubscriptionImagesGetInstance {
+        public static let id: Swift.String = "subscriptionImages_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionImagesGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/fieldsSubscriptionImagesPayload`.
+                @frozen public enum FieldsSubscriptionImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case sourceFileChecksum = "sourceFileChecksum"
+                    case assetToken = "assetToken"
+                    case imageAsset = "imageAsset"
+                    case uploadOperations = "uploadOperations"
+                    case state = "state"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/fields[subscriptionImages]`.
+                public typealias fieldsSubscriptionImagesPayload = [Operations.SubscriptionImagesGetInstance.Input.Query.FieldsSubscriptionImagesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionImages
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/fields[subscriptionImages]`.
+                public var fieldsSubscriptionImages: Operations.SubscriptionImagesGetInstance.Input.Query.fieldsSubscriptionImagesPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/fieldsSubscriptionsPayload`.
+                @frozen public enum FieldsSubscriptionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case productId = "productId"
+                    case familySharable = "familySharable"
+                    case state = "state"
+                    case subscriptionPeriod = "subscriptionPeriod"
+                    case reviewNote = "reviewNote"
+                    case groupLevel = "groupLevel"
+                    case multiSeatStatus = "multiSeatStatus"
+                    case marketSettings = "marketSettings"
+                    case subscriptionLocalizations = "subscriptionLocalizations"
+                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
+                    case group = "group"
+                    case introductoryOffers = "introductoryOffers"
+                    case promotionalOffers = "promotionalOffers"
+                    case offerCodes = "offerCodes"
+                    case prices = "prices"
+                    case pricePoints = "pricePoints"
+                    case promotedPurchase = "promotedPurchase"
+                    case subscriptionAvailability = "subscriptionAvailability"
+                    case winBackOffers = "winBackOffers"
+                    case images = "images"
+                    case planAvailabilities = "planAvailabilities"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/fields[subscriptions]`.
+                public typealias fieldsSubscriptionsPayload = [Operations.SubscriptionImagesGetInstance.Input.Query.FieldsSubscriptionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptions
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/fields[subscriptions]`.
+                public var fieldsSubscriptions: Operations.SubscriptionImagesGetInstance.Input.Query.fieldsSubscriptionsPayload?
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.SubscriptionImagesGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/query/include`.
+                public var include: Operations.SubscriptionImagesGetInstance.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsSubscriptionImages: the fields to include for returned resources of type subscriptionImages
+                ///   - fieldsSubscriptions: the fields to include for returned resources of type subscriptions
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsSubscriptionImages: Operations.SubscriptionImagesGetInstance.Input.Query.fieldsSubscriptionImagesPayload? = nil,
+                    fieldsSubscriptions: Operations.SubscriptionImagesGetInstance.Input.Query.fieldsSubscriptionsPayload? = nil,
+                    include: Operations.SubscriptionImagesGetInstance.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsSubscriptionImages = fieldsSubscriptionImages
+                    self.fieldsSubscriptions = fieldsSubscriptions
+                    self.include = include
+                }
+            }
+            public var query: Operations.SubscriptionImagesGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionImagesGetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionImagesGetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionImagesGetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.SubscriptionImagesGetInstance.Input.Path,
+                query: Operations.SubscriptionImagesGetInstance.Input.Query = .init(),
+                headers: Operations.SubscriptionImagesGetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionImageResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionImageResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionImagesGetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionImagesGetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionImage
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/get(subscriptionImages_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionImagesGetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionImagesGetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptionImages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/patch(subscriptionImages_updateInstance)`.
+    public enum SubscriptionImagesUpdateInstance {
+        public static let id: Swift.String = "subscriptionImages_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionImagesUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionImagesUpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionImagesUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionImagesUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.SubscriptionImageUpdateRequest)
+            }
+            public var body: Operations.SubscriptionImagesUpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.SubscriptionImagesUpdateInstance.Input.Path,
+                headers: Operations.SubscriptionImagesUpdateInstance.Input.Headers = .init(),
+                body: Operations.SubscriptionImagesUpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionImageResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionImageResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionImagesUpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionImagesUpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionImage
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/patch(subscriptionImages_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionImagesUpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionImagesUpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `DELETE /v1/subscriptionImages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/delete(subscriptionImages_deleteInstance)`.
+    public enum SubscriptionImagesDeleteInstance {
+        public static let id: Swift.String = "subscriptionImages_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionImages/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionImagesDeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.SubscriptionImagesDeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/delete(subscriptionImages_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.SubscriptionImagesDeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/delete(subscriptionImages_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.SubscriptionImagesDeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionIntroductoryOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/post(subscriptionIntroductoryOffers_createInstance)`.
+    public enum SubscriptionIntroductoryOffersCreateInstance {
+        public static let id: Swift.String = "subscriptionIntroductoryOffers_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionIntroductoryOffersCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionIntroductoryOffersCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionIntroductoryOffersCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SubscriptionIntroductoryOfferCreateRequest)
+            }
+            public var body: Operations.SubscriptionIntroductoryOffersCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.SubscriptionIntroductoryOffersCreateInstance.Input.Headers = .init(),
+                body: Operations.SubscriptionIntroductoryOffersCreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionIntroductoryOfferResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionIntroductoryOfferResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionIntroductoryOffersCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionIntroductoryOffersCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionIntroductoryOffer
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/post(subscriptionIntroductoryOffers_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.SubscriptionIntroductoryOffersCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.SubscriptionIntroductoryOffersCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptionIntroductoryOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/{id}/patch(subscriptionIntroductoryOffers_updateInstance)`.
+    public enum SubscriptionIntroductoryOffersUpdateInstance {
+        public static let id: Swift.String = "subscriptionIntroductoryOffers_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionIntroductoryOffersUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionIntroductoryOffersUpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionIntroductoryOffersUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionIntroductoryOffersUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.SubscriptionIntroductoryOfferUpdateRequest)
+            }
+            public var body: Operations.SubscriptionIntroductoryOffersUpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.SubscriptionIntroductoryOffersUpdateInstance.Input.Path,
+                headers: Operations.SubscriptionIntroductoryOffersUpdateInstance.Input.Headers = .init(),
+                body: Operations.SubscriptionIntroductoryOffersUpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionIntroductoryOfferResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionIntroductoryOfferResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionIntroductoryOffersUpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionIntroductoryOffersUpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionIntroductoryOffer
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/{id}/patch(subscriptionIntroductoryOffers_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.SubscriptionIntroductoryOffersUpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.SubscriptionIntroductoryOffersUpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `DELETE /v1/subscriptionIntroductoryOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/{id}/delete(subscriptionIntroductoryOffers_deleteInstance)`.
+    public enum SubscriptionIntroductoryOffersDeleteInstance {
+        public static let id: Swift.String = "subscriptionIntroductoryOffers_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/subscriptionIntroductoryOffers/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.SubscriptionIntroductoryOffersDeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.SubscriptionIntroductoryOffersDeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/{id}/delete(subscriptionIntroductoryOffers_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.SubscriptionIntroductoryOffersDeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/{id}/delete(subscriptionIntroductoryOffers_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.SubscriptionIntroductoryOffersDeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionLocalizations/post(subscriptionLocalizations_createInstance)`.
+    public enum SubscriptionLocalizationsCreateInstance {
+        public static let id: Swift.String = "subscriptionLocalizations_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/subscriptionLocalizations/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionLocalizationsCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionLocalizationsCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.SubscriptionLocalizationsCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/subscriptionLocalizations/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionLocalizations/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.SubscriptionLocalizationCreateRequest)
+            }
+            public var body: Operations.SubscriptionLocalizationsCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.SubscriptionLocalizationsCreateInstance.Input.Headers = .init(),
+                body: Operations.SubscriptionLocalizationsCreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/subscriptionLocalizations/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/subscriptionLocalizations/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionLocalizationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionLocalizationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.SubscriptionLocalizationsCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.SubscriptionLocalizationsCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single SubscriptionLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v1/subscriptionLocalizations/post(subscriptionLocalizations_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.SubscriptionLocalizationsCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.SubscriptionLocalizationsCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/subscriptionLocalizations/{id}`.
     /// - Remark: Generated from `#/paths//v1/subscriptionLocalizations/{id}/get(subscriptionLocalizations_getInstance)`.
     public enum SubscriptionLocalizationsGetInstance {
@@ -506,2611 +3081,6 @@ extension Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/subscriptionOfferCodeOneTimeUseCodes`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodeOneTimeUseCodes/post(subscriptionOfferCodeOneTimeUseCodes_createInstance)`.
-    public enum SubscriptionOfferCodeOneTimeUseCodesCreateInstance {
-        public static let id: Swift.String = "subscriptionOfferCodeOneTimeUseCodes_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.SubscriptionOfferCodeOneTimeUseCodeCreateRequest)
-            }
-            public var body: Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Input.Headers = .init(),
-                body: Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionOfferCodeOneTimeUseCodeResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionOfferCodeOneTimeUseCodeResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionOfferCodeOneTimeUseCode
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodeOneTimeUseCodes/post(subscriptionOfferCodeOneTimeUseCodes_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.SubscriptionOfferCodeOneTimeUseCodesCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values/get(subscriptionOfferCodeOneTimeUseCodes_values_getToOneRelated)`.
-    public enum SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated {
-        public static let id: Swift.String = "subscriptionOfferCodeOneTimeUseCodes_values_getToOneRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Input.Path,
-                headers: Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values/GET/responses/200/content/text\/csv`.
-                    case csv(OpenAPIRuntime.HTTPBody)
-                    /// The associated value of the enum case if `self` is `.csv`.
-                    ///
-                    /// - Throws: An error if `self` is not `.csv`.
-                    /// - SeeAlso: `.csv`.
-                    public var csv: OpenAPIRuntime.HTTPBody {
-                        get throws {
-                            switch self {
-                            case let .csv(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionOfferCodeOneTimeUseCodeValue
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values/get(subscriptionOfferCodeOneTimeUseCodes_values_getToOneRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionOfferCodeOneTimeUseCodesValuesGetToOneRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case csv
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "text/csv":
-                    self = .csv
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .csv:
-                    return "text/csv"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .csv
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/subscriptionOfferCodes`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/post(subscriptionOfferCodes_createInstance)`.
-    public enum SubscriptionOfferCodesCreateInstance {
-        public static let id: Swift.String = "subscriptionOfferCodes_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionOfferCodesCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.SubscriptionOfferCodeCreateRequest)
-            }
-            public var body: Operations.SubscriptionOfferCodesCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.SubscriptionOfferCodesCreateInstance.Input.Headers = .init(),
-                body: Operations.SubscriptionOfferCodesCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionOfferCodeResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionOfferCodeResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionOfferCodesCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionOfferCodesCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionOfferCode
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/post(subscriptionOfferCodes_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.SubscriptionOfferCodesCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.SubscriptionOfferCodesCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionOfferCodes/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/get(subscriptionOfferCodes_getInstance)`.
-    public enum SubscriptionOfferCodesGetInstance {
-        public static let id: Swift.String = "subscriptionOfferCodes_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionOfferCodesGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fieldsSubscriptionOfferCodesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case customerEligibilities = "customerEligibilities"
-                    case offerEligibility = "offerEligibility"
-                    case duration = "duration"
-                    case offerMode = "offerMode"
-                    case numberOfPeriods = "numberOfPeriods"
-                    case totalNumberOfCodes = "totalNumberOfCodes"
-                    case productionCodeCount = "productionCodeCount"
-                    case sandboxCodeCount = "sandboxCodeCount"
-                    case active = "active"
-                    case autoRenewEnabled = "autoRenewEnabled"
-                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
-                    case subscription = "subscription"
-                    case oneTimeUseCodes = "oneTimeUseCodes"
-                    case customCodes = "customCodes"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodes]`.
-                public typealias fieldsSubscriptionOfferCodesPayload = [Operations.SubscriptionOfferCodesGetInstance.Input.Query.FieldsSubscriptionOfferCodesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodes]`.
-                public var fieldsSubscriptionOfferCodes: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fieldsSubscriptionsPayload`.
-                @frozen public enum FieldsSubscriptionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case productId = "productId"
-                    case familySharable = "familySharable"
-                    case state = "state"
-                    case subscriptionPeriod = "subscriptionPeriod"
-                    case reviewNote = "reviewNote"
-                    case groupLevel = "groupLevel"
-                    case multiSeatStatus = "multiSeatStatus"
-                    case marketSettings = "marketSettings"
-                    case subscriptionLocalizations = "subscriptionLocalizations"
-                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
-                    case group = "group"
-                    case introductoryOffers = "introductoryOffers"
-                    case promotionalOffers = "promotionalOffers"
-                    case offerCodes = "offerCodes"
-                    case prices = "prices"
-                    case pricePoints = "pricePoints"
-                    case promotedPurchase = "promotedPurchase"
-                    case subscriptionAvailability = "subscriptionAvailability"
-                    case winBackOffers = "winBackOffers"
-                    case images = "images"
-                    case planAvailabilities = "planAvailabilities"
-                    case versions = "versions"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptions]`.
-                public typealias fieldsSubscriptionsPayload = [Operations.SubscriptionOfferCodesGetInstance.Input.Query.FieldsSubscriptionsPayloadPayload]
-                /// the fields to include for returned resources of type subscriptions
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptions]`.
-                public var fieldsSubscriptions: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionsPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fieldsSubscriptionOfferCodeOneTimeUseCodesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodeOneTimeUseCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case numberOfCodes = "numberOfCodes"
-                    case createdDate = "createdDate"
-                    case expirationDate = "expirationDate"
-                    case active = "active"
-                    case environment = "environment"
-                    case offerCode = "offerCode"
-                    case values = "values"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodeOneTimeUseCodes]`.
-                public typealias fieldsSubscriptionOfferCodeOneTimeUseCodesPayload = [Operations.SubscriptionOfferCodesGetInstance.Input.Query.FieldsSubscriptionOfferCodeOneTimeUseCodesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodeOneTimeUseCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodeOneTimeUseCodes]`.
-                public var fieldsSubscriptionOfferCodeOneTimeUseCodes: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodeOneTimeUseCodesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fieldsSubscriptionOfferCodeCustomCodesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodeCustomCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case customCode = "customCode"
-                    case numberOfCodes = "numberOfCodes"
-                    case createdDate = "createdDate"
-                    case expirationDate = "expirationDate"
-                    case active = "active"
-                    case offerCode = "offerCode"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodeCustomCodes]`.
-                public typealias fieldsSubscriptionOfferCodeCustomCodesPayload = [Operations.SubscriptionOfferCodesGetInstance.Input.Query.FieldsSubscriptionOfferCodeCustomCodesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodeCustomCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodeCustomCodes]`.
-                public var fieldsSubscriptionOfferCodeCustomCodes: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodeCustomCodesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fieldsSubscriptionOfferCodePricesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodePricesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case territory = "territory"
-                    case subscriptionPricePoint = "subscriptionPricePoint"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodePrices]`.
-                public typealias fieldsSubscriptionOfferCodePricesPayload = [Operations.SubscriptionOfferCodesGetInstance.Input.Query.FieldsSubscriptionOfferCodePricesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodePrices
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/fields[subscriptionOfferCodePrices]`.
-                public var fieldsSubscriptionOfferCodePrices: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodePricesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case subscription = "subscription"
-                    case oneTimeUseCodes = "oneTimeUseCodes"
-                    case customCodes = "customCodes"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.SubscriptionOfferCodesGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/include`.
-                public var include: Operations.SubscriptionOfferCodesGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related customCodes returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/limit[customCodes]`.
-                public var limitCustomCodes: Swift.Int?
-                /// maximum number of related oneTimeUseCodes returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/limit[oneTimeUseCodes]`.
-                public var limitOneTimeUseCodes: Swift.Int?
-                /// maximum number of related prices returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/query/limit[prices]`.
-                public var limitPrices: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsSubscriptionOfferCodes: the fields to include for returned resources of type subscriptionOfferCodes
-                ///   - fieldsSubscriptions: the fields to include for returned resources of type subscriptions
-                ///   - fieldsSubscriptionOfferCodeOneTimeUseCodes: the fields to include for returned resources of type subscriptionOfferCodeOneTimeUseCodes
-                ///   - fieldsSubscriptionOfferCodeCustomCodes: the fields to include for returned resources of type subscriptionOfferCodeCustomCodes
-                ///   - fieldsSubscriptionOfferCodePrices: the fields to include for returned resources of type subscriptionOfferCodePrices
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitCustomCodes: maximum number of related customCodes returned (when they are included)
-                ///   - limitOneTimeUseCodes: maximum number of related oneTimeUseCodes returned (when they are included)
-                ///   - limitPrices: maximum number of related prices returned (when they are included)
-                public init(
-                    fieldsSubscriptionOfferCodes: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodesPayload? = nil,
-                    fieldsSubscriptions: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionsPayload? = nil,
-                    fieldsSubscriptionOfferCodeOneTimeUseCodes: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodeOneTimeUseCodesPayload? = nil,
-                    fieldsSubscriptionOfferCodeCustomCodes: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodeCustomCodesPayload? = nil,
-                    fieldsSubscriptionOfferCodePrices: Operations.SubscriptionOfferCodesGetInstance.Input.Query.fieldsSubscriptionOfferCodePricesPayload? = nil,
-                    include: Operations.SubscriptionOfferCodesGetInstance.Input.Query.IncludePayload? = nil,
-                    limitCustomCodes: Swift.Int? = nil,
-                    limitOneTimeUseCodes: Swift.Int? = nil,
-                    limitPrices: Swift.Int? = nil
-                ) {
-                    self.fieldsSubscriptionOfferCodes = fieldsSubscriptionOfferCodes
-                    self.fieldsSubscriptions = fieldsSubscriptions
-                    self.fieldsSubscriptionOfferCodeOneTimeUseCodes = fieldsSubscriptionOfferCodeOneTimeUseCodes
-                    self.fieldsSubscriptionOfferCodeCustomCodes = fieldsSubscriptionOfferCodeCustomCodes
-                    self.fieldsSubscriptionOfferCodePrices = fieldsSubscriptionOfferCodePrices
-                    self.include = include
-                    self.limitCustomCodes = limitCustomCodes
-                    self.limitOneTimeUseCodes = limitOneTimeUseCodes
-                    self.limitPrices = limitPrices
-                }
-            }
-            public var query: Operations.SubscriptionOfferCodesGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionOfferCodesGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionOfferCodesGetInstance.Input.Path,
-                query: Operations.SubscriptionOfferCodesGetInstance.Input.Query = .init(),
-                headers: Operations.SubscriptionOfferCodesGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionOfferCodeResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionOfferCodeResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionOfferCodesGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionOfferCodesGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionOfferCode
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/get(subscriptionOfferCodes_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionOfferCodesGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionOfferCodesGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/subscriptionOfferCodes/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/patch(subscriptionOfferCodes_updateInstance)`.
-    public enum SubscriptionOfferCodesUpdateInstance {
-        public static let id: Swift.String = "subscriptionOfferCodes_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionOfferCodesUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionOfferCodesUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.SubscriptionOfferCodeUpdateRequest)
-            }
-            public var body: Operations.SubscriptionOfferCodesUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.SubscriptionOfferCodesUpdateInstance.Input.Path,
-                headers: Operations.SubscriptionOfferCodesUpdateInstance.Input.Headers = .init(),
-                body: Operations.SubscriptionOfferCodesUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionOfferCodeResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionOfferCodeResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionOfferCodesUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionOfferCodesUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionOfferCode
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/patch(subscriptionOfferCodes_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionOfferCodesUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionOfferCodesUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionOfferCodes/{id}/customCodes`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/customCodes/get(subscriptionOfferCodes_customCodes_getToManyRelated)`.
-    public enum SubscriptionOfferCodesCustomCodesGetToManyRelated {
-        public static let id: Swift.String = "subscriptionOfferCodes_customCodes_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/fieldsSubscriptionOfferCodeCustomCodesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodeCustomCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case customCode = "customCode"
-                    case numberOfCodes = "numberOfCodes"
-                    case createdDate = "createdDate"
-                    case expirationDate = "expirationDate"
-                    case active = "active"
-                    case offerCode = "offerCode"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/fields[subscriptionOfferCodeCustomCodes]`.
-                public typealias fieldsSubscriptionOfferCodeCustomCodesPayload = [Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.FieldsSubscriptionOfferCodeCustomCodesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodeCustomCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/fields[subscriptionOfferCodeCustomCodes]`.
-                public var fieldsSubscriptionOfferCodeCustomCodes: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodeCustomCodesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/fieldsSubscriptionOfferCodesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case customerEligibilities = "customerEligibilities"
-                    case offerEligibility = "offerEligibility"
-                    case duration = "duration"
-                    case offerMode = "offerMode"
-                    case numberOfPeriods = "numberOfPeriods"
-                    case totalNumberOfCodes = "totalNumberOfCodes"
-                    case productionCodeCount = "productionCodeCount"
-                    case sandboxCodeCount = "sandboxCodeCount"
-                    case active = "active"
-                    case autoRenewEnabled = "autoRenewEnabled"
-                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
-                    case subscription = "subscription"
-                    case oneTimeUseCodes = "oneTimeUseCodes"
-                    case customCodes = "customCodes"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/fields[subscriptionOfferCodes]`.
-                public typealias fieldsSubscriptionOfferCodesPayload = [Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.FieldsSubscriptionOfferCodesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/fields[subscriptionOfferCodes]`.
-                public var fieldsSubscriptionOfferCodes: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case offerCode = "offerCode"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/include`.
-                public typealias IncludePayload = [Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/query/include`.
-                public var include: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsSubscriptionOfferCodeCustomCodes: the fields to include for returned resources of type subscriptionOfferCodeCustomCodes
-                ///   - fieldsSubscriptionOfferCodes: the fields to include for returned resources of type subscriptionOfferCodes
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsSubscriptionOfferCodeCustomCodes: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodeCustomCodesPayload? = nil,
-                    fieldsSubscriptionOfferCodes: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsSubscriptionOfferCodeCustomCodes = fieldsSubscriptionOfferCodeCustomCodes
-                    self.fieldsSubscriptionOfferCodes = fieldsSubscriptionOfferCodes
-                    self.limit = limit
-                    self.include = include
-                }
-            }
-            public var query: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Path,
-                query: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Query = .init(),
-                headers: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/customCodes/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionOfferCodeCustomCodesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionOfferCodeCustomCodesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of SubscriptionOfferCodeCustomCodes
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/customCodes/get(subscriptionOfferCodes_customCodes_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionOfferCodesCustomCodesGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionOfferCodes/{id}/oneTimeUseCodes`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/get(subscriptionOfferCodes_oneTimeUseCodes_getToManyRelated)`.
-    public enum SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated {
-        public static let id: Swift.String = "subscriptionOfferCodes_oneTimeUseCodes_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/fieldsSubscriptionOfferCodeOneTimeUseCodesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodeOneTimeUseCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case numberOfCodes = "numberOfCodes"
-                    case createdDate = "createdDate"
-                    case expirationDate = "expirationDate"
-                    case active = "active"
-                    case environment = "environment"
-                    case offerCode = "offerCode"
-                    case values = "values"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[subscriptionOfferCodeOneTimeUseCodes]`.
-                public typealias fieldsSubscriptionOfferCodeOneTimeUseCodesPayload = [Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.FieldsSubscriptionOfferCodeOneTimeUseCodesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodeOneTimeUseCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[subscriptionOfferCodeOneTimeUseCodes]`.
-                public var fieldsSubscriptionOfferCodeOneTimeUseCodes: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodeOneTimeUseCodesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/fieldsSubscriptionOfferCodesPayload`.
-                @frozen public enum FieldsSubscriptionOfferCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case customerEligibilities = "customerEligibilities"
-                    case offerEligibility = "offerEligibility"
-                    case duration = "duration"
-                    case offerMode = "offerMode"
-                    case numberOfPeriods = "numberOfPeriods"
-                    case totalNumberOfCodes = "totalNumberOfCodes"
-                    case productionCodeCount = "productionCodeCount"
-                    case sandboxCodeCount = "sandboxCodeCount"
-                    case active = "active"
-                    case autoRenewEnabled = "autoRenewEnabled"
-                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
-                    case subscription = "subscription"
-                    case oneTimeUseCodes = "oneTimeUseCodes"
-                    case customCodes = "customCodes"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[subscriptionOfferCodes]`.
-                public typealias fieldsSubscriptionOfferCodesPayload = [Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.FieldsSubscriptionOfferCodesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionOfferCodes
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[subscriptionOfferCodes]`.
-                public var fieldsSubscriptionOfferCodes: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case offerCode = "offerCode"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/include`.
-                public typealias IncludePayload = [Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/query/include`.
-                public var include: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsSubscriptionOfferCodeOneTimeUseCodes: the fields to include for returned resources of type subscriptionOfferCodeOneTimeUseCodes
-                ///   - fieldsSubscriptionOfferCodes: the fields to include for returned resources of type subscriptionOfferCodes
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsSubscriptionOfferCodeOneTimeUseCodes: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodeOneTimeUseCodesPayload? = nil,
-                    fieldsSubscriptionOfferCodes: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsSubscriptionOfferCodeOneTimeUseCodes = fieldsSubscriptionOfferCodeOneTimeUseCodes
-                    self.fieldsSubscriptionOfferCodes = fieldsSubscriptionOfferCodes
-                    self.limit = limit
-                    self.include = include
-                }
-            }
-            public var query: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Path,
-                query: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query = .init(),
-                headers: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionOfferCodeOneTimeUseCodesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionOfferCodeOneTimeUseCodesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of SubscriptionOfferCodeOneTimeUseCodes
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/get(subscriptionOfferCodes_oneTimeUseCodes_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/subscriptionPlanAvailabilities`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/post(subscriptionPlanAvailabilities_createInstance)`.
-    public enum SubscriptionPlanAvailabilitiesCreateInstance {
-        public static let id: Swift.String = "subscriptionPlanAvailabilities_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.SubscriptionPlanAvailabilityCreateRequest)
-            }
-            public var body: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Input.Headers = .init(),
-                body: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionPlanAvailabilityResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionPlanAvailabilityResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionPlanAvailability
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/post(subscriptionPlanAvailabilities_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.SubscriptionPlanAvailabilitiesCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionPlanAvailabilities/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/{id}/get(subscriptionPlanAvailabilities_getInstance)`.
-    public enum SubscriptionPlanAvailabilitiesGetInstance {
-        public static let id: Swift.String = "subscriptionPlanAvailabilities_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/fieldsSubscriptionPlanAvailabilitiesPayload`.
-                @frozen public enum FieldsSubscriptionPlanAvailabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case availableInNewTerritories = "availableInNewTerritories"
-                    case planType = "planType"
-                    case availableTerritories = "availableTerritories"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/fields[subscriptionPlanAvailabilities]`.
-                public typealias fieldsSubscriptionPlanAvailabilitiesPayload = [Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.FieldsSubscriptionPlanAvailabilitiesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionPlanAvailabilities
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/fields[subscriptionPlanAvailabilities]`.
-                public var fieldsSubscriptionPlanAvailabilities: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.fieldsSubscriptionPlanAvailabilitiesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/fieldsTerritoriesPayload`.
-                @frozen public enum FieldsTerritoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case currency = "currency"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/fields[territories]`.
-                public typealias fieldsTerritoriesPayload = [Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.FieldsTerritoriesPayloadPayload]
-                /// the fields to include for returned resources of type territories
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/fields[territories]`.
-                public var fieldsTerritories: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.fieldsTerritoriesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case availableTerritories = "availableTerritories"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/include`.
-                public var include: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related availableTerritories returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/query/limit[availableTerritories]`.
-                public var limitAvailableTerritories: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsSubscriptionPlanAvailabilities: the fields to include for returned resources of type subscriptionPlanAvailabilities
-                ///   - fieldsTerritories: the fields to include for returned resources of type territories
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitAvailableTerritories: maximum number of related availableTerritories returned (when they are included)
-                public init(
-                    fieldsSubscriptionPlanAvailabilities: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.fieldsSubscriptionPlanAvailabilitiesPayload? = nil,
-                    fieldsTerritories: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.fieldsTerritoriesPayload? = nil,
-                    include: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query.IncludePayload? = nil,
-                    limitAvailableTerritories: Swift.Int? = nil
-                ) {
-                    self.fieldsSubscriptionPlanAvailabilities = fieldsSubscriptionPlanAvailabilities
-                    self.fieldsTerritories = fieldsTerritories
-                    self.include = include
-                    self.limitAvailableTerritories = limitAvailableTerritories
-                }
-            }
-            public var query: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Path,
-                query: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Query = .init(),
-                headers: Operations.SubscriptionPlanAvailabilitiesGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionPlanAvailabilityResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionPlanAvailabilityResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPlanAvailabilitiesGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPlanAvailabilitiesGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionPlanAvailability
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/{id}/get(subscriptionPlanAvailabilities_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionPlanAvailabilitiesGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionPlanAvailabilitiesGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/subscriptionPlanAvailabilities/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/{id}/patch(subscriptionPlanAvailabilities_updateInstance)`.
-    public enum SubscriptionPlanAvailabilitiesUpdateInstance {
-        public static let id: Swift.String = "subscriptionPlanAvailabilities_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.SubscriptionPlanAvailabilityUpdateRequest)
-            }
-            public var body: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Input.Path,
-                headers: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Input.Headers = .init(),
-                body: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionPlanAvailabilityResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionPlanAvailabilityResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionPlanAvailability
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/{id}/patch(subscriptionPlanAvailabilities_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionPlanAvailabilitiesUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionPlanAvailabilities/{id}/availableTerritories`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/{id}/availableTerritories/get(subscriptionPlanAvailabilities_availableTerritories_getToManyRelated)`.
-    public enum SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated {
-        public static let id: Swift.String = "subscriptionPlanAvailabilities_availableTerritories_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/query/fieldsTerritoriesPayload`.
-                @frozen public enum FieldsTerritoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case currency = "currency"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/query/fields[territories]`.
-                public typealias fieldsTerritoriesPayload = [Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Query.FieldsTerritoriesPayloadPayload]
-                /// the fields to include for returned resources of type territories
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/query/fields[territories]`.
-                public var fieldsTerritories: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Query.fieldsTerritoriesPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsTerritories: the fields to include for returned resources of type territories
-                ///   - limit: maximum resources per page
-                public init(
-                    fieldsTerritories: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Query.fieldsTerritoriesPayload? = nil,
-                    limit: Swift.Int? = nil
-                ) {
-                    self.fieldsTerritories = fieldsTerritories
-                    self.limit = limit
-                }
-            }
-            public var query: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Path,
-                query: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Query = .init(),
-                headers: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPlanAvailabilities/{id}/availableTerritories/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.TerritoriesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.TerritoriesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of Territories
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/{id}/availableTerritories/get(subscriptionPlanAvailabilities_availableTerritories_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionPricePoints/{id}/equalizations`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPricePoints/{id}/equalizations/get(subscriptionPricePoints_equalizations_getToManyRelated)`.
-    public enum SubscriptionPricePointsEqualizationsGetToManyRelated {
-        public static let id: Swift.String = "subscriptionPricePoints_equalizations_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// filter by id(s) of related 'territory'
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/filter[territory]`.
-                public var filterTerritory: [Swift.String]?
-                /// filter by id(s) of related 'subscription'
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/filter[subscription]`.
-                public var filterSubscription: [Swift.String]?
-                /// filter by upfrontPricePointId
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/filter[upfrontPricePointId]`.
-                public var filterUpfrontPricePointId: [Swift.String]?
-                /// filter by planType
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/filter[planType]`.
-                public var filterPlanType: [Swift.String]?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/fieldsSubscriptionPricePointsPayload`.
-                @frozen public enum FieldsSubscriptionPricePointsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case customerPrice = "customerPrice"
-                    case proceeds = "proceeds"
-                    case proceedsYear2 = "proceedsYear2"
-                    case territory = "territory"
-                    case equalizations = "equalizations"
-                    case adjustedEqualizations = "adjustedEqualizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/fields[subscriptionPricePoints]`.
-                public typealias fieldsSubscriptionPricePointsPayload = [Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.FieldsSubscriptionPricePointsPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionPricePoints
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/fields[subscriptionPricePoints]`.
-                public var fieldsSubscriptionPricePoints: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.fieldsSubscriptionPricePointsPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/fieldsTerritoriesPayload`.
-                @frozen public enum FieldsTerritoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case currency = "currency"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/fields[territories]`.
-                public typealias fieldsTerritoriesPayload = [Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.FieldsTerritoriesPayloadPayload]
-                /// the fields to include for returned resources of type territories
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/fields[territories]`.
-                public var fieldsTerritories: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.fieldsTerritoriesPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case territory = "territory"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/include`.
-                public typealias IncludePayload = [Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/query/include`.
-                public var include: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterTerritory: filter by id(s) of related 'territory'
-                ///   - filterSubscription: filter by id(s) of related 'subscription'
-                ///   - filterUpfrontPricePointId: filter by upfrontPricePointId
-                ///   - filterPlanType: filter by planType
-                ///   - fieldsSubscriptionPricePoints: the fields to include for returned resources of type subscriptionPricePoints
-                ///   - fieldsTerritories: the fields to include for returned resources of type territories
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    filterTerritory: [Swift.String]? = nil,
-                    filterSubscription: [Swift.String]? = nil,
-                    filterUpfrontPricePointId: [Swift.String]? = nil,
-                    filterPlanType: [Swift.String]? = nil,
-                    fieldsSubscriptionPricePoints: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.fieldsSubscriptionPricePointsPayload? = nil,
-                    fieldsTerritories: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.fieldsTerritoriesPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query.IncludePayload? = nil
-                ) {
-                    self.filterTerritory = filterTerritory
-                    self.filterSubscription = filterSubscription
-                    self.filterUpfrontPricePointId = filterUpfrontPricePointId
-                    self.filterPlanType = filterPlanType
-                    self.fieldsSubscriptionPricePoints = fieldsSubscriptionPricePoints
-                    self.fieldsTerritories = fieldsTerritories
-                    self.limit = limit
-                    self.include = include
-                }
-            }
-            public var query: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Path,
-                query: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Query = .init(),
-                headers: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionPricePointsResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionPricePointsResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            default:
-                                try throwUnexpectedResponseBody(
-                                    expectedContent: "application/json",
-                                    body: self
-                                )
-                            }
-                        }
-                    }
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPricePoints/{id}/equalizations/GET/responses/200/content/text\/csv`.
-                    case csv(OpenAPIRuntime.HTTPBody)
-                    /// The associated value of the enum case if `self` is `.csv`.
-                    ///
-                    /// - Throws: An error if `self` is not `.csv`.
-                    /// - SeeAlso: `.csv`.
-                    public var csv: OpenAPIRuntime.HTTPBody {
-                        get throws {
-                            switch self {
-                            case let .csv(body):
-                                return body
-                            default:
-                                try throwUnexpectedResponseBody(
-                                    expectedContent: "text/csv",
-                                    body: self
-                                )
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of SubscriptionPricePoints
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPricePoints/{id}/equalizations/get(subscriptionPricePoints_equalizations_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case csv
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                case "text/csv":
-                    self = .csv
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                case .csv:
-                    return "text/csv"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json,
-                    .csv
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/subscriptionPrices`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPrices/post(subscriptionPrices_createInstance)`.
-    public enum SubscriptionPricesCreateInstance {
-        public static let id: Swift.String = "subscriptionPrices_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPrices/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPricesCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPricesCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPricesCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/subscriptionPrices/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPrices/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.SubscriptionPriceCreateRequest)
-            }
-            public var body: Operations.SubscriptionPricesCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.SubscriptionPricesCreateInstance.Input.Headers = .init(),
-                body: Operations.SubscriptionPricesCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPrices/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPrices/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionPriceResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionPriceResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPricesCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPricesCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionPrice
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPrices/post(subscriptionPrices_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.SubscriptionPricesCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.SubscriptionPricesCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/subscriptionPrices/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/delete(subscriptionPrices_deleteInstance)`.
-    public enum SubscriptionPricesDeleteInstance {
-        public static let id: Swift.String = "subscriptionPrices_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPrices/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPrices/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionPricesDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.SubscriptionPricesDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/delete(subscriptionPrices_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.SubscriptionPricesDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/delete(subscriptionPrices_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.SubscriptionPricesDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `POST /v1/subscriptionPromotionalOffers`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/post(subscriptionPromotionalOffers_createInstance)`.
-    public enum SubscriptionPromotionalOffersCreateInstance {
-        public static let id: Swift.String = "subscriptionPromotionalOffers_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPromotionalOffersCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPromotionalOffersCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPromotionalOffersCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.SubscriptionPromotionalOfferCreateRequest)
-            }
-            public var body: Operations.SubscriptionPromotionalOffersCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.SubscriptionPromotionalOffersCreateInstance.Input.Headers = .init(),
-                body: Operations.SubscriptionPromotionalOffersCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionPromotionalOfferResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionPromotionalOfferResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPromotionalOffersCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPromotionalOffersCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionPromotionalOffer
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/post(subscriptionPromotionalOffers_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.SubscriptionPromotionalOffersCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.SubscriptionPromotionalOffersCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionPromotionalOffers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/{id}/get(subscriptionPromotionalOffers_getInstance)`.
-    public enum SubscriptionPromotionalOffersGetInstance {
-        public static let id: Swift.String = "subscriptionPromotionalOffers_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.SubscriptionPromotionalOffersGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fieldsSubscriptionPromotionalOffersPayload`.
-                @frozen public enum FieldsSubscriptionPromotionalOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case duration = "duration"
-                    case name = "name"
-                    case numberOfPeriods = "numberOfPeriods"
-                    case offerCode = "offerCode"
-                    case offerMode = "offerMode"
-                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
-                    case subscription = "subscription"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fields[subscriptionPromotionalOffers]`.
-                public typealias fieldsSubscriptionPromotionalOffersPayload = [Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.FieldsSubscriptionPromotionalOffersPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionPromotionalOffers
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fields[subscriptionPromotionalOffers]`.
-                public var fieldsSubscriptionPromotionalOffers: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.fieldsSubscriptionPromotionalOffersPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fieldsSubscriptionsPayload`.
-                @frozen public enum FieldsSubscriptionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case productId = "productId"
-                    case familySharable = "familySharable"
-                    case state = "state"
-                    case subscriptionPeriod = "subscriptionPeriod"
-                    case reviewNote = "reviewNote"
-                    case groupLevel = "groupLevel"
-                    case multiSeatStatus = "multiSeatStatus"
-                    case marketSettings = "marketSettings"
-                    case subscriptionLocalizations = "subscriptionLocalizations"
-                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
-                    case group = "group"
-                    case introductoryOffers = "introductoryOffers"
-                    case promotionalOffers = "promotionalOffers"
-                    case offerCodes = "offerCodes"
-                    case prices = "prices"
-                    case pricePoints = "pricePoints"
-                    case promotedPurchase = "promotedPurchase"
-                    case subscriptionAvailability = "subscriptionAvailability"
-                    case winBackOffers = "winBackOffers"
-                    case images = "images"
-                    case planAvailabilities = "planAvailabilities"
-                    case versions = "versions"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fields[subscriptions]`.
-                public typealias fieldsSubscriptionsPayload = [Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.FieldsSubscriptionsPayloadPayload]
-                /// the fields to include for returned resources of type subscriptions
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fields[subscriptions]`.
-                public var fieldsSubscriptions: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.fieldsSubscriptionsPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fieldsSubscriptionPromotionalOfferPricesPayload`.
-                @frozen public enum FieldsSubscriptionPromotionalOfferPricesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case territory = "territory"
-                    case subscriptionPricePoint = "subscriptionPricePoint"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fields[subscriptionPromotionalOfferPrices]`.
-                public typealias fieldsSubscriptionPromotionalOfferPricesPayload = [Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.FieldsSubscriptionPromotionalOfferPricesPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionPromotionalOfferPrices
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/fields[subscriptionPromotionalOfferPrices]`.
-                public var fieldsSubscriptionPromotionalOfferPrices: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.fieldsSubscriptionPromotionalOfferPricesPayload?
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case subscription = "subscription"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/include`.
-                public var include: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related prices returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/query/limit[prices]`.
-                public var limitPrices: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsSubscriptionPromotionalOffers: the fields to include for returned resources of type subscriptionPromotionalOffers
-                ///   - fieldsSubscriptions: the fields to include for returned resources of type subscriptions
-                ///   - fieldsSubscriptionPromotionalOfferPrices: the fields to include for returned resources of type subscriptionPromotionalOfferPrices
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitPrices: maximum number of related prices returned (when they are included)
-                public init(
-                    fieldsSubscriptionPromotionalOffers: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.fieldsSubscriptionPromotionalOffersPayload? = nil,
-                    fieldsSubscriptions: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.fieldsSubscriptionsPayload? = nil,
-                    fieldsSubscriptionPromotionalOfferPrices: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.fieldsSubscriptionPromotionalOfferPricesPayload? = nil,
-                    include: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query.IncludePayload? = nil,
-                    limitPrices: Swift.Int? = nil
-                ) {
-                    self.fieldsSubscriptionPromotionalOffers = fieldsSubscriptionPromotionalOffers
-                    self.fieldsSubscriptions = fieldsSubscriptions
-                    self.fieldsSubscriptionPromotionalOfferPrices = fieldsSubscriptionPromotionalOfferPrices
-                    self.include = include
-                    self.limitPrices = limitPrices
-                }
-            }
-            public var query: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPromotionalOffersGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SubscriptionPromotionalOffersGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SubscriptionPromotionalOffersGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.SubscriptionPromotionalOffersGetInstance.Input.Path,
-                query: Operations.SubscriptionPromotionalOffersGetInstance.Input.Query = .init(),
-                headers: Operations.SubscriptionPromotionalOffersGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/subscriptionPromotionalOffers/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.SubscriptionPromotionalOfferResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.SubscriptionPromotionalOfferResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SubscriptionPromotionalOffersGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SubscriptionPromotionalOffersGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single SubscriptionPromotionalOffer
-            ///
-            /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/{id}/get(subscriptionPromotionalOffers_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SubscriptionPromotionalOffersGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SubscriptionPromotionalOffersGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
                             response: self
                         )
                     }

@@ -11,7 +11,7 @@ struct AppsCommand: AsyncParsableCommand {
     groupedSubcommands: [
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, Release.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
-      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, Availability.self, PricingCommand.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self, StreamlinedPurchasing.self]),
+      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, TagsCommand.self, Availability.self, PricingCommand.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self, StreamlinedPurchasing.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
     ]
   )
@@ -3094,7 +3094,7 @@ struct AppsCommand: AsyncParsableCommand {
   struct Encryption: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "encryption",
-      abstract: "View or create encryption declarations."
+      abstract: "View or create encryption declarations, and upload their documentation."
     )
     
     @Argument(help: "The bundle identifier of the app.",
@@ -3115,6 +3115,13 @@ struct AppsCommand: AsyncParsableCommand {
     
     @Flag(name: .long, inversion: .prefixedNo, help: "App is available on the French store.")
     var availableOnFrenchStore: Bool = true
+
+    @Option(name: .long, help: "Upload this file as a declaration's documentation (export compliance paperwork).",
+            completion: .file())
+    var uploadDocument: String?
+
+    @Option(name: .long, help: "The declaration to upload to, by ID. Defaults to the newest one.")
+    var declaration: String?
     
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
@@ -3122,6 +3129,12 @@ struct AppsCommand: AsyncParsableCommand {
     func validate() throws {
       if create && appDescription == nil {
         throw ValidationError("--description is required when using --create.")
+      }
+      if create && uploadDocument != nil {
+        throw ValidationError("Create the declaration first, then upload its document.")
+      }
+      if declaration != nil && uploadDocument == nil {
+        throw ValidationError("--declaration names where --upload-document goes.")
       }
     }
     
@@ -3160,12 +3173,35 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
       
+      if let uploadDocument {
+        let path = expandPath(uploadDocument)
+        let all = try await EncryptionDeclarations.list(appID: app.id, client: client)
+        guard let target = declaration.map({ id in all.first { $0.id == id } }) ?? all.max(by: { ($0.createdDate ?? .distantPast) < ($1.createdDate ?? .distantPast) }) else {
+          throw ValidationError(declaration.map { "No encryption declaration '\($0)' for \(appName)." } ?? "\(appName) has no encryption declaration; create one first.")
+        }
+        let existing = try await EncryptionDeclarations.document(declarationID: target.id, client: client)
+        print("App: \(appName)")
+        print("Declaration: \(target.id) (\(target.state.map { formatState($0) } ?? "—"), created \(target.createdDate.map(formatDate) ?? "—"))")
+        if let existing { print("It has a document already: \(existing.fileName ?? existing.id). The new one replaces it.") }
+        print("File: \((path as NSString).lastPathComponent)")
+        guard confirm("Upload? [y/N] ") else {
+          cancelled()
+          return
+        }
+        _ = try await EncryptionDeclarations.uploadDocument(declarationID: target.id, filePath: path, client: client)
+        success("Uploaded", "\((path as NSString).lastPathComponent).")
+        return
+      }
+
       // View mode
       print("App: \(appName)")
       print()
       
       let declarations = try await EncryptionDeclarations.list(appID: app.id, client: client)
-      let rows: [[String]] = declarations.map { decl in
+      let documents = try await boundedConcurrentMap(declarations) { decl in
+        try await EncryptionDeclarations.document(declarationID: decl.id, client: client)
+      }
+      let rows: [[String]] = zip(declarations, documents).map { decl, document in
         [
           decl.state.map { formatState($0) } ?? "—",
           decl.platform.map { formatState($0) } ?? "—",
@@ -3173,6 +3209,8 @@ struct AppsCommand: AsyncParsableCommand {
           decl.containsThirdPartyCryptography.map { $0 ? "Yes" : "No" } ?? "—",
           decl.exempt.map { $0 ? "Yes" : "No" } ?? "—",
           decl.createdDate.map { formatDate($0) } ?? "—",
+          document?.fileName ?? "—",
+          decl.id,
         ]
       }
       
@@ -3182,7 +3220,7 @@ struct AppsCommand: AsyncParsableCommand {
       }
       
       Table.print(
-        headers: ["State", "Platform", "Proprietary", "Third-Party", "Exempt", "Created"],
+        headers: ["State", "Platform", "Proprietary", "Third-Party", "Exempt", "Created", "Document", "ID"],
         rows: rows
       )
     }

@@ -241,7 +241,25 @@ ascelerate apps encryption <bundle-id>
 # Yeni bir şifreleme beyanı oluşturun
 ascelerate apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
 ascelerate apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
+
+# Uyum belgesini en yeni beyana (veya --declaration ile belirtilene) ekleyin
+ascelerate apps encryption <bundle-id> --upload-document approval.pdf
 ```
+
+Bazı beyanlar, App Store Connect'in istediği bir belge gerektirir; örneğin bir ihracat sınıflandırması veya Fransa'nın şifreleme beyanı. `--upload-document` belgeyi en yeni beyana ya da `--declaration` ile belirtilen beyana (listedeki kimlik) ekler; liste her beyanın belgesini gösterir.
+
+## Uygulama etiketleri
+
+```bash
+# Apple'ın App Store'da uygulamaya verdiği etiketler ve gösterildikleri yerler
+ascelerate apps tags <bundle-id> [--json]
+
+# Bir etiketi App Store'da gizleyin veya yeniden gösterin
+ascelerate apps tags hide <bundle-id> "Photo Editing"
+ascelerate apps tags show <bundle-id> "Photo Editing"
+```
+
+Uygulamanın etiketlerini Apple seçer; her birini adıyla veya kimliğiyle gizleyebilir ya da yeniden gösterebilirsiniz.
 
 ## EULA
 

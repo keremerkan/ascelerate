@@ -10,6 +10,302 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesRequest`.
+    public struct AppScreenshotSetAppScreenshotsLinkagesRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesRequest/DataPayload`.
+        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesRequest/DataPayload/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesRequest/DataPayload/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayloadPayload`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - _type:
+            public init(
+                id: Swift.String,
+                _type: Swift.String
+            ) {
+                self.id = id
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesRequest/data`.
+        public typealias DataPayload = [Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesRequest.DataPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesRequest/data`.
+        public var data: Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesRequest.DataPayload
+        /// Creates a new `AppScreenshotSetAppScreenshotsLinkagesRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse`.
+    public struct AppScreenshotSetAppScreenshotsLinkagesResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse/DataPayload`.
+        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse/DataPayload/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse/DataPayload/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayloadPayload`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - _type:
+            public init(
+                id: Swift.String,
+                _type: Swift.String
+            ) {
+                self.id = id
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse/data`.
+        public typealias DataPayload = [Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesResponse.DataPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse/data`.
+        public var data: Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesResponse.DataPayload
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetAppScreenshotsLinkagesResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `AppScreenshotSetAppScreenshotsLinkagesResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesResponse.DataPayload,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest`.
+    public struct AppScreenshotSetCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/attributes/screenshotDisplayType`.
+                public var screenshotDisplayType: Components.Schemas.ScreenshotDisplayType
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - screenshotDisplayType:
+                public init(screenshotDisplayType: Components.Schemas.ScreenshotDisplayType) {
+                    self.screenshotDisplayType = screenshotDisplayType
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case screenshotDisplayType
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.AttributesPayload
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appCustomProductPageLocalization`.
+                public struct AppCustomProductPageLocalizationPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appCustomProductPageLocalization/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appCustomProductPageLocalization/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appCustomProductPageLocalization/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appCustomProductPageLocalization/data`.
+                    public var data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload.DataPayload?
+                    /// Creates a new `AppCustomProductPageLocalizationPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appCustomProductPageLocalization`.
+                public var appCustomProductPageLocalization: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload?
+                /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization`.
+                public struct AppStoreVersionExperimentTreatmentLocalizationPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data`.
+                    public var data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload.DataPayload?
+                    /// Creates a new `AppStoreVersionExperimentTreatmentLocalizationPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization`.
+                public var appStoreVersionExperimentTreatmentLocalization: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload?
+                /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionLocalization`.
+                public struct AppStoreVersionLocalizationPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionLocalization/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionLocalization/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionLocalization/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionLocalization/data`.
+                    public var data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload.DataPayload?
+                    /// Creates a new `AppStoreVersionLocalizationPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships/appStoreVersionLocalization`.
+                public var appStoreVersionLocalization: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload?
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - appCustomProductPageLocalization:
+                ///   - appStoreVersionExperimentTreatmentLocalization:
+                ///   - appStoreVersionLocalization:
+                public init(
+                    appCustomProductPageLocalization: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload? = nil,
+                    appStoreVersionExperimentTreatmentLocalization: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload? = nil,
+                    appStoreVersionLocalization: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload? = nil
+                ) {
+                    self.appCustomProductPageLocalization = appCustomProductPageLocalization
+                    self.appStoreVersionExperimentTreatmentLocalization = appStoreVersionExperimentTreatmentLocalization
+                    self.appStoreVersionLocalization = appStoreVersionLocalization
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case appCustomProductPageLocalization
+                    case appStoreVersionExperimentTreatmentLocalization
+                    case appStoreVersionLocalization
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload?
+            /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.AttributesPayload,
+                relationships: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload.RelationshipsPayload? = nil,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppScreenshotSetCreateRequest/data`.
+        public var data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload
+        /// Creates a new `AppScreenshotSetCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.AppScreenshotSetCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppScreenshotSetResponse`.
     public struct AppScreenshotSetResponse: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/AppScreenshotSetResponse/data`.
@@ -2720,321 +3016,6 @@ extension Components.Schemas {
             id: Swift.String,
             links: Components.Schemas.ResourceLinks? = nil,
             relationships: Components.Schemas.AppStoreVersionExperiment.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case relationships
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response`.
-    public struct AppStoreVersionExperimentsV2Response: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/data`.
-        public var data: [Components.Schemas.AppStoreVersionExperimentV2]
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload/App`.
-            case apps(Components.Schemas.App)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload/AppStoreVersionExperimentTreatment`.
-            case appStoreVersionExperimentTreatments(Components.Schemas.AppStoreVersionExperimentTreatment)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload/AppStoreVersion`.
-            case appStoreVersions(Components.Schemas.AppStoreVersion)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "apps":
-                    self = .apps(try .init(from: decoder))
-                case "appStoreVersionExperimentTreatments":
-                    self = .appStoreVersionExperimentTreatments(try .init(from: decoder))
-                case "appStoreVersions":
-                    self = .appStoreVersions(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .apps(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionExperimentTreatments(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersions(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppStoreVersionExperimentsV2Response.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/included`.
-        public var included: Components.Schemas.AppStoreVersionExperimentsV2Response.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/links`.
-        public var links: Components.Schemas.PagedDocumentLinks
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/meta`.
-        public var meta: Components.Schemas.PagingInformation?
-        /// Creates a new `AppStoreVersionExperimentsV2Response`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        ///   - meta:
-        public init(
-            data: [Components.Schemas.AppStoreVersionExperimentV2],
-            included: Components.Schemas.AppStoreVersionExperimentsV2Response.IncludedPayload? = nil,
-            links: Components.Schemas.PagedDocumentLinks,
-            meta: Components.Schemas.PagingInformation? = nil
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-            self.meta = meta
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-            case meta
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment`.
-    public struct AppStoreVersionExperimentTreatment: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes`.
-        public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/appIcon`.
-            public var appIcon: Components.Schemas.ImageAsset?
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/appIconName`.
-            public var appIconName: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/name`.
-            public var name: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/promotedDate`.
-            public var promotedDate: Foundation.Date?
-            /// Creates a new `AttributesPayload`.
-            ///
-            /// - Parameters:
-            ///   - appIcon:
-            ///   - appIconName:
-            ///   - name:
-            ///   - promotedDate:
-            public init(
-                appIcon: Components.Schemas.ImageAsset? = nil,
-                appIconName: Swift.String? = nil,
-                name: Swift.String? = nil,
-                promotedDate: Foundation.Date? = nil
-            ) {
-                self.appIcon = appIcon
-                self.appIconName = appIconName
-                self.name = name
-                self.promotedDate = promotedDate
-            }
-            public enum CodingKeys: String, CodingKey {
-                case appIcon
-                case appIconName
-                case name
-                case promotedDate
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes`.
-        public var attributes: Components.Schemas.AppStoreVersionExperimentTreatment.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment`.
-            public struct AppStoreVersionExperimentPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data`.
-                public var data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload.DataPayload?
-                /// Creates a new `AppStoreVersionExperimentPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment`.
-            public var appStoreVersionExperiment: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload?
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations`.
-            public struct AppStoreVersionExperimentTreatmentLocalizationsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/data`.
-                public typealias DataPayload = [Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/data`.
-                public var data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `AppStoreVersionExperimentTreatmentLocalizationsPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations`.
-            public var appStoreVersionExperimentTreatmentLocalizations: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload?
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2`.
-            public struct AppStoreVersionExperimentV2Payload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data`.
-                public var data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload.DataPayload?
-                /// Creates a new `AppStoreVersionExperimentV2Payload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2`.
-            public var appStoreVersionExperimentV2: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - appStoreVersionExperiment:
-            ///   - appStoreVersionExperimentTreatmentLocalizations:
-            ///   - appStoreVersionExperimentV2:
-            public init(
-                appStoreVersionExperiment: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload? = nil,
-                appStoreVersionExperimentTreatmentLocalizations: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
-                appStoreVersionExperimentV2: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload? = nil
-            ) {
-                self.appStoreVersionExperiment = appStoreVersionExperiment
-                self.appStoreVersionExperimentTreatmentLocalizations = appStoreVersionExperimentTreatmentLocalizations
-                self.appStoreVersionExperimentV2 = appStoreVersionExperimentV2
-            }
-            public enum CodingKeys: String, CodingKey {
-                case appStoreVersionExperiment
-                case appStoreVersionExperimentTreatmentLocalizations
-                case appStoreVersionExperimentV2
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships`.
-        public var relationships: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/type`.
-        public var _type: Swift.String
-        /// Creates a new `AppStoreVersionExperimentTreatment`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.AppStoreVersionExperimentTreatment.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload? = nil,
             _type: Swift.String
         ) {
             self.attributes = attributes

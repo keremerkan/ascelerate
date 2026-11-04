@@ -10,6 +10,419 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo`.
+    public struct AppAssetLibraryVideo: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes`.
+        @frozen public enum AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoAcceptedAttributes`.
+            case accepted(Components.Schemas.AppAssetLibraryVideoAcceptedAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoApprovedAttributes`.
+            case approved(Components.Schemas.AppAssetLibraryVideoApprovedAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoArchivedAttributes`.
+            case archived(Components.Schemas.AppAssetLibraryVideoArchivedAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoAwaitingUploadAttributes`.
+            case awaitingUpload(Components.Schemas.AppAssetLibraryVideoAwaitingUploadAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoCommonAttributes`.
+            case complete(Components.Schemas.AppAssetLibraryVideoCommonAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoFailedAttributes`.
+            case failed(Components.Schemas.AppAssetLibraryVideoFailedAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoInReviewAttributes`.
+            case inReview(Components.Schemas.AppAssetLibraryVideoInReviewAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoCommonAttributes`.
+            case prepareForSubmission(Components.Schemas.AppAssetLibraryVideoCommonAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoReadyForReviewAttributes`.
+            case readyForReview(Components.Schemas.AppAssetLibraryVideoReadyForReviewAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoRejectedAttributes`.
+            case rejected(Components.Schemas.AppAssetLibraryVideoRejectedAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoUploadCompleteAttributes`.
+            case uploadComplete(Components.Schemas.AppAssetLibraryVideoUploadCompleteAttributes)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoWaitingForReviewAttributes`.
+            case waitingForReview(Components.Schemas.AppAssetLibraryVideoWaitingForReviewAttributes)
+            public enum CodingKeys: String, CodingKey {
+                case state
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: .state
+                )
+                switch discriminator {
+                case "ACCEPTED":
+                    self = .accepted(try .init(from: decoder))
+                case "APPROVED":
+                    self = .approved(try .init(from: decoder))
+                case "ARCHIVED":
+                    self = .archived(try .init(from: decoder))
+                case "AWAITING_UPLOAD":
+                    self = .awaitingUpload(try .init(from: decoder))
+                case "COMPLETE":
+                    self = .complete(try .init(from: decoder))
+                case "FAILED":
+                    self = .failed(try .init(from: decoder))
+                case "IN_REVIEW":
+                    self = .inReview(try .init(from: decoder))
+                case "PREPARE_FOR_SUBMISSION":
+                    self = .prepareForSubmission(try .init(from: decoder))
+                case "READY_FOR_REVIEW":
+                    self = .readyForReview(try .init(from: decoder))
+                case "REJECTED":
+                    self = .rejected(try .init(from: decoder))
+                case "UPLOAD_COMPLETE":
+                    self = .uploadComplete(try .init(from: decoder))
+                case "WAITING_FOR_REVIEW":
+                    self = .waitingForReview(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys.state,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .accepted(value):
+                    try value.encode(to: encoder)
+                case let .approved(value):
+                    try value.encode(to: encoder)
+                case let .archived(value):
+                    try value.encode(to: encoder)
+                case let .awaitingUpload(value):
+                    try value.encode(to: encoder)
+                case let .complete(value):
+                    try value.encode(to: encoder)
+                case let .failed(value):
+                    try value.encode(to: encoder)
+                case let .inReview(value):
+                    try value.encode(to: encoder)
+                case let .prepareForSubmission(value):
+                    try value.encode(to: encoder)
+                case let .readyForReview(value):
+                    try value.encode(to: encoder)
+                case let .rejected(value):
+                    try value.encode(to: encoder)
+                case let .uploadComplete(value):
+                    try value.encode(to: encoder)
+                case let .waitingForReview(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes`.
+        public var attributes: Components.Schemas.AppAssetLibraryVideo.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements`.
+            public struct PlacementsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/data`.
+                public typealias DataPayload = [Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/data`.
+                public var data: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `PlacementsPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements`.
+            public var placements: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - placements:
+            public init(placements: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload? = nil) {
+                self.placements = placements
+            }
+            public enum CodingKeys: String, CodingKey {
+                case placements
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships`.
+        public var relationships: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/type`.
+        public var _type: Swift.String
+        /// Creates a new `AppAssetLibraryVideo`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.AppAssetLibraryVideo.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAcceptedAttributes`.
+    public struct AppAssetLibraryVideoAcceptedAttributes: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAcceptedAttributes/value1`.
+        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAcceptedAttributes/value2`.
+        public var value2: OpenAPIRuntime.OpenAPIObjectContainer
+        /// Creates a new `AppAssetLibraryVideoAcceptedAttributes`.
+        ///
+        /// - Parameters:
+        ///   - value1:
+        ///   - value2:
+        public init(
+            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
+            value2: OpenAPIRuntime.OpenAPIObjectContainer
+        ) {
+            self.value1 = value1
+            self.value2 = value2
+        }
+        public init(from decoder: any Swift.Decoder) throws {
+            self.value1 = try .init(from: decoder)
+            self.value2 = try .init(from: decoder)
+        }
+        public func encode(to encoder: any Swift.Encoder) throws {
+            try self.value1.encode(to: encoder)
+            try self.value2.encode(to: encoder)
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoApprovedAttributes`.
+    public struct AppAssetLibraryVideoApprovedAttributes: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoApprovedAttributes/value1`.
+        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoApprovedAttributes/value2`.
+        public var value2: OpenAPIRuntime.OpenAPIObjectContainer
+        /// Creates a new `AppAssetLibraryVideoApprovedAttributes`.
+        ///
+        /// - Parameters:
+        ///   - value1:
+        ///   - value2:
+        public init(
+            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
+            value2: OpenAPIRuntime.OpenAPIObjectContainer
+        ) {
+            self.value1 = value1
+            self.value2 = value2
+        }
+        public init(from decoder: any Swift.Decoder) throws {
+            self.value1 = try .init(from: decoder)
+            self.value2 = try .init(from: decoder)
+        }
+        public func encode(to encoder: any Swift.Encoder) throws {
+            try self.value1.encode(to: encoder)
+            try self.value2.encode(to: encoder)
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoArchivedAttributes`.
+    public struct AppAssetLibraryVideoArchivedAttributes: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoArchivedAttributes/value1`.
+        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoArchivedAttributes/value2`.
+        public var value2: OpenAPIRuntime.OpenAPIObjectContainer
+        /// Creates a new `AppAssetLibraryVideoArchivedAttributes`.
+        ///
+        /// - Parameters:
+        ///   - value1:
+        ///   - value2:
+        public init(
+            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
+            value2: OpenAPIRuntime.OpenAPIObjectContainer
+        ) {
+            self.value1 = value1
+            self.value2 = value2
+        }
+        public init(from decoder: any Swift.Decoder) throws {
+            self.value1 = try .init(from: decoder)
+            self.value2 = try .init(from: decoder)
+        }
+        public func encode(to encoder: any Swift.Encoder) throws {
+            try self.value1.encode(to: encoder)
+            try self.value2.encode(to: encoder)
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes`.
+    public struct AppAssetLibraryVideoAwaitingUploadAttributes: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value1`.
+        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value2`.
+        public struct Value2Payload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value2/uploadOperations`.
+            public var uploadOperations: [Components.Schemas.UploadOperation]?
+            /// Creates a new `Value2Payload`.
+            ///
+            /// - Parameters:
+            ///   - uploadOperations:
+            public init(uploadOperations: [Components.Schemas.UploadOperation]? = nil) {
+                self.uploadOperations = uploadOperations
+            }
+            public enum CodingKeys: String, CodingKey {
+                case uploadOperations
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value2`.
+        public var value2: Components.Schemas.AppAssetLibraryVideoAwaitingUploadAttributes.Value2Payload
+        /// Creates a new `AppAssetLibraryVideoAwaitingUploadAttributes`.
+        ///
+        /// - Parameters:
+        ///   - value1:
+        ///   - value2:
+        public init(
+            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
+            value2: Components.Schemas.AppAssetLibraryVideoAwaitingUploadAttributes.Value2Payload
+        ) {
+            self.value1 = value1
+            self.value2 = value2
+        }
+        public init(from decoder: any Swift.Decoder) throws {
+            self.value1 = try .init(from: decoder)
+            self.value2 = try .init(from: decoder)
+        }
+        public func encode(to encoder: any Swift.Encoder) throws {
+            try self.value1.encode(to: encoder)
+            try self.value2.encode(to: encoder)
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes`.
+    public struct AppAssetLibraryVideoCommonAttributes: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/category`.
+        public var category: Components.Schemas.AppAssetLibraryAssetCategory?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/createdDate`.
+        public var createdDate: Foundation.Date?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/fileName`.
+        public var fileName: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/fileSize`.
+        public var fileSize: Swift.Int64?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/lastModifiedDate`.
+        public var lastModifiedDate: Foundation.Date?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/previewFrameImage`.
+        public var previewFrameImage: Components.Schemas.PreviewFrameImage?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/previewFrameTimeCode`.
+        public var previewFrameTimeCode: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/referenceName`.
+        public var referenceName: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/specId`.
+        public var specId: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/state`.
+        public var state: Components.Schemas.AppAssetLibraryAssetState
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/stateDetails`.
+        public var stateDetails: [Components.Schemas.StateDetail]?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/videoAsset`.
+        public var videoAsset: Swift.String?
+        /// Creates a new `AppAssetLibraryVideoCommonAttributes`.
+        ///
+        /// - Parameters:
+        ///   - category:
+        ///   - createdDate:
+        ///   - fileName:
+        ///   - fileSize:
+        ///   - lastModifiedDate:
+        ///   - previewFrameImage:
+        ///   - previewFrameTimeCode:
+        ///   - referenceName:
+        ///   - specId:
+        ///   - state:
+        ///   - stateDetails:
+        ///   - videoAsset:
+        public init(
+            category: Components.Schemas.AppAssetLibraryAssetCategory? = nil,
+            createdDate: Foundation.Date? = nil,
+            fileName: Swift.String? = nil,
+            fileSize: Swift.Int64? = nil,
+            lastModifiedDate: Foundation.Date? = nil,
+            previewFrameImage: Components.Schemas.PreviewFrameImage? = nil,
+            previewFrameTimeCode: Swift.String? = nil,
+            referenceName: Swift.String? = nil,
+            specId: Swift.String? = nil,
+            state: Components.Schemas.AppAssetLibraryAssetState,
+            stateDetails: [Components.Schemas.StateDetail]? = nil,
+            videoAsset: Swift.String? = nil
+        ) {
+            self.category = category
+            self.createdDate = createdDate
+            self.fileName = fileName
+            self.fileSize = fileSize
+            self.lastModifiedDate = lastModifiedDate
+            self.previewFrameImage = previewFrameImage
+            self.previewFrameTimeCode = previewFrameTimeCode
+            self.referenceName = referenceName
+            self.specId = specId
+            self.state = state
+            self.stateDetails = stateDetails
+            self.videoAsset = videoAsset
+        }
+        public enum CodingKeys: String, CodingKey {
+            case category
+            case createdDate
+            case fileName
+            case fileSize
+            case lastModifiedDate
+            case previewFrameImage
+            case previewFrameTimeCode
+            case referenceName
+            case specId
+            case state
+            case stateDetails
+            case videoAsset
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCreateRequest`.
     public struct AppAssetLibraryVideoCreateRequest: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCreateRequest/data`.
@@ -2698,317 +3111,6 @@ extension Components.Schemas {
             case id
             case relationships
             case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse`.
-    public struct AppCustomProductPageLocalizationResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/data`.
-        public var data: Components.Schemas.AppCustomProductPageLocalization
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppAssetLibraryPlacement`.
-            case appAssetLibraryPlacements(Components.Schemas.AppAssetLibraryPlacement)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppCustomProductPageVersion`.
-            case appCustomProductPageVersions(Components.Schemas.AppCustomProductPageVersion)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppKeyword`.
-            case appKeywords(Components.Schemas.AppKeyword)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppPreviewSet`.
-            case appPreviewSets(Components.Schemas.AppPreviewSet)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppScreenshotSet`.
-            case appScreenshotSets(Components.Schemas.AppScreenshotSet)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "appAssetLibraryPlacements":
-                    self = .appAssetLibraryPlacements(try .init(from: decoder))
-                case "appCustomProductPageVersions":
-                    self = .appCustomProductPageVersions(try .init(from: decoder))
-                case "appKeywords":
-                    self = .appKeywords(try .init(from: decoder))
-                case "appPreviewSets":
-                    self = .appPreviewSets(try .init(from: decoder))
-                case "appScreenshotSets":
-                    self = .appScreenshotSets(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .appAssetLibraryPlacements(value):
-                    try value.encode(to: encoder)
-                case let .appCustomProductPageVersions(value):
-                    try value.encode(to: encoder)
-                case let .appKeywords(value):
-                    try value.encode(to: encoder)
-                case let .appPreviewSets(value):
-                    try value.encode(to: encoder)
-                case let .appScreenshotSets(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppCustomProductPageLocalizationResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/included`.
-        public var included: Components.Schemas.AppCustomProductPageLocalizationResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppCustomProductPageLocalizationResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppCustomProductPageLocalization,
-            included: Components.Schemas.AppCustomProductPageLocalizationResponse.IncludedPayload? = nil,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse`.
-    public struct AppCustomProductPageLocalizationsResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/data`.
-        public var data: [Components.Schemas.AppCustomProductPageLocalization]
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppAssetLibraryPlacement`.
-            case appAssetLibraryPlacements(Components.Schemas.AppAssetLibraryPlacement)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppCustomProductPageVersion`.
-            case appCustomProductPageVersions(Components.Schemas.AppCustomProductPageVersion)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppKeyword`.
-            case appKeywords(Components.Schemas.AppKeyword)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppPreviewSet`.
-            case appPreviewSets(Components.Schemas.AppPreviewSet)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppScreenshotSet`.
-            case appScreenshotSets(Components.Schemas.AppScreenshotSet)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "appAssetLibraryPlacements":
-                    self = .appAssetLibraryPlacements(try .init(from: decoder))
-                case "appCustomProductPageVersions":
-                    self = .appCustomProductPageVersions(try .init(from: decoder))
-                case "appKeywords":
-                    self = .appKeywords(try .init(from: decoder))
-                case "appPreviewSets":
-                    self = .appPreviewSets(try .init(from: decoder))
-                case "appScreenshotSets":
-                    self = .appScreenshotSets(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .appAssetLibraryPlacements(value):
-                    try value.encode(to: encoder)
-                case let .appCustomProductPageVersions(value):
-                    try value.encode(to: encoder)
-                case let .appKeywords(value):
-                    try value.encode(to: encoder)
-                case let .appPreviewSets(value):
-                    try value.encode(to: encoder)
-                case let .appScreenshotSets(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppCustomProductPageLocalizationsResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/included`.
-        public var included: Components.Schemas.AppCustomProductPageLocalizationsResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/links`.
-        public var links: Components.Schemas.PagedDocumentLinks
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/meta`.
-        public var meta: Components.Schemas.PagingInformation?
-        /// Creates a new `AppCustomProductPageLocalizationsResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        ///   - meta:
-        public init(
-            data: [Components.Schemas.AppCustomProductPageLocalization],
-            included: Components.Schemas.AppCustomProductPageLocalizationsResponse.IncludedPayload? = nil,
-            links: Components.Schemas.PagedDocumentLinks,
-            meta: Components.Schemas.PagingInformation? = nil
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-            self.meta = meta
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-            case meta
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest`.
-    public struct AppCustomProductPageLocalizationUpdateRequest: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data`.
-        public struct DataPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/attributes`.
-            public struct AttributesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/attributes/promotionalText`.
-                public var promotionalText: Swift.String?
-                /// Creates a new `AttributesPayload`.
-                ///
-                /// - Parameters:
-                ///   - promotionalText:
-                public init(promotionalText: Swift.String? = nil) {
-                    self.promotionalText = promotionalText
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case promotionalText
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/attributes`.
-            public var attributes: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload.AttributesPayload?
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/id`.
-            public var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/type`.
-            public var _type: Swift.String
-            /// Creates a new `DataPayload`.
-            ///
-            /// - Parameters:
-            ///   - attributes:
-            ///   - id:
-            ///   - _type:
-            public init(
-                attributes: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload.AttributesPayload? = nil,
-                id: Swift.String,
-                _type: Swift.String
-            ) {
-                self.attributes = attributes
-                self.id = id
-                self._type = _type
-            }
-            public enum CodingKeys: String, CodingKey {
-                case attributes
-                case id
-                case _type = "type"
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data`.
-        public var data: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload
-        /// Creates a new `AppCustomProductPageLocalizationUpdateRequest`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        public init(data: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload) {
-            self.data = data
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse`.
-    public struct AppCustomProductPageResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/data`.
-        public var data: Components.Schemas.AppCustomProductPage
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload/AppCustomProductPageLocalization`.
-            case appCustomProductPageLocalizations(Components.Schemas.AppCustomProductPageLocalization)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload/AppCustomProductPageVersion`.
-            case appCustomProductPageVersions(Components.Schemas.AppCustomProductPageVersion)
-            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload/App`.
-            case apps(Components.Schemas.App)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "appCustomProductPageLocalizations":
-                    self = .appCustomProductPageLocalizations(try .init(from: decoder))
-                case "appCustomProductPageVersions":
-                    self = .appCustomProductPageVersions(try .init(from: decoder))
-                case "apps":
-                    self = .apps(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .appCustomProductPageLocalizations(value):
-                    try value.encode(to: encoder)
-                case let .appCustomProductPageVersions(value):
-                    try value.encode(to: encoder)
-                case let .apps(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppCustomProductPageResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/included`.
-        public var included: Components.Schemas.AppCustomProductPageResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppCustomProductPageResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppCustomProductPage,
-            included: Components.Schemas.AppCustomProductPageResponse.IncludedPayload? = nil,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
         }
     }
 }

@@ -1766,6 +1766,381 @@ extension Components.Schemas {
             try self.value2.encode(to: encoder)
         }
     }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest`.
+    public struct AppAssetLibraryPlacementOrderingRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements`.
+            public struct OrderedPlacementsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements/data`.
+                public typealias DataPayload = [Components.Schemas.AppAssetLibraryPlacementOrderingRequest.RelationshipsPayload.OrderedPlacementsPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements/data`.
+                public var data: Components.Schemas.AppAssetLibraryPlacementOrderingRequest.RelationshipsPayload.OrderedPlacementsPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `OrderedPlacementsPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.AppAssetLibraryPlacementOrderingRequest.RelationshipsPayload.OrderedPlacementsPayload.DataPayload? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships/orderedPlacements`.
+            public var orderedPlacements: Components.Schemas.AppAssetLibraryPlacementOrderingRequest.RelationshipsPayload.OrderedPlacementsPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - orderedPlacements:
+            public init(orderedPlacements: Components.Schemas.AppAssetLibraryPlacementOrderingRequest.RelationshipsPayload.OrderedPlacementsPayload? = nil) {
+                self.orderedPlacements = orderedPlacements
+            }
+            public enum CodingKeys: String, CodingKey {
+                case orderedPlacements
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/relationships`.
+        public var relationships: Components.Schemas.AppAssetLibraryPlacementOrderingRequest.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequest/type`.
+        public var _type: Swift.String
+        /// Creates a new `AppAssetLibraryPlacementOrderingRequest`.
+        ///
+        /// - Parameters:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.AppAssetLibraryPlacementOrderingRequest.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest`.
+    public struct AppAssetLibraryPlacementOrderingRequestCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/attributes/placementGroup`.
+                public var placementGroup: Swift.String?
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - placementGroup:
+                public init(placementGroup: Swift.String? = nil) {
+                    self.placementGroup = placementGroup
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case placementGroup
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.AttributesPayload?
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appCustomProductPageLocalization`.
+                public struct AppCustomProductPageLocalizationPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appCustomProductPageLocalization/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appCustomProductPageLocalization/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appCustomProductPageLocalization/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appCustomProductPageLocalization/data`.
+                    public var data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload.DataPayload?
+                    /// Creates a new `AppCustomProductPageLocalizationPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appCustomProductPageLocalization`.
+                public var appCustomProductPageLocalization: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload?
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization`.
+                public struct AppStoreVersionExperimentTreatmentLocalizationPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization/data`.
+                    public var data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload.DataPayload?
+                    /// Creates a new `AppStoreVersionExperimentTreatmentLocalizationPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionExperimentTreatmentLocalization`.
+                public var appStoreVersionExperimentTreatmentLocalization: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload?
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionLocalization`.
+                public struct AppStoreVersionLocalizationPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionLocalization/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionLocalization/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionLocalization/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionLocalization/data`.
+                    public var data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload.DataPayload?
+                    /// Creates a new `AppStoreVersionLocalizationPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/appStoreVersionLocalization`.
+                public var appStoreVersionLocalization: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload?
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/orderedPlacements`.
+                public struct OrderedPlacementsPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/orderedPlacements/DataPayload`.
+                    public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/orderedPlacements/DataPayload/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/orderedPlacements/DataPayload/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayloadPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/orderedPlacements/data`.
+                    public typealias DataPayload = [Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.OrderedPlacementsPayload.DataPayloadPayload]
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/orderedPlacements/data`.
+                    public var data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.OrderedPlacementsPayload.DataPayload?
+                    /// Creates a new `OrderedPlacementsPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.OrderedPlacementsPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships/orderedPlacements`.
+                public var orderedPlacements: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.OrderedPlacementsPayload?
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - appCustomProductPageLocalization:
+                ///   - appStoreVersionExperimentTreatmentLocalization:
+                ///   - appStoreVersionLocalization:
+                ///   - orderedPlacements:
+                public init(
+                    appCustomProductPageLocalization: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload? = nil,
+                    appStoreVersionExperimentTreatmentLocalization: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload? = nil,
+                    appStoreVersionLocalization: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload? = nil,
+                    orderedPlacements: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload.OrderedPlacementsPayload? = nil
+                ) {
+                    self.appCustomProductPageLocalization = appCustomProductPageLocalization
+                    self.appStoreVersionExperimentTreatmentLocalization = appStoreVersionExperimentTreatmentLocalization
+                    self.appStoreVersionLocalization = appStoreVersionLocalization
+                    self.orderedPlacements = orderedPlacements
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case appCustomProductPageLocalization
+                    case appStoreVersionExperimentTreatmentLocalization
+                    case appStoreVersionLocalization
+                    case orderedPlacements
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload?
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.AttributesPayload? = nil,
+                relationships: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload? = nil,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestCreateRequest/data`.
+        public var data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload
+        /// Creates a new `AppAssetLibraryPlacementOrderingRequestCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestResponse`.
+    public struct AppAssetLibraryPlacementOrderingRequestResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestResponse/data`.
+        public var data: Components.Schemas.AppAssetLibraryPlacementOrderingRequest
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestResponse/included`.
+        public var included: [Components.Schemas.AppAssetLibraryPlacement]?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementOrderingRequestResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `AppAssetLibraryPlacementOrderingRequestResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.AppAssetLibraryPlacementOrderingRequest,
+            included: [Components.Schemas.AppAssetLibraryPlacement]? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementPlatform`.
     public typealias AppAssetLibraryPlacementPlatform = Swift.String
     /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementResponse`.
@@ -2643,419 +3018,6 @@ extension Components.Schemas {
         public enum CodingKeys: String, CodingKey {
             case data
             case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo`.
-    public struct AppAssetLibraryVideo: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes`.
-        @frozen public enum AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoAcceptedAttributes`.
-            case accepted(Components.Schemas.AppAssetLibraryVideoAcceptedAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoApprovedAttributes`.
-            case approved(Components.Schemas.AppAssetLibraryVideoApprovedAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoArchivedAttributes`.
-            case archived(Components.Schemas.AppAssetLibraryVideoArchivedAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoAwaitingUploadAttributes`.
-            case awaitingUpload(Components.Schemas.AppAssetLibraryVideoAwaitingUploadAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoCommonAttributes`.
-            case complete(Components.Schemas.AppAssetLibraryVideoCommonAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoFailedAttributes`.
-            case failed(Components.Schemas.AppAssetLibraryVideoFailedAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoInReviewAttributes`.
-            case inReview(Components.Schemas.AppAssetLibraryVideoInReviewAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoCommonAttributes`.
-            case prepareForSubmission(Components.Schemas.AppAssetLibraryVideoCommonAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoReadyForReviewAttributes`.
-            case readyForReview(Components.Schemas.AppAssetLibraryVideoReadyForReviewAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoRejectedAttributes`.
-            case rejected(Components.Schemas.AppAssetLibraryVideoRejectedAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoUploadCompleteAttributes`.
-            case uploadComplete(Components.Schemas.AppAssetLibraryVideoUploadCompleteAttributes)
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes/AppAssetLibraryVideoWaitingForReviewAttributes`.
-            case waitingForReview(Components.Schemas.AppAssetLibraryVideoWaitingForReviewAttributes)
-            public enum CodingKeys: String, CodingKey {
-                case state
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: .state
-                )
-                switch discriminator {
-                case "ACCEPTED":
-                    self = .accepted(try .init(from: decoder))
-                case "APPROVED":
-                    self = .approved(try .init(from: decoder))
-                case "ARCHIVED":
-                    self = .archived(try .init(from: decoder))
-                case "AWAITING_UPLOAD":
-                    self = .awaitingUpload(try .init(from: decoder))
-                case "COMPLETE":
-                    self = .complete(try .init(from: decoder))
-                case "FAILED":
-                    self = .failed(try .init(from: decoder))
-                case "IN_REVIEW":
-                    self = .inReview(try .init(from: decoder))
-                case "PREPARE_FOR_SUBMISSION":
-                    self = .prepareForSubmission(try .init(from: decoder))
-                case "READY_FOR_REVIEW":
-                    self = .readyForReview(try .init(from: decoder))
-                case "REJECTED":
-                    self = .rejected(try .init(from: decoder))
-                case "UPLOAD_COMPLETE":
-                    self = .uploadComplete(try .init(from: decoder))
-                case "WAITING_FOR_REVIEW":
-                    self = .waitingForReview(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys.state,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .accepted(value):
-                    try value.encode(to: encoder)
-                case let .approved(value):
-                    try value.encode(to: encoder)
-                case let .archived(value):
-                    try value.encode(to: encoder)
-                case let .awaitingUpload(value):
-                    try value.encode(to: encoder)
-                case let .complete(value):
-                    try value.encode(to: encoder)
-                case let .failed(value):
-                    try value.encode(to: encoder)
-                case let .inReview(value):
-                    try value.encode(to: encoder)
-                case let .prepareForSubmission(value):
-                    try value.encode(to: encoder)
-                case let .readyForReview(value):
-                    try value.encode(to: encoder)
-                case let .rejected(value):
-                    try value.encode(to: encoder)
-                case let .uploadComplete(value):
-                    try value.encode(to: encoder)
-                case let .waitingForReview(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes`.
-        public var attributes: Components.Schemas.AppAssetLibraryVideo.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements`.
-            public struct PlacementsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/data`.
-                public typealias DataPayload = [Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/data`.
-                public var data: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `PlacementsPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships/placements`.
-            public var placements: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - placements:
-            public init(placements: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload.PlacementsPayload? = nil) {
-                self.placements = placements
-            }
-            public enum CodingKeys: String, CodingKey {
-                case placements
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/relationships`.
-        public var relationships: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/type`.
-        public var _type: Swift.String
-        /// Creates a new `AppAssetLibraryVideo`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.AppAssetLibraryVideo.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.AppAssetLibraryVideo.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case relationships
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAcceptedAttributes`.
-    public struct AppAssetLibraryVideoAcceptedAttributes: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAcceptedAttributes/value1`.
-        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAcceptedAttributes/value2`.
-        public var value2: OpenAPIRuntime.OpenAPIObjectContainer
-        /// Creates a new `AppAssetLibraryVideoAcceptedAttributes`.
-        ///
-        /// - Parameters:
-        ///   - value1:
-        ///   - value2:
-        public init(
-            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
-            value2: OpenAPIRuntime.OpenAPIObjectContainer
-        ) {
-            self.value1 = value1
-            self.value2 = value2
-        }
-        public init(from decoder: any Swift.Decoder) throws {
-            self.value1 = try .init(from: decoder)
-            self.value2 = try .init(from: decoder)
-        }
-        public func encode(to encoder: any Swift.Encoder) throws {
-            try self.value1.encode(to: encoder)
-            try self.value2.encode(to: encoder)
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoApprovedAttributes`.
-    public struct AppAssetLibraryVideoApprovedAttributes: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoApprovedAttributes/value1`.
-        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoApprovedAttributes/value2`.
-        public var value2: OpenAPIRuntime.OpenAPIObjectContainer
-        /// Creates a new `AppAssetLibraryVideoApprovedAttributes`.
-        ///
-        /// - Parameters:
-        ///   - value1:
-        ///   - value2:
-        public init(
-            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
-            value2: OpenAPIRuntime.OpenAPIObjectContainer
-        ) {
-            self.value1 = value1
-            self.value2 = value2
-        }
-        public init(from decoder: any Swift.Decoder) throws {
-            self.value1 = try .init(from: decoder)
-            self.value2 = try .init(from: decoder)
-        }
-        public func encode(to encoder: any Swift.Encoder) throws {
-            try self.value1.encode(to: encoder)
-            try self.value2.encode(to: encoder)
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoArchivedAttributes`.
-    public struct AppAssetLibraryVideoArchivedAttributes: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoArchivedAttributes/value1`.
-        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoArchivedAttributes/value2`.
-        public var value2: OpenAPIRuntime.OpenAPIObjectContainer
-        /// Creates a new `AppAssetLibraryVideoArchivedAttributes`.
-        ///
-        /// - Parameters:
-        ///   - value1:
-        ///   - value2:
-        public init(
-            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
-            value2: OpenAPIRuntime.OpenAPIObjectContainer
-        ) {
-            self.value1 = value1
-            self.value2 = value2
-        }
-        public init(from decoder: any Swift.Decoder) throws {
-            self.value1 = try .init(from: decoder)
-            self.value2 = try .init(from: decoder)
-        }
-        public func encode(to encoder: any Swift.Encoder) throws {
-            try self.value1.encode(to: encoder)
-            try self.value2.encode(to: encoder)
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes`.
-    public struct AppAssetLibraryVideoAwaitingUploadAttributes: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value1`.
-        public var value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value2`.
-        public struct Value2Payload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value2/uploadOperations`.
-            public var uploadOperations: [Components.Schemas.UploadOperation]?
-            /// Creates a new `Value2Payload`.
-            ///
-            /// - Parameters:
-            ///   - uploadOperations:
-            public init(uploadOperations: [Components.Schemas.UploadOperation]? = nil) {
-                self.uploadOperations = uploadOperations
-            }
-            public enum CodingKeys: String, CodingKey {
-                case uploadOperations
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoAwaitingUploadAttributes/value2`.
-        public var value2: Components.Schemas.AppAssetLibraryVideoAwaitingUploadAttributes.Value2Payload
-        /// Creates a new `AppAssetLibraryVideoAwaitingUploadAttributes`.
-        ///
-        /// - Parameters:
-        ///   - value1:
-        ///   - value2:
-        public init(
-            value1: Components.Schemas.AppAssetLibraryVideoCommonAttributes,
-            value2: Components.Schemas.AppAssetLibraryVideoAwaitingUploadAttributes.Value2Payload
-        ) {
-            self.value1 = value1
-            self.value2 = value2
-        }
-        public init(from decoder: any Swift.Decoder) throws {
-            self.value1 = try .init(from: decoder)
-            self.value2 = try .init(from: decoder)
-        }
-        public func encode(to encoder: any Swift.Encoder) throws {
-            try self.value1.encode(to: encoder)
-            try self.value2.encode(to: encoder)
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes`.
-    public struct AppAssetLibraryVideoCommonAttributes: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/category`.
-        public var category: Components.Schemas.AppAssetLibraryAssetCategory?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/createdDate`.
-        public var createdDate: Foundation.Date?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/fileName`.
-        public var fileName: Swift.String?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/fileSize`.
-        public var fileSize: Swift.Int64?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/lastModifiedDate`.
-        public var lastModifiedDate: Foundation.Date?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/previewFrameImage`.
-        public var previewFrameImage: Components.Schemas.PreviewFrameImage?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/previewFrameTimeCode`.
-        public var previewFrameTimeCode: Swift.String?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/referenceName`.
-        public var referenceName: Swift.String?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/specId`.
-        public var specId: Swift.String?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/state`.
-        public var state: Components.Schemas.AppAssetLibraryAssetState
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/stateDetails`.
-        public var stateDetails: [Components.Schemas.StateDetail]?
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideoCommonAttributes/videoAsset`.
-        public var videoAsset: Swift.String?
-        /// Creates a new `AppAssetLibraryVideoCommonAttributes`.
-        ///
-        /// - Parameters:
-        ///   - category:
-        ///   - createdDate:
-        ///   - fileName:
-        ///   - fileSize:
-        ///   - lastModifiedDate:
-        ///   - previewFrameImage:
-        ///   - previewFrameTimeCode:
-        ///   - referenceName:
-        ///   - specId:
-        ///   - state:
-        ///   - stateDetails:
-        ///   - videoAsset:
-        public init(
-            category: Components.Schemas.AppAssetLibraryAssetCategory? = nil,
-            createdDate: Foundation.Date? = nil,
-            fileName: Swift.String? = nil,
-            fileSize: Swift.Int64? = nil,
-            lastModifiedDate: Foundation.Date? = nil,
-            previewFrameImage: Components.Schemas.PreviewFrameImage? = nil,
-            previewFrameTimeCode: Swift.String? = nil,
-            referenceName: Swift.String? = nil,
-            specId: Swift.String? = nil,
-            state: Components.Schemas.AppAssetLibraryAssetState,
-            stateDetails: [Components.Schemas.StateDetail]? = nil,
-            videoAsset: Swift.String? = nil
-        ) {
-            self.category = category
-            self.createdDate = createdDate
-            self.fileName = fileName
-            self.fileSize = fileSize
-            self.lastModifiedDate = lastModifiedDate
-            self.previewFrameImage = previewFrameImage
-            self.previewFrameTimeCode = previewFrameTimeCode
-            self.referenceName = referenceName
-            self.specId = specId
-            self.state = state
-            self.stateDetails = stateDetails
-            self.videoAsset = videoAsset
-        }
-        public enum CodingKeys: String, CodingKey {
-            case category
-            case createdDate
-            case fileName
-            case fileSize
-            case lastModifiedDate
-            case previewFrameImage
-            case previewFrameTimeCode
-            case referenceName
-            case specId
-            case state
-            case stateDetails
-            case videoAsset
         }
     }
 }

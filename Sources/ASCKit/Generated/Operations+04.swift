@@ -10,6 +10,1026 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `POST /v1/appEventLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/appEventLocalizations/post(appEventLocalizations_createInstance)`.
+    public enum AppEventLocalizationsCreateInstance {
+        public static let id: Swift.String = "appEventLocalizations_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppEventLocalizationsCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppEventLocalizationCreateRequest)
+            }
+            public var body: Operations.AppEventLocalizationsCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.AppEventLocalizationsCreateInstance.Input.Headers = .init(),
+                body: Operations.AppEventLocalizationsCreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appEventLocalizations/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.AppEventLocalizationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppEventLocalizationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppEventLocalizationsCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppEventLocalizationsCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single AppEventLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v1/appEventLocalizations/post(appEventLocalizations_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.AppEventLocalizationsCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.AppEventLocalizationsCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/appEventLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/get(appEventLocalizations_getInstance)`.
+    public enum AppEventLocalizationsGetInstance {
+        public static let id: Swift.String = "appEventLocalizations_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppEventLocalizationsGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fieldsAppEventLocalizationsPayload`.
+                @frozen public enum FieldsAppEventLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case name = "name"
+                    case shortDescription = "shortDescription"
+                    case longDescription = "longDescription"
+                    case appEvent = "appEvent"
+                    case appEventScreenshots = "appEventScreenshots"
+                    case appEventVideoClips = "appEventVideoClips"
+                    case placements = "placements"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEventLocalizations]`.
+                public typealias fieldsAppEventLocalizationsPayload = [Operations.AppEventLocalizationsGetInstance.Input.Query.FieldsAppEventLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appEventLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEventLocalizations]`.
+                public var fieldsAppEventLocalizations: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fieldsAppEventsPayload`.
+                @frozen public enum FieldsAppEventsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case badge = "badge"
+                    case eventState = "eventState"
+                    case deepLink = "deepLink"
+                    case purchaseRequirement = "purchaseRequirement"
+                    case primaryLocale = "primaryLocale"
+                    case priority = "priority"
+                    case purpose = "purpose"
+                    case territorySchedules = "territorySchedules"
+                    case archivedTerritorySchedules = "archivedTerritorySchedules"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEvents]`.
+                public typealias fieldsAppEventsPayload = [Operations.AppEventLocalizationsGetInstance.Input.Query.FieldsAppEventsPayloadPayload]
+                /// the fields to include for returned resources of type appEvents
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEvents]`.
+                public var fieldsAppEvents: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventsPayload?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fieldsAppEventScreenshotsPayload`.
+                @frozen public enum FieldsAppEventScreenshotsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case imageAsset = "imageAsset"
+                    case assetToken = "assetToken"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case appEventAssetType = "appEventAssetType"
+                    case appEventLocalization = "appEventLocalization"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEventScreenshots]`.
+                public typealias fieldsAppEventScreenshotsPayload = [Operations.AppEventLocalizationsGetInstance.Input.Query.FieldsAppEventScreenshotsPayloadPayload]
+                /// the fields to include for returned resources of type appEventScreenshots
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEventScreenshots]`.
+                public var fieldsAppEventScreenshots: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventScreenshotsPayload?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fieldsAppEventVideoClipsPayload`.
+                @frozen public enum FieldsAppEventVideoClipsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case previewFrameTimeCode = "previewFrameTimeCode"
+                    case videoUrl = "videoUrl"
+                    case previewFrameImage = "previewFrameImage"
+                    case previewImage = "previewImage"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case videoDeliveryState = "videoDeliveryState"
+                    case appEventAssetType = "appEventAssetType"
+                    case appEventLocalization = "appEventLocalization"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEventVideoClips]`.
+                public typealias fieldsAppEventVideoClipsPayload = [Operations.AppEventLocalizationsGetInstance.Input.Query.FieldsAppEventVideoClipsPayloadPayload]
+                /// the fields to include for returned resources of type appEventVideoClips
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appEventVideoClips]`.
+                public var fieldsAppEventVideoClips: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventVideoClipsPayload?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fieldsAppAssetLibraryPlacementsPayload`.
+                @frozen public enum FieldsAppAssetLibraryPlacementsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case mediaType = "mediaType"
+                    case placementType = "placementType"
+                    case placementGroup = "placementGroup"
+                    case createdDate = "createdDate"
+                    case lastModifiedDate = "lastModifiedDate"
+                    case state = "state"
+                    case stateDetails = "stateDetails"
+                    case image = "image"
+                    case video = "video"
+                    case appEventLocalization = "appEventLocalization"
+                    case appStoreVersionLocalization = "appStoreVersionLocalization"
+                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
+                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appAssetLibraryPlacements]`.
+                public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppEventLocalizationsGetInstance.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
+                /// the fields to include for returned resources of type appAssetLibraryPlacements
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/fields[appAssetLibraryPlacements]`.
+                public var fieldsAppAssetLibraryPlacements: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case appEvent = "appEvent"
+                    case appEventScreenshots = "appEventScreenshots"
+                    case appEventVideoClips = "appEventVideoClips"
+                    case placements = "placements"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppEventLocalizationsGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/include`.
+                public var include: Operations.AppEventLocalizationsGetInstance.Input.Query.IncludePayload?
+                /// maximum number of related appEventScreenshots returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/limit[appEventScreenshots]`.
+                public var limitAppEventScreenshots: Swift.Int?
+                /// maximum number of related appEventVideoClips returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/limit[appEventVideoClips]`.
+                public var limitAppEventVideoClips: Swift.Int?
+                /// maximum number of related placements returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/query/limit[placements]`.
+                public var limitPlacements: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsAppEventLocalizations: the fields to include for returned resources of type appEventLocalizations
+                ///   - fieldsAppEvents: the fields to include for returned resources of type appEvents
+                ///   - fieldsAppEventScreenshots: the fields to include for returned resources of type appEventScreenshots
+                ///   - fieldsAppEventVideoClips: the fields to include for returned resources of type appEventVideoClips
+                ///   - fieldsAppAssetLibraryPlacements: the fields to include for returned resources of type appAssetLibraryPlacements
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitAppEventScreenshots: maximum number of related appEventScreenshots returned (when they are included)
+                ///   - limitAppEventVideoClips: maximum number of related appEventVideoClips returned (when they are included)
+                ///   - limitPlacements: maximum number of related placements returned (when they are included)
+                public init(
+                    fieldsAppEventLocalizations: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventLocalizationsPayload? = nil,
+                    fieldsAppEvents: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventsPayload? = nil,
+                    fieldsAppEventScreenshots: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventScreenshotsPayload? = nil,
+                    fieldsAppEventVideoClips: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppEventVideoClipsPayload? = nil,
+                    fieldsAppAssetLibraryPlacements: Operations.AppEventLocalizationsGetInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload? = nil,
+                    include: Operations.AppEventLocalizationsGetInstance.Input.Query.IncludePayload? = nil,
+                    limitAppEventScreenshots: Swift.Int? = nil,
+                    limitAppEventVideoClips: Swift.Int? = nil,
+                    limitPlacements: Swift.Int? = nil
+                ) {
+                    self.fieldsAppEventLocalizations = fieldsAppEventLocalizations
+                    self.fieldsAppEvents = fieldsAppEvents
+                    self.fieldsAppEventScreenshots = fieldsAppEventScreenshots
+                    self.fieldsAppEventVideoClips = fieldsAppEventVideoClips
+                    self.fieldsAppAssetLibraryPlacements = fieldsAppAssetLibraryPlacements
+                    self.include = include
+                    self.limitAppEventScreenshots = limitAppEventScreenshots
+                    self.limitAppEventVideoClips = limitAppEventVideoClips
+                    self.limitPlacements = limitPlacements
+                }
+            }
+            public var query: Operations.AppEventLocalizationsGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsGetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppEventLocalizationsGetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppEventLocalizationsGetInstance.Input.Path,
+                query: Operations.AppEventLocalizationsGetInstance.Input.Query = .init(),
+                headers: Operations.AppEventLocalizationsGetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppEventLocalizationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppEventLocalizationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppEventLocalizationsGetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppEventLocalizationsGetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single AppEventLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/get(appEventLocalizations_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppEventLocalizationsGetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppEventLocalizationsGetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `PATCH /v1/appEventLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/patch(appEventLocalizations_updateInstance)`.
+    public enum AppEventLocalizationsUpdateInstance {
+        public static let id: Swift.String = "appEventLocalizations_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppEventLocalizationsUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsUpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppEventLocalizationsUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppEventLocalizationUpdateRequest)
+            }
+            public var body: Operations.AppEventLocalizationsUpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.AppEventLocalizationsUpdateInstance.Input.Path,
+                headers: Operations.AppEventLocalizationsUpdateInstance.Input.Headers = .init(),
+                body: Operations.AppEventLocalizationsUpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppEventLocalizationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppEventLocalizationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppEventLocalizationsUpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppEventLocalizationsUpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single AppEventLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/patch(appEventLocalizations_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppEventLocalizationsUpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppEventLocalizationsUpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `DELETE /v1/appEventLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/delete(appEventLocalizations_deleteInstance)`.
+    public enum AppEventLocalizationsDeleteInstance {
+        public static let id: Swift.String = "appEventLocalizations_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppEventLocalizationsDeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.AppEventLocalizationsDeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/delete(appEventLocalizations_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.AppEventLocalizationsDeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/delete(appEventLocalizations_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.AppEventLocalizationsDeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `GET /v1/appEventLocalizations/{id}/appEventScreenshots`.
+    /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/appEventScreenshots/get(appEventLocalizations_appEventScreenshots_getToManyRelated)`.
+    public enum AppEventLocalizationsAppEventScreenshotsGetToManyRelated {
+        public static let id: Swift.String = "appEventLocalizations_appEventScreenshots_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/fieldsAppEventScreenshotsPayload`.
+                @frozen public enum FieldsAppEventScreenshotsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case imageAsset = "imageAsset"
+                    case assetToken = "assetToken"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case appEventAssetType = "appEventAssetType"
+                    case appEventLocalization = "appEventLocalization"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/fields[appEventScreenshots]`.
+                public typealias fieldsAppEventScreenshotsPayload = [Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.FieldsAppEventScreenshotsPayloadPayload]
+                /// the fields to include for returned resources of type appEventScreenshots
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/fields[appEventScreenshots]`.
+                public var fieldsAppEventScreenshots: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.fieldsAppEventScreenshotsPayload?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/fieldsAppEventLocalizationsPayload`.
+                @frozen public enum FieldsAppEventLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case name = "name"
+                    case shortDescription = "shortDescription"
+                    case longDescription = "longDescription"
+                    case appEvent = "appEvent"
+                    case appEventScreenshots = "appEventScreenshots"
+                    case appEventVideoClips = "appEventVideoClips"
+                    case placements = "placements"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/fields[appEventLocalizations]`.
+                public typealias fieldsAppEventLocalizationsPayload = [Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.FieldsAppEventLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appEventLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/fields[appEventLocalizations]`.
+                public var fieldsAppEventLocalizations: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.fieldsAppEventLocalizationsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case appEventLocalization = "appEventLocalization"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/query/include`.
+                public var include: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsAppEventScreenshots: the fields to include for returned resources of type appEventScreenshots
+                ///   - fieldsAppEventLocalizations: the fields to include for returned resources of type appEventLocalizations
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsAppEventScreenshots: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.fieldsAppEventScreenshotsPayload? = nil,
+                    fieldsAppEventLocalizations: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.fieldsAppEventLocalizationsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsAppEventScreenshots = fieldsAppEventScreenshots
+                    self.fieldsAppEventLocalizations = fieldsAppEventLocalizations
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Path,
+                query: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventScreenshots/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppEventScreenshotsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppEventScreenshotsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of AppEventScreenshots
+            ///
+            /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/appEventScreenshots/get(appEventLocalizations_appEventScreenshots_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppEventLocalizationsAppEventScreenshotsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/appEventLocalizations/{id}/appEventVideoClips`.
+    /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/appEventVideoClips/get(appEventLocalizations_appEventVideoClips_getToManyRelated)`.
+    public enum AppEventLocalizationsAppEventVideoClipsGetToManyRelated {
+        public static let id: Swift.String = "appEventLocalizations_appEventVideoClips_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/fieldsAppEventVideoClipsPayload`.
+                @frozen public enum FieldsAppEventVideoClipsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case previewFrameTimeCode = "previewFrameTimeCode"
+                    case videoUrl = "videoUrl"
+                    case previewFrameImage = "previewFrameImage"
+                    case previewImage = "previewImage"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case videoDeliveryState = "videoDeliveryState"
+                    case appEventAssetType = "appEventAssetType"
+                    case appEventLocalization = "appEventLocalization"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/fields[appEventVideoClips]`.
+                public typealias fieldsAppEventVideoClipsPayload = [Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.FieldsAppEventVideoClipsPayloadPayload]
+                /// the fields to include for returned resources of type appEventVideoClips
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/fields[appEventVideoClips]`.
+                public var fieldsAppEventVideoClips: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.fieldsAppEventVideoClipsPayload?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/fieldsAppEventLocalizationsPayload`.
+                @frozen public enum FieldsAppEventLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case name = "name"
+                    case shortDescription = "shortDescription"
+                    case longDescription = "longDescription"
+                    case appEvent = "appEvent"
+                    case appEventScreenshots = "appEventScreenshots"
+                    case appEventVideoClips = "appEventVideoClips"
+                    case placements = "placements"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/fields[appEventLocalizations]`.
+                public typealias fieldsAppEventLocalizationsPayload = [Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.FieldsAppEventLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appEventLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/fields[appEventLocalizations]`.
+                public var fieldsAppEventLocalizations: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.fieldsAppEventLocalizationsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case appEventLocalization = "appEventLocalization"
+                }
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/query/include`.
+                public var include: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsAppEventVideoClips: the fields to include for returned resources of type appEventVideoClips
+                ///   - fieldsAppEventLocalizations: the fields to include for returned resources of type appEventLocalizations
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsAppEventVideoClips: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.fieldsAppEventVideoClipsPayload? = nil,
+                    fieldsAppEventLocalizations: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.fieldsAppEventLocalizationsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsAppEventVideoClips = fieldsAppEventVideoClips
+                    self.fieldsAppEventLocalizations = fieldsAppEventLocalizations
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Path,
+                query: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appEventLocalizations/{id}/appEventVideoClips/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppEventVideoClipsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppEventVideoClipsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of AppEventVideoClips
+            ///
+            /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/appEventVideoClips/get(appEventLocalizations_appEventVideoClips_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppEventLocalizationsAppEventVideoClipsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/appEventLocalizations/{id}/placements`.
     /// - Remark: Generated from `#/paths//v1/appEventLocalizations/{id}/placements/get(appEventLocalizations_placements_getToManyRelated)`.
     public enum AppEventLocalizationsPlacementsGetToManyRelated {
@@ -2058,1086 +3078,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.AppEventVideoClipsGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/appEventVideoClips/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appEventVideoClips/{id}/patch(appEventVideoClips_updateInstance)`.
-    public enum AppEventVideoClipsUpdateInstance {
-        public static let id: Swift.String = "appEventVideoClips_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppEventVideoClipsUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventVideoClipsUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppEventVideoClipsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppEventVideoClipsUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.AppEventVideoClipUpdateRequest)
-            }
-            public var body: Operations.AppEventVideoClipsUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.AppEventVideoClipsUpdateInstance.Input.Path,
-                headers: Operations.AppEventVideoClipsUpdateInstance.Input.Headers = .init(),
-                body: Operations.AppEventVideoClipsUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppEventVideoClipResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppEventVideoClipResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppEventVideoClipsUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppEventVideoClipsUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppEventVideoClip
-            ///
-            /// - Remark: Generated from `#/paths//v1/appEventVideoClips/{id}/patch(appEventVideoClips_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppEventVideoClipsUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppEventVideoClipsUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/appEventVideoClips/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appEventVideoClips/{id}/delete(appEventVideoClips_deleteInstance)`.
-    public enum AppEventVideoClipsDeleteInstance {
-        public static let id: Swift.String = "appEventVideoClips_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appEventVideoClips/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppEventVideoClipsDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.AppEventVideoClipsDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/appEventVideoClips/{id}/delete(appEventVideoClips_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.AppEventVideoClipsDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/appEventVideoClips/{id}/delete(appEventVideoClips_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.AppEventVideoClipsDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `POST /v1/appInfoLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/post(appInfoLocalizations_createInstance)`.
-    public enum AppInfoLocalizationsCreateInstance {
-        public static let id: Swift.String = "appInfoLocalizations_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfoLocalizationsCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfoLocalizationsCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppInfoLocalizationsCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.AppInfoLocalizationCreateRequest)
-            }
-            public var body: Operations.AppInfoLocalizationsCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.AppInfoLocalizationsCreateInstance.Input.Headers = .init(),
-                body: Operations.AppInfoLocalizationsCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.AppInfoLocalizationResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppInfoLocalizationResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppInfoLocalizationsCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppInfoLocalizationsCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppInfoLocalization
-            ///
-            /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/post(appInfoLocalizations_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.AppInfoLocalizationsCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.AppInfoLocalizationsCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/appInfoLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/{id}/get(appInfoLocalizations_getInstance)`.
-    public enum AppInfoLocalizationsGetInstance {
-        public static let id: Swift.String = "appInfoLocalizations_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppInfoLocalizationsGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/fieldsAppInfoLocalizationsPayload`.
-                @frozen public enum FieldsAppInfoLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case subtitle = "subtitle"
-                    case privacyPolicyUrl = "privacyPolicyUrl"
-                    case privacyChoicesUrl = "privacyChoicesUrl"
-                    case privacyPolicyText = "privacyPolicyText"
-                    case appInfo = "appInfo"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/fields[appInfoLocalizations]`.
-                public typealias fieldsAppInfoLocalizationsPayload = [Operations.AppInfoLocalizationsGetInstance.Input.Query.FieldsAppInfoLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appInfoLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/fields[appInfoLocalizations]`.
-                public var fieldsAppInfoLocalizations: Operations.AppInfoLocalizationsGetInstance.Input.Query.fieldsAppInfoLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/fieldsAppInfosPayload`.
-                @frozen public enum FieldsAppInfosPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appStoreState = "appStoreState"
-                    case state = "state"
-                    case appStoreAgeRating = "appStoreAgeRating"
-                    case australiaAgeRating = "australiaAgeRating"
-                    case brazilAgeRating = "brazilAgeRating"
-                    case brazilAgeRatingV2 = "brazilAgeRatingV2"
-                    case franceAgeRating = "franceAgeRating"
-                    case koreaAgeRating = "koreaAgeRating"
-                    case app = "app"
-                    case ageRatingDeclaration = "ageRatingDeclaration"
-                    case appInfoLocalizations = "appInfoLocalizations"
-                    case primaryCategory = "primaryCategory"
-                    case primarySubcategoryOne = "primarySubcategoryOne"
-                    case primarySubcategoryTwo = "primarySubcategoryTwo"
-                    case secondaryCategory = "secondaryCategory"
-                    case secondarySubcategoryOne = "secondarySubcategoryOne"
-                    case secondarySubcategoryTwo = "secondarySubcategoryTwo"
-                    case territoryAgeRatings = "territoryAgeRatings"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/fields[appInfos]`.
-                public typealias fieldsAppInfosPayload = [Operations.AppInfoLocalizationsGetInstance.Input.Query.FieldsAppInfosPayloadPayload]
-                /// the fields to include for returned resources of type appInfos
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/fields[appInfos]`.
-                public var fieldsAppInfos: Operations.AppInfoLocalizationsGetInstance.Input.Query.fieldsAppInfosPayload?
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appInfo = "appInfo"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppInfoLocalizationsGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/query/include`.
-                public var include: Operations.AppInfoLocalizationsGetInstance.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsAppInfoLocalizations: the fields to include for returned resources of type appInfoLocalizations
-                ///   - fieldsAppInfos: the fields to include for returned resources of type appInfos
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsAppInfoLocalizations: Operations.AppInfoLocalizationsGetInstance.Input.Query.fieldsAppInfoLocalizationsPayload? = nil,
-                    fieldsAppInfos: Operations.AppInfoLocalizationsGetInstance.Input.Query.fieldsAppInfosPayload? = nil,
-                    include: Operations.AppInfoLocalizationsGetInstance.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsAppInfoLocalizations = fieldsAppInfoLocalizations
-                    self.fieldsAppInfos = fieldsAppInfos
-                    self.include = include
-                }
-            }
-            public var query: Operations.AppInfoLocalizationsGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfoLocalizationsGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfoLocalizationsGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppInfoLocalizationsGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppInfoLocalizationsGetInstance.Input.Path,
-                query: Operations.AppInfoLocalizationsGetInstance.Input.Query = .init(),
-                headers: Operations.AppInfoLocalizationsGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppInfoLocalizationResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppInfoLocalizationResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppInfoLocalizationsGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppInfoLocalizationsGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppInfoLocalization
-            ///
-            /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/{id}/get(appInfoLocalizations_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppInfoLocalizationsGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppInfoLocalizationsGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/appInfoLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/{id}/patch(appInfoLocalizations_updateInstance)`.
-    public enum AppInfoLocalizationsUpdateInstance {
-        public static let id: Swift.String = "appInfoLocalizations_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppInfoLocalizationsUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfoLocalizationsUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfoLocalizationsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppInfoLocalizationsUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.AppInfoLocalizationUpdateRequest)
-            }
-            public var body: Operations.AppInfoLocalizationsUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.AppInfoLocalizationsUpdateInstance.Input.Path,
-                headers: Operations.AppInfoLocalizationsUpdateInstance.Input.Headers = .init(),
-                body: Operations.AppInfoLocalizationsUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppInfoLocalizationResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppInfoLocalizationResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppInfoLocalizationsUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppInfoLocalizationsUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppInfoLocalization
-            ///
-            /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/{id}/patch(appInfoLocalizations_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppInfoLocalizationsUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppInfoLocalizationsUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/appInfoLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/{id}/delete(appInfoLocalizations_deleteInstance)`.
-    public enum AppInfoLocalizationsDeleteInstance {
-        public static let id: Swift.String = "appInfoLocalizations_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfoLocalizations/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppInfoLocalizationsDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.AppInfoLocalizationsDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/{id}/delete(appInfoLocalizations_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.AppInfoLocalizationsDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/appInfoLocalizations/{id}/delete(appInfoLocalizations_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.AppInfoLocalizationsDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `GET /v1/appInfos/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appInfos/{id}/get(appInfos_getInstance)`.
-    public enum AppInfosGetInstance {
-        public static let id: Swift.String = "appInfos_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppInfosGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fieldsAppInfosPayload`.
-                @frozen public enum FieldsAppInfosPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appStoreState = "appStoreState"
-                    case state = "state"
-                    case appStoreAgeRating = "appStoreAgeRating"
-                    case australiaAgeRating = "australiaAgeRating"
-                    case brazilAgeRating = "brazilAgeRating"
-                    case brazilAgeRatingV2 = "brazilAgeRatingV2"
-                    case franceAgeRating = "franceAgeRating"
-                    case koreaAgeRating = "koreaAgeRating"
-                    case app = "app"
-                    case ageRatingDeclaration = "ageRatingDeclaration"
-                    case appInfoLocalizations = "appInfoLocalizations"
-                    case primaryCategory = "primaryCategory"
-                    case primarySubcategoryOne = "primarySubcategoryOne"
-                    case primarySubcategoryTwo = "primarySubcategoryTwo"
-                    case secondaryCategory = "secondaryCategory"
-                    case secondarySubcategoryOne = "secondarySubcategoryOne"
-                    case secondarySubcategoryTwo = "secondarySubcategoryTwo"
-                    case territoryAgeRatings = "territoryAgeRatings"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[appInfos]`.
-                public typealias fieldsAppInfosPayload = [Operations.AppInfosGetInstance.Input.Query.FieldsAppInfosPayloadPayload]
-                /// the fields to include for returned resources of type appInfos
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[appInfos]`.
-                public var fieldsAppInfos: Operations.AppInfosGetInstance.Input.Query.fieldsAppInfosPayload?
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fieldsAppsPayload`.
-                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case accessibilityUrl = "accessibilityUrl"
-                    case name = "name"
-                    case bundleId = "bundleId"
-                    case sku = "sku"
-                    case primaryLocale = "primaryLocale"
-                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
-                    case subscriptionStatusUrl = "subscriptionStatusUrl"
-                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
-                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
-                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
-                    case contentRightsDeclaration = "contentRightsDeclaration"
-                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
-                    case accessibilityDeclarations = "accessibilityDeclarations"
-                    case appEncryptionDeclarations = "appEncryptionDeclarations"
-                    case appStoreIcon = "appStoreIcon"
-                    case ciProduct = "ciProduct"
-                    case betaTesters = "betaTesters"
-                    case betaGroups = "betaGroups"
-                    case appStoreVersions = "appStoreVersions"
-                    case appTags = "appTags"
-                    case preReleaseVersions = "preReleaseVersions"
-                    case betaAppLocalizations = "betaAppLocalizations"
-                    case builds = "builds"
-                    case betaLicenseAgreement = "betaLicenseAgreement"
-                    case betaAppReviewDetail = "betaAppReviewDetail"
-                    case appInfos = "appInfos"
-                    case appClips = "appClips"
-                    case appPricePoints = "appPricePoints"
-                    case endUserLicenseAgreement = "endUserLicenseAgreement"
-                    case appPriceSchedule = "appPriceSchedule"
-                    case appAvailabilityV2 = "appAvailabilityV2"
-                    case inAppPurchases = "inAppPurchases"
-                    case subscriptionGroups = "subscriptionGroups"
-                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
-                    case performanceOverviews = "performanceOverviews"
-                    case perfPowerMetrics = "perfPowerMetrics"
-                    case appCustomProductPages = "appCustomProductPages"
-                    case inAppPurchasesV2 = "inAppPurchasesV2"
-                    case promotedPurchases = "promotedPurchases"
-                    case appEvents = "appEvents"
-                    case reviewSubmissions = "reviewSubmissions"
-                    case subscriptionGracePeriod = "subscriptionGracePeriod"
-                    case customerReviews = "customerReviews"
-                    case customerReviewSummarizations = "customerReviewSummarizations"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case alternativeDistributionKey = "alternativeDistributionKey"
-                    case analyticsReportRequests = "analyticsReportRequests"
-                    case marketplaceSearchDetail = "marketplaceSearchDetail"
-                    case buildUploads = "buildUploads"
-                    case backgroundAssets = "backgroundAssets"
-                    case assetLibrary = "assetLibrary"
-                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
-                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
-                    case searchKeywords = "searchKeywords"
-                    case webhooks = "webhooks"
-                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[apps]`.
-                public typealias fieldsAppsPayload = [Operations.AppInfosGetInstance.Input.Query.FieldsAppsPayloadPayload]
-                /// the fields to include for returned resources of type apps
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[apps]`.
-                public var fieldsApps: Operations.AppInfosGetInstance.Input.Query.fieldsAppsPayload?
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fieldsAgeRatingDeclarationsPayload`.
-                @frozen public enum FieldsAgeRatingDeclarationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case advertising = "advertising"
-                    case alcoholTobaccoOrDrugUseOrReferences = "alcoholTobaccoOrDrugUseOrReferences"
-                    case contests = "contests"
-                    case gambling = "gambling"
-                    case gamblingSimulated = "gamblingSimulated"
-                    case gunsOrOtherWeapons = "gunsOrOtherWeapons"
-                    case healthOrWellnessTopics = "healthOrWellnessTopics"
-                    case kidsAgeBand = "kidsAgeBand"
-                    case lootBox = "lootBox"
-                    case medicalOrTreatmentInformation = "medicalOrTreatmentInformation"
-                    case messagingAndChat = "messagingAndChat"
-                    case parentalControls = "parentalControls"
-                    case profanityOrCrudeHumor = "profanityOrCrudeHumor"
-                    case ageAssurance = "ageAssurance"
-                    case sexualContentGraphicAndNudity = "sexualContentGraphicAndNudity"
-                    case sexualContentOrNudity = "sexualContentOrNudity"
-                    case socialMedia = "socialMedia"
-                    case socialMediaAgeRestricted = "socialMediaAgeRestricted"
-                    case horrorOrFearThemes = "horrorOrFearThemes"
-                    case matureOrSuggestiveThemes = "matureOrSuggestiveThemes"
-                    case unrestrictedWebAccess = "unrestrictedWebAccess"
-                    case userGeneratedContent = "userGeneratedContent"
-                    case violenceCartoonOrFantasy = "violenceCartoonOrFantasy"
-                    case violenceRealisticProlongedGraphicOrSadistic = "violenceRealisticProlongedGraphicOrSadistic"
-                    case violenceRealistic = "violenceRealistic"
-                    case ageRatingOverride = "ageRatingOverride"
-                    case ageRatingOverrideV2 = "ageRatingOverrideV2"
-                    case koreaAgeRatingOverride = "koreaAgeRatingOverride"
-                    case gracRatingClassificationNumber = "gracRatingClassificationNumber"
-                    case developerAgeRatingInfoUrl = "developerAgeRatingInfoUrl"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[ageRatingDeclarations]`.
-                public typealias fieldsAgeRatingDeclarationsPayload = [Operations.AppInfosGetInstance.Input.Query.FieldsAgeRatingDeclarationsPayloadPayload]
-                /// the fields to include for returned resources of type ageRatingDeclarations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[ageRatingDeclarations]`.
-                public var fieldsAgeRatingDeclarations: Operations.AppInfosGetInstance.Input.Query.fieldsAgeRatingDeclarationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fieldsAppInfoLocalizationsPayload`.
-                @frozen public enum FieldsAppInfoLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case subtitle = "subtitle"
-                    case privacyPolicyUrl = "privacyPolicyUrl"
-                    case privacyChoicesUrl = "privacyChoicesUrl"
-                    case privacyPolicyText = "privacyPolicyText"
-                    case appInfo = "appInfo"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[appInfoLocalizations]`.
-                public typealias fieldsAppInfoLocalizationsPayload = [Operations.AppInfosGetInstance.Input.Query.FieldsAppInfoLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appInfoLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[appInfoLocalizations]`.
-                public var fieldsAppInfoLocalizations: Operations.AppInfosGetInstance.Input.Query.fieldsAppInfoLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fieldsAppCategoriesPayload`.
-                @frozen public enum FieldsAppCategoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platforms = "platforms"
-                    case subcategories = "subcategories"
-                    case parent = "parent"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[appCategories]`.
-                public typealias fieldsAppCategoriesPayload = [Operations.AppInfosGetInstance.Input.Query.FieldsAppCategoriesPayloadPayload]
-                /// the fields to include for returned resources of type appCategories
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/fields[appCategories]`.
-                public var fieldsAppCategories: Operations.AppInfosGetInstance.Input.Query.fieldsAppCategoriesPayload?
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case app = "app"
-                    case ageRatingDeclaration = "ageRatingDeclaration"
-                    case appInfoLocalizations = "appInfoLocalizations"
-                    case primaryCategory = "primaryCategory"
-                    case primarySubcategoryOne = "primarySubcategoryOne"
-                    case primarySubcategoryTwo = "primarySubcategoryTwo"
-                    case secondaryCategory = "secondaryCategory"
-                    case secondarySubcategoryOne = "secondarySubcategoryOne"
-                    case secondarySubcategoryTwo = "secondarySubcategoryTwo"
-                }
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppInfosGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/include`.
-                public var include: Operations.AppInfosGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related appInfoLocalizations returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/query/limit[appInfoLocalizations]`.
-                public var limitAppInfoLocalizations: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsAppInfos: the fields to include for returned resources of type appInfos
-                ///   - fieldsApps: the fields to include for returned resources of type apps
-                ///   - fieldsAgeRatingDeclarations: the fields to include for returned resources of type ageRatingDeclarations
-                ///   - fieldsAppInfoLocalizations: the fields to include for returned resources of type appInfoLocalizations
-                ///   - fieldsAppCategories: the fields to include for returned resources of type appCategories
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitAppInfoLocalizations: maximum number of related appInfoLocalizations returned (when they are included)
-                public init(
-                    fieldsAppInfos: Operations.AppInfosGetInstance.Input.Query.fieldsAppInfosPayload? = nil,
-                    fieldsApps: Operations.AppInfosGetInstance.Input.Query.fieldsAppsPayload? = nil,
-                    fieldsAgeRatingDeclarations: Operations.AppInfosGetInstance.Input.Query.fieldsAgeRatingDeclarationsPayload? = nil,
-                    fieldsAppInfoLocalizations: Operations.AppInfosGetInstance.Input.Query.fieldsAppInfoLocalizationsPayload? = nil,
-                    fieldsAppCategories: Operations.AppInfosGetInstance.Input.Query.fieldsAppCategoriesPayload? = nil,
-                    include: Operations.AppInfosGetInstance.Input.Query.IncludePayload? = nil,
-                    limitAppInfoLocalizations: Swift.Int? = nil
-                ) {
-                    self.fieldsAppInfos = fieldsAppInfos
-                    self.fieldsApps = fieldsApps
-                    self.fieldsAgeRatingDeclarations = fieldsAgeRatingDeclarations
-                    self.fieldsAppInfoLocalizations = fieldsAppInfoLocalizations
-                    self.fieldsAppCategories = fieldsAppCategories
-                    self.include = include
-                    self.limitAppInfoLocalizations = limitAppInfoLocalizations
-                }
-            }
-            public var query: Operations.AppInfosGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfosGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppInfosGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppInfosGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppInfosGetInstance.Input.Path,
-                query: Operations.AppInfosGetInstance.Input.Query = .init(),
-                headers: Operations.AppInfosGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appInfos/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppInfoResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppInfoResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppInfosGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppInfosGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppInfo
-            ///
-            /// - Remark: Generated from `#/paths//v1/appInfos/{id}/get(appInfos_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppInfosGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppInfosGetInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

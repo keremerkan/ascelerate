@@ -241,7 +241,25 @@ ascelerate apps encryption <bundle-id>
 # Crear una nueva declaración de cifrado
 ascelerate apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
 ascelerate apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
+
+# Adjuntar un documento de cumplimiento a la declaración más reciente (o a la que indique --declaration)
+ascelerate apps encryption <bundle-id> --upload-document approval.pdf
 ```
+
+Algunas declaraciones necesitan un documento que App Store Connect solicita, como una clasificación de exportación o la declaración de cifrado de Francia. `--upload-document` lo adjunta a la declaración más reciente, o a la que indique `--declaration` (el ID de la lista); la lista muestra el documento de cada declaración.
+
+## Etiquetas de la app
+
+```bash
+# Las etiquetas que Apple asigna a la app en el App Store y dónde se muestran
+ascelerate apps tags <bundle-id> [--json]
+
+# Ocultar una etiqueta en el App Store o volver a mostrarla
+ascelerate apps tags hide <bundle-id> "Photo Editing"
+ascelerate apps tags show <bundle-id> "Photo Editing"
+```
+
+Apple elige las etiquetas de una app; puede ocultar o volver a mostrar cada una por su nombre o su ID.
 
 ## EULA
 

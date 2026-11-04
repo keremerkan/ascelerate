@@ -1,3 +1,4 @@
+import AscelerateCore
 import Foundation
 
 /// What a project folder already has for screenshot capture: the facts the setup prompts start
@@ -32,7 +33,7 @@ struct ScreenshotProjectSurvey {
     // Schemes from their files, shared and per user (`xcodebuild -list` takes seconds on a
     // workspace with packages).
     let projects = projectFiles(survey.containers)
-    for container in survey.containers + projects.map { ($0 as NSString).deletingLastPathComponent } {
+    for container in survey.containers + projects {
       for folder in ["\(container)/xcshareddata/xcschemes"] + userSchemeFolders(container) {
         let files = (try? fm.contentsOfDirectory(atPath: folder)) ?? []
         survey.schemes += files.filter { $0.hasSuffix(".xcscheme") }.map { ($0 as NSString).deletingPathExtension }.sorted()
@@ -40,11 +41,12 @@ struct ScreenshotProjectSurvey {
     }
     survey.schemes = unique(survey.schemes)
 
-    // UI test targets and localizations, from every project file (a workspace's projects included).
-    for pbxproj in projects {
-      guard let text = try? String(contentsOfFile: pbxproj, encoding: .utf8) else { continue }
-      survey.uiTestTargets += uiTestTargets(in: text)
-      survey.localizations += knownRegions(in: text)
+    // UI test targets and localizations, from every project's file (a workspace's projects
+    // included), in either format (`XcodeProjectFile`: project.pbxproj or Xcode 27.2's JSON).
+    for project in projects {
+      guard let file = XcodeProjectFile(project: URL(filePath: project)) else { continue }
+      survey.uiTestTargets += file.targets.filter(\.isUITestBundle).map(\.name)
+      survey.localizations += file.localizations.filter { $0 != "Base" }
     }
     survey.uiTestTargets = unique(survey.uiTestTargets)
     survey.localizations = unique(survey.localizations)
@@ -95,7 +97,7 @@ struct ScreenshotProjectSurvey {
     return users.map { "\(container)/xcuserdata/\($0)/xcschemes" }
   }
 
-  /// The project files of the projects, and of the projects a workspace lists.
+  /// The projects, and the projects a workspace lists (`.xcodeproj` folders).
   private static func projectFiles(_ containers: [String]) -> [String] {
     var projects = containers.filter { $0.hasSuffix(".xcodeproj") }
     for workspace in containers where workspace.hasSuffix(".xcworkspace") {
@@ -106,25 +108,7 @@ struct ScreenshotProjectSurvey {
         projects.append((path as NSString).standardizingPath)
       }
     }
-    return unique(projects).map { "\($0)/project.pbxproj" }
-  }
-
-  private static func uiTestTargets(in pbxproj: String) -> [String] {
-    pbxproj.components(separatedBy: "isa = PBXNativeTarget;").dropFirst().compactMap { block in
-      // A target's block ends at the next object; its name and product type come before that.
-      let body = block.components(separatedBy: "};").first ?? block
-      guard body.contains("com.apple.product-type.bundle.ui-testing"),
-        let match = body.firstMatch(of: /\bname = "?([^";]+)"?;/)
-      else { return nil }
-      return String(match.1)
-    }
-  }
-
-  private static func knownRegions(in pbxproj: String) -> [String] {
-    guard let match = pbxproj.firstMatch(of: /knownRegions = \(([^)]*)\);/) else { return [] }
-    return match.1.split(separator: ",")
-      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "\"")) }
-      .filter { !$0.isEmpty && $0 != "Base" }
+    return unique(projects)
   }
 
   private static func newestIOSSimulators() -> [String] {

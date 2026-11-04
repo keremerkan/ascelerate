@@ -36,6 +36,7 @@ Tests/ASCKitTests/
   RateLimitWaitTests.swift            # Rate limit wait middleware against a fake server (swift test)
 Tests/AscelerateCoreTests/
   AppPricingTests.swift               # Price schedule edits (base price now or dated, manual prices, planned changes)
+  XcodeProjectFileTests.swift         # Both project file formats give the same targets, Release settings and languages
 Sources/AscelerateCore/               # App Store Connect logic without terminal I/O (see "AscelerateCore")
   Lookup.swift                        # findApp(exactBundleID:), findVersion(…, choose:), Platform, platformFilter, optionalRelated, attachedBuild, AppLookupError
   ProductVersions.swift               # Pending-version detection for IAPs/subs/groups (versions endpoints) + review-item resolution
@@ -103,6 +104,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   Analytics.swift                     # App Analytics: report requests (ongoing, one-time snapshot; find, create), reports per category, instances per granularity, segments, a segment's data unzipped (used by reports analytics) or zipped (optionally reporting its bytes as they arrive)
   XcodeCloud.swift                    # Xcode Cloud: products (list, delete), workflows (list with repository/Xcode/macOS, enable/disable, delete; edit: name, description, restrict editing, clean, Xcode/macOS, start conditions sent as a set), build runs (newest first, paged; one; start on a branch/tag/pull request or as a rerun), a run's actions, issues (counted for issue counts Apple doesn't send; project-relative paths), test results, artifacts (download with progress, resuming after a stall), logs from the log bundle, repositories with branches/tags and pull requests, Xcode versions with their macOS versions (IDs too); reads retry transient errors
   ZipReader.swift                     # Reads a zip archive's stored and deflated files in memory (Xcode Cloud's log bundles)
+  XcodeProjectFile.swift              # An Xcode project's targets (ID, name, product type), Release settings and languages, from project.pbxproj or Xcode 27.2's JSON project.xcproj (JSON5: trailing commas; settings keyed `KEY[config=Release][sdk=…]`; the development language apart from `supported`); used by screenshot setup-prompt
   SalesReports.swift                  # Sales and Trends summary reports: download (nil on 404), rows (kind, units, proceeds per unit, parent SKU), Pacific Time report days; TSV parsing; Gzip (in-process, no gzip binary)
 Sources/AscelerateAds/                # Apple Ads logic without terminal I/O, on AppleAdsClient and AscelerateCore (see "Apple Ads")
   Ads.swift                           # Credentials, Options (write gate, rate limit notice), withClient, middleware (AdsError, 429 waits, read retries), access control list, ad account, campaigns/ad groups/keywords/negatives, paged /query, report request/paging (ORTZ or UTC), campaign report rows, bulk/decodeRaw

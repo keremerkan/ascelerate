@@ -1270,6 +1270,14 @@ ascelerate game-center achievements submit <bundle-id> first.win   # add its new
 
 Achievements, leaderboards, sets, activities and challenges share `info`, `update`, `delete`, `localizations` (view, set, export, import, delete), `image` (upload, delete; activities and challenges also a version's `--default` image) and `submit`; the first three also `reorder`. Their text and images live on a version; changing a live one makes its next version first. Images are square, at least 512×512.
 
+Groups share these items between a team's apps; adding an app to a group can't be undone, so try it with `--dry-run`:
+
+```bash
+ascelerate game-center groups                                # the team's groups with their apps
+ascelerate game-center groups create --name "My Games"
+ascelerate game-center groups add-app "My Games" <bundle-id> --dry-run
+```
+
 Rule-based matchmaking belongs to the team, so it takes no bundle ID:
 
 ```bash

@@ -116,6 +116,20 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 
 `reorder` (Erfolge, Bestenlisten und Gruppen) stellt die aufgeführten Elemente in dieser Reihenfolge an den Anfang; die übrigen folgen unverändert. `submit` fügt die neue Version des Elements dem Einreichungsentwurf der App hinzu (und legt einen an, wenn es keinen gibt). Sie geht zum App Review, wenn Sie den Entwurf mit `ascelerate apps review submit` einreichen.
 
+## Game-Center-Gruppen
+
+Eine Game-Center-Gruppe teilt Erfolge, Bestenlisten, Bestenlistengruppen, Aktivitäten und Herausforderungen zwischen den Apps eines Teams. Game-Center-Gruppen werden über Referenznamen oder ID angegeben.
+
+```bash
+ascelerate game-center groups [--json]                  # the team's groups with their apps
+ascelerate game-center groups create --name "My Games"
+ascelerate game-center groups rename "My Games" --name "Our Games"
+ascelerate game-center groups delete "Our Games"
+ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
+```
+
+Eine App einer Game-Center-Gruppe hinzuzufügen lässt sich nicht rückgängig machen: Die App kann die Gruppe nicht verlassen, und ihre Erfolge, Bestenlisten und übrigen Elemente wandern in die Gruppe. `add-app` weist darauf hin und fragt zuerst; probieren Sie es mit `--dry-run` aus. Für eine App in einer Game-Center-Gruppe listen, erstellen und ordnen die übrigen `game-center`-Befehle die Elemente der Gruppe, und `leaderboards default` legt die Gruppen-Bestenliste fest, mit der Game Center für diese App öffnet.
+
 ## Matchmaking
 
 Regelbasiertes Matchmaking gehört zum Team, nicht zu einer einzelnen App, daher nehmen diese Befehle keine Bundle-ID. Ein **Regelsatz** legt die Spielerzahl, die Regeln und die Teams fest; eine **Warteschlange** ist der Ort, an den Spiele ihre Match-Anfragen senden, und sie gleicht sie mit einem Regelsatz ab. Regelsätze und Warteschlangen werden über Referenznamen oder ID angegeben.

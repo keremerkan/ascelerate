@@ -28,12 +28,15 @@ extension GameCenter {
   }
 
   /// The app's achievements in the order Game Center shows them.
-  public static func achievements(detailID: String, client: ASCClient) async throws -> [Achievement] {
+  public static func achievements(owner: Owner, client: ASCClient) async throws -> [Achievement] {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.gameCenterDetailsGameCenterAchievementsV2GetToManyRelated(
-          path: .init(id: detailID), query: .init(limit: 200, include: [.versions], limitVersions: 50)
-        ).ok.body.json
+        switch owner {
+          case .detail(let id):
+            try await client.gameCenterDetailsGameCenterAchievementsV2GetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions], limitVersions: 50)).ok.body.json
+          case .group(let id):
+            try await client.gameCenterGroupsGameCenterAchievementsV2GetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions], limitVersions: 50)).ok.body.json
+          }
       }
     }
     var versions: [String: Version] = [:]
@@ -96,7 +99,7 @@ extension GameCenter {
 extension GameCenter {
   /// Creates an achievement with its first version, which holds its languages and images.
   public static func createAchievement(
-    detailID: String, vendorIdentifier: String, referenceName: String, points: Int, showBeforeEarned: Bool, repeatable: Bool,
+    owner: Owner, vendorIdentifier: String, referenceName: String, points: Int, showBeforeEarned: Bool, repeatable: Bool,
     client: ASCClient
   ) async throws -> Achievement {
     let created = try await client.gameCenterAchievementsV2CreateInstance(body: .json(.init(data: .init(
@@ -104,7 +107,8 @@ extension GameCenter {
         points: points, referenceName: referenceName, repeatable: repeatable, showBeforeEarned: showBeforeEarned,
         vendorIdentifier: vendorIdentifier),
       relationships: .init(
-        gameCenterDetail: .init(data: .init(id: detailID, _type: "gameCenterDetails")),
+        gameCenterDetail: owner.detailID.map { .init(data: .init(id: $0, _type: "gameCenterDetails")) },
+        gameCenterGroup: owner.groupID.map { .init(data: .init(id: $0, _type: "gameCenterGroups")) },
         versions: .init(data: [.init(id: "${version}", _type: "gameCenterAchievementVersions")])),
       _type: "gameCenterAchievements"),
       included: [.init(id: "${version}", _type: "gameCenterAchievementVersions")]))).created.body.json.data
@@ -184,8 +188,14 @@ extension GameCenter {
   }
 
   /// Puts the app's achievements in this order (every achievement, by Apple ID).
-  public static func reorderAchievements(detailID: String, ids: [String], client: ASCClient) async throws {
-    _ = try await client.gameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship(
-      path: .init(id: detailID), body: .json(.init(data: ids.map { .init(id: $0, _type: "gameCenterAchievements") }))).noContent
+  public static func reorderAchievements(owner: Owner, ids: [String], client: ASCClient) async throws {
+    let data = ids.map { (id: String) in (id: id, type: "gameCenterAchievements") }
+    switch owner {
+      case .detail(let id):
+        _ = try await client.gameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship(path: .init(id: id), body: .json(.init(data: data.map { .init(id: $0.id, _type: $0.type) }))).noContent
+      case .group(let id):
+        _ = try await client.gameCenterGroupsGameCenterAchievementsV2ReplaceToManyRelationship(path: .init(id: id), body: .json(.init(data: data.map { .init(id: $0.id, _type: $0.type) }))).noContent
+    }
   }
+
 }

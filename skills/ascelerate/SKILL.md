@@ -348,6 +348,16 @@ ascelerate game-center <kind> image upload|delete <app> <item> (--locale X | --d
 ascelerate game-center <kind> submit <app> <item> [--platform ios]   # adds the version to the draft submission (apps review submit sends it)
 ```
 
+Groups (team-wide; share achievements, leaderboards, sets, activities, challenges between apps):
+
+```bash
+ascelerate game-center groups [--json]                     # groups with their apps
+ascelerate game-center groups create|rename|delete ...     # create --name X; rename <group> --name X
+ascelerate game-center groups add-app <group> <app>        # IRREVERSIBLE (the app can't leave; its items move into the group): always --dry-run first and confirm with the user
+```
+
+For an app in a group, the item commands work on the group's items transparently; `leaderboards default` sets the app's default group leaderboard.
+
 Matchmaking (team-wide, no app argument; rule sets and queues by reference name or ID):
 
 ```bash

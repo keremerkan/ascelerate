@@ -116,6 +116,20 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 
 `reorder` (logros, tablas y grupos) coloca primero los indicados, en ese orden; el resto les sigue tal como está. `submit` añade la nueva versión del elemento al borrador de envío de la app (y crea uno si no lo hay). Va a App Review cuando envíe el borrador con `ascelerate apps review submit`.
 
+## Grupos de Game Center
+
+Un grupo de Game Center comparte logros, tablas de clasificación, grupos de tablas, actividades y desafíos entre las apps de un equipo. Los grupos de Game Center se indican por su nombre de referencia o su ID.
+
+```bash
+ascelerate game-center groups [--json]                  # the team's groups with their apps
+ascelerate game-center groups create --name "My Games"
+ascelerate game-center groups rename "My Games" --name "Our Games"
+ascelerate game-center groups delete "Our Games"
+ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
+```
+
+Añadir una app a un grupo de Game Center no se puede deshacer: la app no puede salir del grupo y sus logros, tablas y demás elementos pasan al grupo. `add-app` lo advierte y pregunta antes; pruébelo con `--dry-run`. Para una app de un grupo de Game Center, los demás comandos `game-center` listan, crean y ordenan los elementos del grupo, y `leaderboards default` fija la tabla del grupo con la que se abre Game Center para esa app.
+
 ## Emparejamiento
 
 El emparejamiento basado en reglas pertenece al equipo, no a una app, así que estos comandos no llevan bundle ID. Un **conjunto de reglas** fija el número de jugadores, las reglas y los equipos; una **cola** es donde los juegos envían sus solicitudes de partida, que empareja con un conjunto de reglas. Los conjuntos de reglas y las colas se indican por su nombre de referencia o su ID.

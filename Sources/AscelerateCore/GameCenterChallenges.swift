@@ -24,15 +24,17 @@ extension GameCenter {
     public let image: Image?
   }
 
-  public static func challenges(detailID: String, client: ASCClient) async throws -> [Challenge] {
+  public static func challenges(owner: Owner, client: ASCClient) async throws -> [Challenge] {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.gameCenterDetailsGameCenterChallengesGetToManyRelated(
-          path: .init(id: detailID),
-          query: .init(
-            fieldsGameCenterChallenges: [.referenceName, .vendorIdentifier, .archived, .challengeType, .repeatable, .versions, .leaderboardV2],
-            fieldsGameCenterLeaderboards: [.vendorIdentifier], limit: 200, include: [.versions, .leaderboardV2], limitVersions: 50)
-        ).ok.body.json
+        switch owner {
+          case .detail(let id):
+            try await client.gameCenterDetailsGameCenterChallengesGetToManyRelated(
+              path: .init(id: id), query: .init(limit: 200, include: [.versions, .leaderboardV2], limitVersions: 50)).ok.body.json
+          case .group(let id):
+            try await client.gameCenterGroupsGameCenterChallengesGetToManyRelated(
+              path: .init(id: id), query: .init(limit: 200, include: [.versions, .leaderboardV2], limitVersions: 50)).ok.body.json
+        }
       }
     }
     var versions: [String: Version] = [:]
@@ -55,13 +57,14 @@ extension GameCenter {
   /// leaderboard counts each player's best score, and only a recurring one takes a challenge that
   /// isn't repeatable.
   public static func createChallenge(
-    detailID: String, vendorIdentifier: String, referenceName: String, leaderboardID: String, repeatable: Bool, client: ASCClient
+    owner: Owner, vendorIdentifier: String, referenceName: String, leaderboardID: String, repeatable: Bool, client: ASCClient
   ) async throws -> String {
     let id = try await client.gameCenterChallengesCreateInstance(body: .json(.init(
       data: .init(
         attributes: .init(challengeType: "LEADERBOARD", referenceName: referenceName, repeatable: repeatable, vendorIdentifier: vendorIdentifier),
         relationships: .init(
-          gameCenterDetail: .init(data: .init(id: detailID, _type: "gameCenterDetails")),
+          gameCenterDetail: owner.detailID.map { .init(data: .init(id: $0, _type: "gameCenterDetails")) },
+        gameCenterGroup: owner.groupID.map { .init(data: .init(id: $0, _type: "gameCenterGroups")) },
           versions: .init(data: [.init(id: "${version}", _type: "gameCenterChallengeVersions")])),
         _type: "gameCenterChallenges"),
       included: [.init(id: "${version}", _type: "gameCenterChallengeVersions")]
@@ -105,8 +108,8 @@ extension GameCenter {
 extension GameCenter.Challenge: GameCenterItem {
   public static let imageSize = GameCenterImageSize.exactly(width: 3840, height: 2160)
   public static let noun = "challenge"
-  public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
-    try await GameCenter.challenges(detailID: detailID, client: client)
+  public static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
+    try await GameCenter.challenges(owner: owner, client: client)
   }
   public static func delete(id: String, client: ASCClient) async throws {
     _ = try await client.gameCenterChallengesDeleteInstance(path: .init(id: id)).noContent

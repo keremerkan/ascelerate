@@ -57,13 +57,15 @@ extension GameCenter {
     }
   }
 
-  public static func activities(detailID: String, client: ASCClient) async throws -> [Activity] {
+  public static func activities(owner: Owner, client: ASCClient) async throws -> [Activity] {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.gameCenterDetailsGameCenterActivitiesGetToManyRelated(
-          path: .init(id: detailID),
-          query: .init(limit: 200, include: [.versions, .achievementsV2, .leaderboardsV2], limitAchievements: 50, limitLeaderboards: 50, limitVersions: 50)
-        ).ok.body.json
+        switch owner {
+          case .detail(let id):
+            try await client.gameCenterDetailsGameCenterActivitiesGetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions, .achievementsV2, .leaderboardsV2], limitAchievements: 50, limitLeaderboards: 50, limitVersions: 50)).ok.body.json
+          case .group(let id):
+            try await client.gameCenterGroupsGameCenterActivitiesGetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions, .achievementsV2, .leaderboardsV2], limitAchievements: 50, limitLeaderboards: 50, limitVersions: 50)).ok.body.json
+          }
       }
     }
     var versions: [String: (Version, String?)] = [:]
@@ -89,7 +91,7 @@ extension GameCenter {
 
   /// Creates an activity with its first version.
   public static func createActivity(
-    detailID: String, vendorIdentifier: String, settings s: ActivitySettings, fallbackURL: String?, client: ASCClient
+    owner: Owner, vendorIdentifier: String, settings s: ActivitySettings, fallbackURL: String?, client: ASCClient
   ) async throws -> String {
     try await client.gameCenterActivitiesCreateInstance(body: .json(.init(
       data: .init(
@@ -98,7 +100,8 @@ extension GameCenter {
           properties: s.properties.map { .init(additionalProperties: $0) }, referenceName: s.referenceName ?? "",
           supportsPartyCode: s.supportsPartyCode, vendorIdentifier: vendorIdentifier),
         relationships: .init(
-          gameCenterDetail: .init(data: .init(id: detailID, _type: "gameCenterDetails")),
+          gameCenterDetail: owner.detailID.map { .init(data: .init(id: $0, _type: "gameCenterDetails")) },
+        gameCenterGroup: owner.groupID.map { .init(data: .init(id: $0, _type: "gameCenterGroups")) },
           versions: .init(data: [.init(id: "${version}", _type: "gameCenterActivityVersions")])),
         _type: "gameCenterActivities"),
       included: [.init(attributes: fallbackURL.map { .init(fallbackUrl: $0) }, id: "${version}", _type: "gameCenterActivityVersions")]
@@ -149,8 +152,8 @@ extension GameCenter {
 extension GameCenter.Activity: GameCenterItem {
   public static let imageSize = GameCenterImageSize.exactly(width: 3840, height: 2160)
   public static let noun = "activity"
-  public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
-    try await GameCenter.activities(detailID: detailID, client: client)
+  public static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
+    try await GameCenter.activities(owner: owner, client: client)
   }
   public static func delete(id: String, client: ASCClient) async throws {
     _ = try await client.gameCenterActivitiesDeleteInstance(path: .init(id: id)).noContent

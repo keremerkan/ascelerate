@@ -10,37 +10,37 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
-    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardImages`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/post(gameCenterLeaderboardImagesV2_createInstance)`.
-    public enum GameCenterLeaderboardImagesV2CreateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardImagesV2_createInstance"
+    /// - Remark: HTTP `POST /v1/webhooks`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/post(webhooks_createInstance)`.
+    public enum WebhooksCreateInstance {
+        public static let id: Swift.String = "webhooks_createInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/POST/header`.
+            /// - Remark: Generated from `#/paths/v1/webhooks/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardImagesV2CreateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksCreateInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardImagesV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksCreateInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardImagesV2CreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/POST/requestBody`.
+            public var headers: Operations.WebhooksCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/webhooks/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardImageV2CreateRequest)
+                /// - Remark: Generated from `#/paths/v1/webhooks/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.WebhookCreateRequest)
             }
-            public var body: Operations.GameCenterLeaderboardImagesV2CreateInstance.Input.Body
+            public var body: Operations.WebhooksCreateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
             ///   - body:
             public init(
-                headers: Operations.GameCenterLeaderboardImagesV2CreateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardImagesV2CreateInstance.Input.Body
+                headers: Operations.WebhooksCreateInstance.Input.Headers = .init(),
+                body: Operations.WebhooksCreateInstance.Input.Body
             ) {
                 self.headers = headers
                 self.body = body
@@ -48,15 +48,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/POST/responses/201/content`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/POST/responses/201/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardImageV2Response)
+                    /// - Remark: Generated from `#/paths/v1/webhooks/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.WebhookResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardImageV2Response {
+                    public var json: Components.Schemas.WebhookResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -66,26 +66,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardImagesV2CreateInstance.Output.Created.Body
+                public var body: Operations.WebhooksCreateInstance.Output.Created.Body
                 /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardImagesV2CreateInstance.Output.Created.Body) {
+                public init(body: Operations.WebhooksCreateInstance.Output.Created.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboardImage
+            /// Single Webhook
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/post(gameCenterLeaderboardImagesV2_createInstance)/responses/201`.
+            /// - Remark: Generated from `#/paths//v1/webhooks/post(webhooks_createInstance)/responses/201`.
             ///
             /// HTTP response code: `201 created`.
-            case created(Operations.GameCenterLeaderboardImagesV2CreateInstance.Output.Created)
+            case created(Operations.WebhooksCreateInstance.Output.Created)
             /// The associated value of the enum case if `self` is `.created`.
             ///
             /// - Throws: An error if `self` is not `.created`.
             /// - SeeAlso: `.created`.
-            public var created: Operations.GameCenterLeaderboardImagesV2CreateInstance.Output.Created {
+            public var created: Operations.WebhooksCreateInstance.Output.Created {
                 get throws {
                     switch self {
                     case let .created(response):
@@ -129,16 +129,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardImages/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/get(gameCenterLeaderboardImagesV2_getInstance)`.
-    public enum GameCenterLeaderboardImagesV2GetInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardImagesV2_getInstance"
+    /// - Remark: HTTP `GET /v1/webhooks/{id}`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/{id}/get(webhooks_getInstance)`.
+    public enum WebhooksGetInstance {
+        public static let id: Swift.String = "webhooks_getInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/path`.
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/path/id`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -148,1479 +148,129 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query`.
+            public var path: Operations.WebhooksGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/fieldsGameCenterLeaderboardImagesPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case imageAsset = "imageAsset"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case localization = "localization"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/fields[gameCenterLeaderboardImages]`.
-                public typealias fieldsGameCenterLeaderboardImagesPayload = [Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.FieldsGameCenterLeaderboardImagesPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardImages
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/fields[gameCenterLeaderboardImages]`.
-                public var fieldsGameCenterLeaderboardImages: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardImagesPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/fieldsGameCenterLeaderboardLocalizationsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/fieldsWebhooksPayload`.
+                @frozen public enum FieldsWebhooksPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case enabled = "enabled"
+                    case eventTypes = "eventTypes"
                     case name = "name"
-                    case formatterOverride = "formatterOverride"
-                    case formatterSuffix = "formatterSuffix"
-                    case formatterSuffixSingular = "formatterSuffixSingular"
-                    case description = "description"
-                    case version = "version"
-                    case image = "image"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public typealias fieldsGameCenterLeaderboardLocalizationsPayload = [Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.FieldsGameCenterLeaderboardLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public var fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case localization = "localization"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/query/include`.
-                public var include: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsGameCenterLeaderboardImages: the fields to include for returned resources of type gameCenterLeaderboardImages
-                ///   - fieldsGameCenterLeaderboardLocalizations: the fields to include for returned resources of type gameCenterLeaderboardLocalizations
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsGameCenterLeaderboardImages: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardImagesPayload? = nil,
-                    fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload? = nil,
-                    include: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsGameCenterLeaderboardImages = fieldsGameCenterLeaderboardImages
-                    self.fieldsGameCenterLeaderboardLocalizations = fieldsGameCenterLeaderboardLocalizations
-                    self.include = include
-                }
-            }
-            public var query: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardImagesV2GetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardImagesV2GetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Path,
-                query: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query = .init(),
-                headers: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardImageV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardImageV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardImagesV2GetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardImagesV2GetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterLeaderboardImage
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/get(gameCenterLeaderboardImagesV2_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardImagesV2GetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardImagesV2GetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardImages/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/patch(gameCenterLeaderboardImagesV2_updateInstance)`.
-    public enum GameCenterLeaderboardImagesV2UpdateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardImagesV2_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardImagesV2UpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardImagesV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardImageV2UpdateRequest)
-            }
-            public var body: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Path,
-                headers: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardImageV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardImageV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterLeaderboardImage
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/patch(gameCenterLeaderboardImagesV2_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardImagesV2UpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardImages/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/delete(gameCenterLeaderboardImagesV2_deleteInstance)`.
-    public enum GameCenterLeaderboardImagesV2DeleteInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardImagesV2_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardImages/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterLeaderboardImagesV2DeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.GameCenterLeaderboardImagesV2DeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/delete(gameCenterLeaderboardImagesV2_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.GameCenterLeaderboardImagesV2DeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/delete(gameCenterLeaderboardImagesV2_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.GameCenterLeaderboardImagesV2DeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardLocalizations`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/post(gameCenterLeaderboardLocalizationsV2_createInstance)`.
-    public enum GameCenterLeaderboardLocalizationsV2CreateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardLocalizationsV2_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardLocalizationV2CreateRequest)
-            }
-            public var body: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardLocalizationV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardLocalizationV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterLeaderboardLocalization
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/post(gameCenterLeaderboardLocalizationsV2_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/get(gameCenterLeaderboardLocalizationsV2_getInstance)`.
-    public enum GameCenterLeaderboardLocalizationsV2GetInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardLocalizationsV2_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fieldsGameCenterLeaderboardLocalizationsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case formatterOverride = "formatterOverride"
-                    case formatterSuffix = "formatterSuffix"
-                    case formatterSuffixSingular = "formatterSuffixSingular"
-                    case description = "description"
-                    case version = "version"
-                    case image = "image"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public typealias fieldsGameCenterLeaderboardLocalizationsPayload = [Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public var fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fieldsGameCenterLeaderboardVersionsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case leaderboard = "leaderboard"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public typealias fieldsGameCenterLeaderboardVersionsPayload = [Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardVersions
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public var fieldsGameCenterLeaderboardVersions: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardVersionsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fieldsGameCenterLeaderboardImagesPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case imageAsset = "imageAsset"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case localization = "localization"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fields[gameCenterLeaderboardImages]`.
-                public typealias fieldsGameCenterLeaderboardImagesPayload = [Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardImagesPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardImages
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/fields[gameCenterLeaderboardImages]`.
-                public var fieldsGameCenterLeaderboardImages: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardImagesPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case image = "image"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/query/include`.
-                public var include: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsGameCenterLeaderboardLocalizations: the fields to include for returned resources of type gameCenterLeaderboardLocalizations
-                ///   - fieldsGameCenterLeaderboardVersions: the fields to include for returned resources of type gameCenterLeaderboardVersions
-                ///   - fieldsGameCenterLeaderboardImages: the fields to include for returned resources of type gameCenterLeaderboardImages
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload? = nil,
-                    fieldsGameCenterLeaderboardVersions: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardVersionsPayload? = nil,
-                    fieldsGameCenterLeaderboardImages: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardImagesPayload? = nil,
-                    include: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsGameCenterLeaderboardLocalizations = fieldsGameCenterLeaderboardLocalizations
-                    self.fieldsGameCenterLeaderboardVersions = fieldsGameCenterLeaderboardVersions
-                    self.fieldsGameCenterLeaderboardImages = fieldsGameCenterLeaderboardImages
-                    self.include = include
-                }
-            }
-            public var query: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2GetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2GetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Path,
-                query: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query = .init(),
-                headers: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardLocalizationV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardLocalizationV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterLeaderboardLocalization
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/get(gameCenterLeaderboardLocalizationsV2_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/patch(gameCenterLeaderboardLocalizationsV2_updateInstance)`.
-    public enum GameCenterLeaderboardLocalizationsV2UpdateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardLocalizationsV2_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardLocalizationV2UpdateRequest)
-            }
-            public var body: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Path,
-                headers: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardLocalizationV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardLocalizationV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterLeaderboardLocalization
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/patch(gameCenterLeaderboardLocalizationsV2_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/delete(gameCenterLeaderboardLocalizationsV2_deleteInstance)`.
-    public enum GameCenterLeaderboardLocalizationsV2DeleteInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardLocalizationsV2_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/delete(gameCenterLeaderboardLocalizationsV2_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/delete(gameCenterLeaderboardLocalizationsV2_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardLocalizations/{id}/image`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/image/get(gameCenterLeaderboardLocalizationsV2_image_getToOneRelated)`.
-    public enum GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated {
-        public static let id: Swift.String = "gameCenterLeaderboardLocalizationsV2_image_getToOneRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/fieldsGameCenterLeaderboardImagesPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case imageAsset = "imageAsset"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case localization = "localization"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/fields[gameCenterLeaderboardImages]`.
-                public typealias fieldsGameCenterLeaderboardImagesPayload = [Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.FieldsGameCenterLeaderboardImagesPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardImages
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/fields[gameCenterLeaderboardImages]`.
-                public var fieldsGameCenterLeaderboardImages: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.fieldsGameCenterLeaderboardImagesPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/fieldsGameCenterLeaderboardLocalizationsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case formatterOverride = "formatterOverride"
-                    case formatterSuffix = "formatterSuffix"
-                    case formatterSuffixSingular = "formatterSuffixSingular"
-                    case description = "description"
-                    case version = "version"
-                    case image = "image"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public typealias fieldsGameCenterLeaderboardLocalizationsPayload = [Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.FieldsGameCenterLeaderboardLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public var fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case localization = "localization"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/include`.
-                public typealias IncludePayload = [Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/query/include`.
-                public var include: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsGameCenterLeaderboardImages: the fields to include for returned resources of type gameCenterLeaderboardImages
-                ///   - fieldsGameCenterLeaderboardLocalizations: the fields to include for returned resources of type gameCenterLeaderboardLocalizations
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsGameCenterLeaderboardImages: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.fieldsGameCenterLeaderboardImagesPayload? = nil,
-                    fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload? = nil,
-                    include: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsGameCenterLeaderboardImages = fieldsGameCenterLeaderboardImages
-                    self.fieldsGameCenterLeaderboardLocalizations = fieldsGameCenterLeaderboardLocalizations
-                    self.include = include
-                }
-            }
-            public var query: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Path,
-                query: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query = .init(),
-                headers: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardLocalizations/{id}/image/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardImageV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardImageV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterLeaderboardImage
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/image/get(gameCenterLeaderboardLocalizationsV2_image_getToOneRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v2/gameCenterLeaderboards`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/post(gameCenterLeaderboardsV2_createInstance)`.
-    public enum GameCenterLeaderboardsV2CreateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardsV2_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2CreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterLeaderboardsV2CreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardV2CreateRequest)
-            }
-            public var body: Operations.GameCenterLeaderboardsV2CreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.GameCenterLeaderboardsV2CreateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardsV2CreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardsV2CreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardsV2CreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterLeaderboard
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/post(gameCenterLeaderboardsV2_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.GameCenterLeaderboardsV2CreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.GameCenterLeaderboardsV2CreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v2/gameCenterLeaderboards/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/get(gameCenterLeaderboardsV2_getInstance)`.
-    public enum GameCenterLeaderboardsV2GetInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardsV2_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterLeaderboardsV2GetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fieldsGameCenterLeaderboardsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case defaultFormatter = "defaultFormatter"
-                    case referenceName = "referenceName"
-                    case vendorIdentifier = "vendorIdentifier"
-                    case submissionType = "submissionType"
-                    case scoreSortType = "scoreSortType"
-                    case scoreRangeStart = "scoreRangeStart"
-                    case scoreRangeEnd = "scoreRangeEnd"
-                    case recurrenceStartDate = "recurrenceStartDate"
-                    case recurrenceDuration = "recurrenceDuration"
-                    case recurrenceRule = "recurrenceRule"
-                    case archived = "archived"
-                    case activityProperties = "activityProperties"
-                    case visibility = "visibility"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case gameCenterGroup = "gameCenterGroup"
-                    case gameCenterLeaderboardSets = "gameCenterLeaderboardSets"
-                    case gameCenterScoreModerations = "gameCenterScoreModerations"
-                    case activity = "activity"
-                    case challenge = "challenge"
-                    case versions = "versions"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterLeaderboards]`.
-                public typealias fieldsGameCenterLeaderboardsPayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboards
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterLeaderboards]`.
-                public var fieldsGameCenterLeaderboards: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fieldsGameCenterDetailsPayload`.
-                @frozen public enum FieldsGameCenterDetailsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case arcadeEnabled = "arcadeEnabled"
-                    case challengeEnabled = "challengeEnabled"
+                    case url = "url"
                     case app = "app"
-                    case gameCenterAppVersions = "gameCenterAppVersions"
-                    case gameCenterGroup = "gameCenterGroup"
-                    case gameCenterLeaderboards = "gameCenterLeaderboards"
-                    case gameCenterLeaderboardsV2 = "gameCenterLeaderboardsV2"
-                    case gameCenterLeaderboardSets = "gameCenterLeaderboardSets"
-                    case gameCenterLeaderboardSetsV2 = "gameCenterLeaderboardSetsV2"
-                    case gameCenterAchievements = "gameCenterAchievements"
-                    case gameCenterAchievementsV2 = "gameCenterAchievementsV2"
-                    case gameCenterActivities = "gameCenterActivities"
-                    case gameCenterChallenges = "gameCenterChallenges"
-                    case defaultLeaderboard = "defaultLeaderboard"
-                    case defaultLeaderboardV2 = "defaultLeaderboardV2"
-                    case defaultGroupLeaderboard = "defaultGroupLeaderboard"
-                    case defaultGroupLeaderboardV2 = "defaultGroupLeaderboardV2"
-                    case achievementReleases = "achievementReleases"
-                    case activityReleases = "activityReleases"
-                    case challengeReleases = "challengeReleases"
-                    case leaderboardReleases = "leaderboardReleases"
-                    case leaderboardSetReleases = "leaderboardSetReleases"
-                    case blockedPlayers = "blockedPlayers"
-                    case challengesMinimumPlatformVersions = "challengesMinimumPlatformVersions"
+                    case deliveries = "deliveries"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterDetails]`.
-                public typealias fieldsGameCenterDetailsPayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.FieldsGameCenterDetailsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterDetails
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/fields[webhooks]`.
+                public typealias fieldsWebhooksPayload = [Operations.WebhooksGetInstance.Input.Query.FieldsWebhooksPayloadPayload]
+                /// the fields to include for returned resources of type webhooks
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterDetails]`.
-                public var fieldsGameCenterDetails: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterDetailsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fieldsGameCenterGroupsPayload`.
-                @frozen public enum FieldsGameCenterGroupsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case referenceName = "referenceName"
-                    case gameCenterDetails = "gameCenterDetails"
-                    case gameCenterLeaderboards = "gameCenterLeaderboards"
-                    case gameCenterLeaderboardsV2 = "gameCenterLeaderboardsV2"
-                    case gameCenterLeaderboardSets = "gameCenterLeaderboardSets"
-                    case gameCenterLeaderboardSetsV2 = "gameCenterLeaderboardSetsV2"
-                    case gameCenterAchievements = "gameCenterAchievements"
-                    case gameCenterAchievementsV2 = "gameCenterAchievementsV2"
-                    case gameCenterActivities = "gameCenterActivities"
-                    case gameCenterChallenges = "gameCenterChallenges"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterGroups]`.
-                public typealias fieldsGameCenterGroupsPayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.FieldsGameCenterGroupsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterGroups
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterGroups]`.
-                public var fieldsGameCenterGroups: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterGroupsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fieldsGameCenterLeaderboardSetsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardSetsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case referenceName = "referenceName"
-                    case vendorIdentifier = "vendorIdentifier"
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/fields[webhooks]`.
+                public var fieldsWebhooks: Operations.WebhooksGetInstance.Input.Query.fieldsWebhooksPayload?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/fieldsAppsPayload`.
+                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case accessibilityUrl = "accessibilityUrl"
+                    case name = "name"
+                    case bundleId = "bundleId"
+                    case sku = "sku"
+                    case primaryLocale = "primaryLocale"
+                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
+                    case subscriptionStatusUrl = "subscriptionStatusUrl"
+                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
+                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
+                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
+                    case contentRightsDeclaration = "contentRightsDeclaration"
+                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case accessibilityDeclarations = "accessibilityDeclarations"
+                    case appEncryptionDeclarations = "appEncryptionDeclarations"
+                    case appStoreIcon = "appStoreIcon"
+                    case ciProduct = "ciProduct"
+                    case betaTesters = "betaTesters"
+                    case betaGroups = "betaGroups"
+                    case appStoreVersions = "appStoreVersions"
+                    case appTags = "appTags"
+                    case preReleaseVersions = "preReleaseVersions"
+                    case betaAppLocalizations = "betaAppLocalizations"
+                    case builds = "builds"
+                    case betaLicenseAgreement = "betaLicenseAgreement"
+                    case betaAppReviewDetail = "betaAppReviewDetail"
+                    case appInfos = "appInfos"
+                    case appClips = "appClips"
+                    case appPricePoints = "appPricePoints"
+                    case endUserLicenseAgreement = "endUserLicenseAgreement"
+                    case appPriceSchedule = "appPriceSchedule"
+                    case appAvailabilityV2 = "appAvailabilityV2"
+                    case inAppPurchases = "inAppPurchases"
+                    case subscriptionGroups = "subscriptionGroups"
+                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
+                    case performanceOverviews = "performanceOverviews"
+                    case perfPowerMetrics = "perfPowerMetrics"
+                    case appCustomProductPages = "appCustomProductPages"
+                    case inAppPurchasesV2 = "inAppPurchasesV2"
+                    case promotedPurchases = "promotedPurchases"
+                    case appEvents = "appEvents"
+                    case reviewSubmissions = "reviewSubmissions"
+                    case subscriptionGracePeriod = "subscriptionGracePeriod"
+                    case customerReviews = "customerReviews"
+                    case customerReviewSummarizations = "customerReviewSummarizations"
                     case gameCenterDetail = "gameCenterDetail"
-                    case gameCenterGroup = "gameCenterGroup"
-                    case gameCenterLeaderboards = "gameCenterLeaderboards"
-                    case versions = "versions"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case alternativeDistributionKey = "alternativeDistributionKey"
+                    case analyticsReportRequests = "analyticsReportRequests"
+                    case marketplaceSearchDetail = "marketplaceSearchDetail"
+                    case buildUploads = "buildUploads"
+                    case backgroundAssets = "backgroundAssets"
+                    case assetLibrary = "assetLibrary"
+                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
+                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
+                    case searchKeywords = "searchKeywords"
+                    case webhooks = "webhooks"
+                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterLeaderboardSets]`.
-                public typealias fieldsGameCenterLeaderboardSetsPayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardSetsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardSets
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/fields[apps]`.
+                public typealias fieldsAppsPayload = [Operations.WebhooksGetInstance.Input.Query.FieldsAppsPayloadPayload]
+                /// the fields to include for returned resources of type apps
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterLeaderboardSets]`.
-                public var fieldsGameCenterLeaderboardSets: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fieldsGameCenterActivitiesPayload`.
-                @frozen public enum FieldsGameCenterActivitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case referenceName = "referenceName"
-                    case vendorIdentifier = "vendorIdentifier"
-                    case playStyle = "playStyle"
-                    case minimumPlayersCount = "minimumPlayersCount"
-                    case maximumPlayersCount = "maximumPlayersCount"
-                    case supportsPartyCode = "supportsPartyCode"
-                    case archived = "archived"
-                    case properties = "properties"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case gameCenterGroup = "gameCenterGroup"
-                    case achievements = "achievements"
-                    case achievementsV2 = "achievementsV2"
-                    case leaderboards = "leaderboards"
-                    case leaderboardsV2 = "leaderboardsV2"
-                    case versions = "versions"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterActivities]`.
-                public typealias fieldsGameCenterActivitiesPayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.FieldsGameCenterActivitiesPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterActivities
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterActivities]`.
-                public var fieldsGameCenterActivities: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterActivitiesPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fieldsGameCenterChallengesPayload`.
-                @frozen public enum FieldsGameCenterChallengesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case referenceName = "referenceName"
-                    case vendorIdentifier = "vendorIdentifier"
-                    case archived = "archived"
-                    case challengeType = "challengeType"
-                    case repeatable = "repeatable"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case gameCenterGroup = "gameCenterGroup"
-                    case versions = "versions"
-                    case leaderboard = "leaderboard"
-                    case leaderboardV2 = "leaderboardV2"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterChallenges]`.
-                public typealias fieldsGameCenterChallengesPayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.FieldsGameCenterChallengesPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterChallenges
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterChallenges]`.
-                public var fieldsGameCenterChallenges: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterChallengesPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fieldsGameCenterLeaderboardVersionsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case leaderboard = "leaderboard"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public typealias fieldsGameCenterLeaderboardVersionsPayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardVersions
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public var fieldsGameCenterLeaderboardVersions: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardVersionsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/IncludePayload`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/fields[apps]`.
+                public var fieldsApps: Operations.WebhooksGetInstance.Input.Query.fieldsAppsPayload?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/IncludePayload`.
                 @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case gameCenterDetail = "gameCenterDetail"
-                    case gameCenterGroup = "gameCenterGroup"
-                    case gameCenterLeaderboardSets = "gameCenterLeaderboardSets"
-                    case activity = "activity"
-                    case challenge = "challenge"
-                    case versions = "versions"
+                    case app = "app"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.IncludePayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.WebhooksGetInstance.Input.Query.IncludePayloadPayload]
                 /// comma-separated list of relationships to include
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/include`.
-                public var include: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.IncludePayload?
-                /// maximum number of related gameCenterLeaderboardSets returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/limit[gameCenterLeaderboardSets]`.
-                public var limitGameCenterLeaderboardSets: Swift.Int?
-                /// maximum number of related versions returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/query/limit[versions]`.
-                public var limitVersions: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/query/include`.
+                public var include: Operations.WebhooksGetInstance.Input.Query.IncludePayload?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - fieldsGameCenterLeaderboards: the fields to include for returned resources of type gameCenterLeaderboards
-                ///   - fieldsGameCenterDetails: the fields to include for returned resources of type gameCenterDetails
-                ///   - fieldsGameCenterGroups: the fields to include for returned resources of type gameCenterGroups
-                ///   - fieldsGameCenterLeaderboardSets: the fields to include for returned resources of type gameCenterLeaderboardSets
-                ///   - fieldsGameCenterActivities: the fields to include for returned resources of type gameCenterActivities
-                ///   - fieldsGameCenterChallenges: the fields to include for returned resources of type gameCenterChallenges
-                ///   - fieldsGameCenterLeaderboardVersions: the fields to include for returned resources of type gameCenterLeaderboardVersions
+                ///   - fieldsWebhooks: the fields to include for returned resources of type webhooks
+                ///   - fieldsApps: the fields to include for returned resources of type apps
                 ///   - include: comma-separated list of relationships to include
-                ///   - limitGameCenterLeaderboardSets: maximum number of related gameCenterLeaderboardSets returned (when they are included)
-                ///   - limitVersions: maximum number of related versions returned (when they are included)
                 public init(
-                    fieldsGameCenterLeaderboards: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardsPayload? = nil,
-                    fieldsGameCenterDetails: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterDetailsPayload? = nil,
-                    fieldsGameCenterGroups: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterGroupsPayload? = nil,
-                    fieldsGameCenterLeaderboardSets: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetsPayload? = nil,
-                    fieldsGameCenterActivities: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterActivitiesPayload? = nil,
-                    fieldsGameCenterChallenges: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterChallengesPayload? = nil,
-                    fieldsGameCenterLeaderboardVersions: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardVersionsPayload? = nil,
-                    include: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query.IncludePayload? = nil,
-                    limitGameCenterLeaderboardSets: Swift.Int? = nil,
-                    limitVersions: Swift.Int? = nil
+                    fieldsWebhooks: Operations.WebhooksGetInstance.Input.Query.fieldsWebhooksPayload? = nil,
+                    fieldsApps: Operations.WebhooksGetInstance.Input.Query.fieldsAppsPayload? = nil,
+                    include: Operations.WebhooksGetInstance.Input.Query.IncludePayload? = nil
                 ) {
-                    self.fieldsGameCenterLeaderboards = fieldsGameCenterLeaderboards
-                    self.fieldsGameCenterDetails = fieldsGameCenterDetails
-                    self.fieldsGameCenterGroups = fieldsGameCenterGroups
-                    self.fieldsGameCenterLeaderboardSets = fieldsGameCenterLeaderboardSets
-                    self.fieldsGameCenterActivities = fieldsGameCenterActivities
-                    self.fieldsGameCenterChallenges = fieldsGameCenterChallenges
-                    self.fieldsGameCenterLeaderboardVersions = fieldsGameCenterLeaderboardVersions
+                    self.fieldsWebhooks = fieldsWebhooks
+                    self.fieldsApps = fieldsApps
                     self.include = include
-                    self.limitGameCenterLeaderboardSets = limitGameCenterLeaderboardSets
-                    self.limitVersions = limitVersions
                 }
             }
-            public var query: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/header`.
+            public var query: Operations.WebhooksGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2GetInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksGetInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2GetInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksGetInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardsV2GetInstance.Input.Headers
+            public var headers: Operations.WebhooksGetInstance.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -1628,9 +278,9 @@ extension Operations {
             ///   - query:
             ///   - headers:
             public init(
-                path: Operations.GameCenterLeaderboardsV2GetInstance.Input.Path,
-                query: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query = .init(),
-                headers: Operations.GameCenterLeaderboardsV2GetInstance.Input.Headers = .init()
+                path: Operations.WebhooksGetInstance.Input.Path,
+                query: Operations.WebhooksGetInstance.Input.Query = .init(),
+                headers: Operations.WebhooksGetInstance.Input.Headers = .init()
             ) {
                 self.path = path
                 self.query = query
@@ -1639,15 +289,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardV2Response)
+                    /// - Remark: Generated from `#/paths/v1/webhooks/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WebhookResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardV2Response {
+                    public var json: Components.Schemas.WebhookResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -1657,26 +307,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardsV2GetInstance.Output.Ok.Body
+                public var body: Operations.WebhooksGetInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardsV2GetInstance.Output.Ok.Body) {
+                public init(body: Operations.WebhooksGetInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboard
+            /// Single Webhook
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/get(gameCenterLeaderboardsV2_getInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/get(webhooks_getInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardsV2GetInstance.Output.Ok)
+            case ok(Operations.WebhooksGetInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardsV2GetInstance.Output.Ok {
+            public var ok: Operations.WebhooksGetInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -1720,16 +370,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboards/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/patch(gameCenterLeaderboardsV2_updateInstance)`.
-    public enum GameCenterLeaderboardsV2UpdateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardsV2_updateInstance"
+    /// - Remark: HTTP `PATCH /v1/webhooks/{id}`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/{id}/patch(webhooks_updateInstance)`.
+    public enum WebhooksUpdateInstance {
+        public static let id: Swift.String = "webhooks_updateInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/PATCH/path`.
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/PATCH/path/id`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -1739,25 +389,25 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/PATCH/header`.
+            public var path: Operations.WebhooksUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2UpdateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksUpdateInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksUpdateInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/PATCH/requestBody`.
+            public var headers: Operations.WebhooksUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardV2UpdateRequest)
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.WebhookUpdateRequest)
             }
-            public var body: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Body
+            public var body: Operations.WebhooksUpdateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -1765,9 +415,9 @@ extension Operations {
             ///   - headers:
             ///   - body:
             public init(
-                path: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Path,
-                headers: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Body
+                path: Operations.WebhooksUpdateInstance.Input.Path,
+                headers: Operations.WebhooksUpdateInstance.Input.Headers = .init(),
+                body: Operations.WebhooksUpdateInstance.Input.Body
             ) {
                 self.path = path
                 self.headers = headers
@@ -1776,15 +426,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/PATCH/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardV2Response)
+                    /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WebhookResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardV2Response {
+                    public var json: Components.Schemas.WebhookResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -1794,26 +444,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardsV2UpdateInstance.Output.Ok.Body
+                public var body: Operations.WebhooksUpdateInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardsV2UpdateInstance.Output.Ok.Body) {
+                public init(body: Operations.WebhooksUpdateInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboard
+            /// Single Webhook
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/patch(gameCenterLeaderboardsV2_updateInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/patch(webhooks_updateInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardsV2UpdateInstance.Output.Ok)
+            case ok(Operations.WebhooksUpdateInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardsV2UpdateInstance.Output.Ok {
+            public var ok: Operations.WebhooksUpdateInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -1857,16 +507,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboards/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/delete(gameCenterLeaderboardsV2_deleteInstance)`.
-    public enum GameCenterLeaderboardsV2DeleteInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardsV2_deleteInstance"
+    /// - Remark: HTTP `DELETE /v1/webhooks/{id}`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/{id}/delete(webhooks_deleteInstance)`.
+    public enum WebhooksDeleteInstance {
+        public static let id: Swift.String = "webhooks_deleteInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/DELETE/path`.
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/DELETE/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/DELETE/path/id`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/DELETE/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -1876,12 +526,12 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardsV2DeleteInstance.Input.Path
+            public var path: Operations.WebhooksDeleteInstance.Input.Path
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - path:
-            public init(path: Operations.GameCenterLeaderboardsV2DeleteInstance.Input.Path) {
+            public init(path: Operations.WebhooksDeleteInstance.Input.Path) {
                 self.path = path
             }
         }
@@ -1892,13 +542,13 @@ extension Operations {
             }
             /// Success (no content)
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/delete(gameCenterLeaderboardsV2_deleteInstance)/responses/204`.
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/delete(webhooks_deleteInstance)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
-            case noContent(Operations.GameCenterLeaderboardsV2DeleteInstance.Output.NoContent)
+            case noContent(Operations.WebhooksDeleteInstance.Output.NoContent)
             /// Success (no content)
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/delete(gameCenterLeaderboardsV2_deleteInstance)/responses/204`.
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/delete(webhooks_deleteInstance)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
             public static var noContent: Self {
@@ -1908,7 +558,7 @@ extension Operations {
             ///
             /// - Throws: An error if `self` is not `.noContent`.
             /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.GameCenterLeaderboardsV2DeleteInstance.Output.NoContent {
+            public var noContent: Operations.WebhooksDeleteInstance.Output.NoContent {
                 get throws {
                     switch self {
                     case let .noContent(response):
@@ -1927,16 +577,16 @@ extension Operations {
             case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
-    /// - Remark: HTTP `GET /v2/gameCenterLeaderboards/{id}/versions`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/versions/get(gameCenterLeaderboardsV2_versions_getToManyRelated)`.
-    public enum GameCenterLeaderboardsV2VersionsGetToManyRelated {
-        public static let id: Swift.String = "gameCenterLeaderboardsV2_versions_getToManyRelated"
+    /// - Remark: HTTP `GET /v1/webhooks/{id}/deliveries`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/{id}/deliveries/get(webhooks_deliveries_getToManyRelated)`.
+    public enum WebhooksDeliveriesGetToManyRelated {
+        public static let id: Swift.String = "webhooks_deliveries_getToManyRelated"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/path`.
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/path/id`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -1946,125 +596,114 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query`.
+            public var path: Operations.WebhooksDeliveriesGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fieldsGameCenterLeaderboardVersionsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case leaderboard = "leaderboard"
-                    case localizations = "localizations"
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filterDeliveryStatePayload`.
+                @frozen public enum FilterDeliveryStatePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case succeeded = "SUCCEEDED"
+                    case failed = "FAILED"
+                    case pending = "PENDING"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public typealias fieldsGameCenterLeaderboardVersionsPayload = [Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.FieldsGameCenterLeaderboardVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardVersions
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[deliveryState]`.
+                public typealias filterDeliveryStatePayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.FilterDeliveryStatePayloadPayload]
+                /// filter by attribute 'deliveryState'
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public var fieldsGameCenterLeaderboardVersions: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardVersionsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fieldsGameCenterLeaderboardsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case defaultFormatter = "defaultFormatter"
-                    case referenceName = "referenceName"
-                    case vendorIdentifier = "vendorIdentifier"
-                    case submissionType = "submissionType"
-                    case scoreSortType = "scoreSortType"
-                    case scoreRangeStart = "scoreRangeStart"
-                    case scoreRangeEnd = "scoreRangeEnd"
-                    case recurrenceStartDate = "recurrenceStartDate"
-                    case recurrenceDuration = "recurrenceDuration"
-                    case recurrenceRule = "recurrenceRule"
-                    case archived = "archived"
-                    case activityProperties = "activityProperties"
-                    case visibility = "visibility"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case gameCenterGroup = "gameCenterGroup"
-                    case gameCenterLeaderboardSets = "gameCenterLeaderboardSets"
-                    case gameCenterScoreModerations = "gameCenterScoreModerations"
-                    case activity = "activity"
-                    case challenge = "challenge"
-                    case versions = "versions"
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[deliveryState]`.
+                public var filterDeliveryState: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.filterDeliveryStatePayload?
+                /// filter by createdDateGreaterThanOrEqualTo
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[createdDateGreaterThanOrEqualTo]`.
+                public var filterCreatedDateGreaterThanOrEqualTo: [Swift.String]?
+                /// filter by createdDateLessThan
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[createdDateLessThan]`.
+                public var filterCreatedDateLessThan: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fieldsWebhookDeliveriesPayload`.
+                @frozen public enum FieldsWebhookDeliveriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case createdDate = "createdDate"
+                    case deliveryState = "deliveryState"
+                    case errorMessage = "errorMessage"
+                    case redelivery = "redelivery"
+                    case sentDate = "sentDate"
+                    case request = "request"
+                    case response = "response"
+                    case event = "event"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fields[gameCenterLeaderboards]`.
-                public typealias fieldsGameCenterLeaderboardsPayload = [Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.FieldsGameCenterLeaderboardsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboards
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookDeliveries]`.
+                public typealias fieldsWebhookDeliveriesPayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.FieldsWebhookDeliveriesPayloadPayload]
+                /// the fields to include for returned resources of type webhookDeliveries
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fields[gameCenterLeaderboards]`.
-                public var fieldsGameCenterLeaderboards: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fieldsGameCenterLeaderboardLocalizationsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case formatterOverride = "formatterOverride"
-                    case formatterSuffix = "formatterSuffix"
-                    case formatterSuffixSingular = "formatterSuffixSingular"
-                    case description = "description"
-                    case version = "version"
-                    case image = "image"
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookDeliveries]`.
+                public var fieldsWebhookDeliveries: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookDeliveriesPayload?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fieldsWebhookEventsPayload`.
+                @frozen public enum FieldsWebhookEventsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case eventType = "eventType"
+                    case payload = "payload"
+                    case ping = "ping"
+                    case createdDate = "createdDate"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public typealias fieldsGameCenterLeaderboardLocalizationsPayload = [Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.FieldsGameCenterLeaderboardLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardLocalizations
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookEvents]`.
+                public typealias fieldsWebhookEventsPayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.FieldsWebhookEventsPayloadPayload]
+                /// the fields to include for returned resources of type webhookEvents
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/fields[gameCenterLeaderboardLocalizations]`.
-                public var fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookEvents]`.
+                public var fieldsWebhookEvents: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookEventsPayload?
                 /// maximum resources per page
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/limit`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/limit`.
                 public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/IncludePayload`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/IncludePayload`.
                 @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case leaderboard = "leaderboard"
-                    case localizations = "localizations"
+                    case event = "event"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/include`.
-                public typealias IncludePayload = [Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/include`.
+                public typealias IncludePayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.IncludePayloadPayload]
                 /// comma-separated list of relationships to include
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/include`.
-                public var include: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.IncludePayload?
-                /// maximum number of related localizations returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/query/limit[localizations]`.
-                public var limitLocalizations: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/include`.
+                public var include: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.IncludePayload?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - fieldsGameCenterLeaderboardVersions: the fields to include for returned resources of type gameCenterLeaderboardVersions
-                ///   - fieldsGameCenterLeaderboards: the fields to include for returned resources of type gameCenterLeaderboards
-                ///   - fieldsGameCenterLeaderboardLocalizations: the fields to include for returned resources of type gameCenterLeaderboardLocalizations
+                ///   - filterDeliveryState: filter by attribute 'deliveryState'
+                ///   - filterCreatedDateGreaterThanOrEqualTo: filter by createdDateGreaterThanOrEqualTo
+                ///   - filterCreatedDateLessThan: filter by createdDateLessThan
+                ///   - fieldsWebhookDeliveries: the fields to include for returned resources of type webhookDeliveries
+                ///   - fieldsWebhookEvents: the fields to include for returned resources of type webhookEvents
                 ///   - limit: maximum resources per page
                 ///   - include: comma-separated list of relationships to include
-                ///   - limitLocalizations: maximum number of related localizations returned (when they are included)
                 public init(
-                    fieldsGameCenterLeaderboardVersions: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardVersionsPayload? = nil,
-                    fieldsGameCenterLeaderboards: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardsPayload? = nil,
-                    fieldsGameCenterLeaderboardLocalizations: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardLocalizationsPayload? = nil,
+                    filterDeliveryState: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.filterDeliveryStatePayload? = nil,
+                    filterCreatedDateGreaterThanOrEqualTo: [Swift.String]? = nil,
+                    filterCreatedDateLessThan: [Swift.String]? = nil,
+                    fieldsWebhookDeliveries: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookDeliveriesPayload? = nil,
+                    fieldsWebhookEvents: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookEventsPayload? = nil,
                     limit: Swift.Int? = nil,
-                    include: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query.IncludePayload? = nil,
-                    limitLocalizations: Swift.Int? = nil
+                    include: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.IncludePayload? = nil
                 ) {
-                    self.fieldsGameCenterLeaderboardVersions = fieldsGameCenterLeaderboardVersions
-                    self.fieldsGameCenterLeaderboards = fieldsGameCenterLeaderboards
-                    self.fieldsGameCenterLeaderboardLocalizations = fieldsGameCenterLeaderboardLocalizations
+                    self.filterDeliveryState = filterDeliveryState
+                    self.filterCreatedDateGreaterThanOrEqualTo = filterCreatedDateGreaterThanOrEqualTo
+                    self.filterCreatedDateLessThan = filterCreatedDateLessThan
+                    self.fieldsWebhookDeliveries = fieldsWebhookDeliveries
+                    self.fieldsWebhookEvents = fieldsWebhookEvents
                     self.limit = limit
                     self.include = include
-                    self.limitLocalizations = limitLocalizations
                 }
             }
-            public var query: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/header`.
+            public var query: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksDeliveriesGetToManyRelated.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksDeliveriesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Headers
+            public var headers: Operations.WebhooksDeliveriesGetToManyRelated.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -2072,9 +711,9 @@ extension Operations {
             ///   - query:
             ///   - headers:
             public init(
-                path: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Path,
-                query: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query = .init(),
-                headers: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Headers = .init()
+                path: Operations.WebhooksDeliveriesGetToManyRelated.Input.Path,
+                query: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query = .init(),
+                headers: Operations.WebhooksDeliveriesGetToManyRelated.Input.Headers = .init()
             ) {
                 self.path = path
                 self.query = query
@@ -2083,15 +722,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboards/{id}/versions/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardVersionsV2Response)
+                    /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WebhookDeliveriesResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardVersionsV2Response {
+                    public var json: Components.Schemas.WebhookDeliveriesResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2101,26 +740,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Output.Ok.Body
+                public var body: Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Output.Ok.Body) {
+                public init(body: Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// List of GameCenterLeaderboardVersions
+            /// List of WebhookDeliveries
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/versions/get(gameCenterLeaderboardsV2_versions_getToManyRelated)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/deliveries/get(webhooks_deliveries_getToManyRelated)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Output.Ok)
+            case ok(Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Output.Ok {
+            public var ok: Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -2164,37 +803,37 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetImages`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/post(gameCenterLeaderboardSetImagesV2_createInstance)`.
-    public enum GameCenterLeaderboardSetImagesV2CreateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardSetImagesV2_createInstance"
+    /// - Remark: HTTP `POST /v2/appAvailabilities`.
+    /// - Remark: Generated from `#/paths//v2/appAvailabilities/post(appAvailabilitiesV2_createInstance)`.
+    public enum AppAvailabilitiesV2CreateInstance {
+        public static let id: Swift.String = "appAvailabilitiesV2_createInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/header`.
+            /// - Remark: Generated from `#/paths/v2/appAvailabilities/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2CreateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAvailabilitiesV2CreateInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAvailabilitiesV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/requestBody`.
+            public var headers: Operations.AppAvailabilitiesV2CreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/appAvailabilities/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardSetImageV2CreateRequest)
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppAvailabilityV2CreateRequest)
             }
-            public var body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Body
+            public var body: Operations.AppAvailabilitiesV2CreateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
             ///   - body:
             public init(
-                headers: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Body
+                headers: Operations.AppAvailabilitiesV2CreateInstance.Input.Headers = .init(),
+                body: Operations.AppAvailabilitiesV2CreateInstance.Input.Body
             ) {
                 self.headers = headers
                 self.body = body
@@ -2202,15 +841,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/responses/201/content`.
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/POST/responses/201/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardSetImageV2Response)
+                    /// - Remark: Generated from `#/paths/v2/appAvailabilities/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.AppAvailabilityV2Response)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardSetImageV2Response {
+                    public var json: Components.Schemas.AppAvailabilityV2Response {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2220,26 +859,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created.Body
+                public var body: Operations.AppAvailabilitiesV2CreateInstance.Output.Created.Body
                 /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created.Body) {
+                public init(body: Operations.AppAvailabilitiesV2CreateInstance.Output.Created.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboardSetImage
+            /// Single AppAvailability
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/post(gameCenterLeaderboardSetImagesV2_createInstance)/responses/201`.
+            /// - Remark: Generated from `#/paths//v2/appAvailabilities/post(appAvailabilitiesV2_createInstance)/responses/201`.
             ///
             /// HTTP response code: `201 created`.
-            case created(Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created)
+            case created(Operations.AppAvailabilitiesV2CreateInstance.Output.Created)
             /// The associated value of the enum case if `self` is `.created`.
             ///
             /// - Throws: An error if `self` is not `.created`.
             /// - SeeAlso: `.created`.
-            public var created: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created {
+            public var created: Operations.AppAvailabilitiesV2CreateInstance.Output.Created {
                 get throws {
                     switch self {
                     case let .created(response):
@@ -2283,16 +922,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetImages/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/get(gameCenterLeaderboardSetImagesV2_getInstance)`.
-    public enum GameCenterLeaderboardSetImagesV2GetInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardSetImagesV2_getInstance"
+    /// - Remark: HTTP `GET /v2/appAvailabilities/{id}/territoryAvailabilities`.
+    /// - Remark: Generated from `#/paths//v2/appAvailabilities/{id}/territoryAvailabilities/get(appAvailabilitiesV2_territoryAvailabilities_getToManyRelated)`.
+    public enum AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated {
+        public static let id: Swift.String = "appAvailabilitiesV2_territoryAvailabilities_getToManyRelated"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/path`.
+            /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/path/id`.
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -2302,76 +941,80 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query`.
+            public var path: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/fieldsGameCenterLeaderboardSetImagesPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardSetImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case imageAsset = "imageAsset"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case localization = "localization"
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/fieldsTerritoryAvailabilitiesPayload`.
+                @frozen public enum FieldsTerritoryAvailabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case available = "available"
+                    case releaseDate = "releaseDate"
+                    case preOrderEnabled = "preOrderEnabled"
+                    case preOrderPublishDate = "preOrderPublishDate"
+                    case contentStatuses = "contentStatuses"
+                    case territory = "territory"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/fields[gameCenterLeaderboardSetImages]`.
-                public typealias fieldsGameCenterLeaderboardSetImagesPayload = [Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.FieldsGameCenterLeaderboardSetImagesPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardSetImages
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/fields[territoryAvailabilities]`.
+                public typealias fieldsTerritoryAvailabilitiesPayload = [Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.FieldsTerritoryAvailabilitiesPayloadPayload]
+                /// the fields to include for returned resources of type territoryAvailabilities
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/fields[gameCenterLeaderboardSetImages]`.
-                public var fieldsGameCenterLeaderboardSetImages: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetImagesPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/fieldsGameCenterLeaderboardSetLocalizationsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardSetLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case version = "version"
-                    case image = "image"
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/fields[territoryAvailabilities]`.
+                public var fieldsTerritoryAvailabilities: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.fieldsTerritoryAvailabilitiesPayload?
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/fieldsTerritoriesPayload`.
+                @frozen public enum FieldsTerritoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case currency = "currency"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/fields[gameCenterLeaderboardSetLocalizations]`.
-                public typealias fieldsGameCenterLeaderboardSetLocalizationsPayload = [Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.FieldsGameCenterLeaderboardSetLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardSetLocalizations
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/fields[territories]`.
+                public typealias fieldsTerritoriesPayload = [Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.FieldsTerritoriesPayloadPayload]
+                /// the fields to include for returned resources of type territories
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/fields[gameCenterLeaderboardSetLocalizations]`.
-                public var fieldsGameCenterLeaderboardSetLocalizations: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/IncludePayload`.
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/fields[territories]`.
+                public var fieldsTerritories: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.fieldsTerritoriesPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/IncludePayload`.
                 @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case localization = "localization"
+                    case territory = "territory"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.IncludePayloadPayload]
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.IncludePayloadPayload]
                 /// comma-separated list of relationships to include
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/query/include`.
-                public var include: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.IncludePayload?
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/query/include`.
+                public var include: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.IncludePayload?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - fieldsGameCenterLeaderboardSetImages: the fields to include for returned resources of type gameCenterLeaderboardSetImages
-                ///   - fieldsGameCenterLeaderboardSetLocalizations: the fields to include for returned resources of type gameCenterLeaderboardSetLocalizations
+                ///   - fieldsTerritoryAvailabilities: the fields to include for returned resources of type territoryAvailabilities
+                ///   - fieldsTerritories: the fields to include for returned resources of type territories
+                ///   - limit: maximum resources per page
                 ///   - include: comma-separated list of relationships to include
                 public init(
-                    fieldsGameCenterLeaderboardSetImages: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetImagesPayload? = nil,
-                    fieldsGameCenterLeaderboardSetLocalizations: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetLocalizationsPayload? = nil,
-                    include: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query.IncludePayload? = nil
+                    fieldsTerritoryAvailabilities: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.fieldsTerritoryAvailabilitiesPayload? = nil,
+                    fieldsTerritories: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.fieldsTerritoriesPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query.IncludePayload? = nil
                 ) {
-                    self.fieldsGameCenterLeaderboardSetImages = fieldsGameCenterLeaderboardSetImages
-                    self.fieldsGameCenterLeaderboardSetLocalizations = fieldsGameCenterLeaderboardSetLocalizations
+                    self.fieldsTerritoryAvailabilities = fieldsTerritoryAvailabilities
+                    self.fieldsTerritories = fieldsTerritories
+                    self.limit = limit
                     self.include = include
                 }
             }
-            public var query: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/header`.
+            public var query: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2GetInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2GetInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Headers
+            public var headers: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -2379,9 +1022,9 @@ extension Operations {
             ///   - query:
             ///   - headers:
             public init(
-                path: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Path,
-                query: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query = .init(),
-                headers: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Headers = .init()
+                path: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Path,
+                query: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Query = .init(),
+                headers: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Input.Headers = .init()
             ) {
                 self.path = path
                 self.query = query
@@ -2390,15 +1033,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardSetImageV2Response)
+                    /// - Remark: Generated from `#/paths/v2/appAvailabilities/{id}/territoryAvailabilities/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.TerritoryAvailabilitiesResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardSetImageV2Response {
+                    public var json: Components.Schemas.TerritoryAvailabilitiesResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2408,26 +1051,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Output.Ok.Body
+                public var body: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Output.Ok.Body) {
+                public init(body: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboardSetImage
+            /// List of TerritoryAvailabilities
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/get(gameCenterLeaderboardSetImagesV2_getInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v2/appAvailabilities/{id}/territoryAvailabilities/get(appAvailabilitiesV2_territoryAvailabilities_getToManyRelated)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardSetImagesV2GetInstance.Output.Ok)
+            case ok(Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Output.Ok {
+            public var ok: Operations.AppAvailabilitiesV2TerritoryAvailabilitiesGetToManyRelated.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -2471,16 +1114,135 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSetImages/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/patch(gameCenterLeaderboardSetImagesV2_updateInstance)`.
-    public enum GameCenterLeaderboardSetImagesV2UpdateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardSetImagesV2_updateInstance"
+    /// - Remark: HTTP `POST /v2/appStoreVersionExperiments`.
+    /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/post(appStoreVersionExperimentsV2_createInstance)`.
+    public enum AppStoreVersionExperimentsV2CreateInstance {
+        public static let id: Swift.String = "appStoreVersionExperimentsV2_createInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/PATCH/path`.
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2CreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppStoreVersionExperimentsV2CreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppStoreVersionExperimentV2CreateRequest)
+            }
+            public var body: Operations.AppStoreVersionExperimentsV2CreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.AppStoreVersionExperimentsV2CreateInstance.Input.Headers = .init(),
+                body: Operations.AppStoreVersionExperimentsV2CreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.AppStoreVersionExperimentV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppStoreVersionExperimentV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppStoreVersionExperimentsV2CreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppStoreVersionExperimentsV2CreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single AppStoreVersionExperiment
+            ///
+            /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/post(appStoreVersionExperimentsV2_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.AppStoreVersionExperimentsV2CreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.AppStoreVersionExperimentsV2CreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v2/appStoreVersionExperiments/{id}`.
+    /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/get(appStoreVersionExperimentsV2_getInstance)`.
+    public enum AppStoreVersionExperimentsV2GetInstance {
+        public static let id: Swift.String = "appStoreVersionExperimentsV2_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/PATCH/path/id`.
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -2490,25 +1252,343 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/PATCH/header`.
+            public var path: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fieldsAppStoreVersionExperimentsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case platform = "platform"
+                    case trafficProportion = "trafficProportion"
+                    case state = "state"
+                    case reviewRequired = "reviewRequired"
+                    case startDate = "startDate"
+                    case endDate = "endDate"
+                    case app = "app"
+                    case latestControlVersion = "latestControlVersion"
+                    case controlVersions = "controlVersions"
+                    case appStoreVersionExperimentTreatments = "appStoreVersionExperimentTreatments"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[appStoreVersionExperiments]`.
+                public typealias fieldsAppStoreVersionExperimentsPayload = [Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.FieldsAppStoreVersionExperimentsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperiments
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[appStoreVersionExperiments]`.
+                public var fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload?
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fieldsAppsPayload`.
+                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case accessibilityUrl = "accessibilityUrl"
+                    case name = "name"
+                    case bundleId = "bundleId"
+                    case sku = "sku"
+                    case primaryLocale = "primaryLocale"
+                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
+                    case subscriptionStatusUrl = "subscriptionStatusUrl"
+                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
+                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
+                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
+                    case contentRightsDeclaration = "contentRightsDeclaration"
+                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case accessibilityDeclarations = "accessibilityDeclarations"
+                    case appEncryptionDeclarations = "appEncryptionDeclarations"
+                    case appStoreIcon = "appStoreIcon"
+                    case ciProduct = "ciProduct"
+                    case betaTesters = "betaTesters"
+                    case betaGroups = "betaGroups"
+                    case appStoreVersions = "appStoreVersions"
+                    case appTags = "appTags"
+                    case preReleaseVersions = "preReleaseVersions"
+                    case betaAppLocalizations = "betaAppLocalizations"
+                    case builds = "builds"
+                    case betaLicenseAgreement = "betaLicenseAgreement"
+                    case betaAppReviewDetail = "betaAppReviewDetail"
+                    case appInfos = "appInfos"
+                    case appClips = "appClips"
+                    case appPricePoints = "appPricePoints"
+                    case endUserLicenseAgreement = "endUserLicenseAgreement"
+                    case appPriceSchedule = "appPriceSchedule"
+                    case appAvailabilityV2 = "appAvailabilityV2"
+                    case inAppPurchases = "inAppPurchases"
+                    case subscriptionGroups = "subscriptionGroups"
+                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
+                    case performanceOverviews = "performanceOverviews"
+                    case perfPowerMetrics = "perfPowerMetrics"
+                    case appCustomProductPages = "appCustomProductPages"
+                    case inAppPurchasesV2 = "inAppPurchasesV2"
+                    case promotedPurchases = "promotedPurchases"
+                    case appEvents = "appEvents"
+                    case reviewSubmissions = "reviewSubmissions"
+                    case subscriptionGracePeriod = "subscriptionGracePeriod"
+                    case customerReviews = "customerReviews"
+                    case customerReviewSummarizations = "customerReviewSummarizations"
+                    case gameCenterDetail = "gameCenterDetail"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case alternativeDistributionKey = "alternativeDistributionKey"
+                    case analyticsReportRequests = "analyticsReportRequests"
+                    case marketplaceSearchDetail = "marketplaceSearchDetail"
+                    case buildUploads = "buildUploads"
+                    case backgroundAssets = "backgroundAssets"
+                    case assetLibrary = "assetLibrary"
+                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
+                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
+                    case searchKeywords = "searchKeywords"
+                    case webhooks = "webhooks"
+                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[apps]`.
+                public typealias fieldsAppsPayload = [Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.FieldsAppsPayloadPayload]
+                /// the fields to include for returned resources of type apps
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[apps]`.
+                public var fieldsApps: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppsPayload?
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fieldsAppStoreVersionsPayload`.
+                @frozen public enum FieldsAppStoreVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case platform = "platform"
+                    case versionString = "versionString"
+                    case appStoreState = "appStoreState"
+                    case appVersionState = "appVersionState"
+                    case copyright = "copyright"
+                    case reviewType = "reviewType"
+                    case releaseType = "releaseType"
+                    case earliestReleaseDate = "earliestReleaseDate"
+                    case usesIdfa = "usesIdfa"
+                    case downloadable = "downloadable"
+                    case createdDate = "createdDate"
+                    case app = "app"
+                    case appStoreVersionLocalizations = "appStoreVersionLocalizations"
+                    case build = "build"
+                    case appStoreVersionPhasedRelease = "appStoreVersionPhasedRelease"
+                    case gameCenterAppVersion = "gameCenterAppVersion"
+                    case routingAppCoverage = "routingAppCoverage"
+                    case appStoreReviewDetail = "appStoreReviewDetail"
+                    case appStoreVersionSubmission = "appStoreVersionSubmission"
+                    case appClipDefaultExperience = "appClipDefaultExperience"
+                    case appStoreVersionExperiments = "appStoreVersionExperiments"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case customerReviews = "customerReviews"
+                    case alternativeDistributionPackage = "alternativeDistributionPackage"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[appStoreVersions]`.
+                public typealias fieldsAppStoreVersionsPayload = [Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.FieldsAppStoreVersionsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersions
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[appStoreVersions]`.
+                public var fieldsAppStoreVersions: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppStoreVersionsPayload?
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fieldsAppStoreVersionExperimentTreatmentsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentTreatmentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case appIcon = "appIcon"
+                    case appIconName = "appIconName"
+                    case promotedDate = "promotedDate"
+                    case appStoreVersionExperiment = "appStoreVersionExperiment"
+                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
+                    case appStoreVersionExperimentTreatmentLocalizations = "appStoreVersionExperimentTreatmentLocalizations"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[appStoreVersionExperimentTreatments]`.
+                public typealias fieldsAppStoreVersionExperimentTreatmentsPayload = [Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.FieldsAppStoreVersionExperimentTreatmentsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperimentTreatments
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/fields[appStoreVersionExperimentTreatments]`.
+                public var fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload?
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case app = "app"
+                    case latestControlVersion = "latestControlVersion"
+                    case controlVersions = "controlVersions"
+                    case appStoreVersionExperimentTreatments = "appStoreVersionExperimentTreatments"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/include`.
+                public var include: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.IncludePayload?
+                /// maximum number of related appStoreVersionExperimentTreatments returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/limit[appStoreVersionExperimentTreatments]`.
+                public var limitAppStoreVersionExperimentTreatments: Swift.Int?
+                /// maximum number of related controlVersions returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/query/limit[controlVersions]`.
+                public var limitControlVersions: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsAppStoreVersionExperiments: the fields to include for returned resources of type appStoreVersionExperiments
+                ///   - fieldsApps: the fields to include for returned resources of type apps
+                ///   - fieldsAppStoreVersions: the fields to include for returned resources of type appStoreVersions
+                ///   - fieldsAppStoreVersionExperimentTreatments: the fields to include for returned resources of type appStoreVersionExperimentTreatments
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitAppStoreVersionExperimentTreatments: maximum number of related appStoreVersionExperimentTreatments returned (when they are included)
+                ///   - limitControlVersions: maximum number of related controlVersions returned (when they are included)
+                public init(
+                    fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload? = nil,
+                    fieldsApps: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppsPayload? = nil,
+                    fieldsAppStoreVersions: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppStoreVersionsPayload? = nil,
+                    fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload? = nil,
+                    include: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query.IncludePayload? = nil,
+                    limitAppStoreVersionExperimentTreatments: Swift.Int? = nil,
+                    limitControlVersions: Swift.Int? = nil
+                ) {
+                    self.fieldsAppStoreVersionExperiments = fieldsAppStoreVersionExperiments
+                    self.fieldsApps = fieldsApps
+                    self.fieldsAppStoreVersions = fieldsAppStoreVersions
+                    self.fieldsAppStoreVersionExperimentTreatments = fieldsAppStoreVersionExperimentTreatments
+                    self.include = include
+                    self.limitAppStoreVersionExperimentTreatments = limitAppStoreVersionExperimentTreatments
+                    self.limitControlVersions = limitControlVersions
+                }
+            }
+            public var query: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2GetInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2GetInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardSetImageV2UpdateRequest)
+            public var headers: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Path,
+                query: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Query = .init(),
+                headers: Operations.AppStoreVersionExperimentsV2GetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
             }
-            public var body: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Body
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppStoreVersionExperimentV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppStoreVersionExperimentV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppStoreVersionExperimentsV2GetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppStoreVersionExperimentsV2GetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single AppStoreVersionExperiment
+            ///
+            /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/get(appStoreVersionExperimentsV2_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppStoreVersionExperimentsV2GetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppStoreVersionExperimentsV2GetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `PATCH /v2/appStoreVersionExperiments/{id}`.
+    /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/patch(appStoreVersionExperimentsV2_updateInstance)`.
+    public enum AppStoreVersionExperimentsV2UpdateInstance {
+        public static let id: Swift.String = "appStoreVersionExperimentsV2_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppStoreVersionExperimentsV2UpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2UpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppStoreVersionExperimentsV2UpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.AppStoreVersionExperimentV2UpdateRequest)
+            }
+            public var body: Operations.AppStoreVersionExperimentsV2UpdateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -2516,9 +1596,9 @@ extension Operations {
             ///   - headers:
             ///   - body:
             public init(
-                path: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Path,
-                headers: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Body
+                path: Operations.AppStoreVersionExperimentsV2UpdateInstance.Input.Path,
+                headers: Operations.AppStoreVersionExperimentsV2UpdateInstance.Input.Headers = .init(),
+                body: Operations.AppStoreVersionExperimentsV2UpdateInstance.Input.Body
             ) {
                 self.path = path
                 self.headers = headers
@@ -2527,15 +1607,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/PATCH/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/PATCH/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardSetImageV2Response)
+                    /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppStoreVersionExperimentV2Response)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardSetImageV2Response {
+                    public var json: Components.Schemas.AppStoreVersionExperimentV2Response {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2545,26 +1625,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Output.Ok.Body
+                public var body: Operations.AppStoreVersionExperimentsV2UpdateInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Output.Ok.Body) {
+                public init(body: Operations.AppStoreVersionExperimentsV2UpdateInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboardSetImage
+            /// Single AppStoreVersionExperiment
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/patch(gameCenterLeaderboardSetImagesV2_updateInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/patch(appStoreVersionExperimentsV2_updateInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Output.Ok)
+            case ok(Operations.AppStoreVersionExperimentsV2UpdateInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Output.Ok {
+            public var ok: Operations.AppStoreVersionExperimentsV2UpdateInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -2608,16 +1688,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSetImages/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/delete(gameCenterLeaderboardSetImagesV2_deleteInstance)`.
-    public enum GameCenterLeaderboardSetImagesV2DeleteInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardSetImagesV2_deleteInstance"
+    /// - Remark: HTTP `DELETE /v2/appStoreVersionExperiments/{id}`.
+    /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/delete(appStoreVersionExperimentsV2_deleteInstance)`.
+    public enum AppStoreVersionExperimentsV2DeleteInstance {
+        public static let id: Swift.String = "appStoreVersionExperimentsV2_deleteInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/DELETE/path`.
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/DELETE/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/{id}/DELETE/path/id`.
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/DELETE/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -2627,12 +1707,12 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Input.Path
+            public var path: Operations.AppStoreVersionExperimentsV2DeleteInstance.Input.Path
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - path:
-            public init(path: Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Input.Path) {
+            public init(path: Operations.AppStoreVersionExperimentsV2DeleteInstance.Input.Path) {
                 self.path = path
             }
         }
@@ -2643,13 +1723,13 @@ extension Operations {
             }
             /// Success (no content)
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/delete(gameCenterLeaderboardSetImagesV2_deleteInstance)/responses/204`.
+            /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/delete(appStoreVersionExperimentsV2_deleteInstance)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
-            case noContent(Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Output.NoContent)
+            case noContent(Operations.AppStoreVersionExperimentsV2DeleteInstance.Output.NoContent)
             /// Success (no content)
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/delete(gameCenterLeaderboardSetImagesV2_deleteInstance)/responses/204`.
+            /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/delete(appStoreVersionExperimentsV2_deleteInstance)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
             public static var noContent: Self {
@@ -2659,7 +1739,7 @@ extension Operations {
             ///
             /// - Throws: An error if `self` is not `.noContent`.
             /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Output.NoContent {
+            public var noContent: Operations.AppStoreVersionExperimentsV2DeleteInstance.Output.NoContent {
                 get throws {
                     switch self {
                     case let .noContent(response):
@@ -2678,53 +1758,164 @@ extension Operations {
             case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
-    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetLocalizations`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/post(gameCenterLeaderboardSetLocalizationsV2_createInstance)`.
-    public enum GameCenterLeaderboardSetLocalizationsV2CreateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardSetLocalizationsV2_createInstance"
+    /// - Remark: HTTP `GET /v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments`.
+    /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/get(appStoreVersionExperimentsV2_appStoreVersionExperimentTreatments_getToManyRelated)`.
+    public enum AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated {
+        public static let id: Swift.String = "appStoreVersionExperimentsV2_appStoreVersionExperimentTreatments_getToManyRelated"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/POST/header`.
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fieldsAppStoreVersionExperimentTreatmentsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentTreatmentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case appIcon = "appIcon"
+                    case appIconName = "appIconName"
+                    case promotedDate = "promotedDate"
+                    case appStoreVersionExperiment = "appStoreVersionExperiment"
+                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
+                    case appStoreVersionExperimentTreatmentLocalizations = "appStoreVersionExperimentTreatmentLocalizations"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fields[appStoreVersionExperimentTreatments]`.
+                public typealias fieldsAppStoreVersionExperimentTreatmentsPayload = [Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.FieldsAppStoreVersionExperimentTreatmentsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperimentTreatments
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fields[appStoreVersionExperimentTreatments]`.
+                public var fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload?
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fieldsAppStoreVersionExperimentsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case trafficProportion = "trafficProportion"
+                    case state = "state"
+                    case reviewRequired = "reviewRequired"
+                    case startDate = "startDate"
+                    case endDate = "endDate"
+                    case appStoreVersion = "appStoreVersion"
+                    case appStoreVersionExperimentTreatments = "appStoreVersionExperimentTreatments"
+                    case platform = "platform"
+                    case app = "app"
+                    case latestControlVersion = "latestControlVersion"
+                    case controlVersions = "controlVersions"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fields[appStoreVersionExperiments]`.
+                public typealias fieldsAppStoreVersionExperimentsPayload = [Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.FieldsAppStoreVersionExperimentsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperiments
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fields[appStoreVersionExperiments]`.
+                public var fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentsPayload?
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case appStoreVersionExperimentTreatment = "appStoreVersionExperimentTreatment"
+                    case appScreenshotSets = "appScreenshotSets"
+                    case appPreviewSets = "appPreviewSets"
+                    case placements = "placements"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
+                public typealias fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload = [Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
+                public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case appStoreVersionExperiment = "appStoreVersionExperiment"
+                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
+                    case appStoreVersionExperimentTreatmentLocalizations = "appStoreVersionExperimentTreatmentLocalizations"
+                }
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/include`.
+                public var include: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.IncludePayload?
+                /// maximum number of related appStoreVersionExperimentTreatmentLocalizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/query/limit[appStoreVersionExperimentTreatmentLocalizations]`.
+                public var limitAppStoreVersionExperimentTreatmentLocalizations: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsAppStoreVersionExperimentTreatments: the fields to include for returned resources of type appStoreVersionExperimentTreatments
+                ///   - fieldsAppStoreVersionExperiments: the fields to include for returned resources of type appStoreVersionExperiments
+                ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitAppStoreVersionExperimentTreatmentLocalizations: maximum number of related appStoreVersionExperimentTreatmentLocalizations returned (when they are included)
+                public init(
+                    fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload? = nil,
+                    fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentsPayload? = nil,
+                    fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query.IncludePayload? = nil,
+                    limitAppStoreVersionExperimentTreatmentLocalizations: Swift.Int? = nil
+                ) {
+                    self.fieldsAppStoreVersionExperimentTreatments = fieldsAppStoreVersionExperimentTreatments
+                    self.fieldsAppStoreVersionExperiments = fieldsAppStoreVersionExperiments
+                    self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
+                    self.limit = limit
+                    self.include = include
+                    self.limitAppStoreVersionExperimentTreatmentLocalizations = limitAppStoreVersionExperimentTreatmentLocalizations
+                }
+            }
+            public var query: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardSetLocalizationV2CreateRequest)
-            }
-            public var body: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input.Body
+            public var headers: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
+            ///   - path:
+            ///   - query:
             ///   - headers:
-            ///   - body:
             public init(
-                headers: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input.Body
+                path: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Path,
+                query: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Headers = .init()
             ) {
+                self.path = path
+                self.query = query
                 self.headers = headers
-                self.body = body
             }
         }
         @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/POST/responses/201/content`.
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardSetLocalizationV2Response)
+                    /// - Remark: Generated from `#/paths/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppStoreVersionExperimentTreatmentsResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardSetLocalizationV2Response {
+                    public var json: Components.Schemas.AppStoreVersionExperimentTreatmentsResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2734,26 +1925,145 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Output.Created.Body
+                public var body: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of AppStoreVersionExperimentTreatments
+            ///
+            /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/get(appStoreVersionExperimentsV2_appStoreVersionExperimentTreatments_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/post(gameCenterAchievementImagesV2_createInstance)`.
+    public enum GameCenterAchievementImagesV2CreateInstance {
+        public static let id: Swift.String = "gameCenterAchievementImagesV2_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementImagesV2CreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementImagesV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GameCenterAchievementImagesV2CreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.GameCenterAchievementImageV2CreateRequest)
+            }
+            public var body: Operations.GameCenterAchievementImagesV2CreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.GameCenterAchievementImagesV2CreateInstance.Input.Headers = .init(),
+                body: Operations.GameCenterAchievementImagesV2CreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.GameCenterAchievementImageV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.GameCenterAchievementImageV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GameCenterAchievementImagesV2CreateInstance.Output.Created.Body
                 /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Output.Created.Body) {
+                public init(body: Operations.GameCenterAchievementImagesV2CreateInstance.Output.Created.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboardSetLocalization
+            /// Single GameCenterAchievementImage
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/post(gameCenterLeaderboardSetLocalizationsV2_createInstance)/responses/201`.
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/post(gameCenterAchievementImagesV2_createInstance)/responses/201`.
             ///
             /// HTTP response code: `201 created`.
-            case created(Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Output.Created)
+            case created(Operations.GameCenterAchievementImagesV2CreateInstance.Output.Created)
             /// The associated value of the enum case if `self` is `.created`.
             ///
             /// - Throws: An error if `self` is not `.created`.
             /// - SeeAlso: `.created`.
-            public var created: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Output.Created {
+            public var created: Operations.GameCenterAchievementImagesV2CreateInstance.Output.Created {
                 get throws {
                     switch self {
                     case let .created(response):
@@ -2797,16 +2107,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/get(gameCenterLeaderboardSetLocalizationsV2_getInstance)`.
-    public enum GameCenterLeaderboardSetLocalizationsV2GetInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardSetLocalizationsV2_getInstance"
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/get(gameCenterAchievementImagesV2_getInstance)`.
+    public enum GameCenterAchievementImagesV2GetInstance {
+        public static let id: Swift.String = "gameCenterAchievementImagesV2_getInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/path`.
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/path/id`.
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -2816,37 +2126,11 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query`.
+            public var path: Operations.GameCenterAchievementImagesV2GetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fieldsGameCenterLeaderboardSetLocalizationsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardSetLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case name = "name"
-                    case version = "version"
-                    case image = "image"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fields[gameCenterLeaderboardSetLocalizations]`.
-                public typealias fieldsGameCenterLeaderboardSetLocalizationsPayload = [Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardSetLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardSetLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fields[gameCenterLeaderboardSetLocalizations]`.
-                public var fieldsGameCenterLeaderboardSetLocalizations: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fieldsGameCenterLeaderboardSetVersionsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardSetVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case leaderboardSet = "leaderboardSet"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fields[gameCenterLeaderboardSetVersions]`.
-                public typealias fieldsGameCenterLeaderboardSetVersionsPayload = [Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardSetVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardSetVersions
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fields[gameCenterLeaderboardSetVersions]`.
-                public var fieldsGameCenterLeaderboardSetVersions: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetVersionsPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fieldsGameCenterLeaderboardSetImagesPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardSetImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/fieldsGameCenterAchievementImagesPayload`.
+                @frozen public enum FieldsGameCenterAchievementImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case fileSize = "fileSize"
                     case fileName = "fileName"
                     case imageAsset = "imageAsset"
@@ -2854,55 +2138,66 @@ extension Operations {
                     case assetDeliveryState = "assetDeliveryState"
                     case localization = "localization"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fields[gameCenterLeaderboardSetImages]`.
-                public typealias fieldsGameCenterLeaderboardSetImagesPayload = [Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.FieldsGameCenterLeaderboardSetImagesPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardSetImages
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/fields[gameCenterAchievementImages]`.
+                public typealias fieldsGameCenterAchievementImagesPayload = [Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.FieldsGameCenterAchievementImagesPayloadPayload]
+                /// the fields to include for returned resources of type gameCenterAchievementImages
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/fields[gameCenterLeaderboardSetImages]`.
-                public var fieldsGameCenterLeaderboardSetImages: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetImagesPayload?
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/fields[gameCenterAchievementImages]`.
+                public var fieldsGameCenterAchievementImages: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.fieldsGameCenterAchievementImagesPayload?
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/fieldsGameCenterAchievementLocalizationsPayload`.
+                @frozen public enum FieldsGameCenterAchievementLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case name = "name"
+                    case beforeEarnedDescription = "beforeEarnedDescription"
+                    case afterEarnedDescription = "afterEarnedDescription"
                     case version = "version"
                     case image = "image"
                 }
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.IncludePayloadPayload]
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/fields[gameCenterAchievementLocalizations]`.
+                public typealias fieldsGameCenterAchievementLocalizationsPayload = [Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.FieldsGameCenterAchievementLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type gameCenterAchievementLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/fields[gameCenterAchievementLocalizations]`.
+                public var fieldsGameCenterAchievementLocalizations: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.fieldsGameCenterAchievementLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case localization = "localization"
+                }
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.IncludePayloadPayload]
                 /// comma-separated list of relationships to include
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/query/include`.
-                public var include: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.IncludePayload?
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/query/include`.
+                public var include: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.IncludePayload?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - fieldsGameCenterLeaderboardSetLocalizations: the fields to include for returned resources of type gameCenterLeaderboardSetLocalizations
-                ///   - fieldsGameCenterLeaderboardSetVersions: the fields to include for returned resources of type gameCenterLeaderboardSetVersions
-                ///   - fieldsGameCenterLeaderboardSetImages: the fields to include for returned resources of type gameCenterLeaderboardSetImages
+                ///   - fieldsGameCenterAchievementImages: the fields to include for returned resources of type gameCenterAchievementImages
+                ///   - fieldsGameCenterAchievementLocalizations: the fields to include for returned resources of type gameCenterAchievementLocalizations
                 ///   - include: comma-separated list of relationships to include
                 public init(
-                    fieldsGameCenterLeaderboardSetLocalizations: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetLocalizationsPayload? = nil,
-                    fieldsGameCenterLeaderboardSetVersions: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetVersionsPayload? = nil,
-                    fieldsGameCenterLeaderboardSetImages: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.fieldsGameCenterLeaderboardSetImagesPayload? = nil,
-                    include: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query.IncludePayload? = nil
+                    fieldsGameCenterAchievementImages: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.fieldsGameCenterAchievementImagesPayload? = nil,
+                    fieldsGameCenterAchievementLocalizations: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.fieldsGameCenterAchievementLocalizationsPayload? = nil,
+                    include: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query.IncludePayload? = nil
                 ) {
-                    self.fieldsGameCenterLeaderboardSetLocalizations = fieldsGameCenterLeaderboardSetLocalizations
-                    self.fieldsGameCenterLeaderboardSetVersions = fieldsGameCenterLeaderboardSetVersions
-                    self.fieldsGameCenterLeaderboardSetImages = fieldsGameCenterLeaderboardSetImages
+                    self.fieldsGameCenterAchievementImages = fieldsGameCenterAchievementImages
+                    self.fieldsGameCenterAchievementLocalizations = fieldsGameCenterAchievementLocalizations
                     self.include = include
                 }
             }
-            public var query: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/header`.
+            public var query: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementImagesV2GetInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementImagesV2GetInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Headers
+            public var headers: Operations.GameCenterAchievementImagesV2GetInstance.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -2910,9 +2205,9 @@ extension Operations {
             ///   - query:
             ///   - headers:
             public init(
-                path: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Path,
-                query: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query = .init(),
-                headers: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Headers = .init()
+                path: Operations.GameCenterAchievementImagesV2GetInstance.Input.Path,
+                query: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query = .init(),
+                headers: Operations.GameCenterAchievementImagesV2GetInstance.Input.Headers = .init()
             ) {
                 self.path = path
                 self.query = query
@@ -2921,15 +2216,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardSetLocalizationV2Response)
+                    /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.GameCenterAchievementImageV2Response)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardSetLocalizationV2Response {
+                    public var json: Components.Schemas.GameCenterAchievementImageV2Response {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2939,26 +2234,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Output.Ok.Body
+                public var body: Operations.GameCenterAchievementImagesV2GetInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Output.Ok.Body) {
+                public init(body: Operations.GameCenterAchievementImagesV2GetInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboardSetLocalization
+            /// Single GameCenterAchievementImage
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/get(gameCenterLeaderboardSetLocalizationsV2_getInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/get(gameCenterAchievementImagesV2_getInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Output.Ok)
+            case ok(Operations.GameCenterAchievementImagesV2GetInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Output.Ok {
+            public var ok: Operations.GameCenterAchievementImagesV2GetInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -3002,16 +2297,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSetLocalizations/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/patch(gameCenterLeaderboardSetLocalizationsV2_updateInstance)`.
-    public enum GameCenterLeaderboardSetLocalizationsV2UpdateInstance {
-        public static let id: Swift.String = "gameCenterLeaderboardSetLocalizationsV2_updateInstance"
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/patch(gameCenterAchievementImagesV2_updateInstance)`.
+    public enum GameCenterAchievementImagesV2UpdateInstance {
+        public static let id: Swift.String = "gameCenterAchievementImagesV2_updateInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/PATCH/path`.
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/PATCH/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/PATCH/path/id`.
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/PATCH/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -3021,25 +2316,25 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/PATCH/header`.
+            public var path: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/PATCH/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementImagesV2UpdateInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementImagesV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/PATCH/requestBody`.
+            public var headers: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/PATCH/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterLeaderboardSetLocalizationV2UpdateRequest)
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.GameCenterAchievementImageV2UpdateRequest)
             }
-            public var body: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Body
+            public var body: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -3047,9 +2342,9 @@ extension Operations {
             ///   - headers:
             ///   - body:
             public init(
-                path: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Path,
-                headers: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Body
+                path: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Path,
+                headers: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Headers = .init(),
+                body: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Body
             ) {
                 self.path = path
                 self.headers = headers
@@ -3058,15 +2353,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/PATCH/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/PATCH/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetLocalizations/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterLeaderboardSetLocalizationV2Response)
+                    /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.GameCenterAchievementImageV2Response)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterLeaderboardSetLocalizationV2Response {
+                    public var json: Components.Schemas.GameCenterAchievementImageV2Response {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -3076,26 +2371,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Output.Ok.Body
+                public var body: Operations.GameCenterAchievementImagesV2UpdateInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Output.Ok.Body) {
+                public init(body: Operations.GameCenterAchievementImagesV2UpdateInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single GameCenterLeaderboardSetLocalization
+            /// Single GameCenterAchievementImage
             ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/patch(gameCenterLeaderboardSetLocalizationsV2_updateInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/patch(gameCenterAchievementImagesV2_updateInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Output.Ok)
+            case ok(Operations.GameCenterAchievementImagesV2UpdateInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Output.Ok {
+            public var ok: Operations.GameCenterAchievementImagesV2UpdateInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -3137,6 +2432,609 @@ extension Operations {
                     .json
                 ]
             }
+        }
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/delete(gameCenterAchievementImagesV2_deleteInstance)`.
+    public enum GameCenterAchievementImagesV2DeleteInstance {
+        public static let id: Swift.String = "gameCenterAchievementImagesV2_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementImages/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.GameCenterAchievementImagesV2DeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.GameCenterAchievementImagesV2DeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/delete(gameCenterAchievementImagesV2_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.GameCenterAchievementImagesV2DeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/delete(gameCenterAchievementImagesV2_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.GameCenterAchievementImagesV2DeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/post(gameCenterAchievementLocalizationsV2_createInstance)`.
+    public enum GameCenterAchievementLocalizationsV2CreateInstance {
+        public static let id: Swift.String = "gameCenterAchievementLocalizationsV2_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementLocalizationsV2CreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementLocalizationsV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.GameCenterAchievementLocalizationV2CreateRequest)
+            }
+            public var body: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input.Headers = .init(),
+                body: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.GameCenterAchievementLocalizationV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.GameCenterAchievementLocalizationV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single GameCenterAchievementLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/post(gameCenterAchievementLocalizationsV2_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.GameCenterAchievementLocalizationsV2CreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/get(gameCenterAchievementLocalizationsV2_getInstance)`.
+    public enum GameCenterAchievementLocalizationsV2GetInstance {
+        public static let id: Swift.String = "gameCenterAchievementLocalizationsV2_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fieldsGameCenterAchievementLocalizationsPayload`.
+                @frozen public enum FieldsGameCenterAchievementLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case name = "name"
+                    case beforeEarnedDescription = "beforeEarnedDescription"
+                    case afterEarnedDescription = "afterEarnedDescription"
+                    case version = "version"
+                    case image = "image"
+                }
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fields[gameCenterAchievementLocalizations]`.
+                public typealias fieldsGameCenterAchievementLocalizationsPayload = [Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.FieldsGameCenterAchievementLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type gameCenterAchievementLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fields[gameCenterAchievementLocalizations]`.
+                public var fieldsGameCenterAchievementLocalizations: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.fieldsGameCenterAchievementLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fieldsGameCenterAchievementVersionsPayload`.
+                @frozen public enum FieldsGameCenterAchievementVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case state = "state"
+                    case achievement = "achievement"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fields[gameCenterAchievementVersions]`.
+                public typealias fieldsGameCenterAchievementVersionsPayload = [Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.FieldsGameCenterAchievementVersionsPayloadPayload]
+                /// the fields to include for returned resources of type gameCenterAchievementVersions
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fields[gameCenterAchievementVersions]`.
+                public var fieldsGameCenterAchievementVersions: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.fieldsGameCenterAchievementVersionsPayload?
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fieldsGameCenterAchievementImagesPayload`.
+                @frozen public enum FieldsGameCenterAchievementImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case imageAsset = "imageAsset"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case localization = "localization"
+                }
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fields[gameCenterAchievementImages]`.
+                public typealias fieldsGameCenterAchievementImagesPayload = [Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.FieldsGameCenterAchievementImagesPayloadPayload]
+                /// the fields to include for returned resources of type gameCenterAchievementImages
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/fields[gameCenterAchievementImages]`.
+                public var fieldsGameCenterAchievementImages: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.fieldsGameCenterAchievementImagesPayload?
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case image = "image"
+                }
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/query/include`.
+                public var include: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsGameCenterAchievementLocalizations: the fields to include for returned resources of type gameCenterAchievementLocalizations
+                ///   - fieldsGameCenterAchievementVersions: the fields to include for returned resources of type gameCenterAchievementVersions
+                ///   - fieldsGameCenterAchievementImages: the fields to include for returned resources of type gameCenterAchievementImages
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsGameCenterAchievementLocalizations: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.fieldsGameCenterAchievementLocalizationsPayload? = nil,
+                    fieldsGameCenterAchievementVersions: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.fieldsGameCenterAchievementVersionsPayload? = nil,
+                    fieldsGameCenterAchievementImages: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.fieldsGameCenterAchievementImagesPayload? = nil,
+                    include: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsGameCenterAchievementLocalizations = fieldsGameCenterAchievementLocalizations
+                    self.fieldsGameCenterAchievementVersions = fieldsGameCenterAchievementVersions
+                    self.fieldsGameCenterAchievementImages = fieldsGameCenterAchievementImages
+                    self.include = include
+                }
+            }
+            public var query: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementLocalizationsV2GetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementLocalizationsV2GetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Path,
+                query: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query = .init(),
+                headers: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.GameCenterAchievementLocalizationV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.GameCenterAchievementLocalizationV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GameCenterAchievementLocalizationsV2GetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GameCenterAchievementLocalizationsV2GetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single GameCenterAchievementLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/get(gameCenterAchievementLocalizationsV2_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GameCenterAchievementLocalizationsV2GetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GameCenterAchievementLocalizationsV2GetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/patch(gameCenterAchievementLocalizationsV2_updateInstance)`.
+    public enum GameCenterAchievementLocalizationsV2UpdateInstance {
+        public static let id: Swift.String = "gameCenterAchievementLocalizationsV2_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementLocalizationsV2UpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementLocalizationsV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.GameCenterAchievementLocalizationV2UpdateRequest)
+            }
+            public var body: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Path,
+                headers: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Headers = .init(),
+                body: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.GameCenterAchievementLocalizationV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.GameCenterAchievementLocalizationV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single GameCenterAchievementLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/patch(gameCenterAchievementLocalizationsV2_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/delete(gameCenterAchievementLocalizationsV2_deleteInstance)`.
+    public enum GameCenterAchievementLocalizationsV2DeleteInstance {
+        public static let id: Swift.String = "gameCenterAchievementLocalizationsV2_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v2/gameCenterAchievementLocalizations/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/delete(gameCenterAchievementLocalizationsV2_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/delete(gameCenterAchievementLocalizationsV2_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
 }

@@ -117,7 +117,7 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        let activities = try await GameCenter.activities(detailID: detail.id, client: client)
+        let activities = try await GameCenter.activities(owner: detail.owner, client: client)
         if jsonOption.json { try printJSON(activities); return }
         guard !activities.isEmpty else {
           print("No activities.")
@@ -152,9 +152,9 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        async let activityList = GameCenter.activities(detailID: detail.id, client: client)
-        async let achievementList = GameCenter.achievements(detailID: detail.id, client: client)
-        async let leaderboardList = GameCenter.leaderboards(detailID: detail.id, client: client)
+        async let activityList = GameCenter.activities(owner: detail.owner, client: client)
+        async let achievementList = GameCenter.achievements(owner: detail.owner, client: client)
+        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
         let a = try GameCenterCommand.find(arguments.item, in: try await activityList)
         var localizations: [GameCenter.ActivityLocalization] = []
         var defaultImage: GameCenter.Image?
@@ -222,7 +222,7 @@ extension GameCenterCommand {
           print(yellow("Cancelled."))
           return
         }
-        _ = try await GameCenter.createActivity(detailID: detail.id, vendorIdentifier: id, settings: settings, fallbackURL: fallbackUrl, client: client)
+        _ = try await GameCenter.createActivity(owner: detail.owner, vendorIdentifier: id, settings: settings, fallbackURL: fallbackUrl, client: client)
         print(green("Created") + " activity '\(id)'.")
       }
     }
@@ -251,7 +251,7 @@ extension GameCenterCommand {
         let settings = try options.settings(referenceName: name, archived: archived)
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        let a = try GameCenterCommand.find(arguments.item, in: try await GameCenter.activities(detailID: detail.id, client: client))
+        let a = try GameCenterCommand.find(arguments.item, in: try await GameCenter.activities(owner: detail.owner, client: client))
         var lines: [String] = []
         func change(_ label: String, _ old: String?, _ new: String?) {
           if let new, new != old { lines.append("\(label): \(old ?? "-") → \(new.isEmpty ? "(none)" : new)") }
@@ -313,13 +313,13 @@ extension GameCenterCommand {
         guard achievements != nil || leaderboards != nil else { throw ValidationError("Give --achievements or --leaderboards.") }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        let a = try GameCenterCommand.find(arguments.item, in: try await GameCenter.activities(detailID: detail.id, client: client))
+        let a = try GameCenterCommand.find(arguments.item, in: try await GameCenter.activities(owner: detail.owner, client: client))
         var achievementIDs: [String] = [], leaderboardIDs: [String] = []
         if let achievements {
-          achievementIDs = try GameCenterCommand.ids(achievements, in: try await GameCenter.achievements(detailID: detail.id, client: client))
+          achievementIDs = try GameCenterCommand.ids(achievements, in: try await GameCenter.achievements(owner: detail.owner, client: client))
         }
         if let leaderboards {
-          leaderboardIDs = try GameCenterCommand.ids(leaderboards, in: try await GameCenter.leaderboards(detailID: detail.id, client: client))
+          leaderboardIDs = try GameCenterCommand.ids(leaderboards, in: try await GameCenter.leaderboards(owner: detail.owner, client: client))
         }
         let what = [achievementIDs.isEmpty ? nil : "\(achievementIDs.count) achievement\(achievementIDs.count == 1 ? "" : "s")",
                     leaderboardIDs.isEmpty ? nil : "\(leaderboardIDs.count) leaderboard\(leaderboardIDs.count == 1 ? "" : "s")"]
@@ -377,8 +377,8 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        async let challengeList = GameCenter.challenges(detailID: detail.id, client: client)
-        async let leaderboardList = GameCenter.leaderboards(detailID: detail.id, client: client)
+        async let challengeList = GameCenter.challenges(owner: detail.owner, client: client)
+        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
         let (challenges, leaderboards) = try await (challengeList, leaderboardList)
         if jsonOption.json { try printJSON(challenges); return }
         guard !challenges.isEmpty else {
@@ -414,8 +414,8 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        async let challengeList = GameCenter.challenges(detailID: detail.id, client: client)
-        async let leaderboardList = GameCenter.leaderboards(detailID: detail.id, client: client)
+        async let challengeList = GameCenter.challenges(owner: detail.owner, client: client)
+        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
         let c = try GameCenterCommand.find(arguments.item, in: try await challengeList)
         var localizations: [GameCenter.ChallengeLocalization] = []
         var defaultImage: GameCenter.Image?
@@ -473,8 +473,8 @@ extension GameCenterCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        async let leaderboardList = GameCenter.leaderboards(detailID: detail.id, client: client)
-        async let challengeList = GameCenter.challenges(detailID: detail.id, client: client)
+        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
+        async let challengeList = GameCenter.challenges(owner: detail.owner, client: client)
         let board = try GameCenterCommand.find(leaderboard, in: try await leaderboardList)
         try Challenges.check(leaderboard: board, repeatable: repeatable, challenges: try await challengeList)
         guard confirm("Create challenge \(id) '\(name)' on leaderboard '\(board.displayName)'? [y/N] ") else {
@@ -482,7 +482,7 @@ extension GameCenterCommand {
           return
         }
         _ = try await GameCenter.createChallenge(
-          detailID: detail.id, vendorIdentifier: id, referenceName: name, leaderboardID: board.id, repeatable: repeatable, client: client)
+          owner: detail.owner, vendorIdentifier: id, referenceName: name, leaderboardID: board.id, repeatable: repeatable, client: client)
         print(green("Created") + " challenge '\(id)'.")
       }
     }
@@ -514,8 +514,8 @@ extension GameCenterCommand {
         }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        async let challengeList = GameCenter.challenges(detailID: detail.id, client: client)
-        async let leaderboardList = GameCenter.leaderboards(detailID: detail.id, client: client)
+        async let challengeList = GameCenter.challenges(owner: detail.owner, client: client)
+        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
         let (challenges, leaderboards) = try await (challengeList, leaderboardList)
         let c = try GameCenterCommand.find(arguments.item, in: challenges)
         let board = try leaderboard.map { try GameCenterCommand.find($0, in: leaderboards) }

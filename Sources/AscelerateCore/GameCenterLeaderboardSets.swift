@@ -22,12 +22,15 @@ extension GameCenter {
     public let image: Image?
   }
 
-  public static func leaderboardSets(detailID: String, client: ASCClient) async throws -> [LeaderboardSet] {
+  public static func leaderboardSets(owner: Owner, client: ASCClient) async throws -> [LeaderboardSet] {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated(
-          path: .init(id: detailID), query: .init(limit: 200, include: [.versions], limitVersions: 50)
-        ).ok.body.json
+        switch owner {
+          case .detail(let id):
+            try await client.gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions], limitVersions: 50)).ok.body.json
+          case .group(let id):
+            try await client.gameCenterGroupsGameCenterLeaderboardSetsV2GetToManyRelated(path: .init(id: id), query: .init(limit: 200, include: [.versions], limitVersions: 50)).ok.body.json
+          }
       }
     }
     var versions: [String: Version] = [:]
@@ -74,12 +77,13 @@ extension GameCenter {
   /// leaderboards, the request names no detail: Apple refuses both, and the set takes the
   /// leaderboards' (seen 2026-11-04).
   public static func createLeaderboardSet(
-    detailID: String, vendorIdentifier: String, referenceName: String, leaderboardIDs: [String], client: ASCClient
+    owner: Owner, vendorIdentifier: String, referenceName: String, leaderboardIDs: [String], client: ASCClient
   ) async throws -> LeaderboardSet {
     let created = try await client.gameCenterLeaderboardSetsV2CreateInstance(body: .json(.init(data: .init(
       attributes: .init(referenceName: referenceName, vendorIdentifier: vendorIdentifier),
       relationships: .init(
-        gameCenterDetail: leaderboardIDs.isEmpty ? .init(data: .init(id: detailID, _type: "gameCenterDetails")) : nil,
+        gameCenterDetail: leaderboardIDs.isEmpty ? owner.detailID.map { .init(data: .init(id: $0, _type: "gameCenterDetails")) } : nil,
+        gameCenterGroup: leaderboardIDs.isEmpty ? owner.groupID.map { .init(data: .init(id: $0, _type: "gameCenterGroups")) } : nil,
         gameCenterLeaderboards: leaderboardIDs.isEmpty ? nil : .init(data: leaderboardIDs.map { .init(id: $0, _type: "gameCenterLeaderboards") }),
         versions: .init(data: [.init(id: "${version}", _type: "gameCenterLeaderboardSetVersions")])),
       _type: "gameCenterLeaderboardSets"),
@@ -171,8 +175,14 @@ extension GameCenter {
     _ = try await client.gameCenterLeaderboardSetImagesV2DeleteInstance(path: .init(id: id)).noContent
   }
 
-  public static func reorderLeaderboardSets(detailID: String, ids: [String], client: ASCClient) async throws {
-    _ = try await client.gameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship(
-      path: .init(id: detailID), body: .json(.init(data: ids.map { .init(id: $0, _type: "gameCenterLeaderboardSets") }))).noContent
+  public static func reorderLeaderboardSets(owner: Owner, ids: [String], client: ASCClient) async throws {
+    let data = ids.map { (id: String) in (id: id, type: "gameCenterLeaderboardSets") }
+    switch owner {
+      case .detail(let id):
+        _ = try await client.gameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship(path: .init(id: id), body: .json(.init(data: data.map { .init(id: $0.id, _type: $0.type) }))).noContent
+      case .group(let id):
+        _ = try await client.gameCenterGroupsGameCenterLeaderboardSetsV2ReplaceToManyRelationship(path: .init(id: id), body: .json(.init(data: data.map { .init(id: $0.id, _type: $0.type) }))).noContent
+    }
   }
+
 }

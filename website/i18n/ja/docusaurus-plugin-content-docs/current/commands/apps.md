@@ -241,7 +241,25 @@ ascelerate apps encryption <bundle-id>
 # 新しい暗号化宣言を作成
 ascelerate apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
 ascelerate apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
+
+# 最新の宣言（または --declaration で指定した宣言）にコンプライアンス書類を添付
+ascelerate apps encryption <bundle-id> --upload-document approval.pdf
 ```
+
+宣言によっては、輸出分類やフランスの暗号化申告など、App Store Connect が求める書類が必要です。`--upload-document` は最新の宣言、または `--declaration` で指定した宣言（一覧の ID）に書類を添付します。一覧には各宣言の書類が表示されます。
+
+## アプリのタグ
+
+```bash
+# Apple が App Store でアプリに付けたタグと、表示される地域
+ascelerate apps tags <bundle-id> [--json]
+
+# タグを App Store で非表示にする、または再表示する
+ascelerate apps tags hide <bundle-id> "Photo Editing"
+ascelerate apps tags show <bundle-id> "Photo Editing"
+```
+
+アプリのタグは Apple が選びます。各タグは名前または ID で非表示にしたり、再表示したりできます。
 
 ## EULA
 

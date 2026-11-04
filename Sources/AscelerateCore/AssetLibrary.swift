@@ -389,6 +389,28 @@ public enum AssetLibrary {
     )
   }
 
+  /// Puts an owner's placements in a group in the given order (`appAssetLibraryPlacementOrderingRequests`).
+  /// An event localization's slots hold one asset each, so there's nothing to order there.
+  public static func reorder(placementIDs: [String], group: String, on owner: Owner, client: ASCClient) async throws {
+    typealias Relationships = Components.Schemas.AppAssetLibraryPlacementOrderingRequestCreateRequest.DataPayload.RelationshipsPayload
+    var relationships = Relationships(
+      orderedPlacements: .init(data: placementIDs.map { .init(id: $0, _type: "appAssetLibraryPlacements") }))
+    switch owner {
+      case .versionLocalization(let id):
+        relationships.appStoreVersionLocalization = .init(data: .init(id: id, _type: "appStoreVersionLocalizations"))
+      case .productPageLocalization(let id):
+        relationships.appCustomProductPageLocalization = .init(data: .init(id: id, _type: "appCustomProductPageLocalizations"))
+      case .treatmentLocalization(let id):
+        relationships.appStoreVersionExperimentTreatmentLocalization = .init(
+          data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations"))
+      case .eventLocalization:
+        return
+    }
+    _ = try await client.appAssetLibraryPlacementOrderingRequestsCreateInstance(body: .json(.init(data: .init(
+      attributes: .init(placementGroup: group), relationships: relationships,
+      _type: "appAssetLibraryPlacementOrderingRequests")))).created
+  }
+
   /// Deletes a placement. One that is already gone (a retried delete, or removed elsewhere)
   /// counts as deleted.
   public static func deletePlacement(id: String, client: ASCClient) async throws {

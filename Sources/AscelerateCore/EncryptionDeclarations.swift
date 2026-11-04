@@ -44,6 +44,43 @@ public enum EncryptionDeclarations {
     )))).created.body.json.data)
   }
 
+  /// A declaration's documentation file: what App Store Connect asks for when an app's encryption
+  /// needs export compliance paperwork (an ERN, a French declaration).
+  public struct Document: Codable, Hashable, Identifiable, Sendable {
+    public let id: String
+    public let fileName: String?
+    public let fileSize: Int?
+    /// `AWAITING_UPLOAD`, `UPLOAD_COMPLETE`, `COMPLETE` or `FAILED`.
+    public let state: String?
+    public let downloadURL: String?
+  }
+
+  /// A declaration's document, or nil when it has none.
+  public static func document(declarationID: String, client: ASCClient) async throws -> Document? {
+    guard let document = try await optionalRelated({
+      try await client.appEncryptionDeclarationsAppEncryptionDeclarationDocumentGetToOneRelated(path: .init(id: declarationID)).ok.body.json.data
+    }) else { return nil }
+    let a = document.attributes
+    return Document(
+      id: document.id, fileName: a?.fileName, fileSize: a?.fileSize, state: a?.assetDeliveryState?.state,
+      downloadURL: a?.downloadUrl)
+  }
+
+  /// Uploads a file as a declaration's document (reserve, upload, commit); returns its ID.
+  public static func uploadDocument(declarationID: String, filePath: String, client: ASCClient) async throws -> String {
+    let file = try MediaFile(path: filePath)
+    return try await uploadAsset(filePath: filePath) {
+      let reserved = try await client.appEncryptionDeclarationDocumentsCreateInstance(body: .json(.init(data: .init(
+        attributes: .init(fileName: file.fileName, fileSize: file.fileSize),
+        relationships: .init(appEncryptionDeclaration: .init(data: .init(id: declarationID, _type: "appEncryptionDeclarations"))),
+        _type: "appEncryptionDeclarationDocuments")))).created.body.json.data
+      return (reserved.id, reserved.attributes?.uploadOperations ?? [])
+    } commit: { id, md5 in
+      _ = try await client.appEncryptionDeclarationDocumentsUpdateInstance(path: .init(id: id), body: .json(.init(data: .init(
+        attributes: .init(sourceFileChecksum: md5, uploaded: true), id: id, _type: "appEncryptionDeclarationDocuments")))).ok
+    }
+  }
+
   private static func declaration(_ data: Components.Schemas.AppEncryptionDeclaration) -> Declaration {
     let a = data.attributes
     return Declaration(

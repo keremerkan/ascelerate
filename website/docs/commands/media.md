@@ -127,7 +127,7 @@ App Store Connect has no screenshot set for iPhone Duo. ascelerate uploads the f
 
 The folder can also hold iPhone Duo app previews (`.mp4`, `.m4v` or `.mov`): 1920×886 or 886×1920, 15–30 seconds at 23–30 fps, with an audio track. They're added after the locale's existing previews; with `--replace`, those are removed first. Screenshots and previews are replaced separately, and only when the folder has files of that kind.
 
-If a file still fails after retries, `media upload` places that locale's iPhone Duo screenshots or previews again at the end of the run, so they stay in file order. `media verify` lists them with their file names and processing state; given the media folder, it also flags locales whose files or order differ from the folder (run `media upload` with `--replace` to fix them). `media download` saves the screenshots under their own file names, and `media prune` never deletes them.
+If a file still fails after retries, `media upload` places that locale's iPhone Duo screenshots or previews again at the end of the run, so they stay in file order. `media verify` lists them with their file names and processing state; given the media folder, it also flags locales whose files or order differ from the folder. A set holding the folder's files in another order is put in file order after you confirm, without uploading anything again; for other files, run `media upload` with `--replace`. `media download` saves the screenshots under their own file names, and `media prune` never deletes them.
 
 ### Product page header and search results {#header-and-search-results}
 

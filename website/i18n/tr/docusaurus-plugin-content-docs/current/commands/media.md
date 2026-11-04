@@ -127,7 +127,7 @@ App Store Connect'te iPhone Duo için bir ekran görüntüsü seti yoktur. ascel
 
 Klasör, iPhone Duo uygulama önizlemelerini de (`.mp4`, `.m4v` veya `.mov`) içerebilir: 1920×886 veya 886×1920, 23–30 fps'de 15–30 saniye, ses kanalıyla. Önizlemeler locale'in mevcut önizlemelerinin ardına eklenir; `--replace` ile mevcut olanlar önce kaldırılır. Ekran görüntüleri ve önizlemeler ayrı ayrı ve yalnızca klasörde o türden dosya olduğunda değiştirilir.
 
-Yeniden denemelere rağmen yüklenemeyen bir dosya olursa `media upload`, o locale'in iPhone Duo ekran görüntülerini veya önizlemelerini çalışmanın sonunda yeniden yerleştirir; böylece dosya sırası korunur. `media verify` bunları dosya adları ve işlenme durumlarıyla listeler. Medya klasörü verildiğinde, dosyaları ya da sırası klasörden farklı olan locale'leri de bildirir (düzeltmek için `media upload` komutunu `--replace` ile çalıştırın). `media download` ekran görüntülerini kendi dosya adlarıyla kaydeder; `media prune` ise bunları hiçbir zaman silmez.
+Yeniden denemelere rağmen yüklenemeyen bir dosya olursa `media upload`, o locale'in iPhone Duo ekran görüntülerini veya önizlemelerini çalışmanın sonunda yeniden yerleştirir; böylece dosya sırası korunur. `media verify` bunları dosya adları ve işlenme durumlarıyla listeler. Medya klasörü verildiğinde, dosyaları ya da sırası klasörden farklı olan locale'leri de bildirir. Klasördeki dosyaları başka bir sırayla içeren bir seti, onayınızdan sonra hiçbir şeyi yeniden yüklemeden dosya sırasına koyar; dosyalar farklıysa `media upload` komutunu `--replace` ile çalıştırın. `media download` ekran görüntülerini kendi dosya adlarıyla kaydeder; `media prune` ise bunları hiçbir zaman silmez.
 
 ### Ürün sayfası başlığı ve arama sonuçları {#header-and-search-results}
 

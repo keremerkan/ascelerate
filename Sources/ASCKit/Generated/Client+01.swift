@@ -1363,6 +1363,101 @@ extension Client {
             }
         )
     }
+    /// - Remark: HTTP `POST /v1/appAssetLibraryPlacementOrderingRequests`.
+    /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacementOrderingRequests/post(appAssetLibraryPlacementOrderingRequests_createInstance)`.
+    public func appAssetLibraryPlacementOrderingRequestsCreateInstance(_ input: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Input) async throws -> Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/appAssetLibraryPlacementOrderingRequests",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appAssetLibraryPlacements]",
+                    value: input.query.fieldsAppAssetLibraryPlacements
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[orderedPlacements]",
+                    value: input.query.limitOrderedPlacements
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appAssetLibraryPlacementOrderingRequests]",
+                    value: input.query.fieldsAppAssetLibraryPlacementOrderingRequests
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.AppAssetLibraryPlacementOrderingRequestsCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.AppAssetLibraryPlacementOrderingRequestResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `POST /v1/appAssetLibraryPlacements`.
     /// - Remark: Generated from `#/paths//v1/appAssetLibraryPlacements/post(appAssetLibraryPlacements_createInstance)`.
     public func appAssetLibraryPlacementsCreateInstance(_ input: Operations.AppAssetLibraryPlacementsCreateInstance.Input) async throws -> Operations.AppAssetLibraryPlacementsCreateInstance.Output {
@@ -2985,73 +3080,6 @@ extension Client {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `POST /v1/appCustomProductPages`.
-    /// - Remark: Generated from `#/paths//v1/appCustomProductPages/post(appCustomProductPages_createInstance)`.
-    public func appCustomProductPagesCreateInstance(_ input: Operations.AppCustomProductPagesCreateInstance.Input) async throws -> Operations.AppCustomProductPagesCreateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppCustomProductPagesCreateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appCustomProductPages",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 201:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.AppCustomProductPagesCreateInstance.Output.Created.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AppCustomProductPageResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .created(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,

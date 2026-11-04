@@ -10,6 +10,321 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response`.
+    public struct AppStoreVersionExperimentsV2Response: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/data`.
+        public var data: [Components.Schemas.AppStoreVersionExperimentV2]
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload/App`.
+            case apps(Components.Schemas.App)
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload/AppStoreVersionExperimentTreatment`.
+            case appStoreVersionExperimentTreatments(Components.Schemas.AppStoreVersionExperimentTreatment)
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/IncludedPayload/AppStoreVersion`.
+            case appStoreVersions(Components.Schemas.AppStoreVersion)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "apps":
+                    self = .apps(try .init(from: decoder))
+                case "appStoreVersionExperimentTreatments":
+                    self = .appStoreVersionExperimentTreatments(try .init(from: decoder))
+                case "appStoreVersions":
+                    self = .appStoreVersions(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .apps(value):
+                    try value.encode(to: encoder)
+                case let .appStoreVersionExperimentTreatments(value):
+                    try value.encode(to: encoder)
+                case let .appStoreVersions(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/included`.
+        public typealias IncludedPayload = [Components.Schemas.AppStoreVersionExperimentsV2Response.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/included`.
+        public var included: Components.Schemas.AppStoreVersionExperimentsV2Response.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentsV2Response/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `AppStoreVersionExperimentsV2Response`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.AppStoreVersionExperimentV2],
+            included: Components.Schemas.AppStoreVersionExperimentsV2Response.IncludedPayload? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment`.
+    public struct AppStoreVersionExperimentTreatment: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/appIcon`.
+            public var appIcon: Components.Schemas.ImageAsset?
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/appIconName`.
+            public var appIconName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/name`.
+            public var name: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes/promotedDate`.
+            public var promotedDate: Foundation.Date?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - appIcon:
+            ///   - appIconName:
+            ///   - name:
+            ///   - promotedDate:
+            public init(
+                appIcon: Components.Schemas.ImageAsset? = nil,
+                appIconName: Swift.String? = nil,
+                name: Swift.String? = nil,
+                promotedDate: Foundation.Date? = nil
+            ) {
+                self.appIcon = appIcon
+                self.appIconName = appIconName
+                self.name = name
+                self.promotedDate = promotedDate
+            }
+            public enum CodingKeys: String, CodingKey {
+                case appIcon
+                case appIconName
+                case name
+                case promotedDate
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/attributes`.
+        public var attributes: Components.Schemas.AppStoreVersionExperimentTreatment.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment`.
+            public struct AppStoreVersionExperimentPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment/data`.
+                public var data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload.DataPayload?
+                /// Creates a new `AppStoreVersionExperimentPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperiment`.
+            public var appStoreVersionExperiment: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload?
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations`.
+            public struct AppStoreVersionExperimentTreatmentLocalizationsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/data`.
+                public typealias DataPayload = [Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/data`.
+                public var data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `AppStoreVersionExperimentTreatmentLocalizationsPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentTreatmentLocalizations`.
+            public var appStoreVersionExperimentTreatmentLocalizations: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload?
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2`.
+            public struct AppStoreVersionExperimentV2Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2/data`.
+                public var data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload.DataPayload?
+                /// Creates a new `AppStoreVersionExperimentV2Payload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships/appStoreVersionExperimentV2`.
+            public var appStoreVersionExperimentV2: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - appStoreVersionExperiment:
+            ///   - appStoreVersionExperimentTreatmentLocalizations:
+            ///   - appStoreVersionExperimentV2:
+            public init(
+                appStoreVersionExperiment: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentPayload? = nil,
+                appStoreVersionExperimentTreatmentLocalizations: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
+                appStoreVersionExperimentV2: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload.AppStoreVersionExperimentV2Payload? = nil
+            ) {
+                self.appStoreVersionExperiment = appStoreVersionExperiment
+                self.appStoreVersionExperimentTreatmentLocalizations = appStoreVersionExperimentTreatmentLocalizations
+                self.appStoreVersionExperimentV2 = appStoreVersionExperimentV2
+            }
+            public enum CodingKeys: String, CodingKey {
+                case appStoreVersionExperiment
+                case appStoreVersionExperimentTreatmentLocalizations
+                case appStoreVersionExperimentV2
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/relationships`.
+        public var relationships: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatment/type`.
+        public var _type: Swift.String
+        /// Creates a new `AppStoreVersionExperimentTreatment`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.AppStoreVersionExperimentTreatment.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.AppStoreVersionExperimentTreatment.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatmentCreateRequest`.
     public struct AppStoreVersionExperimentTreatmentCreateRequest: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/AppStoreVersionExperimentTreatmentCreateRequest/data`.
@@ -2700,422 +3015,6 @@ extension Components.Schemas {
         }
         public enum CodingKeys: String, CodingKey {
             case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionPhasedReleaseWithoutIncludesResponse`.
-    public struct AppStoreVersionPhasedReleaseWithoutIncludesResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionPhasedReleaseWithoutIncludesResponse/data`.
-        public var data: Components.Schemas.AppStoreVersionPhasedRelease
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionPhasedReleaseWithoutIncludesResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppStoreVersionPhasedReleaseWithoutIncludesResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppStoreVersionPhasedRelease,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequest`.
-    public struct AppStoreVersionReleaseRequest: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequest/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequest/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequest/type`.
-        public var _type: Swift.String
-        /// Creates a new `AppStoreVersionReleaseRequest`.
-        ///
-        /// - Parameters:
-        ///   - id:
-        ///   - links:
-        ///   - _type:
-        public init(
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            _type: Swift.String
-        ) {
-            self.id = id
-            self.links = links
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case id
-            case links
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest`.
-    public struct AppStoreVersionReleaseRequestCreateRequest: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data`.
-        public struct DataPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships`.
-            public struct RelationshipsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships/appStoreVersion`.
-                public struct AppStoreVersionPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships/appStoreVersion/data`.
-                    public struct DataPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships/appStoreVersion/data/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships/appStoreVersion/data/type`.
-                        public var _type: Swift.String
-                        /// Creates a new `DataPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - id:
-                        ///   - _type:
-                        public init(
-                            id: Swift.String,
-                            _type: Swift.String
-                        ) {
-                            self.id = id
-                            self._type = _type
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case id
-                            case _type = "type"
-                        }
-                    }
-                    /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships/appStoreVersion/data`.
-                    public var data: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionPayload.DataPayload
-                    /// Creates a new `AppStoreVersionPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - data:
-                    public init(data: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionPayload.DataPayload) {
-                        self.data = data
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case data
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships/appStoreVersion`.
-                public var appStoreVersion: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionPayload
-                /// Creates a new `RelationshipsPayload`.
-                ///
-                /// - Parameters:
-                ///   - appStoreVersion:
-                public init(appStoreVersion: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionPayload) {
-                    self.appStoreVersion = appStoreVersion
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case appStoreVersion
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/relationships`.
-            public var relationships: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload.RelationshipsPayload
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data/type`.
-            public var _type: Swift.String
-            /// Creates a new `DataPayload`.
-            ///
-            /// - Parameters:
-            ///   - relationships:
-            ///   - _type:
-            public init(
-                relationships: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload.RelationshipsPayload,
-                _type: Swift.String
-            ) {
-                self.relationships = relationships
-                self._type = _type
-            }
-            public enum CodingKeys: String, CodingKey {
-                case relationships
-                case _type = "type"
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestCreateRequest/data`.
-        public var data: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload
-        /// Creates a new `AppStoreVersionReleaseRequestCreateRequest`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        public init(data: Components.Schemas.AppStoreVersionReleaseRequestCreateRequest.DataPayload) {
-            self.data = data
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestResponse`.
-    public struct AppStoreVersionReleaseRequestResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestResponse/data`.
-        public var data: Components.Schemas.AppStoreVersionReleaseRequest
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionReleaseRequestResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppStoreVersionReleaseRequestResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppStoreVersionReleaseRequest,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse`.
-    public struct AppStoreVersionResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/data`.
-        public var data: Components.Schemas.AppStoreVersion
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/AlternativeDistributionPackage`.
-            case alternativeDistributionPackages(Components.Schemas.AlternativeDistributionPackage)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/AppClipDefaultExperience`.
-            case appClipDefaultExperiences(Components.Schemas.AppClipDefaultExperience)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/App`.
-            case apps(Components.Schemas.App)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/AppStoreReviewDetail`.
-            case appStoreReviewDetails(Components.Schemas.AppStoreReviewDetail)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/AppStoreVersionExperiment`.
-            case appStoreVersionExperiments(Components.Schemas.AppStoreVersionExperiment)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/AppStoreVersionLocalization`.
-            case appStoreVersionLocalizations(Components.Schemas.AppStoreVersionLocalization)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/AppStoreVersionPhasedRelease`.
-            case appStoreVersionPhasedReleases(Components.Schemas.AppStoreVersionPhasedRelease)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/AppStoreVersionSubmission`.
-            case appStoreVersionSubmissions(Components.Schemas.AppStoreVersionSubmission)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/Build`.
-            case builds(Components.Schemas.Build)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/GameCenterAppVersion`.
-            case gameCenterAppVersions(Components.Schemas.GameCenterAppVersion)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/IncludedPayload/RoutingAppCoverage`.
-            case routingAppCoverages(Components.Schemas.RoutingAppCoverage)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "alternativeDistributionPackages":
-                    self = .alternativeDistributionPackages(try .init(from: decoder))
-                case "appClipDefaultExperiences":
-                    self = .appClipDefaultExperiences(try .init(from: decoder))
-                case "apps":
-                    self = .apps(try .init(from: decoder))
-                case "appStoreReviewDetails":
-                    self = .appStoreReviewDetails(try .init(from: decoder))
-                case "appStoreVersionExperiments":
-                    self = .appStoreVersionExperiments(try .init(from: decoder))
-                case "appStoreVersionLocalizations":
-                    self = .appStoreVersionLocalizations(try .init(from: decoder))
-                case "appStoreVersionPhasedReleases":
-                    self = .appStoreVersionPhasedReleases(try .init(from: decoder))
-                case "appStoreVersionSubmissions":
-                    self = .appStoreVersionSubmissions(try .init(from: decoder))
-                case "builds":
-                    self = .builds(try .init(from: decoder))
-                case "gameCenterAppVersions":
-                    self = .gameCenterAppVersions(try .init(from: decoder))
-                case "routingAppCoverages":
-                    self = .routingAppCoverages(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .alternativeDistributionPackages(value):
-                    try value.encode(to: encoder)
-                case let .appClipDefaultExperiences(value):
-                    try value.encode(to: encoder)
-                case let .apps(value):
-                    try value.encode(to: encoder)
-                case let .appStoreReviewDetails(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionExperiments(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionLocalizations(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionPhasedReleases(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionSubmissions(value):
-                    try value.encode(to: encoder)
-                case let .builds(value):
-                    try value.encode(to: encoder)
-                case let .gameCenterAppVersions(value):
-                    try value.encode(to: encoder)
-                case let .routingAppCoverages(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppStoreVersionResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/included`.
-        public var included: Components.Schemas.AppStoreVersionResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppStoreVersionResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppStoreVersion,
-            included: Components.Schemas.AppStoreVersionResponse.IncludedPayload? = nil,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse`.
-    public struct AppStoreVersionsResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/data`.
-        public var data: [Components.Schemas.AppStoreVersion]
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/AlternativeDistributionPackage`.
-            case alternativeDistributionPackages(Components.Schemas.AlternativeDistributionPackage)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/AppClipDefaultExperience`.
-            case appClipDefaultExperiences(Components.Schemas.AppClipDefaultExperience)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/App`.
-            case apps(Components.Schemas.App)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/AppStoreReviewDetail`.
-            case appStoreReviewDetails(Components.Schemas.AppStoreReviewDetail)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/AppStoreVersionExperiment`.
-            case appStoreVersionExperiments(Components.Schemas.AppStoreVersionExperiment)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/AppStoreVersionLocalization`.
-            case appStoreVersionLocalizations(Components.Schemas.AppStoreVersionLocalization)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/AppStoreVersionPhasedRelease`.
-            case appStoreVersionPhasedReleases(Components.Schemas.AppStoreVersionPhasedRelease)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/AppStoreVersionSubmission`.
-            case appStoreVersionSubmissions(Components.Schemas.AppStoreVersionSubmission)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/Build`.
-            case builds(Components.Schemas.Build)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/GameCenterAppVersion`.
-            case gameCenterAppVersions(Components.Schemas.GameCenterAppVersion)
-            /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/IncludedPayload/RoutingAppCoverage`.
-            case routingAppCoverages(Components.Schemas.RoutingAppCoverage)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "alternativeDistributionPackages":
-                    self = .alternativeDistributionPackages(try .init(from: decoder))
-                case "appClipDefaultExperiences":
-                    self = .appClipDefaultExperiences(try .init(from: decoder))
-                case "apps":
-                    self = .apps(try .init(from: decoder))
-                case "appStoreReviewDetails":
-                    self = .appStoreReviewDetails(try .init(from: decoder))
-                case "appStoreVersionExperiments":
-                    self = .appStoreVersionExperiments(try .init(from: decoder))
-                case "appStoreVersionLocalizations":
-                    self = .appStoreVersionLocalizations(try .init(from: decoder))
-                case "appStoreVersionPhasedReleases":
-                    self = .appStoreVersionPhasedReleases(try .init(from: decoder))
-                case "appStoreVersionSubmissions":
-                    self = .appStoreVersionSubmissions(try .init(from: decoder))
-                case "builds":
-                    self = .builds(try .init(from: decoder))
-                case "gameCenterAppVersions":
-                    self = .gameCenterAppVersions(try .init(from: decoder))
-                case "routingAppCoverages":
-                    self = .routingAppCoverages(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .alternativeDistributionPackages(value):
-                    try value.encode(to: encoder)
-                case let .appClipDefaultExperiences(value):
-                    try value.encode(to: encoder)
-                case let .apps(value):
-                    try value.encode(to: encoder)
-                case let .appStoreReviewDetails(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionExperiments(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionLocalizations(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionPhasedReleases(value):
-                    try value.encode(to: encoder)
-                case let .appStoreVersionSubmissions(value):
-                    try value.encode(to: encoder)
-                case let .builds(value):
-                    try value.encode(to: encoder)
-                case let .gameCenterAppVersions(value):
-                    try value.encode(to: encoder)
-                case let .routingAppCoverages(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppStoreVersionsResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/included`.
-        public var included: Components.Schemas.AppStoreVersionsResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/links`.
-        public var links: Components.Schemas.PagedDocumentLinks
-        /// - Remark: Generated from `#/components/schemas/AppStoreVersionsResponse/meta`.
-        public var meta: Components.Schemas.PagingInformation?
-        /// Creates a new `AppStoreVersionsResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        ///   - meta:
-        public init(
-            data: [Components.Schemas.AppStoreVersion],
-            included: Components.Schemas.AppStoreVersionsResponse.IncludedPayload? = nil,
-            links: Components.Schemas.PagedDocumentLinks,
-            meta: Components.Schemas.PagingInformation? = nil
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-            self.meta = meta
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-            case meta
         }
     }
 }

@@ -505,7 +505,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
 >
-> App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ; `media download` doesn't include them yet, and `media prune` never deletes them.
+> App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ (a set holding the folder's files in another order is put in file order after you confirm, without uploading again); `media download` doesn't include them yet, and `media prune` never deletes them.
 >
 > `PRODUCT_PAGE_HEADER` and `APP_STORE_SEARCH_RESULTS` folders also go through the asset library, one image per locale each that isn't tied to a device class (the version shows it on iPhone, iPad and iPhone Duo alike), on every platform's versions: the product page header takes a PNG at 3840×1646 or 5244×2950, and the search results image a 3:2 JPG/PNG from 1920×1280 to 3840×2560 or a 5244×2950 PNG. Each slot also takes a video instead (header: 3840×1646; search results: 3:2 in the same size range; 5–30 s at 30 or 60 fps). Uploading replaces the locale's current image or video (the old one is removed after the new one is uploaded). An `APP_IPHONE_DUO` folder can hold app previews too (1920×886 or 886×1920, 15–30 s at 23–30 fps, with audio). Custom product pages take all three through `product-pages media upload --display-type PRODUCT_PAGE_HEADER` (or `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`). `media download` saves the library images; App Store Connect gives no download link for library videos.
 >
@@ -764,7 +764,25 @@ ascelerate apps encryption <bundle-id>
 # Create a new encryption declaration
 ascelerate apps encryption <bundle-id> --create --description "Uses HTTPS for API communication"
 ascelerate apps encryption <bundle-id> --create --description "Uses AES encryption" --proprietary-crypto --third-party-crypto
+
+# Attach a compliance document to the newest declaration (or the one --declaration names)
+ascelerate apps encryption <bundle-id> --upload-document approval.pdf
 ```
+
+Some declarations need a document App Store Connect asks for, such as an export classification or France's encryption declaration. `--upload-document` attaches it to the newest declaration, or to the one `--declaration` names (the ID in the list); the list shows each declaration's document.
+
+### App Tags
+
+```bash
+# The tags Apple gives the app on the App Store, and where they're shown
+ascelerate apps tags <bundle-id> [--json]
+
+# Hide a tag on the App Store, or show it again
+ascelerate apps tags hide <bundle-id> "Photo Editing"
+ascelerate apps tags show <bundle-id> "Photo Editing"
+```
+
+Apple chooses an app's tags; you can hide or show each one, by its name or ID.
 
 ### EULA
 

@@ -10,6 +10,317 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse`.
+    public struct AppCustomProductPageLocalizationResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/data`.
+        public var data: Components.Schemas.AppCustomProductPageLocalization
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppAssetLibraryPlacement`.
+            case appAssetLibraryPlacements(Components.Schemas.AppAssetLibraryPlacement)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppCustomProductPageVersion`.
+            case appCustomProductPageVersions(Components.Schemas.AppCustomProductPageVersion)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppKeyword`.
+            case appKeywords(Components.Schemas.AppKeyword)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppPreviewSet`.
+            case appPreviewSets(Components.Schemas.AppPreviewSet)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/IncludedPayload/AppScreenshotSet`.
+            case appScreenshotSets(Components.Schemas.AppScreenshotSet)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "appAssetLibraryPlacements":
+                    self = .appAssetLibraryPlacements(try .init(from: decoder))
+                case "appCustomProductPageVersions":
+                    self = .appCustomProductPageVersions(try .init(from: decoder))
+                case "appKeywords":
+                    self = .appKeywords(try .init(from: decoder))
+                case "appPreviewSets":
+                    self = .appPreviewSets(try .init(from: decoder))
+                case "appScreenshotSets":
+                    self = .appScreenshotSets(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .appAssetLibraryPlacements(value):
+                    try value.encode(to: encoder)
+                case let .appCustomProductPageVersions(value):
+                    try value.encode(to: encoder)
+                case let .appKeywords(value):
+                    try value.encode(to: encoder)
+                case let .appPreviewSets(value):
+                    try value.encode(to: encoder)
+                case let .appScreenshotSets(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.AppCustomProductPageLocalizationResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/included`.
+        public var included: Components.Schemas.AppCustomProductPageLocalizationResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `AppCustomProductPageLocalizationResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.AppCustomProductPageLocalization,
+            included: Components.Schemas.AppCustomProductPageLocalizationResponse.IncludedPayload? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse`.
+    public struct AppCustomProductPageLocalizationsResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/data`.
+        public var data: [Components.Schemas.AppCustomProductPageLocalization]
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppAssetLibraryPlacement`.
+            case appAssetLibraryPlacements(Components.Schemas.AppAssetLibraryPlacement)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppCustomProductPageVersion`.
+            case appCustomProductPageVersions(Components.Schemas.AppCustomProductPageVersion)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppKeyword`.
+            case appKeywords(Components.Schemas.AppKeyword)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppPreviewSet`.
+            case appPreviewSets(Components.Schemas.AppPreviewSet)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/IncludedPayload/AppScreenshotSet`.
+            case appScreenshotSets(Components.Schemas.AppScreenshotSet)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "appAssetLibraryPlacements":
+                    self = .appAssetLibraryPlacements(try .init(from: decoder))
+                case "appCustomProductPageVersions":
+                    self = .appCustomProductPageVersions(try .init(from: decoder))
+                case "appKeywords":
+                    self = .appKeywords(try .init(from: decoder))
+                case "appPreviewSets":
+                    self = .appPreviewSets(try .init(from: decoder))
+                case "appScreenshotSets":
+                    self = .appScreenshotSets(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .appAssetLibraryPlacements(value):
+                    try value.encode(to: encoder)
+                case let .appCustomProductPageVersions(value):
+                    try value.encode(to: encoder)
+                case let .appKeywords(value):
+                    try value.encode(to: encoder)
+                case let .appPreviewSets(value):
+                    try value.encode(to: encoder)
+                case let .appScreenshotSets(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.AppCustomProductPageLocalizationsResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/included`.
+        public var included: Components.Schemas.AppCustomProductPageLocalizationsResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationsResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `AppCustomProductPageLocalizationsResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.AppCustomProductPageLocalization],
+            included: Components.Schemas.AppCustomProductPageLocalizationsResponse.IncludedPayload? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest`.
+    public struct AppCustomProductPageLocalizationUpdateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/attributes/promotionalText`.
+                public var promotionalText: Swift.String?
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - promotionalText:
+                public init(promotionalText: Swift.String? = nil) {
+                    self.promotionalText = promotionalText
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case promotionalText
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/attributes`.
+            public var attributes: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload.AttributesPayload?
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - id:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload.AttributesPayload? = nil,
+                id: Swift.String,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.id = id
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case id
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageLocalizationUpdateRequest/data`.
+        public var data: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload
+        /// Creates a new `AppCustomProductPageLocalizationUpdateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.AppCustomProductPageLocalizationUpdateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse`.
+    public struct AppCustomProductPageResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/data`.
+        public var data: Components.Schemas.AppCustomProductPage
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload/AppCustomProductPageLocalization`.
+            case appCustomProductPageLocalizations(Components.Schemas.AppCustomProductPageLocalization)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload/AppCustomProductPageVersion`.
+            case appCustomProductPageVersions(Components.Schemas.AppCustomProductPageVersion)
+            /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/IncludedPayload/App`.
+            case apps(Components.Schemas.App)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "appCustomProductPageLocalizations":
+                    self = .appCustomProductPageLocalizations(try .init(from: decoder))
+                case "appCustomProductPageVersions":
+                    self = .appCustomProductPageVersions(try .init(from: decoder))
+                case "apps":
+                    self = .apps(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .appCustomProductPageLocalizations(value):
+                    try value.encode(to: encoder)
+                case let .appCustomProductPageVersions(value):
+                    try value.encode(to: encoder)
+                case let .apps(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.AppCustomProductPageResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/included`.
+        public var included: Components.Schemas.AppCustomProductPageResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/AppCustomProductPageResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `AppCustomProductPageResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.AppCustomProductPage,
+            included: Components.Schemas.AppCustomProductPageResponse.IncludedPayload? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppCustomProductPagesResponse`.
     public struct AppCustomProductPagesResponse: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/AppCustomProductPagesResponse/data`.
@@ -1396,6 +1707,216 @@ extension Components.Schemas {
             case _type = "type"
         }
     }
+    /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest`.
+    public struct AppEncryptionDeclarationDocumentCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/attributes/fileName`.
+                public var fileName: Swift.String
+                /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/attributes/fileSize`.
+                public var fileSize: Swift.Int
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - fileName:
+                ///   - fileSize:
+                public init(
+                    fileName: Swift.String,
+                    fileSize: Swift.Int
+                ) {
+                    self.fileName = fileName
+                    self.fileSize = fileSize
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case fileName
+                    case fileSize
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.AttributesPayload
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships/appEncryptionDeclaration`.
+                public struct AppEncryptionDeclarationPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships/appEncryptionDeclaration/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships/appEncryptionDeclaration/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships/appEncryptionDeclaration/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships/appEncryptionDeclaration/data`.
+                    public var data: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.RelationshipsPayload.AppEncryptionDeclarationPayload.DataPayload
+                    /// Creates a new `AppEncryptionDeclarationPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.RelationshipsPayload.AppEncryptionDeclarationPayload.DataPayload) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships/appEncryptionDeclaration`.
+                public var appEncryptionDeclaration: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.RelationshipsPayload.AppEncryptionDeclarationPayload
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - appEncryptionDeclaration:
+                public init(appEncryptionDeclaration: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.RelationshipsPayload.AppEncryptionDeclarationPayload) {
+                    self.appEncryptionDeclaration = appEncryptionDeclaration
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case appEncryptionDeclaration
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.RelationshipsPayload
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.AttributesPayload,
+                relationships: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload.RelationshipsPayload,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentCreateRequest/data`.
+        public var data: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload
+        /// Creates a new `AppEncryptionDeclarationDocumentCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.AppEncryptionDeclarationDocumentCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentResponse`.
+    public struct AppEncryptionDeclarationDocumentResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentResponse/data`.
+        public var data: Components.Schemas.AppEncryptionDeclarationDocument
+        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `AppEncryptionDeclarationDocumentResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - links:
+        public init(
+            data: Components.Schemas.AppEncryptionDeclarationDocument,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest`.
+    public struct AppEncryptionDeclarationDocumentUpdateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data/attributes/sourceFileChecksum`.
+                public var sourceFileChecksum: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data/attributes/uploaded`.
+                public var uploaded: Swift.Bool?
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - sourceFileChecksum:
+                ///   - uploaded:
+                public init(
+                    sourceFileChecksum: Swift.String? = nil,
+                    uploaded: Swift.Bool? = nil
+                ) {
+                    self.sourceFileChecksum = sourceFileChecksum
+                    self.uploaded = uploaded
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case sourceFileChecksum
+                    case uploaded
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data/attributes`.
+            public var attributes: Components.Schemas.AppEncryptionDeclarationDocumentUpdateRequest.DataPayload.AttributesPayload?
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - id:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.AppEncryptionDeclarationDocumentUpdateRequest.DataPayload.AttributesPayload? = nil,
+                id: Swift.String,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.id = id
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case id
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationDocumentUpdateRequest/data`.
+        public var data: Components.Schemas.AppEncryptionDeclarationDocumentUpdateRequest.DataPayload
+        /// Creates a new `AppEncryptionDeclarationDocumentUpdateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.AppEncryptionDeclarationDocumentUpdateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationResponse`.
     public struct AppEncryptionDeclarationResponse: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/AppEncryptionDeclarationResponse/data`.
@@ -2487,547 +3008,6 @@ extension Components.Schemas {
         /// - Parameters:
         ///   - data:
         public init(data: Components.Schemas.AppEventLocalizationCreateRequest.DataPayload) {
-            self.data = data
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse`.
-    public struct AppEventLocalizationResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/data`.
-        public var data: Components.Schemas.AppEventLocalization
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/IncludedPayload/AppAssetLibraryPlacement`.
-            case appAssetLibraryPlacements(Components.Schemas.AppAssetLibraryPlacement)
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/IncludedPayload/AppEvent`.
-            case appEvents(Components.Schemas.AppEvent)
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/IncludedPayload/AppEventScreenshot`.
-            case appEventScreenshots(Components.Schemas.AppEventScreenshot)
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/IncludedPayload/AppEventVideoClip`.
-            case appEventVideoClips(Components.Schemas.AppEventVideoClip)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "appAssetLibraryPlacements":
-                    self = .appAssetLibraryPlacements(try .init(from: decoder))
-                case "appEvents":
-                    self = .appEvents(try .init(from: decoder))
-                case "appEventScreenshots":
-                    self = .appEventScreenshots(try .init(from: decoder))
-                case "appEventVideoClips":
-                    self = .appEventVideoClips(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .appAssetLibraryPlacements(value):
-                    try value.encode(to: encoder)
-                case let .appEvents(value):
-                    try value.encode(to: encoder)
-                case let .appEventScreenshots(value):
-                    try value.encode(to: encoder)
-                case let .appEventVideoClips(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppEventLocalizationResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/included`.
-        public var included: Components.Schemas.AppEventLocalizationResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppEventLocalizationResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppEventLocalization,
-            included: Components.Schemas.AppEventLocalizationResponse.IncludedPayload? = nil,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse`.
-    public struct AppEventLocalizationsResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/data`.
-        public var data: [Components.Schemas.AppEventLocalization]
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/IncludedPayload/AppAssetLibraryPlacement`.
-            case appAssetLibraryPlacements(Components.Schemas.AppAssetLibraryPlacement)
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/IncludedPayload/AppEvent`.
-            case appEvents(Components.Schemas.AppEvent)
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/IncludedPayload/AppEventScreenshot`.
-            case appEventScreenshots(Components.Schemas.AppEventScreenshot)
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/IncludedPayload/AppEventVideoClip`.
-            case appEventVideoClips(Components.Schemas.AppEventVideoClip)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "appAssetLibraryPlacements":
-                    self = .appAssetLibraryPlacements(try .init(from: decoder))
-                case "appEvents":
-                    self = .appEvents(try .init(from: decoder))
-                case "appEventScreenshots":
-                    self = .appEventScreenshots(try .init(from: decoder))
-                case "appEventVideoClips":
-                    self = .appEventVideoClips(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .appAssetLibraryPlacements(value):
-                    try value.encode(to: encoder)
-                case let .appEvents(value):
-                    try value.encode(to: encoder)
-                case let .appEventScreenshots(value):
-                    try value.encode(to: encoder)
-                case let .appEventVideoClips(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.AppEventLocalizationsResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/included`.
-        public var included: Components.Schemas.AppEventLocalizationsResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/links`.
-        public var links: Components.Schemas.PagedDocumentLinks
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationsResponse/meta`.
-        public var meta: Components.Schemas.PagingInformation?
-        /// Creates a new `AppEventLocalizationsResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        ///   - meta:
-        public init(
-            data: [Components.Schemas.AppEventLocalization],
-            included: Components.Schemas.AppEventLocalizationsResponse.IncludedPayload? = nil,
-            links: Components.Schemas.PagedDocumentLinks,
-            meta: Components.Schemas.PagingInformation? = nil
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-            self.meta = meta
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-            case meta
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest`.
-    public struct AppEventLocalizationUpdateRequest: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data`.
-        public struct DataPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data/attributes`.
-            public struct AttributesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data/attributes/longDescription`.
-                public var longDescription: Swift.String?
-                /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data/attributes/name`.
-                public var name: Swift.String?
-                /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data/attributes/shortDescription`.
-                public var shortDescription: Swift.String?
-                /// Creates a new `AttributesPayload`.
-                ///
-                /// - Parameters:
-                ///   - longDescription:
-                ///   - name:
-                ///   - shortDescription:
-                public init(
-                    longDescription: Swift.String? = nil,
-                    name: Swift.String? = nil,
-                    shortDescription: Swift.String? = nil
-                ) {
-                    self.longDescription = longDescription
-                    self.name = name
-                    self.shortDescription = shortDescription
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case longDescription
-                    case name
-                    case shortDescription
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data/attributes`.
-            public var attributes: Components.Schemas.AppEventLocalizationUpdateRequest.DataPayload.AttributesPayload?
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data/id`.
-            public var id: Swift.String
-            /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data/type`.
-            public var _type: Swift.String
-            /// Creates a new `DataPayload`.
-            ///
-            /// - Parameters:
-            ///   - attributes:
-            ///   - id:
-            ///   - _type:
-            public init(
-                attributes: Components.Schemas.AppEventLocalizationUpdateRequest.DataPayload.AttributesPayload? = nil,
-                id: Swift.String,
-                _type: Swift.String
-            ) {
-                self.attributes = attributes
-                self.id = id
-                self._type = _type
-            }
-            public enum CodingKeys: String, CodingKey {
-                case attributes
-                case id
-                case _type = "type"
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppEventLocalizationUpdateRequest/data`.
-        public var data: Components.Schemas.AppEventLocalizationUpdateRequest.DataPayload
-        /// Creates a new `AppEventLocalizationUpdateRequest`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        public init(data: Components.Schemas.AppEventLocalizationUpdateRequest.DataPayload) {
-            self.data = data
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppEventResponse`.
-    public struct AppEventResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppEventResponse/data`.
-        public var data: Components.Schemas.AppEvent
-        /// - Remark: Generated from `#/components/schemas/AppEventResponse/included`.
-        public var included: [Components.Schemas.AppEventLocalization]?
-        /// - Remark: Generated from `#/components/schemas/AppEventResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppEventResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppEvent,
-            included: [Components.Schemas.AppEventLocalization]? = nil,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppEventScreenshot`.
-    public struct AppEventScreenshot: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes`.
-        public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes/appEventAssetType`.
-            public var appEventAssetType: Components.Schemas.AppEventAssetType?
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes/assetDeliveryState`.
-            public var assetDeliveryState: Components.Schemas.AppMediaAssetState?
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes/assetToken`.
-            public var assetToken: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes/fileName`.
-            public var fileName: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes/fileSize`.
-            public var fileSize: Swift.Int?
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes/imageAsset`.
-            public var imageAsset: Components.Schemas.ImageAsset?
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes/uploadOperations`.
-            public var uploadOperations: [Components.Schemas.UploadOperation]?
-            /// Creates a new `AttributesPayload`.
-            ///
-            /// - Parameters:
-            ///   - appEventAssetType:
-            ///   - assetDeliveryState:
-            ///   - assetToken:
-            ///   - fileName:
-            ///   - fileSize:
-            ///   - imageAsset:
-            ///   - uploadOperations:
-            public init(
-                appEventAssetType: Components.Schemas.AppEventAssetType? = nil,
-                assetDeliveryState: Components.Schemas.AppMediaAssetState? = nil,
-                assetToken: Swift.String? = nil,
-                fileName: Swift.String? = nil,
-                fileSize: Swift.Int? = nil,
-                imageAsset: Components.Schemas.ImageAsset? = nil,
-                uploadOperations: [Components.Schemas.UploadOperation]? = nil
-            ) {
-                self.appEventAssetType = appEventAssetType
-                self.assetDeliveryState = assetDeliveryState
-                self.assetToken = assetToken
-                self.fileName = fileName
-                self.fileSize = fileSize
-                self.imageAsset = imageAsset
-                self.uploadOperations = uploadOperations
-            }
-            public enum CodingKeys: String, CodingKey {
-                case appEventAssetType
-                case assetDeliveryState
-                case assetToken
-                case fileName
-                case fileSize
-                case imageAsset
-                case uploadOperations
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/attributes`.
-        public var attributes: Components.Schemas.AppEventScreenshot.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships/appEventLocalization`.
-            public struct AppEventLocalizationPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships/appEventLocalization/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships/appEventLocalization/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships/appEventLocalization/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships/appEventLocalization/data`.
-                public var data: Components.Schemas.AppEventScreenshot.RelationshipsPayload.AppEventLocalizationPayload.DataPayload?
-                /// Creates a new `AppEventLocalizationPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.AppEventScreenshot.RelationshipsPayload.AppEventLocalizationPayload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships/appEventLocalization`.
-            public var appEventLocalization: Components.Schemas.AppEventScreenshot.RelationshipsPayload.AppEventLocalizationPayload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - appEventLocalization:
-            public init(appEventLocalization: Components.Schemas.AppEventScreenshot.RelationshipsPayload.AppEventLocalizationPayload? = nil) {
-                self.appEventLocalization = appEventLocalization
-            }
-            public enum CodingKeys: String, CodingKey {
-                case appEventLocalization
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/relationships`.
-        public var relationships: Components.Schemas.AppEventScreenshot.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshot/type`.
-        public var _type: Swift.String
-        /// Creates a new `AppEventScreenshot`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.AppEventScreenshot.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.AppEventScreenshot.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case relationships
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest`.
-    public struct AppEventScreenshotCreateRequest: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data`.
-        public struct DataPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/attributes`.
-            public struct AttributesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/attributes/appEventAssetType`.
-                public var appEventAssetType: Components.Schemas.AppEventAssetType
-                /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/attributes/fileName`.
-                public var fileName: Swift.String
-                /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/attributes/fileSize`.
-                public var fileSize: Swift.Int
-                /// Creates a new `AttributesPayload`.
-                ///
-                /// - Parameters:
-                ///   - appEventAssetType:
-                ///   - fileName:
-                ///   - fileSize:
-                public init(
-                    appEventAssetType: Components.Schemas.AppEventAssetType,
-                    fileName: Swift.String,
-                    fileSize: Swift.Int
-                ) {
-                    self.appEventAssetType = appEventAssetType
-                    self.fileName = fileName
-                    self.fileSize = fileSize
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case appEventAssetType
-                    case fileName
-                    case fileSize
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/attributes`.
-            public var attributes: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.AttributesPayload
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships`.
-            public struct RelationshipsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships/appEventLocalization`.
-                public struct AppEventLocalizationPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships/appEventLocalization/data`.
-                    public struct DataPayload: Codable, Hashable, Sendable {
-                        /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships/appEventLocalization/data/id`.
-                        public var id: Swift.String
-                        /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships/appEventLocalization/data/type`.
-                        public var _type: Swift.String
-                        /// Creates a new `DataPayload`.
-                        ///
-                        /// - Parameters:
-                        ///   - id:
-                        ///   - _type:
-                        public init(
-                            id: Swift.String,
-                            _type: Swift.String
-                        ) {
-                            self.id = id
-                            self._type = _type
-                        }
-                        public enum CodingKeys: String, CodingKey {
-                            case id
-                            case _type = "type"
-                        }
-                    }
-                    /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships/appEventLocalization/data`.
-                    public var data: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.RelationshipsPayload.AppEventLocalizationPayload.DataPayload
-                    /// Creates a new `AppEventLocalizationPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - data:
-                    public init(data: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.RelationshipsPayload.AppEventLocalizationPayload.DataPayload) {
-                        self.data = data
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case data
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships/appEventLocalization`.
-                public var appEventLocalization: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.RelationshipsPayload.AppEventLocalizationPayload
-                /// Creates a new `RelationshipsPayload`.
-                ///
-                /// - Parameters:
-                ///   - appEventLocalization:
-                public init(appEventLocalization: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.RelationshipsPayload.AppEventLocalizationPayload) {
-                    self.appEventLocalization = appEventLocalization
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case appEventLocalization
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/relationships`.
-            public var relationships: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.RelationshipsPayload
-            /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data/type`.
-            public var _type: Swift.String
-            /// Creates a new `DataPayload`.
-            ///
-            /// - Parameters:
-            ///   - attributes:
-            ///   - relationships:
-            ///   - _type:
-            public init(
-                attributes: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.AttributesPayload,
-                relationships: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload.RelationshipsPayload,
-                _type: Swift.String
-            ) {
-                self.attributes = attributes
-                self.relationships = relationships
-                self._type = _type
-            }
-            public enum CodingKeys: String, CodingKey {
-                case attributes
-                case relationships
-                case _type = "type"
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/AppEventScreenshotCreateRequest/data`.
-        public var data: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload
-        /// Creates a new `AppEventScreenshotCreateRequest`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        public init(data: Components.Schemas.AppEventScreenshotCreateRequest.DataPayload) {
             self.data = data
         }
         public enum CodingKeys: String, CodingKey {

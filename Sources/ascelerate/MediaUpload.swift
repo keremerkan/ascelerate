@@ -880,16 +880,31 @@ extension AppsCommand {
         let (total, stuck) = printMediaStatus(items)
         let plan = try folder.map { try scanMediaFolder(at: $0) }
 
-        // Placements keep their creation order and can't be reordered or retried one by one,
-        // so check them against the folder: a set that differs needs `media upload --replace`.
+        // Placements keep their creation order and can't be retried one by one, so check them
+        // against the folder: a set holding the folder's files in another order is put in file
+        // order with one request; one with other files needs `media upload --replace`.
         if let plan {
-          let mismatched = placementSetsDifferingFromFolder(items, plan: plan)
-          if !mismatched.isEmpty {
-            print()
-            for label in mismatched {
-              print(yellow("⚠ \(label): files or order differ from the folder."))
+          let differing = placementSetsDifferingFromFolder(items, plan: plan)
+          let misordered = differing.filter { $0.order != nil }
+          let mismatched = differing.filter { $0.order == nil }
+          if !differing.isEmpty { print() }
+          for set in misordered { print(yellow("⚠ \(set.label): placed in another order than the folder's files.")) }
+          for set in mismatched { print(yellow("⚠ \(set.label): files differ from the folder.")) }
+          if !misordered.isEmpty,
+            confirm("Put \(misordered.count == 1 ? "it" : "these \(misordered.count)") in file order? [y/N] ")
+          {
+            for set in misordered {
+              guard let order = set.order else { continue }
+              let done = try await unlessDryRunStopped {
+                try await AssetLibrary.reorder(
+                  placementIDs: order.placementIDs, group: order.group, on: .versionLocalization(order.localizationID),
+                  client: ascClient)
+              }
+              if done != nil { print(green("Reordered") + " \(set.label).") }
             }
-            print("Run `media upload` with --replace to place them again in file order.")
+          }
+          if !mismatched.isEmpty {
+            print("Run `media upload` with --replace to place them again from the folder.")
           }
         }
 
@@ -1537,6 +1552,9 @@ private struct MediaItemStatus {
   /// An asset library placement (iPhone Duo, header, search results), which the classic retry
   /// can't redo.
   var isPlacement = false
+  /// A placement's localization and placement group, for reordering it.
+  var localizationID = ""
+  var placementGroup = ""
   let setID: String
   let mediaID: String
   let allIDsInSet: [String]
@@ -1589,7 +1607,7 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
           locale: locale, displayTypeName: displayTypeName, position: i + 1,
           fileName: fileNames[i] ?? "unknown", state: state.map { formatState($0) } ?? "unknown",
           isComplete: state.map { $0 == "ACTIVE" || $0 == "INACTIVE" || $0.hasPrefix("PARENT_") } ?? false,
-          isScreenshot: isScreenshot, isPlacement: true,
+          isScreenshot: isScreenshot, isPlacement: true, localizationID: loc.id, placementGroup: group,
           setID: "placements/\(loc.id)/\(type.rawValue)", mediaID: placement.id, allIDsInSet: placements.map(\.id)))
       }
     }
@@ -1703,31 +1721,52 @@ private func printMediaStatus(_ items: [MediaItemStatus]) -> (total: Int, stuck:
   return (total, stuck)
 }
 
-/// The "[locale] displayType" labels of placement sets (iPhone Duo) whose file names, in
-/// display order, differ from the folder's files for that locale and display type.
-private func placementSetsDifferingFromFolder(_ items: [MediaItemStatus], plan: MediaUploadPlan) -> [String] {
-  var labels: [String] = []
+/// A placement set (iPhone Duo screenshots or previews, a header or search results slot) that
+/// differs from the folder's files for its locale and display type. When it holds exactly the
+/// folder's files in another order, `order` puts them in file order.
+private struct DifferingPlacementSet {
+  let label: String
+  var order: (placementIDs: [String], group: String, localizationID: String)?
+}
+
+private func placementSetsDifferingFromFolder(_ items: [MediaItemStatus], plan: MediaUploadPlan) -> [DifferingPlacementSet] {
+  var sets: [DifferingPlacementSet] = []
   for localeMedia in plan.locales {
     for dt in localeMedia.displayTypes {
       guard let slot = AssetLibrary.slots[dt.folderName] else { continue }
-      func placed(screenshots: Bool?) -> [String] {
+      let label = "[\(localeName(localeMedia.locale))] \(dt.folderName)"
+      func placed(screenshots: Bool?) -> [MediaItemStatus] {
         items.filter {
           $0.isPlacement && $0.locale.lowercased() == localeMedia.locale.lowercased() && $0.displayTypeName == dt.folderName
             && (screenshots == nil || $0.isScreenshot == screenshots)
-        }.sorted { $0.position < $1.position }.map(\.fileName)
+        }.sorted { $0.position < $1.position }
       }
-      // A single slot holds the folder's one file, image or video; a set compares screenshots
-      // and previews on their own (an empty local part isn't compared, as upload leaves it alone).
-      let differs = slot.isSingle
-        ? placed(screenshots: nil) != (dt.screenshots + dt.previews).map(\.fileName)
-        : (!dt.screenshots.isEmpty && placed(screenshots: true) != dt.screenshots.map(\.fileName))
-          || (!dt.previews.isEmpty && placed(screenshots: false) != dt.previews.map(\.fileName))
-      if differs {
-        labels.append("[\(localeName(localeMedia.locale))] \(dt.folderName)")
+      // A single slot holds the folder's one file, image or video.
+      if slot.isSingle {
+        if placed(screenshots: nil).map(\.fileName) != (dt.screenshots + dt.previews).map(\.fileName) {
+          sets.append(.init(label: label))
+        }
+        continue
+      }
+      // A set compares screenshots and previews on their own (an empty local part isn't compared,
+      // as upload leaves it alone).
+      for (isScreenshot, files) in [(true, dt.screenshots), (false, dt.previews)] where !files.isEmpty {
+        let current = placed(screenshots: isScreenshot)
+        let names = files.map(\.fileName)
+        guard current.map(\.fileName) != names else { continue }
+        var set = DifferingPlacementSet(label: label + (dt.previews.isEmpty || dt.screenshots.isEmpty ? "" : isScreenshot ? " screenshots" : " previews"))
+        // Reorderable when the set holds each of the folder's files once.
+        let byName = Dictionary(current.map { ($0.fileName, $0) }, uniquingKeysWith: { first, _ in first })
+        if current.count == names.count, Set(names).count == names.count, byName.count == names.count,
+          let first = current.first, names.allSatisfy({ byName[$0] != nil })
+        {
+          set.order = (names.compactMap { byName[$0]?.mediaID }, first.placementGroup, first.localizationID)
+        }
+        sets.append(set)
       }
     }
   }
-  return labels
+  return sets
 }
 
 /// Builds a lookup from "locale/displayType/screenshot|preview/position" to local file path.

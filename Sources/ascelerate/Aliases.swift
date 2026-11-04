@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 
 enum Aliases {
@@ -37,3 +38,7 @@ func resolveAlias(_ input: String) -> String {
   let aliases = Aliases.load()
   return aliases[input] ?? input
 }
+
+/// Shell completion for an app argument: the alias names in `~/.ascelerate/aliases.json`.
+let appAliasCompletion = CompletionKind.shellCommand(
+  "grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'")

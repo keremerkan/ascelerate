@@ -16,7 +16,7 @@ struct BuildsCommand: AsyncParsableCommand {
     )
 
     @Option(name: .long, help: "Filter by bundle identifier.",
-            completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+            completion: appAliasCompletion)
     var bundleID: String?
 
     @Option(name: .long, help: "Filter by app version (e.g. 14.3).")
@@ -111,7 +111,7 @@ struct BuildsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "Bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var platformOption: PlatformOption
@@ -203,7 +203,7 @@ struct BuildsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The app's bundle identifier.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Build version number to wait for (e.g. 903). If omitted, waits for the latest build.")

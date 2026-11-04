@@ -394,7 +394,7 @@ extension AppsCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "Path to the media folder or zip file.",
@@ -755,7 +755,7 @@ extension AppsCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Output folder path. Defaults to <bundle-id>-media.")
@@ -841,7 +841,7 @@ extension AppsCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
@@ -1050,7 +1050,7 @@ extension AppsCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "What to remove: PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS or APP_IPHONE_DUO.",
@@ -1184,7 +1184,7 @@ extension AppsCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Only images that fit these kinds (comma-separated): PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS, APP_IPHONE_DUO, UNFINISHED_UPLOADS or a screenshot display type (APP_IPHONE_67, ...).")
@@ -1361,7 +1361,7 @@ extension AppsCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "Path to the media folder (same structure as upload).")

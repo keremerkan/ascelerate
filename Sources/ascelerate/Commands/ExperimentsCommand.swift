@@ -19,7 +19,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
   /// The app and experiment every subcommand but `list`/`create` starts from.
   struct Target: ParsableArguments {
     @Argument(help: "Bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "Experiment name or ID.")
@@ -87,7 +87,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "List the app's product page optimization tests.")
 
     @Argument(help: "Bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var jsonOption: JSONOption
@@ -165,7 +165,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "Bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Test name.")

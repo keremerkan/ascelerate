@@ -171,8 +171,7 @@ struct DevicesCommand: AsyncParsableCommand {
       print("  [2] Status")
       print("  [3] Both")
       print()
-      print("Select (1-3): ", terminator: "")
-      guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+      guard let input = readAnswer("Select (1-3): ")?.trimmingCharacters(in: .whitespacesAndNewlines),
             let choice = Int(input),
             choice >= 1, choice <= 3 else {
         throw ValidationError("Invalid selection.")
@@ -182,8 +181,7 @@ struct DevicesCommand: AsyncParsableCommand {
       var newStatus: ASCEnum.DeviceUpdateRequestStatus?
 
       if choice == 1 || choice == 3 {
-        print("New name [\(currentName)]: ", terminator: "")
-        if let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines), !line.isEmpty {
+        if let line = readAnswer("New name [\(currentName)]: ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines), !line.isEmpty {
           newName = line
         } else {
           throw ValidationError("Name cannot be empty.")
@@ -196,8 +194,7 @@ struct DevicesCommand: AsyncParsableCommand {
           print("  [\(i + 1)] \(s.rawValue)")
         }
         print()
-        print("Select status (1-\(statusTypes.count)): ", terminator: "")
-        guard let sInput = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard let sInput = readAnswer("Select status (1-\(statusTypes.count)): ")?.trimmingCharacters(in: .whitespacesAndNewlines),
               let sChoice = Int(sInput),
               sChoice >= 1, sChoice <= statusTypes.count else {
           throw ValidationError("Invalid selection.")

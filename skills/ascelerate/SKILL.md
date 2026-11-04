@@ -705,6 +705,9 @@ iPhone Duo simulator (Xcode 27.1+): `setHinge(.open)` / `setHinge(.closed)` unfo
 ascelerate builds archive                           # Auto-detects workspace/scheme
 ascelerate builds archive --scheme MyApp --json-events   # Progress as JSON Lines on stdout (step, archived with the path); readable log and xcodebuild's warnings/errors on stderr
 ascelerate builds archive --scheme MyApp --build-number 9   # Archive with build number 9 (app, extensions, watch app) when the project's number was already uploaded; the project is left as it is
+ascelerate builds archive --scheme MyApp --build-number auto   # Reads App Store Connect: keeps the project's number while it's higher than every uploaded build of the platform, else the one after the highest; the app's extensions and watch app always get the same number (good for workflows)
+ascelerate builds archive --scheme MyApp --xcodebuild-output quiet   # Only xcodebuild's warnings and errors (default: the setting, else full; quiet with --json-events and in event-mode workflows)
+ascelerate settings --xcodebuild-output quiet|full|default   # Saved default for every archive (~/.ascelerate/settings.json); ASCELERATE_XCODEBUILD_OUTPUT overrides for one run
 ascelerate builds archives [--bundle-id X] [--platform macos] [--json]   # Xcode's archives, newest first (path, version, build, platform, date); archive picks the scheme's platform when --destination is omitted
 ascelerate builds upload MyApp.ipa
 ascelerate builds upload --latest --bundle-id com.example.MyApp --platform macos   # the newest archive of an app for one platform
@@ -853,6 +856,8 @@ apps review submit com.example.MyApp
 ```bash
 ascelerate run-workflow release.workflow
 ascelerate run-workflow release.workflow --yes   # Skip all prompts (CI/CD)
+ascelerate run-workflow release.workflow --check [--json]   # Parse every step without running (line + error per bad step)
+ascelerate run-workflow release.workflow --json-events      # JSON events on stdout: workflow, step (running/succeeded/failed/dry-run), finished, prompt (kind confirm|choice|choices|text, options; answer one line on stdin); readable output on stderr
 ```
 
 Commands are one per line, without the `ascelerate` prefix. Lines starting with `#` are comments. `builds upload` automatically passes the build version to subsequent commands.

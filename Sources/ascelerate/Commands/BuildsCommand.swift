@@ -249,7 +249,7 @@ struct BuildsCommand: AsyncParsableCommand {
     }
   }
 
-  struct Archive: ParsableCommand {
+  struct Archive: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "Archive an Xcode project via xcodebuild."
     )
@@ -274,7 +274,7 @@ struct BuildsCommand: AsyncParsableCommand {
 
     @Option(
       name: .customLong("build-number"),
-      help: "Build number of everything built into the archive (the app, its extensions, its watch app): sets CURRENT_PROJECT_VERSION for this archive only, leaving the project as it is. A target whose Info.plist names its own number keeps it.")
+      help: "Build number of everything built into the archive (the app, its extensions, its watch app): sets CURRENT_PROJECT_VERSION for this archive only, leaving the project as it is. A target whose Info.plist names its own number keeps it. auto: the app target's own number, or the one after the highest uploaded to App Store Connect for the app's platform when that one is taken; either way everything in the archive gets it, so the extensions match the app.")
     var buildNumber: String?
 
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -285,16 +285,23 @@ struct BuildsCommand: AsyncParsableCommand {
       help: "Report progress as JSON events on stdout, one per line (step, archived), for other tools. The readable progress and xcodebuild's output go to stderr.")
     var jsonEvents = false
 
-    func run() throws {
-      try EventOutput.$emitsEvents.withValue(jsonEvents) { try archive() }
+    @Option(
+      name: .long,
+      help: "quiet (xcodebuild's warnings and errors) or full. Defaults to the setting (ascelerate settings), else full, or quiet with --json-events and in a workflow a program follows.")
+    var xcodebuildOutput: XcodebuildOutput?
+
+    func run() async throws {
+      try await EventOutput.$emitsEvents.withValue(jsonEvents) { try await archive() }
     }
 
-    private func archive() throws {
+    private var isAutomaticNumber: Bool { buildNumber?.lowercased() == "auto" }
+
+    private func archive() async throws {
       if yes { autoConfirm = true }
 
       // App Store Connect's form: up to three period-separated integers.
-      if let buildNumber, buildNumber.wholeMatch(of: /[0-9]+(\.[0-9]+){0,2}/) == nil {
-        throw ValidationError("The build number must be up to three numbers separated by periods, such as 9 or 1.0.9.")
+      if let buildNumber, !isAutomaticNumber, buildNumber.wholeMatch(of: /[0-9]+(\.[0-9]+){0,2}/) == nil {
+        throw ValidationError("The build number must be up to three numbers separated by periods, such as 9 or 1.0.9, or auto.")
       }
 
       try ensureXcodebuild()
@@ -305,7 +312,10 @@ struct BuildsCommand: AsyncParsableCommand {
       // 2. Detect scheme
       let schemeName = try detectScheme(buildFlag: buildFlag, buildPath: buildPath)
 
-      let destination = destination ?? defaultDestination(buildFlag: buildFlag, buildPath: buildPath, scheme: schemeName)
+      let settings = appSettings(buildFlag: buildFlag, buildPath: buildPath, scheme: schemeName)
+      let destination = destination ?? defaultDestination(settings)
+      // Before the clean, so a number App Store Connect can't give stops the run at once.
+      let buildNumber = isAutomaticNumber ? try await automaticNumber(settings, destination: destination) : buildNumber
 
       // 3. Clean before archiving
       EventOutput.log("Cleaning build...")
@@ -323,12 +333,7 @@ struct BuildsCommand: AsyncParsableCommand {
       cleanProcess.standardOutput = toolOutput
       cleanProcess.standardError = FileHandle.standardError
 
-      try cleanProcess.run()
-      waitForwardingInterrupts(cleanProcess)
-
-      if cleanProcess.terminationStatus != 0 {
-        throw ExitCode(cleanProcess.terminationStatus)
-      }
+      try runReportingErrors(cleanProcess, tool: "xcodebuild clean", errors: .xcodebuild)
 
       // 4. Build archive arguments
       var args = [
@@ -368,12 +373,7 @@ struct BuildsCommand: AsyncParsableCommand {
       process.standardOutput = toolOutput
       process.standardError = FileHandle.standardError
 
-      try process.run()
-      waitForwardingInterrupts(process)
-
-      if process.terminationStatus != 0 {
-        throw ExitCode(process.terminationStatus)
-      }
+      try runReportingErrors(process, tool: "xcodebuild archive", errors: .xcodebuild)
 
       // 6. Print result: without --output, xcodebuild names the archive in Xcode's archive
       // location, where it's the newest one made since the run started.
@@ -390,12 +390,18 @@ struct BuildsCommand: AsyncParsableCommand {
       }
     }
 
-    /// The generic destination of the platform the scheme's app builds for, from its build settings
-    /// (`SUPPORTED_PLATFORMS` without the simulators), so a Mac, tvOS or visionOS app archives without
-    /// `--destination`. iOS when the app builds for several platforms or the settings can't be read,
-    /// as before.
-    private func defaultDestination(buildFlag: String, buildPath: String, scheme: String) -> String {
-      let fallback = "generic/platform=iOS"
+    /// What the archive needs of the scheme's app target's build settings.
+    private struct AppSettings {
+      /// `SUPPORTED_PLATFORMS` without the simulators (macosx, iphoneos…).
+      let platforms: [String]
+      let bundleID: String?
+      /// `CURRENT_PROJECT_VERSION`.
+      let projectNumber: String?
+    }
+
+    /// The scheme's app target's build settings (`xcodebuild -showBuildSettings`); nil when they
+    /// can't be read.
+    private func appSettings(buildFlag: String, buildPath: String, scheme: String) -> AppSettings? {
       let process = Process()
       process.executableURL = URL(fileURLWithPath: "/usr/bin/xcodebuild")
       process.arguments = [
@@ -407,17 +413,27 @@ struct BuildsCommand: AsyncParsableCommand {
       do {
         try process.run()
       } catch {
-        return fallback
+        return nil
       }
       let data = waitForwardingInterrupts(process, reading: pipe)
       guard process.terminationStatus == 0,
         let targets = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]]
-      else { return fallback }
+      else { return nil }
       let settings = targets.compactMap { $0["buildSettings"] as? [String: Any] }
       let app = settings.first { $0["WRAPPER_EXTENSION"] as? String == "app" } ?? settings.first
-      let platforms = ((app?["SUPPORTED_PLATFORMS"] as? String) ?? "").split(separator: " ").filter { !$0.hasSuffix("simulator") }
+      let platforms = ((app?["SUPPORTED_PLATFORMS"] as? String) ?? "").split(separator: " ").map(String.init)
+        .filter { !$0.hasSuffix("simulator") }
+      func value(_ key: String) -> String? { (app?[key] as? String).flatMap { $0.isEmpty ? nil : $0 } }
+      return AppSettings(platforms: platforms, bundleID: value("PRODUCT_BUNDLE_IDENTIFIER"), projectNumber: value("CURRENT_PROJECT_VERSION"))
+    }
+
+    /// The generic destination of the platform the scheme's app builds for (`SUPPORTED_PLATFORMS`),
+    /// so a Mac, tvOS or visionOS app archives without `--destination`. iOS when the app builds for
+    /// several platforms or the settings can't be read, as before.
+    private func defaultDestination(_ settings: AppSettings?) -> String {
+      let fallback = "generic/platform=iOS"
       let destinations = ["macosx": "macOS", "iphoneos": "iOS", "appletvos": "tvOS", "xros": "visionOS", "watchos": "watchOS"]
-      guard platforms.count == 1, let platform = destinations[String(platforms[0])] else { return fallback }
+      guard let platforms = settings?.platforms, platforms.count == 1, let platform = destinations[platforms[0]] else { return fallback }
       let destination = "generic/platform=\(platform)"
       if destination != fallback {
         EventOutput.log("Destination: \(destination) (the scheme's platform)")
@@ -425,10 +441,36 @@ struct BuildsCommand: AsyncParsableCommand {
       return destination
     }
 
-    /// For another tool following the events, xcodebuild prints only warnings and errors: its full
-    /// output (every compile command, kilobytes a line) is more than a log view can follow.
+    /// `--build-number auto`: the app target's number while it's higher than every build uploaded
+    /// for the destination's platform, else the one after the highest (`Builds.numberNeeded`).
+    /// Passed even when it's the target's own, so an extension left at an older number gets the
+    /// app's (App Store Connect warns when they differ).
+    private func automaticNumber(_ settings: AppSettings?, destination: String) async throws -> String? {
+      guard let bundleID = settings?.bundleID else {
+        throw ValidationError("--build-number auto needs the app's bundle ID, which the scheme's build settings don't name.")
+      }
+      let platform: Platform =
+        if destination.contains("macOS") { .macOs }
+        else if destination.contains("tvOS") { .tvOs }
+        else if destination.contains("visionOS") { .visionOs }
+        else { .ios }
+      let client = try ClientFactory.makeClient()
+      let app = try await findApp(exactBundleID: bundleID, client: client)
+      let uploaded = try await Builds.highestNumber(appID: app.id, platform: platform, client: client)
+      let project = settings?.projectNumber
+      guard let number = Builds.numberNeeded(uploaded: uploaded, project: project) else {
+        EventOutput.log(uploaded.map { "The app's build number \(project ?? "?") is higher than the uploaded \($0)" }
+          ?? "No build of \(formatState(platform.rawValue)) is uploaded yet: keeping the app's build number")
+        return project
+      }
+      EventOutput.log("Build \(uploaded ?? "") of \(formatState(platform.rawValue)) is uploaded already: archiving with build number \(number)")
+      return number
+    }
+
+    /// xcodebuild's `-quiet` when its output is to be quiet (`XcodebuildOutput.resolve`): by
+    /// default for another tool following the events.
     private var quietFlag: [String] {
-      jsonEvents ? ["-quiet"] : []
+      XcodebuildOutput.resolve(xcodebuildOutput, followed: jsonEvents) == .quiet ? ["-quiet"] : []
     }
 
     /// Where xcodebuild's output goes: the terminal, or stderr when stdout carries events.
@@ -593,6 +635,12 @@ struct BuildsCommand: AsyncParsableCommand {
     var jsonEvents = false
 
     func run() async throws {
+      // A workflow step's upload reports its progress in the workflow's events.
+      if EventOutput.inWorkflow {
+        return try await UploadProgress.$observe.withValue({ total in UploadProgressEvents(total: total) }) {
+          try await upload()
+        }
+      }
       guard jsonEvents else { return try await upload() }
       try await EventOutput.$emitsEvents.withValue(true) {
         try await UploadProgress.$observe.withValue({ total in UploadProgressEvents(total: total) }) {
@@ -686,12 +734,7 @@ struct BuildsCommand: AsyncParsableCommand {
       process.standardOutput = jsonEvents ? FileHandle.standardError : FileHandle.standardOutput
       process.standardError = FileHandle.standardError
 
-      try process.run()
-      waitForwardingInterrupts(process)
-
-      if process.terminationStatus != 0 {
-        throw ExitCode(process.terminationStatus)
-      }
+      try runReportingErrors(process, tool: "altool", errors: .altool)
 
       if let buildNumber = uploadedBuildNumber {
         recordUploadedBuild(buildNumber, platform: archivePlatform?.ascPlatform)
@@ -770,12 +813,7 @@ struct BuildsCommand: AsyncParsableCommand {
       process.standardOutput = FileHandle.standardOutput
       process.standardError = FileHandle.standardError
 
-      try process.run()
-      waitForwardingInterrupts(process)
-
-      if process.terminationStatus != 0 {
-        throw ExitCode(process.terminationStatus)
-      }
+      try runReportingErrors(process, tool: "altool", errors: .altool)
     }
   }
 }
@@ -895,8 +933,7 @@ private func resolveFilePath(_ file: String?, prompt: String) throws -> String {
   if let f = file {
     filePath = f
   } else {
-    print(prompt, terminator: "")
-    guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+    guard let line = readAnswer(prompt)?.trimmingCharacters(in: .whitespacesAndNewlines),
       !line.isEmpty
     else {
       throw ValidationError("No file path provided.")
@@ -1232,10 +1269,14 @@ struct BuildEvent: Encodable {
   var warnings: [String]?
 }
 
-/// Reports an upload's acknowledged bytes as `progress` events, at most once per percent.
+/// Reports an upload's acknowledged bytes as `progress` events, at most once per percent: the
+/// command's own, or in a workflow its step's (the workflow's stream leaves the command's out).
 private final class UploadProgressEvents: UploadProgressObserver, @unchecked Sendable {
   private let lock = NSLock()
   private var shownPercent = -1
+  /// Read where it's made: the progress comes from the upload's own threads, which don't see the
+  /// task's values.
+  private let step = EventOutput.inWorkflow ? EventOutput.step : nil
 
   init(total: Int64) {}
 
@@ -1245,7 +1286,11 @@ private final class UploadProgressEvents: UploadProgressObserver, @unchecked Sen
       let percent = Int(sent * 100 / total)
       guard percent > shownPercent else { return }
       shownPercent = percent
-      EventOutput.emit(BuildEvent(event: "progress", bytes: total, sent: sent))
+      if let step {
+        EventOutput.emit(WorkflowEvent(event: "progress", index: step.index, depth: step.depth, sent: sent, bytes: total))
+      } else {
+        EventOutput.emit(BuildEvent(event: "progress", bytes: total, sent: sent))
+      }
     }
   }
 

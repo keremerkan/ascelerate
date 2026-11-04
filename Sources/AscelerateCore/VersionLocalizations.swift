@@ -31,9 +31,10 @@ public func validURL(_ value: String?) -> String? {
 
 /// Updating and creating the localizations of an App Store version.
 public enum VersionLocalizations {
-  /// The version states in which every field can change. In any other state only promotional text
-  /// can be updated.
-  public static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW"]
+  /// The version states in which every field can change: being prepared, in a draft submission
+  /// (Ready for Review) or submitted and not yet in review. In any other state only promotional
+  /// text can be updated.
+  public static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW"]
 
   /// Sends the non-nil fields of `fields` to an existing localization.
   public static func update(

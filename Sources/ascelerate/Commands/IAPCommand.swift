@@ -641,8 +641,7 @@ struct IAPCommand: AsyncParsableCommand {
 
       var note: String? = reviewNote
       if note == nil && !autoConfirm {
-        print("Review Note (optional, press Enter to skip): ", terminator: "")
-        let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let input = readAnswer("Review Note (optional, press Enter to skip): ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !input.isEmpty { note = input }
       }
 
@@ -1141,8 +1140,7 @@ struct IAPCommand: AsyncParsableCommand {
             }
             print()
             print("Revert any of these to auto-equalize from the new base?")
-            print("Select to revert (comma-separated numbers, 'all', or press Enter to keep all): ", terminator: "")
-            let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let input = readAnswer("Select to revert (comma-separated numbers, 'all', or press Enter to keep all): ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
             if input.isEmpty {
               // keep all

@@ -944,15 +944,13 @@ struct SubCommand: AsyncParsableCommand {
 
       var level = groupLevel
       if level == nil && !autoConfirm {
-        print("Group Level (1 = highest, press Enter to skip): ", terminator: "")
-        let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let input = readAnswer("Group Level (1 = highest, press Enter to skip): ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if let val = Int(input) { level = val }
       }
 
       var note: String? = reviewNote
       if note == nil && !autoConfirm {
-        print("Review Note (optional, press Enter to skip): ", terminator: "")
-        let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let input = readAnswer("Review Note (optional, press Enter to skip): ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !input.isEmpty { note = input }
       }
 

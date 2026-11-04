@@ -33,6 +33,19 @@ ascelerate builds archive --scheme MyApp --output ./archives
 ascelerate builds archive --scheme MyApp --build-number 9
 ```
 
+`--build-number auto` を指定すると、まず App Store Connect でアプリのビルドを読み取ります。プロジェクトの番号が、そのプラットフォームでアップロード済みのどのビルドよりも大きい間はその番号のままで、そうでなければ最も大きい番号の次の番号が付きます。どちらの場合も、アーカイブにビルドされるすべてにその番号が付くため、古い番号のままの機能拡張もアプリと同じ番号になります。これにより、プロジェクトを変更しなくてもワークフローでアーカイブできます。ほかのコマンドと同じく API キーが必要です。アプリのバンドル ID はスキームのビルド設定から読み取ります。
+
+```bash
+ascelerate builds archive --scheme MyApp --build-number auto
+```
+
+```bash
+ascelerate builds archive --scheme MyApp --xcodebuild-output quiet   # xcodebuildの警告とエラーのみ
+ascelerate settings --xcodebuild-output quiet                        # すべてのアーカイブの既定
+```
+
+`--xcodebuild-output quiet` はxcodebuildの警告とエラーだけを出力し（`xcodebuild -quiet`）、`full` はすべてを出力します。オプションを省略すると `ascelerate settings --xcodebuild-output` の設定に従います（`~/.ascelerate/settings.json` に保存され、`default` で既定に戻ります）。設定がない場合、ターミナルではすべて出力し、`--json-events` 付きや `--json-events` で実行したワークフローの中では簡潔になります。`ASCELERATE_XCODEBUILD_OUTPUT=quiet|full` で1回の実行だけ設定を上書きできます。
+
 ## アーカイブ一覧
 
 ```bash

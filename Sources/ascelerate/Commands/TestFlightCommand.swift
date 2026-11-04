@@ -1908,8 +1908,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         printed = items.count
 
         let moreHint = exhausted ? "" : ", 'm' for more"
-        print("Select (1-\(items.count)\(moreHint)): ", terminator: "")
-        guard let line = readLine() else {
+        guard let line = readAnswer("Select (1-\(items.count)\(moreHint)): ") else {
           throw ValidationError("No input available (stdin closed).")
         }
         let input = line.trimmingCharacters(in: .whitespacesAndNewlines)

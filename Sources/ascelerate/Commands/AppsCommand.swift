@@ -653,12 +653,7 @@ struct AppsCommand: AsyncParsableCommand {
         return
       }
 
-      let state = appVersion.attributes?.appVersionState
-      guard state == "PREPARE_FOR_SUBMISSION" || state == "WAITING_FOR_REVIEW" else {
-        throw ValidationError(
-          "Version \(versionString) (\(platformStr)) is in state '\(state.map { formatState($0) } ?? "unknown")' — copyright can only be updated on an editable version.")
-      }
-
+      // In any state, as promotional text: App Store Connect takes a copyright change on a live version too.
       print("App:       \(app.attributes?.name ?? bundleID)")
       print("Version:   \(versionString) (\(platformStr))")
       print("Copyright: \(current?.isEmpty == false ? current! : "—") → \(newCopyright)")
@@ -3686,8 +3681,7 @@ private func selectBuild(appID: String, versionID: String, versionString: String
     let number = selected.number ?? "—"
     print("Auto-selected build \(number) (most recent).")
   } else {
-    print("Select a build (1-\(builds.count)): ", terminator: "")
-    guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+    guard let input = readAnswer("Select a build (1-\(builds.count)): ")?.trimmingCharacters(in: .whitespacesAndNewlines),
           let choice = Int(input),
           choice >= 1, choice <= builds.count else {
       throw ValidationError("Invalid selection.")

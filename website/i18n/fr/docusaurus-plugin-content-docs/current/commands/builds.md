@@ -33,6 +33,19 @@ Avec `--build-number`, tout ce qui est compilé dans l'archive (l'application, s
 ascelerate builds archive --scheme MyApp --build-number 9
 ```
 
+Avec `--build-number auto`, la commande lit d'abord les builds de l'application dans App Store Connect : l'archive garde le numéro du projet tant qu'il est supérieur à tous les builds chargés pour la plateforme, et reçoit sinon le numéro qui suit le plus élevé. Dans les deux cas, tout ce qui est compilé dans l'archive reçoit ce numéro, si bien qu'une extension restée à un numéro plus ancien correspond à l'application. Un workflow peut ainsi archiver sans que personne ne modifie le projet. La clé d'API est nécessaire, comme pour les autres commandes, et l'identifiant de bundle de l'application est lu dans les réglages de build du scheme.
+
+```bash
+ascelerate builds archive --scheme MyApp --build-number auto
+```
+
+```bash
+ascelerate builds archive --scheme MyApp --xcodebuild-output quiet   # uniquement les avertissements et erreurs de xcodebuild
+ascelerate settings --xcodebuild-output quiet                        # la valeur par défaut de chaque archive
+```
+
+`--xcodebuild-output quiet` ne transmet que les avertissements et les erreurs de xcodebuild (`xcodebuild -quiet`), `full` tout. Sans l’option, c’est `ascelerate settings --xcodebuild-output` qui décide (enregistré dans `~/.ascelerate/settings.json` ; `default` rétablit la valeur par défaut). Sans réglage, la sortie est complète dans un terminal et réduite avec `--json-events` ou dans un workflow exécuté avec `--json-events`. `ASCELERATE_XCODEBUILD_OUTPUT=quiet|full` remplace le réglage pour une exécution.
+
 ## Lister les archives
 
 ```bash

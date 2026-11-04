@@ -88,6 +88,30 @@ public enum Builds {
     return limit.map { Array(builds.prefix($0)) } ?? builds
   }
 
+  /// The highest build number uploaded for the app on a platform, of any version; nil without one.
+  /// The newest 50 builds hold it: App Store Connect takes only numbers higher than the last.
+  public static func highestNumber(appID: String, platform: Platform, client: ASCClient) async throws -> String? {
+    try await list(appID: appID, platform: platform, limit: 50, client: client).compactMap(\.number)
+      .max { $0.compare($1, options: .numeric) == .orderedAscending }
+  }
+
+  /// The build number an archive needs so App Store Connect takes it, given the highest uploaded
+  /// (`uploaded`) and the project's own (`project`): nil when the project's is higher (or nothing
+  /// is uploaded), else the one after the highest uploaded.
+  public static func numberNeeded(uploaded: String?, project: String?) -> String? {
+    guard let uploaded else { return nil }
+    if let project, project.compare(uploaded, options: .numeric) == .orderedDescending { return nil }
+    return next(after: uploaded)
+  }
+
+  /// The number after `number`: its last part plus one ("8" → "9", "1.0.8" → "1.0.9").
+  public static func next(after number: String) -> String {
+    var parts = number.split(separator: ".").map(String.init)
+    guard let last = parts.last.flatMap({ Int($0) }) else { return number }
+    parts[parts.count - 1] = String(last + 1)
+    return parts.joined(separator: ".")
+  }
+
   public struct Page: Sendable {
     public let builds: [Build]
     /// The next page's link, for `page(…, after:)`; nil on the last page.

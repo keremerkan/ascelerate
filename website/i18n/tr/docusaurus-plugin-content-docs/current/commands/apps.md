@@ -45,7 +45,7 @@ ascelerate apps copyright <bundle-id>
 ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
 ```
 
-`--set` verilmediğinde mevcut telif hakkı bildirimi gösterilir. Güncelleme için sürümün düzenlenebilir durumda olması gerekir.
+`--set` verilmediğinde mevcut telif hakkı bildirimi gösterilir. Tanıtım metni gibi her durumda, yayındaki bir sürümde de güncellenebilir.
 
 ## İnceleme
 

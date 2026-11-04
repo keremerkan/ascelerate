@@ -19,6 +19,9 @@ func describeError(_ error: Error) -> String {
   }
   // ValidationError's localizedDescription is the generic "The operation couldn't be completed".
   if let validation = error as? ValidationError { return validation.message }
+  // A command that ended with only its exit code (its reason is in its output above): an
+  // ExitCode's own description is the framework's "ArgumentParser.ExitCode error 1".
+  if let exit = error as? ExitCode { return "The command ended with exit code \(exit.rawValue). Its output above says why." }
   return (ascUnderlyingError(error) ?? error).localizedDescription
 }
 
@@ -82,6 +85,104 @@ func waitForwardingInterrupts(_ process: Process, reading pipe: Pipe? = nil) -> 
   let data = pipe?.fileHandleForReading.readDataToEndOfFile() ?? Data()
   process.waitUntilExit()
   return data
+}
+
+/// A tool that failed (xcodebuild, altool), with the lines of its output that say why: what a
+/// workflow step reports as its error, which an exit code alone didn't ("The operation couldn't be
+/// completed (ArgumentParser.ExitCode error 1.)"). The tool's whole output went where it always
+/// does; these are only its error lines.
+struct ToolFailure: LocalizedError {
+  let tool: String
+  let status: Int32
+  let errors: [String]
+
+  var errorDescription: String? {
+    errors.isEmpty ? "\(tool) ended with exit code \(status)." : errors.joined(separator: "\n")
+  }
+}
+
+/// The kinds of error lines `runReportingErrors` keeps.
+enum ToolErrorLines {
+  /// xcodebuild: compiler and build errors (`…: error: …`, `error: …`) and its failure banner.
+  case xcodebuild
+  /// altool: its `*** Error:` lines and the `ERROR` ones of its newer output.
+  case altool
+
+  /// Bytes every pattern below contains one of.
+  fileprivate static let needles = [Data("rror".utf8), Data("RROR".utf8), Data("FAILED".utf8)]
+
+  fileprivate func matches(_ line: String) -> Bool {
+    switch self {
+      case .xcodebuild:
+        line.contains(": error:") || line.hasPrefix("error:") || (line.hasPrefix("** ") && line.hasSuffix(" FAILED **"))
+      case .altool:
+        line.contains("*** Error") || line.contains("ERROR:") || line.hasPrefix("ERROR")
+          || (line.localizedCaseInsensitiveContains("error:") && !line.localizedCaseInsensitiveContains("no errors"))
+    }
+  }
+}
+
+/// Runs `process` (its output set to where it goes, as usual) to its end, passing Ctrl-C on as
+/// `waitForwardingInterrupts` does, and throws `ToolFailure` with the error lines of its output
+/// when it fails. Its stdout and stderr still reach their places as it writes them.
+func runReportingErrors(_ process: Process, tool: String, errors kind: ToolErrorLines) throws {
+  final class Collector: @unchecked Sendable {
+    private let lock = NSLock()
+    private var lines: [String] = []
+
+    func add(_ line: String) {
+      lock.lock()
+      defer { lock.unlock() }
+      if lines.count < 10, !lines.contains(line) { lines.append(line) }
+    }
+
+    var collected: [String] {
+      lock.lock()
+      defer { lock.unlock() }
+      return lines
+    }
+  }
+  let collector = Collector()
+  let group = DispatchGroup()
+  // Each stream read on its own, written on to where it went, and scanned line by line.
+  func forward(_ destination: Any?, set: (Pipe) -> Void) {
+    let target = destination as? FileHandle ?? FileHandle.standardOutput
+    let pipe = Pipe()
+    set(pipe)
+    let reader = pipe.fileHandleForReading
+    group.enter()
+    DispatchQueue.global().async {
+      var pending = Data()
+      func scan(_ bytes: Data) {
+        // Only lines that can be errors are decoded: every kind's pattern has one of these (on
+        // 50 MB of build output, 0.3 s instead of 1.3 s).
+        guard ToolErrorLines.needles.contains(where: { bytes.range(of: $0) != nil }) else { return }
+        let line = String(decoding: bytes, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+        if kind.matches(line) { collector.add(line) }
+      }
+      while true {
+        let data = reader.availableData
+        if data.isEmpty { break }
+        target.write(data)
+        pending.append(data)
+        var start = pending.startIndex
+        while let newline = pending[start...].firstIndex(of: 0x0A) {
+          scan(pending[start..<newline])
+          start = pending.index(after: newline)
+        }
+        pending = Data(pending[start...])
+      }
+      scan(pending)
+      group.leave()
+    }
+  }
+  forward(process.standardOutput) { process.standardOutput = $0 }
+  forward(process.standardError ?? FileHandle.standardError) { process.standardError = $0 }
+  try process.run()
+  waitForwardingInterrupts(process)
+  group.wait()
+  guard process.terminationStatus != 0 else { return }
+  throw ToolFailure(tool: tool, status: process.terminationStatus, errors: collector.collected)
 }
 
 /// Has a Ctrl-C delete `path` (a temporary folder) before exiting.
@@ -322,9 +423,9 @@ func resolveFolder(_ folder: String?, prompt: String) throws -> String {
     let manualOption = candidates.count + 1
     print("  [\(manualOption)] Enter path manually")
     print()
-    print("Select (1-\(manualOption)): ", terminator: "")
 
-    guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+    let options = candidates.map { $0.name + ($0.isArchive ? " (archive)" : "") } + ["Enter path manually"]
+    guard let input = readAnswer("Select (1-\(manualOption)): ", kind: .choice, options: options)?.trimmingCharacters(in: .whitespacesAndNewlines),
           let choice = Int(input),
           choice >= 1, choice <= manualOption else {
       throw ValidationError("Invalid selection.")
@@ -517,9 +618,9 @@ func resolveFile(_ file: String?, extension ext: String, prompt: String) throws 
     let manualOption = candidates.count + 1
     print("  [\(manualOption)] Enter path manually")
     print()
-    print("Select (1-\(manualOption)): ", terminator: "")
 
-    guard let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines),
+    guard let input = readAnswer("Select (1-\(manualOption)): ", kind: .choice, options: candidates + ["Enter path manually"])?
+      .trimmingCharacters(in: .whitespacesAndNewlines),
           let choice = Int(input),
           choice >= 1, choice <= manualOption else {
       throw ValidationError("Invalid selection.")
@@ -545,8 +646,7 @@ func promptText(_ message: String) throws -> String {
     let label = message.trimmingCharacters(in: CharacterSet(charactersIn: ": "))
     throw ValidationError("\(label) is required — cannot prompt with \(nonInteractiveFlag).")
   }
-  print(message, terminator: "")
-  guard let line = readLine() else {
+  guard let line = readAnswer(message) else {
     throw ValidationError("No input available (stdin closed).")
   }
   let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -557,14 +657,34 @@ func promptText(_ message: String) throws -> String {
   return trimmed
 }
 
+/// What a question asks for, as its `prompt` event names it.
+enum PromptKind: String {
+  case confirm, choice, choices, text
+}
+
+/// Asks a question and reads the answer, one line from stdin; nil when stdin is closed. Every
+/// prompt goes through here: with events on (`--json-events`), the question is printed as a whole
+/// line and also goes out as a `prompt` event first, so a program running the command can answer
+/// it; in a terminal it waits on the same line.
+func readAnswer(_ prompt: String, kind: PromptKind = .text, options: [String]? = nil, optional: Bool = false) -> String? {
+  if EventOutput.emitsEvents {
+    print(prompt)
+    EventOutput.emit(PromptEvent(
+      kind: kind.rawValue, message: prompt.trimmingCharacters(in: .whitespaces), options: options, optional: optional ? true : nil))
+  } else {
+    print(prompt, terminator: "")
+  }
+  return readLine()
+}
+
 /// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
 func confirm(_ prompt: String) -> Bool {
-  print(prompt, terminator: "")
   if autoConfirm {
+    print(prompt, terminator: "")
     print("y (auto)")
     return true
   }
-  guard let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+  guard let answer = readAnswer(prompt, kind: .confirm)?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
     answer == "y" || answer == "yes"
   else {
     return false
@@ -629,10 +749,9 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
 
     let kind = isDir.boolValue ? "Folder" : "File"
     print("\(kind) '\(current)' already exists. Press Enter to overwrite or type a new name:")
-    print("> ", terminator: "")
     fflush(stdout)
 
-    guard let line = readLine() else { return current }
+    guard let line = readAnswer("> ", optional: true) else { return current }
     let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty { return current }
     current = trimmed
@@ -765,10 +884,8 @@ func checkForUpdatesInteractively() async -> Bool {
   if let detail = skill { items.append("ascelerate skill\(detail)") }
 
   let label = items.joined(separator: " and ")
-  print("\(label.prefix(1).uppercased())\(label.dropFirst()) outdated. Update now? [Y/n] ", terminator: "")
-  fflush(stdout)
-
-  let answer = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+  let answer = readAnswer("\(label.prefix(1).uppercased())\(label.dropFirst()) outdated. Update now? [Y/n] ", kind: .confirm, optional: true)?
+    .trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
   guard answer.isEmpty || answer == "y" || answer == "yes" else { return true }
 
   if completions != nil {
@@ -817,8 +934,7 @@ func promptSelection<T>(
   }
   print()
   let label = prompt ?? "Select"
-  print("\(label) (1-\(items.count)): ", terminator: "")
-  guard let line = readLine() else {
+  guard let line = readAnswer("\(label) (1-\(items.count)): ", kind: .choice, options: items.map(display)) else {
     throw ValidationError("No input available (stdin closed).")
   }
   guard let choice = Int(line.trimmingCharacters(in: .whitespacesAndNewlines)),
@@ -850,8 +966,9 @@ func promptMultiSelection<T>(
   print()
   let label = prompt ?? "Select"
   let defaultHint = defaultAll ? " [all]" : ""
-  print("\(label) (comma-separated numbers, or 'all')\(defaultHint): ", terminator: "")
-  guard let line = readLine() else {
+  guard let line = readAnswer(
+    "\(label) (comma-separated numbers, or 'all')\(defaultHint): ", kind: .choices, options: items.map(display), optional: defaultAll)
+  else {
     throw ValidationError("No input available (stdin closed).")
   }
   let input = line.trimmingCharacters(in: .whitespacesAndNewlines)

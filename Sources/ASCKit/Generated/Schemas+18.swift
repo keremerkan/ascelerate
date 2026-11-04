@@ -10,6 +10,80 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/ProfileResponse`.
+    public struct ProfileResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/ProfileResponse/data`.
+        public var data: Components.Schemas.Profile
+        /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload/BundleId`.
+            case bundleIds(Components.Schemas.BundleId)
+            /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload/Certificate`.
+            case certificates(Components.Schemas.Certificate)
+            /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload/Device`.
+            case devices(Components.Schemas.Device)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "bundleIds":
+                    self = .bundleIds(try .init(from: decoder))
+                case "certificates":
+                    self = .certificates(try .init(from: decoder))
+                case "devices":
+                    self = .devices(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .bundleIds(value):
+                    try value.encode(to: encoder)
+                case let .certificates(value):
+                    try value.encode(to: encoder)
+                case let .devices(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ProfileResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.ProfileResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/ProfileResponse/included`.
+        public var included: Components.Schemas.ProfileResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/ProfileResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `ProfileResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.Profile,
+            included: Components.Schemas.ProfileResponse.IncludedPayload? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/ProfilesResponse`.
     public struct ProfilesResponse: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/ProfilesResponse/data`.

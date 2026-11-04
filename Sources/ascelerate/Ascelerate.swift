@@ -17,7 +17,7 @@ struct Ascelerate: AsyncParsableCommand {
     subcommands: [AppsCommand.self, AppEventsCommand.self, BuildsCommand.self, CustomerReviewsCommand.self, ExperimentsCommand.self, NominationsCommand.self, ProductPagesCommand.self, ScreenshotCommand.self, TestFlightCommand.self, WebhooksCommand.self, XcodeCloudCommand.self],
     groupedSubcommands: [
       CommandGroup(name: "Monetization", subcommands: [IAPCommand.self, SubCommand.self, SandboxTestersCommand.self]),
-      CommandGroup(name: "Reporting", subcommands: [ReportsCommand.self]),
+      CommandGroup(name: "Reporting", subcommands: [ReportsCommand.self, DiagnosticsCommand.self]),
       CommandGroup(name: "Advertising", subcommands: [AdsCommand.self]),
       CommandGroup(name: "Provisioning", subcommands: [BundleIDsCommand.self, CertsCommand.self, DevicesCommand.self, ProfilesCommand.self]),
       CommandGroup(name: "Team", subcommands: [UsersCommand.self]),

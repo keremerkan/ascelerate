@@ -338,6 +338,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/apps/{id}/metrics/betaTesterUsages`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/metrics/betaTesterUsages/get(apps_betaTesterUsages_getMetrics)`.
     func appsBetaTesterUsagesGetMetrics(_ input: Operations.AppsBetaTesterUsagesGetMetrics.Input) async throws -> Operations.AppsBetaTesterUsagesGetMetrics.Output
+    /// - Remark: HTTP `GET /v1/apps/{id}/perfPowerMetrics`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/perfPowerMetrics/get(apps_perfPowerMetrics_getToManyRelated)`.
+    func appsPerfPowerMetricsGetToManyRelated(_ input: Operations.AppsPerfPowerMetricsGetToManyRelated.Input) async throws -> Operations.AppsPerfPowerMetricsGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/apps/{id}/promotedPurchases`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/promotedPurchases/get(apps_promotedPurchases_getToManyRelated)`.
     func appsPromotedPurchasesGetToManyRelated(_ input: Operations.AppsPromotedPurchasesGetToManyRelated.Input) async throws -> Operations.AppsPromotedPurchasesGetToManyRelated.Output
@@ -674,6 +677,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /v1/builds/{id}`.
     /// - Remark: Generated from `#/paths//v1/builds/{id}/patch(builds_updateInstance)`.
     func buildsUpdateInstance(_ input: Operations.BuildsUpdateInstance.Input) async throws -> Operations.BuildsUpdateInstance.Output
+    /// - Remark: HTTP `GET /v1/builds/{id}/diagnosticSignatures`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/diagnosticSignatures/get(builds_diagnosticSignatures_getToManyRelated)`.
+    func buildsDiagnosticSignaturesGetToManyRelated(_ input: Operations.BuildsDiagnosticSignaturesGetToManyRelated.Input) async throws -> Operations.BuildsDiagnosticSignaturesGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/builds/{id}/icons`.
     /// - Remark: Generated from `#/paths//v1/builds/{id}/icons/get(builds_icons_getToManyRelated)`.
     func buildsIconsGetToManyRelated(_ input: Operations.BuildsIconsGetToManyRelated.Input) async throws -> Operations.BuildsIconsGetToManyRelated.Output
@@ -683,6 +689,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/builds/{id}/metrics/betaBuildUsages`.
     /// - Remark: Generated from `#/paths//v1/builds/{id}/metrics/betaBuildUsages/get(builds_betaBuildUsages_getMetrics)`.
     func buildsBetaBuildUsagesGetMetrics(_ input: Operations.BuildsBetaBuildUsagesGetMetrics.Input) async throws -> Operations.BuildsBetaBuildUsagesGetMetrics.Output
+    /// - Remark: HTTP `GET /v1/builds/{id}/perfPowerMetrics`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/perfPowerMetrics/get(builds_perfPowerMetrics_getToManyRelated)`.
+    func buildsPerfPowerMetricsGetToManyRelated(_ input: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input) async throws -> Operations.BuildsPerfPowerMetricsGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/builds/{id}/relationships/individualTesters`.
     /// - Remark: Generated from `#/paths//v1/builds/{id}/relationships/individualTesters/get(builds_individualTesters_getToManyRelationship)`.
     func buildsIndividualTestersGetToManyRelationship(_ input: Operations.BuildsIndividualTestersGetToManyRelationship.Input) async throws -> Operations.BuildsIndividualTestersGetToManyRelationship.Output
@@ -848,6 +857,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /v1/devices/{id}`.
     /// - Remark: Generated from `#/paths//v1/devices/{id}/patch(devices_updateInstance)`.
     func devicesUpdateInstance(_ input: Operations.DevicesUpdateInstance.Input) async throws -> Operations.DevicesUpdateInstance.Output
+    /// - Remark: HTTP `GET /v1/diagnosticSignatures/{id}/logs`.
+    /// - Remark: Generated from `#/paths//v1/diagnosticSignatures/{id}/logs/get(diagnosticSignatures_logs_getToManyRelated)`.
+    func diagnosticSignaturesLogsGetToManyRelated(_ input: Operations.DiagnosticSignaturesLogsGetToManyRelated.Input) async throws -> Operations.DiagnosticSignaturesLogsGetToManyRelated.Output
     /// - Remark: HTTP `POST /v1/endAppAvailabilityPreOrders`.
     /// - Remark: Generated from `#/paths//v1/endAppAvailabilityPreOrders/post(endAppAvailabilityPreOrders_createInstance)`.
     func endAppAvailabilityPreOrdersCreateInstance(_ input: Operations.EndAppAvailabilityPreOrdersCreateInstance.Input) async throws -> Operations.EndAppAvailabilityPreOrdersCreateInstance.Output
@@ -2658,6 +2670,19 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// - Remark: HTTP `GET /v1/apps/{id}/perfPowerMetrics`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/perfPowerMetrics/get(apps_perfPowerMetrics_getToManyRelated)`.
+    public func appsPerfPowerMetricsGetToManyRelated(
+        path: Operations.AppsPerfPowerMetricsGetToManyRelated.Input.Path,
+        query: Operations.AppsPerfPowerMetricsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.AppsPerfPowerMetricsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppsPerfPowerMetricsGetToManyRelated.Output {
+        try await appsPerfPowerMetricsGetToManyRelated(Operations.AppsPerfPowerMetricsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
     /// - Remark: HTTP `GET /v1/apps/{id}/promotedPurchases`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/promotedPurchases/get(apps_promotedPurchases_getToManyRelated)`.
     public func appsPromotedPurchasesGetToManyRelated(
@@ -3920,6 +3945,19 @@ extension APIProtocol {
             body: body
         ))
     }
+    /// - Remark: HTTP `GET /v1/builds/{id}/diagnosticSignatures`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/diagnosticSignatures/get(builds_diagnosticSignatures_getToManyRelated)`.
+    public func buildsDiagnosticSignaturesGetToManyRelated(
+        path: Operations.BuildsDiagnosticSignaturesGetToManyRelated.Input.Path,
+        query: Operations.BuildsDiagnosticSignaturesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.BuildsDiagnosticSignaturesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.BuildsDiagnosticSignaturesGetToManyRelated.Output {
+        try await buildsDiagnosticSignaturesGetToManyRelated(Operations.BuildsDiagnosticSignaturesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
     /// - Remark: HTTP `GET /v1/builds/{id}/icons`.
     /// - Remark: Generated from `#/paths//v1/builds/{id}/icons/get(builds_icons_getToManyRelated)`.
     public func buildsIconsGetToManyRelated(
@@ -3954,6 +3992,19 @@ extension APIProtocol {
         headers: Operations.BuildsBetaBuildUsagesGetMetrics.Input.Headers = .init()
     ) async throws -> Operations.BuildsBetaBuildUsagesGetMetrics.Output {
         try await buildsBetaBuildUsagesGetMetrics(Operations.BuildsBetaBuildUsagesGetMetrics.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/builds/{id}/perfPowerMetrics`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/perfPowerMetrics/get(builds_perfPowerMetrics_getToManyRelated)`.
+    public func buildsPerfPowerMetricsGetToManyRelated(
+        path: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Path,
+        query: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.BuildsPerfPowerMetricsGetToManyRelated.Output {
+        try await buildsPerfPowerMetricsGetToManyRelated(Operations.BuildsPerfPowerMetricsGetToManyRelated.Input(
             path: path,
             query: query,
             headers: headers
@@ -4582,6 +4633,19 @@ extension APIProtocol {
             path: path,
             headers: headers,
             body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/diagnosticSignatures/{id}/logs`.
+    /// - Remark: Generated from `#/paths//v1/diagnosticSignatures/{id}/logs/get(diagnosticSignatures_logs_getToManyRelated)`.
+    public func diagnosticSignaturesLogsGetToManyRelated(
+        path: Operations.DiagnosticSignaturesLogsGetToManyRelated.Input.Path,
+        query: Operations.DiagnosticSignaturesLogsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.DiagnosticSignaturesLogsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.DiagnosticSignaturesLogsGetToManyRelated.Output {
+        try await diagnosticSignaturesLogsGetToManyRelated(Operations.DiagnosticSignaturesLogsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
         ))
     }
     /// - Remark: HTTP `POST /v1/endAppAvailabilityPreOrders`.

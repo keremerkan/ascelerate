@@ -1392,6 +1392,16 @@ ascelerate reports analytics <bundle-id> --category APP_USAGE --granularity WEEK
 - Apple generates analytics reports asynchronously — a freshly created snapshot isn't ready immediately; re-run the command after a few minutes to download the segments.
 - The API does not expose aggregate rating counts or the star-rating average — only individual reviews (see Customer Reviews).
 
+### Diagnostics
+
+What Xcode's Organizer shows, from users' devices: a build's hangs, slow launches and disk writes with their call stacks, and performance and power metrics across versions (the build on the App Store unless `--build`):
+
+```bash
+ascelerate diagnostics <bundle-id>                           # signatures by type, heaviest first
+ascelerate diagnostics logs <signature-id>                   # sampled events with call stacks (▶ blamed frame)
+ascelerate diagnostics metrics <bundle-id> [--type launch,hang] [--all]   # per version, 50th/90th percentile; regressions first
+```
+
 ### Apple Ads
 
 Manage Apple Ads (formerly Search Ads) campaigns through the Apple Ads Platform API: performance reports, keywords and negative keywords, bids and budgets, plus Apple's keyword research data. Apps are matched with App Store Connect, so `--app` takes the same bundle IDs and aliases as every other command.

@@ -809,6 +809,122 @@ extension Components.Schemas {
     public typealias InternalBetaState = Swift.String
     /// - Remark: Generated from `#/components/schemas/KidsAgeBand`.
     public typealias KidsAgeBand = Swift.String
+    /// - Remark: Generated from `#/components/schemas/MetricCategory`.
+    public typealias MetricCategory = Swift.String
+    /// - Remark: Generated from `#/components/schemas/MetricsInsight`.
+    public struct MetricsInsight: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/highImpact`.
+        public var highImpact: Swift.Bool?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/latestVersion`.
+        public var latestVersion: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/maxLatestVersionValue`.
+        public var maxLatestVersionValue: Swift.Double?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/metric`.
+        public var metric: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/metricCategory`.
+        public var metricCategory: Components.Schemas.MetricCategory?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/PopulationsPayload`.
+        public struct PopulationsPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/MetricsInsight/PopulationsPayload/deltaPercentage`.
+            public var deltaPercentage: Swift.Double?
+            /// - Remark: Generated from `#/components/schemas/MetricsInsight/PopulationsPayload/device`.
+            public var device: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/MetricsInsight/PopulationsPayload/latestVersionValue`.
+            public var latestVersionValue: Swift.Double?
+            /// - Remark: Generated from `#/components/schemas/MetricsInsight/PopulationsPayload/percentile`.
+            public var percentile: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/MetricsInsight/PopulationsPayload/referenceAverageValue`.
+            public var referenceAverageValue: Swift.Double?
+            /// - Remark: Generated from `#/components/schemas/MetricsInsight/PopulationsPayload/summaryString`.
+            public var summaryString: Swift.String?
+            /// Creates a new `PopulationsPayloadPayload`.
+            ///
+            /// - Parameters:
+            ///   - deltaPercentage:
+            ///   - device:
+            ///   - latestVersionValue:
+            ///   - percentile:
+            ///   - referenceAverageValue:
+            ///   - summaryString:
+            public init(
+                deltaPercentage: Swift.Double? = nil,
+                device: Swift.String? = nil,
+                latestVersionValue: Swift.Double? = nil,
+                percentile: Swift.String? = nil,
+                referenceAverageValue: Swift.Double? = nil,
+                summaryString: Swift.String? = nil
+            ) {
+                self.deltaPercentage = deltaPercentage
+                self.device = device
+                self.latestVersionValue = latestVersionValue
+                self.percentile = percentile
+                self.referenceAverageValue = referenceAverageValue
+                self.summaryString = summaryString
+            }
+            public enum CodingKeys: String, CodingKey {
+                case deltaPercentage
+                case device
+                case latestVersionValue
+                case percentile
+                case referenceAverageValue
+                case summaryString
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/populations`.
+        public typealias PopulationsPayload = [Components.Schemas.MetricsInsight.PopulationsPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/populations`.
+        public var populations: Components.Schemas.MetricsInsight.PopulationsPayload?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/referenceVersions`.
+        public var referenceVersions: [OpenAPIRuntime.OpenAPIValueContainer]?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/subSystemLabel`.
+        public var subSystemLabel: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/MetricsInsight/summaryString`.
+        public var summaryString: Swift.String?
+        /// Creates a new `MetricsInsight`.
+        ///
+        /// - Parameters:
+        ///   - highImpact:
+        ///   - latestVersion:
+        ///   - maxLatestVersionValue:
+        ///   - metric:
+        ///   - metricCategory:
+        ///   - populations:
+        ///   - referenceVersions:
+        ///   - subSystemLabel:
+        ///   - summaryString:
+        public init(
+            highImpact: Swift.Bool? = nil,
+            latestVersion: Swift.String? = nil,
+            maxLatestVersionValue: Swift.Double? = nil,
+            metric: Swift.String? = nil,
+            metricCategory: Components.Schemas.MetricCategory? = nil,
+            populations: Components.Schemas.MetricsInsight.PopulationsPayload? = nil,
+            referenceVersions: [OpenAPIRuntime.OpenAPIValueContainer]? = nil,
+            subSystemLabel: Swift.String? = nil,
+            summaryString: Swift.String? = nil
+        ) {
+            self.highImpact = highImpact
+            self.latestVersion = latestVersion
+            self.maxLatestVersionValue = maxLatestVersionValue
+            self.metric = metric
+            self.metricCategory = metricCategory
+            self.populations = populations
+            self.referenceVersions = referenceVersions
+            self.subSystemLabel = subSystemLabel
+            self.summaryString = summaryString
+        }
+        public enum CodingKeys: String, CodingKey {
+            case highImpact
+            case latestVersion
+            case maxLatestVersionValue
+            case metric
+            case metricCategory
+            case populations
+            case referenceVersions
+            case subSystemLabel
+            case summaryString
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/Nomination`.
     public struct Nomination: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/Nomination/attributes`.
@@ -2997,80 +3113,6 @@ extension Components.Schemas {
         }
         public enum CodingKeys: String, CodingKey {
             case data
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/ProfileResponse`.
-    public struct ProfileResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/ProfileResponse/data`.
-        public var data: Components.Schemas.Profile
-        /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload`.
-        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload/BundleId`.
-            case bundleIds(Components.Schemas.BundleId)
-            /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload/Certificate`.
-            case certificates(Components.Schemas.Certificate)
-            /// - Remark: Generated from `#/components/schemas/ProfileResponse/IncludedPayload/Device`.
-            case devices(Components.Schemas.Device)
-            public enum CodingKeys: String, CodingKey {
-                case _type = "type"
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(
-                    Swift.String.self,
-                    forKey: ._type
-                )
-                switch discriminator {
-                case "bundleIds":
-                    self = .bundleIds(try .init(from: decoder))
-                case "certificates":
-                    self = .certificates(try .init(from: decoder))
-                case "devices":
-                    self = .devices(try .init(from: decoder))
-                default:
-                    throw Swift.DecodingError.unknownOneOfDiscriminator(
-                        discriminatorKey: CodingKeys._type,
-                        discriminatorValue: discriminator,
-                        codingPath: decoder.codingPath
-                    )
-                }
-            }
-            public func encode(to encoder: any Swift.Encoder) throws {
-                switch self {
-                case let .bundleIds(value):
-                    try value.encode(to: encoder)
-                case let .certificates(value):
-                    try value.encode(to: encoder)
-                case let .devices(value):
-                    try value.encode(to: encoder)
-                }
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/ProfileResponse/included`.
-        public typealias IncludedPayload = [Components.Schemas.ProfileResponse.IncludedPayloadPayload]
-        /// - Remark: Generated from `#/components/schemas/ProfileResponse/included`.
-        public var included: Components.Schemas.ProfileResponse.IncludedPayload?
-        /// - Remark: Generated from `#/components/schemas/ProfileResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `ProfileResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - included:
-        ///   - links:
-        public init(
-            data: Components.Schemas.Profile,
-            included: Components.Schemas.ProfileResponse.IncludedPayload? = nil,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.included = included
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case included
-            case links
         }
     }
 }

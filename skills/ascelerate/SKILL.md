@@ -402,6 +402,16 @@ ascelerate reports analytics <app> [--category APP_STORE_ENGAGEMENT|APP_USAGE|CO
 - `sales`/`finance` default to a parsed **summary**; add `--raw` to print the TSV or `--output PATH` to save it. `--date` defaults to the most recent completed period for sales; for `finance` it's a *fiscal* period `YYYY-MM` (not a calendar month) and is required along with `--region`.
 - `analytics` reuses an existing report request or prompts to create one (a one-time snapshot by default; `--ongoing` for recurring). A freshly created snapshot isn't ready immediately — re-run the command after a few minutes to download the segments.
 
+### Diagnostics (Organizer: hangs, launches, disk writes, metrics)
+
+```bash
+ascelerate diagnostics <app> [--build N] [--type hangs,launches,disk-writes] [--json]   # signatures of the App Store build by default
+ascelerate diagnostics logs <signature-id> [--frames 40|0] [--json]                   # events: device, OS, version; call stacks, ▶ = blamed frame
+ascelerate diagnostics metrics <app> [--build N] [--type launch,hang,memory,disk,battery,termination,animation,storage] [--all] [--json]
+```
+
+To investigate performance: start with `metrics` (Apple's regressions print first, e.g. a 90th-percentile peak memory jump), then `diagnostics` for the build's signatures and `logs` for the blamed frames. The data comes from users who share analytics, a day or more after release; a new build may have none yet.
+
 ### Apple Ads (campaigns, keywords, search terms, insights)
 
 `ascelerate ads` drives the Apple Ads Platform API: performance reports, campaign/keyword/negative management, and Apple's keyword research data, across every app and campaign of the ad account. App names come from App Store Connect, so `--app` takes the same bundle IDs and aliases as the rest of ascelerate.

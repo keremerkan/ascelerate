@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
         'commands/product-pages',
         'commands/experiments',
         'commands/reports',
+        'commands/diagnostics',
         'commands/ads',
         'commands/nominations',
         'commands/webhooks',

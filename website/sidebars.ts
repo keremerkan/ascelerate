@@ -31,6 +31,7 @@ const sidebars: SidebarsConfig = {
         'commands/events',
         'commands/product-pages',
         'commands/experiments',
+        'commands/game-center',
         'commands/reports',
         'commands/diagnostics',
         'commands/ads',

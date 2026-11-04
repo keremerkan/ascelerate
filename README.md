@@ -1245,6 +1245,28 @@ ascelerate reviews delete-response <review-id>
 
 Reviews are read-only — you can only manage the developer response. `--sort` accepts `recent`, `oldest`, `critical` (lowest rating first), or `best`. Review IDs come from `reviews list`. With `--json`, `reviews list` includes full review bodies and developer responses, so no per-review `info` calls are needed.
 
+### Game Center
+
+Achievements, leaderboards and leaderboard sets, with their languages, images and order:
+
+```bash
+ascelerate game-center <bundle-id>                           # on or off, counts, default leaderboard
+ascelerate game-center enable <bundle-id>                    # can't be turned off again through the API
+ascelerate game-center achievements create <bundle-id> --id first.win --name "First Win" --points 10
+ascelerate game-center achievements localizations set <bundle-id> first.win --locale en-US \
+  --name "First Win" --before-earned "Win a round." --after-earned "You won a round."
+ascelerate game-center achievements image upload <bundle-id> first.win --locale en-US icon.png
+ascelerate game-center leaderboards create <bundle-id> --id high.score --name "High Score"
+ascelerate game-center leaderboards create <bundle-id> --id weekly.time --name "Weekly Time" \
+  --formatter elapsed-time-second --sort low --recurrence-start 2026-12-07T00:00:00Z \
+  --recurrence-duration PT168H --recurrence-rule "FREQ=DAILY;INTERVAL=7"
+ascelerate game-center sets create <bundle-id> --id all.scores --name "All Scores" --leaderboards high.score,weekly.time
+ascelerate game-center achievements reorder <bundle-id> first.win,high.five
+ascelerate game-center achievements submit <bundle-id> first.win   # add its new version to the draft submission
+```
+
+Achievements, leaderboards and sets share `info`, `update`, `delete`, `reorder`, `localizations` (view, set, export, import, delete), `image` (upload, delete) and `submit`. Their text and images live on a version; changing a live one makes its next version first. Images are square, at least 512×512.
+
 ### Featuring Nominations
 
 Tell Apple's editorial team about a launch, an update or new content:

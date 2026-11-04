@@ -11,6 +11,297 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `GET /v1/buildUploadFiles/{id}`.
+    /// - Remark: Generated from `#/paths//v1/buildUploadFiles/{id}/get(buildUploadFiles_getInstance)`.
+    public func buildUploadFilesGetInstance(_ input: Operations.BuildUploadFilesGetInstance.Input) async throws -> Operations.BuildUploadFilesGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildUploadFilesGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/buildUploadFiles/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[buildUploadFiles]",
+                    value: input.query.fieldsBuildUploadFiles
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.BuildUploadFilesGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.BuildUploadFileResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v1/buildUploadFiles/{id}`.
+    /// - Remark: Generated from `#/paths//v1/buildUploadFiles/{id}/patch(buildUploadFiles_updateInstance)`.
+    public func buildUploadFilesUpdateInstance(_ input: Operations.BuildUploadFilesUpdateInstance.Input) async throws -> Operations.BuildUploadFilesUpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildUploadFilesUpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/buildUploadFiles/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.BuildUploadFilesUpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.BuildUploadFileResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/buildUploads`.
+    /// - Remark: Generated from `#/paths//v1/buildUploads/post(buildUploads_createInstance)`.
+    public func buildUploadsCreateInstance(_ input: Operations.BuildUploadsCreateInstance.Input) async throws -> Operations.BuildUploadsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildUploadsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/buildUploads",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.BuildUploadsCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.BuildUploadResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/buildUploads/{id}`.
+    /// - Remark: Generated from `#/paths//v1/buildUploads/{id}/get(buildUploads_getInstance)`.
+    public func buildUploadsGetInstance(_ input: Operations.BuildUploadsGetInstance.Input) async throws -> Operations.BuildUploadsGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildUploadsGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/buildUploads/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[buildUploads]",
+                    value: input.query.fieldsBuildUploads
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[builds]",
+                    value: input.query.fieldsBuilds
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[buildUploadFiles]",
+                    value: input.query.fieldsBuildUploadFiles
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.BuildUploadsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.BuildUploadResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `DELETE /v1/buildUploads/{id}`.
     /// - Remark: Generated from `#/paths//v1/buildUploads/{id}/delete(buildUploads_deleteInstance)`.
     public func buildUploadsDeleteInstance(_ input: Operations.BuildUploadsDeleteInstance.Input) async throws -> Operations.BuildUploadsDeleteInstance.Output {
@@ -2749,354 +3040,6 @@ extension Client {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
                             Components.Schemas.AppResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/ciProducts/{id}/buildRuns`.
-    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/buildRuns/get(ciProducts_buildRuns_getToManyRelated)`.
-    public func ciProductsBuildRunsGetToManyRelated(_ input: Operations.CiProductsBuildRunsGetToManyRelated.Input) async throws -> Operations.CiProductsBuildRunsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.CiProductsBuildRunsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/ciProducts/{}/buildRuns",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[builds]",
-                    value: input.query.filterBuilds
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "sort",
-                    value: input.query.sort
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[ciBuildRuns]",
-                    value: input.query.fieldsCiBuildRuns
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[builds]",
-                    value: input.query.fieldsBuilds
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[ciWorkflows]",
-                    value: input.query.fieldsCiWorkflows
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[ciProducts]",
-                    value: input.query.fieldsCiProducts
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmGitReferences]",
-                    value: input.query.fieldsScmGitReferences
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmPullRequests]",
-                    value: input.query.fieldsScmPullRequests
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[builds]",
-                    value: input.query.limitBuilds
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.CiProductsBuildRunsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.CiBuildRunsResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/ciProducts/{id}/primaryRepositories`.
-    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/primaryRepositories/get(ciProducts_primaryRepositories_getToManyRelated)`.
-    public func ciProductsPrimaryRepositoriesGetToManyRelated(_ input: Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Input) async throws -> Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.CiProductsPrimaryRepositoriesGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/ciProducts/{}/primaryRepositories",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[id]",
-                    value: input.query.filterId
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmRepositories]",
-                    value: input.query.fieldsScmRepositories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmProviders]",
-                    value: input.query.fieldsScmProviders
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmGitReferences]",
-                    value: input.query.fieldsScmGitReferences
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.CiProductsPrimaryRepositoriesGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ScmRepositoriesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/ciProducts/{id}/workflows`.
-    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/workflows/get(ciProducts_workflows_getToManyRelated)`.
-    public func ciProductsWorkflowsGetToManyRelated(_ input: Operations.CiProductsWorkflowsGetToManyRelated.Input) async throws -> Operations.CiProductsWorkflowsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.CiProductsWorkflowsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/ciProducts/{}/workflows",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[ciWorkflows]",
-                    value: input.query.fieldsCiWorkflows
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[ciProducts]",
-                    value: input.query.fieldsCiProducts
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmRepositories]",
-                    value: input.query.fieldsScmRepositories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[ciXcodeVersions]",
-                    value: input.query.fieldsCiXcodeVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[ciMacOsVersions]",
-                    value: input.query.fieldsCiMacOsVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.CiProductsWorkflowsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.CiWorkflowsResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

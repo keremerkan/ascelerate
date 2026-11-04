@@ -209,6 +209,10 @@ public enum ReviewSubmissions {
     case inAppPurchaseVersion(String)
     case subscriptionVersion(String)
     case subscriptionGroupVersion(String)
+    /// A Game Center achievement's, leaderboard's or leaderboard set's version.
+    case gameCenterAchievementVersion(String)
+    case gameCenterLeaderboardVersion(String)
+    case gameCenterLeaderboardSetVersion(String)
   }
 
   /// Adds an item to the app's open draft submission for `platform` (`READY_FOR_REVIEW`, or
@@ -261,6 +265,12 @@ public enum ReviewSubmissions {
         relationships.subscriptionVersion = .init(data: .init(id: id, _type: "subscriptionVersions"))
       case .subscriptionGroupVersion(let id):
         relationships.subscriptionGroupVersion = .init(data: .init(id: id, _type: "subscriptionGroupVersions"))
+      case .gameCenterAchievementVersion(let id):
+        relationships.gameCenterAchievementVersion = .init(data: .init(id: id, _type: "gameCenterAchievementVersions"))
+      case .gameCenterLeaderboardVersion(let id):
+        relationships.gameCenterLeaderboardVersion = .init(data: .init(id: id, _type: "gameCenterLeaderboardVersions"))
+      case .gameCenterLeaderboardSetVersion(let id):
+        relationships.gameCenterLeaderboardSetVersion = .init(data: .init(id: id, _type: "gameCenterLeaderboardSetVersions"))
     }
     _ = try await unlessDryRunStopped {
       try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(

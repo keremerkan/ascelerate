@@ -10,6 +10,505 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/DiagnosticInsight`.
+    public struct DiagnosticInsight: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/DiagnosticInsight/direction`.
+        public var direction: Components.Schemas.DiagnosticInsightDirection?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticInsight/insightType`.
+        public var insightType: Components.Schemas.DiagnosticInsightType?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticInsight/ReferenceVersionsPayload`.
+        public struct ReferenceVersionsPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/DiagnosticInsight/ReferenceVersionsPayload/value`.
+            public var value: Swift.Double?
+            /// - Remark: Generated from `#/components/schemas/DiagnosticInsight/ReferenceVersionsPayload/version`.
+            public var version: Swift.String?
+            /// Creates a new `ReferenceVersionsPayloadPayload`.
+            ///
+            /// - Parameters:
+            ///   - value:
+            ///   - version:
+            public init(
+                value: Swift.Double? = nil,
+                version: Swift.String? = nil
+            ) {
+                self.value = value
+                self.version = version
+            }
+            public enum CodingKeys: String, CodingKey {
+                case value
+                case version
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/DiagnosticInsight/referenceVersions`.
+        public typealias ReferenceVersionsPayload = [Components.Schemas.DiagnosticInsight.ReferenceVersionsPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/DiagnosticInsight/referenceVersions`.
+        public var referenceVersions: Components.Schemas.DiagnosticInsight.ReferenceVersionsPayload?
+        /// Creates a new `DiagnosticInsight`.
+        ///
+        /// - Parameters:
+        ///   - direction:
+        ///   - insightType:
+        ///   - referenceVersions:
+        public init(
+            direction: Components.Schemas.DiagnosticInsightDirection? = nil,
+            insightType: Components.Schemas.DiagnosticInsightType? = nil,
+            referenceVersions: Components.Schemas.DiagnosticInsight.ReferenceVersionsPayload? = nil
+        ) {
+            self.direction = direction
+            self.insightType = insightType
+            self.referenceVersions = referenceVersions
+        }
+        public enum CodingKeys: String, CodingKey {
+            case direction
+            case insightType
+            case referenceVersions
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/DiagnosticInsightDirection`.
+    public typealias DiagnosticInsightDirection = Swift.String
+    /// - Remark: Generated from `#/components/schemas/DiagnosticInsightType`.
+    public typealias DiagnosticInsightType = Swift.String
+    /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode`.
+    public struct DiagnosticLogCallStackNode: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/address`.
+        public var address: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/binaryName`.
+        public var binaryName: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/binaryUUID`.
+        public var binaryUUID: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/fileName`.
+        public var fileName: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/insightsCategory`.
+        public var insightsCategory: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/isBlameFrame`.
+        public var isBlameFrame: Swift.Bool?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/lineNumber`.
+        public var lineNumber: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/offsetIntoBinaryTextSegment`.
+        public var offsetIntoBinaryTextSegment: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/offsetIntoSymbol`.
+        public var offsetIntoSymbol: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/rawFrame`.
+        public var rawFrame: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/sampleCount`.
+        public var sampleCount: Swift.Int?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/subFrames`.
+        public var subFrames: [Components.Schemas.DiagnosticLogCallStackNode]?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticLogCallStackNode/symbolName`.
+        public var symbolName: Swift.String?
+        /// Creates a new `DiagnosticLogCallStackNode`.
+        ///
+        /// - Parameters:
+        ///   - address:
+        ///   - binaryName:
+        ///   - binaryUUID:
+        ///   - fileName:
+        ///   - insightsCategory:
+        ///   - isBlameFrame:
+        ///   - lineNumber:
+        ///   - offsetIntoBinaryTextSegment:
+        ///   - offsetIntoSymbol:
+        ///   - rawFrame:
+        ///   - sampleCount:
+        ///   - subFrames:
+        ///   - symbolName:
+        public init(
+            address: Swift.String? = nil,
+            binaryName: Swift.String? = nil,
+            binaryUUID: Swift.String? = nil,
+            fileName: Swift.String? = nil,
+            insightsCategory: Swift.String? = nil,
+            isBlameFrame: Swift.Bool? = nil,
+            lineNumber: Swift.String? = nil,
+            offsetIntoBinaryTextSegment: Swift.String? = nil,
+            offsetIntoSymbol: Swift.String? = nil,
+            rawFrame: Swift.String? = nil,
+            sampleCount: Swift.Int? = nil,
+            subFrames: [Components.Schemas.DiagnosticLogCallStackNode]? = nil,
+            symbolName: Swift.String? = nil
+        ) {
+            self.address = address
+            self.binaryName = binaryName
+            self.binaryUUID = binaryUUID
+            self.fileName = fileName
+            self.insightsCategory = insightsCategory
+            self.isBlameFrame = isBlameFrame
+            self.lineNumber = lineNumber
+            self.offsetIntoBinaryTextSegment = offsetIntoBinaryTextSegment
+            self.offsetIntoSymbol = offsetIntoSymbol
+            self.rawFrame = rawFrame
+            self.sampleCount = sampleCount
+            self.subFrames = subFrames
+            self.symbolName = symbolName
+        }
+        public enum CodingKeys: String, CodingKey {
+            case address
+            case binaryName
+            case binaryUUID
+            case fileName
+            case insightsCategory
+            case isBlameFrame
+            case lineNumber
+            case offsetIntoBinaryTextSegment
+            case offsetIntoSymbol
+            case rawFrame
+            case sampleCount
+            case subFrames
+            case symbolName
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/diagnosticLogs`.
+    public struct DiagnosticLogs: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload`.
+        public struct ProductDataPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticInsightsPayload`.
+            public struct DiagnosticInsightsPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticInsightsPayload/insightsCategory`.
+                public var insightsCategory: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticInsightsPayload/insightsString`.
+                public var insightsString: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticInsightsPayload/insightsURL`.
+                public var insightsURL: Swift.String?
+                /// Creates a new `DiagnosticInsightsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - insightsCategory:
+                ///   - insightsString:
+                ///   - insightsURL:
+                public init(
+                    insightsCategory: Swift.String? = nil,
+                    insightsString: Swift.String? = nil,
+                    insightsURL: Swift.String? = nil
+                ) {
+                    self.insightsCategory = insightsCategory
+                    self.insightsString = insightsString
+                    self.insightsURL = insightsURL
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case insightsCategory
+                    case insightsString
+                    case insightsURL
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/diagnosticInsights`.
+            public typealias DiagnosticInsightsPayload = [Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticInsightsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/diagnosticInsights`.
+            public var diagnosticInsights: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticInsightsPayload?
+            /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload`.
+            public struct DiagnosticLogsPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/CallStackTreePayload`.
+                public struct CallStackTreePayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/CallStackTreePayload/callStackPerThread`.
+                    public var callStackPerThread: Swift.Bool?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/CallStackTreePayload/CallStacksPayload`.
+                    public struct CallStacksPayloadPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/CallStackTreePayload/CallStacksPayload/callStackRootFrames`.
+                        public var callStackRootFrames: [Components.Schemas.DiagnosticLogCallStackNode]?
+                        /// Creates a new `CallStacksPayloadPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - callStackRootFrames:
+                        public init(callStackRootFrames: [Components.Schemas.DiagnosticLogCallStackNode]? = nil) {
+                            self.callStackRootFrames = callStackRootFrames
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case callStackRootFrames
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/CallStackTreePayload/callStacks`.
+                    public typealias CallStacksPayload = [Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.CallStackTreePayloadPayload.CallStacksPayloadPayload]
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/CallStackTreePayload/callStacks`.
+                    public var callStacks: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.CallStackTreePayloadPayload.CallStacksPayload?
+                    /// Creates a new `CallStackTreePayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - callStackPerThread:
+                    ///   - callStacks:
+                    public init(
+                        callStackPerThread: Swift.Bool? = nil,
+                        callStacks: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.CallStackTreePayloadPayload.CallStacksPayload? = nil
+                    ) {
+                        self.callStackPerThread = callStackPerThread
+                        self.callStacks = callStacks
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case callStackPerThread
+                        case callStacks
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/callStackTree`.
+                public typealias CallStackTreePayload = [Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.CallStackTreePayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/callStackTree`.
+                public var callStackTree: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.CallStackTreePayload?
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData`.
+                public struct DiagnosticMetaDataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/appVersion`.
+                    public var appVersion: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/buildVersion`.
+                    public var buildVersion: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/bundleId`.
+                    public var bundleId: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/deviceType`.
+                    public var deviceType: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/event`.
+                    public var event: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/eventDetail`.
+                    public var eventDetail: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/osVersion`.
+                    public var osVersion: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/platformArchitecture`.
+                    public var platformArchitecture: Swift.String?
+                    /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData/writesCaused`.
+                    public var writesCaused: Swift.String?
+                    /// Creates a new `DiagnosticMetaDataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - appVersion:
+                    ///   - buildVersion:
+                    ///   - bundleId:
+                    ///   - deviceType:
+                    ///   - event:
+                    ///   - eventDetail:
+                    ///   - osVersion:
+                    ///   - platformArchitecture:
+                    ///   - writesCaused:
+                    public init(
+                        appVersion: Swift.String? = nil,
+                        buildVersion: Swift.String? = nil,
+                        bundleId: Swift.String? = nil,
+                        deviceType: Swift.String? = nil,
+                        event: Swift.String? = nil,
+                        eventDetail: Swift.String? = nil,
+                        osVersion: Swift.String? = nil,
+                        platformArchitecture: Swift.String? = nil,
+                        writesCaused: Swift.String? = nil
+                    ) {
+                        self.appVersion = appVersion
+                        self.buildVersion = buildVersion
+                        self.bundleId = bundleId
+                        self.deviceType = deviceType
+                        self.event = event
+                        self.eventDetail = eventDetail
+                        self.osVersion = osVersion
+                        self.platformArchitecture = platformArchitecture
+                        self.writesCaused = writesCaused
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case appVersion
+                        case buildVersion
+                        case bundleId
+                        case deviceType
+                        case event
+                        case eventDetail
+                        case osVersion
+                        case platformArchitecture
+                        case writesCaused
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/DiagnosticLogsPayload/diagnosticMetaData`.
+                public var diagnosticMetaData: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.DiagnosticMetaDataPayload?
+                /// Creates a new `DiagnosticLogsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - callStackTree:
+                ///   - diagnosticMetaData:
+                public init(
+                    callStackTree: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.CallStackTreePayload? = nil,
+                    diagnosticMetaData: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload.DiagnosticMetaDataPayload? = nil
+                ) {
+                    self.callStackTree = callStackTree
+                    self.diagnosticMetaData = diagnosticMetaData
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case callStackTree
+                    case diagnosticMetaData
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/diagnosticLogs`.
+            public typealias DiagnosticLogsPayload = [Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/diagnosticLogs`.
+            public var diagnosticLogs: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayload?
+            /// - Remark: Generated from `#/components/schemas/diagnosticLogs/ProductDataPayload/signatureId`.
+            public var signatureId: Swift.String?
+            /// Creates a new `ProductDataPayloadPayload`.
+            ///
+            /// - Parameters:
+            ///   - diagnosticInsights:
+            ///   - diagnosticLogs:
+            ///   - signatureId:
+            public init(
+                diagnosticInsights: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticInsightsPayload? = nil,
+                diagnosticLogs: Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload.DiagnosticLogsPayload? = nil,
+                signatureId: Swift.String? = nil
+            ) {
+                self.diagnosticInsights = diagnosticInsights
+                self.diagnosticLogs = diagnosticLogs
+                self.signatureId = signatureId
+            }
+            public enum CodingKeys: String, CodingKey {
+                case diagnosticInsights
+                case diagnosticLogs
+                case signatureId
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/diagnosticLogs/productData`.
+        public typealias ProductDataPayload = [Components.Schemas.DiagnosticLogs.ProductDataPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/diagnosticLogs/productData`.
+        public var productData: Components.Schemas.DiagnosticLogs.ProductDataPayload?
+        /// - Remark: Generated from `#/components/schemas/diagnosticLogs/version`.
+        public var version: Swift.String?
+        /// Creates a new `DiagnosticLogs`.
+        ///
+        /// - Parameters:
+        ///   - productData:
+        ///   - version:
+        public init(
+            productData: Components.Schemas.DiagnosticLogs.ProductDataPayload? = nil,
+            version: Swift.String? = nil
+        ) {
+            self.productData = productData
+            self.version = version
+        }
+        public enum CodingKeys: String, CodingKey {
+            case productData
+            case version
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/DiagnosticSignature`.
+    public struct DiagnosticSignature: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/attributes/diagnosticType`.
+            public var diagnosticType: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/attributes/insight`.
+            public var insight: Components.Schemas.DiagnosticInsight?
+            /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/attributes/signature`.
+            public var signature: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/attributes/weight`.
+            public var weight: Swift.Double?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - diagnosticType:
+            ///   - insight:
+            ///   - signature:
+            ///   - weight:
+            public init(
+                diagnosticType: Swift.String? = nil,
+                insight: Components.Schemas.DiagnosticInsight? = nil,
+                signature: Swift.String? = nil,
+                weight: Swift.Double? = nil
+            ) {
+                self.diagnosticType = diagnosticType
+                self.insight = insight
+                self.signature = signature
+                self.weight = weight
+            }
+            public enum CodingKeys: String, CodingKey {
+                case diagnosticType
+                case insight
+                case signature
+                case weight
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/attributes`.
+        public var attributes: Components.Schemas.DiagnosticSignature.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/relationships/logs`.
+            public struct LogsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/relationships/logs/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// Creates a new `LogsPayload`.
+                ///
+                /// - Parameters:
+                ///   - links:
+                public init(links: Components.Schemas.RelationshipLinks? = nil) {
+                    self.links = links
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case links
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/relationships/logs`.
+            public var logs: Components.Schemas.DiagnosticSignature.RelationshipsPayload.LogsPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - logs:
+            public init(logs: Components.Schemas.DiagnosticSignature.RelationshipsPayload.LogsPayload? = nil) {
+                self.logs = logs
+            }
+            public enum CodingKeys: String, CodingKey {
+                case logs
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/relationships`.
+        public var relationships: Components.Schemas.DiagnosticSignature.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignature/type`.
+        public var _type: Swift.String
+        /// Creates a new `DiagnosticSignature`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.DiagnosticSignature.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.DiagnosticSignature.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/DiagnosticSignaturesResponse`.
+    public struct DiagnosticSignaturesResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignaturesResponse/data`.
+        public var data: [Components.Schemas.DiagnosticSignature]
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignaturesResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/DiagnosticSignaturesResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `DiagnosticSignaturesResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.DiagnosticSignature],
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case links
+            case meta
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/DocumentLinks`.
     public struct DocumentLinks: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/DocumentLinks/self`.
@@ -2944,192 +3443,6 @@ extension Components.Schemas {
             id: Swift.String,
             links: Components.Schemas.ResourceLinks? = nil,
             relationships: Components.Schemas.GameCenterDetail.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case relationships
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion`.
-    @available(*, deprecated)
-    public struct GameCenterEnabledVersion: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/attributes`.
-        public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/attributes/iconAsset`.
-            public var iconAsset: Components.Schemas.ImageAsset?
-            /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/attributes/platform`.
-            public var platform: Components.Schemas.Platform?
-            /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/attributes/versionString`.
-            public var versionString: Swift.String?
-            /// Creates a new `AttributesPayload`.
-            ///
-            /// - Parameters:
-            ///   - iconAsset:
-            ///   - platform:
-            ///   - versionString:
-            public init(
-                iconAsset: Components.Schemas.ImageAsset? = nil,
-                platform: Components.Schemas.Platform? = nil,
-                versionString: Swift.String? = nil
-            ) {
-                self.iconAsset = iconAsset
-                self.platform = platform
-                self.versionString = versionString
-            }
-            public enum CodingKeys: String, CodingKey {
-                case iconAsset
-                case platform
-                case versionString
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/attributes`.
-        public var attributes: Components.Schemas.GameCenterEnabledVersion.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/app`.
-            public struct AppPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/app/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/app/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/app/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/app/data`.
-                public var data: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.AppPayload.DataPayload?
-                /// Creates a new `AppPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.AppPayload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/app`.
-            public var app: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.AppPayload?
-            /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions`.
-            public struct CompatibleVersionsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions/data`.
-                public typealias DataPayload = [Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.CompatibleVersionsPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions/data`.
-                public var data: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.CompatibleVersionsPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `CompatibleVersionsPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.CompatibleVersionsPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships/compatibleVersions`.
-            public var compatibleVersions: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.CompatibleVersionsPayload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - app:
-            ///   - compatibleVersions:
-            public init(
-                app: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.AppPayload? = nil,
-                compatibleVersions: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload.CompatibleVersionsPayload? = nil
-            ) {
-                self.app = app
-                self.compatibleVersions = compatibleVersions
-            }
-            public enum CodingKeys: String, CodingKey {
-                case app
-                case compatibleVersions
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/relationships`.
-        public var relationships: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/GameCenterEnabledVersion/type`.
-        public var _type: Swift.String
-        /// Creates a new `GameCenterEnabledVersion`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.GameCenterEnabledVersion.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.GameCenterEnabledVersion.RelationshipsPayload? = nil,
             _type: Swift.String
         ) {
             self.attributes = attributes

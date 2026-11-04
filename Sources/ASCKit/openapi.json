@@ -56438,7 +56438,10 @@
             "type" : "array"
           },
           "referenceVersions" : {
-            "type" : "string"
+            "items" : {
+
+            },
+            "type" : "array"
           },
           "subSystemLabel" : {
             "type" : "string"
@@ -70534,15 +70537,10 @@
                                           "type" : "string"
                                         },
                                         "percentageBreakdown" : {
-                                          "properties" : {
-                                            "subSystemLabel" : {
-                                              "type" : "string"
-                                            },
-                                            "value" : {
-                                              "type" : "number"
-                                            }
+                                          "items" : {
+
                                           },
-                                          "type" : "object"
+                                          "type" : "array"
                                         },
                                         "value" : {
                                           "type" : "number"

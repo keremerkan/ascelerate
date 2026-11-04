@@ -10,6 +10,558 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes`.
+    /// - Remark: Generated from `#/paths//v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/get(inAppPurchaseOfferCodes_oneTimeUseCodes_getToManyRelated)`.
+    public enum InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated {
+        public static let id: Swift.String = "inAppPurchaseOfferCodes_oneTimeUseCodes_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/fieldsInAppPurchaseOfferCodeOneTimeUseCodesPayload`.
+                @frozen public enum FieldsInAppPurchaseOfferCodeOneTimeUseCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case numberOfCodes = "numberOfCodes"
+                    case createdDate = "createdDate"
+                    case expirationDate = "expirationDate"
+                    case active = "active"
+                    case environment = "environment"
+                    case values = "values"
+                    case createdByActor = "createdByActor"
+                    case deactivatedByActor = "deactivatedByActor"
+                }
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[inAppPurchaseOfferCodeOneTimeUseCodes]`.
+                public typealias fieldsInAppPurchaseOfferCodeOneTimeUseCodesPayload = [Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.FieldsInAppPurchaseOfferCodeOneTimeUseCodesPayloadPayload]
+                /// the fields to include for returned resources of type inAppPurchaseOfferCodeOneTimeUseCodes
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[inAppPurchaseOfferCodeOneTimeUseCodes]`.
+                public var fieldsInAppPurchaseOfferCodeOneTimeUseCodes: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsInAppPurchaseOfferCodeOneTimeUseCodesPayload?
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/fieldsActorsPayload`.
+                @frozen public enum FieldsActorsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case actorType = "actorType"
+                    case userFirstName = "userFirstName"
+                    case userLastName = "userLastName"
+                    case userEmail = "userEmail"
+                    case apiKeyId = "apiKeyId"
+                }
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[actors]`.
+                public typealias fieldsActorsPayload = [Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.FieldsActorsPayloadPayload]
+                /// the fields to include for returned resources of type actors
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/fields[actors]`.
+                public var fieldsActors: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsActorsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case createdByActor = "createdByActor"
+                    case deactivatedByActor = "deactivatedByActor"
+                }
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/include`.
+                public typealias IncludePayload = [Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/query/include`.
+                public var include: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsInAppPurchaseOfferCodeOneTimeUseCodes: the fields to include for returned resources of type inAppPurchaseOfferCodeOneTimeUseCodes
+                ///   - fieldsActors: the fields to include for returned resources of type actors
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsInAppPurchaseOfferCodeOneTimeUseCodes: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsInAppPurchaseOfferCodeOneTimeUseCodesPayload? = nil,
+                    fieldsActors: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.fieldsActorsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsInAppPurchaseOfferCodeOneTimeUseCodes = fieldsInAppPurchaseOfferCodeOneTimeUseCodes
+                    self.fieldsActors = fieldsActors
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Path,
+                query: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Query = .init(),
+                headers: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.InAppPurchaseOfferCodeOneTimeUseCodesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.InAppPurchaseOfferCodeOneTimeUseCodesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of InAppPurchaseOfferCodeOneTimeUseCodes
+            ///
+            /// - Remark: Generated from `#/paths//v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes/get(inAppPurchaseOfferCodes_oneTimeUseCodes_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.InAppPurchaseOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/inAppPurchasePricePoints/{id}/equalizations`.
+    /// - Remark: Generated from `#/paths//v1/inAppPurchasePricePoints/{id}/equalizations/get(inAppPurchasePricePoints_equalizations_getToManyRelated)`.
+    public enum InAppPurchasePricePointsEqualizationsGetToManyRelated {
+        public static let id: Swift.String = "inAppPurchasePricePoints_equalizations_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// filter by id(s) of related 'territory'
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/filter[territory]`.
+                public var filterTerritory: [Swift.String]?
+                /// filter by id(s) of related 'inAppPurchaseV2'
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/filter[inAppPurchaseV2]`.
+                public var filterInAppPurchaseV2: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/fieldsInAppPurchasePricePointsPayload`.
+                @frozen public enum FieldsInAppPurchasePricePointsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case customerPrice = "customerPrice"
+                    case proceeds = "proceeds"
+                    case territory = "territory"
+                    case equalizations = "equalizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/fields[inAppPurchasePricePoints]`.
+                public typealias fieldsInAppPurchasePricePointsPayload = [Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.FieldsInAppPurchasePricePointsPayloadPayload]
+                /// the fields to include for returned resources of type inAppPurchasePricePoints
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/fields[inAppPurchasePricePoints]`.
+                public var fieldsInAppPurchasePricePoints: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.fieldsInAppPurchasePricePointsPayload?
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/fieldsTerritoriesPayload`.
+                @frozen public enum FieldsTerritoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case currency = "currency"
+                }
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/fields[territories]`.
+                public typealias fieldsTerritoriesPayload = [Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.FieldsTerritoriesPayloadPayload]
+                /// the fields to include for returned resources of type territories
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/fields[territories]`.
+                public var fieldsTerritories: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.fieldsTerritoriesPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case territory = "territory"
+                }
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/include`.
+                public typealias IncludePayload = [Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/query/include`.
+                public var include: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterTerritory: filter by id(s) of related 'territory'
+                ///   - filterInAppPurchaseV2: filter by id(s) of related 'inAppPurchaseV2'
+                ///   - fieldsInAppPurchasePricePoints: the fields to include for returned resources of type inAppPurchasePricePoints
+                ///   - fieldsTerritories: the fields to include for returned resources of type territories
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    filterTerritory: [Swift.String]? = nil,
+                    filterInAppPurchaseV2: [Swift.String]? = nil,
+                    fieldsInAppPurchasePricePoints: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.fieldsInAppPurchasePricePointsPayload? = nil,
+                    fieldsTerritories: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.fieldsTerritoriesPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.filterTerritory = filterTerritory
+                    self.filterInAppPurchaseV2 = filterInAppPurchaseV2
+                    self.fieldsInAppPurchasePricePoints = fieldsInAppPurchasePricePoints
+                    self.fieldsTerritories = fieldsTerritories
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Path,
+                query: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.InAppPurchasePricePointsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.InAppPurchasePricePointsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            default:
+                                try throwUnexpectedResponseBody(
+                                    expectedContent: "application/json",
+                                    body: self
+                                )
+                            }
+                        }
+                    }
+                    /// - Remark: Generated from `#/paths/v1/inAppPurchasePricePoints/{id}/equalizations/GET/responses/200/content/text\/csv`.
+                    case csv(OpenAPIRuntime.HTTPBody)
+                    /// The associated value of the enum case if `self` is `.csv`.
+                    ///
+                    /// - Throws: An error if `self` is not `.csv`.
+                    /// - SeeAlso: `.csv`.
+                    public var csv: OpenAPIRuntime.HTTPBody {
+                        get throws {
+                            switch self {
+                            case let .csv(body):
+                                return body
+                            default:
+                                try throwUnexpectedResponseBody(
+                                    expectedContent: "text/csv",
+                                    body: self
+                                )
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of InAppPurchasePricePoints
+            ///
+            /// - Remark: Generated from `#/paths//v1/inAppPurchasePricePoints/{id}/equalizations/get(inAppPurchasePricePoints_equalizations_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.InAppPurchasePricePointsEqualizationsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case csv
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                case "text/csv":
+                    self = .csv
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                case .csv:
+                    return "text/csv"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json,
+                    .csv
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /v1/inAppPurchasePriceSchedules`.
+    /// - Remark: Generated from `#/paths//v1/inAppPurchasePriceSchedules/post(inAppPurchasePriceSchedules_createInstance)`.
+    public enum InAppPurchasePriceSchedulesCreateInstance {
+        public static let id: Swift.String = "inAppPurchasePriceSchedules_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/inAppPurchasePriceSchedules/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.InAppPurchasePriceSchedulesCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.InAppPurchasePriceSchedulesCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.InAppPurchasePriceSchedulesCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/inAppPurchasePriceSchedules/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePriceSchedules/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.InAppPurchasePriceScheduleCreateRequest)
+            }
+            public var body: Operations.InAppPurchasePriceSchedulesCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.InAppPurchasePriceSchedulesCreateInstance.Input.Headers = .init(),
+                body: Operations.InAppPurchasePriceSchedulesCreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/inAppPurchasePriceSchedules/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/inAppPurchasePriceSchedules/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.InAppPurchasePriceScheduleResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.InAppPurchasePriceScheduleResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.InAppPurchasePriceSchedulesCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.InAppPurchasePriceSchedulesCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single InAppPurchasePriceSchedule
+            ///
+            /// - Remark: Generated from `#/paths//v1/inAppPurchasePriceSchedules/post(inAppPurchasePriceSchedules_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.InAppPurchasePriceSchedulesCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.InAppPurchasePriceSchedulesCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/inAppPurchasePriceSchedules/{id}/automaticPrices`.
     /// - Remark: Generated from `#/paths//v1/inAppPurchasePriceSchedules/{id}/automaticPrices/get(inAppPurchasePriceSchedules_automaticPrices_getToManyRelated)`.
     public enum InAppPurchasePriceSchedulesAutomaticPricesGetToManyRelated {
@@ -2576,447 +3128,6 @@ extension Operations {
                     .json
                 ]
             }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/profiles`.
-    /// - Remark: Generated from `#/paths//v1/profiles/post(profiles_createInstance)`.
-    public enum ProfilesCreateInstance {
-        public static let id: Swift.String = "profiles_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/profiles/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ProfilesCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ProfilesCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.ProfilesCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/profiles/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/profiles/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.ProfileCreateRequest)
-            }
-            public var body: Operations.ProfilesCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.ProfilesCreateInstance.Input.Headers = .init(),
-                body: Operations.ProfilesCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/profiles/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/profiles/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.ProfileResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ProfileResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.ProfilesCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.ProfilesCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single Profile
-            ///
-            /// - Remark: Generated from `#/paths//v1/profiles/post(profiles_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.ProfilesCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.ProfilesCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/profiles/{id}`.
-    /// - Remark: Generated from `#/paths//v1/profiles/{id}/get(profiles_getInstance)`.
-    public enum ProfilesGetInstance {
-        public static let id: Swift.String = "profiles_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.ProfilesGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fieldsProfilesPayload`.
-                @frozen public enum FieldsProfilesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case platform = "platform"
-                    case profileType = "profileType"
-                    case profileState = "profileState"
-                    case profileContent = "profileContent"
-                    case uuid = "uuid"
-                    case createdDate = "createdDate"
-                    case expirationDate = "expirationDate"
-                    case bundleId = "bundleId"
-                    case devices = "devices"
-                    case certificates = "certificates"
-                }
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[profiles]`.
-                public typealias fieldsProfilesPayload = [Operations.ProfilesGetInstance.Input.Query.FieldsProfilesPayloadPayload]
-                /// the fields to include for returned resources of type profiles
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[profiles]`.
-                public var fieldsProfiles: Operations.ProfilesGetInstance.Input.Query.fieldsProfilesPayload?
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fieldsBundleIdsPayload`.
-                @frozen public enum FieldsBundleIdsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case platform = "platform"
-                    case identifier = "identifier"
-                    case seedId = "seedId"
-                    case profiles = "profiles"
-                    case bundleIdCapabilities = "bundleIdCapabilities"
-                    case app = "app"
-                }
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[bundleIds]`.
-                public typealias fieldsBundleIdsPayload = [Operations.ProfilesGetInstance.Input.Query.FieldsBundleIdsPayloadPayload]
-                /// the fields to include for returned resources of type bundleIds
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[bundleIds]`.
-                public var fieldsBundleIds: Operations.ProfilesGetInstance.Input.Query.fieldsBundleIdsPayload?
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fieldsDevicesPayload`.
-                @frozen public enum FieldsDevicesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case platform = "platform"
-                    case udid = "udid"
-                    case deviceClass = "deviceClass"
-                    case status = "status"
-                    case model = "model"
-                    case addedDate = "addedDate"
-                }
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[devices]`.
-                public typealias fieldsDevicesPayload = [Operations.ProfilesGetInstance.Input.Query.FieldsDevicesPayloadPayload]
-                /// the fields to include for returned resources of type devices
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[devices]`.
-                public var fieldsDevices: Operations.ProfilesGetInstance.Input.Query.fieldsDevicesPayload?
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fieldsCertificatesPayload`.
-                @frozen public enum FieldsCertificatesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case certificateType = "certificateType"
-                    case displayName = "displayName"
-                    case serialNumber = "serialNumber"
-                    case platform = "platform"
-                    case expirationDate = "expirationDate"
-                    case certificateContent = "certificateContent"
-                    case activated = "activated"
-                    case passTypeId = "passTypeId"
-                }
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[certificates]`.
-                public typealias fieldsCertificatesPayload = [Operations.ProfilesGetInstance.Input.Query.FieldsCertificatesPayloadPayload]
-                /// the fields to include for returned resources of type certificates
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/fields[certificates]`.
-                public var fieldsCertificates: Operations.ProfilesGetInstance.Input.Query.fieldsCertificatesPayload?
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case bundleId = "bundleId"
-                    case devices = "devices"
-                    case certificates = "certificates"
-                }
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.ProfilesGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/include`.
-                public var include: Operations.ProfilesGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related certificates returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/limit[certificates]`.
-                public var limitCertificates: Swift.Int?
-                /// maximum number of related devices returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/query/limit[devices]`.
-                public var limitDevices: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsProfiles: the fields to include for returned resources of type profiles
-                ///   - fieldsBundleIds: the fields to include for returned resources of type bundleIds
-                ///   - fieldsDevices: the fields to include for returned resources of type devices
-                ///   - fieldsCertificates: the fields to include for returned resources of type certificates
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitCertificates: maximum number of related certificates returned (when they are included)
-                ///   - limitDevices: maximum number of related devices returned (when they are included)
-                public init(
-                    fieldsProfiles: Operations.ProfilesGetInstance.Input.Query.fieldsProfilesPayload? = nil,
-                    fieldsBundleIds: Operations.ProfilesGetInstance.Input.Query.fieldsBundleIdsPayload? = nil,
-                    fieldsDevices: Operations.ProfilesGetInstance.Input.Query.fieldsDevicesPayload? = nil,
-                    fieldsCertificates: Operations.ProfilesGetInstance.Input.Query.fieldsCertificatesPayload? = nil,
-                    include: Operations.ProfilesGetInstance.Input.Query.IncludePayload? = nil,
-                    limitCertificates: Swift.Int? = nil,
-                    limitDevices: Swift.Int? = nil
-                ) {
-                    self.fieldsProfiles = fieldsProfiles
-                    self.fieldsBundleIds = fieldsBundleIds
-                    self.fieldsDevices = fieldsDevices
-                    self.fieldsCertificates = fieldsCertificates
-                    self.include = include
-                    self.limitCertificates = limitCertificates
-                    self.limitDevices = limitDevices
-                }
-            }
-            public var query: Operations.ProfilesGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ProfilesGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ProfilesGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.ProfilesGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.ProfilesGetInstance.Input.Path,
-                query: Operations.ProfilesGetInstance.Input.Query = .init(),
-                headers: Operations.ProfilesGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/profiles/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ProfileResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ProfileResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.ProfilesGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.ProfilesGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single Profile
-            ///
-            /// - Remark: Generated from `#/paths//v1/profiles/{id}/get(profiles_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.ProfilesGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.ProfilesGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/profiles/{id}`.
-    /// - Remark: Generated from `#/paths//v1/profiles/{id}/delete(profiles_deleteInstance)`.
-    public enum ProfilesDeleteInstance {
-        public static let id: Swift.String = "profiles_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/profiles/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/profiles/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.ProfilesDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.ProfilesDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/profiles/{id}/delete(profiles_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.ProfilesDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/profiles/{id}/delete(profiles_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.ProfilesDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
 }

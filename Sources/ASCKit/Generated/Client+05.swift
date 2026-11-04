@@ -11,6 +11,94 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `GET /v1/appStoreReviewDetails/{id}/appStoreReviewAttachments`.
+    /// - Remark: Generated from `#/paths//v1/appStoreReviewDetails/{id}/appStoreReviewAttachments/get(appStoreReviewDetails_appStoreReviewAttachments_getToManyRelated)`.
+    public func appStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated(_ input: Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.Input) async throws -> Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/appStoreReviewDetails/{}/appStoreReviewAttachments",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appStoreReviewAttachments]",
+                    value: input.query.fieldsAppStoreReviewAttachments
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appStoreReviewDetails]",
+                    value: input.query.fieldsAppStoreReviewDetails
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.AppStoreReviewAttachmentsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `POST /v1/appStoreVersionExperimentTreatmentLocalizations`.
     /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatmentLocalizations/post(appStoreVersionExperimentTreatmentLocalizations_createInstance)`.
     public func appStoreVersionExperimentTreatmentLocalizationsCreateInstance(_ input: Operations.AppStoreVersionExperimentTreatmentLocalizationsCreateInstance.Input) async throws -> Operations.AppStoreVersionExperimentTreatmentLocalizationsCreateInstance.Output {
@@ -2949,66 +3037,6 @@ extension Client {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
                             Components.Schemas.CustomerReviewsResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/appStoreVersions/{id}/relationships/build`.
-    /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/relationships/build/get(appStoreVersions_build_getToOneRelationship)`.
-    public func appStoreVersionsBuildGetToOneRelationship(_ input: Operations.AppStoreVersionsBuildGetToOneRelationship.Input) async throws -> Operations.AppStoreVersionsBuildGetToOneRelationship.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppStoreVersionsBuildGetToOneRelationship.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appStoreVersions/{}/relationships/build",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.AppStoreVersionsBuildGetToOneRelationship.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AppStoreVersionBuildLinkageResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

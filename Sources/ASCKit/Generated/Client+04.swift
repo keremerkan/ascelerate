@@ -1206,6 +1206,87 @@ extension Client {
             }
         )
     }
+    /// - Remark: HTTP `GET /v1/apps/{id}/perfPowerMetrics`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/perfPowerMetrics/get(apps_perfPowerMetrics_getToManyRelated)`.
+    public func appsPerfPowerMetricsGetToManyRelated(_ input: Operations.AppsPerfPowerMetricsGetToManyRelated.Input) async throws -> Operations.AppsPerfPowerMetricsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.AppsPerfPowerMetricsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/apps/{}/perfPowerMetrics",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[platform]",
+                    value: input.query.filterPlatform
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[metricType]",
+                    value: input.query.filterMetricType
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[deviceType]",
+                    value: input.query.filterDeviceType
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.AppsPerfPowerMetricsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/vnd.apple.xcode-metrics+json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/vnd.apple.xcode-metrics+json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.XcodeMetrics.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .applicationVnd_apple_xcodeMetricsJson(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `GET /v1/apps/{id}/promotedPurchases`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/promotedPurchases/get(apps_promotedPurchases_getToManyRelated)`.
     public func appsPromotedPurchasesGetToManyRelated(_ input: Operations.AppsPromotedPurchasesGetToManyRelated.Input) async throws -> Operations.AppsPromotedPurchasesGetToManyRelated.Output {
@@ -2970,94 +3051,6 @@ extension Client {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
                             Components.Schemas.AppStoreReviewDetailResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/appStoreReviewDetails/{id}/appStoreReviewAttachments`.
-    /// - Remark: Generated from `#/paths//v1/appStoreReviewDetails/{id}/appStoreReviewAttachments/get(appStoreReviewDetails_appStoreReviewAttachments_getToManyRelated)`.
-    public func appStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated(_ input: Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.Input) async throws -> Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appStoreReviewDetails/{}/appStoreReviewAttachments",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreReviewAttachments]",
-                    value: input.query.fieldsAppStoreReviewAttachments
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreReviewDetails]",
-                    value: input.query.fieldsAppStoreReviewDetails
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.AppStoreReviewDetailsAppStoreReviewAttachmentsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AppStoreReviewAttachmentsResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

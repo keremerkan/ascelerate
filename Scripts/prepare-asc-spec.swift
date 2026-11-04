@@ -18,6 +18,8 @@
 //   (the asset library placement's `relationships`, which could never decode).
 // - A metric response's dimensions that name a resource (`betaTesters`) declare their `data` as a
 //   string, but Apple sends the resource's linkage (`{"type", "id"}`): those become objects.
+// - A metrics insight's `referenceVersions` (declared a string) and a data point's
+//   `percentageBreakdown` (declared an object) come as arrays.
 // - Operations keep only their success responses (the error middleware handles the rest).
 import Foundation
 
@@ -212,6 +214,48 @@ if var allSchemas = components["schemas"] as? [String: Any] {
   spec["components"] = components
 }
 
+// A metrics insight's `referenceVersions` is declared a string, but Apple sends an array (seen live
+// 2026-11-04 on an app with a regression), which failed the whole metrics response. Its items are
+// left free-form.
+var fixedInsights = 0
+if var allSchemas = components["schemas"] as? [String: Any], var insight = allSchemas["MetricsInsight"] as? [String: Any],
+  var properties = insight["properties"] as? [String: Any],
+  (properties["referenceVersions"] as? [String: Any])?["type"] as? String == "string"
+{
+  properties["referenceVersions"] = ["type": "array", "items": [String: Any]()]
+  insight["properties"] = properties
+  allSchemas["MetricsInsight"] = insight
+  components["schemas"] = allSchemas
+  spec["components"] = components
+  fixedInsights += 1
+}
+// A metrics data point's `percentageBreakdown` is declared an object; Apple sends an array (seen
+// live the same day, a battery metric). Left free-form too.
+func arrayed(_ schema: Any, along path: ArraySlice<String>) -> Any {
+  guard var schema = schema as? [String: Any], let key = path.first else { return schema }
+  if key == "[]" {
+    if let items = schema["items"] { schema["items"] = arrayed(items, along: path.dropFirst()) }
+    return schema
+  }
+  guard var properties = schema["properties"] as? [String: Any], let property = properties[key] else { return schema }
+  if path.count == 1 {
+    if (property as? [String: Any])?["type"] as? String == "object" {
+      properties[key] = ["type": "array", "items": [String: Any]()]
+      fixedInsights += 1
+    }
+  } else {
+    properties[key] = arrayed(property, along: path.dropFirst())
+  }
+  schema["properties"] = properties
+  return schema
+}
+if var allSchemas = components["schemas"] as? [String: Any], let metrics = allSchemas["xcodeMetrics"] {
+  let path = ["productData", "[]", "metricCategories", "[]", "metrics", "[]", "datasets", "[]", "points", "[]", "percentageBreakdown"]
+  allSchemas["xcodeMetrics"] = arrayed(metrics, along: path[...])
+  components["schemas"] = allSchemas
+  spec["components"] = components
+}
+
 // Only success responses are kept: ASCKit's error middleware throws every 4xx/5xx as `ASCError`
 // before the generated client decodes it, so the typed error responses (400, 401, 403, 404, 409,
 // 422 and 429 on most operations) were never used, and they made up most of the generated code.
@@ -238,7 +282,7 @@ spec["paths"] = keepSuccessResponses(spec["paths"] ?? [:])
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(fixedDimensions) metric dimensions made linkages, \(droppedResponses) error responses dropped)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(fixedDimensions) metric dimensions made linkages, \(fixedInsights) metrics fields made arrays, \(droppedResponses) error responses dropped)")
 
 // ASCEnums.swift: the enum catalog as Swift enums, for validating input (`parseEnum`) and
 // naming values in code; requests and responses carry the raw strings.

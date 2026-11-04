@@ -60,9 +60,36 @@ ascelerate game-center sets update <bundle-id> all.scores --leaderboards weekly.
 
 `--leaderboards` définit les classements d’un groupe dans cet ordre, à la place des actuels.
 
+## Activités
+
+Une activité est une partie du jeu, comme un niveau ou un mode, dans laquelle les joueurs peuvent être invités directement. Ses succès et classements sont ceux qui lui appartiennent.
+
+```bash
+ascelerate game-center activities <bundle-id> [--json]
+ascelerate game-center activities create <bundle-id> --id duel --name "Duel" --play-style sync \
+  --min-players 2 --max-players 2 [--party-code true] [--properties mode=duel] [--fallback-url https://example.com/duel]
+ascelerate game-center activities update <bundle-id> duel --max-players 4 --fallback-url ""
+ascelerate game-center activities link <bundle-id> duel --achievements first.win --leaderboards high.score
+ascelerate game-center activities link <bundle-id> duel --leaderboards high.score --remove
+```
+
+`--play-style` vaut `sync` (les joueurs jouent ensemble) ou `async` (chacun son tour). `--properties` remplace les propriétés clé-valeur propres au jeu pour l’activité. L’URL de secours est une page web pour les joueurs qui n’ont pas le jeu ; elle appartient à la dernière version.
+
+## Défis
+
+Un défi permet aux joueurs de mettre leurs amis au défi de battre un score sur l’un des classements de l’app.
+
+```bash
+ascelerate game-center challenges <bundle-id> [--json]
+ascelerate game-center challenges create <bundle-id> --id beat.score --name "Beat My Score" --leaderboard high.score --repeatable
+ascelerate game-center challenges update <bundle-id> beat.score --leaderboard weekly.best
+```
+
+Les règles d’App Store Connect, que les commandes vérifient d’abord : un classement a au plus un défi, il doit compter le meilleur score de chaque joueur, et un défi qui n’est pas `--repeatable` demande un classement récurrent.
+
 ## Langues et images
 
-Les succès, classements et groupes ont les mêmes commandes de langues et d’images ; remplacez `achievements` par `leaderboards` ou `sets` :
+Les succès, classements, groupes, activités et défis ont les mêmes commandes de langues et d’images ; remplacez `achievements` par `leaderboards`, `sets`, `activities` ou `challenges` :
 
 ```bash
 ascelerate game-center achievements localizations <bundle-id> first.win
@@ -76,9 +103,9 @@ ascelerate game-center achievements image upload <bundle-id> first.win --locale 
 ascelerate game-center achievements image delete <bundle-id> first.win --locale en-US
 ```
 
-Une nouvelle langue d’un succès demande son nom et ses deux descriptions. Une langue d’un classement a un nom, une description facultative, son propre `--formatter` et l’unité qui suit un score (`--suffix " points"`, `--suffix-singular " point"`). Une langue d’un groupe a un nom.
+Une nouvelle langue d’un succès demande son nom et ses deux descriptions. Une langue d’un classement a un nom, une description facultative, son propre `--formatter` et l’unité qui suit un score (`--suffix " points"`, `--suffix-singular " point"`). Une langue d’un groupe a un nom ; celle d’une activité ou d’un défi a un nom et une description (`--name`, `--description`).
 
-Une image appartient à une langue. Elle doit être carrée et faire au moins 512 × 512 (le plus souvent 512 × 512 ou 1024 × 1024), en PNG ou JPEG. Le téléversement remplace l’image actuelle de la langue et attend la vérification d’Apple, si bien qu’une image refusée est signalée aussitôt.
+Une image appartient à une langue. Pour les succès, classements et groupes, elle doit être carrée et faire au moins 512 × 512 (le plus souvent 512 × 512 ou 1024 × 1024) ; pour les activités et les défis, exactement 3840 × 2160, et leurs versions acceptent aussi une image par défaut (`image upload --default`). En PNG ou JPEG. Le téléversement remplace l’image actuelle et attend la vérification d’Apple, si bien qu’une image refusée est signalée aussitôt.
 
 ## Ordre et App Review
 
@@ -87,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` place en tête ceux qui sont indiqués, dans cet ordre ; les autres suivent tels quels. `submit` ajoute la nouvelle version de l’élément au brouillon de soumission de l’app (en créant un s’il n’y en a pas). Elle part en App Review quand vous soumettez le brouillon avec `ascelerate apps review submit`.
+`reorder` (succès, classements et groupes) place en tête ceux qui sont indiqués, dans cet ordre ; les autres suivent tels quels. `submit` ajoute la nouvelle version de l’élément au brouillon de soumission de l’app (en créant un s’il n’y en a pas). Elle part en App Review quand vous soumettez le brouillon avec `ascelerate apps review submit`.
 
 ## Matchmaking
 

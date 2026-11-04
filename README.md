@@ -1261,11 +1261,14 @@ ascelerate game-center leaderboards create <bundle-id> --id weekly.time --name "
   --formatter elapsed-time-second --sort low --recurrence-start 2026-12-07T00:00:00Z \
   --recurrence-duration PT168H --recurrence-rule "FREQ=DAILY;INTERVAL=7"
 ascelerate game-center sets create <bundle-id> --id all.scores --name "All Scores" --leaderboards high.score,weekly.time
+ascelerate game-center activities create <bundle-id> --id duel --name "Duel" --play-style sync --min-players 2 --max-players 2
+ascelerate game-center activities link <bundle-id> duel --achievements first.win --leaderboards high.score
+ascelerate game-center challenges create <bundle-id> --id beat.score --name "Beat My Score" --leaderboard high.score --repeatable
 ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win   # add its new version to the draft submission
 ```
 
-Achievements, leaderboards and sets share `info`, `update`, `delete`, `reorder`, `localizations` (view, set, export, import, delete), `image` (upload, delete) and `submit`. Their text and images live on a version; changing a live one makes its next version first. Images are square, at least 512×512.
+Achievements, leaderboards, sets, activities and challenges share `info`, `update`, `delete`, `localizations` (view, set, export, import, delete), `image` (upload, delete; activities and challenges also a version's `--default` image) and `submit`; the first three also `reorder`. Their text and images live on a version; changing a live one makes its next version first. Images are square, at least 512×512.
 
 Rule-based matchmaking belongs to the team, so it takes no bundle ID:
 

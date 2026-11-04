@@ -60,9 +60,36 @@ ascelerate game-center sets update <bundle-id> all.scores --leaderboards weekly.
 
 `--leaderboards`, setin puan tablolarını mevcut olanların yerine bu sırayla belirler.
 
+## Etkinlikler
+
+Etkinlik, oyunun oyuncuların doğrudan davet edilebildiği bir bölümüdür (bir seviye veya bir mod gibi). Başarıları ve puan tabloları, ona ait olanlardır.
+
+```bash
+ascelerate game-center activities <bundle-id> [--json]
+ascelerate game-center activities create <bundle-id> --id duel --name "Duel" --play-style sync \
+  --min-players 2 --max-players 2 [--party-code true] [--properties mode=duel] [--fallback-url https://example.com/duel]
+ascelerate game-center activities update <bundle-id> duel --max-players 4 --fallback-url ""
+ascelerate game-center activities link <bundle-id> duel --achievements first.win --leaderboards high.score
+ascelerate game-center activities link <bundle-id> duel --leaderboards high.score --remove
+```
+
+`--play-style`, `sync` (oyuncular birlikte oynar) veya `async` (sırayla) alır. `--properties`, oyunun etkinliğe ait anahtar-değer özelliklerinin yerini alır. Yedek URL, oyunu olmayan oyuncular için bir web sayfasıdır ve en son sürüme aittir.
+
+## Meydan Okumalar
+
+Meydan okuma, oyuncuların arkadaşlarını uygulamanın puan tablolarından birindeki bir skoru geçmeye davet etmesini sağlar.
+
+```bash
+ascelerate game-center challenges <bundle-id> [--json]
+ascelerate game-center challenges create <bundle-id> --id beat.score --name "Beat My Score" --leaderboard high.score --repeatable
+ascelerate game-center challenges update <bundle-id> beat.score --leaderboard weekly.best
+```
+
+App Store Connect'in kuralları (komutlar bunları önceden denetler): bir puan tablosunun en fazla bir meydan okuması olur, her oyuncunun en iyi skorunu saymalıdır ve `--repeatable` olmayan bir meydan okuma yinelenen bir puan tablosu gerektirir.
+
 ## Diller ve Görseller
 
-Başarılar, puan tabloları ve setler aynı dil ve görsel komutlarına sahiptir; `achievements` yerine `leaderboards` veya `sets` yazın:
+Başarılar, puan tabloları, setler, etkinlikler ve meydan okumalar aynı dil ve görsel komutlarına sahiptir; `achievements` yerine `leaderboards`, `sets`, `activities` veya `challenges` yazın:
 
 ```bash
 ascelerate game-center achievements localizations <bundle-id> first.win
@@ -76,9 +103,9 @@ ascelerate game-center achievements image upload <bundle-id> first.win --locale 
 ascelerate game-center achievements image delete <bundle-id> first.win --locale en-US
 ```
 
-Bir başarının yeni dili için adı ve iki açıklaması gerekir. Bir puan tablosu dilinde ad, isteğe bağlı bir açıklama, kendine ait bir `--formatter` ve skordan sonra gelen birim (`--suffix " points"`, `--suffix-singular " point"`) bulunur. Bir set dilinin yalnızca adı vardır.
+Bir başarının yeni dili için adı ve iki açıklaması gerekir. Bir puan tablosu dilinde ad, isteğe bağlı bir açıklama, kendine ait bir `--formatter` ve skordan sonra gelen birim (`--suffix " points"`, `--suffix-singular " point"`) bulunur. Bir set dilinin yalnızca adı vardır; bir etkinlik veya meydan okuma dilinin adı ve açıklaması vardır (`--name`, `--description`).
 
-Bir görsel tek bir dile aittir. Kare ve en az 512×512 olmalıdır (genellikle 512×512 veya 1024×1024), PNG ya da JPEG. Yükleme, dilin mevcut görselinin yerini alır ve Apple'ın kontrolünü bekler; böylece reddedilen bir görsel hemen bildirilir.
+Bir görsel tek bir dile aittir. Başarılar, puan tabloları ve setler için kare ve en az 512×512 olmalıdır (genellikle 512×512 veya 1024×1024); etkinlikler ve meydan okumalar için tam olarak 3840×2160 olmalıdır ve sürümleri ayrıca varsayılan bir görsel alır (`image upload --default`). PNG ya da JPEG. Yükleme mevcut görselin yerini alır ve Apple'ın kontrolünü bekler; böylece reddedilen bir görsel hemen bildirilir.
 
 ## Sıralama ve App Review
 
@@ -87,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder`, listelenenleri bu sırayla başa koyar; diğerleri oldukları gibi ardından gelir. `submit`, öğenin yeni sürümünü uygulamanın taslak gönderimine ekler (yoksa bir tane oluşturur). Taslağı `ascelerate apps review submit` ile gönderdiğinizde App Review'a gider.
+`reorder` (başarılar, puan tabloları ve setler), listelenenleri bu sırayla başa koyar; diğerleri oldukları gibi ardından gelir. `submit`, öğenin yeni sürümünü uygulamanın taslak gönderimine ekler (yoksa bir tane oluşturur). Taslağı `ascelerate apps review submit` ile gönderdiğinizde App Review'a gider.
 
 ## Eşleştirme
 

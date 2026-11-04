@@ -60,9 +60,36 @@ ascelerate game-center sets update <bundle-id> all.scores --leaderboards weekly.
 
 `--leaderboards` fija las tablas de un grupo en ese orden y sustituye las actuales.
 
+## Actividades
+
+Una actividad es una parte del juego, como un nivel o un modo, a la que se puede invitar directamente a los jugadores. Sus logros y tablas de clasificación son los que le pertenecen.
+
+```bash
+ascelerate game-center activities <bundle-id> [--json]
+ascelerate game-center activities create <bundle-id> --id duel --name "Duel" --play-style sync \
+  --min-players 2 --max-players 2 [--party-code true] [--properties mode=duel] [--fallback-url https://example.com/duel]
+ascelerate game-center activities update <bundle-id> duel --max-players 4 --fallback-url ""
+ascelerate game-center activities link <bundle-id> duel --achievements first.win --leaderboards high.score
+ascelerate game-center activities link <bundle-id> duel --leaderboards high.score --remove
+```
+
+`--play-style` es `sync` (los jugadores juegan a la vez) o `async` (por turnos). `--properties` sustituye las propiedades clave-valor propias del juego para la actividad. La URL alternativa es una página web para jugadores que no tienen el juego; pertenece a la última versión.
+
+## Desafíos
+
+Un desafío permite a los jugadores retar a sus amigos a superar una puntuación en una de las tablas de clasificación de la app.
+
+```bash
+ascelerate game-center challenges <bundle-id> [--json]
+ascelerate game-center challenges create <bundle-id> --id beat.score --name "Beat My Score" --leaderboard high.score --repeatable
+ascelerate game-center challenges update <bundle-id> beat.score --leaderboard weekly.best
+```
+
+Las reglas de App Store Connect, que los comandos comprueban antes: una tabla tiene como mucho un desafío, debe contar la mejor puntuación de cada jugador y un desafío que no sea `--repeatable` necesita una tabla recurrente.
+
 ## Idiomas e imágenes
 
-Los logros, las tablas y los grupos tienen los mismos comandos de idiomas e imágenes; cambie `achievements` por `leaderboards` o `sets`:
+Los logros, las tablas, los grupos, las actividades y los desafíos tienen los mismos comandos de idiomas e imágenes; cambie `achievements` por `leaderboards`, `sets`, `activities` o `challenges`:
 
 ```bash
 ascelerate game-center achievements localizations <bundle-id> first.win
@@ -76,9 +103,9 @@ ascelerate game-center achievements image upload <bundle-id> first.win --locale 
 ascelerate game-center achievements image delete <bundle-id> first.win --locale en-US
 ```
 
-Un idioma nuevo de un logro necesita su nombre y las dos descripciones. Un idioma de una tabla tiene un nombre, una descripción opcional, su propio `--formatter` y la unidad que sigue a una puntuación (`--suffix " points"`, `--suffix-singular " point"`). Un idioma de un grupo tiene un nombre.
+Un idioma nuevo de un logro necesita su nombre y las dos descripciones. Un idioma de una tabla tiene un nombre, una descripción opcional, su propio `--formatter` y la unidad que sigue a una puntuación (`--suffix " points"`, `--suffix-singular " point"`). Un idioma de un grupo tiene un nombre; uno de una actividad o un desafío, un nombre y una descripción (`--name`, `--description`).
 
-Una imagen pertenece a un idioma. Debe ser cuadrada y de al menos 512×512 (lo habitual es 512×512 o 1024×1024), en PNG o JPEG. La subida sustituye la imagen actual del idioma y espera la comprobación de Apple, de modo que una imagen rechazada se notifica al momento.
+Una imagen pertenece a un idioma. Para logros, tablas y grupos debe ser cuadrada y de al menos 512×512 (lo habitual es 512×512 o 1024×1024); para actividades y desafíos, exactamente de 3840×2160, y sus versiones admiten además una imagen predeterminada (`image upload --default`). En PNG o JPEG. La subida sustituye la imagen actual y espera la comprobación de Apple, de modo que una imagen rechazada se notifica al momento.
 
 ## Orden y App Review
 
@@ -87,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` coloca primero los indicados, en ese orden; el resto les sigue tal como está. `submit` añade la nueva versión del elemento al borrador de envío de la app (y crea uno si no lo hay). Va a App Review cuando envíe el borrador con `ascelerate apps review submit`.
+`reorder` (logros, tablas y grupos) coloca primero los indicados, en ese orden; el resto les sigue tal como está. `submit` añade la nueva versión del elemento al borrador de envío de la app (y crea uno si no lo hay). Va a App Review cuando envíe el borrador con `ascelerate apps review submit`.
 
 ## Emparejamiento
 

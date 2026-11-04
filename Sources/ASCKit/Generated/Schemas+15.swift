@@ -2084,6 +2084,98 @@ extension Components.Schemas {
             case links
         }
     }
+    /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse`.
+    public struct GameCenterActivitiesResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/data`.
+        public var data: [Components.Schemas.GameCenterActivity]
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/IncludedPayload/GameCenterAchievement`.
+            case gameCenterAchievements(Components.Schemas.GameCenterAchievement)
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/IncludedPayload/GameCenterActivityVersion`.
+            case gameCenterActivityVersions(Components.Schemas.GameCenterActivityVersion)
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/IncludedPayload/GameCenterDetail`.
+            case gameCenterDetails(Components.Schemas.GameCenterDetail)
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/IncludedPayload/GameCenterGroup`.
+            case gameCenterGroups(Components.Schemas.GameCenterGroup)
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/IncludedPayload/GameCenterLeaderboard`.
+            case gameCenterLeaderboards(Components.Schemas.GameCenterLeaderboard)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "gameCenterAchievements":
+                    self = .gameCenterAchievements(try .init(from: decoder))
+                case "gameCenterActivityVersions":
+                    self = .gameCenterActivityVersions(try .init(from: decoder))
+                case "gameCenterDetails":
+                    self = .gameCenterDetails(try .init(from: decoder))
+                case "gameCenterGroups":
+                    self = .gameCenterGroups(try .init(from: decoder))
+                case "gameCenterLeaderboards":
+                    self = .gameCenterLeaderboards(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .gameCenterAchievements(value):
+                    try value.encode(to: encoder)
+                case let .gameCenterActivityVersions(value):
+                    try value.encode(to: encoder)
+                case let .gameCenterDetails(value):
+                    try value.encode(to: encoder)
+                case let .gameCenterGroups(value):
+                    try value.encode(to: encoder)
+                case let .gameCenterLeaderboards(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.GameCenterActivitiesResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/included`.
+        public var included: Components.Schemas.GameCenterActivitiesResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivitiesResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `GameCenterActivitiesResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.GameCenterActivity],
+            included: Components.Schemas.GameCenterActivitiesResponse.IncludedPayload? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/GameCenterActivity`.
     public struct GameCenterActivity: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/GameCenterActivity/attributes`.
@@ -2587,562 +2679,369 @@ extension Components.Schemas {
             case _type = "type"
         }
     }
-    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion`.
-    public struct GameCenterActivityVersion: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/attributes`.
+    /// - Remark: Generated from `#/components/schemas/GameCenterActivityAchievementsV2LinkagesRequest`.
+    public struct GameCenterActivityAchievementsV2LinkagesRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityAchievementsV2LinkagesRequest/DataPayload`.
+        public struct DataPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityAchievementsV2LinkagesRequest/DataPayload/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityAchievementsV2LinkagesRequest/DataPayload/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayloadPayload`.
+            ///
+            /// - Parameters:
+            ///   - id:
+            ///   - _type:
+            public init(
+                id: Swift.String,
+                _type: Swift.String
+            ) {
+                self.id = id
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case id
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityAchievementsV2LinkagesRequest/data`.
+        public typealias DataPayload = [Components.Schemas.GameCenterActivityAchievementsV2LinkagesRequest.DataPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityAchievementsV2LinkagesRequest/data`.
+        public var data: Components.Schemas.GameCenterActivityAchievementsV2LinkagesRequest.DataPayload
+        /// Creates a new `GameCenterActivityAchievementsV2LinkagesRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.GameCenterActivityAchievementsV2LinkagesRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest`.
+    public struct GameCenterActivityCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes/maximumPlayersCount`.
+                public var maximumPlayersCount: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes/minimumPlayersCount`.
+                public var minimumPlayersCount: Swift.Int?
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes/playStyle`.
+                public var playStyle: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes/properties`.
+                public var properties: Components.Schemas.StringToStringMap?
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes/referenceName`.
+                public var referenceName: Swift.String
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes/supportsPartyCode`.
+                public var supportsPartyCode: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes/vendorIdentifier`.
+                public var vendorIdentifier: Swift.String
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - maximumPlayersCount:
+                ///   - minimumPlayersCount:
+                ///   - playStyle:
+                ///   - properties:
+                ///   - referenceName:
+                ///   - supportsPartyCode:
+                ///   - vendorIdentifier:
+                public init(
+                    maximumPlayersCount: Swift.Int? = nil,
+                    minimumPlayersCount: Swift.Int? = nil,
+                    playStyle: Swift.String? = nil,
+                    properties: Components.Schemas.StringToStringMap? = nil,
+                    referenceName: Swift.String,
+                    supportsPartyCode: Swift.Bool? = nil,
+                    vendorIdentifier: Swift.String
+                ) {
+                    self.maximumPlayersCount = maximumPlayersCount
+                    self.minimumPlayersCount = minimumPlayersCount
+                    self.playStyle = playStyle
+                    self.properties = properties
+                    self.referenceName = referenceName
+                    self.supportsPartyCode = supportsPartyCode
+                    self.vendorIdentifier = vendorIdentifier
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case maximumPlayersCount
+                    case minimumPlayersCount
+                    case playStyle
+                    case properties
+                    case referenceName
+                    case supportsPartyCode
+                    case vendorIdentifier
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.AttributesPayload
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterDetail`.
+                public struct GameCenterDetailPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterDetail/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterDetail/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterDetail/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterDetail/data`.
+                    public var data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterDetailPayload.DataPayload?
+                    /// Creates a new `GameCenterDetailPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterDetailPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterDetail`.
+                public var gameCenterDetail: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterDetailPayload?
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterGroup`.
+                public struct GameCenterGroupPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterGroup/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterGroup/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterGroup/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterGroup/data`.
+                    public var data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterGroupPayload.DataPayload?
+                    /// Creates a new `GameCenterGroupPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterGroupPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/gameCenterGroup`.
+                public var gameCenterGroup: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterGroupPayload?
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/versions`.
+                public struct VersionsPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/versions/DataPayload`.
+                    public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/versions/DataPayload/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/versions/DataPayload/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayloadPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/versions/data`.
+                    public typealias DataPayload = [Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.VersionsPayload.DataPayloadPayload]
+                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/versions/data`.
+                    public var data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.VersionsPayload.DataPayload?
+                    /// Creates a new `VersionsPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.VersionsPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships/versions`.
+                public var versions: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.VersionsPayload?
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - gameCenterDetail:
+                ///   - gameCenterGroup:
+                ///   - versions:
+                public init(
+                    gameCenterDetail: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterDetailPayload? = nil,
+                    gameCenterGroup: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.GameCenterGroupPayload? = nil,
+                    versions: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload.VersionsPayload? = nil
+                ) {
+                    self.gameCenterDetail = gameCenterDetail
+                    self.gameCenterGroup = gameCenterGroup
+                    self.versions = versions
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case gameCenterDetail
+                    case gameCenterGroup
+                    case versions
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload?
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.AttributesPayload,
+                relationships: Components.Schemas.GameCenterActivityCreateRequest.DataPayload.RelationshipsPayload? = nil,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/data`.
+        public var data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityCreateRequest/included`.
+        public var included: [Components.Schemas.GameCenterActivityVersionInlineCreate]?
+        /// Creates a new `GameCenterActivityCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        public init(
+            data: Components.Schemas.GameCenterActivityCreateRequest.DataPayload,
+            included: [Components.Schemas.GameCenterActivityVersionInlineCreate]? = nil
+        ) {
+            self.data = data
+            self.included = included
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage`.
+    public struct GameCenterActivityImage: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/attributes`.
         public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/attributes/fallbackUrl`.
-            public var fallbackUrl: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/attributes/state`.
-            public var state: Components.Schemas.GameCenterVersionState?
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/attributes/version`.
-            public var version: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/attributes/assetDeliveryState`.
+            public var assetDeliveryState: Components.Schemas.AppMediaAssetState?
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/attributes/fileName`.
+            public var fileName: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/attributes/fileSize`.
+            public var fileSize: Swift.Int?
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/attributes/imageAsset`.
+            public var imageAsset: Components.Schemas.ImageAsset?
+            /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/attributes/uploadOperations`.
+            public var uploadOperations: [Components.Schemas.UploadOperation]?
             /// Creates a new `AttributesPayload`.
             ///
             /// - Parameters:
-            ///   - fallbackUrl:
-            ///   - state:
-            ///   - version:
+            ///   - assetDeliveryState:
+            ///   - fileName:
+            ///   - fileSize:
+            ///   - imageAsset:
+            ///   - uploadOperations:
             public init(
-                fallbackUrl: Swift.String? = nil,
-                state: Components.Schemas.GameCenterVersionState? = nil,
-                version: Swift.Int? = nil
+                assetDeliveryState: Components.Schemas.AppMediaAssetState? = nil,
+                fileName: Swift.String? = nil,
+                fileSize: Swift.Int? = nil,
+                imageAsset: Components.Schemas.ImageAsset? = nil,
+                uploadOperations: [Components.Schemas.UploadOperation]? = nil
             ) {
-                self.fallbackUrl = fallbackUrl
-                self.state = state
-                self.version = version
+                self.assetDeliveryState = assetDeliveryState
+                self.fileName = fileName
+                self.fileSize = fileSize
+                self.imageAsset = imageAsset
+                self.uploadOperations = uploadOperations
             }
             public enum CodingKeys: String, CodingKey {
-                case fallbackUrl
-                case state
-                case version
+                case assetDeliveryState
+                case fileName
+                case fileSize
+                case imageAsset
+                case uploadOperations
             }
         }
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/attributes`.
-        public var attributes: Components.Schemas.GameCenterActivityVersion.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/id`.
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/attributes`.
+        public var attributes: Components.Schemas.GameCenterActivityImage.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/id`.
         public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/links`.
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/links`.
         public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/activity`.
-            public struct ActivityPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/activity/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/activity/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/activity/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/activity/data`.
-                public var data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ActivityPayload.DataPayload?
-                /// Creates a new `ActivityPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ActivityPayload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/activity`.
-            public var activity: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ActivityPayload?
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/defaultImage`.
-            public struct DefaultImagePayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/defaultImage/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/defaultImage/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/defaultImage/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/defaultImage/data`.
-                public var data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.DefaultImagePayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/defaultImage/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// Creates a new `DefaultImagePayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                public init(
-                    data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.DefaultImagePayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/defaultImage`.
-            public var defaultImage: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.DefaultImagePayload?
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations`.
-            public struct LocalizationsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations/data`.
-                public typealias DataPayload = [Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.LocalizationsPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations/data`.
-                public var data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.LocalizationsPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `LocalizationsPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.LocalizationsPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/localizations`.
-            public var localizations: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.LocalizationsPayload?
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases`.
-            public struct ReleasesPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases/data`.
-                public typealias DataPayload = [Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ReleasesPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases/data`.
-                public var data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ReleasesPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `ReleasesPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ReleasesPayload.DataPayload? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships/releases`.
-            public var releases: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ReleasesPayload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - activity:
-            ///   - defaultImage:
-            ///   - localizations:
-            ///   - releases:
-            public init(
-                activity: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ActivityPayload? = nil,
-                defaultImage: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.DefaultImagePayload? = nil,
-                localizations: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.LocalizationsPayload? = nil,
-                releases: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload.ReleasesPayload? = nil
-            ) {
-                self.activity = activity
-                self.defaultImage = defaultImage
-                self.localizations = localizations
-                self.releases = releases
-            }
-            public enum CodingKeys: String, CodingKey {
-                case activity
-                case defaultImage
-                case localizations
-                case releases
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/relationships`.
-        public var relationships: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersion/type`.
+        /// - Remark: Generated from `#/components/schemas/GameCenterActivityImage/type`.
         public var _type: Swift.String
-        /// Creates a new `GameCenterActivityVersion`.
+        /// Creates a new `GameCenterActivityImage`.
         ///
         /// - Parameters:
         ///   - attributes:
         ///   - id:
         ///   - links:
-        ///   - relationships:
         ///   - _type:
         public init(
-            attributes: Components.Schemas.GameCenterActivityVersion.AttributesPayload? = nil,
+            attributes: Components.Schemas.GameCenterActivityImage.AttributesPayload? = nil,
             id: Swift.String,
             links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.GameCenterActivityVersion.RelationshipsPayload? = nil,
             _type: Swift.String
         ) {
             self.attributes = attributes
             self.id = id
             self.links = links
-            self.relationships = relationships
             self._type = _type
         }
         public enum CodingKeys: String, CodingKey {
             case attributes
             case id
             case links
-            case relationships
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease`.
-    @available(*, deprecated)
-    public struct GameCenterActivityVersionRelease: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships/version`.
-            public struct VersionPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships/version/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships/version/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships/version/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships/version/data`.
-                public var data: Components.Schemas.GameCenterActivityVersionRelease.RelationshipsPayload.VersionPayload.DataPayload?
-                /// Creates a new `VersionPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                public init(data: Components.Schemas.GameCenterActivityVersionRelease.RelationshipsPayload.VersionPayload.DataPayload? = nil) {
-                    self.data = data
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships/version`.
-            public var version: Components.Schemas.GameCenterActivityVersionRelease.RelationshipsPayload.VersionPayload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - version:
-            public init(version: Components.Schemas.GameCenterActivityVersionRelease.RelationshipsPayload.VersionPayload? = nil) {
-                self.version = version
-            }
-            public enum CodingKeys: String, CodingKey {
-                case version
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/relationships`.
-        public var relationships: Components.Schemas.GameCenterActivityVersionRelease.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/GameCenterActivityVersionRelease/type`.
-        public var _type: Swift.String
-        /// Creates a new `GameCenterActivityVersionRelease`.
-        ///
-        /// - Parameters:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.GameCenterActivityVersionRelease.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case id
-            case links
-            case relationships
-            case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion`.
-    public struct GameCenterAppVersion: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/attributes`.
-        public struct AttributesPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/attributes/enabled`.
-            public var enabled: Swift.Bool?
-            /// Creates a new `AttributesPayload`.
-            ///
-            /// - Parameters:
-            ///   - enabled:
-            public init(enabled: Swift.Bool? = nil) {
-                self.enabled = enabled
-            }
-            public enum CodingKeys: String, CodingKey {
-                case enabled
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/attributes`.
-        public var attributes: Components.Schemas.GameCenterAppVersion.AttributesPayload?
-        /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/id`.
-        public var id: Swift.String
-        /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/links`.
-        public var links: Components.Schemas.ResourceLinks?
-        /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships`.
-        public struct RelationshipsPayload: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/appStoreVersion`.
-            public struct AppStoreVersionPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/appStoreVersion/data`.
-                public struct DataPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/appStoreVersion/data/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/appStoreVersion/data/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/appStoreVersion/data`.
-                public var data: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.AppStoreVersionPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/appStoreVersion/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// Creates a new `AppStoreVersionPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                public init(
-                    data: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.AppStoreVersionPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/appStoreVersion`.
-            public var appStoreVersion: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.AppStoreVersionPayload?
-            /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions`.
-            public struct CompatibilityVersionsPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions/DataPayload`.
-                public struct DataPayloadPayload: Codable, Hashable, Sendable {
-                    /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions/DataPayload/id`.
-                    public var id: Swift.String
-                    /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions/DataPayload/type`.
-                    public var _type: Swift.String
-                    /// Creates a new `DataPayloadPayload`.
-                    ///
-                    /// - Parameters:
-                    ///   - id:
-                    ///   - _type:
-                    public init(
-                        id: Swift.String,
-                        _type: Swift.String
-                    ) {
-                        self.id = id
-                        self._type = _type
-                    }
-                    public enum CodingKeys: String, CodingKey {
-                        case id
-                        case _type = "type"
-                    }
-                }
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions/data`.
-                public typealias DataPayload = [Components.Schemas.GameCenterAppVersion.RelationshipsPayload.CompatibilityVersionsPayload.DataPayloadPayload]
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions/data`.
-                public var data: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.CompatibilityVersionsPayload.DataPayload?
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions/links`.
-                public var links: Components.Schemas.RelationshipLinks?
-                /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions/meta`.
-                public var meta: Components.Schemas.PagingInformation?
-                /// Creates a new `CompatibilityVersionsPayload`.
-                ///
-                /// - Parameters:
-                ///   - data:
-                ///   - links:
-                ///   - meta:
-                public init(
-                    data: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.CompatibilityVersionsPayload.DataPayload? = nil,
-                    links: Components.Schemas.RelationshipLinks? = nil,
-                    meta: Components.Schemas.PagingInformation? = nil
-                ) {
-                    self.data = data
-                    self.links = links
-                    self.meta = meta
-                }
-                public enum CodingKeys: String, CodingKey {
-                    case data
-                    case links
-                    case meta
-                }
-            }
-            /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships/compatibilityVersions`.
-            public var compatibilityVersions: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.CompatibilityVersionsPayload?
-            /// Creates a new `RelationshipsPayload`.
-            ///
-            /// - Parameters:
-            ///   - appStoreVersion:
-            ///   - compatibilityVersions:
-            public init(
-                appStoreVersion: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.AppStoreVersionPayload? = nil,
-                compatibilityVersions: Components.Schemas.GameCenterAppVersion.RelationshipsPayload.CompatibilityVersionsPayload? = nil
-            ) {
-                self.appStoreVersion = appStoreVersion
-                self.compatibilityVersions = compatibilityVersions
-            }
-            public enum CodingKeys: String, CodingKey {
-                case appStoreVersion
-                case compatibilityVersions
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/relationships`.
-        public var relationships: Components.Schemas.GameCenterAppVersion.RelationshipsPayload?
-        /// - Remark: Generated from `#/components/schemas/GameCenterAppVersion/type`.
-        public var _type: Swift.String
-        /// Creates a new `GameCenterAppVersion`.
-        ///
-        /// - Parameters:
-        ///   - attributes:
-        ///   - id:
-        ///   - links:
-        ///   - relationships:
-        ///   - _type:
-        public init(
-            attributes: Components.Schemas.GameCenterAppVersion.AttributesPayload? = nil,
-            id: Swift.String,
-            links: Components.Schemas.ResourceLinks? = nil,
-            relationships: Components.Schemas.GameCenterAppVersion.RelationshipsPayload? = nil,
-            _type: Swift.String
-        ) {
-            self.attributes = attributes
-            self.id = id
-            self.links = links
-            self.relationships = relationships
-            self._type = _type
-        }
-        public enum CodingKeys: String, CodingKey {
-            case attributes
-            case id
-            case links
-            case relationships
             case _type = "type"
         }
     }

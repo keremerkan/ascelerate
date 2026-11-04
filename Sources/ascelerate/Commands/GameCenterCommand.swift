@@ -14,7 +14,7 @@ struct GameCenterCommand: AsyncParsableCommand {
       starts in Prepare for Submission and goes to App Review with the app (submit adds it to the \
       app's draft submission). Changing one that is live makes its next version first.
       """,
-    subcommands: [Status.self, Enable.self, AppVersion.self, Achievements.self, Leaderboards.self, Sets.self, Matchmaking.self],
+    subcommands: [Status.self, Enable.self, AppVersion.self, Achievements.self, Leaderboards.self, Sets.self, Activities.self, Challenges.self, Matchmaking.self],
     defaultSubcommand: Status.self
   )
 
@@ -238,7 +238,7 @@ struct GameCenterDelete<Item: GameCenterItem>: AsyncParsableCommand {
   }
 }
 
-struct GameCenterReorder<Item: GameCenterItem>: AsyncParsableCommand {
+struct GameCenterReorder<Item: GameCenterOrderedItem>: AsyncParsableCommand {
   static var configuration: CommandConfiguration {
     CommandConfiguration(
       commandName: "reorder",
@@ -462,51 +462,75 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
 /// A language's image: upload (replacing the current one) or delete.
 struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
   static var configuration: CommandConfiguration {
-    CommandConfiguration(
+    let hasDefault = Item.self is any GameCenterDefaultImageItem.Type
+    return CommandConfiguration(
       commandName: "image",
-      abstract: "A language's image (one per language).",
-      discussion: "Game Center takes a square PNG or JPEG of at least 512×512 (512×512 or 1024×1024).",
+      abstract: hasDefault ? "A language's image, or the version's default image (--default)." : "A language's image (one per language).",
+      discussion: "A PNG or JPEG, \(Item.imageSize.description).",
       subcommands: [Upload.self, Delete.self])
   }
 
-  /// Game Center takes a square image of at least 512 pixels (seen live 2026-11-04: 600 and 2048
-  /// were taken; 100 and 511 failed with IMAGE_BAD_DIMENSION_SM_LESS_MIN, a screenshot with
-  /// IMAGE_BAD_ASPECT_RATIO).
+  /// Checks the file against what Apple takes for this kind (`GameCenterImageSize`).
   static func checkSize(_ path: String) throws {
     guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
       let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
       let width = properties[kCGImagePropertyPixelWidth] as? Int, let height = properties[kCGImagePropertyPixelHeight] as? Int
     else { throw ValidationError("'\(path)' isn't an image.") }
-    guard width == height, width >= 512 else {
-      throw ValidationError("The image is \(width)×\(height); Game Center takes a square one of at least 512×512 (512×512 or 1024×1024).")
+    guard Item.imageSize.accepts(width: width, height: height) else {
+      throw ValidationError("The image is \(width)×\(height); \(GameCenterCommand.article(Item.noun)) image must be \(Item.imageSize.description).")
     }
   }
 
-  /// The language's localization on an editable version.
-  static func localization(
-    _ arguments: GameCenterItemArguments, locale: String, client: ASCClient
-  ) async throws -> (Item, Item.Localization, GameCenter.Version)? {
+  /// Which image: a language's, or the version's default one.
+  struct Target {
+    let label: String
+    let current: GameCenter.Image?
+    let upload: (String) async throws -> String
+    /// The image as Apple has it now.
+    let read: () async throws -> GameCenter.Image?
+  }
+
+  /// The image slot on an editable version.
+  static func target(
+    _ arguments: GameCenterItemArguments, locale: String?, isDefault: Bool, client: ASCClient
+  ) async throws -> (Item, Target)? {
+    guard (locale == nil) == isDefault else { throw ValidationError("Give --locale or --default.") }
+    let defaultKind = Item.self as? any GameCenterDefaultImageItem.Type
+    if isDefault, defaultKind == nil { throw ValidationError("\(GameCenterCommand.article(Item.noun).prefix(1).uppercased() + GameCenterCommand.article(Item.noun).dropFirst()) has no default image; give --locale.") }
     let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
     let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(detailID: detail.id, client: client))
     guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return nil }
     if version.id.hasPrefix("DRY-RUN") {
-      throw ValidationError("Dry run: the new version wasn't made, so it has no languages to add an image to yet.")
+      throw ValidationError("Dry run: the new version wasn't made, so there's nothing to add an image to yet.")
+    }
+    if let defaultKind, isDefault {
+      let current = try await defaultKind.defaultImage(versionID: version.id, client: client)
+      return (item, Target(
+        label: "the default image of '\(item.displayName)'", current: current,
+        upload: { try await defaultKind.uploadDefaultImage(versionID: version.id, filePath: $0, client: client) },
+        read: { try await defaultKind.defaultImage(versionID: version.id, client: client) }))
     }
     guard let localization = try await Item.localizations(versionID: version.id, client: client)
-      .first(where: { $0.locale.lowercased() == locale.lowercased() })
+      .first(where: { $0.locale.lowercased() == locale!.lowercased() })
     else {
-      throw ValidationError("'\(item.displayName)' has no \(localeName(locale)); add it first (localizations import or set).")
+      throw ValidationError("'\(item.displayName)' has no \(localeName(locale!)); add it first (localizations import or set).")
     }
-    return (item, localization, version)
+    return (item, Target(
+      label: "\(localeName(localization.locale)) of '\(item.displayName)'", current: localization.image,
+      upload: { try await Item.uploadImage(localizationID: localization.id, filePath: $0, client: client) },
+      read: { try await Item.localizations(versionID: version.id, client: client).first { $0.id == localization.id }?.image }))
   }
 
   struct Upload: AsyncParsableCommand {
-    static var configuration: CommandConfiguration { CommandConfiguration(abstract: "Upload a language's image.") }
+    static var configuration: CommandConfiguration { CommandConfiguration(abstract: "Upload an image (replacing the current one).") }
 
     @OptionGroup var arguments: GameCenterItemArguments
 
     @Option(name: .long, help: "The language's locale code (en-US).")
-    var locale: String
+    var locale: String?
+
+    @Flag(name: .long, help: "The version's default image (activities and challenges).")
+    var `default` = false
 
     @Argument(help: "The image file (PNG or JPEG).", completion: .file(extensions: ["png", "jpg", "jpeg"]))
     var file: String
@@ -520,21 +544,20 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
       guard FileManager.default.fileExists(atPath: path) else { throw ValidationError("File not found at '\(path)'.") }
       try GameCenterImage.checkSize(path)
       let client = try ClientFactory.makeClient()
-      guard let (item, localization, version) = try await GameCenterImage.localization(arguments, locale: locale, client: client) else { return }
-      let replacing = localization.image.map { " (replacing \($0.fileName))" } ?? ""
-      guard confirm("Upload \((path as NSString).lastPathComponent) for \(localeName(localization.locale)) of '\(item.displayName)'\(replacing)? [y/N] ") else {
+      guard let (_, target) = try await GameCenterImage.target(arguments, locale: locale, isDefault: `default`, client: client) else { return }
+      let replacing = target.current.map { " (replacing \($0.fileName))" } ?? ""
+      guard confirm("Upload \((path as NSString).lastPathComponent) as \(target.label)\(replacing)? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
-      if let old = localization.image {
+      if let old = target.current {
         guard try await unlessDryRunStopped({ try await Item.deleteImage(id: old.id, client: client) }) != nil else { return }
       }
-      let imageID = try await Item.uploadImage(localizationID: localization.id, filePath: path, client: client)
+      let imageID = try await target.upload(path)
       // Apple checks the file in a few seconds; wait for its verdict, up to half a minute.
       for _ in 0..<15 {
         try await Task.sleep(for: .seconds(2))
-        let image = try await Item.localizations(versionID: version.id, client: client).first { $0.id == localization.id }?.image
-        guard let image, image.id == imageID else { continue }
+        guard let image = try await target.read(), image.id == imageID else { continue }
         if image.state == "COMPLETE" {
           print(green("Uploaded") + " the image.")
           return
@@ -549,12 +572,15 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
   }
 
   struct Delete: AsyncParsableCommand {
-    static var configuration: CommandConfiguration { CommandConfiguration(abstract: "Delete a language's image.") }
+    static var configuration: CommandConfiguration { CommandConfiguration(abstract: "Delete an image.") }
 
     @OptionGroup var arguments: GameCenterItemArguments
 
     @Option(name: .long, help: "The language's locale code (en-US).")
-    var locale: String
+    var locale: String?
+
+    @Flag(name: .long, help: "The version's default image (activities and challenges).")
+    var `default` = false
 
     @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
     var yes = false
@@ -562,12 +588,12 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
     func run() async throws {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
-      guard let (item, localization, _) = try await GameCenterImage.localization(arguments, locale: locale, client: client) else { return }
-      guard let image = localization.image else {
-        print("\(localeName(localization.locale)) of '\(item.displayName)' has no image.")
+      guard let (_, target) = try await GameCenterImage.target(arguments, locale: locale, isDefault: `default`, client: client) else { return }
+      guard let image = target.current else {
+        print("There's no image for \(target.label).")
         return
       }
-      guard confirm("Delete \(image.fileName) of \(localeName(localization.locale))? [y/N] ") else {
+      guard confirm("Delete \(image.fileName), \(target.label)? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }

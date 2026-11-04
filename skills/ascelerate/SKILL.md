@@ -335,11 +335,16 @@ ascelerate game-center achievements update <app> <ach> [--name] [--points] [--hi
 ascelerate game-center leaderboards create <app> --id VENDOR_ID --name "Reference" [--formatter integer|elapsed-time-second|money-dollar-decimal|…] [--sort high|low] [--submission best|recent] [--min N --max N] [--recurrence-start ISO --recurrence-duration PT168H --recurrence-rule "FREQ=DAILY;INTERVAL=7"] [--hidden true|false]
 ascelerate game-center leaderboards default <app> <lb>
 ascelerate game-center sets create <app> --id VENDOR_ID --name "Reference" [--leaderboards a,b]   # update --leaderboards replaces them, in order
-# shared by achievements, leaderboards and sets:
+ascelerate game-center activities create <app> --id X --name X [--play-style sync|async] [--min-players N] [--max-players N] [--party-code true|false] [--properties k=v,k=v] [--fallback-url URL]
+ascelerate game-center activities update <app> <act> [same options] [--name X] [--archived B]   # --fallback-url "" clears (latest version)
+ascelerate game-center activities link <app> <act> [--achievements a,b] [--leaderboards a,b] [--remove]
+ascelerate game-center challenges create <app> --id X --name X --leaderboard LB [--repeatable]   # LB: best-score, one challenge per leaderboard; not repeatable only on a recurring one
+ascelerate game-center challenges update <app> <ch> [--name X] [--leaderboard LB] [--repeatable B] [--archived B]
+# shared by achievements, leaderboards, sets, activities and challenges (reorder: the first three only):
 ascelerate game-center <kind> info|delete <app> <item>
 ascelerate game-center <kind> reorder <app> a,b,c              # listed first, rest keep their order
 ascelerate game-center <kind> localizations [view|set|export|import|delete] <app> <item> [--locale X] [--file X]
-ascelerate game-center <kind> image upload|delete <app> <item> --locale X [file]   # square, ≥512×512; waits for Apple's check
+ascelerate game-center <kind> image upload|delete <app> <item> (--locale X | --default) [file]   # waits for Apple's check; --default: an activity's/challenge's version image
 ascelerate game-center <kind> submit <app> <item> [--platform ios]   # adds the version to the draft submission (apps review submit sends it)
 ```
 

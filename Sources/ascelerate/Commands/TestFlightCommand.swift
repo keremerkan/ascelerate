@@ -10,7 +10,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     subcommands: [Groups.self, Testers.self, Builds.self, Versions.self, Feedback.self],
     groupedSubcommands: [
       CommandGroup(name: "Build Management", subcommands: [Expire.self, Notify.self, AutoNotify.self]),
-      CommandGroup(name: "Metadata", subcommands: [WhatsNew.self, AppInfo.self, ReviewInfo.self, Eula.self]),
+      CommandGroup(name: "Metadata", subcommands: [WhatToTest.self, AppInfo.self, ReviewInfo.self, Eula.self]),
       CommandGroup(name: "Review", subcommands: [Submit.self, Status.self]),
     ]
   )
@@ -1167,11 +1167,11 @@ struct TestFlightCommand: AsyncParsableCommand {
 
   // MARK: - What to Test
 
-  struct WhatsNew: AsyncParsableCommand {
+  struct WhatToTest: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-      commandName: "whats-new",
-      abstract: "View, set, export, and import a build's test notes (What to Test).",
-      subcommands: [View.self, Set.self, Export.self, Import.self]
+      commandName: "what-to-test",
+      abstract: "View, set, copy, export, and import a build's test notes (What to Test).",
+      subcommands: [View.self, Set.self, Copy.self, Export.self, Import.self]
     )
 
     /// Applies What to Test text per locale, patching existing localizations and creating missing
@@ -1263,10 +1263,70 @@ struct TestFlightCommand: AsyncParsableCommand {
         }
         print()
 
-        try await WhatsNew.apply(
+        try await WhatToTest.apply(
           updates: targets.map { ($0, text) }, buildID: resolved.id, client: client)
         print()
         success("Updated", "test notes for build \(resolved.label).")
+      }
+    }
+
+    struct Copy: AsyncParsableCommand {
+      static let configuration = CommandConfiguration(
+        abstract: "Copy the test notes of an earlier build to a build (the newest by default).",
+        discussion: """
+          Takes the What to Test of the newest earlier build of the same platform that has any \
+          (or --from), in every language it has, and sets it on the build, creating the languages \
+          the build lacks. In a workflow, put it after builds await-processing, before the build \
+          goes to a group or to beta review.
+          """
+      )
+
+      @Argument(help: "The bundle identifier of the app.",
+                completion: appAliasCompletion)
+      var bundleID: String
+
+      @OptionGroup var buildOptions: BuildOptions
+
+      @Option(name: .long, help: "The build number to copy from. Defaults to the newest earlier build with test notes.")
+      var from: String?
+
+      @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+      var yes = false
+
+      func run() async throws {
+        if yes { autoConfirm = true }
+        let client = try ClientFactory.makeClient()
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let target = try await buildOptions.resolve(appID: app.id, client: client)
+
+        let source: AscelerateCore.Builds.Build
+        let notes: [AscelerateCore.Builds.TestNotes]
+        if let from {
+          source = try await TestFlightCommand.findBuild(
+            appID: app.id, buildVersion: from, platform: target.platform.flatMap(Platform.init(rawValue:)), client: client)
+          notes = try await AscelerateCore.Builds.testNotes(buildID: source.id, client: client).filter { !($0.text ?? "").isEmpty }
+          guard !notes.isEmpty else { throw ValidationError("Build \(source.label) has no test notes to copy.") }
+        } else if let earlier = try await AscelerateCore.Builds.earlierTestNotes(before: target, appID: app.id, client: client) {
+          (source, notes) = earlier
+        } else {
+          print("No earlier build of this platform has test notes; build \(target.label) is left as it is.")
+          return
+        }
+        guard source.id != target.id else { throw ValidationError("The build to copy from is the build itself.") }
+
+        print("Copy What to Test from build \(source.label) to build \(target.label):")
+        for note in notes { print("  [\(localeName(note.locale))]") }
+        print()
+        guard confirm("Copy \(notes.count) locale(s)? [y/N] ") else {
+          cancelled()
+          return
+        }
+        print()
+
+        try await WhatToTest.apply(
+          updates: notes.map { ($0.locale, $0.text ?? "") }, buildID: target.id, client: client)
+        print()
+        success("Copied", "test notes from build \(source.label) to build \(target.label).")
       }
     }
 
@@ -1301,7 +1361,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let data = try encoder.encode(result)
 
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "whats-new.json", isDirectory: false))
+          confirmOutputPath(output ?? "what-to-test.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
 
         print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
@@ -1352,7 +1412,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         }
         print()
 
-        try await WhatsNew.apply(updates: updates, buildID: resolved.id, client: client)
+        try await WhatToTest.apply(updates: updates, buildID: resolved.id, client: client)
         print()
         print("Done.")
       }

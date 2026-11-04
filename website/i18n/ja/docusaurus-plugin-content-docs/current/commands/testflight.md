@@ -109,15 +109,18 @@ ascelerate testflight auto-notify <bundle-id> --enabled false
 テストメモはビルドごと、ロケールごとに保存されます。
 
 ```bash
-ascelerate testflight whats-new view <bundle-id>
+ascelerate testflight what-to-test view <bundle-id>
 
 # 特定のロケールのみ。--locale を省略すると既存のすべてのロケールが対象になります
-ascelerate testflight whats-new set <bundle-id> --text "新しいマップフィルターをお試しください" --locale ja
-ascelerate testflight whats-new set <bundle-id> --text "新しいマップフィルターをお試しください"
+ascelerate testflight what-to-test set <bundle-id> --text "新しいマップフィルターをお試しください" --locale ja
+ascelerate testflight what-to-test set <bundle-id> --text "新しいマップフィルターをお試しください"
+
+# 最新のビルドに、テストメモがある直前のビルドのテストメモをコピー（ワークフローでは await-processing の後に）
+ascelerate testflight what-to-test copy <bundle-id> --platform ios
 
 # JSON によるエクスポートとインポート
-ascelerate testflight whats-new export <bundle-id> --output notes.json
-ascelerate testflight whats-new import <bundle-id> --file notes.json
+ascelerate testflight what-to-test export <bundle-id> --output notes.json
+ascelerate testflight what-to-test import <bundle-id> --file notes.json
 ```
 
 JSON 形式は他のローカライゼーションコマンドと共通です。

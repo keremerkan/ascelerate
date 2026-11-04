@@ -109,15 +109,18 @@ ascelerate testflight auto-notify <bundle-id> --enabled false
 Las notas de prueba se guardan por compilación y por idioma:
 
 ```bash
-ascelerate testflight whats-new view <bundle-id>
+ascelerate testflight what-to-test view <bundle-id>
 
 # Un idioma, o todos los idiomas existentes si se omite --locale
-ascelerate testflight whats-new set <bundle-id> --text "Try the new map filters" --locale en-US
-ascelerate testflight whats-new set <bundle-id> --text "Try the new map filters"
+ascelerate testflight what-to-test set <bundle-id> --text "Try the new map filters" --locale en-US
+ascelerate testflight what-to-test set <bundle-id> --text "Try the new map filters"
+
+# La compilación más reciente recibe las notas de prueba de la compilación anterior más reciente que las tenga (en un workflow, después de await-processing)
+ascelerate testflight what-to-test copy <bundle-id> --platform ios
 
 # Ida y vuelta a través de JSON
-ascelerate testflight whats-new export <bundle-id> --output notes.json
-ascelerate testflight whats-new import <bundle-id> --file notes.json
+ascelerate testflight what-to-test export <bundle-id> --output notes.json
+ascelerate testflight what-to-test import <bundle-id> --file notes.json
 ```
 
 El formato JSON es el mismo que el de los demás comandos de localización:

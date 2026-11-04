@@ -20,6 +20,7 @@
 //   string, but Apple sends the resource's linkage (`{"type", "id"}`): those become objects.
 // - A metrics insight's `referenceVersions` (declared a string) and a data point's
 //   `percentageBreakdown` (declared an object) come as arrays.
+// - A matchmaking rule set test result comes without the `id` the spec requires.
 // - Operations keep only their success responses (the error middleware handles the rest).
 import Foundation
 
@@ -256,6 +257,20 @@ if var allSchemas = components["schemas"] as? [String: Any], let metrics = allSc
   spec["components"] = components
 }
 
+// A matchmaking rule set test's result has no `id` (seen live 2026-11-04: `{"data": {"type":
+// "gameCenterMatchmakingRuleSetTests", "attributes": …}}`), which the spec requires, so decoding
+// failed after Apple had run the test.
+var optionalIDs = 0
+if var allSchemas = components["schemas"] as? [String: Any], var test = allSchemas["GameCenterMatchmakingRuleSetTest"] as? [String: Any],
+  let required = test["required"] as? [String], required.contains("id")
+{
+  test["required"] = required.filter { $0 != "id" }
+  allSchemas["GameCenterMatchmakingRuleSetTest"] = test
+  components["schemas"] = allSchemas
+  spec["components"] = components
+  optionalIDs += 1
+}
+
 // Only success responses are kept: ASCKit's error middleware throws every 4xx/5xx as `ASCError`
 // before the generated client decodes it, so the typed error responses (400, 401, 403, 404, 409,
 // 422 and 429 on most operations) were never used, and they made up most of the generated code.
@@ -282,7 +297,7 @@ spec["paths"] = keepSuccessResponses(spec["paths"] ?? [:])
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(fixedDimensions) metric dimensions made linkages, \(fixedInsights) metrics fields made arrays, \(droppedResponses) error responses dropped)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(fixedDimensions) metric dimensions made linkages, \(fixedInsights) metrics fields made arrays, \(optionalIDs) result IDs made optional, \(droppedResponses) error responses dropped)")
 
 // ASCEnums.swift: the enum catalog as Swift enums, for validating input (`parseEnum`) and
 // naming values in code; requests and responses carry the raw strings.

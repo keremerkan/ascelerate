@@ -88,3 +88,36 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 ```
 
 `reorder` coloca primero los indicados, en ese orden; el resto les sigue tal como está. `submit` añade la nueva versión del elemento al borrador de envío de la app (y crea uno si no lo hay). Va a App Review cuando envíe el borrador con `ascelerate apps review submit`.
+
+## Emparejamiento
+
+El emparejamiento basado en reglas pertenece al equipo, no a una app, así que estos comandos no llevan bundle ID. Un **conjunto de reglas** fija el número de jugadores, las reglas y los equipos; una **cola** es donde los juegos envían sus solicitudes de partida, que empareja con un conjunto de reglas. Los conjuntos de reglas y las colas se indican por su nombre de referencia o su ID.
+
+```bash
+ascelerate game-center matchmaking rule-sets [--json]
+ascelerate game-center matchmaking rule-sets create --name Ranked --min 2 --max 4
+ascelerate game-center matchmaking rule-sets info Ranked
+ascelerate game-center matchmaking rules add Ranked --name SameVersion --type compatible \
+  --expression "requests[0].appVersion == requests[1].appVersion" --description "Same app version"
+ascelerate game-center matchmaking rules add Ranked --name Skill --type distance \
+  --expression "requests[0].properties.skill" --description "Close skill" --weight 2
+ascelerate game-center matchmaking teams add Ranked --name Red --min 1 --max 2
+ascelerate game-center matchmaking queues create --name RankedQueue --rule-set Ranked [--experiment-rule-set RankedB] [--classic-apps com.example.MyApp]
+ascelerate game-center matchmaking queues update RankedQueue --experiment-rule-set none
+ascelerate game-center matchmaking test Ranked --file requests.json
+```
+
+Las reglas se escriben en el lenguaje de reglas de Apple, basado en JMESPath (que no tiene operadores aritméticos). Una regla de compatibilidad (compatible) compara `requests[0]` con `requests[1]`; una regla de distancia (distance) da un número para `requests[0]`, y las solicitudes con números más cercanos se emparejan primero. Las propiedades de un jugador se leen como `requests[0].properties.<clave>`. App Store Connect solo comprueba la sintaxis de una expresión al guardarla, así que pruebe un conjunto de reglas antes de usarlo.
+
+`test` pasa solicitudes de ejemplo por un conjunto de reglas y muestra las partidas que formaría Apple, con el equipo de cada jugador; no se guarda nada. El archivo es una matriz JSON:
+
+```json
+[
+  {"requestName": "alice", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 5, "locale": "EN-US", "players": [{"playerId": "alice", "properties": {"skill": "10"}}]},
+  {"requestName": "bob", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 8, "locale": "EN-US", "players": [{"playerId": "bob", "properties": {"skill": "12"}}]}
+]
+```
+
+Una solicitud también puede indicar `latitude`, `longitude`, `playerCount`, `minPlayers` y `maxPlayers`. Un conjunto de reglas que usa una cola no se puede eliminar; cambie o elimine antes la cola.

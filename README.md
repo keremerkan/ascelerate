@@ -1267,6 +1267,17 @@ ascelerate game-center achievements submit <bundle-id> first.win   # add its new
 
 Achievements, leaderboards and sets share `info`, `update`, `delete`, `reorder`, `localizations` (view, set, export, import, delete), `image` (upload, delete) and `submit`. Their text and images live on a version; changing a live one makes its next version first. Images are square, at least 512×512.
 
+Rule-based matchmaking belongs to the team, so it takes no bundle ID:
+
+```bash
+ascelerate game-center matchmaking rule-sets create --name Ranked --min 2 --max 4
+ascelerate game-center matchmaking rules add Ranked --name SameVersion --type compatible \
+  --expression "requests[0].appVersion == requests[1].appVersion" --description "Same app version"
+ascelerate game-center matchmaking teams add Ranked --name Red --min 1 --max 2
+ascelerate game-center matchmaking queues create --name RankedQueue --rule-set Ranked
+ascelerate game-center matchmaking test Ranked --file requests.json   # the matches Apple would make
+```
+
 ### Featuring Nominations
 
 Tell Apple's editorial team about a launch, an update or new content:

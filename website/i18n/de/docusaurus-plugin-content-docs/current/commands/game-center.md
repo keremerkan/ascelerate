@@ -88,3 +88,36 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 ```
 
 `reorder` stellt die aufgeführten Elemente in dieser Reihenfolge an den Anfang; die übrigen folgen unverändert. `submit` fügt die neue Version des Elements dem Einreichungsentwurf der App hinzu (und legt einen an, wenn es keinen gibt). Sie geht zum App Review, wenn Sie den Entwurf mit `ascelerate apps review submit` einreichen.
+
+## Matchmaking
+
+Regelbasiertes Matchmaking gehört zum Team, nicht zu einer einzelnen App, daher nehmen diese Befehle keine Bundle-ID. Ein **Regelsatz** legt die Spielerzahl, die Regeln und die Teams fest; eine **Warteschlange** ist der Ort, an den Spiele ihre Match-Anfragen senden, und sie gleicht sie mit einem Regelsatz ab. Regelsätze und Warteschlangen werden über Referenznamen oder ID angegeben.
+
+```bash
+ascelerate game-center matchmaking rule-sets [--json]
+ascelerate game-center matchmaking rule-sets create --name Ranked --min 2 --max 4
+ascelerate game-center matchmaking rule-sets info Ranked
+ascelerate game-center matchmaking rules add Ranked --name SameVersion --type compatible \
+  --expression "requests[0].appVersion == requests[1].appVersion" --description "Same app version"
+ascelerate game-center matchmaking rules add Ranked --name Skill --type distance \
+  --expression "requests[0].properties.skill" --description "Close skill" --weight 2
+ascelerate game-center matchmaking teams add Ranked --name Red --min 1 --max 2
+ascelerate game-center matchmaking queues create --name RankedQueue --rule-set Ranked [--experiment-rule-set RankedB] [--classic-apps com.example.MyApp]
+ascelerate game-center matchmaking queues update RankedQueue --experiment-rule-set none
+ascelerate game-center matchmaking test Ranked --file requests.json
+```
+
+Regeln werden in Apples Regelsprache geschrieben, die auf JMESPath beruht (das keine Rechenoperatoren kennt). Eine Kompatibilitätsregel (compatible) vergleicht `requests[0]` mit `requests[1]`; eine Distanzregel (distance) liefert eine Zahl für `requests[0]`, und Anfragen mit näher beieinanderliegenden Zahlen werden zuerst zusammengeführt. Die Eigenschaften eines Spielers werden als `requests[0].properties.<Schlüssel>` gelesen. App Store Connect prüft beim Speichern nur die Syntax eines Ausdrucks; testen Sie einen Regelsatz daher, bevor Sie ihn verwenden.
+
+`test` schickt Beispielanfragen durch einen Regelsatz und zeigt die Matches, die Apple bilden würde, mit dem Team jedes Spielers; es wird nichts gespeichert. Die Datei ist ein JSON-Array:
+
+```json
+[
+  {"requestName": "alice", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 5, "locale": "EN-US", "players": [{"playerId": "alice", "properties": {"skill": "10"}}]},
+  {"requestName": "bob", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 8, "locale": "EN-US", "players": [{"playerId": "bob", "properties": {"skill": "12"}}]}
+]
+```
+
+Eine Anfrage kann außerdem `latitude`, `longitude`, `playerCount`, `minPlayers` und `maxPlayers` angeben. Ein Regelsatz, den eine Warteschlange verwendet, kann nicht gelöscht werden; ändern oder löschen Sie zuerst die Warteschlange.

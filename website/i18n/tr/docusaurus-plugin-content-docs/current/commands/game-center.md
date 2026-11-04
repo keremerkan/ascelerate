@@ -88,3 +88,36 @@ ascelerate game-center achievements submit <bundle-id> first.win [--platform ios
 ```
 
 `reorder`, listelenenleri bu sırayla başa koyar; diğerleri oldukları gibi ardından gelir. `submit`, öğenin yeni sürümünü uygulamanın taslak gönderimine ekler (yoksa bir tane oluşturur). Taslağı `ascelerate apps review submit` ile gönderdiğinizde App Review'a gider.
+
+## Eşleştirme
+
+Kurala dayalı eşleştirme tek bir uygulamaya değil ekibe aittir; bu yüzden bu komutlar bundle ID almaz. Bir **kural seti** oyuncu sayısını, kuralları ve takımları belirler; bir **kuyruk**, oyunların eşleşme isteklerini gönderdiği yerdir ve tek bir kural setiyle eşleştirir. Kural setleri ve kuyruklar referans adıyla veya kimliğiyle belirtilir.
+
+```bash
+ascelerate game-center matchmaking rule-sets [--json]
+ascelerate game-center matchmaking rule-sets create --name Ranked --min 2 --max 4
+ascelerate game-center matchmaking rule-sets info Ranked
+ascelerate game-center matchmaking rules add Ranked --name SameVersion --type compatible \
+  --expression "requests[0].appVersion == requests[1].appVersion" --description "Same app version"
+ascelerate game-center matchmaking rules add Ranked --name Skill --type distance \
+  --expression "requests[0].properties.skill" --description "Close skill" --weight 2
+ascelerate game-center matchmaking teams add Ranked --name Red --min 1 --max 2
+ascelerate game-center matchmaking queues create --name RankedQueue --rule-set Ranked [--experiment-rule-set RankedB] [--classic-apps com.example.MyApp]
+ascelerate game-center matchmaking queues update RankedQueue --experiment-rule-set none
+ascelerate game-center matchmaking test Ranked --file requests.json
+```
+
+Kurallar, Apple'ın JMESPath tabanlı kural dilinde yazılır (JMESPath'te aritmetik işleçler yoktur). Uyumluluk kuralı (compatible) `requests[0]` ve `requests[1]` isteklerini karşılaştırır; mesafe kuralı (distance) `requests[0]` için bir sayı verir ve sayıları birbirine daha yakın olan istekler önce eşleşir. Bir oyuncunun özellikleri `requests[0].properties.<anahtar>` olarak okunur. App Store Connect bir ifadeyi kaydederken yalnızca söz dizimini denetler; bu yüzden bir kural setini kullanmadan önce test edin.
+
+`test`, örnek istekleri bir kural setinden geçirir ve Apple'ın yapacağı eşleşmeleri her oyuncunun takımıyla birlikte gösterir; hiçbir şey kaydedilmez. Dosya bir JSON dizisidir:
+
+```json
+[
+  {"requestName": "alice", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 5, "locale": "EN-US", "players": [{"playerId": "alice", "properties": {"skill": "10"}}]},
+  {"requestName": "bob", "bundleId": "com.example.MyApp", "platform": "IOS", "appVersion": "1.0",
+   "secondsInQueue": 8, "locale": "EN-US", "players": [{"playerId": "bob", "properties": {"skill": "12"}}]}
+]
+```
+
+Bir istek ayrıca `latitude`, `longitude`, `playerCount`, `minPlayers` ve `maxPlayers` verebilir. Bir kuyruğun kullandığı kural seti silinemez; önce kuyruğu değiştirin veya silin.

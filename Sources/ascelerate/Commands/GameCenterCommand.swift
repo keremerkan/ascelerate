@@ -95,6 +95,8 @@ struct GameCenterCommand: AsyncParsableCommand {
       let achievements: Int?
       let leaderboards: Int?
       let leaderboardSets: Int?
+      /// Items whose latest version waits for App Review.
+      let toSubmit: Int?
     }
 
     func run() async throws {
@@ -102,16 +104,18 @@ struct GameCenterCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: app, client: client)
       guard let detail = try await GameCenter.detail(appID: app.id, client: client) else {
-        if jsonOption.json { try printJSON(Result(enabled: false, detail: nil, achievements: nil, leaderboards: nil, leaderboardSets: nil)); return }
+        if jsonOption.json { try printJSON(Result(enabled: false, detail: nil, achievements: nil, leaderboards: nil, leaderboardSets: nil, toSubmit: nil)); return }
         print("Game Center is off for this app. Turn it on with: ascelerate game-center enable \(self.app)")
         return
       }
       async let achievements = GameCenter.achievements(owner: detail.owner, client: client)
       async let leaderboards = GameCenter.leaderboards(owner: detail.owner, client: client)
       async let sets = GameCenter.leaderboardSets(owner: detail.owner, client: client)
-      let (a, l, s) = try await (achievements, leaderboards, sets)
+      async let pendingItems = GameCenter.pendingItems(owner: detail.owner, client: client)
+      let (a, l, s, pending) = try await (achievements, leaderboards, sets, pendingItems)
       if jsonOption.json {
-        try printJSON(Result(enabled: true, detail: detail, achievements: a.count, leaderboards: l.count, leaderboardSets: s.count))
+        try printJSON(Result(
+          enabled: true, detail: detail, achievements: a.count, leaderboards: l.count, leaderboardSets: s.count, toSubmit: pending.count))
         return
       }
       let defaultLeaderboard = detail.defaultLeaderboardID.map { id in l.first { $0.id == id }?.displayName ?? id }
@@ -123,6 +127,7 @@ struct GameCenterCommand: AsyncParsableCommand {
         ["Default leaderboard", defaultLeaderboard ?? "-"],
         ["Group", detail.groupID ?? "-"],
         ["Apple Arcade", detail.arcadeEnabled ? "Yes" : "No"],
+        ["Waiting for review", pending.isEmpty ? "-" : "\(pending.count) (added by apps review submit)"],
       ])
     }
   }

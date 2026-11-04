@@ -66,7 +66,7 @@ ascelerate apps review submit <bundle-id> --version 2.1.0
 ascelerate apps review submit <bundle-id> --platform macos
 ```
 
-Beim Einreichen erkennt der Befehl automatisch IAPs und Abonnements mit ausstehenden Änderungen und bietet an, diese zusammen mit der App-Version einzureichen. Ausstehende Änderungen werden aus dem Versionsverlauf jedes Produkts gelesen (eine Version im Status „Prepare for Submission“, „Ready for Review“ oder einem abgelehnten Status), sodass auch reine Screenshot-Änderungen erkannt werden. `apps review status` löst die Einträge aktiver Einreichungen zur App-Version bzw. zum Produkt auf, auf das sie sich beziehen.
+Beim Einreichen erkennt der Befehl automatisch IAPs und Abonnements mit ausstehenden Änderungen und bietet an, diese zusammen mit der App-Version einzureichen. Ausstehende Änderungen werden aus dem Versionsverlauf jedes Produkts gelesen (eine Version im Status „Prepare for Submission“, „Ready for Review“ oder einem abgelehnten Status), sodass auch reine Screenshot-Änderungen erkannt werden. `apps review status` löst die Einträge aktiver Einreichungen zur App-Version bzw. zum Produkt auf, auf das sie sich beziehen. Außerdem bietet er an, die Game-Center-Erfolge, -Bestenlisten, -Bestenlistengruppen, -Aktivitäten und -Herausforderungen mit Änderungen, die auf die Prüfung warten, hinzuzufügen, und warnt, wenn Game Center für die Version ausgeschaltet ist.
 
 ### Abgelehnte Elemente lösen
 

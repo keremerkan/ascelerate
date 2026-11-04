@@ -1599,6 +1599,8 @@ struct AppsCommand: AsyncParsableCommand {
         else { return }
 
         try await submitBundledProducts(app: app, client: client)
+        try await addPendingGameCenterItems(
+          app: app, versionID: appVersion.id, submissionID: submissionID, platform: platformValue.rawValue, client: client)
 
         // Step 3: Submit for review
         let result = try await client.reviewSubmissionsUpdateInstance(
@@ -1862,6 +1864,37 @@ struct AppsCommand: AsyncParsableCommand {
                 print("  Skipped subscription group '\(group.name)' — no pending version")
               }
             }
+          }
+        }
+      }
+
+      /// Offers to add the Game Center items with a version waiting for review (achievements,
+      /// leaderboards, sets, activities, challenges) to the submission; they're reviewed with the
+      /// app version. Items already in it are left alone.
+      private func addPendingGameCenterItems(
+        app: Components.Schemas.App, versionID: String, submissionID: String, platform: String, client: ASCClient
+      ) async throws {
+        guard let detail = try await GameCenter.detail(appID: app.id, client: client) else { return }
+        // A version already in a draft reads READY_FOR_REVIEW, so these aren't in one yet.
+        let pending = try await GameCenter.pendingItems(owner: detail.owner, client: client)
+        guard !pending.isEmpty else { return }
+        print()
+        print(yellow("Game Center items with changes waiting for review:"))
+        for item in pending {
+          print("  \(item.noun.prefix(1).uppercased() + item.noun.dropFirst()): \(item.name) (version \(item.version.version ?? 0), \(formatState(item.version.state ?? "-")))")
+        }
+        if try await GameCenter.isEnabled(versionID: versionID, client: client) != true {
+          print(yellow("Game Center is off on this version;") + " turn it on so they can be reviewed: ascelerate game-center version \(bundleID) --enabled true")
+        }
+        print()
+        guard confirm("Add them to the submission? [y/N] ") else { return }
+        for item in pending {
+          do {
+            try await ReviewSubmissions.add(item.reviewItem, appID: app.id, platform: platform, draftID: submissionID, client: client)
+            if !ClientFactory.isDryRun { print("  \(green("Added")) \(item.noun) '\(item.name)'") }
+          } catch let error where ASCError.from(error)?.statusCode == 409 {
+            // One item Apple refuses (a missing language, say) shouldn't stop the submission.
+            print("  \(yellow("Skipped")) \(item.noun) '\(item.name)': \(describeError(error))")
           }
         }
       }

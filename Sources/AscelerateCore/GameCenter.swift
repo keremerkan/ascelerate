@@ -313,3 +313,30 @@ extension GameCenter.LeaderboardSet: GameCenterOrderedItem {
 extension GameCenter.LeaderboardSetLocalization: GameCenterLocalization {
   public var fields: LeaderboardSetLocaleFields { .init(name: name) }
 }
+
+extension GameCenter {
+  /// An achievement, leaderboard, set, activity or challenge whose latest version waits for App
+  /// Review (Prepare for Submission or rejected).
+  public struct PendingItem: Sendable {
+    public let noun: String
+    public let name: String
+    public let version: Version
+    public let reviewItem: ReviewSubmissions.DraftItem
+  }
+
+  /// Every kind's items with a version to submit, achievements first.
+  public static func pendingItems(owner: Owner, client: ASCClient) async throws -> [PendingItem] {
+    func pending<Item: GameCenterItem>(_ type: Item.Type) async throws -> [PendingItem] {
+      try await Item.list(owner: owner, client: client).compactMap { item in
+        guard let version = item.latestVersion, version.isEditable else { return nil }
+        return PendingItem(noun: Item.noun, name: item.displayName, version: version, reviewItem: Item.reviewItem(versionID: version.id))
+      }
+    }
+    async let achievements = pending(Achievement.self)
+    async let leaderboards = pending(Leaderboard.self)
+    async let sets = pending(LeaderboardSet.self)
+    async let activities = pending(Activity.self)
+    async let challenges = pending(Challenge.self)
+    return try await achievements + leaderboards + sets + activities + challenges
+  }
+}

@@ -66,7 +66,7 @@ ascelerate apps review submit <bundle-id> --version 2.1.0
 ascelerate apps review submit <bundle-id> --platform macos
 ```
 
-Al enviar, el comando detecta automáticamente las compras dentro de la app y las suscripciones con cambios pendientes y ofrece enviarlas junto con la versión de la app. Los cambios pendientes se leen del historial de versiones de cada producto (una versión en Prepare for Submission, Ready for Review o en un estado de rechazo), por lo que también se detectan los cambios que solo afectan a capturas de pantalla. `apps review status` relaciona los elementos de los envíos activos con la versión de la app o el producto al que corresponden.
+Al enviar, el comando detecta automáticamente las compras dentro de la app y las suscripciones con cambios pendientes y ofrece enviarlas junto con la versión de la app. Los cambios pendientes se leen del historial de versiones de cada producto (una versión en Prepare for Submission, Ready for Review o en un estado de rechazo), por lo que también se detectan los cambios que solo afectan a capturas de pantalla. `apps review status` relaciona los elementos de los envíos activos con la versión de la app o el producto al que corresponden. También ofrece añadir los logros, tablas de clasificación, grupos de tablas, actividades y desafíos de Game Center cuyos cambios esperan revisión, y avisa si Game Center está desactivado en la versión.
 
 ### Resolver los elementos rechazados
 

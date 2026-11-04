@@ -154,7 +154,7 @@ Required display types: `APP_IPHONE_67` (iPhone) and `APP_IPAD_PRO_3GEN_129` (iP
 
 ```bash
 ascelerate apps review preflight <app>           # Pre-submission checks
-ascelerate apps review submit <app>              # Submit (offers to include IAPs/subs)
+ascelerate apps review submit <app>              # Submit (offers to include IAPs/subs and Game Center items waiting for review)
 ascelerate apps review status <app>              # Check status (active submissions list app version + IAP/sub items)
 ascelerate apps review resolve-issues <app>      # After fixing rejection
 ascelerate apps review cancel-submission <app>   # Cancel active review

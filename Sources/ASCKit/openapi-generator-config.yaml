@@ -389,8 +389,6 @@ filter:
     - /v2/gameCenterLeaderboardSetLocalizations/{id}/image
     - /v2/gameCenterLeaderboardSetImages
     - /v2/gameCenterLeaderboardSetImages/{id}
-    - /v1/gameCenterLeaderboardSetMemberLocalizations
-    - /v1/gameCenterLeaderboardSetMemberLocalizations/{id}
     - /v1/gameCenterMatchmakingQueues
     - /v1/gameCenterMatchmakingQueues/{id}
     - /v1/gameCenterMatchmakingRuleSets

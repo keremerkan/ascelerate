@@ -323,6 +323,28 @@ Reviews are read-only; only the developer response is writable. Review IDs come 
 
 The App Store Connect API does **not** expose aggregate rating counts or the star-rating average/histogram — only individual reviews (above). For download/unit numbers and revenue, use `reports` (below).
 
+### Game Center
+
+```bash
+ascelerate game-center <app> [--json]                    # on/off, counts, default leaderboard
+ascelerate game-center enable <app>                      # irreversible through the API; bundle ID needs the Game Center capability
+ascelerate game-center version <app> [--version X] [--enabled true|false]   # the App Store version's Game Center switch
+ascelerate game-center achievements|leaderboards|sets <app> [--json]
+ascelerate game-center achievements create <app> --id VENDOR_ID --name "Reference" --points 1-100 [--hidden] [--repeatable]   # all achievements: 1,000 points max
+ascelerate game-center achievements update <app> <ach> [--name] [--points] [--hidden true|false] [--repeatable true|false] [--archived true|false]
+ascelerate game-center leaderboards create <app> --id VENDOR_ID --name "Reference" [--formatter integer|elapsed-time-second|money-dollar-decimal|…] [--sort high|low] [--submission best|recent] [--min N --max N] [--recurrence-start ISO --recurrence-duration PT168H --recurrence-rule "FREQ=DAILY;INTERVAL=7"] [--hidden true|false]
+ascelerate game-center leaderboards default <app> <lb>
+ascelerate game-center sets create <app> --id VENDOR_ID --name "Reference" [--leaderboards a,b]   # update --leaderboards replaces them, in order
+# shared by achievements, leaderboards and sets:
+ascelerate game-center <kind> info|delete <app> <item>
+ascelerate game-center <kind> reorder <app> a,b,c              # listed first, rest keep their order
+ascelerate game-center <kind> localizations [view|set|export|import|delete] <app> <item> [--locale X] [--file X]
+ascelerate game-center <kind> image upload|delete <app> <item> --locale X [file]   # square, ≥512×512; waits for Apple's check
+ascelerate game-center <kind> submit <app> <item> [--platform ios]   # adds the version to the draft submission (apps review submit sends it)
+```
+
+Items are named by vendor identifier, reference name or Apple ID. Text and images live on a version (Prepare for Submission until reviewed); editing a live item makes its next version after a prompt, an item in review can't change. Achievement languages need name, `--before-earned`, `--after-earned`; leaderboard languages: name, description, `--formatter` override, `--suffix`/`--suffix-singular`. Recurring leaderboards: duration in hours/minutes only (`PT24H`; Apple refuses `P7D`), rule `FREQ=MINUTELY|HOURLY|DAILY;INTERVAL=n`. A score range clears only as a whole (`--min "" --max ""`). The first leaderboard becomes the default.
+
 ### Featuring nominations
 
 ```bash

@@ -350,6 +350,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/apps/{id}/endUserLicenseAgreement`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/endUserLicenseAgreement/get(apps_endUserLicenseAgreement_getToOneRelated)`.
     func appsEndUserLicenseAgreementGetToOneRelated(_ input: Operations.AppsEndUserLicenseAgreementGetToOneRelated.Input) async throws -> Operations.AppsEndUserLicenseAgreementGetToOneRelated.Output
+    /// - Remark: HTTP `GET /v1/apps/{id}/gameCenterDetail`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/gameCenterDetail/get(apps_gameCenterDetail_getToOneRelated)`.
+    func appsGameCenterDetailGetToOneRelated(_ input: Operations.AppsGameCenterDetailGetToOneRelated.Input) async throws -> Operations.AppsGameCenterDetailGetToOneRelated.Output
     /// - Remark: HTTP `GET /v1/apps/{id}/inAppPurchasesV2`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/inAppPurchasesV2/get(apps_inAppPurchasesV2_getToManyRelated)`.
     func appsInAppPurchasesV2GetToManyRelated(_ input: Operations.AppsInAppPurchasesV2GetToManyRelated.Input) async throws -> Operations.AppsInAppPurchasesV2GetToManyRelated.Output
@@ -527,6 +530,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/appStoreVersions/{id}/customerReviews`.
     /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/customerReviews/get(appStoreVersions_customerReviews_getToManyRelated)`.
     func appStoreVersionsCustomerReviewsGetToManyRelated(_ input: Operations.AppStoreVersionsCustomerReviewsGetToManyRelated.Input) async throws -> Operations.AppStoreVersionsCustomerReviewsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/appStoreVersions/{id}/gameCenterAppVersion`.
+    /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/gameCenterAppVersion/get(appStoreVersions_gameCenterAppVersion_getToOneRelated)`.
+    func appStoreVersionsGameCenterAppVersionGetToOneRelated(_ input: Operations.AppStoreVersionsGameCenterAppVersionGetToOneRelated.Input) async throws -> Operations.AppStoreVersionsGameCenterAppVersionGetToOneRelated.Output
     /// - Remark: HTTP `GET /v1/appStoreVersions/{id}/relationships/build`.
     /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/relationships/build/get(appStoreVersions_build_getToOneRelationship)`.
     func appStoreVersionsBuildGetToOneRelationship(_ input: Operations.AppStoreVersionsBuildGetToOneRelationship.Input) async throws -> Operations.AppStoreVersionsBuildGetToOneRelationship.Output
@@ -905,6 +911,66 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/financeReports`.
     /// - Remark: Generated from `#/paths//v1/financeReports/get(financeReports_getCollection)`.
     func financeReportsGetCollection(_ input: Operations.FinanceReportsGetCollection.Input) async throws -> Operations.FinanceReportsGetCollection.Output
+    /// - Remark: HTTP `POST /v1/gameCenterAppVersions`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterAppVersions/post(gameCenterAppVersions_createInstance)`.
+    func gameCenterAppVersionsCreateInstance(_ input: Operations.GameCenterAppVersionsCreateInstance.Input) async throws -> Operations.GameCenterAppVersionsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterAppVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterAppVersions/{id}/get(gameCenterAppVersions_getInstance)`.
+    func gameCenterAppVersionsGetInstance(_ input: Operations.GameCenterAppVersionsGetInstance.Input) async throws -> Operations.GameCenterAppVersionsGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterAppVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterAppVersions/{id}/patch(gameCenterAppVersions_updateInstance)`.
+    func gameCenterAppVersionsUpdateInstance(_ input: Operations.GameCenterAppVersionsUpdateInstance.Input) async throws -> Operations.GameCenterAppVersionsUpdateInstance.Output
+    /// - Remark: HTTP `POST /v1/gameCenterDetails`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/post(gameCenterDetails_createInstance)`.
+    func gameCenterDetailsCreateInstance(_ input: Operations.GameCenterDetailsCreateInstance.Input) async throws -> Operations.GameCenterDetailsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/get(gameCenterDetails_getInstance)`.
+    func gameCenterDetailsGetInstance(_ input: Operations.GameCenterDetailsGetInstance.Input) async throws -> Operations.GameCenterDetailsGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/patch(gameCenterDetails_updateInstance)`.
+    func gameCenterDetailsUpdateInstance(_ input: Operations.GameCenterDetailsUpdateInstance.Input) async throws -> Operations.GameCenterDetailsUpdateInstance.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterAchievementsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterAchievementsV2/get(gameCenterDetails_gameCenterAchievementsV2_getToManyRelated)`.
+    func gameCenterDetailsGameCenterAchievementsV2GetToManyRelated(_ input: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelated.Input) async throws -> Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterAppVersions`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterAppVersions/get(gameCenterDetails_gameCenterAppVersions_getToManyRelated)`.
+    func gameCenterDetailsGameCenterAppVersionsGetToManyRelated(_ input: Operations.GameCenterDetailsGameCenterAppVersionsGetToManyRelated.Input) async throws -> Operations.GameCenterDetailsGameCenterAppVersionsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterLeaderboardSetsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterLeaderboardSetsV2/get(gameCenterDetails_gameCenterLeaderboardSetsV2_getToManyRelated)`.
+    func gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated(_ input: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated.Input) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterLeaderboardsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterLeaderboardsV2/get(gameCenterDetails_gameCenterLeaderboardsV2_getToManyRelated)`.
+    func gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated(_ input: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated.Input) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2/get(gameCenterDetails_gameCenterAchievementsV2_getToManyRelationship)`.
+    func gameCenterDetailsGameCenterAchievementsV2GetToManyRelationship(_ input: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelationship.Input) async throws -> Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelationship.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2/patch(gameCenterDetails_gameCenterAchievementsV2_replaceToManyRelationship)`.
+    func gameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship(_ input: Operations.GameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship.Input) async throws -> Operations.GameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2/get(gameCenterDetails_gameCenterLeaderboardSetsV2_getToManyRelationship)`.
+    func gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship(_ input: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship.Input) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2/patch(gameCenterDetails_gameCenterLeaderboardSetsV2_replaceToManyRelationship)`.
+    func gameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship(_ input: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship.Input) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship.Output
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2/get(gameCenterDetails_gameCenterLeaderboardsV2_getToManyRelationship)`.
+    func gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship(_ input: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship.Input) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2/patch(gameCenterDetails_gameCenterLeaderboardsV2_replaceToManyRelationship)`.
+    func gameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship(_ input: Operations.GameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship.Input) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship.Output
+    /// - Remark: HTTP `GET /v1/gameCenterLeaderboardSetMemberLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/get(gameCenterLeaderboardSetMemberLocalizations_getCollection)`.
+    func gameCenterLeaderboardSetMemberLocalizationsGetCollection(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Output
+    /// - Remark: HTTP `POST /v1/gameCenterLeaderboardSetMemberLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/post(gameCenterLeaderboardSetMemberLocalizations_createInstance)`.
+    func gameCenterLeaderboardSetMemberLocalizationsCreateInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Output
+    /// - Remark: HTTP `PATCH /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/patch(gameCenterLeaderboardSetMemberLocalizations_updateInstance)`.
+    func gameCenterLeaderboardSetMemberLocalizationsUpdateInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/delete(gameCenterLeaderboardSetMemberLocalizations_deleteInstance)`.
+    func gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(_ input: Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Output
     /// - Remark: HTTP `POST /v1/inAppPurchaseAppStoreReviewScreenshots`.
     /// - Remark: Generated from `#/paths//v1/inAppPurchaseAppStoreReviewScreenshots/post(inAppPurchaseAppStoreReviewScreenshots_createInstance)`.
     func inAppPurchaseAppStoreReviewScreenshotsCreateInstance(_ input: Operations.InAppPurchaseAppStoreReviewScreenshotsCreateInstance.Input) async throws -> Operations.InAppPurchaseAppStoreReviewScreenshotsCreateInstance.Output
@@ -1373,6 +1439,174 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments`.
     /// - Remark: Generated from `#/paths//v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments/get(appStoreVersionExperimentsV2_appStoreVersionExperimentTreatments_getToManyRelated)`.
     func appStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated(_ input: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input) async throws -> Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/post(gameCenterAchievementImagesV2_createInstance)`.
+    func gameCenterAchievementImagesV2CreateInstance(_ input: Operations.GameCenterAchievementImagesV2CreateInstance.Input) async throws -> Operations.GameCenterAchievementImagesV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/get(gameCenterAchievementImagesV2_getInstance)`.
+    func gameCenterAchievementImagesV2GetInstance(_ input: Operations.GameCenterAchievementImagesV2GetInstance.Input) async throws -> Operations.GameCenterAchievementImagesV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/patch(gameCenterAchievementImagesV2_updateInstance)`.
+    func gameCenterAchievementImagesV2UpdateInstance(_ input: Operations.GameCenterAchievementImagesV2UpdateInstance.Input) async throws -> Operations.GameCenterAchievementImagesV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/delete(gameCenterAchievementImagesV2_deleteInstance)`.
+    func gameCenterAchievementImagesV2DeleteInstance(_ input: Operations.GameCenterAchievementImagesV2DeleteInstance.Input) async throws -> Operations.GameCenterAchievementImagesV2DeleteInstance.Output
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/post(gameCenterAchievementLocalizationsV2_createInstance)`.
+    func gameCenterAchievementLocalizationsV2CreateInstance(_ input: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input) async throws -> Operations.GameCenterAchievementLocalizationsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/get(gameCenterAchievementLocalizationsV2_getInstance)`.
+    func gameCenterAchievementLocalizationsV2GetInstance(_ input: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input) async throws -> Operations.GameCenterAchievementLocalizationsV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/patch(gameCenterAchievementLocalizationsV2_updateInstance)`.
+    func gameCenterAchievementLocalizationsV2UpdateInstance(_ input: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input) async throws -> Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/delete(gameCenterAchievementLocalizationsV2_deleteInstance)`.
+    func gameCenterAchievementLocalizationsV2DeleteInstance(_ input: Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Input) async throws -> Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementLocalizations/{id}/image`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/image/get(gameCenterAchievementLocalizationsV2_image_getToOneRelated)`.
+    func gameCenterAchievementLocalizationsV2ImageGetToOneRelated(_ input: Operations.GameCenterAchievementLocalizationsV2ImageGetToOneRelated.Input) async throws -> Operations.GameCenterAchievementLocalizationsV2ImageGetToOneRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterAchievements`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/post(gameCenterAchievementsV2_createInstance)`.
+    func gameCenterAchievementsV2CreateInstance(_ input: Operations.GameCenterAchievementsV2CreateInstance.Input) async throws -> Operations.GameCenterAchievementsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterAchievements/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/get(gameCenterAchievementsV2_getInstance)`.
+    func gameCenterAchievementsV2GetInstance(_ input: Operations.GameCenterAchievementsV2GetInstance.Input) async throws -> Operations.GameCenterAchievementsV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievements/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/patch(gameCenterAchievementsV2_updateInstance)`.
+    func gameCenterAchievementsV2UpdateInstance(_ input: Operations.GameCenterAchievementsV2UpdateInstance.Input) async throws -> Operations.GameCenterAchievementsV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievements/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/delete(gameCenterAchievementsV2_deleteInstance)`.
+    func gameCenterAchievementsV2DeleteInstance(_ input: Operations.GameCenterAchievementsV2DeleteInstance.Input) async throws -> Operations.GameCenterAchievementsV2DeleteInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterAchievements/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/versions/get(gameCenterAchievementsV2_versions_getToManyRelated)`.
+    func gameCenterAchievementsV2VersionsGetToManyRelated(_ input: Operations.GameCenterAchievementsV2VersionsGetToManyRelated.Input) async throws -> Operations.GameCenterAchievementsV2VersionsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementVersions/post(gameCenterAchievementVersionsV2_createInstance)`.
+    func gameCenterAchievementVersionsV2CreateInstance(_ input: Operations.GameCenterAchievementVersionsV2CreateInstance.Input) async throws -> Operations.GameCenterAchievementVersionsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementVersions/{id}/get(gameCenterAchievementVersionsV2_getInstance)`.
+    func gameCenterAchievementVersionsV2GetInstance(_ input: Operations.GameCenterAchievementVersionsV2GetInstance.Input) async throws -> Operations.GameCenterAchievementVersionsV2GetInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementVersions/{id}/localizations/get(gameCenterAchievementVersionsV2_localizations_getToManyRelated)`.
+    func gameCenterAchievementVersionsV2LocalizationsGetToManyRelated(_ input: Operations.GameCenterAchievementVersionsV2LocalizationsGetToManyRelated.Input) async throws -> Operations.GameCenterAchievementVersionsV2LocalizationsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/post(gameCenterLeaderboardImagesV2_createInstance)`.
+    func gameCenterLeaderboardImagesV2CreateInstance(_ input: Operations.GameCenterLeaderboardImagesV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardImagesV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/get(gameCenterLeaderboardImagesV2_getInstance)`.
+    func gameCenterLeaderboardImagesV2GetInstance(_ input: Operations.GameCenterLeaderboardImagesV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardImagesV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/patch(gameCenterLeaderboardImagesV2_updateInstance)`.
+    func gameCenterLeaderboardImagesV2UpdateInstance(_ input: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardImagesV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/delete(gameCenterLeaderboardImagesV2_deleteInstance)`.
+    func gameCenterLeaderboardImagesV2DeleteInstance(_ input: Operations.GameCenterLeaderboardImagesV2DeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardImagesV2DeleteInstance.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/post(gameCenterLeaderboardLocalizationsV2_createInstance)`.
+    func gameCenterLeaderboardLocalizationsV2CreateInstance(_ input: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/get(gameCenterLeaderboardLocalizationsV2_getInstance)`.
+    func gameCenterLeaderboardLocalizationsV2GetInstance(_ input: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/patch(gameCenterLeaderboardLocalizationsV2_updateInstance)`.
+    func gameCenterLeaderboardLocalizationsV2UpdateInstance(_ input: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/delete(gameCenterLeaderboardLocalizationsV2_deleteInstance)`.
+    func gameCenterLeaderboardLocalizationsV2DeleteInstance(_ input: Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardLocalizations/{id}/image`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/image/get(gameCenterLeaderboardLocalizationsV2_image_getToOneRelated)`.
+    func gameCenterLeaderboardLocalizationsV2ImageGetToOneRelated(_ input: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input) async throws -> Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/post(gameCenterLeaderboardsV2_createInstance)`.
+    func gameCenterLeaderboardsV2CreateInstance(_ input: Operations.GameCenterLeaderboardsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboards/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/get(gameCenterLeaderboardsV2_getInstance)`.
+    func gameCenterLeaderboardsV2GetInstance(_ input: Operations.GameCenterLeaderboardsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardsV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboards/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/patch(gameCenterLeaderboardsV2_updateInstance)`.
+    func gameCenterLeaderboardsV2UpdateInstance(_ input: Operations.GameCenterLeaderboardsV2UpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardsV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboards/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/delete(gameCenterLeaderboardsV2_deleteInstance)`.
+    func gameCenterLeaderboardsV2DeleteInstance(_ input: Operations.GameCenterLeaderboardsV2DeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardsV2DeleteInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboards/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/versions/get(gameCenterLeaderboardsV2_versions_getToManyRelated)`.
+    func gameCenterLeaderboardsV2VersionsGetToManyRelated(_ input: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input) async throws -> Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/post(gameCenterLeaderboardSetImagesV2_createInstance)`.
+    func gameCenterLeaderboardSetImagesV2CreateInstance(_ input: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/get(gameCenterLeaderboardSetImagesV2_getInstance)`.
+    func gameCenterLeaderboardSetImagesV2GetInstance(_ input: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardSetImagesV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSetImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/patch(gameCenterLeaderboardSetImagesV2_updateInstance)`.
+    func gameCenterLeaderboardSetImagesV2UpdateInstance(_ input: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSetImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/delete(gameCenterLeaderboardSetImagesV2_deleteInstance)`.
+    func gameCenterLeaderboardSetImagesV2DeleteInstance(_ input: Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/post(gameCenterLeaderboardSetLocalizationsV2_createInstance)`.
+    func gameCenterLeaderboardSetLocalizationsV2CreateInstance(_ input: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/get(gameCenterLeaderboardSetLocalizationsV2_getInstance)`.
+    func gameCenterLeaderboardSetLocalizationsV2GetInstance(_ input: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSetLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/patch(gameCenterLeaderboardSetLocalizationsV2_updateInstance)`.
+    func gameCenterLeaderboardSetLocalizationsV2UpdateInstance(_ input: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSetLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/delete(gameCenterLeaderboardSetLocalizationsV2_deleteInstance)`.
+    func gameCenterLeaderboardSetLocalizationsV2DeleteInstance(_ input: Operations.GameCenterLeaderboardSetLocalizationsV2DeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2DeleteInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetLocalizations/{id}/image`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/image/get(gameCenterLeaderboardSetLocalizationsV2_image_getToOneRelated)`.
+    func gameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated(_ input: Operations.GameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated.Input) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSets`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/post(gameCenterLeaderboardSetsV2_createInstance)`.
+    func gameCenterLeaderboardSetsV2CreateInstance(_ input: Operations.GameCenterLeaderboardSetsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/get(gameCenterLeaderboardSetsV2_getInstance)`.
+    func gameCenterLeaderboardSetsV2GetInstance(_ input: Operations.GameCenterLeaderboardSetsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardSetsV2GetInstance.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSets/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/patch(gameCenterLeaderboardSetsV2_updateInstance)`.
+    func gameCenterLeaderboardSetsV2UpdateInstance(_ input: Operations.GameCenterLeaderboardSetsV2UpdateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetsV2UpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSets/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/delete(gameCenterLeaderboardSetsV2_deleteInstance)`.
+    func gameCenterLeaderboardSetsV2DeleteInstance(_ input: Operations.GameCenterLeaderboardSetsV2DeleteInstance.Input) async throws -> Operations.GameCenterLeaderboardSetsV2DeleteInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/gameCenterLeaderboards/get(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_getToManyRelated)`.
+    func gameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated(_ input: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated.Input) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/get(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_getToManyRelationship)`.
+    func gameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship(_ input: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship.Input) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/post(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_createToManyRelationship)`.
+    func gameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship(_ input: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship.Input) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship.Output
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/patch(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_replaceToManyRelationship)`.
+    func gameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship(_ input: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship.Input) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship.Output
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/delete(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_deleteToManyRelationship)`.
+    func gameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship(_ input: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship.Input) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/versions/get(gameCenterLeaderboardSetsV2_versions_getToManyRelated)`.
+    func gameCenterLeaderboardSetsV2VersionsGetToManyRelated(_ input: Operations.GameCenterLeaderboardSetsV2VersionsGetToManyRelated.Input) async throws -> Operations.GameCenterLeaderboardSetsV2VersionsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/post(gameCenterLeaderboardSetVersionsV2_createInstance)`.
+    func gameCenterLeaderboardSetVersionsV2CreateInstance(_ input: Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/{id}/get(gameCenterLeaderboardSetVersionsV2_getInstance)`.
+    func gameCenterLeaderboardSetVersionsV2GetInstance(_ input: Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/{id}/localizations/get(gameCenterLeaderboardSetVersionsV2_localizations_getToManyRelated)`.
+    func gameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated(_ input: Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Input) async throws -> Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/post(gameCenterLeaderboardVersionsV2_createInstance)`.
+    func gameCenterLeaderboardVersionsV2CreateInstance(_ input: Operations.GameCenterLeaderboardVersionsV2CreateInstance.Input) async throws -> Operations.GameCenterLeaderboardVersionsV2CreateInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/{id}/get(gameCenterLeaderboardVersionsV2_getInstance)`.
+    func gameCenterLeaderboardVersionsV2GetInstance(_ input: Operations.GameCenterLeaderboardVersionsV2GetInstance.Input) async throws -> Operations.GameCenterLeaderboardVersionsV2GetInstance.Output
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/{id}/localizations/get(gameCenterLeaderboardVersionsV2_localizations_getToManyRelated)`.
+    func gameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated(_ input: Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Input) async throws -> Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Output
     /// - Remark: HTTP `POST /v2/inAppPurchases`.
     /// - Remark: Generated from `#/paths//v2/inAppPurchases/post(inAppPurchasesV2_createInstance)`.
     func inAppPurchasesV2CreateInstance(_ input: Operations.InAppPurchasesV2CreateInstance.Input) async throws -> Operations.InAppPurchasesV2CreateInstance.Output
@@ -2744,6 +2978,19 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// - Remark: HTTP `GET /v1/apps/{id}/gameCenterDetail`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/gameCenterDetail/get(apps_gameCenterDetail_getToOneRelated)`.
+    public func appsGameCenterDetailGetToOneRelated(
+        path: Operations.AppsGameCenterDetailGetToOneRelated.Input.Path,
+        query: Operations.AppsGameCenterDetailGetToOneRelated.Input.Query = .init(),
+        headers: Operations.AppsGameCenterDetailGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppsGameCenterDetailGetToOneRelated.Output {
+        try await appsGameCenterDetailGetToOneRelated(Operations.AppsGameCenterDetailGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
     /// - Remark: HTTP `GET /v1/apps/{id}/inAppPurchasesV2`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/inAppPurchasesV2/get(apps_inAppPurchasesV2_getToManyRelated)`.
     public func appsInAppPurchasesV2GetToManyRelated(
@@ -3418,6 +3665,19 @@ extension APIProtocol {
         headers: Operations.AppStoreVersionsCustomerReviewsGetToManyRelated.Input.Headers = .init()
     ) async throws -> Operations.AppStoreVersionsCustomerReviewsGetToManyRelated.Output {
         try await appStoreVersionsCustomerReviewsGetToManyRelated(Operations.AppStoreVersionsCustomerReviewsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/appStoreVersions/{id}/gameCenterAppVersion`.
+    /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/gameCenterAppVersion/get(appStoreVersions_gameCenterAppVersion_getToOneRelated)`.
+    public func appStoreVersionsGameCenterAppVersionGetToOneRelated(
+        path: Operations.AppStoreVersionsGameCenterAppVersionGetToOneRelated.Input.Path,
+        query: Operations.AppStoreVersionsGameCenterAppVersionGetToOneRelated.Input.Query = .init(),
+        headers: Operations.AppStoreVersionsGameCenterAppVersionGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppStoreVersionsGameCenterAppVersionGetToOneRelated.Output {
+        try await appStoreVersionsGameCenterAppVersionGetToOneRelated(Operations.AppStoreVersionsGameCenterAppVersionGetToOneRelated.Input(
             path: path,
             query: query,
             headers: headers
@@ -4850,6 +5110,244 @@ extension APIProtocol {
             query: query,
             headers: headers
         ))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterAppVersions`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterAppVersions/post(gameCenterAppVersions_createInstance)`.
+    public func gameCenterAppVersionsCreateInstance(
+        headers: Operations.GameCenterAppVersionsCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAppVersionsCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAppVersionsCreateInstance.Output {
+        try await gameCenterAppVersionsCreateInstance(Operations.GameCenterAppVersionsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterAppVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterAppVersions/{id}/get(gameCenterAppVersions_getInstance)`.
+    public func gameCenterAppVersionsGetInstance(
+        path: Operations.GameCenterAppVersionsGetInstance.Input.Path,
+        query: Operations.GameCenterAppVersionsGetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterAppVersionsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAppVersionsGetInstance.Output {
+        try await gameCenterAppVersionsGetInstance(Operations.GameCenterAppVersionsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterAppVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterAppVersions/{id}/patch(gameCenterAppVersions_updateInstance)`.
+    public func gameCenterAppVersionsUpdateInstance(
+        path: Operations.GameCenterAppVersionsUpdateInstance.Input.Path,
+        headers: Operations.GameCenterAppVersionsUpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAppVersionsUpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAppVersionsUpdateInstance.Output {
+        try await gameCenterAppVersionsUpdateInstance(Operations.GameCenterAppVersionsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterDetails`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/post(gameCenterDetails_createInstance)`.
+    public func gameCenterDetailsCreateInstance(
+        headers: Operations.GameCenterDetailsCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterDetailsCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterDetailsCreateInstance.Output {
+        try await gameCenterDetailsCreateInstance(Operations.GameCenterDetailsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/get(gameCenterDetails_getInstance)`.
+    public func gameCenterDetailsGetInstance(
+        path: Operations.GameCenterDetailsGetInstance.Input.Path,
+        query: Operations.GameCenterDetailsGetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGetInstance.Output {
+        try await gameCenterDetailsGetInstance(Operations.GameCenterDetailsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/patch(gameCenterDetails_updateInstance)`.
+    public func gameCenterDetailsUpdateInstance(
+        path: Operations.GameCenterDetailsUpdateInstance.Input.Path,
+        headers: Operations.GameCenterDetailsUpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterDetailsUpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterDetailsUpdateInstance.Output {
+        try await gameCenterDetailsUpdateInstance(Operations.GameCenterDetailsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterAchievementsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterAchievementsV2/get(gameCenterDetails_gameCenterAchievementsV2_getToManyRelated)`.
+    public func gameCenterDetailsGameCenterAchievementsV2GetToManyRelated(
+        path: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelated.Input.Path,
+        query: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelated.Output {
+        try await gameCenterDetailsGameCenterAchievementsV2GetToManyRelated(Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterAppVersions`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterAppVersions/get(gameCenterDetails_gameCenterAppVersions_getToManyRelated)`.
+    public func gameCenterDetailsGameCenterAppVersionsGetToManyRelated(
+        path: Operations.GameCenterDetailsGameCenterAppVersionsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterDetailsGameCenterAppVersionsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGameCenterAppVersionsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGameCenterAppVersionsGetToManyRelated.Output {
+        try await gameCenterDetailsGameCenterAppVersionsGetToManyRelated(Operations.GameCenterDetailsGameCenterAppVersionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterLeaderboardSetsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterLeaderboardSetsV2/get(gameCenterDetails_gameCenterLeaderboardSetsV2_getToManyRelated)`.
+    public func gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated(
+        path: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated.Input.Path,
+        query: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated.Output {
+        try await gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated(Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/gameCenterLeaderboardsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/gameCenterLeaderboardsV2/get(gameCenterDetails_gameCenterLeaderboardsV2_getToManyRelated)`.
+    public func gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated(
+        path: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated.Input.Path,
+        query: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated.Output {
+        try await gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated(Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2/get(gameCenterDetails_gameCenterAchievementsV2_getToManyRelationship)`.
+    public func gameCenterDetailsGameCenterAchievementsV2GetToManyRelationship(
+        path: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelationship.Input.Path,
+        query: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelationship.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelationship.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelationship.Output {
+        try await gameCenterDetailsGameCenterAchievementsV2GetToManyRelationship(Operations.GameCenterDetailsGameCenterAchievementsV2GetToManyRelationship.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2/patch(gameCenterDetails_gameCenterAchievementsV2_replaceToManyRelationship)`.
+    public func gameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship(
+        path: Operations.GameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship.Input.Path,
+        body: Operations.GameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship.Input.Body
+    ) async throws -> Operations.GameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship.Output {
+        try await gameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship(Operations.GameCenterDetailsGameCenterAchievementsV2ReplaceToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2/get(gameCenterDetails_gameCenterLeaderboardSetsV2_getToManyRelationship)`.
+    public func gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship(
+        path: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship.Input.Path,
+        query: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship.Output {
+        try await gameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship(Operations.GameCenterDetailsGameCenterLeaderboardSetsV2GetToManyRelationship.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2/patch(gameCenterDetails_gameCenterLeaderboardSetsV2_replaceToManyRelationship)`.
+    public func gameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship(
+        path: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship.Input.Path,
+        body: Operations.GameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship.Input.Body
+    ) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship.Output {
+        try await gameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship(Operations.GameCenterDetailsGameCenterLeaderboardSetsV2ReplaceToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2/get(gameCenterDetails_gameCenterLeaderboardsV2_getToManyRelationship)`.
+    public func gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship(
+        path: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship.Input.Path,
+        query: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship.Input.Query = .init(),
+        headers: Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship.Output {
+        try await gameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship(Operations.GameCenterDetailsGameCenterLeaderboardsV2GetToManyRelationship.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2/patch(gameCenterDetails_gameCenterLeaderboardsV2_replaceToManyRelationship)`.
+    public func gameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship(
+        path: Operations.GameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship.Input.Path,
+        body: Operations.GameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship.Input.Body
+    ) async throws -> Operations.GameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship.Output {
+        try await gameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship(Operations.GameCenterDetailsGameCenterLeaderboardsV2ReplaceToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/gameCenterLeaderboardSetMemberLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/get(gameCenterLeaderboardSetMemberLocalizations_getCollection)`.
+    public func gameCenterLeaderboardSetMemberLocalizationsGetCollection(
+        query: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input.Query,
+        headers: Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Output {
+        try await gameCenterLeaderboardSetMemberLocalizationsGetCollection(Operations.GameCenterLeaderboardSetMemberLocalizationsGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/gameCenterLeaderboardSetMemberLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/post(gameCenterLeaderboardSetMemberLocalizations_createInstance)`.
+    public func gameCenterLeaderboardSetMemberLocalizationsCreateInstance(
+        headers: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Output {
+        try await gameCenterLeaderboardSetMemberLocalizationsCreateInstance(Operations.GameCenterLeaderboardSetMemberLocalizationsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/patch(gameCenterLeaderboardSetMemberLocalizations_updateInstance)`.
+    public func gameCenterLeaderboardSetMemberLocalizationsUpdateInstance(
+        path: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input.Path,
+        headers: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Output {
+        try await gameCenterLeaderboardSetMemberLocalizationsUpdateInstance(Operations.GameCenterLeaderboardSetMemberLocalizationsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/gameCenterLeaderboardSetMemberLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterLeaderboardSetMemberLocalizations/{id}/delete(gameCenterLeaderboardSetMemberLocalizations_deleteInstance)`.
+    public func gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(path: Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Output {
+        try await gameCenterLeaderboardSetMemberLocalizationsDeleteInstance(Operations.GameCenterLeaderboardSetMemberLocalizationsDeleteInstance.Input(path: path))
     }
     /// - Remark: HTTP `POST /v1/inAppPurchaseAppStoreReviewScreenshots`.
     /// - Remark: Generated from `#/paths//v1/inAppPurchaseAppStoreReviewScreenshots/post(inAppPurchaseAppStoreReviewScreenshots_createInstance)`.
@@ -6610,6 +7108,632 @@ extension APIProtocol {
         headers: Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input.Headers = .init()
     ) async throws -> Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Output {
         try await appStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated(Operations.AppStoreVersionExperimentsV2AppStoreVersionExperimentTreatmentsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/post(gameCenterAchievementImagesV2_createInstance)`.
+    public func gameCenterAchievementImagesV2CreateInstance(
+        headers: Operations.GameCenterAchievementImagesV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAchievementImagesV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAchievementImagesV2CreateInstance.Output {
+        try await gameCenterAchievementImagesV2CreateInstance(Operations.GameCenterAchievementImagesV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/get(gameCenterAchievementImagesV2_getInstance)`.
+    public func gameCenterAchievementImagesV2GetInstance(
+        path: Operations.GameCenterAchievementImagesV2GetInstance.Input.Path,
+        query: Operations.GameCenterAchievementImagesV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterAchievementImagesV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAchievementImagesV2GetInstance.Output {
+        try await gameCenterAchievementImagesV2GetInstance(Operations.GameCenterAchievementImagesV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/patch(gameCenterAchievementImagesV2_updateInstance)`.
+    public func gameCenterAchievementImagesV2UpdateInstance(
+        path: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAchievementImagesV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAchievementImagesV2UpdateInstance.Output {
+        try await gameCenterAchievementImagesV2UpdateInstance(Operations.GameCenterAchievementImagesV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievementImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementImages/{id}/delete(gameCenterAchievementImagesV2_deleteInstance)`.
+    public func gameCenterAchievementImagesV2DeleteInstance(path: Operations.GameCenterAchievementImagesV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterAchievementImagesV2DeleteInstance.Output {
+        try await gameCenterAchievementImagesV2DeleteInstance(Operations.GameCenterAchievementImagesV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/post(gameCenterAchievementLocalizationsV2_createInstance)`.
+    public func gameCenterAchievementLocalizationsV2CreateInstance(
+        headers: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAchievementLocalizationsV2CreateInstance.Output {
+        try await gameCenterAchievementLocalizationsV2CreateInstance(Operations.GameCenterAchievementLocalizationsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/get(gameCenterAchievementLocalizationsV2_getInstance)`.
+    public func gameCenterAchievementLocalizationsV2GetInstance(
+        path: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Path,
+        query: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterAchievementLocalizationsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAchievementLocalizationsV2GetInstance.Output {
+        try await gameCenterAchievementLocalizationsV2GetInstance(Operations.GameCenterAchievementLocalizationsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/patch(gameCenterAchievementLocalizationsV2_updateInstance)`.
+    public func gameCenterAchievementLocalizationsV2UpdateInstance(
+        path: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Output {
+        try await gameCenterAchievementLocalizationsV2UpdateInstance(Operations.GameCenterAchievementLocalizationsV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievementLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/delete(gameCenterAchievementLocalizationsV2_deleteInstance)`.
+    public func gameCenterAchievementLocalizationsV2DeleteInstance(path: Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Output {
+        try await gameCenterAchievementLocalizationsV2DeleteInstance(Operations.GameCenterAchievementLocalizationsV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementLocalizations/{id}/image`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementLocalizations/{id}/image/get(gameCenterAchievementLocalizationsV2_image_getToOneRelated)`.
+    public func gameCenterAchievementLocalizationsV2ImageGetToOneRelated(
+        path: Operations.GameCenterAchievementLocalizationsV2ImageGetToOneRelated.Input.Path,
+        query: Operations.GameCenterAchievementLocalizationsV2ImageGetToOneRelated.Input.Query = .init(),
+        headers: Operations.GameCenterAchievementLocalizationsV2ImageGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAchievementLocalizationsV2ImageGetToOneRelated.Output {
+        try await gameCenterAchievementLocalizationsV2ImageGetToOneRelated(Operations.GameCenterAchievementLocalizationsV2ImageGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterAchievements`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/post(gameCenterAchievementsV2_createInstance)`.
+    public func gameCenterAchievementsV2CreateInstance(
+        headers: Operations.GameCenterAchievementsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAchievementsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAchievementsV2CreateInstance.Output {
+        try await gameCenterAchievementsV2CreateInstance(Operations.GameCenterAchievementsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievements/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/get(gameCenterAchievementsV2_getInstance)`.
+    public func gameCenterAchievementsV2GetInstance(
+        path: Operations.GameCenterAchievementsV2GetInstance.Input.Path,
+        query: Operations.GameCenterAchievementsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterAchievementsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAchievementsV2GetInstance.Output {
+        try await gameCenterAchievementsV2GetInstance(Operations.GameCenterAchievementsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterAchievements/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/patch(gameCenterAchievementsV2_updateInstance)`.
+    public func gameCenterAchievementsV2UpdateInstance(
+        path: Operations.GameCenterAchievementsV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterAchievementsV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAchievementsV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAchievementsV2UpdateInstance.Output {
+        try await gameCenterAchievementsV2UpdateInstance(Operations.GameCenterAchievementsV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterAchievements/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/delete(gameCenterAchievementsV2_deleteInstance)`.
+    public func gameCenterAchievementsV2DeleteInstance(path: Operations.GameCenterAchievementsV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterAchievementsV2DeleteInstance.Output {
+        try await gameCenterAchievementsV2DeleteInstance(Operations.GameCenterAchievementsV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievements/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/versions/get(gameCenterAchievementsV2_versions_getToManyRelated)`.
+    public func gameCenterAchievementsV2VersionsGetToManyRelated(
+        path: Operations.GameCenterAchievementsV2VersionsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterAchievementsV2VersionsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterAchievementsV2VersionsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAchievementsV2VersionsGetToManyRelated.Output {
+        try await gameCenterAchievementsV2VersionsGetToManyRelated(Operations.GameCenterAchievementsV2VersionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterAchievementVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementVersions/post(gameCenterAchievementVersionsV2_createInstance)`.
+    public func gameCenterAchievementVersionsV2CreateInstance(
+        headers: Operations.GameCenterAchievementVersionsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterAchievementVersionsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterAchievementVersionsV2CreateInstance.Output {
+        try await gameCenterAchievementVersionsV2CreateInstance(Operations.GameCenterAchievementVersionsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementVersions/{id}/get(gameCenterAchievementVersionsV2_getInstance)`.
+    public func gameCenterAchievementVersionsV2GetInstance(
+        path: Operations.GameCenterAchievementVersionsV2GetInstance.Input.Path,
+        query: Operations.GameCenterAchievementVersionsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterAchievementVersionsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAchievementVersionsV2GetInstance.Output {
+        try await gameCenterAchievementVersionsV2GetInstance(Operations.GameCenterAchievementVersionsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterAchievementVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterAchievementVersions/{id}/localizations/get(gameCenterAchievementVersionsV2_localizations_getToManyRelated)`.
+    public func gameCenterAchievementVersionsV2LocalizationsGetToManyRelated(
+        path: Operations.GameCenterAchievementVersionsV2LocalizationsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterAchievementVersionsV2LocalizationsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterAchievementVersionsV2LocalizationsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterAchievementVersionsV2LocalizationsGetToManyRelated.Output {
+        try await gameCenterAchievementVersionsV2LocalizationsGetToManyRelated(Operations.GameCenterAchievementVersionsV2LocalizationsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/post(gameCenterLeaderboardImagesV2_createInstance)`.
+    public func gameCenterLeaderboardImagesV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardImagesV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardImagesV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardImagesV2CreateInstance.Output {
+        try await gameCenterLeaderboardImagesV2CreateInstance(Operations.GameCenterLeaderboardImagesV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/get(gameCenterLeaderboardImagesV2_getInstance)`.
+    public func gameCenterLeaderboardImagesV2GetInstance(
+        path: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardImagesV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardImagesV2GetInstance.Output {
+        try await gameCenterLeaderboardImagesV2GetInstance(Operations.GameCenterLeaderboardImagesV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/patch(gameCenterLeaderboardImagesV2_updateInstance)`.
+    public func gameCenterLeaderboardImagesV2UpdateInstance(
+        path: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardImagesV2UpdateInstance.Output {
+        try await gameCenterLeaderboardImagesV2UpdateInstance(Operations.GameCenterLeaderboardImagesV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardImages/{id}/delete(gameCenterLeaderboardImagesV2_deleteInstance)`.
+    public func gameCenterLeaderboardImagesV2DeleteInstance(path: Operations.GameCenterLeaderboardImagesV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardImagesV2DeleteInstance.Output {
+        try await gameCenterLeaderboardImagesV2DeleteInstance(Operations.GameCenterLeaderboardImagesV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/post(gameCenterLeaderboardLocalizationsV2_createInstance)`.
+    public func gameCenterLeaderboardLocalizationsV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Output {
+        try await gameCenterLeaderboardLocalizationsV2CreateInstance(Operations.GameCenterLeaderboardLocalizationsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/get(gameCenterLeaderboardLocalizationsV2_getInstance)`.
+    public func gameCenterLeaderboardLocalizationsV2GetInstance(
+        path: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Output {
+        try await gameCenterLeaderboardLocalizationsV2GetInstance(Operations.GameCenterLeaderboardLocalizationsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/patch(gameCenterLeaderboardLocalizationsV2_updateInstance)`.
+    public func gameCenterLeaderboardLocalizationsV2UpdateInstance(
+        path: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Output {
+        try await gameCenterLeaderboardLocalizationsV2UpdateInstance(Operations.GameCenterLeaderboardLocalizationsV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/delete(gameCenterLeaderboardLocalizationsV2_deleteInstance)`.
+    public func gameCenterLeaderboardLocalizationsV2DeleteInstance(path: Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Output {
+        try await gameCenterLeaderboardLocalizationsV2DeleteInstance(Operations.GameCenterLeaderboardLocalizationsV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardLocalizations/{id}/image`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardLocalizations/{id}/image/get(gameCenterLeaderboardLocalizationsV2_image_getToOneRelated)`.
+    public func gameCenterLeaderboardLocalizationsV2ImageGetToOneRelated(
+        path: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Path,
+        query: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Output {
+        try await gameCenterLeaderboardLocalizationsV2ImageGetToOneRelated(Operations.GameCenterLeaderboardLocalizationsV2ImageGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/post(gameCenterLeaderboardsV2_createInstance)`.
+    public func gameCenterLeaderboardsV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardsV2CreateInstance.Output {
+        try await gameCenterLeaderboardsV2CreateInstance(Operations.GameCenterLeaderboardsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboards/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/get(gameCenterLeaderboardsV2_getInstance)`.
+    public func gameCenterLeaderboardsV2GetInstance(
+        path: Operations.GameCenterLeaderboardsV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardsV2GetInstance.Output {
+        try await gameCenterLeaderboardsV2GetInstance(Operations.GameCenterLeaderboardsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboards/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/patch(gameCenterLeaderboardsV2_updateInstance)`.
+    public func gameCenterLeaderboardsV2UpdateInstance(
+        path: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardsV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardsV2UpdateInstance.Output {
+        try await gameCenterLeaderboardsV2UpdateInstance(Operations.GameCenterLeaderboardsV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboards/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/delete(gameCenterLeaderboardsV2_deleteInstance)`.
+    public func gameCenterLeaderboardsV2DeleteInstance(path: Operations.GameCenterLeaderboardsV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardsV2DeleteInstance.Output {
+        try await gameCenterLeaderboardsV2DeleteInstance(Operations.GameCenterLeaderboardsV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboards/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboards/{id}/versions/get(gameCenterLeaderboardsV2_versions_getToManyRelated)`.
+    public func gameCenterLeaderboardsV2VersionsGetToManyRelated(
+        path: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Output {
+        try await gameCenterLeaderboardsV2VersionsGetToManyRelated(Operations.GameCenterLeaderboardsV2VersionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/post(gameCenterLeaderboardSetImagesV2_createInstance)`.
+    public func gameCenterLeaderboardSetImagesV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output {
+        try await gameCenterLeaderboardSetImagesV2CreateInstance(Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/get(gameCenterLeaderboardSetImagesV2_getInstance)`.
+    public func gameCenterLeaderboardSetImagesV2GetInstance(
+        path: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetImagesV2GetInstance.Output {
+        try await gameCenterLeaderboardSetImagesV2GetInstance(Operations.GameCenterLeaderboardSetImagesV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSetImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/patch(gameCenterLeaderboardSetImagesV2_updateInstance)`.
+    public func gameCenterLeaderboardSetImagesV2UpdateInstance(
+        path: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Output {
+        try await gameCenterLeaderboardSetImagesV2UpdateInstance(Operations.GameCenterLeaderboardSetImagesV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSetImages/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/delete(gameCenterLeaderboardSetImagesV2_deleteInstance)`.
+    public func gameCenterLeaderboardSetImagesV2DeleteInstance(path: Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Output {
+        try await gameCenterLeaderboardSetImagesV2DeleteInstance(Operations.GameCenterLeaderboardSetImagesV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetLocalizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/post(gameCenterLeaderboardSetLocalizationsV2_createInstance)`.
+    public func gameCenterLeaderboardSetLocalizationsV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Output {
+        try await gameCenterLeaderboardSetLocalizationsV2CreateInstance(Operations.GameCenterLeaderboardSetLocalizationsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/get(gameCenterLeaderboardSetLocalizationsV2_getInstance)`.
+    public func gameCenterLeaderboardSetLocalizationsV2GetInstance(
+        path: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Output {
+        try await gameCenterLeaderboardSetLocalizationsV2GetInstance(Operations.GameCenterLeaderboardSetLocalizationsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSetLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/patch(gameCenterLeaderboardSetLocalizationsV2_updateInstance)`.
+    public func gameCenterLeaderboardSetLocalizationsV2UpdateInstance(
+        path: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Output {
+        try await gameCenterLeaderboardSetLocalizationsV2UpdateInstance(Operations.GameCenterLeaderboardSetLocalizationsV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSetLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/delete(gameCenterLeaderboardSetLocalizationsV2_deleteInstance)`.
+    public func gameCenterLeaderboardSetLocalizationsV2DeleteInstance(path: Operations.GameCenterLeaderboardSetLocalizationsV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2DeleteInstance.Output {
+        try await gameCenterLeaderboardSetLocalizationsV2DeleteInstance(Operations.GameCenterLeaderboardSetLocalizationsV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetLocalizations/{id}/image`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetLocalizations/{id}/image/get(gameCenterLeaderboardSetLocalizationsV2_image_getToOneRelated)`.
+    public func gameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated(
+        path: Operations.GameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated.Input.Path,
+        query: Operations.GameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated.Output {
+        try await gameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated(Operations.GameCenterLeaderboardSetLocalizationsV2ImageGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSets`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/post(gameCenterLeaderboardSetsV2_createInstance)`.
+    public func gameCenterLeaderboardSetsV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardSetsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2CreateInstance.Output {
+        try await gameCenterLeaderboardSetsV2CreateInstance(Operations.GameCenterLeaderboardSetsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/get(gameCenterLeaderboardSetsV2_getInstance)`.
+    public func gameCenterLeaderboardSetsV2GetInstance(
+        path: Operations.GameCenterLeaderboardSetsV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardSetsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2GetInstance.Output {
+        try await gameCenterLeaderboardSetsV2GetInstance(Operations.GameCenterLeaderboardSetsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSets/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/patch(gameCenterLeaderboardSetsV2_updateInstance)`.
+    public func gameCenterLeaderboardSetsV2UpdateInstance(
+        path: Operations.GameCenterLeaderboardSetsV2UpdateInstance.Input.Path,
+        headers: Operations.GameCenterLeaderboardSetsV2UpdateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetsV2UpdateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2UpdateInstance.Output {
+        try await gameCenterLeaderboardSetsV2UpdateInstance(Operations.GameCenterLeaderboardSetsV2UpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSets/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/delete(gameCenterLeaderboardSetsV2_deleteInstance)`.
+    public func gameCenterLeaderboardSetsV2DeleteInstance(path: Operations.GameCenterLeaderboardSetsV2DeleteInstance.Input.Path) async throws -> Operations.GameCenterLeaderboardSetsV2DeleteInstance.Output {
+        try await gameCenterLeaderboardSetsV2DeleteInstance(Operations.GameCenterLeaderboardSetsV2DeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/gameCenterLeaderboards/get(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_getToManyRelated)`.
+    public func gameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated(
+        path: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated.Output {
+        try await gameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated(Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/get(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_getToManyRelationship)`.
+    public func gameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship(
+        path: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship.Input.Path,
+        query: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship.Output {
+        try await gameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship(Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/post(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_createToManyRelationship)`.
+    public func gameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship(
+        path: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship.Input.Path,
+        body: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship.Output {
+        try await gameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship(Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsCreateToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/patch(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_replaceToManyRelationship)`.
+    public func gameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship(
+        path: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship.Input.Path,
+        body: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship.Output {
+        try await gameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship(Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsReplaceToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards/delete(gameCenterLeaderboardSetsV2_gameCenterLeaderboards_deleteToManyRelationship)`.
+    public func gameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship(
+        path: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship.Input.Path,
+        body: Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship.Output {
+        try await gameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship(Operations.GameCenterLeaderboardSetsV2GameCenterLeaderboardsDeleteToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSets/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSets/{id}/versions/get(gameCenterLeaderboardSetsV2_versions_getToManyRelated)`.
+    public func gameCenterLeaderboardSetsV2VersionsGetToManyRelated(
+        path: Operations.GameCenterLeaderboardSetsV2VersionsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterLeaderboardSetsV2VersionsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetsV2VersionsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetsV2VersionsGetToManyRelated.Output {
+        try await gameCenterLeaderboardSetsV2VersionsGetToManyRelated(Operations.GameCenterLeaderboardSetsV2VersionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/post(gameCenterLeaderboardSetVersionsV2_createInstance)`.
+    public func gameCenterLeaderboardSetVersionsV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Output {
+        try await gameCenterLeaderboardSetVersionsV2CreateInstance(Operations.GameCenterLeaderboardSetVersionsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/{id}/get(gameCenterLeaderboardSetVersionsV2_getInstance)`.
+    public func gameCenterLeaderboardSetVersionsV2GetInstance(
+        path: Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Output {
+        try await gameCenterLeaderboardSetVersionsV2GetInstance(Operations.GameCenterLeaderboardSetVersionsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetVersions/{id}/localizations/get(gameCenterLeaderboardSetVersionsV2_localizations_getToManyRelated)`.
+    public func gameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated(
+        path: Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Output {
+        try await gameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated(Operations.GameCenterLeaderboardSetVersionsV2LocalizationsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardVersions`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/post(gameCenterLeaderboardVersionsV2_createInstance)`.
+    public func gameCenterLeaderboardVersionsV2CreateInstance(
+        headers: Operations.GameCenterLeaderboardVersionsV2CreateInstance.Input.Headers = .init(),
+        body: Operations.GameCenterLeaderboardVersionsV2CreateInstance.Input.Body
+    ) async throws -> Operations.GameCenterLeaderboardVersionsV2CreateInstance.Output {
+        try await gameCenterLeaderboardVersionsV2CreateInstance(Operations.GameCenterLeaderboardVersionsV2CreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/{id}/get(gameCenterLeaderboardVersionsV2_getInstance)`.
+    public func gameCenterLeaderboardVersionsV2GetInstance(
+        path: Operations.GameCenterLeaderboardVersionsV2GetInstance.Input.Path,
+        query: Operations.GameCenterLeaderboardVersionsV2GetInstance.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardVersionsV2GetInstance.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardVersionsV2GetInstance.Output {
+        try await gameCenterLeaderboardVersionsV2GetInstance(Operations.GameCenterLeaderboardVersionsV2GetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v2/gameCenterLeaderboardVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardVersions/{id}/localizations/get(gameCenterLeaderboardVersionsV2_localizations_getToManyRelated)`.
+    public func gameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated(
+        path: Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Input.Path,
+        query: Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Output {
+        try await gameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated(Operations.GameCenterLeaderboardVersionsV2LocalizationsGetToManyRelated.Input(
             path: path,
             query: query,
             headers: headers

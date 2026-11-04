@@ -10,6 +10,783 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/ciMacOsVersions`.
+    /// - Remark: Generated from `#/paths//v1/ciMacOsVersions/get(ciMacOsVersions_getCollection)`.
+    public enum CiMacOsVersionsGetCollection {
+        public static let id: Swift.String = "ciMacOsVersions_getCollection"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/fieldsCiMacOsVersionsPayload`.
+                @frozen public enum FieldsCiMacOsVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case name = "name"
+                    case xcodeVersions = "xcodeVersions"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/fields[ciMacOsVersions]`.
+                public typealias fieldsCiMacOsVersionsPayload = [Operations.CiMacOsVersionsGetCollection.Input.Query.FieldsCiMacOsVersionsPayloadPayload]
+                /// the fields to include for returned resources of type ciMacOsVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/fields[ciMacOsVersions]`.
+                public var fieldsCiMacOsVersions: Operations.CiMacOsVersionsGetCollection.Input.Query.fieldsCiMacOsVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/fieldsCiXcodeVersionsPayload`.
+                @frozen public enum FieldsCiXcodeVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case name = "name"
+                    case testDestinations = "testDestinations"
+                    case macOsVersions = "macOsVersions"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/fields[ciXcodeVersions]`.
+                public typealias fieldsCiXcodeVersionsPayload = [Operations.CiMacOsVersionsGetCollection.Input.Query.FieldsCiXcodeVersionsPayloadPayload]
+                /// the fields to include for returned resources of type ciXcodeVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/fields[ciXcodeVersions]`.
+                public var fieldsCiXcodeVersions: Operations.CiMacOsVersionsGetCollection.Input.Query.fieldsCiXcodeVersionsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case xcodeVersions = "xcodeVersions"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/include`.
+                public typealias IncludePayload = [Operations.CiMacOsVersionsGetCollection.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/include`.
+                public var include: Operations.CiMacOsVersionsGetCollection.Input.Query.IncludePayload?
+                /// maximum number of related xcodeVersions returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/query/limit[xcodeVersions]`.
+                public var limitXcodeVersions: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsCiMacOsVersions: the fields to include for returned resources of type ciMacOsVersions
+                ///   - fieldsCiXcodeVersions: the fields to include for returned resources of type ciXcodeVersions
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitXcodeVersions: maximum number of related xcodeVersions returned (when they are included)
+                public init(
+                    fieldsCiMacOsVersions: Operations.CiMacOsVersionsGetCollection.Input.Query.fieldsCiMacOsVersionsPayload? = nil,
+                    fieldsCiXcodeVersions: Operations.CiMacOsVersionsGetCollection.Input.Query.fieldsCiXcodeVersionsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.CiMacOsVersionsGetCollection.Input.Query.IncludePayload? = nil,
+                    limitXcodeVersions: Swift.Int? = nil
+                ) {
+                    self.fieldsCiMacOsVersions = fieldsCiMacOsVersions
+                    self.fieldsCiXcodeVersions = fieldsCiXcodeVersions
+                    self.limit = limit
+                    self.include = include
+                    self.limitXcodeVersions = limitXcodeVersions
+                }
+            }
+            public var query: Operations.CiMacOsVersionsGetCollection.Input.Query
+            /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiMacOsVersionsGetCollection.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiMacOsVersionsGetCollection.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.CiMacOsVersionsGetCollection.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.CiMacOsVersionsGetCollection.Input.Query = .init(),
+                headers: Operations.CiMacOsVersionsGetCollection.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ciMacOsVersions/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.CiMacOsVersionsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.CiMacOsVersionsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.CiMacOsVersionsGetCollection.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.CiMacOsVersionsGetCollection.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of CiMacOsVersions
+            ///
+            /// - Remark: Generated from `#/paths//v1/ciMacOsVersions/get(ciMacOsVersions_getCollection)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.CiMacOsVersionsGetCollection.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.CiMacOsVersionsGetCollection.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/get(ciProducts_getCollection)`.
+    public enum CiProductsGetCollection {
+        public static let id: Swift.String = "ciProducts_getCollection"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/filterProductTypePayload`.
+                @frozen public enum FilterProductTypePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case app = "APP"
+                    case framework = "FRAMEWORK"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/filter[productType]`.
+                public typealias filterProductTypePayload = [Operations.CiProductsGetCollection.Input.Query.FilterProductTypePayloadPayload]
+                /// filter by attribute 'productType'
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/filter[productType]`.
+                public var filterProductType: Operations.CiProductsGetCollection.Input.Query.filterProductTypePayload?
+                /// filter by id(s) of related 'app'
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/filter[app]`.
+                public var filterApp: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fieldsCiProductsPayload`.
+                @frozen public enum FieldsCiProductsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case createdDate = "createdDate"
+                    case productType = "productType"
+                    case app = "app"
+                    case bundleId = "bundleId"
+                    case workflows = "workflows"
+                    case primaryRepositories = "primaryRepositories"
+                    case additionalRepositories = "additionalRepositories"
+                    case buildRuns = "buildRuns"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[ciProducts]`.
+                public typealias fieldsCiProductsPayload = [Operations.CiProductsGetCollection.Input.Query.FieldsCiProductsPayloadPayload]
+                /// the fields to include for returned resources of type ciProducts
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[ciProducts]`.
+                public var fieldsCiProducts: Operations.CiProductsGetCollection.Input.Query.fieldsCiProductsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fieldsAppsPayload`.
+                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case accessibilityUrl = "accessibilityUrl"
+                    case name = "name"
+                    case bundleId = "bundleId"
+                    case sku = "sku"
+                    case primaryLocale = "primaryLocale"
+                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
+                    case subscriptionStatusUrl = "subscriptionStatusUrl"
+                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
+                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
+                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
+                    case contentRightsDeclaration = "contentRightsDeclaration"
+                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case accessibilityDeclarations = "accessibilityDeclarations"
+                    case appEncryptionDeclarations = "appEncryptionDeclarations"
+                    case appStoreIcon = "appStoreIcon"
+                    case ciProduct = "ciProduct"
+                    case betaTesters = "betaTesters"
+                    case betaGroups = "betaGroups"
+                    case appStoreVersions = "appStoreVersions"
+                    case appTags = "appTags"
+                    case preReleaseVersions = "preReleaseVersions"
+                    case betaAppLocalizations = "betaAppLocalizations"
+                    case builds = "builds"
+                    case betaLicenseAgreement = "betaLicenseAgreement"
+                    case betaAppReviewDetail = "betaAppReviewDetail"
+                    case appInfos = "appInfos"
+                    case appClips = "appClips"
+                    case appPricePoints = "appPricePoints"
+                    case endUserLicenseAgreement = "endUserLicenseAgreement"
+                    case appPriceSchedule = "appPriceSchedule"
+                    case appAvailabilityV2 = "appAvailabilityV2"
+                    case inAppPurchases = "inAppPurchases"
+                    case subscriptionGroups = "subscriptionGroups"
+                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
+                    case performanceOverviews = "performanceOverviews"
+                    case perfPowerMetrics = "perfPowerMetrics"
+                    case appCustomProductPages = "appCustomProductPages"
+                    case inAppPurchasesV2 = "inAppPurchasesV2"
+                    case promotedPurchases = "promotedPurchases"
+                    case appEvents = "appEvents"
+                    case reviewSubmissions = "reviewSubmissions"
+                    case subscriptionGracePeriod = "subscriptionGracePeriod"
+                    case customerReviews = "customerReviews"
+                    case customerReviewSummarizations = "customerReviewSummarizations"
+                    case gameCenterDetail = "gameCenterDetail"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case alternativeDistributionKey = "alternativeDistributionKey"
+                    case analyticsReportRequests = "analyticsReportRequests"
+                    case marketplaceSearchDetail = "marketplaceSearchDetail"
+                    case buildUploads = "buildUploads"
+                    case backgroundAssets = "backgroundAssets"
+                    case assetLibrary = "assetLibrary"
+                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
+                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
+                    case searchKeywords = "searchKeywords"
+                    case webhooks = "webhooks"
+                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[apps]`.
+                public typealias fieldsAppsPayload = [Operations.CiProductsGetCollection.Input.Query.FieldsAppsPayloadPayload]
+                /// the fields to include for returned resources of type apps
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[apps]`.
+                public var fieldsApps: Operations.CiProductsGetCollection.Input.Query.fieldsAppsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fieldsBundleIdsPayload`.
+                @frozen public enum FieldsBundleIdsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case platform = "platform"
+                    case identifier = "identifier"
+                    case seedId = "seedId"
+                    case profiles = "profiles"
+                    case bundleIdCapabilities = "bundleIdCapabilities"
+                    case app = "app"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[bundleIds]`.
+                public typealias fieldsBundleIdsPayload = [Operations.CiProductsGetCollection.Input.Query.FieldsBundleIdsPayloadPayload]
+                /// the fields to include for returned resources of type bundleIds
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[bundleIds]`.
+                public var fieldsBundleIds: Operations.CiProductsGetCollection.Input.Query.fieldsBundleIdsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fieldsScmRepositoriesPayload`.
+                @frozen public enum FieldsScmRepositoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case lastAccessedDate = "lastAccessedDate"
+                    case httpCloneUrl = "httpCloneUrl"
+                    case sshCloneUrl = "sshCloneUrl"
+                    case ownerName = "ownerName"
+                    case repositoryName = "repositoryName"
+                    case scmProvider = "scmProvider"
+                    case defaultBranch = "defaultBranch"
+                    case gitReferences = "gitReferences"
+                    case pullRequests = "pullRequests"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[scmRepositories]`.
+                public typealias fieldsScmRepositoriesPayload = [Operations.CiProductsGetCollection.Input.Query.FieldsScmRepositoriesPayloadPayload]
+                /// the fields to include for returned resources of type scmRepositories
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/fields[scmRepositories]`.
+                public var fieldsScmRepositories: Operations.CiProductsGetCollection.Input.Query.fieldsScmRepositoriesPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case app = "app"
+                    case bundleId = "bundleId"
+                    case primaryRepositories = "primaryRepositories"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/include`.
+                public typealias IncludePayload = [Operations.CiProductsGetCollection.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/include`.
+                public var include: Operations.CiProductsGetCollection.Input.Query.IncludePayload?
+                /// maximum number of related primaryRepositories returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/query/limit[primaryRepositories]`.
+                public var limitPrimaryRepositories: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterProductType: filter by attribute 'productType'
+                ///   - filterApp: filter by id(s) of related 'app'
+                ///   - fieldsCiProducts: the fields to include for returned resources of type ciProducts
+                ///   - fieldsApps: the fields to include for returned resources of type apps
+                ///   - fieldsBundleIds: the fields to include for returned resources of type bundleIds
+                ///   - fieldsScmRepositories: the fields to include for returned resources of type scmRepositories
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitPrimaryRepositories: maximum number of related primaryRepositories returned (when they are included)
+                public init(
+                    filterProductType: Operations.CiProductsGetCollection.Input.Query.filterProductTypePayload? = nil,
+                    filterApp: [Swift.String]? = nil,
+                    fieldsCiProducts: Operations.CiProductsGetCollection.Input.Query.fieldsCiProductsPayload? = nil,
+                    fieldsApps: Operations.CiProductsGetCollection.Input.Query.fieldsAppsPayload? = nil,
+                    fieldsBundleIds: Operations.CiProductsGetCollection.Input.Query.fieldsBundleIdsPayload? = nil,
+                    fieldsScmRepositories: Operations.CiProductsGetCollection.Input.Query.fieldsScmRepositoriesPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.CiProductsGetCollection.Input.Query.IncludePayload? = nil,
+                    limitPrimaryRepositories: Swift.Int? = nil
+                ) {
+                    self.filterProductType = filterProductType
+                    self.filterApp = filterApp
+                    self.fieldsCiProducts = fieldsCiProducts
+                    self.fieldsApps = fieldsApps
+                    self.fieldsBundleIds = fieldsBundleIds
+                    self.fieldsScmRepositories = fieldsScmRepositories
+                    self.limit = limit
+                    self.include = include
+                    self.limitPrimaryRepositories = limitPrimaryRepositories
+                }
+            }
+            public var query: Operations.CiProductsGetCollection.Input.Query
+            /// - Remark: Generated from `#/paths/v1/ciProducts/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiProductsGetCollection.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiProductsGetCollection.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.CiProductsGetCollection.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.CiProductsGetCollection.Input.Query = .init(),
+                headers: Operations.CiProductsGetCollection.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ciProducts/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ciProducts/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.CiProductsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.CiProductsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.CiProductsGetCollection.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.CiProductsGetCollection.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of CiProducts
+            ///
+            /// - Remark: Generated from `#/paths//v1/ciProducts/get(ciProducts_getCollection)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.CiProductsGetCollection.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.CiProductsGetCollection.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/ciProducts/{id}`.
+    /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/get(ciProducts_getInstance)`.
+    public enum CiProductsGetInstance {
+        public static let id: Swift.String = "ciProducts_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.CiProductsGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fieldsCiProductsPayload`.
+                @frozen public enum FieldsCiProductsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case createdDate = "createdDate"
+                    case productType = "productType"
+                    case app = "app"
+                    case bundleId = "bundleId"
+                    case workflows = "workflows"
+                    case primaryRepositories = "primaryRepositories"
+                    case additionalRepositories = "additionalRepositories"
+                    case buildRuns = "buildRuns"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[ciProducts]`.
+                public typealias fieldsCiProductsPayload = [Operations.CiProductsGetInstance.Input.Query.FieldsCiProductsPayloadPayload]
+                /// the fields to include for returned resources of type ciProducts
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[ciProducts]`.
+                public var fieldsCiProducts: Operations.CiProductsGetInstance.Input.Query.fieldsCiProductsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fieldsAppsPayload`.
+                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case accessibilityUrl = "accessibilityUrl"
+                    case name = "name"
+                    case bundleId = "bundleId"
+                    case sku = "sku"
+                    case primaryLocale = "primaryLocale"
+                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
+                    case subscriptionStatusUrl = "subscriptionStatusUrl"
+                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
+                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
+                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
+                    case contentRightsDeclaration = "contentRightsDeclaration"
+                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case accessibilityDeclarations = "accessibilityDeclarations"
+                    case appEncryptionDeclarations = "appEncryptionDeclarations"
+                    case appStoreIcon = "appStoreIcon"
+                    case ciProduct = "ciProduct"
+                    case betaTesters = "betaTesters"
+                    case betaGroups = "betaGroups"
+                    case appStoreVersions = "appStoreVersions"
+                    case appTags = "appTags"
+                    case preReleaseVersions = "preReleaseVersions"
+                    case betaAppLocalizations = "betaAppLocalizations"
+                    case builds = "builds"
+                    case betaLicenseAgreement = "betaLicenseAgreement"
+                    case betaAppReviewDetail = "betaAppReviewDetail"
+                    case appInfos = "appInfos"
+                    case appClips = "appClips"
+                    case appPricePoints = "appPricePoints"
+                    case endUserLicenseAgreement = "endUserLicenseAgreement"
+                    case appPriceSchedule = "appPriceSchedule"
+                    case appAvailabilityV2 = "appAvailabilityV2"
+                    case inAppPurchases = "inAppPurchases"
+                    case subscriptionGroups = "subscriptionGroups"
+                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
+                    case performanceOverviews = "performanceOverviews"
+                    case perfPowerMetrics = "perfPowerMetrics"
+                    case appCustomProductPages = "appCustomProductPages"
+                    case inAppPurchasesV2 = "inAppPurchasesV2"
+                    case promotedPurchases = "promotedPurchases"
+                    case appEvents = "appEvents"
+                    case reviewSubmissions = "reviewSubmissions"
+                    case subscriptionGracePeriod = "subscriptionGracePeriod"
+                    case customerReviews = "customerReviews"
+                    case customerReviewSummarizations = "customerReviewSummarizations"
+                    case gameCenterDetail = "gameCenterDetail"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case alternativeDistributionKey = "alternativeDistributionKey"
+                    case analyticsReportRequests = "analyticsReportRequests"
+                    case marketplaceSearchDetail = "marketplaceSearchDetail"
+                    case buildUploads = "buildUploads"
+                    case backgroundAssets = "backgroundAssets"
+                    case assetLibrary = "assetLibrary"
+                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
+                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
+                    case searchKeywords = "searchKeywords"
+                    case webhooks = "webhooks"
+                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[apps]`.
+                public typealias fieldsAppsPayload = [Operations.CiProductsGetInstance.Input.Query.FieldsAppsPayloadPayload]
+                /// the fields to include for returned resources of type apps
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[apps]`.
+                public var fieldsApps: Operations.CiProductsGetInstance.Input.Query.fieldsAppsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fieldsBundleIdsPayload`.
+                @frozen public enum FieldsBundleIdsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case platform = "platform"
+                    case identifier = "identifier"
+                    case seedId = "seedId"
+                    case profiles = "profiles"
+                    case bundleIdCapabilities = "bundleIdCapabilities"
+                    case app = "app"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[bundleIds]`.
+                public typealias fieldsBundleIdsPayload = [Operations.CiProductsGetInstance.Input.Query.FieldsBundleIdsPayloadPayload]
+                /// the fields to include for returned resources of type bundleIds
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[bundleIds]`.
+                public var fieldsBundleIds: Operations.CiProductsGetInstance.Input.Query.fieldsBundleIdsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fieldsScmRepositoriesPayload`.
+                @frozen public enum FieldsScmRepositoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case lastAccessedDate = "lastAccessedDate"
+                    case httpCloneUrl = "httpCloneUrl"
+                    case sshCloneUrl = "sshCloneUrl"
+                    case ownerName = "ownerName"
+                    case repositoryName = "repositoryName"
+                    case scmProvider = "scmProvider"
+                    case defaultBranch = "defaultBranch"
+                    case gitReferences = "gitReferences"
+                    case pullRequests = "pullRequests"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[scmRepositories]`.
+                public typealias fieldsScmRepositoriesPayload = [Operations.CiProductsGetInstance.Input.Query.FieldsScmRepositoriesPayloadPayload]
+                /// the fields to include for returned resources of type scmRepositories
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/fields[scmRepositories]`.
+                public var fieldsScmRepositories: Operations.CiProductsGetInstance.Input.Query.fieldsScmRepositoriesPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case app = "app"
+                    case bundleId = "bundleId"
+                    case primaryRepositories = "primaryRepositories"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.CiProductsGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/include`.
+                public var include: Operations.CiProductsGetInstance.Input.Query.IncludePayload?
+                /// maximum number of related primaryRepositories returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/query/limit[primaryRepositories]`.
+                public var limitPrimaryRepositories: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsCiProducts: the fields to include for returned resources of type ciProducts
+                ///   - fieldsApps: the fields to include for returned resources of type apps
+                ///   - fieldsBundleIds: the fields to include for returned resources of type bundleIds
+                ///   - fieldsScmRepositories: the fields to include for returned resources of type scmRepositories
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitPrimaryRepositories: maximum number of related primaryRepositories returned (when they are included)
+                public init(
+                    fieldsCiProducts: Operations.CiProductsGetInstance.Input.Query.fieldsCiProductsPayload? = nil,
+                    fieldsApps: Operations.CiProductsGetInstance.Input.Query.fieldsAppsPayload? = nil,
+                    fieldsBundleIds: Operations.CiProductsGetInstance.Input.Query.fieldsBundleIdsPayload? = nil,
+                    fieldsScmRepositories: Operations.CiProductsGetInstance.Input.Query.fieldsScmRepositoriesPayload? = nil,
+                    include: Operations.CiProductsGetInstance.Input.Query.IncludePayload? = nil,
+                    limitPrimaryRepositories: Swift.Int? = nil
+                ) {
+                    self.fieldsCiProducts = fieldsCiProducts
+                    self.fieldsApps = fieldsApps
+                    self.fieldsBundleIds = fieldsBundleIds
+                    self.fieldsScmRepositories = fieldsScmRepositories
+                    self.include = include
+                    self.limitPrimaryRepositories = limitPrimaryRepositories
+                }
+            }
+            public var query: Operations.CiProductsGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiProductsGetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiProductsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.CiProductsGetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.CiProductsGetInstance.Input.Path,
+                query: Operations.CiProductsGetInstance.Input.Query = .init(),
+                headers: Operations.CiProductsGetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.CiProductResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.CiProductResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.CiProductsGetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.CiProductsGetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single CiProduct
+            ///
+            /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/get(ciProducts_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.CiProductsGetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.CiProductsGetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `DELETE /v1/ciProducts/{id}`.
     /// - Remark: Generated from `#/paths//v1/ciProducts/{id}/delete(ciProducts_deleteInstance)`.
     public enum CiProductsDeleteInstance {
@@ -2308,822 +3085,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.CiWorkflowsUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/ciWorkflows/{id}`.
-    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/delete(ciWorkflows_deleteInstance)`.
-    public enum CiWorkflowsDeleteInstance {
-        public static let id: Swift.String = "ciWorkflows_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.CiWorkflowsDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.CiWorkflowsDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/delete(ciWorkflows_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.CiWorkflowsDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/delete(ciWorkflows_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.CiWorkflowsDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}/buildRuns`.
-    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/buildRuns/get(ciWorkflows_buildRuns_getToManyRelated)`.
-    public enum CiWorkflowsBuildRunsGetToManyRelated {
-        public static let id: Swift.String = "ciWorkflows_buildRuns_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// filter by id(s) of related 'builds'
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/filter[builds]`.
-                public var filterBuilds: [Swift.String]?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/SortPayload`.
-                @frozen public enum SortPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case number = "number"
-                    case minusNumber = "-number"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/sort`.
-                public typealias SortPayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.SortPayloadPayload]
-                /// comma-separated list of sort expressions; resources will be sorted as specified
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/sort`.
-                public var sort: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.SortPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fieldsCiBuildRunsPayload`.
-                @frozen public enum FieldsCiBuildRunsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case number = "number"
-                    case createdDate = "createdDate"
-                    case startedDate = "startedDate"
-                    case finishedDate = "finishedDate"
-                    case sourceCommit = "sourceCommit"
-                    case destinationCommit = "destinationCommit"
-                    case isPullRequestBuild = "isPullRequestBuild"
-                    case issueCounts = "issueCounts"
-                    case executionProgress = "executionProgress"
-                    case completionStatus = "completionStatus"
-                    case startReason = "startReason"
-                    case cancelReason = "cancelReason"
-                    case builds = "builds"
-                    case workflow = "workflow"
-                    case product = "product"
-                    case sourceBranchOrTag = "sourceBranchOrTag"
-                    case destinationBranch = "destinationBranch"
-                    case actions = "actions"
-                    case pullRequest = "pullRequest"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[ciBuildRuns]`.
-                public typealias fieldsCiBuildRunsPayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.FieldsCiBuildRunsPayloadPayload]
-                /// the fields to include for returned resources of type ciBuildRuns
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[ciBuildRuns]`.
-                public var fieldsCiBuildRuns: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsCiBuildRunsPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fieldsBuildsPayload`.
-                @frozen public enum FieldsBuildsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case uploadedDate = "uploadedDate"
-                    case expirationDate = "expirationDate"
-                    case expired = "expired"
-                    case minOsVersion = "minOsVersion"
-                    case lsMinimumSystemVersion = "lsMinimumSystemVersion"
-                    case computedMinMacOsVersion = "computedMinMacOsVersion"
-                    case computedMinVisionOsVersion = "computedMinVisionOsVersion"
-                    case iconAssetToken = "iconAssetToken"
-                    case processingState = "processingState"
-                    case buildAudienceType = "buildAudienceType"
-                    case usesNonExemptEncryption = "usesNonExemptEncryption"
-                    case preReleaseVersion = "preReleaseVersion"
-                    case individualTesters = "individualTesters"
-                    case betaGroups = "betaGroups"
-                    case betaBuildLocalizations = "betaBuildLocalizations"
-                    case appEncryptionDeclaration = "appEncryptionDeclaration"
-                    case betaAppReviewSubmission = "betaAppReviewSubmission"
-                    case app = "app"
-                    case buildBetaDetail = "buildBetaDetail"
-                    case appStoreVersion = "appStoreVersion"
-                    case icons = "icons"
-                    case buildBundles = "buildBundles"
-                    case buildUpload = "buildUpload"
-                    case perfPowerMetrics = "perfPowerMetrics"
-                    case diagnosticSignatures = "diagnosticSignatures"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[builds]`.
-                public typealias fieldsBuildsPayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.FieldsBuildsPayloadPayload]
-                /// the fields to include for returned resources of type builds
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[builds]`.
-                public var fieldsBuilds: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsBuildsPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fieldsCiWorkflowsPayload`.
-                @frozen public enum FieldsCiWorkflowsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case description = "description"
-                    case branchStartCondition = "branchStartCondition"
-                    case tagStartCondition = "tagStartCondition"
-                    case pullRequestStartCondition = "pullRequestStartCondition"
-                    case scheduledStartCondition = "scheduledStartCondition"
-                    case manualBranchStartCondition = "manualBranchStartCondition"
-                    case manualTagStartCondition = "manualTagStartCondition"
-                    case manualPullRequestStartCondition = "manualPullRequestStartCondition"
-                    case actions = "actions"
-                    case isEnabled = "isEnabled"
-                    case isLockedForEditing = "isLockedForEditing"
-                    case clean = "clean"
-                    case containerFilePath = "containerFilePath"
-                    case lastModifiedDate = "lastModifiedDate"
-                    case product = "product"
-                    case repository = "repository"
-                    case xcodeVersion = "xcodeVersion"
-                    case macOsVersion = "macOsVersion"
-                    case buildRuns = "buildRuns"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[ciWorkflows]`.
-                public typealias fieldsCiWorkflowsPayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.FieldsCiWorkflowsPayloadPayload]
-                /// the fields to include for returned resources of type ciWorkflows
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[ciWorkflows]`.
-                public var fieldsCiWorkflows: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsCiWorkflowsPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fieldsCiProductsPayload`.
-                @frozen public enum FieldsCiProductsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case createdDate = "createdDate"
-                    case productType = "productType"
-                    case app = "app"
-                    case bundleId = "bundleId"
-                    case workflows = "workflows"
-                    case primaryRepositories = "primaryRepositories"
-                    case additionalRepositories = "additionalRepositories"
-                    case buildRuns = "buildRuns"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[ciProducts]`.
-                public typealias fieldsCiProductsPayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.FieldsCiProductsPayloadPayload]
-                /// the fields to include for returned resources of type ciProducts
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[ciProducts]`.
-                public var fieldsCiProducts: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsCiProductsPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fieldsScmGitReferencesPayload`.
-                @frozen public enum FieldsScmGitReferencesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case canonicalName = "canonicalName"
-                    case isDeleted = "isDeleted"
-                    case kind = "kind"
-                    case repository = "repository"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[scmGitReferences]`.
-                public typealias fieldsScmGitReferencesPayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.FieldsScmGitReferencesPayloadPayload]
-                /// the fields to include for returned resources of type scmGitReferences
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[scmGitReferences]`.
-                public var fieldsScmGitReferences: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsScmGitReferencesPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fieldsScmPullRequestsPayload`.
-                @frozen public enum FieldsScmPullRequestsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case title = "title"
-                    case number = "number"
-                    case webUrl = "webUrl"
-                    case sourceRepositoryOwner = "sourceRepositoryOwner"
-                    case sourceRepositoryName = "sourceRepositoryName"
-                    case sourceBranchName = "sourceBranchName"
-                    case destinationRepositoryOwner = "destinationRepositoryOwner"
-                    case destinationRepositoryName = "destinationRepositoryName"
-                    case destinationBranchName = "destinationBranchName"
-                    case isClosed = "isClosed"
-                    case isCrossRepository = "isCrossRepository"
-                    case repository = "repository"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[scmPullRequests]`.
-                public typealias fieldsScmPullRequestsPayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.FieldsScmPullRequestsPayloadPayload]
-                /// the fields to include for returned resources of type scmPullRequests
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/fields[scmPullRequests]`.
-                public var fieldsScmPullRequests: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsScmPullRequestsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case builds = "builds"
-                    case workflow = "workflow"
-                    case product = "product"
-                    case sourceBranchOrTag = "sourceBranchOrTag"
-                    case destinationBranch = "destinationBranch"
-                    case pullRequest = "pullRequest"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/include`.
-                public typealias IncludePayload = [Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/include`.
-                public var include: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.IncludePayload?
-                /// maximum number of related builds returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/query/limit[builds]`.
-                public var limitBuilds: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterBuilds: filter by id(s) of related 'builds'
-                ///   - sort: comma-separated list of sort expressions; resources will be sorted as specified
-                ///   - fieldsCiBuildRuns: the fields to include for returned resources of type ciBuildRuns
-                ///   - fieldsBuilds: the fields to include for returned resources of type builds
-                ///   - fieldsCiWorkflows: the fields to include for returned resources of type ciWorkflows
-                ///   - fieldsCiProducts: the fields to include for returned resources of type ciProducts
-                ///   - fieldsScmGitReferences: the fields to include for returned resources of type scmGitReferences
-                ///   - fieldsScmPullRequests: the fields to include for returned resources of type scmPullRequests
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitBuilds: maximum number of related builds returned (when they are included)
-                public init(
-                    filterBuilds: [Swift.String]? = nil,
-                    sort: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.SortPayload? = nil,
-                    fieldsCiBuildRuns: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsCiBuildRunsPayload? = nil,
-                    fieldsBuilds: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsBuildsPayload? = nil,
-                    fieldsCiWorkflows: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsCiWorkflowsPayload? = nil,
-                    fieldsCiProducts: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsCiProductsPayload? = nil,
-                    fieldsScmGitReferences: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsScmGitReferencesPayload? = nil,
-                    fieldsScmPullRequests: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.fieldsScmPullRequestsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query.IncludePayload? = nil,
-                    limitBuilds: Swift.Int? = nil
-                ) {
-                    self.filterBuilds = filterBuilds
-                    self.sort = sort
-                    self.fieldsCiBuildRuns = fieldsCiBuildRuns
-                    self.fieldsBuilds = fieldsBuilds
-                    self.fieldsCiWorkflows = fieldsCiWorkflows
-                    self.fieldsCiProducts = fieldsCiProducts
-                    self.fieldsScmGitReferences = fieldsScmGitReferences
-                    self.fieldsScmPullRequests = fieldsScmPullRequests
-                    self.limit = limit
-                    self.include = include
-                    self.limitBuilds = limitBuilds
-                }
-            }
-            public var query: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiWorkflowsBuildRunsGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiWorkflowsBuildRunsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Path,
-                query: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Query = .init(),
-                headers: Operations.CiWorkflowsBuildRunsGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/buildRuns/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.CiBuildRunsResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.CiBuildRunsResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.CiWorkflowsBuildRunsGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.CiWorkflowsBuildRunsGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of CiBuildRuns
-            ///
-            /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/buildRuns/get(ciWorkflows_buildRuns_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.CiWorkflowsBuildRunsGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.CiWorkflowsBuildRunsGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/ciWorkflows/{id}/repository`.
-    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/repository/get(ciWorkflows_repository_getToOneRelated)`.
-    public enum CiWorkflowsRepositoryGetToOneRelated {
-        public static let id: Swift.String = "ciWorkflows_repository_getToOneRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fieldsScmRepositoriesPayload`.
-                @frozen public enum FieldsScmRepositoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case lastAccessedDate = "lastAccessedDate"
-                    case httpCloneUrl = "httpCloneUrl"
-                    case sshCloneUrl = "sshCloneUrl"
-                    case ownerName = "ownerName"
-                    case repositoryName = "repositoryName"
-                    case scmProvider = "scmProvider"
-                    case defaultBranch = "defaultBranch"
-                    case gitReferences = "gitReferences"
-                    case pullRequests = "pullRequests"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fields[scmRepositories]`.
-                public typealias fieldsScmRepositoriesPayload = [Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.FieldsScmRepositoriesPayloadPayload]
-                /// the fields to include for returned resources of type scmRepositories
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fields[scmRepositories]`.
-                public var fieldsScmRepositories: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.fieldsScmRepositoriesPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fieldsScmProvidersPayload`.
-                @frozen public enum FieldsScmProvidersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case scmProviderType = "scmProviderType"
-                    case url = "url"
-                    case repositories = "repositories"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fields[scmProviders]`.
-                public typealias fieldsScmProvidersPayload = [Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.FieldsScmProvidersPayloadPayload]
-                /// the fields to include for returned resources of type scmProviders
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fields[scmProviders]`.
-                public var fieldsScmProviders: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.fieldsScmProvidersPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fieldsScmGitReferencesPayload`.
-                @frozen public enum FieldsScmGitReferencesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case canonicalName = "canonicalName"
-                    case isDeleted = "isDeleted"
-                    case kind = "kind"
-                    case repository = "repository"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fields[scmGitReferences]`.
-                public typealias fieldsScmGitReferencesPayload = [Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.FieldsScmGitReferencesPayloadPayload]
-                /// the fields to include for returned resources of type scmGitReferences
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/fields[scmGitReferences]`.
-                public var fieldsScmGitReferences: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.fieldsScmGitReferencesPayload?
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case scmProvider = "scmProvider"
-                    case defaultBranch = "defaultBranch"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/include`.
-                public typealias IncludePayload = [Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/query/include`.
-                public var include: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsScmRepositories: the fields to include for returned resources of type scmRepositories
-                ///   - fieldsScmProviders: the fields to include for returned resources of type scmProviders
-                ///   - fieldsScmGitReferences: the fields to include for returned resources of type scmGitReferences
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsScmRepositories: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.fieldsScmRepositoriesPayload? = nil,
-                    fieldsScmProviders: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.fieldsScmProvidersPayload? = nil,
-                    fieldsScmGitReferences: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.fieldsScmGitReferencesPayload? = nil,
-                    include: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsScmRepositories = fieldsScmRepositories
-                    self.fieldsScmProviders = fieldsScmProviders
-                    self.fieldsScmGitReferences = fieldsScmGitReferences
-                    self.include = include
-                }
-            }
-            public var query: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiWorkflowsRepositoryGetToOneRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiWorkflowsRepositoryGetToOneRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Path,
-                query: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Query = .init(),
-                headers: Operations.CiWorkflowsRepositoryGetToOneRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/repository/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ScmRepositoryResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ScmRepositoryResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.CiWorkflowsRepositoryGetToOneRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.CiWorkflowsRepositoryGetToOneRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single ScmRepository
-            ///
-            /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/repository/get(ciWorkflows_repository_getToOneRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.CiWorkflowsRepositoryGetToOneRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.CiWorkflowsRepositoryGetToOneRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/ciXcodeVersions`.
-    /// - Remark: Generated from `#/paths//v1/ciXcodeVersions/get(ciXcodeVersions_getCollection)`.
-    public enum CiXcodeVersionsGetCollection {
-        public static let id: Swift.String = "ciXcodeVersions_getCollection"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/fieldsCiXcodeVersionsPayload`.
-                @frozen public enum FieldsCiXcodeVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case name = "name"
-                    case testDestinations = "testDestinations"
-                    case macOsVersions = "macOsVersions"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/fields[ciXcodeVersions]`.
-                public typealias fieldsCiXcodeVersionsPayload = [Operations.CiXcodeVersionsGetCollection.Input.Query.FieldsCiXcodeVersionsPayloadPayload]
-                /// the fields to include for returned resources of type ciXcodeVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/fields[ciXcodeVersions]`.
-                public var fieldsCiXcodeVersions: Operations.CiXcodeVersionsGetCollection.Input.Query.fieldsCiXcodeVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/fieldsCiMacOsVersionsPayload`.
-                @frozen public enum FieldsCiMacOsVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case name = "name"
-                    case xcodeVersions = "xcodeVersions"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/fields[ciMacOsVersions]`.
-                public typealias fieldsCiMacOsVersionsPayload = [Operations.CiXcodeVersionsGetCollection.Input.Query.FieldsCiMacOsVersionsPayloadPayload]
-                /// the fields to include for returned resources of type ciMacOsVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/fields[ciMacOsVersions]`.
-                public var fieldsCiMacOsVersions: Operations.CiXcodeVersionsGetCollection.Input.Query.fieldsCiMacOsVersionsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case macOsVersions = "macOsVersions"
-                }
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/include`.
-                public typealias IncludePayload = [Operations.CiXcodeVersionsGetCollection.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/include`.
-                public var include: Operations.CiXcodeVersionsGetCollection.Input.Query.IncludePayload?
-                /// maximum number of related macOsVersions returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/query/limit[macOsVersions]`.
-                public var limitMacOsVersions: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsCiXcodeVersions: the fields to include for returned resources of type ciXcodeVersions
-                ///   - fieldsCiMacOsVersions: the fields to include for returned resources of type ciMacOsVersions
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitMacOsVersions: maximum number of related macOsVersions returned (when they are included)
-                public init(
-                    fieldsCiXcodeVersions: Operations.CiXcodeVersionsGetCollection.Input.Query.fieldsCiXcodeVersionsPayload? = nil,
-                    fieldsCiMacOsVersions: Operations.CiXcodeVersionsGetCollection.Input.Query.fieldsCiMacOsVersionsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.CiXcodeVersionsGetCollection.Input.Query.IncludePayload? = nil,
-                    limitMacOsVersions: Swift.Int? = nil
-                ) {
-                    self.fieldsCiXcodeVersions = fieldsCiXcodeVersions
-                    self.fieldsCiMacOsVersions = fieldsCiMacOsVersions
-                    self.limit = limit
-                    self.include = include
-                    self.limitMacOsVersions = limitMacOsVersions
-                }
-            }
-            public var query: Operations.CiXcodeVersionsGetCollection.Input.Query
-            /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiXcodeVersionsGetCollection.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiXcodeVersionsGetCollection.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.CiXcodeVersionsGetCollection.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.CiXcodeVersionsGetCollection.Input.Query = .init(),
-                headers: Operations.CiXcodeVersionsGetCollection.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/ciXcodeVersions/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.CiXcodeVersionsResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.CiXcodeVersionsResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.CiXcodeVersionsGetCollection.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.CiXcodeVersionsGetCollection.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of CiXcodeVersions
-            ///
-            /// - Remark: Generated from `#/paths//v1/ciXcodeVersions/get(ciXcodeVersions_getCollection)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.CiXcodeVersionsGetCollection.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.CiXcodeVersionsGetCollection.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

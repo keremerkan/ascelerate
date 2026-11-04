@@ -11,6 +11,2002 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `DELETE /v1/subscriptionAppStoreReviewScreenshots/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionAppStoreReviewScreenshots/{id}/delete(subscriptionAppStoreReviewScreenshots_deleteInstance)`.
+    public func subscriptionAppStoreReviewScreenshotsDeleteInstance(_ input: Operations.SubscriptionAppStoreReviewScreenshotsDeleteInstance.Input) async throws -> Operations.SubscriptionAppStoreReviewScreenshotsDeleteInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionAppStoreReviewScreenshotsDeleteInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionAppStoreReviewScreenshots/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGracePeriods/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGracePeriods/{id}/get(subscriptionGracePeriods_getInstance)`.
+    public func subscriptionGracePeriodsGetInstance(_ input: Operations.SubscriptionGracePeriodsGetInstance.Input) async throws -> Operations.SubscriptionGracePeriodsGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGracePeriodsGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGracePeriods/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGracePeriods]",
+                    value: input.query.fieldsSubscriptionGracePeriods
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGracePeriodsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGracePeriodResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptionGracePeriods/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGracePeriods/{id}/patch(subscriptionGracePeriods_updateInstance)`.
+    public func subscriptionGracePeriodsUpdateInstance(_ input: Operations.SubscriptionGracePeriodsUpdateInstance.Input) async throws -> Operations.SubscriptionGracePeriodsUpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGracePeriodsUpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGracePeriods/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGracePeriodsUpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGracePeriodResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionGroupLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupLocalizations/post(subscriptionGroupLocalizations_createInstance)`.
+    public func subscriptionGroupLocalizationsCreateInstance(_ input: Operations.SubscriptionGroupLocalizationsCreateInstance.Input) async throws -> Operations.SubscriptionGroupLocalizationsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupLocalizationsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroupLocalizations",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupLocalizationsCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupLocalizationResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroupLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupLocalizations/{id}/get(subscriptionGroupLocalizations_getInstance)`.
+    public func subscriptionGroupLocalizationsGetInstance(_ input: Operations.SubscriptionGroupLocalizationsGetInstance.Input) async throws -> Operations.SubscriptionGroupLocalizationsGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupLocalizationsGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroupLocalizations/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupLocalizations]",
+                    value: input.query.fieldsSubscriptionGroupLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroups]",
+                    value: input.query.fieldsSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupLocalizationsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupLocalizationResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptionGroupLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupLocalizations/{id}/patch(subscriptionGroupLocalizations_updateInstance)`.
+    public func subscriptionGroupLocalizationsUpdateInstance(_ input: Operations.SubscriptionGroupLocalizationsUpdateInstance.Input) async throws -> Operations.SubscriptionGroupLocalizationsUpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupLocalizationsUpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroupLocalizations/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupLocalizationsUpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupLocalizationResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `DELETE /v1/subscriptionGroupLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupLocalizations/{id}/delete(subscriptionGroupLocalizations_deleteInstance)`.
+    public func subscriptionGroupLocalizationsDeleteInstance(_ input: Operations.SubscriptionGroupLocalizationsDeleteInstance.Input) async throws -> Operations.SubscriptionGroupLocalizationsDeleteInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupLocalizationsDeleteInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroupLocalizations/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionGroups`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/post(subscriptionGroups_createInstance)`.
+    public func subscriptionGroupsCreateInstance(_ input: Operations.SubscriptionGroupsCreateInstance.Input) async throws -> Operations.SubscriptionGroupsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroups",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupsCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroups/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/get(subscriptionGroups_getInstance)`.
+    public func subscriptionGroupsGetInstance(_ input: Operations.SubscriptionGroupsGetInstance.Input) async throws -> Operations.SubscriptionGroupsGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupsGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroups/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroups]",
+                    value: input.query.fieldsSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptions]",
+                    value: input.query.fieldsSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupLocalizations]",
+                    value: input.query.fieldsSubscriptionGroupLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupVersions]",
+                    value: input.query.fieldsSubscriptionGroupVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[subscriptionGroupLocalizations]",
+                    value: input.query.limitSubscriptionGroupLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[subscriptions]",
+                    value: input.query.limitSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[versions]",
+                    value: input.query.limitVersions
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptionGroups/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/patch(subscriptionGroups_updateInstance)`.
+    public func subscriptionGroupsUpdateInstance(_ input: Operations.SubscriptionGroupsUpdateInstance.Input) async throws -> Operations.SubscriptionGroupsUpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupsUpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroups/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupsUpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `DELETE /v1/subscriptionGroups/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/delete(subscriptionGroups_deleteInstance)`.
+    public func subscriptionGroupsDeleteInstance(_ input: Operations.SubscriptionGroupsDeleteInstance.Input) async throws -> Operations.SubscriptionGroupsDeleteInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupsDeleteInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroups/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroups/{id}/subscriptionGroupLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/subscriptionGroupLocalizations/get(subscriptionGroups_subscriptionGroupLocalizations_getToManyRelated)`.
+    public func subscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated(_ input: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Input) async throws -> Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroups/{}/subscriptionGroupLocalizations",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupLocalizations]",
+                    value: input.query.fieldsSubscriptionGroupLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroups]",
+                    value: input.query.fieldsSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupsSubscriptionGroupLocalizationsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupLocalizationsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroups/{id}/subscriptions`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/subscriptions/get(subscriptionGroups_subscriptions_getToManyRelated)`.
+    public func subscriptionGroupsSubscriptionsGetToManyRelated(_ input: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Input) async throws -> Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroups/{}/subscriptions",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[productId]",
+                    value: input.query.filterProductId
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[name]",
+                    value: input.query.filterName
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[state]",
+                    value: input.query.filterState
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "sort",
+                    value: input.query.sort
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptions]",
+                    value: input.query.fieldsSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionLocalizations]",
+                    value: input.query.fieldsSubscriptionLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionAppStoreReviewScreenshots]",
+                    value: input.query.fieldsSubscriptionAppStoreReviewScreenshots
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroups]",
+                    value: input.query.fieldsSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionIntroductoryOffers]",
+                    value: input.query.fieldsSubscriptionIntroductoryOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionPromotionalOffers]",
+                    value: input.query.fieldsSubscriptionPromotionalOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionOfferCodes]",
+                    value: input.query.fieldsSubscriptionOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionPrices]",
+                    value: input.query.fieldsSubscriptionPrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[promotedPurchases]",
+                    value: input.query.fieldsPromotedPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionAvailabilities]",
+                    value: input.query.fieldsSubscriptionAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[winBackOffers]",
+                    value: input.query.fieldsWinBackOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionImages]",
+                    value: input.query.fieldsSubscriptionImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionPlanAvailabilities]",
+                    value: input.query.fieldsSubscriptionPlanAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionVersions]",
+                    value: input.query.fieldsSubscriptionVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[subscriptionLocalizations]",
+                    value: input.query.limitSubscriptionLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[introductoryOffers]",
+                    value: input.query.limitIntroductoryOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[promotionalOffers]",
+                    value: input.query.limitPromotionalOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[offerCodes]",
+                    value: input.query.limitOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[prices]",
+                    value: input.query.limitPrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[winBackOffers]",
+                    value: input.query.limitWinBackOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[images]",
+                    value: input.query.limitImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[planAvailabilities]",
+                    value: input.query.limitPlanAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[versions]",
+                    value: input.query.limitVersions
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupsSubscriptionsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroups/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroups/{id}/versions/get(subscriptionGroups_versions_getToManyRelated)`.
+    public func subscriptionGroupsVersionsGetToManyRelated(_ input: Operations.SubscriptionGroupsVersionsGetToManyRelated.Input) async throws -> Operations.SubscriptionGroupsVersionsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupsVersionsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroups/{}/versions",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[state]",
+                    value: input.query.filterState
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupVersions]",
+                    value: input.query.fieldsSubscriptionGroupVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroups]",
+                    value: input.query.fieldsSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupLocalizations]",
+                    value: input.query.fieldsSubscriptionGroupLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[localizations]",
+                    value: input.query.limitLocalizations
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupsVersionsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupVersionsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionGroupSubmissions`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupSubmissions/post(subscriptionGroupSubmissions_createInstance)`.
+    public func subscriptionGroupSubmissionsCreateInstance(_ input: Operations.SubscriptionGroupSubmissionsCreateInstance.Input) async throws -> Operations.SubscriptionGroupSubmissionsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupSubmissionsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroupSubmissions",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupSubmissionsCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupSubmissionResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroupVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupVersions/{id}/get(subscriptionGroupVersions_getInstance)`.
+    public func subscriptionGroupVersionsGetInstance(_ input: Operations.SubscriptionGroupVersionsGetInstance.Input) async throws -> Operations.SubscriptionGroupVersionsGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupVersionsGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroupVersions/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupVersions]",
+                    value: input.query.fieldsSubscriptionGroupVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroups]",
+                    value: input.query.fieldsSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupLocalizations]",
+                    value: input.query.fieldsSubscriptionGroupLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[localizations]",
+                    value: input.query.limitLocalizations
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupVersionsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupVersionResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionGroupVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionGroupVersions/{id}/localizations/get(subscriptionGroupVersions_localizations_getToManyRelated)`.
+    public func subscriptionGroupVersionsLocalizationsGetToManyRelated(_ input: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Input) async throws -> Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionGroupVersions/{}/localizations",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupLocalizations]",
+                    value: input.query.fieldsSubscriptionGroupLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroupVersions]",
+                    value: input.query.fieldsSubscriptionGroupVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionGroupVersionsLocalizationsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionGroupLocalizationsV2Response.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionImages`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/post(subscriptionImages_createInstance)`.
+    public func subscriptionImagesCreateInstance(_ input: Operations.SubscriptionImagesCreateInstance.Input) async throws -> Operations.SubscriptionImagesCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionImagesCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionImages",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionImagesCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionImageResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionImages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/get(subscriptionImages_getInstance)`.
+    public func subscriptionImagesGetInstance(_ input: Operations.SubscriptionImagesGetInstance.Input) async throws -> Operations.SubscriptionImagesGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionImagesGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionImages/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionImages]",
+                    value: input.query.fieldsSubscriptionImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptions]",
+                    value: input.query.fieldsSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionImagesGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionImageResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptionImages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/patch(subscriptionImages_updateInstance)`.
+    public func subscriptionImagesUpdateInstance(_ input: Operations.SubscriptionImagesUpdateInstance.Input) async throws -> Operations.SubscriptionImagesUpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionImagesUpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionImages/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionImagesUpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionImageResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `DELETE /v1/subscriptionImages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionImages/{id}/delete(subscriptionImages_deleteInstance)`.
+    public func subscriptionImagesDeleteInstance(_ input: Operations.SubscriptionImagesDeleteInstance.Input) async throws -> Operations.SubscriptionImagesDeleteInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionImagesDeleteInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionImages/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionIntroductoryOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/post(subscriptionIntroductoryOffers_createInstance)`.
+    public func subscriptionIntroductoryOffersCreateInstance(_ input: Operations.SubscriptionIntroductoryOffersCreateInstance.Input) async throws -> Operations.SubscriptionIntroductoryOffersCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionIntroductoryOffersCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionIntroductoryOffers",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionIntroductoryOffersCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionIntroductoryOfferResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptionIntroductoryOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/{id}/patch(subscriptionIntroductoryOffers_updateInstance)`.
+    public func subscriptionIntroductoryOffersUpdateInstance(_ input: Operations.SubscriptionIntroductoryOffersUpdateInstance.Input) async throws -> Operations.SubscriptionIntroductoryOffersUpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionIntroductoryOffersUpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionIntroductoryOffers/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .patch
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionIntroductoryOffersUpdateInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionIntroductoryOfferResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `DELETE /v1/subscriptionIntroductoryOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionIntroductoryOffers/{id}/delete(subscriptionIntroductoryOffers_deleteInstance)`.
+    public func subscriptionIntroductoryOffersDeleteInstance(_ input: Operations.SubscriptionIntroductoryOffersDeleteInstance.Input) async throws -> Operations.SubscriptionIntroductoryOffersDeleteInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionIntroductoryOffersDeleteInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionIntroductoryOffers/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionLocalizations/post(subscriptionLocalizations_createInstance)`.
+    public func subscriptionLocalizationsCreateInstance(_ input: Operations.SubscriptionLocalizationsCreateInstance.Input) async throws -> Operations.SubscriptionLocalizationsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionLocalizationsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionLocalizations",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionLocalizationsCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionLocalizationResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionLocalizations/{id}/get(subscriptionLocalizations_getInstance)`.
+    public func subscriptionLocalizationsGetInstance(_ input: Operations.SubscriptionLocalizationsGetInstance.Input) async throws -> Operations.SubscriptionLocalizationsGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionLocalizationsGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionLocalizations/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionLocalizations]",
+                    value: input.query.fieldsSubscriptionLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptions]",
+                    value: input.query.fieldsSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionLocalizationsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionLocalizationResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `PATCH /v1/subscriptionLocalizations/{id}`.
     /// - Remark: Generated from `#/paths//v1/subscriptionLocalizations/{id}/patch(subscriptionLocalizations_updateInstance)`.
     public func subscriptionLocalizationsUpdateInstance(_ input: Operations.SubscriptionLocalizationsUpdateInstance.Input) async throws -> Operations.SubscriptionLocalizationsUpdateInstance.Output {
@@ -1022,2067 +3018,6 @@ extension Client {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
                             Components.Schemas.TerritoriesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionPricePoints/{id}/equalizations`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPricePoints/{id}/equalizations/get(subscriptionPricePoints_equalizations_getToManyRelated)`.
-    public func subscriptionPricePointsEqualizationsGetToManyRelated(_ input: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input) async throws -> Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPricePoints/{}/equalizations",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[territory]",
-                    value: input.query.filterTerritory
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[subscription]",
-                    value: input.query.filterSubscription
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[upfrontPricePointId]",
-                    value: input.query.filterUpfrontPricePointId
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[planType]",
-                    value: input.query.filterPlanType
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPricePoints]",
-                    value: input.query.fieldsSubscriptionPricePoints
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[territories]",
-                    value: input.query.fieldsTerritories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json",
-                            "text/csv"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPricePointsResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    case "text/csv":
-                        body = try converter.getResponseBodyAsBinary(
-                            OpenAPIRuntime.HTTPBody.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .csv(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `POST /v1/subscriptionPrices`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPrices/post(subscriptionPrices_createInstance)`.
-    public func subscriptionPricesCreateInstance(_ input: Operations.SubscriptionPricesCreateInstance.Input) async throws -> Operations.SubscriptionPricesCreateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPricesCreateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPrices",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 201:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionPricesCreateInstance.Output.Created.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPriceResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .created(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `DELETE /v1/subscriptionPrices/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/delete(subscriptionPrices_deleteInstance)`.
-    public func subscriptionPricesDeleteInstance(_ input: Operations.SubscriptionPricesDeleteInstance.Input) async throws -> Operations.SubscriptionPricesDeleteInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPricesDeleteInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPrices/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .delete
-                )
-                suppressMutabilityWarning(&request)
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 204:
-                    return .noContent(.init())
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `POST /v1/subscriptionPromotionalOffers`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/post(subscriptionPromotionalOffers_createInstance)`.
-    public func subscriptionPromotionalOffersCreateInstance(_ input: Operations.SubscriptionPromotionalOffersCreateInstance.Input) async throws -> Operations.SubscriptionPromotionalOffersCreateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPromotionalOffersCreateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPromotionalOffers",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 201:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionPromotionalOffersCreateInstance.Output.Created.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPromotionalOfferResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .created(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionPromotionalOffers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/{id}/get(subscriptionPromotionalOffers_getInstance)`.
-    public func subscriptionPromotionalOffersGetInstance(_ input: Operations.SubscriptionPromotionalOffersGetInstance.Input) async throws -> Operations.SubscriptionPromotionalOffersGetInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPromotionalOffersGetInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPromotionalOffers/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPromotionalOffers]",
-                    value: input.query.fieldsSubscriptionPromotionalOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPromotionalOfferPrices]",
-                    value: input.query.fieldsSubscriptionPromotionalOfferPrices
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[prices]",
-                    value: input.query.limitPrices
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionPromotionalOffersGetInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPromotionalOfferResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `PATCH /v1/subscriptionPromotionalOffers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/{id}/patch(subscriptionPromotionalOffers_updateInstance)`.
-    public func subscriptionPromotionalOffersUpdateInstance(_ input: Operations.SubscriptionPromotionalOffersUpdateInstance.Input) async throws -> Operations.SubscriptionPromotionalOffersUpdateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPromotionalOffersUpdateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPromotionalOffers/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .patch
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionPromotionalOffersUpdateInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPromotionalOfferResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `DELETE /v1/subscriptionPromotionalOffers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/{id}/delete(subscriptionPromotionalOffers_deleteInstance)`.
-    public func subscriptionPromotionalOffersDeleteInstance(_ input: Operations.SubscriptionPromotionalOffersDeleteInstance.Input) async throws -> Operations.SubscriptionPromotionalOffersDeleteInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPromotionalOffersDeleteInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPromotionalOffers/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .delete
-                )
-                suppressMutabilityWarning(&request)
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 204:
-                    return .noContent(.init())
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptionPromotionalOffers/{id}/prices`.
-    /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/{id}/prices/get(subscriptionPromotionalOffers_prices_getToManyRelated)`.
-    public func subscriptionPromotionalOffersPricesGetToManyRelated(_ input: Operations.SubscriptionPromotionalOffersPricesGetToManyRelated.Input) async throws -> Operations.SubscriptionPromotionalOffersPricesGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionPromotionalOffersPricesGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptionPromotionalOffers/{}/prices",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[territory]",
-                    value: input.query.filterTerritory
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPromotionalOfferPrices]",
-                    value: input.query.fieldsSubscriptionPromotionalOfferPrices
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[territories]",
-                    value: input.query.fieldsTerritories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPricePoints]",
-                    value: input.query.fieldsSubscriptionPricePoints
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionPromotionalOffersPricesGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPromotionalOfferPricesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `POST /v1/subscriptions`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/post(subscriptions_createInstance)`.
-    public func subscriptionsCreateInstance(_ input: Operations.SubscriptionsCreateInstance.Input) async throws -> Operations.SubscriptionsCreateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsCreateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .post
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 201:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsCreateInstance.Output.Created.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .created(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/get(subscriptions_getInstance)`.
-    public func subscriptionsGetInstance(_ input: Operations.SubscriptionsGetInstance.Input) async throws -> Operations.SubscriptionsGetInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsGetInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionLocalizations]",
-                    value: input.query.fieldsSubscriptionLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionAppStoreReviewScreenshots]",
-                    value: input.query.fieldsSubscriptionAppStoreReviewScreenshots
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionGroups]",
-                    value: input.query.fieldsSubscriptionGroups
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionIntroductoryOffers]",
-                    value: input.query.fieldsSubscriptionIntroductoryOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPromotionalOffers]",
-                    value: input.query.fieldsSubscriptionPromotionalOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionOfferCodes]",
-                    value: input.query.fieldsSubscriptionOfferCodes
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPrices]",
-                    value: input.query.fieldsSubscriptionPrices
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[promotedPurchases]",
-                    value: input.query.fieldsPromotedPurchases
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionAvailabilities]",
-                    value: input.query.fieldsSubscriptionAvailabilities
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[winBackOffers]",
-                    value: input.query.fieldsWinBackOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionImages]",
-                    value: input.query.fieldsSubscriptionImages
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPlanAvailabilities]",
-                    value: input.query.fieldsSubscriptionPlanAvailabilities
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionVersions]",
-                    value: input.query.fieldsSubscriptionVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[images]",
-                    value: input.query.limitImages
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[introductoryOffers]",
-                    value: input.query.limitIntroductoryOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[offerCodes]",
-                    value: input.query.limitOfferCodes
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[planAvailabilities]",
-                    value: input.query.limitPlanAvailabilities
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[prices]",
-                    value: input.query.limitPrices
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[promotionalOffers]",
-                    value: input.query.limitPromotionalOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[subscriptionLocalizations]",
-                    value: input.query.limitSubscriptionLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[versions]",
-                    value: input.query.limitVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[winBackOffers]",
-                    value: input.query.limitWinBackOffers
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsGetInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `PATCH /v1/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/patch(subscriptions_updateInstance)`.
-    public func subscriptionsUpdateInstance(_ input: Operations.SubscriptionsUpdateInstance.Input) async throws -> Operations.SubscriptionsUpdateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsUpdateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .patch
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsUpdateInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `DELETE /v1/subscriptions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/delete(subscriptions_deleteInstance)`.
-    public func subscriptionsDeleteInstance(_ input: Operations.SubscriptionsDeleteInstance.Input) async throws -> Operations.SubscriptionsDeleteInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsDeleteInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .delete
-                )
-                suppressMutabilityWarning(&request)
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 204:
-                    return .noContent(.init())
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/appStoreReviewScreenshot`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/appStoreReviewScreenshot/get(subscriptions_appStoreReviewScreenshot_getToOneRelated)`.
-    public func subscriptionsAppStoreReviewScreenshotGetToOneRelated(_ input: Operations.SubscriptionsAppStoreReviewScreenshotGetToOneRelated.Input) async throws -> Operations.SubscriptionsAppStoreReviewScreenshotGetToOneRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsAppStoreReviewScreenshotGetToOneRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/appStoreReviewScreenshot",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionAppStoreReviewScreenshots]",
-                    value: input.query.fieldsSubscriptionAppStoreReviewScreenshots
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsAppStoreReviewScreenshotGetToOneRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionAppStoreReviewScreenshotResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/images`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/images/get(subscriptions_images_getToManyRelated)`.
-    public func subscriptionsImagesGetToManyRelated(_ input: Operations.SubscriptionsImagesGetToManyRelated.Input) async throws -> Operations.SubscriptionsImagesGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsImagesGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/images",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionImages]",
-                    value: input.query.fieldsSubscriptionImages
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsImagesGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionImagesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/introductoryOffers`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/introductoryOffers/get(subscriptions_introductoryOffers_getToManyRelated)`.
-    public func subscriptionsIntroductoryOffersGetToManyRelated(_ input: Operations.SubscriptionsIntroductoryOffersGetToManyRelated.Input) async throws -> Operations.SubscriptionsIntroductoryOffersGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsIntroductoryOffersGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/introductoryOffers",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[territory]",
-                    value: input.query.filterTerritory
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionIntroductoryOffers]",
-                    value: input.query.fieldsSubscriptionIntroductoryOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[territories]",
-                    value: input.query.fieldsTerritories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPricePoints]",
-                    value: input.query.fieldsSubscriptionPricePoints
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsIntroductoryOffersGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionIntroductoryOffersResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/offerCodes`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/offerCodes/get(subscriptions_offerCodes_getToManyRelated)`.
-    public func subscriptionsOfferCodesGetToManyRelated(_ input: Operations.SubscriptionsOfferCodesGetToManyRelated.Input) async throws -> Operations.SubscriptionsOfferCodesGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsOfferCodesGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/offerCodes",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[territory]",
-                    value: input.query.filterTerritory
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionOfferCodes]",
-                    value: input.query.fieldsSubscriptionOfferCodes
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionOfferCodeOneTimeUseCodes]",
-                    value: input.query.fieldsSubscriptionOfferCodeOneTimeUseCodes
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionOfferCodeCustomCodes]",
-                    value: input.query.fieldsSubscriptionOfferCodeCustomCodes
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionOfferCodePrices]",
-                    value: input.query.fieldsSubscriptionOfferCodePrices
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[oneTimeUseCodes]",
-                    value: input.query.limitOneTimeUseCodes
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[customCodes]",
-                    value: input.query.limitCustomCodes
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[prices]",
-                    value: input.query.limitPrices
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsOfferCodesGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionOfferCodesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/planAvailabilities`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/planAvailabilities/get(subscriptions_planAvailabilities_getToManyRelated)`.
-    public func subscriptionsPlanAvailabilitiesGetToManyRelated(_ input: Operations.SubscriptionsPlanAvailabilitiesGetToManyRelated.Input) async throws -> Operations.SubscriptionsPlanAvailabilitiesGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsPlanAvailabilitiesGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/planAvailabilities",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPlanAvailabilities]",
-                    value: input.query.fieldsSubscriptionPlanAvailabilities
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[territories]",
-                    value: input.query.fieldsTerritories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[availableTerritories]",
-                    value: input.query.limitAvailableTerritories
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsPlanAvailabilitiesGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPlanAvailabilitiesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/pricePoints`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/pricePoints/get(subscriptions_pricePoints_getToManyRelated)`.
-    public func subscriptionsPricePointsGetToManyRelated(_ input: Operations.SubscriptionsPricePointsGetToManyRelated.Input) async throws -> Operations.SubscriptionsPricePointsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsPricePointsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/pricePoints",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[territory]",
-                    value: input.query.filterTerritory
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[upfrontPricePointId]",
-                    value: input.query.filterUpfrontPricePointId
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[planType]",
-                    value: input.query.filterPlanType
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPricePoints]",
-                    value: input.query.fieldsSubscriptionPricePoints
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[territories]",
-                    value: input.query.fieldsTerritories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsPricePointsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json",
-                            "text/csv"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPricePointsResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    case "text/csv":
-                        body = try converter.getResponseBodyAsBinary(
-                            OpenAPIRuntime.HTTPBody.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .csv(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/prices`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/prices/get(subscriptions_prices_getToManyRelated)`.
-    public func subscriptionsPricesGetToManyRelated(_ input: Operations.SubscriptionsPricesGetToManyRelated.Input) async throws -> Operations.SubscriptionsPricesGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsPricesGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/prices",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[planType]",
-                    value: input.query.filterPlanType
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[subscriptionPricePoint]",
-                    value: input.query.filterSubscriptionPricePoint
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[territory]",
-                    value: input.query.filterTerritory
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPrices]",
-                    value: input.query.fieldsSubscriptionPrices
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[territories]",
-                    value: input.query.fieldsTerritories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPricePoints]",
-                    value: input.query.fieldsSubscriptionPricePoints
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsPricesGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPricesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/promotionalOffers`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/promotionalOffers/get(subscriptions_promotionalOffers_getToManyRelated)`.
-    public func subscriptionsPromotionalOffersGetToManyRelated(_ input: Operations.SubscriptionsPromotionalOffersGetToManyRelated.Input) async throws -> Operations.SubscriptionsPromotionalOffersGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsPromotionalOffersGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/promotionalOffers",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[territory]",
-                    value: input.query.filterTerritory
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPromotionalOffers]",
-                    value: input.query.fieldsSubscriptionPromotionalOffers
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionPromotionalOfferPrices]",
-                    value: input.query.fieldsSubscriptionPromotionalOfferPrices
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[prices]",
-                    value: input.query.limitPrices
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsPromotionalOffersGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionPromotionalOffersResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/subscriptionLocalizations`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/subscriptionLocalizations/get(subscriptions_subscriptionLocalizations_getToManyRelated)`.
-    public func subscriptionsSubscriptionLocalizationsGetToManyRelated(_ input: Operations.SubscriptionsSubscriptionLocalizationsGetToManyRelated.Input) async throws -> Operations.SubscriptionsSubscriptionLocalizationsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsSubscriptionLocalizationsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/subscriptionLocalizations",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionLocalizations]",
-                    value: input.query.fieldsSubscriptionLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsSubscriptionLocalizationsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionLocalizationsResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/subscriptions/{id}/versions`.
-    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/versions/get(subscriptions_versions_getToManyRelated)`.
-    public func subscriptionsVersionsGetToManyRelated(_ input: Operations.SubscriptionsVersionsGetToManyRelated.Input) async throws -> Operations.SubscriptionsVersionsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SubscriptionsVersionsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/subscriptions/{}/versions",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[state]",
-                    value: input.query.filterState
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionVersions]",
-                    value: input.query.fieldsSubscriptionVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptions]",
-                    value: input.query.fieldsSubscriptions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionImages]",
-                    value: input.query.fieldsSubscriptionImages
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionLocalizations]",
-                    value: input.query.fieldsSubscriptionLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[images]",
-                    value: input.query.limitImages
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[localizations]",
-                    value: input.query.limitLocalizations
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SubscriptionsVersionsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.SubscriptionVersionsResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

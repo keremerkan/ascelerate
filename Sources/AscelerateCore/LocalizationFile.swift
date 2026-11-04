@@ -144,3 +144,48 @@ public struct ProductPageLocaleFields: Codable, Equatable, Sendable {
     self.promotionalText = promotionalText
   }
 }
+
+/// A Game Center achievement's language, as `game-center achievements localizations export`/
+/// `import` write and read it. A nil field is left as it is.
+public struct AchievementLocaleFields: Codable, Equatable, Sendable {
+  public var name: String?
+  public var beforeEarnedDescription: String?
+  public var afterEarnedDescription: String?
+
+  public init(name: String? = nil, beforeEarnedDescription: String? = nil, afterEarnedDescription: String? = nil) {
+    self.name = name
+    self.beforeEarnedDescription = beforeEarnedDescription
+    self.afterEarnedDescription = afterEarnedDescription
+  }
+}
+
+/// A Game Center leaderboard's language, as `game-center leaderboards localizations export`/
+/// `import` write and read it. A nil field is left as it is; an empty one is cleared.
+public struct LeaderboardLocaleFields: Codable, Equatable, Sendable {
+  public var name: String?
+  public var description: String?
+  public var formatterOverride: String?
+  public var formatterSuffix: String?
+  public var formatterSuffixSingular: String?
+
+  public init(
+    name: String? = nil, description: String? = nil, formatterOverride: String? = nil, formatterSuffix: String? = nil,
+    formatterSuffixSingular: String? = nil
+  ) {
+    self.name = name
+    self.description = description
+    self.formatterOverride = formatterOverride
+    self.formatterSuffix = formatterSuffix
+    self.formatterSuffixSingular = formatterSuffixSingular
+  }
+}
+
+/// A Game Center leaderboard set's language, as `game-center sets localizations export`/`import`
+/// write and read it. A nil field is left as it is.
+public struct LeaderboardSetLocaleFields: Codable, Equatable, Sendable {
+  public var name: String?
+
+  public init(name: String? = nil) {
+    self.name = name
+  }
+}

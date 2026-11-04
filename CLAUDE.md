@@ -55,6 +55,10 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   RoutingCoverage.swift               # A version's routing app coverage file (.geojson): read, delete, upload
   EncryptionDeclarations.swift        # Encryption declarations: list (top-level endpoint filtered by app), create, a declaration's compliance document (read, upload); codeValue for a build's ITSEncryptionExportComplianceCode
   AppTags.swift                       # App Store tags Apple gives an app: list (territories read per tag), show/hide
+  GameCenter.swift                    # Game Center: the app's detail (read, enable), the App Store version switch, Version (states, editable), the GameCenterItem/GameCenterLocalization protocols the shared commands are generic over, and the three kinds' conformances
+  GameCenterAchievements.swift        # Achievements (v2): list (display order) with versions, one, create (first version inline), update, delete, new version, localizations (with images), save/delete a language, image upload/delete, reorder
+  GameCenterLeaderboards.swift        # Leaderboards (v2): the same, plus LeaderboardSettings (formatter, sort, submission, score range, recurrence, visibility; empty strings cleared as null), formatters, the default leaderboard
+  GameCenterLeaderboardSets.swift     # Leaderboard sets (v2): the same, plus their leaderboards (read per set, replace in order), rename
   OfferCodes.swift                    # Offer codes of IAPs and subscriptions: list, one (counts; included prices cap at 50), batches and custom codes (newest first), create (prices inline; a free subscription offer's without a tier), turn off, generate a batch, add a custom code, a batch's codes (CSV). Codes need an approved product (409 "parent Subscription is not approved"), and an offer turned off can't be turned on again (409 "is inactivate, cannot be updated"; seen 2026-10-25)
   PromotionalOffers.swift             # Subscriptions' promotional offers (server-signed): list, one (price count from the relationship's total; included prices cap at 50, 200 is refused), create with prices inline, set prices, delete. A price update changes only the territories it sends (seen 2026-10-25)
   PromotedPurchases.swift             # Promoted purchases: list (display order, with their IAPs/subscriptions), add, delete, enabled/visible, reorder. A promotion of a product with missing metadata is accepted but left out of the app's list and the product's link (seen 2026-10-25)
@@ -124,6 +128,7 @@ Sources/ascelerate/
     BuildsCommand.swift               # Build subcommands
     AccessibilityCommand.swift        # apps accessibility (view/set/publish): App Store accessibility declarations per device family
     AppTagsCommand.swift              # apps tags (view/hide/show): Apple's App Store tags
+    GameCenterCommand.swift           # game-center: status, enable, version switch; achievements/leaderboards/sets (list, info, create, update; default leaderboard) and the generic GameCenterDelete/Reorder/Submit/Localizations/Image commands over GameCenterItem
     AppPricingCommand.swift           # apps pricing (show/tiers/set/override/keep/remove/sale/cancel/export/import): the app's price schedule through AppPricing
     ExperimentsCommand.swift          # experiments: product page optimization tests, treatments, treatment media, submit/start/stop
     WebhooksCommand.swift             # webhooks (list/create/update/delete/ping/deliveries/redeliver)
@@ -426,6 +431,23 @@ ascelerate experiments treatments remove-locale <bundle-id> <test> <treatment> -
 ascelerate experiments media list <bundle-id> <test> [--treatment X]
 ascelerate experiments media upload <bundle-id> <test> <treatment> --locale X [--display-type X | --preview-type X] [--preview-frame X] <file> [-y]  # Creates the treatment locale if needed; PRODUCT_PAGE_HEADER/APP_STORE_SEARCH_RESULTS/APP_IPHONE_DUO via the asset library
 ascelerate experiments media delete <bundle-id> <test> <media-id> [-y]
+ascelerate game-center [status] <app> [--json]                    # On/off, counts, default leaderboard, group
+ascelerate game-center enable <app> [-y]                          # Turn Game Center on (the API can't turn it off)
+ascelerate game-center version <app> [--version X] [--platform X] [--enabled true|false] [-y]  # The App Store version's Game Center switch
+ascelerate game-center achievements [list] <app> [--json]         # Display order, points total
+ascelerate game-center achievements info <app> <ach> [--json]
+ascelerate game-center achievements create <app> --id X --name X --points N [--hidden] [--repeatable] [-y]
+ascelerate game-center achievements update <app> <ach> [--name X] [--points N] [--hidden B] [--repeatable B] [--archived B] [-y]
+ascelerate game-center leaderboards [list|info] <app> [<lb>] [--json]
+ascelerate game-center leaderboards create <app> --id X --name X [--formatter X] [--sort high|low] [--submission best|recent] [--min X] [--max X] [--recurrence-start ISO] [--recurrence-duration PT…] [--recurrence-rule X] [--hidden B] [-y]
+ascelerate game-center leaderboards update <app> <lb> [same options] [--name X] [--archived B] [-y]   # "" clears range/recurrence
+ascelerate game-center leaderboards default <app> <lb> [-y]
+ascelerate game-center sets [list] <app> [--json]
+ascelerate game-center sets create <app> --id X --name X [--leaderboards a,b] [-y]
+ascelerate game-center sets update <app> <set> [--name X] [--leaderboards a,b] [-y]
+ascelerate game-center achievements|leaderboards|sets delete|reorder|submit <app> ... [-y]   # submit: adds the latest version to the draft submission
+ascelerate game-center achievements|leaderboards|sets localizations [view|set|export|import|delete] <app> <item> [--locale X] [--file X] [-y]
+ascelerate game-center achievements|leaderboards|sets image upload|delete <app> <item> --locale X [file] [-y]
 ascelerate nominations [list] [--app X] [--state draft|submitted|archived] [--json]  # Featuring nominations (all states by default)
 ascelerate nominations create --app X [--app Y] --type launch|enhancements|new-content --name X --description X --publish-start YYYY-MM-DD [--publish-end X] [--devices iphone,ipad] [--locales en-US,tr-TR] [--territories USA,TUR] [--notes X] [--materials URL,URL] [--pre-order] [--submit] [-y]  # Create (draft unless --submit)
 ascelerate nominations update <id> [--name X] [--description X] [--type X] [--publish-start X] [--publish-end X] [--devices X] [--locales X] [--notes X] [--materials X] [-y]  # Change a draft
@@ -669,6 +691,10 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 ### Accessibility declarations (`apps accessibility`)
 - One `accessibilityDeclarations` record per app and device family (`deviceFamily`: ASCEnum.DeviceFamily), nine `supports…` booleans (VoiceOver, Voice Control, Larger Text, Dark Interface, Differentiate Without Color Alone, Sufficient Contrast, Reduced Motion, Captions, Audio Descriptions; CLI names in `AccessibilityDeclarations.features`), a `state` (DRAFT, PUBLISHED, REPLACED) and a write-only `publish` flag on update. Publishing a changed declaration leaves the old one as REPLACED (`view` hides those unless `--all`). Some features don't apply to a family: App Store Connect doesn't ask about Larger Text on the Mac, whose declarations store no value for it (shown "-"), so `AccessibilityDeclarations.features(for:)` leaves it out, create/update don't send it, and `set` refuses it for `mac` (the other families' exceptions are unknown; no declarations to check). `set` sends the full declaration; `publish` PATCHes `publish: true` on every DRAFT.
 - **Drafts (verified live 2026-10-20/21):** a family takes one draft at a time (another POST is refused as a duplicate); a draft can be edited and deleted, a published declaration only replaced (edit it by creating a draft); publishing needs the app on the App Store for that family's platform (refused otherwise). Live-verified: create, edit, delete and publish of drafts, including a Mac declaration without Larger Text (2026-10-21).
+
+### Game Center (`game-center`)
+- **v2 model only:** the v1 achievement, leaderboard and set endpoints are deprecated; v2 gives each a version history (`gameCenterAchievementVersions`, …; states as `GameCenterVersionState`), with the languages (`…LocalizationsV2`) on a version and one image per language. A version goes to App Review as a review submission item (`gameCenterAchievementVersion`, `gameCenterLeaderboardVersion`, `gameCenterLeaderboardSetVersion`; `ReviewSubmissions.DraftItem`). The detail's to-many relationship PATCHes (`relationships/gameCenterAchievementsV2`, …) set the display order. One implementation of delete, reorder, submit, languages and images serves all three kinds through `GameCenterItem` (generic ArgumentParser commands with computed `configuration`).
+- **Seen live 2026-11-04 on a test app (never submitted):** `POST gameCenterDetails` turns Game Center on, and there is no DELETE. Creating an achievement, leaderboard or set requires its first version inline (`relationships.versions` with a `${local-id}` plus `included`). A set created with leaderboards must not name the detail (409 "Cannot pass in gameCenterDetail … if gameCenterLeaderboards are being passed in"; it inherits it). The first leaderboard became the default without asking. An achievement that was never live can be archived and deleted. Images: square and at least 512 px (600 and 2048 taken; 100 and 511 FAILED `IMAGE_BAD_DIMENSION_SM_LESS_MIN`, a screenshot `IMAGE_BAD_ASPECT_RATIO`); usually COMPLETE within seconds, one set image took minutes. A recurring leaderboard's duration takes time parts only (`PT168H`; `P7D`, `P7DT0H` refused), its rule only `FREQ=MINUTELY|HOURLY|DAILY;INTERVAL=n`. A score range end can't be cleared while the other stays (409 "You must provide a value for the field 'scoreRangeStart'"); both together can, and one end alone can be set. The App Store version switch (`gameCenterAppVersions`, created on first use) turned on and off. Not verified: submit (only dry run; a real add would leave a draft the API can't delete), editing a live item (its new version), leaderboard set member localizations (no command yet).
 
 ### Nominations (`nominations`)
 - Featuring nominations for Apple's editors (`/v1/nominations`): type `APP_LAUNCH`/`APP_ENHANCEMENTS`/`NEW_CONTENT` (CLI: launch, enhancements, new-content), name, description, publish start (required), optional end date, device families, locales, notes, supplemental material URLs, pre-order; `relatedApps` (one or more apps) is required. `--territories` sets `supportedTerritories` plus `launchInSelectMarketsFirst`. `create` saves a draft unless `--submit`; `submit`/`archive` PATCH `submitted`/`archived: true`.
@@ -1007,7 +1033,7 @@ Measured 2026-10-13 against the 4.5.1 spec: ascelerate calls **298 of 1,303 oper
 
 ### Missing entirely
 Counts are approximate top-level resources from the 1.7.0 surface.
-- **Game Center** (~38) — achievements, leaderboards (+sets), challenges, activities, matchmaking (queues/rules/teams), groups, details, enabled versions, releases.
+- **Game Center** (~38) — achievements, leaderboards and sets (v2) are covered by `game-center`; remaining: challenges, activities, matchmaking (queues/rules/teams), groups, leaderboard set member localizations, score moderation, blocked players, metrics.
 - **App Clips** (7) — app clips, advanced/default experiences, header/advanced images, app-clip review details.
 - **Background Assets** (6) — assets, versions, upload files, app-store/internal/external beta releases.
 - **Alternative distribution / EU** (~8) — `alternativeDistribution*` (domains, keys, packages + variants/deltas/versions) and `marketplace*` (search details, webhooks).

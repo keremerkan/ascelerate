@@ -1466,6 +1466,283 @@ extension Client {
             }
         )
     }
+    /// - Remark: HTTP `GET /v1/apps/{id}/gameCenterDetail`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/gameCenterDetail/get(apps_gameCenterDetail_getToOneRelated)`.
+    public func appsGameCenterDetailGetToOneRelated(_ input: Operations.AppsGameCenterDetailGetToOneRelated.Input) async throws -> Operations.AppsGameCenterDetailGetToOneRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.AppsGameCenterDetailGetToOneRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/apps/{}/gameCenterDetail",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterDetails]",
+                    value: input.query.fieldsGameCenterDetails
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[apps]",
+                    value: input.query.fieldsApps
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterAppVersions]",
+                    value: input.query.fieldsGameCenterAppVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterGroups]",
+                    value: input.query.fieldsGameCenterGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboards]",
+                    value: input.query.fieldsGameCenterLeaderboards
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSets]",
+                    value: input.query.fieldsGameCenterLeaderboardSets
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterAchievements]",
+                    value: input.query.fieldsGameCenterAchievements
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterActivities]",
+                    value: input.query.fieldsGameCenterActivities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterChallenges]",
+                    value: input.query.fieldsGameCenterChallenges
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterAchievementReleases]",
+                    value: input.query.fieldsGameCenterAchievementReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterActivityVersionReleases]",
+                    value: input.query.fieldsGameCenterActivityVersionReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterChallengeVersionReleases]",
+                    value: input.query.fieldsGameCenterChallengeVersionReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardReleases]",
+                    value: input.query.fieldsGameCenterLeaderboardReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[gameCenterLeaderboardSetReleases]",
+                    value: input.query.fieldsGameCenterLeaderboardSetReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appStoreVersions]",
+                    value: input.query.fieldsAppStoreVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterAppVersions]",
+                    value: input.query.limitGameCenterAppVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterLeaderboards]",
+                    value: input.query.limitGameCenterLeaderboards
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterLeaderboardsV2]",
+                    value: input.query.limitGameCenterLeaderboardsV2
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterLeaderboardSets]",
+                    value: input.query.limitGameCenterLeaderboardSets
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterLeaderboardSetsV2]",
+                    value: input.query.limitGameCenterLeaderboardSetsV2
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterAchievements]",
+                    value: input.query.limitGameCenterAchievements
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterAchievementsV2]",
+                    value: input.query.limitGameCenterAchievementsV2
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterActivities]",
+                    value: input.query.limitGameCenterActivities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[gameCenterChallenges]",
+                    value: input.query.limitGameCenterChallenges
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[achievementReleases]",
+                    value: input.query.limitAchievementReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[activityReleases]",
+                    value: input.query.limitActivityReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[challengeReleases]",
+                    value: input.query.limitChallengeReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[leaderboardReleases]",
+                    value: input.query.limitLeaderboardReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[leaderboardSetReleases]",
+                    value: input.query.limitLeaderboardSetReleases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[challengesMinimumPlatformVersions]",
+                    value: input.query.limitChallengesMinimumPlatformVersions
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.AppsGameCenterDetailGetToOneRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.GameCenterDetailResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `GET /v1/apps/{id}/inAppPurchasesV2`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/inAppPurchasesV2/get(apps_inAppPurchasesV2_getToManyRelated)`.
     public func appsInAppPurchasesV2GetToManyRelated(_ input: Operations.AppsInAppPurchasesV2GetToManyRelated.Input) async throws -> Operations.AppsInAppPurchasesV2GetToManyRelated.Output {
@@ -2786,239 +3063,6 @@ extension Client {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .created(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/appScreenshotSets/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/get(appScreenshotSets_getInstance)`.
-    public func appScreenshotSetsGetInstance(_ input: Operations.AppScreenshotSetsGetInstance.Input) async throws -> Operations.AppScreenshotSetsGetInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppScreenshotSetsGetInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appScreenshotSets/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appScreenshotSets]",
-                    value: input.query.fieldsAppScreenshotSets
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreVersionLocalizations]",
-                    value: input.query.fieldsAppStoreVersionLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appCustomProductPageLocalizations]",
-                    value: input.query.fieldsAppCustomProductPageLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreVersionExperimentTreatmentLocalizations]",
-                    value: input.query.fieldsAppStoreVersionExperimentTreatmentLocalizations
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appScreenshots]",
-                    value: input.query.fieldsAppScreenshots
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[appScreenshots]",
-                    value: input.query.limitAppScreenshots
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.AppScreenshotSetsGetInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AppScreenshotSetResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `DELETE /v1/appScreenshotSets/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/delete(appScreenshotSets_deleteInstance)`.
-    public func appScreenshotSetsDeleteInstance(_ input: Operations.AppScreenshotSetsDeleteInstance.Input) async throws -> Operations.AppScreenshotSetsDeleteInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppScreenshotSetsDeleteInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appScreenshotSets/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .delete
-                )
-                suppressMutabilityWarning(&request)
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 204:
-                    return .noContent(.init())
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/appScreenshotSets/{id}/appScreenshots`.
-    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelated)`.
-    public func appScreenshotSetsAppScreenshotsGetToManyRelated(_ input: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input) async throws -> Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/appScreenshotSets/{}/appScreenshots",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appScreenshots]",
-                    value: input.query.fieldsAppScreenshots
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appScreenshotSets]",
-                    value: input.query.fieldsAppScreenshotSets
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AppScreenshotsResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,

@@ -10,6 +10,666 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/builds/{id}/icons`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/icons/get(builds_icons_getToManyRelated)`.
+    public enum BuildsIconsGetToManyRelated {
+        public static let id: Swift.String = "builds_icons_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.BuildsIconsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/query/fieldsBuildIconsPayload`.
+                @frozen public enum FieldsBuildIconsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case iconAsset = "iconAsset"
+                    case iconType = "iconType"
+                    case masked = "masked"
+                    case name = "name"
+                }
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/query/fields[buildIcons]`.
+                public typealias fieldsBuildIconsPayload = [Operations.BuildsIconsGetToManyRelated.Input.Query.FieldsBuildIconsPayloadPayload]
+                /// the fields to include for returned resources of type buildIcons
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/query/fields[buildIcons]`.
+                public var fieldsBuildIcons: Operations.BuildsIconsGetToManyRelated.Input.Query.fieldsBuildIconsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsBuildIcons: the fields to include for returned resources of type buildIcons
+                ///   - limit: maximum resources per page
+                public init(
+                    fieldsBuildIcons: Operations.BuildsIconsGetToManyRelated.Input.Query.fieldsBuildIconsPayload? = nil,
+                    limit: Swift.Int? = nil
+                ) {
+                    self.fieldsBuildIcons = fieldsBuildIcons
+                    self.limit = limit
+                }
+            }
+            public var query: Operations.BuildsIconsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsIconsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsIconsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.BuildsIconsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.BuildsIconsGetToManyRelated.Input.Path,
+                query: Operations.BuildsIconsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.BuildsIconsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/builds/{id}/icons/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.BuildIconsWithoutIncludesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.BuildIconsWithoutIncludesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.BuildsIconsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.BuildsIconsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of BuildIcons with get
+            ///
+            /// - Remark: Generated from `#/paths//v1/builds/{id}/icons/get(builds_icons_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.BuildsIconsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.BuildsIconsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/builds/{id}/individualTesters`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/individualTesters/get(builds_individualTesters_getToManyRelated)`.
+    public enum BuildsIndividualTestersGetToManyRelated {
+        public static let id: Swift.String = "builds_individualTesters_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.BuildsIndividualTestersGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/query/fieldsBetaTestersPayload`.
+                @frozen public enum FieldsBetaTestersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case firstName = "firstName"
+                    case lastName = "lastName"
+                    case email = "email"
+                    case inviteType = "inviteType"
+                    case state = "state"
+                    case appDevices = "appDevices"
+                    case apps = "apps"
+                    case betaGroups = "betaGroups"
+                    case builds = "builds"
+                }
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/query/fields[betaTesters]`.
+                public typealias fieldsBetaTestersPayload = [Operations.BuildsIndividualTestersGetToManyRelated.Input.Query.FieldsBetaTestersPayloadPayload]
+                /// the fields to include for returned resources of type betaTesters
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/query/fields[betaTesters]`.
+                public var fieldsBetaTesters: Operations.BuildsIndividualTestersGetToManyRelated.Input.Query.fieldsBetaTestersPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsBetaTesters: the fields to include for returned resources of type betaTesters
+                ///   - limit: maximum resources per page
+                public init(
+                    fieldsBetaTesters: Operations.BuildsIndividualTestersGetToManyRelated.Input.Query.fieldsBetaTestersPayload? = nil,
+                    limit: Swift.Int? = nil
+                ) {
+                    self.fieldsBetaTesters = fieldsBetaTesters
+                    self.limit = limit
+                }
+            }
+            public var query: Operations.BuildsIndividualTestersGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsIndividualTestersGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsIndividualTestersGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.BuildsIndividualTestersGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.BuildsIndividualTestersGetToManyRelated.Input.Path,
+                query: Operations.BuildsIndividualTestersGetToManyRelated.Input.Query = .init(),
+                headers: Operations.BuildsIndividualTestersGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/builds/{id}/individualTesters/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.BetaTestersWithoutIncludesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.BetaTestersWithoutIncludesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.BuildsIndividualTestersGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.BuildsIndividualTestersGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of BetaTesters with get
+            ///
+            /// - Remark: Generated from `#/paths//v1/builds/{id}/individualTesters/get(builds_individualTesters_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.BuildsIndividualTestersGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.BuildsIndividualTestersGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/builds/{id}/metrics/betaBuildUsages`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/metrics/betaBuildUsages/get(builds_betaBuildUsages_getMetrics)`.
+    public enum BuildsBetaBuildUsagesGetMetrics {
+        public static let id: Swift.String = "builds_betaBuildUsages_getMetrics"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/metrics/betaBuildUsages/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/metrics/betaBuildUsages/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.BuildsBetaBuildUsagesGetMetrics.Input.Path
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/metrics/betaBuildUsages/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// maximum number of groups to return per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/metrics/betaBuildUsages/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - limit: maximum number of groups to return per page
+                public init(limit: Swift.Int? = nil) {
+                    self.limit = limit
+                }
+            }
+            public var query: Operations.BuildsBetaBuildUsagesGetMetrics.Input.Query
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/metrics/betaBuildUsages/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsBetaBuildUsagesGetMetrics.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsBetaBuildUsagesGetMetrics.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.BuildsBetaBuildUsagesGetMetrics.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.BuildsBetaBuildUsagesGetMetrics.Input.Path,
+                query: Operations.BuildsBetaBuildUsagesGetMetrics.Input.Query = .init(),
+                headers: Operations.BuildsBetaBuildUsagesGetMetrics.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/metrics/betaBuildUsages/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/builds/{id}/metrics/betaBuildUsages/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.BetaBuildUsagesV1MetricResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.BetaBuildUsagesV1MetricResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.BuildsBetaBuildUsagesGetMetrics.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.BuildsBetaBuildUsagesGetMetrics.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Metrics data response
+            ///
+            /// - Remark: Generated from `#/paths//v1/builds/{id}/metrics/betaBuildUsages/get(builds_betaBuildUsages_getMetrics)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.BuildsBetaBuildUsagesGetMetrics.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.BuildsBetaBuildUsagesGetMetrics.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/builds/{id}/perfPowerMetrics`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/perfPowerMetrics/get(builds_perfPowerMetrics_getToManyRelated)`.
+    public enum BuildsPerfPowerMetricsGetToManyRelated {
+        public static let id: Swift.String = "builds_perfPowerMetrics_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query/filterPlatformPayload`.
+                @frozen public enum FilterPlatformPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case ios = "IOS"
+                }
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query/filter[platform]`.
+                public typealias filterPlatformPayload = [Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query.FilterPlatformPayloadPayload]
+                /// filter by attribute 'platform'
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query/filter[platform]`.
+                public var filterPlatform: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query.filterPlatformPayload?
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query/filterMetricTypePayload`.
+                @frozen public enum FilterMetricTypePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case disk = "DISK"
+                    case hang = "HANG"
+                    case battery = "BATTERY"
+                    case launch = "LAUNCH"
+                    case memory = "MEMORY"
+                    case animation = "ANIMATION"
+                    case termination = "TERMINATION"
+                    case storage = "STORAGE"
+                }
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query/filter[metricType]`.
+                public typealias filterMetricTypePayload = [Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query.FilterMetricTypePayloadPayload]
+                /// filter by attribute 'metricType'
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query/filter[metricType]`.
+                public var filterMetricType: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query.filterMetricTypePayload?
+                /// filter by attribute 'deviceType'
+                ///
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/query/filter[deviceType]`.
+                public var filterDeviceType: [Swift.String]?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterPlatform: filter by attribute 'platform'
+                ///   - filterMetricType: filter by attribute 'metricType'
+                ///   - filterDeviceType: filter by attribute 'deviceType'
+                public init(
+                    filterPlatform: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query.filterPlatformPayload? = nil,
+                    filterMetricType: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query.filterMetricTypePayload? = nil,
+                    filterDeviceType: [Swift.String]? = nil
+                ) {
+                    self.filterPlatform = filterPlatform
+                    self.filterMetricType = filterMetricType
+                    self.filterDeviceType = filterDeviceType
+                }
+            }
+            public var query: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsPerfPowerMetricsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BuildsPerfPowerMetricsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Path,
+                query: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/builds/{id}/perfPowerMetrics/GET/responses/200/content/application\/vnd.apple.xcode-metrics+json`.
+                    case applicationVnd_apple_xcodeMetricsJson(Components.Schemas.XcodeMetrics)
+                    /// The associated value of the enum case if `self` is `.applicationVnd_apple_xcodeMetricsJson`.
+                    ///
+                    /// - Throws: An error if `self` is not `.applicationVnd_apple_xcodeMetricsJson`.
+                    /// - SeeAlso: `.applicationVnd_apple_xcodeMetricsJson`.
+                    public var applicationVnd_apple_xcodeMetricsJson: Components.Schemas.XcodeMetrics {
+                        get throws {
+                            switch self {
+                            case let .applicationVnd_apple_xcodeMetricsJson(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.BuildsPerfPowerMetricsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.BuildsPerfPowerMetricsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of PerfPowerMetrics
+            ///
+            /// - Remark: Generated from `#/paths//v1/builds/{id}/perfPowerMetrics/get(builds_perfPowerMetrics_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.BuildsPerfPowerMetricsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.BuildsPerfPowerMetricsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case applicationVnd_apple_xcodeMetricsJson
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/vnd.apple.xcode-metrics+json":
+                    self = .applicationVnd_apple_xcodeMetricsJson
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .applicationVnd_apple_xcodeMetricsJson:
+                    return "application/vnd.apple.xcode-metrics+json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .applicationVnd_apple_xcodeMetricsJson
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/builds/{id}/relationships/individualTesters`.
     /// - Remark: Generated from `#/paths//v1/builds/{id}/relationships/individualTesters/get(builds_individualTesters_getToManyRelationship)`.
     public enum BuildsIndividualTestersGetToManyRelationship {
@@ -2343,797 +3003,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.BundleIdsUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/bundleIds/{id}`.
-    /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/delete(bundleIds_deleteInstance)`.
-    public enum BundleIdsDeleteInstance {
-        public static let id: Swift.String = "bundleIds_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.BundleIdsDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.BundleIdsDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/delete(bundleIds_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.BundleIdsDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/delete(bundleIds_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.BundleIdsDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `GET /v1/bundleIds/{id}/bundleIdCapabilities`.
-    /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/bundleIdCapabilities/get(bundleIds_bundleIdCapabilities_getToManyRelated)`.
-    public enum BundleIdsBundleIdCapabilitiesGetToManyRelated {
-        public static let id: Swift.String = "bundleIds_bundleIdCapabilities_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/query/fieldsBundleIdCapabilitiesPayload`.
-                @frozen public enum FieldsBundleIdCapabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case capabilityType = "capabilityType"
-                    case settings = "settings"
-                }
-                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/query/fields[bundleIdCapabilities]`.
-                public typealias fieldsBundleIdCapabilitiesPayload = [Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Query.FieldsBundleIdCapabilitiesPayloadPayload]
-                /// the fields to include for returned resources of type bundleIdCapabilities
-                ///
-                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/query/fields[bundleIdCapabilities]`.
-                public var fieldsBundleIdCapabilities: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Query.fieldsBundleIdCapabilitiesPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsBundleIdCapabilities: the fields to include for returned resources of type bundleIdCapabilities
-                ///   - limit: maximum resources per page
-                public init(
-                    fieldsBundleIdCapabilities: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Query.fieldsBundleIdCapabilitiesPayload? = nil,
-                    limit: Swift.Int? = nil
-                ) {
-                    self.fieldsBundleIdCapabilities = fieldsBundleIdCapabilities
-                    self.limit = limit
-                }
-            }
-            public var query: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Path,
-                query: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Query = .init(),
-                headers: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/bundleIdCapabilities/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.BundleIdCapabilitiesWithoutIncludesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.BundleIdCapabilitiesWithoutIncludesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of BundleIdCapabilities with get
-            ///
-            /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/bundleIdCapabilities/get(bundleIds_bundleIdCapabilities_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.BundleIdsBundleIdCapabilitiesGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/certificates`.
-    /// - Remark: Generated from `#/paths//v1/certificates/get(certificates_getCollection)`.
-    public enum CertificatesGetCollection {
-        public static let id: Swift.String = "certificates_getCollection"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/certificates/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// filter by attribute 'displayName'
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/filter[displayName]`.
-                public var filterDisplayName: [Swift.String]?
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/filterCertificateTypePayload`.
-                @frozen public enum FilterCertificateTypePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case applePay = "APPLE_PAY"
-                    case applePayMerchantIdentity = "APPLE_PAY_MERCHANT_IDENTITY"
-                    case applePayPspIdentity = "APPLE_PAY_PSP_IDENTITY"
-                    case applePayRsa = "APPLE_PAY_RSA"
-                    case developerIdKext = "DEVELOPER_ID_KEXT"
-                    case developerIdKextG2 = "DEVELOPER_ID_KEXT_G2"
-                    case developerIdApplication = "DEVELOPER_ID_APPLICATION"
-                    case developerIdApplicationG2 = "DEVELOPER_ID_APPLICATION_G2"
-                    case development = "DEVELOPMENT"
-                    case distribution = "DISTRIBUTION"
-                    case identityAccess = "IDENTITY_ACCESS"
-                    case iosDevelopment = "IOS_DEVELOPMENT"
-                    case iosDistribution = "IOS_DISTRIBUTION"
-                    case macAppDistribution = "MAC_APP_DISTRIBUTION"
-                    case macInstallerDistribution = "MAC_INSTALLER_DISTRIBUTION"
-                    case macAppDevelopment = "MAC_APP_DEVELOPMENT"
-                    case passTypeId = "PASS_TYPE_ID"
-                    case passTypeIdWithNfc = "PASS_TYPE_ID_WITH_NFC"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/filter[certificateType]`.
-                public typealias filterCertificateTypePayload = [Operations.CertificatesGetCollection.Input.Query.FilterCertificateTypePayloadPayload]
-                /// filter by attribute 'certificateType'
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/filter[certificateType]`.
-                public var filterCertificateType: Operations.CertificatesGetCollection.Input.Query.filterCertificateTypePayload?
-                /// filter by attribute 'serialNumber'
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/filter[serialNumber]`.
-                public var filterSerialNumber: [Swift.String]?
-                /// filter by id(s)
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/filter[id]`.
-                public var filterId: [Swift.String]?
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/SortPayload`.
-                @frozen public enum SortPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case displayName = "displayName"
-                    case minusDisplayName = "-displayName"
-                    case certificateType = "certificateType"
-                    case minusCertificateType = "-certificateType"
-                    case serialNumber = "serialNumber"
-                    case minusSerialNumber = "-serialNumber"
-                    case id = "id"
-                    case minusId = "-id"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/sort`.
-                public typealias SortPayload = [Operations.CertificatesGetCollection.Input.Query.SortPayloadPayload]
-                /// comma-separated list of sort expressions; resources will be sorted as specified
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/sort`.
-                public var sort: Operations.CertificatesGetCollection.Input.Query.SortPayload?
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/fieldsCertificatesPayload`.
-                @frozen public enum FieldsCertificatesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case certificateType = "certificateType"
-                    case displayName = "displayName"
-                    case serialNumber = "serialNumber"
-                    case platform = "platform"
-                    case expirationDate = "expirationDate"
-                    case certificateContent = "certificateContent"
-                    case activated = "activated"
-                    case passTypeId = "passTypeId"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/fields[certificates]`.
-                public typealias fieldsCertificatesPayload = [Operations.CertificatesGetCollection.Input.Query.FieldsCertificatesPayloadPayload]
-                /// the fields to include for returned resources of type certificates
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/fields[certificates]`.
-                public var fieldsCertificates: Operations.CertificatesGetCollection.Input.Query.fieldsCertificatesPayload?
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/fieldsPassTypeIdsPayload`.
-                @frozen public enum FieldsPassTypeIdsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case identifier = "identifier"
-                    case certificates = "certificates"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/fields[passTypeIds]`.
-                public typealias fieldsPassTypeIdsPayload = [Operations.CertificatesGetCollection.Input.Query.FieldsPassTypeIdsPayloadPayload]
-                /// the fields to include for returned resources of type passTypeIds
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/fields[passTypeIds]`.
-                public var fieldsPassTypeIds: Operations.CertificatesGetCollection.Input.Query.fieldsPassTypeIdsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case passTypeId = "passTypeId"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/include`.
-                public typealias IncludePayload = [Operations.CertificatesGetCollection.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/query/include`.
-                public var include: Operations.CertificatesGetCollection.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterDisplayName: filter by attribute 'displayName'
-                ///   - filterCertificateType: filter by attribute 'certificateType'
-                ///   - filterSerialNumber: filter by attribute 'serialNumber'
-                ///   - filterId: filter by id(s)
-                ///   - sort: comma-separated list of sort expressions; resources will be sorted as specified
-                ///   - fieldsCertificates: the fields to include for returned resources of type certificates
-                ///   - fieldsPassTypeIds: the fields to include for returned resources of type passTypeIds
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    filterDisplayName: [Swift.String]? = nil,
-                    filterCertificateType: Operations.CertificatesGetCollection.Input.Query.filterCertificateTypePayload? = nil,
-                    filterSerialNumber: [Swift.String]? = nil,
-                    filterId: [Swift.String]? = nil,
-                    sort: Operations.CertificatesGetCollection.Input.Query.SortPayload? = nil,
-                    fieldsCertificates: Operations.CertificatesGetCollection.Input.Query.fieldsCertificatesPayload? = nil,
-                    fieldsPassTypeIds: Operations.CertificatesGetCollection.Input.Query.fieldsPassTypeIdsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.CertificatesGetCollection.Input.Query.IncludePayload? = nil
-                ) {
-                    self.filterDisplayName = filterDisplayName
-                    self.filterCertificateType = filterCertificateType
-                    self.filterSerialNumber = filterSerialNumber
-                    self.filterId = filterId
-                    self.sort = sort
-                    self.fieldsCertificates = fieldsCertificates
-                    self.fieldsPassTypeIds = fieldsPassTypeIds
-                    self.limit = limit
-                    self.include = include
-                }
-            }
-            public var query: Operations.CertificatesGetCollection.Input.Query
-            /// - Remark: Generated from `#/paths/v1/certificates/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CertificatesGetCollection.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CertificatesGetCollection.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.CertificatesGetCollection.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.CertificatesGetCollection.Input.Query = .init(),
-                headers: Operations.CertificatesGetCollection.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/certificates/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/certificates/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.CertificatesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.CertificatesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.CertificatesGetCollection.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.CertificatesGetCollection.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of Certificates
-            ///
-            /// - Remark: Generated from `#/paths//v1/certificates/get(certificates_getCollection)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.CertificatesGetCollection.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.CertificatesGetCollection.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/certificates`.
-    /// - Remark: Generated from `#/paths//v1/certificates/post(certificates_createInstance)`.
-    public enum CertificatesCreateInstance {
-        public static let id: Swift.String = "certificates_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/certificates/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CertificatesCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CertificatesCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.CertificatesCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/certificates/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/certificates/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.CertificateCreateRequest)
-            }
-            public var body: Operations.CertificatesCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.CertificatesCreateInstance.Input.Headers = .init(),
-                body: Operations.CertificatesCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/certificates/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/certificates/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.CertificateResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.CertificateResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.CertificatesCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.CertificatesCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single Certificate
-            ///
-            /// - Remark: Generated from `#/paths//v1/certificates/post(certificates_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.CertificatesCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.CertificatesCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/certificates/{id}`.
-    /// - Remark: Generated from `#/paths//v1/certificates/{id}/get(certificates_getInstance)`.
-    public enum CertificatesGetInstance {
-        public static let id: Swift.String = "certificates_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.CertificatesGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/fieldsCertificatesPayload`.
-                @frozen public enum FieldsCertificatesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case certificateType = "certificateType"
-                    case displayName = "displayName"
-                    case serialNumber = "serialNumber"
-                    case platform = "platform"
-                    case expirationDate = "expirationDate"
-                    case certificateContent = "certificateContent"
-                    case activated = "activated"
-                    case passTypeId = "passTypeId"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/fields[certificates]`.
-                public typealias fieldsCertificatesPayload = [Operations.CertificatesGetInstance.Input.Query.FieldsCertificatesPayloadPayload]
-                /// the fields to include for returned resources of type certificates
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/fields[certificates]`.
-                public var fieldsCertificates: Operations.CertificatesGetInstance.Input.Query.fieldsCertificatesPayload?
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/fieldsPassTypeIdsPayload`.
-                @frozen public enum FieldsPassTypeIdsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case identifier = "identifier"
-                    case certificates = "certificates"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/fields[passTypeIds]`.
-                public typealias fieldsPassTypeIdsPayload = [Operations.CertificatesGetInstance.Input.Query.FieldsPassTypeIdsPayloadPayload]
-                /// the fields to include for returned resources of type passTypeIds
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/fields[passTypeIds]`.
-                public var fieldsPassTypeIds: Operations.CertificatesGetInstance.Input.Query.fieldsPassTypeIdsPayload?
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case passTypeId = "passTypeId"
-                }
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.CertificatesGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/query/include`.
-                public var include: Operations.CertificatesGetInstance.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsCertificates: the fields to include for returned resources of type certificates
-                ///   - fieldsPassTypeIds: the fields to include for returned resources of type passTypeIds
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsCertificates: Operations.CertificatesGetInstance.Input.Query.fieldsCertificatesPayload? = nil,
-                    fieldsPassTypeIds: Operations.CertificatesGetInstance.Input.Query.fieldsPassTypeIdsPayload? = nil,
-                    include: Operations.CertificatesGetInstance.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsCertificates = fieldsCertificates
-                    self.fieldsPassTypeIds = fieldsPassTypeIds
-                    self.include = include
-                }
-            }
-            public var query: Operations.CertificatesGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CertificatesGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CertificatesGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.CertificatesGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.CertificatesGetInstance.Input.Path,
-                query: Operations.CertificatesGetInstance.Input.Query = .init(),
-                headers: Operations.CertificatesGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/certificates/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.CertificateResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.CertificateResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.CertificatesGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.CertificatesGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single Certificate
-            ///
-            /// - Remark: Generated from `#/paths//v1/certificates/{id}/get(certificates_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.CertificatesGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.CertificatesGetInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

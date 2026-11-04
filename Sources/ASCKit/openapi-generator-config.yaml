@@ -669,6 +669,11 @@ nameOverrides:
   "fields[preReleaseVersions]": fieldsPreReleaseVersions
   "fields[profiles]": fieldsProfiles
   "fields[promotedPurchases]": fieldsPromotedPurchases
+  "fields[retentionMessageLocalizations]": fieldsRetentionMessageLocalizations
+  "fields[retentionMessageVersions]": fieldsRetentionMessageVersions
+  "fields[retentionMessages]": fieldsRetentionMessages
+  "fields[retentionOfferPrices]": fieldsRetentionOfferPrices
+  "fields[retentionOffers]": fieldsRetentionOffers
   "fields[reviewSubmissionItems]": fieldsReviewSubmissionItems
   "fields[reviewSubmissions]": fieldsReviewSubmissions
   "fields[routingAppCoverages]": fieldsRoutingAppCoverages
@@ -937,6 +942,9 @@ nameOverrides:
   "limit[relatedApps]": limitRelatedApps
   "limit[releases]": limitReleases
   "limit[reports]": limitReports
+  "limit[retentionMessageOffers]": limitRetentionMessageOffers
+  "limit[retentionMessages]": limitRetentionMessages
+  "limit[retentionOffers]": limitRetentionOffers
   "limit[reviewSubmissions]": limitReviewSubmissions
   "limit[rules]": limitRules
   "limit[searchKeywords]": limitSearchKeywords

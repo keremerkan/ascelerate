@@ -11,6 +11,196 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/iapPriceSchedule`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/iapPriceSchedule/get(inAppPurchasesV2_iapPriceSchedule_getToOneRelated)`.
+    public func inAppPurchasesV2IapPriceScheduleGetToOneRelated(_ input: Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.Input) async throws -> Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/iapPriceSchedule",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchasePriceSchedules]",
+                    value: input.query.fieldsInAppPurchasePriceSchedules
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[territories]",
+                    value: input.query.fieldsTerritories
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchasePrices]",
+                    value: input.query.fieldsInAppPurchasePrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[manualPrices]",
+                    value: input.query.limitManualPrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[automaticPrices]",
+                    value: input.query.limitAutomaticPrices
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2IapPriceScheduleGetToOneRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchasePriceScheduleResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/images`.
+    /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/images/get(inAppPurchasesV2_images_getToManyRelated)`.
+    public func inAppPurchasesV2ImagesGetToManyRelated(_ input: Operations.InAppPurchasesV2ImagesGetToManyRelated.Input) async throws -> Operations.InAppPurchasesV2ImagesGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.InAppPurchasesV2ImagesGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v2/inAppPurchases/{}/images",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchaseImages]",
+                    value: input.query.fieldsInAppPurchaseImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[inAppPurchases]",
+                    value: input.query.fieldsInAppPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.InAppPurchasesV2ImagesGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.InAppPurchaseImagesResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `GET /v2/inAppPurchases/{id}/inAppPurchaseAvailability`.
     /// - Remark: Generated from `#/paths//v2/inAppPurchases/{id}/inAppPurchaseAvailability/get(inAppPurchasesV2_inAppPurchaseAvailability_getToOneRelated)`.
     public func inAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated(_ input: Operations.InAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated.Input) async throws -> Operations.InAppPurchasesV2InAppPurchaseAvailabilityGetToOneRelated.Output {

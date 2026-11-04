@@ -11,6 +11,94 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `GET /v1/subscriptionOfferCodes/{id}/oneTimeUseCodes`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionOfferCodes/{id}/oneTimeUseCodes/get(subscriptionOfferCodes_oneTimeUseCodes_getToManyRelated)`.
+    public func subscriptionOfferCodesOneTimeUseCodesGetToManyRelated(_ input: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Input) async throws -> Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/subscriptionOfferCodes/{}/oneTimeUseCodes",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionOfferCodeOneTimeUseCodes]",
+                    value: input.query.fieldsSubscriptionOfferCodeOneTimeUseCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionOfferCodes]",
+                    value: input.query.fieldsSubscriptionOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.SubscriptionOfferCodesOneTimeUseCodesGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionOfferCodeOneTimeUseCodesResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `POST /v1/subscriptionPlanAvailabilities`.
     /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/post(subscriptionPlanAvailabilities_createInstance)`.
     public func subscriptionPlanAvailabilitiesCreateInstance(_ input: Operations.SubscriptionPlanAvailabilitiesCreateInstance.Input) async throws -> Operations.SubscriptionPlanAvailabilitiesCreateInstance.Output {
@@ -1093,6 +1181,20 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
+                    name: "fields[retentionOffers]",
+                    value: input.query.fieldsRetentionOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
                     name: "include",
                     value: input.query.include
                 )
@@ -1137,6 +1239,20 @@ extension Client {
                     explode: true,
                     name: "limit[promotionalOffers]",
                     value: input.query.limitPromotionalOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[retentionMessageOffers]",
+                    value: input.query.limitRetentionMessageOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[retentionOffers]",
+                    value: input.query.limitRetentionOffers
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2942,116 +3058,6 @@ extension Client {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
                             Components.Schemas.UserInvitationResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `DELETE /v1/userInvitations/{id}`.
-    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/delete(userInvitations_deleteInstance)`.
-    public func userInvitationsDeleteInstance(_ input: Operations.UserInvitationsDeleteInstance.Input) async throws -> Operations.UserInvitationsDeleteInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.UserInvitationsDeleteInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/userInvitations/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .delete
-                )
-                suppressMutabilityWarning(&request)
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 204:
-                    return .noContent(.init())
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/userInvitations/{id}/visibleApps`.
-    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/visibleApps/get(userInvitations_visibleApps_getToManyRelated)`.
-    public func userInvitationsVisibleAppsGetToManyRelated(_ input: Operations.UserInvitationsVisibleAppsGetToManyRelated.Input) async throws -> Operations.UserInvitationsVisibleAppsGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.UserInvitationsVisibleAppsGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/userInvitations/{}/visibleApps",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[apps]",
-                    value: input.query.fieldsApps
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.UserInvitationsVisibleAppsGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.AppsWithoutIncludesResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

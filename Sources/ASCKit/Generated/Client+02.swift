@@ -1845,6 +1845,13 @@ extension Client {
                 try converter.setQueryItemAsURI(
                     in: &request,
                     style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageVersions]",
+                    value: input.query.fieldsRetentionMessageVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
                     explode: true,
                     name: "limit",
                     value: input.query.limit

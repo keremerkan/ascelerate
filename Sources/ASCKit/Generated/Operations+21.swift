@@ -10,6 +10,143 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `PATCH /v1/gameCenterActivityVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/gameCenterActivityVersions/{id}/patch(gameCenterActivityVersions_updateInstance)`.
+    public enum GameCenterActivityVersionsUpdateInstance {
+        public static let id: Swift.String = "gameCenterActivityVersions_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.GameCenterActivityVersionsUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterActivityVersionsUpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterActivityVersionsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GameCenterActivityVersionsUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.GameCenterActivityVersionUpdateRequest)
+            }
+            public var body: Operations.GameCenterActivityVersionsUpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.GameCenterActivityVersionsUpdateInstance.Input.Path,
+                headers: Operations.GameCenterActivityVersionsUpdateInstance.Input.Headers = .init(),
+                body: Operations.GameCenterActivityVersionsUpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.GameCenterActivityVersionResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.GameCenterActivityVersionResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single GameCenterActivityVersion
+            ///
+            /// - Remark: Generated from `#/paths//v1/gameCenterActivityVersions/{id}/patch(gameCenterActivityVersions_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/gameCenterActivityVersions/{id}/defaultImage`.
     /// - Remark: Generated from `#/paths//v1/gameCenterActivityVersions/{id}/defaultImage/get(gameCenterActivityVersions_defaultImage_getToOneRelated)`.
     public enum GameCenterActivityVersionsDefaultImageGetToOneRelated {
@@ -2956,125 +3093,6 @@ extension Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/gameCenterChallengeVersions`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterChallengeVersions/post(gameCenterChallengeVersions_createInstance)`.
-    public enum GameCenterChallengeVersionsCreateInstance {
-        public static let id: Swift.String = "gameCenterChallengeVersions_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/gameCenterChallengeVersions/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterChallengeVersionsCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterChallengeVersionsCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterChallengeVersionsCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/gameCenterChallengeVersions/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/gameCenterChallengeVersions/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterChallengeVersionCreateRequest)
-            }
-            public var body: Operations.GameCenterChallengeVersionsCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.GameCenterChallengeVersionsCreateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterChallengeVersionsCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/gameCenterChallengeVersions/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/gameCenterChallengeVersions/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.GameCenterChallengeVersionResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterChallengeVersionResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterChallengeVersionsCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterChallengeVersionsCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterChallengeVersion
-            ///
-            /// - Remark: Generated from `#/paths//v1/gameCenterChallengeVersions/post(gameCenterChallengeVersions_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.GameCenterChallengeVersionsCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.GameCenterChallengeVersionsCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
                             response: self
                         )
                     }

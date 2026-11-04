@@ -10,6 +10,152 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/appScreenshotSets/{id}/relationships/appScreenshots`.
+    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/relationships/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelationship)`.
+    public enum AppScreenshotSetsAppScreenshotsGetToManyRelationship {
+        public static let id: Swift.String = "appScreenshotSets_appScreenshots_getToManyRelationship"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Path
+            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - limit: maximum resources per page
+                public init(limit: Swift.Int? = nil) {
+                    self.limit = limit
+                }
+            }
+            public var query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Query
+            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Path,
+                query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Query = .init(),
+                headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of related linkages
+            ///
+            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/relationships/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelationship)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `PATCH /v1/appScreenshotSets/{id}/relationships/appScreenshots`.
     /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/relationships/appScreenshots/patch(appScreenshotSets_appScreenshots_replaceToManyRelationship)`.
     public enum AppScreenshotSetsAppScreenshotsReplaceToManyRelationship {
@@ -1520,6 +1666,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/GET/query/fields[appAssetLibraryPlacements]`.
                 public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppStoreVersionExperimentTreatmentLocalizationsGetInstance.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
@@ -2525,6 +2672,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements/GET/query/fields[appAssetLibraryPlacements]`.
                 public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
@@ -2644,6 +2792,19 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
                 public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
                 /// maximum resources per page
                 ///
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements/GET/query/limit`.
@@ -2656,6 +2817,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements/GET/query/include`.
                 public typealias IncludePayload = [Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.IncludePayloadPayload]
@@ -2683,6 +2845,7 @@ extension Operations {
                 ///   - fieldsAppStoreVersionLocalizations: the fields to include for returned resources of type appStoreVersionLocalizations
                 ///   - fieldsAppCustomProductPageLocalizations: the fields to include for returned resources of type appCustomProductPageLocalizations
                 ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
                 ///   - limit: maximum resources per page
                 ///   - include: comma-separated list of relationships to include
                 public init(
@@ -2703,6 +2866,7 @@ extension Operations {
                     fieldsAppStoreVersionLocalizations: Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionLocalizationsPayload? = nil,
                     fieldsAppCustomProductPageLocalizations: Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppCustomProductPageLocalizationsPayload? = nil,
                     fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
                     limit: Swift.Int? = nil,
                     include: Operations.AppStoreVersionExperimentTreatmentLocalizationsPlacementsGetToManyRelated.Input.Query.IncludePayload? = nil
                 ) {
@@ -2723,6 +2887,7 @@ extension Operations {
                     self.fieldsAppStoreVersionLocalizations = fieldsAppStoreVersionLocalizations
                     self.fieldsAppCustomProductPageLocalizations = fieldsAppCustomProductPageLocalizations
                     self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
                     self.limit = limit
                     self.include = include
                 }
@@ -2922,229 +3087,6 @@ extension Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/appStoreVersionExperimentTreatments/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatments/{id}/get(appStoreVersionExperimentTreatments_getInstance)`.
-    public enum AppStoreVersionExperimentTreatmentsGetInstance {
-        public static let id: Swift.String = "appStoreVersionExperimentTreatments_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fieldsAppStoreVersionExperimentTreatmentsPayload`.
-                @frozen public enum FieldsAppStoreVersionExperimentTreatmentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case appIcon = "appIcon"
-                    case appIconName = "appIconName"
-                    case promotedDate = "promotedDate"
-                    case appStoreVersionExperiment = "appStoreVersionExperiment"
-                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
-                    case appStoreVersionExperimentTreatmentLocalizations = "appStoreVersionExperimentTreatmentLocalizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatments]`.
-                public typealias fieldsAppStoreVersionExperimentTreatmentsPayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.FieldsAppStoreVersionExperimentTreatmentsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionExperimentTreatments
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatments]`.
-                public var fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fieldsAppStoreVersionExperimentsPayload`.
-                @frozen public enum FieldsAppStoreVersionExperimentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case trafficProportion = "trafficProportion"
-                    case state = "state"
-                    case reviewRequired = "reviewRequired"
-                    case startDate = "startDate"
-                    case endDate = "endDate"
-                    case appStoreVersion = "appStoreVersion"
-                    case appStoreVersionExperimentTreatments = "appStoreVersionExperimentTreatments"
-                    case platform = "platform"
-                    case app = "app"
-                    case latestControlVersion = "latestControlVersion"
-                    case controlVersions = "controlVersions"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperiments]`.
-                public typealias fieldsAppStoreVersionExperimentsPayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.FieldsAppStoreVersionExperimentsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionExperiments
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperiments]`.
-                public var fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload`.
-                @frozen public enum FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case locale = "locale"
-                    case appStoreVersionExperimentTreatment = "appStoreVersionExperimentTreatment"
-                    case appScreenshotSets = "appScreenshotSets"
-                    case appPreviewSets = "appPreviewSets"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
-                public typealias fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
-                public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appStoreVersionExperiment = "appStoreVersionExperiment"
-                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
-                    case appStoreVersionExperimentTreatmentLocalizations = "appStoreVersionExperimentTreatmentLocalizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/include`.
-                public var include: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related appStoreVersionExperimentTreatmentLocalizations returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/limit[appStoreVersionExperimentTreatmentLocalizations]`.
-                public var limitAppStoreVersionExperimentTreatmentLocalizations: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsAppStoreVersionExperimentTreatments: the fields to include for returned resources of type appStoreVersionExperimentTreatments
-                ///   - fieldsAppStoreVersionExperiments: the fields to include for returned resources of type appStoreVersionExperiments
-                ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitAppStoreVersionExperimentTreatmentLocalizations: maximum number of related appStoreVersionExperimentTreatmentLocalizations returned (when they are included)
-                public init(
-                    fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload? = nil,
-                    fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload? = nil,
-                    fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
-                    include: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.IncludePayload? = nil,
-                    limitAppStoreVersionExperimentTreatmentLocalizations: Swift.Int? = nil
-                ) {
-                    self.fieldsAppStoreVersionExperimentTreatments = fieldsAppStoreVersionExperimentTreatments
-                    self.fieldsAppStoreVersionExperiments = fieldsAppStoreVersionExperiments
-                    self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
-                    self.include = include
-                    self.limitAppStoreVersionExperimentTreatmentLocalizations = limitAppStoreVersionExperimentTreatmentLocalizations
-                }
-            }
-            public var query: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentTreatmentsGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentTreatmentsGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Path,
-                query: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query = .init(),
-                headers: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppStoreVersionExperimentTreatmentResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppStoreVersionExperimentTreatmentResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppStoreVersionExperimentTreatment
-            ///
-            /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatments/{id}/get(appStoreVersionExperimentTreatments_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
                             response: self
                         )
                     }

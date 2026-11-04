@@ -1655,6 +1655,13 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
                     name: "fields[gameCenterEnabledVersions]",
                     value: input.query.fieldsGameCenterEnabledVersions
                 )
@@ -1839,6 +1846,13 @@ extension Client {
                     explode: true,
                     name: "limit[promotedPurchases]",
                     value: input.query.limitPromotedPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[retentionMessages]",
+                    value: input.query.limitRetentionMessages
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2030,6 +2044,13 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
                     name: "fields[gameCenterEnabledVersions]",
                     value: input.query.fieldsGameCenterEnabledVersions
                 )
@@ -2207,6 +2228,13 @@ extension Client {
                     explode: true,
                     name: "limit[promotedPurchases]",
                     value: input.query.limitPromotedPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[retentionMessages]",
+                    value: input.query.limitRetentionMessages
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,

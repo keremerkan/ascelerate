@@ -10,6 +10,125 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `POST /v2/gameCenterLeaderboardSetImages`.
+    /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/post(gameCenterLeaderboardSetImagesV2_createInstance)`.
+    public enum GameCenterLeaderboardSetImagesV2CreateInstance {
+        public static let id: Swift.String = "gameCenterLeaderboardSetImagesV2_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2CreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterLeaderboardSetImagesV2CreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.GameCenterLeaderboardSetImageV2CreateRequest)
+            }
+            public var body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Headers = .init(),
+                body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v2/gameCenterLeaderboardSetImages/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.GameCenterLeaderboardSetImageV2Response)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.GameCenterLeaderboardSetImageV2Response {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single GameCenterLeaderboardSetImage
+            ///
+            /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/post(gameCenterLeaderboardSetImagesV2_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.GameCenterLeaderboardSetImagesV2CreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v2/gameCenterLeaderboardSetImages/{id}`.
     /// - Remark: Generated from `#/paths//v2/gameCenterLeaderboardSetImages/{id}/get(gameCenterLeaderboardSetImagesV2_getInstance)`.
     public enum GameCenterLeaderboardSetImagesV2GetInstance {

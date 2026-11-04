@@ -2338,6 +2338,13 @@ extension Client {
                 try converter.setQueryItemAsURI(
                     in: &request,
                     style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageVersions]",
+                    value: input.query.fieldsRetentionMessageVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
                     explode: true,
                     name: "limit",
                     value: input.query.limit
@@ -2983,94 +2990,6 @@ extension Client {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
                             Components.Schemas.ScmRepositoryResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/scmRepositories/{id}/gitReferences`.
-    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/gitReferences/get(scmRepositories_gitReferences_getToManyRelated)`.
-    public func scmRepositoriesGitReferencesGetToManyRelated(_ input: Operations.ScmRepositoriesGitReferencesGetToManyRelated.Input) async throws -> Operations.ScmRepositoriesGitReferencesGetToManyRelated.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.ScmRepositoriesGitReferencesGetToManyRelated.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/scmRepositories/{}/gitReferences",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmGitReferences]",
-                    value: input.query.fieldsScmGitReferences
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmRepositories]",
-                    value: input.query.fieldsScmRepositories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ScmRepositoriesGitReferencesGetToManyRelated.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ScmGitReferencesResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

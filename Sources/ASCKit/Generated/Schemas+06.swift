@@ -2318,6 +2318,8 @@ extension Components.Schemas {
             case preReleaseVersions(Components.Schemas.PrereleaseVersion)
             /// - Remark: Generated from `#/components/schemas/AppResponse/IncludedPayload/PromotedPurchase`.
             case promotedPurchases(Components.Schemas.PromotedPurchase)
+            /// - Remark: Generated from `#/components/schemas/AppResponse/IncludedPayload/RetentionMessage`.
+            case retentionMessages(Components.Schemas.RetentionMessage)
             /// - Remark: Generated from `#/components/schemas/AppResponse/IncludedPayload/ReviewSubmission`.
             case reviewSubmissions(Components.Schemas.ReviewSubmission)
             /// - Remark: Generated from `#/components/schemas/AppResponse/IncludedPayload/SubscriptionGracePeriod`.
@@ -2376,6 +2378,8 @@ extension Components.Schemas {
                     self = .preReleaseVersions(try .init(from: decoder))
                 case "promotedPurchases":
                     self = .promotedPurchases(try .init(from: decoder))
+                case "retentionMessages":
+                    self = .retentionMessages(try .init(from: decoder))
                 case "reviewSubmissions":
                     self = .reviewSubmissions(try .init(from: decoder))
                 case "subscriptionGracePeriods":
@@ -2433,6 +2437,8 @@ extension Components.Schemas {
                 case let .preReleaseVersions(value):
                     try value.encode(to: encoder)
                 case let .promotedPurchases(value):
+                    try value.encode(to: encoder)
+                case let .retentionMessages(value):
                     try value.encode(to: encoder)
                 case let .reviewSubmissions(value):
                     try value.encode(to: encoder)

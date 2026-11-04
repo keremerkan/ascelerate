@@ -10,6 +10,143 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `PATCH /v1/bundleIds/{id}`.
+    /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/patch(bundleIds_updateInstance)`.
+    public enum BundleIdsUpdateInstance {
+        public static let id: Swift.String = "bundleIds_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.BundleIdsUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BundleIdsUpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.BundleIdsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.BundleIdsUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.BundleIdUpdateRequest)
+            }
+            public var body: Operations.BundleIdsUpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.BundleIdsUpdateInstance.Input.Path,
+                headers: Operations.BundleIdsUpdateInstance.Input.Headers = .init(),
+                body: Operations.BundleIdsUpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/bundleIds/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.BundleIdResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.BundleIdResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.BundleIdsUpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.BundleIdsUpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single BundleId
+            ///
+            /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/patch(bundleIds_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.BundleIdsUpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.BundleIdsUpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `DELETE /v1/bundleIds/{id}`.
     /// - Remark: Generated from `#/paths//v1/bundleIds/{id}/delete(bundleIds_deleteInstance)`.
     public enum BundleIdsDeleteInstance {
@@ -2834,6 +2971,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"

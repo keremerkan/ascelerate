@@ -125,6 +125,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appCustomProductPageLocalizations/{id}/placements/GET/query/fields[appAssetLibraryPlacements]`.
                 public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
@@ -244,6 +245,19 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/appCustomProductPageLocalizations/{id}/placements/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
                 public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/appCustomProductPageLocalizations/{id}/placements/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/appCustomProductPageLocalizations/{id}/placements/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/appCustomProductPageLocalizations/{id}/placements/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
                 /// maximum resources per page
                 ///
                 /// - Remark: Generated from `#/paths/v1/appCustomProductPageLocalizations/{id}/placements/GET/query/limit`.
@@ -256,6 +270,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appCustomProductPageLocalizations/{id}/placements/GET/query/include`.
                 public typealias IncludePayload = [Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.IncludePayloadPayload]
@@ -283,6 +298,7 @@ extension Operations {
                 ///   - fieldsAppStoreVersionLocalizations: the fields to include for returned resources of type appStoreVersionLocalizations
                 ///   - fieldsAppCustomProductPageLocalizations: the fields to include for returned resources of type appCustomProductPageLocalizations
                 ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
                 ///   - limit: maximum resources per page
                 ///   - include: comma-separated list of relationships to include
                 public init(
@@ -303,6 +319,7 @@ extension Operations {
                     fieldsAppStoreVersionLocalizations: Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionLocalizationsPayload? = nil,
                     fieldsAppCustomProductPageLocalizations: Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppCustomProductPageLocalizationsPayload? = nil,
                     fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
                     limit: Swift.Int? = nil,
                     include: Operations.AppCustomProductPageLocalizationsPlacementsGetToManyRelated.Input.Query.IncludePayload? = nil
                 ) {
@@ -323,6 +340,7 @@ extension Operations {
                     self.fieldsAppStoreVersionLocalizations = fieldsAppStoreVersionLocalizations
                     self.fieldsAppCustomProductPageLocalizations = fieldsAppCustomProductPageLocalizations
                     self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
                     self.limit = limit
                     self.include = include
                 }
@@ -629,6 +647,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -1846,6 +1865,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appCustomProductPageVersions/{id}/appCustomProductPageLocalizations/GET/query/fields[appAssetLibraryPlacements]`.
                 public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppCustomProductPageVersionsAppCustomProductPageLocalizationsGetToManyRelated.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
@@ -2549,6 +2569,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"

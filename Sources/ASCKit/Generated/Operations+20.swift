@@ -10,6 +10,167 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/endUserLicenseAgreements/{id}/territories`.
+    /// - Remark: Generated from `#/paths//v1/endUserLicenseAgreements/{id}/territories/get(endUserLicenseAgreements_territories_getToManyRelated)`.
+    public enum EndUserLicenseAgreementsTerritoriesGetToManyRelated {
+        public static let id: Swift.String = "endUserLicenseAgreements_territories_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/query/fieldsTerritoriesPayload`.
+                @frozen public enum FieldsTerritoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case currency = "currency"
+                }
+                /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/query/fields[territories]`.
+                public typealias fieldsTerritoriesPayload = [Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Query.FieldsTerritoriesPayloadPayload]
+                /// the fields to include for returned resources of type territories
+                ///
+                /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/query/fields[territories]`.
+                public var fieldsTerritories: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Query.fieldsTerritoriesPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsTerritories: the fields to include for returned resources of type territories
+                ///   - limit: maximum resources per page
+                public init(
+                    fieldsTerritories: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Query.fieldsTerritoriesPayload? = nil,
+                    limit: Swift.Int? = nil
+                ) {
+                    self.fieldsTerritories = fieldsTerritories
+                    self.limit = limit
+                }
+            }
+            public var query: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Path,
+                query: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Query = .init(),
+                headers: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/endUserLicenseAgreements/{id}/territories/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.TerritoriesWithoutIncludesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.TerritoriesWithoutIncludesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of Territories with get
+            ///
+            /// - Remark: Generated from `#/paths//v1/endUserLicenseAgreements/{id}/territories/get(endUserLicenseAgreements_territories_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.EndUserLicenseAgreementsTerritoriesGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/financeReports`.
     /// - Remark: Generated from `#/paths//v1/financeReports/get(financeReports_getCollection)`.
     public enum FinanceReportsGetCollection {
@@ -2966,143 +3127,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.GameCenterActivityVersionsGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/gameCenterActivityVersions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/gameCenterActivityVersions/{id}/patch(gameCenterActivityVersions_updateInstance)`.
-    public enum GameCenterActivityVersionsUpdateInstance {
-        public static let id: Swift.String = "gameCenterActivityVersions_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterActivityVersionsUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterActivityVersionsUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterActivityVersionsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterActivityVersionsUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterActivityVersionUpdateRequest)
-            }
-            public var body: Operations.GameCenterActivityVersionsUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.GameCenterActivityVersionsUpdateInstance.Input.Path,
-                headers: Operations.GameCenterActivityVersionsUpdateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterActivityVersionsUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/gameCenterActivityVersions/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterActivityVersionResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterActivityVersionResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterActivityVersion
-            ///
-            /// - Remark: Generated from `#/paths//v1/gameCenterActivityVersions/{id}/patch(gameCenterActivityVersions_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterActivityVersionsUpdateInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

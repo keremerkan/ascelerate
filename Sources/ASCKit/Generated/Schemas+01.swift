@@ -3427,6 +3427,62 @@ extension Components.Schemas {
             }
             /// - Remark: Generated from `#/components/schemas/App/relationships/promotedPurchases`.
             public var promotedPurchases: Components.Schemas.App.RelationshipsPayload.PromotedPurchasesPayload?
+            /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages`.
+            public struct RetentionMessagesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages/DataPayload`.
+                public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages/DataPayload/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages/DataPayload/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages/data`.
+                public typealias DataPayload = [Components.Schemas.App.RelationshipsPayload.RetentionMessagesPayload.DataPayloadPayload]
+                /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages/data`.
+                public var data: Components.Schemas.App.RelationshipsPayload.RetentionMessagesPayload.DataPayload?
+                /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages/meta`.
+                public var meta: Components.Schemas.PagingInformation?
+                /// Creates a new `RetentionMessagesPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                ///   - links:
+                ///   - meta:
+                public init(
+                    data: Components.Schemas.App.RelationshipsPayload.RetentionMessagesPayload.DataPayload? = nil,
+                    links: Components.Schemas.RelationshipLinks? = nil,
+                    meta: Components.Schemas.PagingInformation? = nil
+                ) {
+                    self.data = data
+                    self.links = links
+                    self.meta = meta
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                    case links
+                    case meta
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/App/relationships/retentionMessages`.
+            public var retentionMessages: Components.Schemas.App.RelationshipsPayload.RetentionMessagesPayload?
             /// - Remark: Generated from `#/components/schemas/App/relationships/reviewSubmissions`.
             public struct ReviewSubmissionsPayload: Codable, Hashable, Sendable {
                 /// - Remark: Generated from `#/components/schemas/App/relationships/reviewSubmissions/DataPayload`.
@@ -3664,6 +3720,7 @@ extension Components.Schemas {
             ///   - perfPowerMetrics:
             ///   - preReleaseVersions:
             ///   - promotedPurchases:
+            ///   - retentionMessages:
             ///   - reviewSubmissions:
             ///   - searchKeywords:
             ///   - subscriptionGracePeriod:
@@ -3710,6 +3767,7 @@ extension Components.Schemas {
                 perfPowerMetrics: Components.Schemas.App.RelationshipsPayload.PerfPowerMetricsPayload? = nil,
                 preReleaseVersions: Components.Schemas.App.RelationshipsPayload.PreReleaseVersionsPayload? = nil,
                 promotedPurchases: Components.Schemas.App.RelationshipsPayload.PromotedPurchasesPayload? = nil,
+                retentionMessages: Components.Schemas.App.RelationshipsPayload.RetentionMessagesPayload? = nil,
                 reviewSubmissions: Components.Schemas.App.RelationshipsPayload.ReviewSubmissionsPayload? = nil,
                 searchKeywords: Components.Schemas.App.RelationshipsPayload.SearchKeywordsPayload? = nil,
                 subscriptionGracePeriod: Components.Schemas.App.RelationshipsPayload.SubscriptionGracePeriodPayload? = nil,
@@ -3756,6 +3814,7 @@ extension Components.Schemas {
                 self.perfPowerMetrics = perfPowerMetrics
                 self.preReleaseVersions = preReleaseVersions
                 self.promotedPurchases = promotedPurchases
+                self.retentionMessages = retentionMessages
                 self.reviewSubmissions = reviewSubmissions
                 self.searchKeywords = searchKeywords
                 self.subscriptionGracePeriod = subscriptionGracePeriod
@@ -3803,6 +3862,7 @@ extension Components.Schemas {
                 case perfPowerMetrics
                 case preReleaseVersions
                 case promotedPurchases
+                case retentionMessages
                 case reviewSubmissions
                 case searchKeywords
                 case subscriptionGracePeriod

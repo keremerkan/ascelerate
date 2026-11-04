@@ -10,6 +10,229 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/appStoreVersionExperimentTreatments/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatments/{id}/get(appStoreVersionExperimentTreatments_getInstance)`.
+    public enum AppStoreVersionExperimentTreatmentsGetInstance {
+        public static let id: Swift.String = "appStoreVersionExperimentTreatments_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fieldsAppStoreVersionExperimentTreatmentsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentTreatmentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case appIcon = "appIcon"
+                    case appIconName = "appIconName"
+                    case promotedDate = "promotedDate"
+                    case appStoreVersionExperiment = "appStoreVersionExperiment"
+                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
+                    case appStoreVersionExperimentTreatmentLocalizations = "appStoreVersionExperimentTreatmentLocalizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatments]`.
+                public typealias fieldsAppStoreVersionExperimentTreatmentsPayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.FieldsAppStoreVersionExperimentTreatmentsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperimentTreatments
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatments]`.
+                public var fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload?
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fieldsAppStoreVersionExperimentsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case trafficProportion = "trafficProportion"
+                    case state = "state"
+                    case reviewRequired = "reviewRequired"
+                    case startDate = "startDate"
+                    case endDate = "endDate"
+                    case appStoreVersion = "appStoreVersion"
+                    case appStoreVersionExperimentTreatments = "appStoreVersionExperimentTreatments"
+                    case platform = "platform"
+                    case app = "app"
+                    case latestControlVersion = "latestControlVersion"
+                    case controlVersions = "controlVersions"
+                }
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperiments]`.
+                public typealias fieldsAppStoreVersionExperimentsPayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.FieldsAppStoreVersionExperimentsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperiments
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperiments]`.
+                public var fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload?
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case appStoreVersionExperimentTreatment = "appStoreVersionExperimentTreatment"
+                    case appScreenshotSets = "appScreenshotSets"
+                    case appPreviewSets = "appPreviewSets"
+                    case placements = "placements"
+                }
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
+                public typealias fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
+                public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case appStoreVersionExperiment = "appStoreVersionExperiment"
+                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
+                    case appStoreVersionExperimentTreatmentLocalizations = "appStoreVersionExperimentTreatmentLocalizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/include`.
+                public var include: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.IncludePayload?
+                /// maximum number of related appStoreVersionExperimentTreatmentLocalizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/query/limit[appStoreVersionExperimentTreatmentLocalizations]`.
+                public var limitAppStoreVersionExperimentTreatmentLocalizations: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsAppStoreVersionExperimentTreatments: the fields to include for returned resources of type appStoreVersionExperimentTreatments
+                ///   - fieldsAppStoreVersionExperiments: the fields to include for returned resources of type appStoreVersionExperiments
+                ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitAppStoreVersionExperimentTreatmentLocalizations: maximum number of related appStoreVersionExperimentTreatmentLocalizations returned (when they are included)
+                public init(
+                    fieldsAppStoreVersionExperimentTreatments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentsPayload? = nil,
+                    fieldsAppStoreVersionExperiments: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload? = nil,
+                    fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
+                    include: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query.IncludePayload? = nil,
+                    limitAppStoreVersionExperimentTreatmentLocalizations: Swift.Int? = nil
+                ) {
+                    self.fieldsAppStoreVersionExperimentTreatments = fieldsAppStoreVersionExperimentTreatments
+                    self.fieldsAppStoreVersionExperiments = fieldsAppStoreVersionExperiments
+                    self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
+                    self.include = include
+                    self.limitAppStoreVersionExperimentTreatmentLocalizations = limitAppStoreVersionExperimentTreatmentLocalizations
+                }
+            }
+            public var query: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentTreatmentsGetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentTreatmentsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Path,
+                query: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Query = .init(),
+                headers: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppStoreVersionExperimentTreatmentResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppStoreVersionExperimentTreatmentResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single AppStoreVersionExperimentTreatment
+            ///
+            /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatments/{id}/get(appStoreVersionExperimentTreatments_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppStoreVersionExperimentTreatmentsGetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `PATCH /v1/appStoreVersionExperimentTreatments/{id}`.
     /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatments/{id}/patch(appStoreVersionExperimentTreatments_updateInstance)`.
     public enum AppStoreVersionExperimentTreatmentsUpdateInstance {
@@ -316,6 +539,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/{id}/appStoreVersionExperimentTreatmentLocalizations/GET/query/fields[appAssetLibraryPlacements]`.
                 public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppStoreVersionExperimentTreatmentsAppStoreVersionExperimentTreatmentLocalizationsGetToManyRelated.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
@@ -742,6 +966,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/GET/query/fields[appAssetLibraryPlacements]`.
                 public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppStoreVersionLocalizationsGetInstance.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
@@ -1892,6 +2117,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/placements/GET/query/fields[appAssetLibraryPlacements]`.
                 public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
@@ -2011,6 +2237,19 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/placements/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
                 public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/placements/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/placements/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/placements/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
                 /// maximum resources per page
                 ///
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/placements/GET/query/limit`.
@@ -2023,6 +2262,7 @@ extension Operations {
                     case appStoreVersionLocalization = "appStoreVersionLocalization"
                     case appCustomProductPageLocalization = "appCustomProductPageLocalization"
                     case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/appStoreVersionLocalizations/{id}/placements/GET/query/include`.
                 public typealias IncludePayload = [Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.IncludePayloadPayload]
@@ -2050,6 +2290,7 @@ extension Operations {
                 ///   - fieldsAppStoreVersionLocalizations: the fields to include for returned resources of type appStoreVersionLocalizations
                 ///   - fieldsAppCustomProductPageLocalizations: the fields to include for returned resources of type appCustomProductPageLocalizations
                 ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
                 ///   - limit: maximum resources per page
                 ///   - include: comma-separated list of relationships to include
                 public init(
@@ -2070,6 +2311,7 @@ extension Operations {
                     fieldsAppStoreVersionLocalizations: Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionLocalizationsPayload? = nil,
                     fieldsAppCustomProductPageLocalizations: Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppCustomProductPageLocalizationsPayload? = nil,
                     fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
                     limit: Swift.Int? = nil,
                     include: Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.IncludePayload? = nil
                 ) {
@@ -2090,6 +2332,7 @@ extension Operations {
                     self.fieldsAppStoreVersionLocalizations = fieldsAppStoreVersionLocalizations
                     self.fieldsAppCustomProductPageLocalizations = fieldsAppCustomProductPageLocalizations
                     self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
                     self.limit = limit
                     self.include = include
                 }
@@ -2734,500 +2977,6 @@ extension Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/appStoreVersions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/get(appStoreVersions_getInstance)`.
-    public enum AppStoreVersionsGetInstance {
-        public static let id: Swift.String = "appStoreVersions_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppStoreVersionsGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppStoreVersionsPayload`.
-                @frozen public enum FieldsAppStoreVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platform = "platform"
-                    case versionString = "versionString"
-                    case appStoreState = "appStoreState"
-                    case appVersionState = "appVersionState"
-                    case copyright = "copyright"
-                    case reviewType = "reviewType"
-                    case releaseType = "releaseType"
-                    case earliestReleaseDate = "earliestReleaseDate"
-                    case usesIdfa = "usesIdfa"
-                    case downloadable = "downloadable"
-                    case createdDate = "createdDate"
-                    case app = "app"
-                    case appStoreVersionLocalizations = "appStoreVersionLocalizations"
-                    case build = "build"
-                    case appStoreVersionPhasedRelease = "appStoreVersionPhasedRelease"
-                    case gameCenterAppVersion = "gameCenterAppVersion"
-                    case routingAppCoverage = "routingAppCoverage"
-                    case appStoreReviewDetail = "appStoreReviewDetail"
-                    case appStoreVersionSubmission = "appStoreVersionSubmission"
-                    case appClipDefaultExperience = "appClipDefaultExperience"
-                    case appStoreVersionExperiments = "appStoreVersionExperiments"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case customerReviews = "customerReviews"
-                    case alternativeDistributionPackage = "alternativeDistributionPackage"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersions]`.
-                public typealias fieldsAppStoreVersionsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppStoreVersionsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersions]`.
-                public var fieldsAppStoreVersions: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppsPayload`.
-                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case accessibilityUrl = "accessibilityUrl"
-                    case name = "name"
-                    case bundleId = "bundleId"
-                    case sku = "sku"
-                    case primaryLocale = "primaryLocale"
-                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
-                    case subscriptionStatusUrl = "subscriptionStatusUrl"
-                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
-                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
-                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
-                    case contentRightsDeclaration = "contentRightsDeclaration"
-                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
-                    case accessibilityDeclarations = "accessibilityDeclarations"
-                    case appEncryptionDeclarations = "appEncryptionDeclarations"
-                    case appStoreIcon = "appStoreIcon"
-                    case ciProduct = "ciProduct"
-                    case betaTesters = "betaTesters"
-                    case betaGroups = "betaGroups"
-                    case appStoreVersions = "appStoreVersions"
-                    case appTags = "appTags"
-                    case preReleaseVersions = "preReleaseVersions"
-                    case betaAppLocalizations = "betaAppLocalizations"
-                    case builds = "builds"
-                    case betaLicenseAgreement = "betaLicenseAgreement"
-                    case betaAppReviewDetail = "betaAppReviewDetail"
-                    case appInfos = "appInfos"
-                    case appClips = "appClips"
-                    case appPricePoints = "appPricePoints"
-                    case endUserLicenseAgreement = "endUserLicenseAgreement"
-                    case appPriceSchedule = "appPriceSchedule"
-                    case appAvailabilityV2 = "appAvailabilityV2"
-                    case inAppPurchases = "inAppPurchases"
-                    case subscriptionGroups = "subscriptionGroups"
-                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
-                    case performanceOverviews = "performanceOverviews"
-                    case perfPowerMetrics = "perfPowerMetrics"
-                    case appCustomProductPages = "appCustomProductPages"
-                    case inAppPurchasesV2 = "inAppPurchasesV2"
-                    case promotedPurchases = "promotedPurchases"
-                    case appEvents = "appEvents"
-                    case reviewSubmissions = "reviewSubmissions"
-                    case subscriptionGracePeriod = "subscriptionGracePeriod"
-                    case customerReviews = "customerReviews"
-                    case customerReviewSummarizations = "customerReviewSummarizations"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case alternativeDistributionKey = "alternativeDistributionKey"
-                    case analyticsReportRequests = "analyticsReportRequests"
-                    case marketplaceSearchDetail = "marketplaceSearchDetail"
-                    case buildUploads = "buildUploads"
-                    case backgroundAssets = "backgroundAssets"
-                    case assetLibrary = "assetLibrary"
-                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
-                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
-                    case searchKeywords = "searchKeywords"
-                    case webhooks = "webhooks"
-                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[apps]`.
-                public typealias fieldsAppsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppsPayloadPayload]
-                /// the fields to include for returned resources of type apps
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[apps]`.
-                public var fieldsApps: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppStoreVersionLocalizationsPayload`.
-                @frozen public enum FieldsAppStoreVersionLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case description = "description"
-                    case locale = "locale"
-                    case keywords = "keywords"
-                    case marketingUrl = "marketingUrl"
-                    case promotionalText = "promotionalText"
-                    case supportUrl = "supportUrl"
-                    case whatsNew = "whatsNew"
-                    case appStoreVersion = "appStoreVersion"
-                    case appScreenshotSets = "appScreenshotSets"
-                    case appPreviewSets = "appPreviewSets"
-                    case searchKeywords = "searchKeywords"
-                    case placements = "placements"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionLocalizations]`.
-                public typealias fieldsAppStoreVersionLocalizationsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppStoreVersionLocalizationsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionLocalizations
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionLocalizations]`.
-                public var fieldsAppStoreVersionLocalizations: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionLocalizationsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsBuildsPayload`.
-                @frozen public enum FieldsBuildsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case uploadedDate = "uploadedDate"
-                    case expirationDate = "expirationDate"
-                    case expired = "expired"
-                    case minOsVersion = "minOsVersion"
-                    case lsMinimumSystemVersion = "lsMinimumSystemVersion"
-                    case computedMinMacOsVersion = "computedMinMacOsVersion"
-                    case computedMinVisionOsVersion = "computedMinVisionOsVersion"
-                    case iconAssetToken = "iconAssetToken"
-                    case processingState = "processingState"
-                    case buildAudienceType = "buildAudienceType"
-                    case usesNonExemptEncryption = "usesNonExemptEncryption"
-                    case preReleaseVersion = "preReleaseVersion"
-                    case individualTesters = "individualTesters"
-                    case betaGroups = "betaGroups"
-                    case betaBuildLocalizations = "betaBuildLocalizations"
-                    case appEncryptionDeclaration = "appEncryptionDeclaration"
-                    case betaAppReviewSubmission = "betaAppReviewSubmission"
-                    case app = "app"
-                    case buildBetaDetail = "buildBetaDetail"
-                    case appStoreVersion = "appStoreVersion"
-                    case icons = "icons"
-                    case buildBundles = "buildBundles"
-                    case buildUpload = "buildUpload"
-                    case perfPowerMetrics = "perfPowerMetrics"
-                    case diagnosticSignatures = "diagnosticSignatures"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[builds]`.
-                public typealias fieldsBuildsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsBuildsPayloadPayload]
-                /// the fields to include for returned resources of type builds
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[builds]`.
-                public var fieldsBuilds: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsBuildsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppStoreVersionPhasedReleasesPayload`.
-                @frozen public enum FieldsAppStoreVersionPhasedReleasesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case phasedReleaseState = "phasedReleaseState"
-                    case startDate = "startDate"
-                    case totalPauseDuration = "totalPauseDuration"
-                    case currentDayNumber = "currentDayNumber"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionPhasedReleases]`.
-                public typealias fieldsAppStoreVersionPhasedReleasesPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppStoreVersionPhasedReleasesPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionPhasedReleases
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionPhasedReleases]`.
-                public var fieldsAppStoreVersionPhasedReleases: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionPhasedReleasesPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsGameCenterAppVersionsPayload`.
-                @frozen public enum FieldsGameCenterAppVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case enabled = "enabled"
-                    case compatibilityVersions = "compatibilityVersions"
-                    case appStoreVersion = "appStoreVersion"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[gameCenterAppVersions]`.
-                public typealias fieldsGameCenterAppVersionsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsGameCenterAppVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterAppVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[gameCenterAppVersions]`.
-                public var fieldsGameCenterAppVersions: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsGameCenterAppVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsRoutingAppCoveragesPayload`.
-                @frozen public enum FieldsRoutingAppCoveragesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case sourceFileChecksum = "sourceFileChecksum"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case appStoreVersion = "appStoreVersion"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[routingAppCoverages]`.
-                public typealias fieldsRoutingAppCoveragesPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsRoutingAppCoveragesPayloadPayload]
-                /// the fields to include for returned resources of type routingAppCoverages
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[routingAppCoverages]`.
-                public var fieldsRoutingAppCoverages: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsRoutingAppCoveragesPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppStoreReviewDetailsPayload`.
-                @frozen public enum FieldsAppStoreReviewDetailsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case contactFirstName = "contactFirstName"
-                    case contactLastName = "contactLastName"
-                    case contactPhone = "contactPhone"
-                    case contactEmail = "contactEmail"
-                    case demoAccountName = "demoAccountName"
-                    case demoAccountPassword = "demoAccountPassword"
-                    case demoAccountRequired = "demoAccountRequired"
-                    case notes = "notes"
-                    case appStoreVersion = "appStoreVersion"
-                    case appStoreReviewAttachments = "appStoreReviewAttachments"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreReviewDetails]`.
-                public typealias fieldsAppStoreReviewDetailsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppStoreReviewDetailsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreReviewDetails
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreReviewDetails]`.
-                public var fieldsAppStoreReviewDetails: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreReviewDetailsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppStoreVersionSubmissionsPayload`.
-                @frozen public enum FieldsAppStoreVersionSubmissionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appStoreVersion = "appStoreVersion"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionSubmissions]`.
-                public typealias fieldsAppStoreVersionSubmissionsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppStoreVersionSubmissionsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionSubmissions
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionSubmissions]`.
-                @available(*, deprecated)
-                public var fieldsAppStoreVersionSubmissions: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionSubmissionsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppClipDefaultExperiencesPayload`.
-                @frozen public enum FieldsAppClipDefaultExperiencesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case action = "action"
-                    case appClip = "appClip"
-                    case releaseWithAppStoreVersion = "releaseWithAppStoreVersion"
-                    case appClipDefaultExperienceLocalizations = "appClipDefaultExperienceLocalizations"
-                    case appClipAppStoreReviewDetail = "appClipAppStoreReviewDetail"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appClipDefaultExperiences]`.
-                public typealias fieldsAppClipDefaultExperiencesPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppClipDefaultExperiencesPayloadPayload]
-                /// the fields to include for returned resources of type appClipDefaultExperiences
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appClipDefaultExperiences]`.
-                public var fieldsAppClipDefaultExperiences: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppClipDefaultExperiencesPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAppStoreVersionExperimentsPayload`.
-                @frozen public enum FieldsAppStoreVersionExperimentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case trafficProportion = "trafficProportion"
-                    case state = "state"
-                    case reviewRequired = "reviewRequired"
-                    case startDate = "startDate"
-                    case endDate = "endDate"
-                    case appStoreVersion = "appStoreVersion"
-                    case appStoreVersionExperimentTreatments = "appStoreVersionExperimentTreatments"
-                    case platform = "platform"
-                    case app = "app"
-                    case latestControlVersion = "latestControlVersion"
-                    case controlVersions = "controlVersions"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionExperiments]`.
-                public typealias fieldsAppStoreVersionExperimentsPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAppStoreVersionExperimentsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionExperiments
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[appStoreVersionExperiments]`.
-                public var fieldsAppStoreVersionExperiments: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fieldsAlternativeDistributionPackagesPayload`.
-                @frozen public enum FieldsAlternativeDistributionPackagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case sourceFileChecksum = "sourceFileChecksum"
-                    case versions = "versions"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[alternativeDistributionPackages]`.
-                public typealias fieldsAlternativeDistributionPackagesPayload = [Operations.AppStoreVersionsGetInstance.Input.Query.FieldsAlternativeDistributionPackagesPayloadPayload]
-                /// the fields to include for returned resources of type alternativeDistributionPackages
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/fields[alternativeDistributionPackages]`.
-                public var fieldsAlternativeDistributionPackages: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAlternativeDistributionPackagesPayload?
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case app = "app"
-                    case appStoreVersionLocalizations = "appStoreVersionLocalizations"
-                    case build = "build"
-                    case appStoreVersionPhasedRelease = "appStoreVersionPhasedRelease"
-                    case gameCenterAppVersion = "gameCenterAppVersion"
-                    case routingAppCoverage = "routingAppCoverage"
-                    case appStoreReviewDetail = "appStoreReviewDetail"
-                    case appStoreVersionSubmission = "appStoreVersionSubmission"
-                    case appClipDefaultExperience = "appClipDefaultExperience"
-                    case appStoreVersionExperiments = "appStoreVersionExperiments"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case alternativeDistributionPackage = "alternativeDistributionPackage"
-                }
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppStoreVersionsGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/include`.
-                public var include: Operations.AppStoreVersionsGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related appStoreVersionExperiments returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/limit[appStoreVersionExperiments]`.
-                @available(*, deprecated)
-                public var limitAppStoreVersionExperiments: Swift.Int?
-                /// maximum number of related appStoreVersionExperimentsV2 returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/limit[appStoreVersionExperimentsV2]`.
-                public var limitAppStoreVersionExperimentsV2: Swift.Int?
-                /// maximum number of related appStoreVersionLocalizations returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/query/limit[appStoreVersionLocalizations]`.
-                public var limitAppStoreVersionLocalizations: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsAppStoreVersions: the fields to include for returned resources of type appStoreVersions
-                ///   - fieldsApps: the fields to include for returned resources of type apps
-                ///   - fieldsAppStoreVersionLocalizations: the fields to include for returned resources of type appStoreVersionLocalizations
-                ///   - fieldsBuilds: the fields to include for returned resources of type builds
-                ///   - fieldsAppStoreVersionPhasedReleases: the fields to include for returned resources of type appStoreVersionPhasedReleases
-                ///   - fieldsGameCenterAppVersions: the fields to include for returned resources of type gameCenterAppVersions
-                ///   - fieldsRoutingAppCoverages: the fields to include for returned resources of type routingAppCoverages
-                ///   - fieldsAppStoreReviewDetails: the fields to include for returned resources of type appStoreReviewDetails
-                ///   - fieldsAppStoreVersionSubmissions: the fields to include for returned resources of type appStoreVersionSubmissions
-                ///   - fieldsAppClipDefaultExperiences: the fields to include for returned resources of type appClipDefaultExperiences
-                ///   - fieldsAppStoreVersionExperiments: the fields to include for returned resources of type appStoreVersionExperiments
-                ///   - fieldsAlternativeDistributionPackages: the fields to include for returned resources of type alternativeDistributionPackages
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitAppStoreVersionExperiments: maximum number of related appStoreVersionExperiments returned (when they are included)
-                ///   - limitAppStoreVersionExperimentsV2: maximum number of related appStoreVersionExperimentsV2 returned (when they are included)
-                ///   - limitAppStoreVersionLocalizations: maximum number of related appStoreVersionLocalizations returned (when they are included)
-                public init(
-                    fieldsAppStoreVersions: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionsPayload? = nil,
-                    fieldsApps: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppsPayload? = nil,
-                    fieldsAppStoreVersionLocalizations: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionLocalizationsPayload? = nil,
-                    fieldsBuilds: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsBuildsPayload? = nil,
-                    fieldsAppStoreVersionPhasedReleases: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionPhasedReleasesPayload? = nil,
-                    fieldsGameCenterAppVersions: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsGameCenterAppVersionsPayload? = nil,
-                    fieldsRoutingAppCoverages: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsRoutingAppCoveragesPayload? = nil,
-                    fieldsAppStoreReviewDetails: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreReviewDetailsPayload? = nil,
-                    fieldsAppStoreVersionSubmissions: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionSubmissionsPayload? = nil,
-                    fieldsAppClipDefaultExperiences: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppClipDefaultExperiencesPayload? = nil,
-                    fieldsAppStoreVersionExperiments: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAppStoreVersionExperimentsPayload? = nil,
-                    fieldsAlternativeDistributionPackages: Operations.AppStoreVersionsGetInstance.Input.Query.fieldsAlternativeDistributionPackagesPayload? = nil,
-                    include: Operations.AppStoreVersionsGetInstance.Input.Query.IncludePayload? = nil,
-                    limitAppStoreVersionExperiments: Swift.Int? = nil,
-                    limitAppStoreVersionExperimentsV2: Swift.Int? = nil,
-                    limitAppStoreVersionLocalizations: Swift.Int? = nil
-                ) {
-                    self.fieldsAppStoreVersions = fieldsAppStoreVersions
-                    self.fieldsApps = fieldsApps
-                    self.fieldsAppStoreVersionLocalizations = fieldsAppStoreVersionLocalizations
-                    self.fieldsBuilds = fieldsBuilds
-                    self.fieldsAppStoreVersionPhasedReleases = fieldsAppStoreVersionPhasedReleases
-                    self.fieldsGameCenterAppVersions = fieldsGameCenterAppVersions
-                    self.fieldsRoutingAppCoverages = fieldsRoutingAppCoverages
-                    self.fieldsAppStoreReviewDetails = fieldsAppStoreReviewDetails
-                    self.fieldsAppStoreVersionSubmissions = fieldsAppStoreVersionSubmissions
-                    self.fieldsAppClipDefaultExperiences = fieldsAppClipDefaultExperiences
-                    self.fieldsAppStoreVersionExperiments = fieldsAppStoreVersionExperiments
-                    self.fieldsAlternativeDistributionPackages = fieldsAlternativeDistributionPackages
-                    self.include = include
-                    self.limitAppStoreVersionExperiments = limitAppStoreVersionExperiments
-                    self.limitAppStoreVersionExperimentsV2 = limitAppStoreVersionExperimentsV2
-                    self.limitAppStoreVersionLocalizations = limitAppStoreVersionLocalizations
-                }
-            }
-            public var query: Operations.AppStoreVersionsGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionsGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionsGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppStoreVersionsGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppStoreVersionsGetInstance.Input.Path,
-                query: Operations.AppStoreVersionsGetInstance.Input.Query = .init(),
-                headers: Operations.AppStoreVersionsGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appStoreVersions/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppStoreVersionResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppStoreVersionResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppStoreVersionsGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppStoreVersionsGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppStoreVersion
-            ///
-            /// - Remark: Generated from `#/paths//v1/appStoreVersions/{id}/get(appStoreVersions_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppStoreVersionsGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppStoreVersionsGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
                             response: self
                         )
                     }

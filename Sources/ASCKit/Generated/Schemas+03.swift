@@ -10,6 +10,29 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryResponse`.
+    public struct AppAssetLibraryResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryResponse/data`.
+        public var data: Components.Schemas.AppAssetLibrary
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `AppAssetLibraryResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - links:
+        public init(
+            data: Components.Schemas.AppAssetLibrary,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case links
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo`.
     public struct AppAssetLibraryVideo: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/AppAssetLibraryVideo/attributes`.

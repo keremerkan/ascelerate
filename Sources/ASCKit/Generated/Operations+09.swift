@@ -10,6 +10,188 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/apps/{id}/metrics/betaTesterUsages`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/metrics/betaTesterUsages/get(apps_betaTesterUsages_getMetrics)`.
+    public enum AppsBetaTesterUsagesGetMetrics {
+        public static let id: Swift.String = "apps_betaTesterUsages_getMetrics"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppsBetaTesterUsagesGetMetrics.Input.Path
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query/period`.
+                @frozen public enum PeriodPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case p7d = "P7D"
+                    case p30d = "P30D"
+                    case p90d = "P90D"
+                    case p365d = "P365D"
+                }
+                /// the duration of the reporting period
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query/period`.
+                public var period: Operations.AppsBetaTesterUsagesGetMetrics.Input.Query.PeriodPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query/GroupByPayload`.
+                @frozen public enum GroupByPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case betaTesters = "betaTesters"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query/groupBy`.
+                public typealias GroupByPayload = [Operations.AppsBetaTesterUsagesGetMetrics.Input.Query.GroupByPayloadPayload]
+                /// the dimension by which to group the results
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query/groupBy`.
+                public var groupBy: Operations.AppsBetaTesterUsagesGetMetrics.Input.Query.GroupByPayload?
+                /// filter by 'betaTesters' relationship dimension
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query/filter[betaTesters]`.
+                public var filterBetaTesters: Swift.String?
+                /// maximum number of groups to return per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - period: the duration of the reporting period
+                ///   - groupBy: the dimension by which to group the results
+                ///   - filterBetaTesters: filter by 'betaTesters' relationship dimension
+                ///   - limit: maximum number of groups to return per page
+                public init(
+                    period: Operations.AppsBetaTesterUsagesGetMetrics.Input.Query.PeriodPayload? = nil,
+                    groupBy: Operations.AppsBetaTesterUsagesGetMetrics.Input.Query.GroupByPayload? = nil,
+                    filterBetaTesters: Swift.String? = nil,
+                    limit: Swift.Int? = nil
+                ) {
+                    self.period = period
+                    self.groupBy = groupBy
+                    self.filterBetaTesters = filterBetaTesters
+                    self.limit = limit
+                }
+            }
+            public var query: Operations.AppsBetaTesterUsagesGetMetrics.Input.Query
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsBetaTesterUsagesGetMetrics.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsBetaTesterUsagesGetMetrics.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppsBetaTesterUsagesGetMetrics.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppsBetaTesterUsagesGetMetrics.Input.Path,
+                query: Operations.AppsBetaTesterUsagesGetMetrics.Input.Query = .init(),
+                headers: Operations.AppsBetaTesterUsagesGetMetrics.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/apps/{id}/metrics/betaTesterUsages/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppsBetaTesterUsagesV1MetricResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppsBetaTesterUsagesV1MetricResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppsBetaTesterUsagesGetMetrics.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppsBetaTesterUsagesGetMetrics.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Metrics data response
+            ///
+            /// - Remark: Generated from `#/paths//v1/apps/{id}/metrics/betaTesterUsages/get(apps_betaTesterUsages_getMetrics)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppsBetaTesterUsagesGetMetrics.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppsBetaTesterUsagesGetMetrics.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/apps/{id}/perfPowerMetrics`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/perfPowerMetrics/get(apps_perfPowerMetrics_getToManyRelated)`.
     public enum AppsPerfPowerMetricsGetToManyRelated {
@@ -278,6 +460,9 @@ extension Operations {
                     case images = "images"
                     case planAvailabilities = "planAvailabilities"
                     case versions = "versions"
+                    case retentionOffers = "retentionOffers"
+                    case retentionMessage = "retentionMessage"
+                    case retentionMessageOffers = "retentionMessageOffers"
                 }
                 /// - Remark: Generated from `#/paths/v1/apps/{id}/promotedPurchases/GET/query/fields[subscriptions]`.
                 public typealias fieldsSubscriptionsPayload = [Operations.AppsPromotedPurchasesGetToManyRelated.Input.Query.FieldsSubscriptionsPayloadPayload]
@@ -764,6 +949,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -814,6 +1000,7 @@ extension Operations {
                     case inAppPurchaseVersion = "inAppPurchaseVersion"
                     case subscriptionVersion = "subscriptionVersion"
                     case subscriptionGroupVersion = "subscriptionGroupVersion"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/apps/{id}/reviewSubmissions/GET/query/fields[reviewSubmissionItems]`.
                 public typealias fieldsReviewSubmissionItemsPayload = [Operations.AppsReviewSubmissionsGetToManyRelated.Input.Query.FieldsReviewSubmissionItemsPayloadPayload]
@@ -1288,6 +1475,9 @@ extension Operations {
                     case images = "images"
                     case planAvailabilities = "planAvailabilities"
                     case versions = "versions"
+                    case retentionOffers = "retentionOffers"
+                    case retentionMessage = "retentionMessage"
+                    case retentionMessageOffers = "retentionMessageOffers"
                 }
                 /// - Remark: Generated from `#/paths/v1/apps/{id}/subscriptionGroups/GET/query/fields[subscriptions]`.
                 public typealias fieldsSubscriptionsPayload = [Operations.AppsSubscriptionGroupsGetToManyRelated.Input.Query.FieldsSubscriptionsPayloadPayload]
@@ -1577,6 +1767,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -2878,152 +3069,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/appScreenshotSets/{id}/relationships/appScreenshots`.
-    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/relationships/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelationship)`.
-    public enum AppScreenshotSetsAppScreenshotsGetToManyRelationship {
-        public static let id: Swift.String = "appScreenshotSets_appScreenshots_getToManyRelationship"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - limit: maximum resources per page
-                public init(limit: Swift.Int? = nil) {
-                    self.limit = limit
-                }
-            }
-            public var query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Query
-            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Path,
-                query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Query = .init(),
-                headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/relationships/appScreenshots/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppScreenshotSetAppScreenshotsLinkagesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of related linkages
-            ///
-            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/relationships/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelationship)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelationship.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

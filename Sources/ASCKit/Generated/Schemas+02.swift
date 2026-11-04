@@ -1319,6 +1319,46 @@ extension Components.Schemas {
         }
         /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCommonRelationships/appStoreVersionLocalization`.
         public var appStoreVersionLocalization: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.AppStoreVersionLocalizationPayload?
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCommonRelationships/retentionMessageVersion`.
+        public struct RetentionMessageVersionPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCommonRelationships/retentionMessageVersion/data`.
+            public struct DataPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCommonRelationships/retentionMessageVersion/data/id`.
+                public var id: Swift.String
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCommonRelationships/retentionMessageVersion/data/type`.
+                public var _type: Swift.String
+                /// Creates a new `DataPayload`.
+                ///
+                /// - Parameters:
+                ///   - id:
+                ///   - _type:
+                public init(
+                    id: Swift.String,
+                    _type: Swift.String
+                ) {
+                    self.id = id
+                    self._type = _type
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case id
+                    case _type = "type"
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCommonRelationships/retentionMessageVersion/data`.
+            public var data: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.RetentionMessageVersionPayload.DataPayload?
+            /// Creates a new `RetentionMessageVersionPayload`.
+            ///
+            /// - Parameters:
+            ///   - data:
+            public init(data: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.RetentionMessageVersionPayload.DataPayload? = nil) {
+                self.data = data
+            }
+            public enum CodingKeys: String, CodingKey {
+                case data
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCommonRelationships/retentionMessageVersion`.
+        public var retentionMessageVersion: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.RetentionMessageVersionPayload?
         /// Creates a new `AppAssetLibraryPlacementCommonRelationships`.
         ///
         /// - Parameters:
@@ -1326,22 +1366,26 @@ extension Components.Schemas {
         ///   - appEventLocalization:
         ///   - appStoreVersionExperimentTreatmentLocalization:
         ///   - appStoreVersionLocalization:
+        ///   - retentionMessageVersion:
         public init(
             appCustomProductPageLocalization: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.AppCustomProductPageLocalizationPayload? = nil,
             appEventLocalization: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.AppEventLocalizationPayload? = nil,
             appStoreVersionExperimentTreatmentLocalization: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.AppStoreVersionExperimentTreatmentLocalizationPayload? = nil,
-            appStoreVersionLocalization: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.AppStoreVersionLocalizationPayload? = nil
+            appStoreVersionLocalization: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.AppStoreVersionLocalizationPayload? = nil,
+            retentionMessageVersion: Components.Schemas.AppAssetLibraryPlacementCommonRelationships.RetentionMessageVersionPayload? = nil
         ) {
             self.appCustomProductPageLocalization = appCustomProductPageLocalization
             self.appEventLocalization = appEventLocalization
             self.appStoreVersionExperimentTreatmentLocalization = appStoreVersionExperimentTreatmentLocalization
             self.appStoreVersionLocalization = appStoreVersionLocalization
+            self.retentionMessageVersion = retentionMessageVersion
         }
         public enum CodingKeys: String, CodingKey {
             case appCustomProductPageLocalization
             case appEventLocalization
             case appStoreVersionExperimentTreatmentLocalization
             case appStoreVersionLocalization
+            case retentionMessageVersion
         }
     }
     /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest`.
@@ -1575,6 +1619,46 @@ extension Components.Schemas {
                 }
                 /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/image`.
                 public var image: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.ImagePayload?
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/retentionMessageVersion`.
+                public struct RetentionMessageVersionPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/retentionMessageVersion/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/retentionMessageVersion/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/retentionMessageVersion/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/retentionMessageVersion/data`.
+                    public var data: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.RetentionMessageVersionPayload.DataPayload?
+                    /// Creates a new `RetentionMessageVersionPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.RetentionMessageVersionPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/retentionMessageVersion`.
+                public var retentionMessageVersion: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.RetentionMessageVersionPayload?
                 /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/video`.
                 public struct VideoPayload: Codable, Hashable, Sendable {
                     /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementCreateRequest/data/relationships/video/data`.
@@ -1623,6 +1707,7 @@ extension Components.Schemas {
                 ///   - appStoreVersionExperimentTreatmentLocalization:
                 ///   - appStoreVersionLocalization:
                 ///   - image:
+                ///   - retentionMessageVersion:
                 ///   - video:
                 public init(
                     appCustomProductPageLocalization: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.AppCustomProductPageLocalizationPayload? = nil,
@@ -1630,6 +1715,7 @@ extension Components.Schemas {
                     appStoreVersionExperimentTreatmentLocalization: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionExperimentTreatmentLocalizationPayload? = nil,
                     appStoreVersionLocalization: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.AppStoreVersionLocalizationPayload? = nil,
                     image: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.ImagePayload? = nil,
+                    retentionMessageVersion: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.RetentionMessageVersionPayload? = nil,
                     video: Components.Schemas.AppAssetLibraryPlacementCreateRequest.DataPayload.RelationshipsPayload.VideoPayload? = nil
                 ) {
                     self.appCustomProductPageLocalization = appCustomProductPageLocalization
@@ -1637,6 +1723,7 @@ extension Components.Schemas {
                     self.appStoreVersionExperimentTreatmentLocalization = appStoreVersionExperimentTreatmentLocalization
                     self.appStoreVersionLocalization = appStoreVersionLocalization
                     self.image = image
+                    self.retentionMessageVersion = retentionMessageVersion
                     self.video = video
                 }
                 public enum CodingKeys: String, CodingKey {
@@ -1645,6 +1732,7 @@ extension Components.Schemas {
                     case appStoreVersionExperimentTreatmentLocalization
                     case appStoreVersionLocalization
                     case image
+                    case retentionMessageVersion
                     case video
                 }
             }
@@ -2161,6 +2249,8 @@ extension Components.Schemas {
             case appStoreVersionExperimentTreatmentLocalizations(Components.Schemas.AppStoreVersionExperimentTreatmentLocalization)
             /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementResponse/IncludedPayload/AppStoreVersionLocalization`.
             case appStoreVersionLocalizations(Components.Schemas.AppStoreVersionLocalization)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementResponse/IncludedPayload/RetentionMessageVersion`.
+            case retentionMessageVersions(Components.Schemas.RetentionMessageVersion)
             public enum CodingKeys: String, CodingKey {
                 case _type = "type"
             }
@@ -2183,6 +2273,8 @@ extension Components.Schemas {
                     self = .appStoreVersionExperimentTreatmentLocalizations(try .init(from: decoder))
                 case "appStoreVersionLocalizations":
                     self = .appStoreVersionLocalizations(try .init(from: decoder))
+                case "retentionMessageVersions":
+                    self = .retentionMessageVersions(try .init(from: decoder))
                 default:
                     throw Swift.DecodingError.unknownOneOfDiscriminator(
                         discriminatorKey: CodingKeys._type,
@@ -2204,6 +2296,8 @@ extension Components.Schemas {
                 case let .appStoreVersionExperimentTreatmentLocalizations(value):
                     try value.encode(to: encoder)
                 case let .appStoreVersionLocalizations(value):
+                    try value.encode(to: encoder)
+                case let .retentionMessageVersions(value):
                     try value.encode(to: encoder)
                 }
             }
@@ -2253,6 +2347,8 @@ extension Components.Schemas {
             case appStoreVersionExperimentTreatmentLocalizations(Components.Schemas.AppStoreVersionExperimentTreatmentLocalization)
             /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementsResponse/IncludedPayload/AppStoreVersionLocalization`.
             case appStoreVersionLocalizations(Components.Schemas.AppStoreVersionLocalization)
+            /// - Remark: Generated from `#/components/schemas/AppAssetLibraryPlacementsResponse/IncludedPayload/RetentionMessageVersion`.
+            case retentionMessageVersions(Components.Schemas.RetentionMessageVersion)
             public enum CodingKeys: String, CodingKey {
                 case _type = "type"
             }
@@ -2275,6 +2371,8 @@ extension Components.Schemas {
                     self = .appStoreVersionExperimentTreatmentLocalizations(try .init(from: decoder))
                 case "appStoreVersionLocalizations":
                     self = .appStoreVersionLocalizations(try .init(from: decoder))
+                case "retentionMessageVersions":
+                    self = .retentionMessageVersions(try .init(from: decoder))
                 default:
                     throw Swift.DecodingError.unknownOneOfDiscriminator(
                         discriminatorKey: CodingKeys._type,
@@ -2296,6 +2394,8 @@ extension Components.Schemas {
                 case let .appStoreVersionExperimentTreatmentLocalizations(value):
                     try value.encode(to: encoder)
                 case let .appStoreVersionLocalizations(value):
+                    try value.encode(to: encoder)
+                case let .retentionMessageVersions(value):
                     try value.encode(to: encoder)
                 }
             }
@@ -2995,29 +3095,6 @@ extension Components.Schemas {
             case id
             case links
             case _type = "type"
-        }
-    }
-    /// - Remark: Generated from `#/components/schemas/AppAssetLibraryResponse`.
-    public struct AppAssetLibraryResponse: Codable, Hashable, Sendable {
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryResponse/data`.
-        public var data: Components.Schemas.AppAssetLibrary
-        /// - Remark: Generated from `#/components/schemas/AppAssetLibraryResponse/links`.
-        public var links: Components.Schemas.DocumentLinks
-        /// Creates a new `AppAssetLibraryResponse`.
-        ///
-        /// - Parameters:
-        ///   - data:
-        ///   - links:
-        public init(
-            data: Components.Schemas.AppAssetLibrary,
-            links: Components.Schemas.DocumentLinks
-        ) {
-            self.data = data
-            self.links = links
-        }
-        public enum CodingKeys: String, CodingKey {
-            case data
-            case links
         }
     }
 }

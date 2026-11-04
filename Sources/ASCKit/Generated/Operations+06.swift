@@ -848,6 +848,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -1181,6 +1182,18 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/apps/GET/query/fields[subscriptionGroups]`.
                 public var fieldsSubscriptionGroups: Operations.AppsGetCollection.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.AppsGetCollection.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.AppsGetCollection.Input.Query.fieldsRetentionMessagesPayload?
                 /// - Remark: Generated from `#/paths/v1/apps/GET/query/fieldsGameCenterEnabledVersionsPayload`.
                 @frozen public enum FieldsGameCenterEnabledVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case platform = "platform"
@@ -1359,6 +1372,7 @@ extension Operations {
                     case endUserLicenseAgreement = "endUserLicenseAgreement"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case appCustomProductPages = "appCustomProductPages"
                     case inAppPurchasesV2 = "inAppPurchasesV2"
@@ -1442,6 +1456,10 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/apps/GET/query/limit[promotedPurchases]`.
                 public var limitPromotedPurchases: Swift.Int?
+                /// maximum number of related retentionMessages returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/GET/query/limit[retentionMessages]`.
+                public var limitRetentionMessages: Swift.Int?
                 /// maximum number of related reviewSubmissions returned (when they are included)
                 ///
                 /// - Remark: Generated from `#/paths/v1/apps/GET/query/limit[reviewSubmissions]`.
@@ -1481,6 +1499,7 @@ extension Operations {
                 ///   - fieldsEndUserLicenseAgreements: the fields to include for returned resources of type endUserLicenseAgreements
                 ///   - fieldsInAppPurchases: the fields to include for returned resources of type inAppPurchases
                 ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
                 ///   - fieldsGameCenterEnabledVersions: the fields to include for returned resources of type gameCenterEnabledVersions
                 ///   - fieldsAppCustomProductPages: the fields to include for returned resources of type appCustomProductPages
                 ///   - fieldsPromotedPurchases: the fields to include for returned resources of type promotedPurchases
@@ -1508,6 +1527,7 @@ extension Operations {
                 ///   - limitInAppPurchasesV2: maximum number of related inAppPurchasesV2 returned (when they are included)
                 ///   - limitPreReleaseVersions: maximum number of related preReleaseVersions returned (when they are included)
                 ///   - limitPromotedPurchases: maximum number of related promotedPurchases returned (when they are included)
+                ///   - limitRetentionMessages: maximum number of related retentionMessages returned (when they are included)
                 ///   - limitReviewSubmissions: maximum number of related reviewSubmissions returned (when they are included)
                 ///   - limitSubscriptionGroups: maximum number of related subscriptionGroups returned (when they are included)
                 public init(
@@ -1539,6 +1559,7 @@ extension Operations {
                     fieldsEndUserLicenseAgreements: Operations.AppsGetCollection.Input.Query.fieldsEndUserLicenseAgreementsPayload? = nil,
                     fieldsInAppPurchases: Operations.AppsGetCollection.Input.Query.fieldsInAppPurchasesPayload? = nil,
                     fieldsSubscriptionGroups: Operations.AppsGetCollection.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    fieldsRetentionMessages: Operations.AppsGetCollection.Input.Query.fieldsRetentionMessagesPayload? = nil,
                     fieldsGameCenterEnabledVersions: Operations.AppsGetCollection.Input.Query.fieldsGameCenterEnabledVersionsPayload? = nil,
                     fieldsAppCustomProductPages: Operations.AppsGetCollection.Input.Query.fieldsAppCustomProductPagesPayload? = nil,
                     fieldsPromotedPurchases: Operations.AppsGetCollection.Input.Query.fieldsPromotedPurchasesPayload? = nil,
@@ -1566,6 +1587,7 @@ extension Operations {
                     limitInAppPurchasesV2: Swift.Int? = nil,
                     limitPreReleaseVersions: Swift.Int? = nil,
                     limitPromotedPurchases: Swift.Int? = nil,
+                    limitRetentionMessages: Swift.Int? = nil,
                     limitReviewSubmissions: Swift.Int? = nil,
                     limitSubscriptionGroups: Swift.Int? = nil
                 ) {
@@ -1597,6 +1619,7 @@ extension Operations {
                     self.fieldsEndUserLicenseAgreements = fieldsEndUserLicenseAgreements
                     self.fieldsInAppPurchases = fieldsInAppPurchases
                     self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
                     self.fieldsGameCenterEnabledVersions = fieldsGameCenterEnabledVersions
                     self.fieldsAppCustomProductPages = fieldsAppCustomProductPages
                     self.fieldsPromotedPurchases = fieldsPromotedPurchases
@@ -1624,6 +1647,7 @@ extension Operations {
                     self.limitInAppPurchasesV2 = limitInAppPurchasesV2
                     self.limitPreReleaseVersions = limitPreReleaseVersions
                     self.limitPromotedPurchases = limitPromotedPurchases
+                    self.limitRetentionMessages = limitRetentionMessages
                     self.limitReviewSubmissions = limitReviewSubmissions
                     self.limitSubscriptionGroups = limitSubscriptionGroups
                 }
@@ -1794,6 +1818,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -2127,6 +2152,18 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/fields[subscriptionGroups]`.
                 public var fieldsSubscriptionGroups: Operations.AppsGetInstance.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.AppsGetInstance.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.AppsGetInstance.Input.Query.fieldsRetentionMessagesPayload?
                 /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/fieldsGameCenterEnabledVersionsPayload`.
                 @frozen public enum FieldsGameCenterEnabledVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case platform = "platform"
@@ -2301,6 +2338,7 @@ extension Operations {
                     case endUserLicenseAgreement = "endUserLicenseAgreement"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case appCustomProductPages = "appCustomProductPages"
                     case inAppPurchasesV2 = "inAppPurchasesV2"
@@ -2384,6 +2422,10 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/limit[promotedPurchases]`.
                 public var limitPromotedPurchases: Swift.Int?
+                /// maximum number of related retentionMessages returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/limit[retentionMessages]`.
+                public var limitRetentionMessages: Swift.Int?
                 /// maximum number of related reviewSubmissions returned (when they are included)
                 ///
                 /// - Remark: Generated from `#/paths/v1/apps/{id}/GET/query/limit[reviewSubmissions]`.
@@ -2411,6 +2453,7 @@ extension Operations {
                 ///   - fieldsEndUserLicenseAgreements: the fields to include for returned resources of type endUserLicenseAgreements
                 ///   - fieldsInAppPurchases: the fields to include for returned resources of type inAppPurchases
                 ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
                 ///   - fieldsGameCenterEnabledVersions: the fields to include for returned resources of type gameCenterEnabledVersions
                 ///   - fieldsAppCustomProductPages: the fields to include for returned resources of type appCustomProductPages
                 ///   - fieldsPromotedPurchases: the fields to include for returned resources of type promotedPurchases
@@ -2437,6 +2480,7 @@ extension Operations {
                 ///   - limitInAppPurchasesV2: maximum number of related inAppPurchasesV2 returned (when they are included)
                 ///   - limitPreReleaseVersions: maximum number of related preReleaseVersions returned (when they are included)
                 ///   - limitPromotedPurchases: maximum number of related promotedPurchases returned (when they are included)
+                ///   - limitRetentionMessages: maximum number of related retentionMessages returned (when they are included)
                 ///   - limitReviewSubmissions: maximum number of related reviewSubmissions returned (when they are included)
                 ///   - limitSubscriptionGroups: maximum number of related subscriptionGroups returned (when they are included)
                 public init(
@@ -2456,6 +2500,7 @@ extension Operations {
                     fieldsEndUserLicenseAgreements: Operations.AppsGetInstance.Input.Query.fieldsEndUserLicenseAgreementsPayload? = nil,
                     fieldsInAppPurchases: Operations.AppsGetInstance.Input.Query.fieldsInAppPurchasesPayload? = nil,
                     fieldsSubscriptionGroups: Operations.AppsGetInstance.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    fieldsRetentionMessages: Operations.AppsGetInstance.Input.Query.fieldsRetentionMessagesPayload? = nil,
                     fieldsGameCenterEnabledVersions: Operations.AppsGetInstance.Input.Query.fieldsGameCenterEnabledVersionsPayload? = nil,
                     fieldsAppCustomProductPages: Operations.AppsGetInstance.Input.Query.fieldsAppCustomProductPagesPayload? = nil,
                     fieldsPromotedPurchases: Operations.AppsGetInstance.Input.Query.fieldsPromotedPurchasesPayload? = nil,
@@ -2482,6 +2527,7 @@ extension Operations {
                     limitInAppPurchasesV2: Swift.Int? = nil,
                     limitPreReleaseVersions: Swift.Int? = nil,
                     limitPromotedPurchases: Swift.Int? = nil,
+                    limitRetentionMessages: Swift.Int? = nil,
                     limitReviewSubmissions: Swift.Int? = nil,
                     limitSubscriptionGroups: Swift.Int? = nil
                 ) {
@@ -2501,6 +2547,7 @@ extension Operations {
                     self.fieldsEndUserLicenseAgreements = fieldsEndUserLicenseAgreements
                     self.fieldsInAppPurchases = fieldsInAppPurchases
                     self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
                     self.fieldsGameCenterEnabledVersions = fieldsGameCenterEnabledVersions
                     self.fieldsAppCustomProductPages = fieldsAppCustomProductPages
                     self.fieldsPromotedPurchases = fieldsPromotedPurchases
@@ -2527,6 +2574,7 @@ extension Operations {
                     self.limitInAppPurchasesV2 = limitInAppPurchasesV2
                     self.limitPreReleaseVersions = limitPreReleaseVersions
                     self.limitPromotedPurchases = limitPromotedPurchases
+                    self.limitRetentionMessages = limitRetentionMessages
                     self.limitReviewSubmissions = limitReviewSubmissions
                     self.limitSubscriptionGroups = limitSubscriptionGroups
                 }
@@ -2941,218 +2989,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.AppsAccessibilityDeclarationsGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/apps/{id}/analyticsReportRequests`.
-    /// - Remark: Generated from `#/paths//v1/apps/{id}/analyticsReportRequests/get(apps_analyticsReportRequests_getToManyRelated)`.
-    public enum AppsAnalyticsReportRequestsGetToManyRelated {
-        public static let id: Swift.String = "apps_analyticsReportRequests_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/filterAccessTypePayload`.
-                @frozen public enum FilterAccessTypePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case oneTimeSnapshot = "ONE_TIME_SNAPSHOT"
-                    case ongoing = "ONGOING"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/filter[accessType]`.
-                public typealias filterAccessTypePayload = [Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.FilterAccessTypePayloadPayload]
-                /// filter by attribute 'accessType'
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/filter[accessType]`.
-                public var filterAccessType: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.filterAccessTypePayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/fieldsAnalyticsReportRequestsPayload`.
-                @frozen public enum FieldsAnalyticsReportRequestsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case accessType = "accessType"
-                    case stoppedDueToInactivity = "stoppedDueToInactivity"
-                    case reports = "reports"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/fields[analyticsReportRequests]`.
-                public typealias fieldsAnalyticsReportRequestsPayload = [Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.FieldsAnalyticsReportRequestsPayloadPayload]
-                /// the fields to include for returned resources of type analyticsReportRequests
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/fields[analyticsReportRequests]`.
-                public var fieldsAnalyticsReportRequests: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.fieldsAnalyticsReportRequestsPayload?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/fieldsAnalyticsReportsPayload`.
-                @frozen public enum FieldsAnalyticsReportsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case category = "category"
-                    case instances = "instances"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/fields[analyticsReports]`.
-                public typealias fieldsAnalyticsReportsPayload = [Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.FieldsAnalyticsReportsPayloadPayload]
-                /// the fields to include for returned resources of type analyticsReports
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/fields[analyticsReports]`.
-                public var fieldsAnalyticsReports: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.fieldsAnalyticsReportsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case reports = "reports"
-                }
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/include`.
-                public var include: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.IncludePayload?
-                /// maximum number of related reports returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/query/limit[reports]`.
-                public var limitReports: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterAccessType: filter by attribute 'accessType'
-                ///   - fieldsAnalyticsReportRequests: the fields to include for returned resources of type analyticsReportRequests
-                ///   - fieldsAnalyticsReports: the fields to include for returned resources of type analyticsReports
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitReports: maximum number of related reports returned (when they are included)
-                public init(
-                    filterAccessType: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.filterAccessTypePayload? = nil,
-                    fieldsAnalyticsReportRequests: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.fieldsAnalyticsReportRequestsPayload? = nil,
-                    fieldsAnalyticsReports: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.fieldsAnalyticsReportsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query.IncludePayload? = nil,
-                    limitReports: Swift.Int? = nil
-                ) {
-                    self.filterAccessType = filterAccessType
-                    self.fieldsAnalyticsReportRequests = fieldsAnalyticsReportRequests
-                    self.fieldsAnalyticsReports = fieldsAnalyticsReports
-                    self.limit = limit
-                    self.include = include
-                    self.limitReports = limitReports
-                }
-            }
-            public var query: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsAnalyticsReportRequestsGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsAnalyticsReportRequestsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Path,
-                query: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Query = .init(),
-                headers: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/apps/{id}/analyticsReportRequests/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AnalyticsReportRequestsResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AnalyticsReportRequestsResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of AnalyticsReportRequests
-            ///
-            /// - Remark: Generated from `#/paths//v1/apps/{id}/analyticsReportRequests/get(apps_analyticsReportRequests_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppsAnalyticsReportRequestsGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppsAnalyticsReportRequestsGetToManyRelated.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

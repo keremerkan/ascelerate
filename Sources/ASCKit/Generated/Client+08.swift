@@ -2827,6 +2827,13 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
                     name: "fields[gameCenterEnabledVersions]",
                     value: input.query.fieldsGameCenterEnabledVersions
                 )
@@ -2962,6 +2969,13 @@ extension Client {
                     explode: true,
                     name: "limit[subscriptionGroups]",
                     value: input.query.limitSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[retentionMessages]",
+                    value: input.query.limitRetentionMessages
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,

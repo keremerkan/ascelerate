@@ -97,6 +97,9 @@ extension Operations {
                     case images = "images"
                     case planAvailabilities = "planAvailabilities"
                     case versions = "versions"
+                    case retentionOffers = "retentionOffers"
+                    case retentionMessage = "retentionMessage"
+                    case retentionMessageOffers = "retentionMessageOffers"
                 }
                 /// - Remark: Generated from `#/paths/v1/promotedPurchases/{id}/GET/query/fields[subscriptions]`.
                 public typealias fieldsSubscriptionsPayload = [Operations.PromotedPurchasesGetInstance.Input.Query.FieldsSubscriptionsPayloadPayload]
@@ -871,6 +874,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -921,6 +925,7 @@ extension Operations {
                     case inAppPurchaseVersion = "inAppPurchaseVersion"
                     case subscriptionVersion = "subscriptionVersion"
                     case subscriptionGroupVersion = "subscriptionGroupVersion"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[reviewSubmissionItems]`.
                 public typealias fieldsReviewSubmissionItemsPayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FieldsReviewSubmissionItemsPayloadPayload]
@@ -1339,6 +1344,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -1389,6 +1395,7 @@ extension Operations {
                     case inAppPurchaseVersion = "inAppPurchaseVersion"
                     case subscriptionVersion = "subscriptionVersion"
                     case subscriptionGroupVersion = "subscriptionGroupVersion"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[reviewSubmissionItems]`.
                 public typealias fieldsReviewSubmissionItemsPayload = [Operations.ReviewSubmissionsGetInstance.Input.Query.FieldsReviewSubmissionItemsPayloadPayload]
@@ -1779,6 +1786,7 @@ extension Operations {
                     case inAppPurchaseVersion = "inAppPurchaseVersion"
                     case subscriptionVersion = "subscriptionVersion"
                     case subscriptionGroupVersion = "subscriptionGroupVersion"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[reviewSubmissionItems]`.
                 public typealias fieldsReviewSubmissionItemsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsReviewSubmissionItemsPayloadPayload]
@@ -2053,6 +2061,19 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[subscriptionGroupVersions]`.
                 public var fieldsSubscriptionGroupVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
                 /// maximum resources per page
                 ///
                 /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/limit`.
@@ -2075,6 +2096,7 @@ extension Operations {
                     case inAppPurchaseVersion = "inAppPurchaseVersion"
                     case subscriptionVersion = "subscriptionVersion"
                     case subscriptionGroupVersion = "subscriptionGroupVersion"
+                    case retentionMessageVersion = "retentionMessageVersion"
                 }
                 /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/include`.
                 public typealias IncludePayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.IncludePayloadPayload]
@@ -2101,6 +2123,7 @@ extension Operations {
                 ///   - fieldsInAppPurchaseVersions: the fields to include for returned resources of type inAppPurchaseVersions
                 ///   - fieldsSubscriptionVersions: the fields to include for returned resources of type subscriptionVersions
                 ///   - fieldsSubscriptionGroupVersions: the fields to include for returned resources of type subscriptionGroupVersions
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
                 ///   - limit: maximum resources per page
                 ///   - include: comma-separated list of relationships to include
                 public init(
@@ -2120,6 +2143,7 @@ extension Operations {
                     fieldsInAppPurchaseVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsInAppPurchaseVersionsPayload? = nil,
                     fieldsSubscriptionVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsSubscriptionVersionsPayload? = nil,
                     fieldsSubscriptionGroupVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
                     limit: Swift.Int? = nil,
                     include: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.IncludePayload? = nil
                 ) {
@@ -2139,6 +2163,7 @@ extension Operations {
                     self.fieldsInAppPurchaseVersions = fieldsInAppPurchaseVersions
                     self.fieldsSubscriptionVersions = fieldsSubscriptionVersions
                     self.fieldsSubscriptionGroupVersions = fieldsSubscriptionGroupVersions
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
                     self.limit = limit
                     self.include = include
                 }
@@ -2984,151 +3009,6 @@ extension Operations {
             public static var allCases: [Self] {
                 [
                     .applicationAGzip
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/scmProviders`.
-    /// - Remark: Generated from `#/paths//v1/scmProviders/get(scmProviders_getCollection)`.
-    public enum ScmProvidersGetCollection {
-        public static let id: Swift.String = "scmProviders_getCollection"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/scmProviders/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/scmProviders/GET/query/fieldsScmProvidersPayload`.
-                @frozen public enum FieldsScmProvidersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case scmProviderType = "scmProviderType"
-                    case url = "url"
-                    case repositories = "repositories"
-                }
-                /// - Remark: Generated from `#/paths/v1/scmProviders/GET/query/fields[scmProviders]`.
-                public typealias fieldsScmProvidersPayload = [Operations.ScmProvidersGetCollection.Input.Query.FieldsScmProvidersPayloadPayload]
-                /// the fields to include for returned resources of type scmProviders
-                ///
-                /// - Remark: Generated from `#/paths/v1/scmProviders/GET/query/fields[scmProviders]`.
-                public var fieldsScmProviders: Operations.ScmProvidersGetCollection.Input.Query.fieldsScmProvidersPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/scmProviders/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsScmProviders: the fields to include for returned resources of type scmProviders
-                ///   - limit: maximum resources per page
-                public init(
-                    fieldsScmProviders: Operations.ScmProvidersGetCollection.Input.Query.fieldsScmProvidersPayload? = nil,
-                    limit: Swift.Int? = nil
-                ) {
-                    self.fieldsScmProviders = fieldsScmProviders
-                    self.limit = limit
-                }
-            }
-            public var query: Operations.ScmProvidersGetCollection.Input.Query
-            /// - Remark: Generated from `#/paths/v1/scmProviders/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ScmProvidersGetCollection.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ScmProvidersGetCollection.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.ScmProvidersGetCollection.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.ScmProvidersGetCollection.Input.Query = .init(),
-                headers: Operations.ScmProvidersGetCollection.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/scmProviders/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/scmProviders/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ScmProvidersResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ScmProvidersResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.ScmProvidersGetCollection.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.ScmProvidersGetCollection.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of ScmProviders
-            ///
-            /// - Remark: Generated from `#/paths//v1/scmProviders/get(scmProviders_getCollection)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.ScmProvidersGetCollection.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.ScmProvidersGetCollection.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
                 ]
             }
         }

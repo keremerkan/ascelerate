@@ -266,6 +266,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -569,6 +570,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -914,6 +916,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -1247,6 +1250,18 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/fields[subscriptionGroups]`.
                 public var fieldsSubscriptionGroups: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.CiProductsAppGetToOneRelated.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsRetentionMessagesPayload?
                 /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/fieldsGameCenterEnabledVersionsPayload`.
                 @frozen public enum FieldsGameCenterEnabledVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case platform = "platform"
@@ -1420,6 +1435,7 @@ extension Operations {
                     case endUserLicenseAgreement = "endUserLicenseAgreement"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case appCustomProductPages = "appCustomProductPages"
                     case inAppPurchasesV2 = "inAppPurchasesV2"
@@ -1478,6 +1494,10 @@ extension Operations {
                 ///
                 /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/limit[subscriptionGroups]`.
                 public var limitSubscriptionGroups: Swift.Int?
+                /// maximum number of related retentionMessages returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/limit[retentionMessages]`.
+                public var limitRetentionMessages: Swift.Int?
                 /// maximum number of related gameCenterEnabledVersions returned (when they are included)
                 ///
                 /// - Remark: Generated from `#/paths/v1/ciProducts/{id}/app/GET/query/limit[gameCenterEnabledVersions]`.
@@ -1530,6 +1550,7 @@ extension Operations {
                 ///   - fieldsEndUserLicenseAgreements: the fields to include for returned resources of type endUserLicenseAgreements
                 ///   - fieldsInAppPurchases: the fields to include for returned resources of type inAppPurchases
                 ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
                 ///   - fieldsGameCenterEnabledVersions: the fields to include for returned resources of type gameCenterEnabledVersions
                 ///   - fieldsAppCustomProductPages: the fields to include for returned resources of type appCustomProductPages
                 ///   - fieldsPromotedPurchases: the fields to include for returned resources of type promotedPurchases
@@ -1550,6 +1571,7 @@ extension Operations {
                 ///   - limitAppClips: maximum number of related appClips returned (when they are included)
                 ///   - limitInAppPurchases: maximum number of related inAppPurchases returned (when they are included)
                 ///   - limitSubscriptionGroups: maximum number of related subscriptionGroups returned (when they are included)
+                ///   - limitRetentionMessages: maximum number of related retentionMessages returned (when they are included)
                 ///   - limitGameCenterEnabledVersions: maximum number of related gameCenterEnabledVersions returned (when they are included)
                 ///   - limitAppCustomProductPages: maximum number of related appCustomProductPages returned (when they are included)
                 ///   - limitInAppPurchasesV2: maximum number of related inAppPurchasesV2 returned (when they are included)
@@ -1575,6 +1597,7 @@ extension Operations {
                     fieldsEndUserLicenseAgreements: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsEndUserLicenseAgreementsPayload? = nil,
                     fieldsInAppPurchases: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsInAppPurchasesPayload? = nil,
                     fieldsSubscriptionGroups: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    fieldsRetentionMessages: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsRetentionMessagesPayload? = nil,
                     fieldsGameCenterEnabledVersions: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsGameCenterEnabledVersionsPayload? = nil,
                     fieldsAppCustomProductPages: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsAppCustomProductPagesPayload? = nil,
                     fieldsPromotedPurchases: Operations.CiProductsAppGetToOneRelated.Input.Query.fieldsPromotedPurchasesPayload? = nil,
@@ -1595,6 +1618,7 @@ extension Operations {
                     limitAppClips: Swift.Int? = nil,
                     limitInAppPurchases: Swift.Int? = nil,
                     limitSubscriptionGroups: Swift.Int? = nil,
+                    limitRetentionMessages: Swift.Int? = nil,
                     limitGameCenterEnabledVersions: Swift.Int? = nil,
                     limitAppCustomProductPages: Swift.Int? = nil,
                     limitInAppPurchasesV2: Swift.Int? = nil,
@@ -1620,6 +1644,7 @@ extension Operations {
                     self.fieldsEndUserLicenseAgreements = fieldsEndUserLicenseAgreements
                     self.fieldsInAppPurchases = fieldsInAppPurchases
                     self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
                     self.fieldsGameCenterEnabledVersions = fieldsGameCenterEnabledVersions
                     self.fieldsAppCustomProductPages = fieldsAppCustomProductPages
                     self.fieldsPromotedPurchases = fieldsPromotedPurchases
@@ -1640,6 +1665,7 @@ extension Operations {
                     self.limitAppClips = limitAppClips
                     self.limitInAppPurchases = limitInAppPurchases
                     self.limitSubscriptionGroups = limitSubscriptionGroups
+                    self.limitRetentionMessages = limitRetentionMessages
                     self.limitGameCenterEnabledVersions = limitGameCenterEnabledVersions
                     self.limitAppCustomProductPages = limitAppCustomProductPages
                     self.limitInAppPurchasesV2 = limitInAppPurchasesV2
@@ -2948,143 +2974,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.CiWorkflowsGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/ciWorkflows/{id}`.
-    /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/patch(ciWorkflows_updateInstance)`.
-    public enum CiWorkflowsUpdateInstance {
-        public static let id: Swift.String = "ciWorkflows_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.CiWorkflowsUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiWorkflowsUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.CiWorkflowsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.CiWorkflowsUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.CiWorkflowUpdateRequest)
-            }
-            public var body: Operations.CiWorkflowsUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.CiWorkflowsUpdateInstance.Input.Path,
-                headers: Operations.CiWorkflowsUpdateInstance.Input.Headers = .init(),
-                body: Operations.CiWorkflowsUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/ciWorkflows/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.CiWorkflowResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.CiWorkflowResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.CiWorkflowsUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.CiWorkflowsUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single CiWorkflow
-            ///
-            /// - Remark: Generated from `#/paths//v1/ciWorkflows/{id}/patch(ciWorkflows_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.CiWorkflowsUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.CiWorkflowsUpdateInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

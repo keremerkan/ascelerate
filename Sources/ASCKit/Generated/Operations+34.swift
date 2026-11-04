@@ -10,6 +10,439 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `PATCH /v1/webhooks/{id}`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/{id}/patch(webhooks_updateInstance)`.
+    public enum WebhooksUpdateInstance {
+        public static let id: Swift.String = "webhooks_updateInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.WebhooksUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksUpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.WebhooksUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.WebhookUpdateRequest)
+            }
+            public var body: Operations.WebhooksUpdateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.WebhooksUpdateInstance.Input.Path,
+                headers: Operations.WebhooksUpdateInstance.Input.Headers = .init(),
+                body: Operations.WebhooksUpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/webhooks/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WebhookResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.WebhookResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.WebhooksUpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.WebhooksUpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single Webhook
+            ///
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/patch(webhooks_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.WebhooksUpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.WebhooksUpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `DELETE /v1/webhooks/{id}`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/{id}/delete(webhooks_deleteInstance)`.
+    public enum WebhooksDeleteInstance {
+        public static let id: Swift.String = "webhooks_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.WebhooksDeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.WebhooksDeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/delete(webhooks_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.WebhooksDeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/delete(webhooks_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.WebhooksDeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `GET /v1/webhooks/{id}/deliveries`.
+    /// - Remark: Generated from `#/paths//v1/webhooks/{id}/deliveries/get(webhooks_deliveries_getToManyRelated)`.
+    public enum WebhooksDeliveriesGetToManyRelated {
+        public static let id: Swift.String = "webhooks_deliveries_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.WebhooksDeliveriesGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filterDeliveryStatePayload`.
+                @frozen public enum FilterDeliveryStatePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case succeeded = "SUCCEEDED"
+                    case failed = "FAILED"
+                    case pending = "PENDING"
+                }
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[deliveryState]`.
+                public typealias filterDeliveryStatePayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.FilterDeliveryStatePayloadPayload]
+                /// filter by attribute 'deliveryState'
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[deliveryState]`.
+                public var filterDeliveryState: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.filterDeliveryStatePayload?
+                /// filter by createdDateGreaterThanOrEqualTo
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[createdDateGreaterThanOrEqualTo]`.
+                public var filterCreatedDateGreaterThanOrEqualTo: [Swift.String]?
+                /// filter by createdDateLessThan
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/filter[createdDateLessThan]`.
+                public var filterCreatedDateLessThan: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fieldsWebhookDeliveriesPayload`.
+                @frozen public enum FieldsWebhookDeliveriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case createdDate = "createdDate"
+                    case deliveryState = "deliveryState"
+                    case errorMessage = "errorMessage"
+                    case redelivery = "redelivery"
+                    case sentDate = "sentDate"
+                    case request = "request"
+                    case response = "response"
+                    case event = "event"
+                }
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookDeliveries]`.
+                public typealias fieldsWebhookDeliveriesPayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.FieldsWebhookDeliveriesPayloadPayload]
+                /// the fields to include for returned resources of type webhookDeliveries
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookDeliveries]`.
+                public var fieldsWebhookDeliveries: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookDeliveriesPayload?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fieldsWebhookEventsPayload`.
+                @frozen public enum FieldsWebhookEventsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case eventType = "eventType"
+                    case payload = "payload"
+                    case ping = "ping"
+                    case createdDate = "createdDate"
+                }
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookEvents]`.
+                public typealias fieldsWebhookEventsPayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.FieldsWebhookEventsPayloadPayload]
+                /// the fields to include for returned resources of type webhookEvents
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/fields[webhookEvents]`.
+                public var fieldsWebhookEvents: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookEventsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case event = "event"
+                }
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/include`.
+                public typealias IncludePayload = [Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/query/include`.
+                public var include: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterDeliveryState: filter by attribute 'deliveryState'
+                ///   - filterCreatedDateGreaterThanOrEqualTo: filter by createdDateGreaterThanOrEqualTo
+                ///   - filterCreatedDateLessThan: filter by createdDateLessThan
+                ///   - fieldsWebhookDeliveries: the fields to include for returned resources of type webhookDeliveries
+                ///   - fieldsWebhookEvents: the fields to include for returned resources of type webhookEvents
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    filterDeliveryState: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.filterDeliveryStatePayload? = nil,
+                    filterCreatedDateGreaterThanOrEqualTo: [Swift.String]? = nil,
+                    filterCreatedDateLessThan: [Swift.String]? = nil,
+                    fieldsWebhookDeliveries: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookDeliveriesPayload? = nil,
+                    fieldsWebhookEvents: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.fieldsWebhookEventsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.filterDeliveryState = filterDeliveryState
+                    self.filterCreatedDateGreaterThanOrEqualTo = filterCreatedDateGreaterThanOrEqualTo
+                    self.filterCreatedDateLessThan = filterCreatedDateLessThan
+                    self.fieldsWebhookDeliveries = fieldsWebhookDeliveries
+                    self.fieldsWebhookEvents = fieldsWebhookEvents
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksDeliveriesGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WebhooksDeliveriesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.WebhooksDeliveriesGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.WebhooksDeliveriesGetToManyRelated.Input.Path,
+                query: Operations.WebhooksDeliveriesGetToManyRelated.Input.Query = .init(),
+                headers: Operations.WebhooksDeliveriesGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/webhooks/{id}/deliveries/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.WebhookDeliveriesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.WebhookDeliveriesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of WebhookDeliveries
+            ///
+            /// - Remark: Generated from `#/paths//v1/webhooks/{id}/deliveries/get(webhooks_deliveries_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.WebhooksDeliveriesGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `POST /v2/appAvailabilities`.
     /// - Remark: Generated from `#/paths//v2/appAvailabilities/post(appAvailabilitiesV2_createInstance)`.
     public enum AppAvailabilitiesV2CreateInstance {
@@ -517,6 +950,7 @@ extension Operations {
                     case appAvailabilityV2 = "appAvailabilityV2"
                     case inAppPurchases = "inAppPurchases"
                     case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
                     case gameCenterEnabledVersions = "gameCenterEnabledVersions"
                     case performanceOverviews = "performanceOverviews"
                     case perfPowerMetrics = "perfPowerMetrics"
@@ -2839,213 +3273,6 @@ extension Operations {
                     .json
                 ]
             }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v2/gameCenterAchievements/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/patch(gameCenterAchievementsV2_updateInstance)`.
-    public enum GameCenterAchievementsV2UpdateInstance {
-        public static let id: Swift.String = "gameCenterAchievementsV2_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterAchievementsV2UpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementsV2UpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GameCenterAchievementsV2UpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.GameCenterAchievementsV2UpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.GameCenterAchievementV2UpdateRequest)
-            }
-            public var body: Operations.GameCenterAchievementsV2UpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.GameCenterAchievementsV2UpdateInstance.Input.Path,
-                headers: Operations.GameCenterAchievementsV2UpdateInstance.Input.Headers = .init(),
-                body: Operations.GameCenterAchievementsV2UpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.GameCenterAchievementV2Response)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.GameCenterAchievementV2Response {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.GameCenterAchievementsV2UpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.GameCenterAchievementsV2UpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single GameCenterAchievement
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/patch(gameCenterAchievementsV2_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.GameCenterAchievementsV2UpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.GameCenterAchievementsV2UpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v2/gameCenterAchievements/{id}`.
-    /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/delete(gameCenterAchievementsV2_deleteInstance)`.
-    public enum GameCenterAchievementsV2DeleteInstance {
-        public static let id: Swift.String = "gameCenterAchievementsV2_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v2/gameCenterAchievements/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.GameCenterAchievementsV2DeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.GameCenterAchievementsV2DeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/delete(gameCenterAchievementsV2_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.GameCenterAchievementsV2DeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v2/gameCenterAchievements/{id}/delete(gameCenterAchievementsV2_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.GameCenterAchievementsV2DeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
 }

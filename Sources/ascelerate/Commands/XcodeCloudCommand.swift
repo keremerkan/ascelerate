@@ -18,8 +18,6 @@ struct XcodeCloudCommand: AsyncParsableCommand {
   )
 
   static let productHelp = ArgumentHelp("The product: its app's bundle ID or alias, its name, or its ID.")
-  static let aliasCompletion = CompletionKind.shellCommand(
-    "grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'")
 
   // MARK: Lookups
 
@@ -400,7 +398,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct List: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "List a product's workflows.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @OptionGroup var jsonOption: JSONOption
@@ -431,7 +429,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Info: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "A workflow's actions, start conditions and environment.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The workflow's name or ID.")
@@ -493,7 +491,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           """
       )
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Option(name: .long, help: "The workflow to copy, by name or ID (not needed when the product has one).")
@@ -558,7 +556,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           """
       )
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The workflow's name or ID.")
@@ -598,7 +596,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Enable: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "Turn a workflow on: it starts builds again.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The workflow's name or ID.")
@@ -615,7 +613,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Disable: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "Turn a workflow off: it starts no builds, on its own or by hand.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The workflow's name or ID.")
@@ -632,7 +630,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Delete: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "Delete a workflow (its build runs stay).")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The workflow's name or ID.")
@@ -685,7 +683,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct List: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "List a product's build runs, newest first.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Option(name: .long, help: "Only this workflow's runs (name or ID).")
@@ -725,7 +723,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Info: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "A build run's details and its actions.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The run's number or ID.")
@@ -800,7 +798,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Issues: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "A build run's errors and warnings, per action.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The run's number or ID.")
@@ -845,7 +843,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Tests: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "A build run's test results.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The run's number or ID.")
@@ -893,7 +891,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "A build run's logs, from each action's log bundle: list them, or print one.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The run's number or ID.")
@@ -939,7 +937,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     struct Artifacts: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "A build run's artifacts (logs, archives, products), or download them.")
 
-      @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+      @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
       var product: String
 
       @Argument(help: "The run's number or ID.")
@@ -1012,7 +1010,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       discussion: "Without --branch, --tag or --pull-request, Xcode Cloud builds what the workflow's start condition allows by hand."
     )
 
-    @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+    @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
     var product: String
 
     @Argument(help: "The workflow's name or ID.")
@@ -1081,7 +1079,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
   struct Rerun: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Build an earlier run's commit again, with its workflow.")
 
-    @Argument(help: XcodeCloudCommand.productHelp, completion: XcodeCloudCommand.aliasCompletion)
+    @Argument(help: XcodeCloudCommand.productHelp, completion: appAliasCompletion)
     var product: String
 
     @Argument(help: "The run's number or ID.")

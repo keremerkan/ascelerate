@@ -14,8 +14,6 @@ struct WebhooksCommand: AsyncParsableCommand {
   )
 
   static let bundleIDHelp = ArgumentHelp("Bundle identifier of the app.")
-  static let aliasCompletion = CompletionKind.shellCommand(
-    "grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'")
 
   static func webhooks(appID: String, client: ASCClient) async throws -> [Components.Schemas.Webhook] {
     try await ASCPaging.allPages(next: { $0.links.next }) {
@@ -60,7 +58,7 @@ struct WebhooksCommand: AsyncParsableCommand {
   struct List: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "List the app's webhooks.")
 
-    @Argument(help: WebhooksCommand.bundleIDHelp, completion: WebhooksCommand.aliasCompletion)
+    @Argument(help: WebhooksCommand.bundleIDHelp, completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var jsonOption: JSONOption
@@ -88,7 +86,7 @@ struct WebhooksCommand: AsyncParsableCommand {
   struct Create: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Create a webhook.")
 
-    @Argument(help: WebhooksCommand.bundleIDHelp, completion: WebhooksCommand.aliasCompletion)
+    @Argument(help: WebhooksCommand.bundleIDHelp, completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Webhook name.")
@@ -136,7 +134,7 @@ struct WebhooksCommand: AsyncParsableCommand {
   struct Update: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Change a webhook's name, URL, events, secret or enabled state.")
 
-    @Argument(help: WebhooksCommand.bundleIDHelp, completion: WebhooksCommand.aliasCompletion)
+    @Argument(help: WebhooksCommand.bundleIDHelp, completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "Webhook name or ID.")
@@ -186,7 +184,7 @@ struct WebhooksCommand: AsyncParsableCommand {
   struct Delete: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Delete a webhook.")
 
-    @Argument(help: WebhooksCommand.bundleIDHelp, completion: WebhooksCommand.aliasCompletion)
+    @Argument(help: WebhooksCommand.bundleIDHelp, completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "Webhook name or ID.")
@@ -212,7 +210,7 @@ struct WebhooksCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "Send a test event to the webhook's URL (see the result with 'webhooks deliveries').")
 
-    @Argument(help: WebhooksCommand.bundleIDHelp, completion: WebhooksCommand.aliasCompletion)
+    @Argument(help: WebhooksCommand.bundleIDHelp, completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "Webhook name or ID.")
@@ -244,7 +242,7 @@ struct WebhooksCommand: AsyncParsableCommand {
   struct Deliveries: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "List the webhook's recent deliveries (newest first).")
 
-    @Argument(help: WebhooksCommand.bundleIDHelp, completion: WebhooksCommand.aliasCompletion)
+    @Argument(help: WebhooksCommand.bundleIDHelp, completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "Webhook name or ID.")

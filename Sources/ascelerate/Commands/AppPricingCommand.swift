@@ -95,7 +95,7 @@ extension AppsCommand {
         abstract: "Show the base price, prices set by hand and planned changes.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Flag(name: .long, help: "Also list Apple's prices in every other territory.")
@@ -184,7 +184,7 @@ extension AppsCommand {
       static let configuration = CommandConfiguration(abstract: "List a territory's price tiers.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Territory code (default: USA).")
@@ -214,7 +214,7 @@ extension AppsCommand {
           """)
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Customer price in the base territory's currency (e.g. 0.99; 0 for free).")
@@ -266,7 +266,7 @@ extension AppsCommand {
         discussion: "Apple doesn't adjust a price set by hand. 'apps pricing remove' gives it back to Apple.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Territory code (e.g. FRA).")
@@ -304,7 +304,7 @@ extension AppsCommand {
         discussion: "App Store Connect's \"manually manage prices\". Territories already priced by hand stay as they are.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Comma-separated territory codes, or 'all'.")
@@ -344,7 +344,7 @@ extension AppsCommand {
         discussion: "The base territory's price stays; change it with 'apps pricing set'.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Comma-separated territory codes, or 'all'.")
@@ -385,7 +385,7 @@ extension AppsCommand {
           """)
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Comma-separated territory codes, or 'all'.")
@@ -441,7 +441,7 @@ extension AppsCommand {
         discussion: "The price before it goes on until the one after it, or for good.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Territory code of the planned price.")
@@ -480,7 +480,7 @@ extension AppsCommand {
         discussion: "The format of 'iap pricing export'; 'apps pricing import' applies it to this or another app.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Output file path.", completion: .file(extensions: ["json"]))
@@ -512,7 +512,7 @@ extension AppsCommand {
           """)
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Path to the JSON file.", completion: .file(extensions: ["json"]))

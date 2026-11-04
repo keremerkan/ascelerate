@@ -68,7 +68,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Filter by state (DRAFT, READY_FOR_REVIEW, IN_REVIEW, APPROVED, PUBLISHED, PAST, ARCHIVED, etc.).")
@@ -114,7 +114,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The event reference name or ID.")
@@ -168,7 +168,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Internal reference name for the event (required).")
@@ -262,7 +262,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The event reference name or ID.")
@@ -368,7 +368,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The event reference name or ID.")
@@ -413,7 +413,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The event reference name or ID.")
@@ -451,7 +451,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The event reference name or ID.")
@@ -492,7 +492,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The event reference name or ID.")
@@ -602,7 +602,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The event reference name or ID.")
@@ -641,7 +641,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The event reference name or ID.")
@@ -709,7 +709,7 @@ struct AppEventsCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The event reference name or ID.")

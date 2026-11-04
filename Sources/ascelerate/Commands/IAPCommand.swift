@@ -187,7 +187,7 @@ struct IAPCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Filter by type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION).")
@@ -257,7 +257,7 @@ struct IAPCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -385,7 +385,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       func run() async throws {
@@ -414,7 +414,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the IAP or subscription to promote.")
@@ -474,7 +474,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the promoted IAP or subscription.")
@@ -508,7 +508,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the promoted IAP or subscription.")
@@ -549,7 +549,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "Comma-separated product identifiers in the desired order.")
@@ -599,7 +599,7 @@ struct IAPCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "IAP type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION).")
@@ -675,7 +675,7 @@ struct IAPCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -737,7 +737,7 @@ struct IAPCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -771,7 +771,7 @@ struct IAPCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -828,7 +828,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -866,7 +866,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -895,7 +895,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -961,7 +961,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1031,7 +1031,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1082,7 +1082,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1222,7 +1222,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1315,7 +1315,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1398,7 +1398,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1447,7 +1447,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1573,7 +1573,7 @@ struct IAPCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Argument(help: "The product identifier of the in-app purchase.")
@@ -1636,7 +1636,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1676,7 +1676,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1718,7 +1718,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1812,7 +1812,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1856,7 +1856,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -1920,7 +1920,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -2013,7 +2013,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -2038,7 +2038,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -2081,7 +2081,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -2120,7 +2120,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -2145,7 +2145,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")
@@ -2188,7 +2188,7 @@ struct IAPCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The product identifier of the in-app purchase.")

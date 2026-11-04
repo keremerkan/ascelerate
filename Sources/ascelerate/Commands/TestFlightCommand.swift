@@ -89,7 +89,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       func run() async throws {
@@ -134,7 +134,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -218,7 +218,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Group name (required).")
@@ -283,7 +283,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -357,7 +357,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -394,7 +394,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -433,7 +433,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -497,7 +497,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         )
 
         @Argument(help: "The bundle identifier of the app.",
-                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                  completion: appAliasCompletion)
         var bundleID: String
 
         @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -543,7 +543,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         )
 
         @Argument(help: "The bundle identifier of the app.",
-                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                  completion: appAliasCompletion)
         var bundleID: String
 
         @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -595,7 +595,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         )
 
         @Argument(help: "The bundle identifier of the app.",
-                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                  completion: appAliasCompletion)
         var bundleID: String
 
         @Argument(help: "The beta group name (interactive picker if omitted).")
@@ -658,7 +658,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Only testers in this beta group.")
@@ -706,7 +706,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Tester email (required).")
@@ -763,7 +763,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The tester's email.")
@@ -811,7 +811,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Argument(help: "The tester's email.")
@@ -851,7 +851,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Path to the CSV file.",
@@ -930,7 +930,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var platformOption: PlatformOption
@@ -1015,7 +1015,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var platformOption: PlatformOption
@@ -1054,7 +1054,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var buildOptions: BuildOptions
@@ -1094,7 +1094,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var buildOptions: BuildOptions
@@ -1128,7 +1128,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Whether testers are notified automatically (true/false).")
@@ -1188,7 +1188,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @OptionGroup var buildOptions: BuildOptions
@@ -1221,7 +1221,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "The test notes text (required).")
@@ -1276,7 +1276,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @OptionGroup var buildOptions: BuildOptions
@@ -1314,7 +1314,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @OptionGroup var buildOptions: BuildOptions
@@ -1367,7 +1367,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var buildOptions: BuildOptions
@@ -1406,7 +1406,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @OptionGroup var buildOptions: BuildOptions
@@ -1483,7 +1483,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       func run() async throws {
@@ -1521,7 +1521,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Locale (e.g. en-US). Defaults to the only existing locale, or prompts.")
@@ -1587,7 +1587,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Output file path.",
@@ -1615,7 +1615,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       )
 
       @Argument(help: "The bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Path to JSON file.",
@@ -1674,7 +1674,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Review contact first name.")
@@ -1767,7 +1767,7 @@ struct TestFlightCommand: AsyncParsableCommand {
     )
 
     @Argument(help: "The bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
     var bundleID: String
 
     @Option(name: .long, help: "Path to a text file with the agreement text.",
@@ -1937,7 +1937,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         )
 
         @Argument(help: "The bundle identifier of the app.",
-                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                  completion: appAliasCompletion)
         var bundleID: String
 
         @OptionGroup var buildFilter: FeedbackBuildFilter
@@ -2058,7 +2058,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         )
 
         @Argument(help: "The bundle identifier of the app.",
-                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                  completion: appAliasCompletion)
         var bundleID: String
 
         @OptionGroup var buildFilter: FeedbackBuildFilter
@@ -2130,7 +2130,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         )
 
         @Argument(help: "The bundle identifier of the app.",
-                  completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                  completion: appAliasCompletion)
         var bundleID: String
 
         @Argument(help: "The submission ID (interactive picker if omitted).")

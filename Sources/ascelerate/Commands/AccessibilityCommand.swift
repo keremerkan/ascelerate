@@ -20,7 +20,7 @@ extension AppsCommand {
       static let configuration = CommandConfiguration(abstract: "Show the accessibility declarations per device family.")
 
       @Argument(help: "Bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
       var bundleID: String
 
       @Flag(name: .long, help: "Include declarations replaced by newer ones.")
@@ -55,7 +55,7 @@ extension AppsCommand {
       static let configuration = CommandConfiguration(abstract: "Publish the app's draft accessibility declarations as they are.")
 
       @Argument(help: "Bundle identifier of the app.",
-                completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+                completion: appAliasCompletion)
       var bundleID: String
 
       @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
@@ -92,7 +92,7 @@ extension AppsCommand {
       )
 
       @Argument(help: "Bundle identifier of the app.",
-              completion: .shellCommand("grep -o '\"[^\"]*\" *:' ~/.ascelerate/aliases.json 2>/dev/null | sed 's/\" *://' | tr -d '\"'"))
+              completion: appAliasCompletion)
       var bundleID: String
 
       @Option(name: .long, help: "Device family: iphone, ipad, mac, apple-tv, apple-watch, vision.")

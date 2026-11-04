@@ -288,6 +288,23 @@ public enum Builds {
     }
   }
 
+  /// The newest build uploaded before `target` on its platform whose What to Test has text in some
+  /// language, with that text (empty languages left out): what a new build of the same app keeps
+  /// (`testflight what-to-test copy`). Nil when none of the 20 builds before it has any.
+  public static func earlierTestNotes(
+    before target: Build, appID: String, client: ASCClient
+  ) async throws -> (build: Build, notes: [TestNotes])? {
+    let builds = try await list(appID: appID, platform: target.platform.flatMap(Platform.init(rawValue:)), limit: 41, client: client)
+    // Newest first: the ones after the target in the list came before it.
+    let earlier = builds.firstIndex { $0.id == target.id }.map { Array(builds[($0 + 1)...]) }
+      ?? builds.filter { $0.id != target.id }
+    for build in earlier.prefix(20) {
+      let notes = try await testNotes(buildID: build.id, client: client).filter { !($0.text ?? "").isEmpty }
+      if !notes.isEmpty { return (build, notes) }
+    }
+    return nil
+  }
+
   /// Submits the build for beta review, which external testing needs (only the first build of a
   /// version gets a full review; later ones of an approved version pass at once). Returns the
   /// review's state.

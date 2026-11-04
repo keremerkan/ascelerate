@@ -109,15 +109,18 @@ ascelerate testflight auto-notify <bundle-id> --enabled false
 Test notları build ve dil başına saklanır:
 
 ```bash
-ascelerate testflight whats-new view <bundle-id>
+ascelerate testflight what-to-test view <bundle-id>
 
 # Tek bir dil için; --locale verilmezse mevcut tüm diller güncellenir
-ascelerate testflight whats-new set <bundle-id> --text "Yeni harita filtrelerini deneyin" --locale tr-TR
-ascelerate testflight whats-new set <bundle-id> --text "Yeni harita filtrelerini deneyin"
+ascelerate testflight what-to-test set <bundle-id> --text "Yeni harita filtrelerini deneyin" --locale tr-TR
+ascelerate testflight what-to-test set <bundle-id> --text "Yeni harita filtrelerini deneyin"
+
+# En yeni build'e, test notu olan en yeni önceki build'in notları kopyalanır (workflow'da await-processing'den sonra)
+ascelerate testflight what-to-test copy <bundle-id> --platform ios
 
 # JSON ile dışa ve içe aktarma
-ascelerate testflight whats-new export <bundle-id> --output notes.json
-ascelerate testflight whats-new import <bundle-id> --file notes.json
+ascelerate testflight what-to-test export <bundle-id> --output notes.json
+ascelerate testflight what-to-test import <bundle-id> --file notes.json
 ```
 
 JSON biçimi diğer yerelleştirme komutlarıyla aynıdır:

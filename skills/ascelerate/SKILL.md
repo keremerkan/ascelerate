@@ -761,10 +761,11 @@ ascelerate testflight feedback crashes|screenshots info <submission-id>    # ful
 ascelerate testflight feedback crashes|screenshots delete <submission-id>
 
 # What to Test (per build, per locale)
-ascelerate testflight whats-new view <app>
-ascelerate testflight whats-new set <app> --text "Bug fixes" [--locale en-US]  # all locales if omitted
-ascelerate testflight whats-new export <app> --output notes.json
-ascelerate testflight whats-new import <app> --file notes.json
+ascelerate testflight what-to-test view <app>
+ascelerate testflight what-to-test set <app> --text "Bug fixes" [--locale en-US]  # all locales if omitted
+ascelerate testflight what-to-test copy <app> --platform ios [--build N] [--from N] [-y]  # Copy the newest earlier build's test notes (every language) to the newest build; in a workflow after await-processing
+ascelerate testflight what-to-test export <app> --output notes.json
+ascelerate testflight what-to-test import <app> --file notes.json
 
 # Beta review (required for external testing)
 ascelerate testflight submit <app> [--build 123]

@@ -66,7 +66,7 @@ public struct AppInfoLocaleFields: Codable, Equatable, Sendable {
   }
 }
 
-/// A build's What to Test in one locale, as `testflight whats-new export`/`import` write and read
+/// A build's What to Test in one locale, as `testflight what-to-test export`/`import` write and read
 /// it. A nil field is left as it is.
 public struct WhatsNewFields: Codable, Equatable, Sendable {
   public var whatsNew: String?

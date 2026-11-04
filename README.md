@@ -1018,11 +1018,12 @@ ascelerate testflight notify <bundle-id>                 # notify testers about 
 ascelerate testflight auto-notify <bundle-id> --enabled true
 
 # What to Test (per build, per locale)
-ascelerate testflight whats-new view <bundle-id>
-ascelerate testflight whats-new set <bundle-id> --text "Bug fixes" --locale en-US
-ascelerate testflight whats-new set <bundle-id> --text "Bug fixes"         # all existing locales
-ascelerate testflight whats-new export <bundle-id> --output notes.json
-ascelerate testflight whats-new import <bundle-id> --file notes.json
+ascelerate testflight what-to-test view <bundle-id>
+ascelerate testflight what-to-test set <bundle-id> --text "Bug fixes" --locale en-US
+ascelerate testflight what-to-test set <bundle-id> --text "Bug fixes"         # all existing locales
+ascelerate testflight what-to-test copy <bundle-id> --platform ios          # newest build gets the newest earlier build's notes
+ascelerate testflight what-to-test export <bundle-id> --output notes.json
+ascelerate testflight what-to-test import <bundle-id> --file notes.json
 
 # Beta review (required for external testing)
 ascelerate testflight submit <bundle-id>

@@ -437,8 +437,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 filename = ScreenshotCommand.defaultHelperPath
             } else {
                 let defaultPath = ScreenshotCommand.defaultHelperPath
-                print("Enter filename [\(defaultPath)]: ", terminator: "")
-                let input = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let input = readAnswer("Enter filename [\(defaultPath)]: ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 filename = input.isEmpty ? defaultPath : input
             }
 

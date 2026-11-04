@@ -45,7 +45,7 @@ ascelerate apps copyright <bundle-id>
 ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
 ```
 
-`--set` を省略すると、現在の著作権表示が表示されます。更新するには、バージョンが編集可能な状態である必要があります。
+`--set` を省略すると、現在の著作権表示が表示されます。プロモーションテキストと同じく、公開済みのバージョンを含め、どの状態でも更新できます。
 
 ## レビュー
 

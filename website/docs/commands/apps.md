@@ -45,7 +45,7 @@ ascelerate apps copyright <bundle-id>
 ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
 ```
 
-Without `--set`, prints the current copyright notice. Updating requires the version to be in an editable state.
+Without `--set`, prints the current copyright notice. Like promotional text, it can be updated in any state, a live version's too.
 
 ## Review
 

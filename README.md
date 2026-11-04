@@ -955,6 +955,9 @@ ascelerate builds archive
 ascelerate builds archive --scheme MyApp --output ./archives
 ascelerate builds archive --scheme MyApp --json-events   # progress as JSON Lines on stdout for other tools
 ascelerate builds archive --scheme MyApp --build-number 9   # build 9 for the app, its extensions and watch app (the project is left as it is)
+ascelerate builds archive --scheme MyApp --build-number auto   # the app's number, or the one after the highest uploaded when that's taken; extensions get the same
+ascelerate builds archive --scheme MyApp --xcodebuild-output quiet   # xcodebuild's warnings and errors only (full: everything)
+ascelerate settings --xcodebuild-output quiet   # the default for every archive (~/.ascelerate/settings.json; ASCELERATE_XCODEBUILD_OUTPUT for one run)
 ascelerate builds archives                    # Xcode's archives, newest first (--bundle-id, --platform, --json)
 
 # Validate a build before uploading
@@ -1536,6 +1539,8 @@ Chain multiple commands into a single automated run with a workflow file:
 ascelerate run-workflow release.txt
 ascelerate run-workflow release.txt --yes   # skip all prompts (CI/CD)
 ascelerate run-workflow                     # interactively select from .workflow/.txt files
+ascelerate run-workflow release.txt --check # every step parses (--json: each step's line and error); nothing runs
+ascelerate run-workflow release.txt --json-events   # JSON events on stdout (steps, outcomes, prompts answered on stdin); output on stderr
 ```
 
 A workflow file is a plain text file with one command per line (without the `ascelerate` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported.

@@ -45,7 +45,7 @@ ascelerate apps copyright <bundle-id>
 ascelerate apps copyright <bundle-id> --set "2026 Your Name" --version 2.1.0 --platform macos
 ```
 
-Sans `--set`, la mention de copyright actuelle est affichée. La mise à jour nécessite que la version soit dans un état modifiable.
+Sans `--set`, la mention de copyright actuelle est affichée. Comme le texte promotionnel, elle peut être modifiée dans n'importe quel état, y compris pour une version déjà publiée.
 
 ## Examen
 

@@ -7,7 +7,7 @@ import Foundation
 /// App Store Server Notifications endpoints).
 public enum AppInfos {
   /// States in which an app info's localizations and categories can change.
-  public static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW"]
+  public static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW"]
 
   public enum AppInfoError: LocalizedError {
     case notFound

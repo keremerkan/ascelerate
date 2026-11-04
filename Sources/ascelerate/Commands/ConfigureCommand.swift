@@ -51,8 +51,7 @@ struct ConfigureCommand: ParsableCommand {
     print()
     print("Vendor Number — optional, only needed for 'ascelerate reports sales' and 'reports finance'.")
     print("Find it in App Store Connect → Payments and Financial Reports (e.g. 80012345).")
-    print("Vendor Number (press Enter to skip): ", terminator: "")
-    let vendorNumberInput = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let vendorNumberInput = readAnswer("Vendor Number (press Enter to skip): ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     let vendorNumber = vendorNumberInput.isEmpty ? nil : vendorNumberInput
 
     let fm = FileManager.default

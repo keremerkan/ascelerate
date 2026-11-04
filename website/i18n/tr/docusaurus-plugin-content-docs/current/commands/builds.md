@@ -33,6 +33,19 @@ ascelerate builds archive --scheme MyApp --output ./archives
 ascelerate builds archive --scheme MyApp --build-number 9
 ```
 
+`--build-number auto` ile önce uygulamanın App Store Connect'teki derlemeleri okunur: Projedeki numara, platform için yüklenen tüm derlemelerden büyük olduğu sürece arşiv bu numarayı korur; değilse en yüksek numaradan sonrakini alır. Her iki durumda da arşive derlenen her şey bu numarayı alır ve eski bir numarada kalmış bir uzantı da uygulamayla aynı numarayı taşır. Böylece bir workflow, kimse projeyi değiştirmeden arşivleyebilir. Diğer komutlar gibi API anahtarı gerekir; uygulamanın bundle ID'si scheme'in derleme ayarlarından okunur.
+
+```bash
+ascelerate builds archive --scheme MyApp --build-number auto
+```
+
+```bash
+ascelerate builds archive --scheme MyApp --xcodebuild-output quiet   # yalnızca xcodebuild'in uyarıları ve hataları
+ascelerate settings --xcodebuild-output quiet                        # her arşivleme için varsayılan
+```
+
+`--xcodebuild-output quiet` yalnızca xcodebuild'in uyarılarını ve hatalarını iletir (`xcodebuild -quiet`), `full` ise her şeyi. Bu seçenek verilmezse `ascelerate settings --xcodebuild-output` ayarı belirler (`~/.ascelerate/settings.json` dosyasında saklanır; `default` varsayılana döndürür). Ayar yoksa çıktı terminalde tam, `--json-events` ile ve `--json-events` ile çalıştırılan bir workflow'da kısadır. `ASCELERATE_XCODEBUILD_OUTPUT=quiet|full` ayarı tek bir çalıştırma için geçersiz kılar.
+
 ## Arşivleri listeleme
 
 ```bash

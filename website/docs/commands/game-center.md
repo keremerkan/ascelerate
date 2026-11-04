@@ -60,9 +60,36 @@ ascelerate game-center sets update <bundle-id> all.scores --leaderboards weekly.
 
 `--leaderboards` sets a set's leaderboards in that order, replacing the current ones.
 
+## Activities
+
+An activity is a part of the game, such as a level or a mode, that players can be invited straight into. Its achievements and leaderboards are the ones that belong to it.
+
+```bash
+ascelerate game-center activities <bundle-id> [--json]
+ascelerate game-center activities create <bundle-id> --id duel --name "Duel" --play-style sync \
+  --min-players 2 --max-players 2 [--party-code true] [--properties mode=duel] [--fallback-url https://example.com/duel]
+ascelerate game-center activities update <bundle-id> duel --max-players 4 --fallback-url ""
+ascelerate game-center activities link <bundle-id> duel --achievements first.win --leaderboards high.score
+ascelerate game-center activities link <bundle-id> duel --leaderboards high.score --remove
+```
+
+`--play-style` is `sync` (players play together) or `async` (in turns). `--properties` replaces the game's own key-value properties for the activity. The fallback URL is a web page for players without the game; it belongs to the latest version.
+
+## Challenges
+
+A challenge lets players challenge friends to beat a score on one of the app's leaderboards.
+
+```bash
+ascelerate game-center challenges <bundle-id> [--json]
+ascelerate game-center challenges create <bundle-id> --id beat.score --name "Beat My Score" --leaderboard high.score --repeatable
+ascelerate game-center challenges update <bundle-id> beat.score --leaderboard weekly.best
+```
+
+App Store Connect's rules, which the commands check first: a leaderboard has one challenge at most, it must count each player's best score, and a challenge that isn't `--repeatable` needs a recurring leaderboard.
+
 ## Languages and Images
 
-Achievements, leaderboards and sets have the same language and image commands; replace `achievements` with `leaderboards` or `sets`:
+Achievements, leaderboards, sets, activities and challenges have the same language and image commands; replace `achievements` with `leaderboards`, `sets`, `activities` or `challenges`:
 
 ```bash
 ascelerate game-center achievements localizations <bundle-id> first.win
@@ -76,9 +103,9 @@ ascelerate game-center achievements image upload <bundle-id> first.win --locale 
 ascelerate game-center achievements image delete <bundle-id> first.win --locale en-US
 ```
 
-A new achievement language needs its name and both descriptions. A leaderboard language has a name, an optional description, its own `--formatter`, and the unit after a score (`--suffix " points"`, `--suffix-singular " point"`). A set language has a name.
+A new achievement language needs its name and both descriptions. A leaderboard language has a name, an optional description, its own `--formatter`, and the unit after a score (`--suffix " points"`, `--suffix-singular " point"`). A set language has a name; an activity or challenge language has a name and a description (`--name`, `--description`).
 
-An image belongs to one language. It must be square and at least 512×512 (512×512 or 1024×1024 are usual), PNG or JPEG. The upload replaces the language's current image and waits for Apple's check, so a refused image is reported at once.
+An image belongs to one language. For achievements, leaderboards and sets it must be square and at least 512×512 (512×512 or 1024×1024 are usual); for activities and challenges exactly 3840×2160, and their versions also take a default image (`image upload --default`). PNG or JPEG. The upload replaces the current image and waits for Apple's check, so a refused image is reported at once.
 
 ## Order and App Review
 
@@ -87,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` puts the ones listed first, in that order; the rest follow as they are. `submit` adds the item's new version to the app's draft submission (making one when there's none). It goes to App Review when you submit the draft with `ascelerate apps review submit`.
+`reorder` (achievements, leaderboards and sets) puts the ones listed first, in that order; the rest follow as they are. `submit` adds the item's new version to the app's draft submission (making one when there's none). It goes to App Review when you submit the draft with `ascelerate apps review submit`.
 
 ## Matchmaking
 

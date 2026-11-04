@@ -60,9 +60,36 @@ ascelerate game-center sets update <bundle-id> all.scores --leaderboards weekly.
 
 `--leaderboards` legt die Bestenlisten einer Gruppe in dieser Reihenfolge fest und ersetzt die bisherigen.
 
+## Aktivitäten
+
+Eine Aktivität ist ein Teil des Spiels, etwa ein Level oder ein Modus, in den Spieler direkt eingeladen werden können. Ihre Erfolge und Bestenlisten sind die, die zu ihr gehören.
+
+```bash
+ascelerate game-center activities <bundle-id> [--json]
+ascelerate game-center activities create <bundle-id> --id duel --name "Duel" --play-style sync \
+  --min-players 2 --max-players 2 [--party-code true] [--properties mode=duel] [--fallback-url https://example.com/duel]
+ascelerate game-center activities update <bundle-id> duel --max-players 4 --fallback-url ""
+ascelerate game-center activities link <bundle-id> duel --achievements first.win --leaderboards high.score
+ascelerate game-center activities link <bundle-id> duel --leaderboards high.score --remove
+```
+
+`--play-style` ist `sync` (Spieler spielen gemeinsam) oder `async` (abwechselnd). `--properties` ersetzt die eigenen Schlüssel-Wert-Eigenschaften des Spiels für die Aktivität. Die Fallback-URL ist eine Webseite für Spieler ohne das Spiel; sie gehört zur neuesten Version.
+
+## Herausforderungen
+
+Mit einer Herausforderung fordern Spieler Freunde heraus, eine Punktzahl auf einer der Bestenlisten der App zu schlagen.
+
+```bash
+ascelerate game-center challenges <bundle-id> [--json]
+ascelerate game-center challenges create <bundle-id> --id beat.score --name "Beat My Score" --leaderboard high.score --repeatable
+ascelerate game-center challenges update <bundle-id> beat.score --leaderboard weekly.best
+```
+
+Die Regeln von App Store Connect, die die Befehle vorab prüfen: Eine Bestenliste hat höchstens eine Herausforderung, sie muss die beste Punktzahl jedes Spielers zählen, und eine Herausforderung ohne `--repeatable` braucht eine wiederkehrende Bestenliste.
+
 ## Sprachen und Bilder
 
-Erfolge, Bestenlisten und Gruppen haben dieselben Sprach- und Bildbefehle; ersetzen Sie `achievements` durch `leaderboards` oder `sets`:
+Erfolge, Bestenlisten, Gruppen, Aktivitäten und Herausforderungen haben dieselben Sprach- und Bildbefehle; ersetzen Sie `achievements` durch `leaderboards`, `sets`, `activities` oder `challenges`:
 
 ```bash
 ascelerate game-center achievements localizations <bundle-id> first.win
@@ -76,9 +103,9 @@ ascelerate game-center achievements image upload <bundle-id> first.win --locale 
 ascelerate game-center achievements image delete <bundle-id> first.win --locale en-US
 ```
 
-Eine neue Sprache eines Erfolgs braucht den Namen und beide Beschreibungen. Eine Sprache einer Bestenliste hat einen Namen, eine optionale Beschreibung, einen eigenen `--formatter` und die Einheit nach einer Punktzahl (`--suffix " points"`, `--suffix-singular " point"`). Eine Sprache einer Gruppe hat einen Namen.
+Eine neue Sprache eines Erfolgs braucht den Namen und beide Beschreibungen. Eine Sprache einer Bestenliste hat einen Namen, eine optionale Beschreibung, einen eigenen `--formatter` und die Einheit nach einer Punktzahl (`--suffix " points"`, `--suffix-singular " point"`). Eine Sprache einer Gruppe hat einen Namen, eine Sprache einer Aktivität oder Herausforderung einen Namen und eine Beschreibung (`--name`, `--description`).
 
-Ein Bild gehört zu einer Sprache. Es muss quadratisch und mindestens 512 × 512 groß sein (üblich sind 512 × 512 oder 1024 × 1024), als PNG oder JPEG. Der Upload ersetzt das aktuelle Bild der Sprache und wartet auf Apples Prüfung, sodass ein abgelehntes Bild sofort gemeldet wird.
+Ein Bild gehört zu einer Sprache. Für Erfolge, Bestenlisten und Gruppen muss es quadratisch und mindestens 512 × 512 groß sein (üblich sind 512 × 512 oder 1024 × 1024), für Aktivitäten und Herausforderungen genau 3840 × 2160; deren Versionen nehmen außerdem ein Standardbild (`image upload --default`). PNG oder JPEG. Der Upload ersetzt das aktuelle Bild und wartet auf Apples Prüfung, sodass ein abgelehntes Bild sofort gemeldet wird.
 
 ## Reihenfolge und App Review
 
@@ -87,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` stellt die aufgeführten Elemente in dieser Reihenfolge an den Anfang; die übrigen folgen unverändert. `submit` fügt die neue Version des Elements dem Einreichungsentwurf der App hinzu (und legt einen an, wenn es keinen gibt). Sie geht zum App Review, wenn Sie den Entwurf mit `ascelerate apps review submit` einreichen.
+`reorder` (Erfolge, Bestenlisten und Gruppen) stellt die aufgeführten Elemente in dieser Reihenfolge an den Anfang; die übrigen folgen unverändert. `submit` fügt die neue Version des Elements dem Einreichungsentwurf der App hinzu (und legt einen an, wenn es keinen gibt). Sie geht zum App Review, wenn Sie den Entwurf mit `ascelerate apps review submit` einreichen.
 
 ## Matchmaking
 

@@ -131,9 +131,22 @@ public protocol GameCenterItem: Codable, Sendable {
   @discardableResult
   static func uploadImage(localizationID: String, filePath: String, client: ASCClient) async throws -> String
   static func deleteImage(id: String, client: ASCClient) async throws
+  static func reviewItem(versionID: String) -> ReviewSubmissions.DraftItem
+  /// The sizes its images take.
+  static var imageSize: GameCenterImageSize { get }
+}
+
+/// A kind whose items have a display order (achievements, leaderboards, leaderboard sets).
+public protocol GameCenterOrderedItem: GameCenterItem {
   /// Puts the app's items of this kind in this order (every one, by Apple ID).
   static func reorder(detailID: String, ids: [String], client: ASCClient) async throws
-  static func reviewItem(versionID: String) -> ReviewSubmissions.DraftItem
+}
+
+/// A kind whose versions have a default image besides each language's (activities, challenges).
+public protocol GameCenterDefaultImageItem: GameCenterItem {
+  static func defaultImage(versionID: String, client: ASCClient) async throws -> GameCenter.Image?
+  @discardableResult
+  static func uploadDefaultImage(versionID: String, filePath: String, client: ASCClient) async throws -> String
 }
 
 /// A language of a Game Center item's version.
@@ -146,14 +159,41 @@ public protocol GameCenterLocalization: Codable, Sendable {
   var fields: Fields { get }
 }
 
+/// The image sizes a kind takes (seen live 2026-11-04).
+public enum GameCenterImageSize: Sendable {
+  /// Square, at least this many pixels a side (achievements, leaderboards, sets: 600 and 2048
+  /// were taken, 511 failed with IMAGE_BAD_DIMENSION_SM_LESS_MIN, a screenshot with
+  /// IMAGE_BAD_ASPECT_RATIO).
+  case squareAtLeast(Int)
+  /// Exactly this size (activities and challenges, language and default images: 3840×2160 taken;
+  /// 1920×1080, 2560×1440, 4096×2304 and 1024×1024 failed with IMAGE_INCORRECT_DIMENSIONS).
+  case exactly(width: Int, height: Int)
+
+  public func accepts(width: Int, height: Int) -> Bool {
+    switch self {
+      case .squareAtLeast(let side): width == height && width >= side
+      case .exactly(let w, let h): width == w && height == h
+    }
+  }
+
+  public var description: String {
+    switch self {
+      case .squareAtLeast(let side): "a square one of at least \(side)×\(side) (512×512 or 1024×1024)"
+      case .exactly(let w, let h): "exactly \(w)×\(h)"
+    }
+  }
+}
+
 extension GameCenterItem {
+  public static var imageSize: GameCenterImageSize { .squareAtLeast(512) }
+
   public var latestVersion: GameCenter.Version? { GameCenter.latest(versions) }
 
   /// How the CLI and lookups name it: its vendor identifier, else its reference name.
   public var displayName: String { vendorIdentifier ?? referenceName ?? id }
 }
 
-extension GameCenter.Achievement: GameCenterItem {
+extension GameCenter.Achievement: GameCenterOrderedItem {
   public static let noun = "achievement"
   public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
     try await GameCenter.achievements(detailID: detailID, client: client)
@@ -189,7 +229,7 @@ extension GameCenter.AchievementLocalization: GameCenterLocalization {
   }
 }
 
-extension GameCenter.Leaderboard: GameCenterItem {
+extension GameCenter.Leaderboard: GameCenterOrderedItem {
   public static let noun = "leaderboard"
   public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
     try await GameCenter.leaderboards(detailID: detailID, client: client)
@@ -227,7 +267,7 @@ extension GameCenter.LeaderboardLocalization: GameCenterLocalization {
   }
 }
 
-extension GameCenter.LeaderboardSet: GameCenterItem {
+extension GameCenter.LeaderboardSet: GameCenterOrderedItem {
   public static let noun = "leaderboard set"
   public static func list(detailID: String, client: ASCClient) async throws -> [Self] {
     try await GameCenter.leaderboardSets(detailID: detailID, client: client)

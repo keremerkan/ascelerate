@@ -97,8 +97,9 @@ public struct BetaAppLocaleFields: Codable, Equatable, Sendable {
   }
 }
 
-/// An in-app purchase's or subscription's language, as `iap`/`sub localizations export`/`import`
-/// write and read it. A nil field is left as it is.
+/// A language with a name and description: an in-app purchase's or subscription's (`iap`/`sub
+/// localizations export`/`import`) and a Game Center activity's or challenge's. A nil field is
+/// left as it is.
 public struct ProductLocaleFields: Codable, Equatable, Sendable {
   public var name: String?
   public var description: String?

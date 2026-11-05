@@ -43,6 +43,19 @@ import Testing
     #expect(steps.withLock { $0 } == [0, 2, 3])
   }
 
+  @Test func nearestTier() async throws {
+    let tiers: [String: [AppPricing.PricePoint]] = [
+      "USA": [point("USA", "1.89"), point("USA", "1.99"), point("USA", "2.49")],
+      "DEU": [point("DEU", "1.99"), point("DEU", "2.99")],
+    ]
+    // 1.92 is nearest to 1.89; 2.49 is as close to 1.99 as to 2.99, so the cheaper one.
+    let resolution = try await PriceFile(baseTerritory: "USA", prices: ["USA": "1.92", "DEU": "2.49"]).resolve(
+      tiers: { ids in tiers.filter { ids.contains($0.key) } }, equalizations: { _ in [] })
+    let nearest = Dictionary(uniqueKeysWithValues: resolution.mismatches.map { ($0.territoryID, $0.nearestTier?.customerPrice) })
+    #expect(nearest == ["USA": "1.89", "DEU": "1.99"])
+    #expect(resolution.mismatches.first { $0.territoryID == "USA" }?.nearest == ["1.89", "1.99", "2.49"])
+  }
+
   @Test func resolveInBatches() async throws {
     let prices = Dictionary(uniqueKeysWithValues: (0..<20).map { (String(format: "T%02d", $0), "1.99") })
     let reads = Mutex<[[String]]>([])

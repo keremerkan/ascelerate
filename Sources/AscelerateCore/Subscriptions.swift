@@ -344,7 +344,7 @@ public enum Subscriptions {
     return Prices(prices: prices, currencies: currencies)
   }
 
-  private static func pricePoint(_ point: Components.Schemas.SubscriptionPricePoint, territoryID: String) -> AppPricing.PricePoint {
+  static func pricePoint(_ point: Components.Schemas.SubscriptionPricePoint, territoryID: String) -> AppPricing.PricePoint {
     AppPricing.PricePoint(
       id: point.id, territoryID: territoryID, customerPrice: point.attributes?.customerPrice ?? "",
       proceeds: point.attributes?.proceeds ?? "")

@@ -3,7 +3,7 @@ import Foundation
 
 extension Ads {
   /// A money amount as Apple sends it (decimal string + currency).
-  public struct Amount: Encodable, Sendable {
+  public struct Amount: Codable, Sendable {
     public let amount: String
     public let currency: String?
 
@@ -26,7 +26,7 @@ extension Ads {
   }
 
   /// A report row's metrics, from Apple's App Store metrics.
-  public struct Metrics: Encodable, Sendable {
+  public struct Metrics: Codable, Sendable {
     public let spend: Amount?
     public let impressions: Int64
     public let taps: Int64

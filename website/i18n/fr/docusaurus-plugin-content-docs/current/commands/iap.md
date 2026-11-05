@@ -111,6 +111,8 @@ ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices
 
 Le fichier contient les prix client indexés par code de région. À l'import, chaque prix est mis en correspondance avec les paliers tarifaires du produit *cible* d'après le prix client ; le même fichier fonctionne donc d'un produit ou d'une app à l'autre. L'import remplace intégralement le calendrier : les régions absentes du fichier reviennent à l'alignement automatique, et si le calendrier actuel correspond déjà au fichier, la commande ne fait rien. Les erreurs transitoires d'App Store Connect (HTTP 429/5xx) sont automatiquement réessayées.
 
+Un prix qui ne correspond à aucun palier de la cible fait échouer l’importation, qui indique les paliers les plus proches ; avec `--snap`, chacun de ces prix prend plutôt le palier le plus proche (le moins cher à distance égale), et les prix ajustés sont listés avant la confirmation.
+
 ## Disponibilité territoriale
 
 Chaque achat intégré a sa propre disponibilité territoriale, indépendante de l'application. Par défaut, un IAP hérite des territoires de son application ; dès que vous appelez `iap availability` avec des modifications, l'IAP obtient une liste explicite.

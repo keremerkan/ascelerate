@@ -1890,6 +1890,9 @@ struct SubCommand: AsyncParsableCommand {
       @Flag(name: .customLong("confirm-decrease"), help: "Required with --yes when a listed price is lower than the current price in any territory. Plain -y is not enough — price decreases need explicit confirmation.")
       var confirmDecrease = false
 
+      @Flag(name: .long, help: "Use the nearest tier for a price that isn't one (the cheaper when two are as close), listing each, instead of failing.")
+      var snap = false
+
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
 
@@ -1903,14 +1906,40 @@ struct SubCommand: AsyncParsableCommand {
         let priceFile = try loadProductPricesFile(file)
         let sortedPrices = priceFile.prices.sorted { $0.key < $1.key }
 
-        // Resolve each listed price against this subscription's own tiers. Fetching
-        // every territory's tier list would be one paged call per territory, so first
-        // resolve one anchor territory and walk its equalizations — any territory
-        // whose file price matches the equalized tier resolves for free; only
-        // mismatches (manually overridden territories) fall back to an individual fetch.
         let anchor = sortedPrices.first { $0.key == "USA" } ?? sortedPrices[0]
+        let entries = try await PriceSnapping.resolving(snap) {
+          try await resolve(sortedPrices, anchor: anchor, subID: sub.id, client: client)
+        }
+
+        let currentByTerritory = try await SubCommand.fetchCurrentPricesByTerritory(
+          subID: sub.id, client: client)
+        let targets = SubCommand.categorizePriceChanges(
+          entries, currentByTerritory: currentByTerritory)
+
+        try await SubCommand.gateAndApplyPriceChanges(
+          targets,
+          subID: sub.id,
+          headerLines: [
+            "Import prices:",
+            "  Product ID:        \(productID)",
+          ],
+          confirmPrompt: "Apply imported pricing? [y/N] ",
+          preserveCurrent: preserveCurrent,
+          confirmDecrease: confirmDecrease,
+          startDate: startDate,
+          client: client
+        )
+      }
+
+      /// Each listed price's tier. Fetching every territory's tier list would be one paged call per
+      /// territory, so one anchor territory resolves first and its equalizations follow: any
+      /// territory whose file price matches the equalized tier resolves for free; only the others
+      /// (territories priced by hand) read their own tiers.
+      private func resolve(
+        _ sortedPrices: [(key: String, value: String)], anchor: (key: String, value: String), subID: String, client: ASCClient
+      ) async throws -> [(territoryID: String, pricePointID: String, newPrice: String?)] {
         let anchorResolved = try await SubCommand.resolveSubPricePoint(
-          subID: sub.id, territoryID: anchor.key, customerPrice: anchor.value, client: client)
+          subID: subID, territoryID: anchor.key, customerPrice: anchor.value, client: client)
         let equalized = try await SubCommand.fetchEqualizedPoints(
           sourcePoint: anchorResolved.point, sourceTerritory: anchor.key, client: client)
         var candidateByTerritory: [String: Components.Schemas.SubscriptionPricePoint] = [:]
@@ -1936,7 +1965,7 @@ struct SubCommand: AsyncParsableCommand {
           print("Resolving price points for \(unmatched.count) territor\(unmatched.count == 1 ? "y" : "ies")", terminator: "")
           fflush(stdout)
           let resolved = try await SubCommand.resolveSubPricePointsBatched(
-            subID: sub.id, prices: unmatched, client: client)
+            subID: subID, prices: unmatched, client: client)
           entries.append(contentsOf: resolved.map {
             ($0.territoryID, $0.point.id, $0.point.attributes?.customerPrice)
           })
@@ -1944,24 +1973,7 @@ struct SubCommand: AsyncParsableCommand {
           print(" done.")
         }
 
-        let currentByTerritory = try await SubCommand.fetchCurrentPricesByTerritory(
-          subID: sub.id, client: client)
-        let targets = SubCommand.categorizePriceChanges(
-          entries, currentByTerritory: currentByTerritory)
-
-        try await SubCommand.gateAndApplyPriceChanges(
-          targets,
-          subID: sub.id,
-          headerLines: [
-            "Import prices:",
-            "  Product ID:        \(productID)",
-          ],
-          confirmPrompt: "Apply imported pricing? [y/N] ",
-          preserveCurrent: preserveCurrent,
-          confirmDecrease: confirmDecrease,
-          startDate: startDate,
-          client: client
-        )
+        return entries
       }
     }
   }

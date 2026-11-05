@@ -200,7 +200,7 @@ ascelerate iap pricing set <app> <product-id> --price 4.99 [--base-territory USA
 ascelerate iap pricing override <app> <product-id> --price 5.99 --territory FRA
 ascelerate iap pricing remove <app> <product-id> --territory FRA   # revert to auto-equalize
 ascelerate iap pricing export <app> <product-id> [--output prices.json]
-ascelerate iap pricing import <app> <product-id> [--file prices.json]   # copy schedule from another product/app
+ascelerate iap pricing import <app> <product-id> [--file prices.json] [--snap]   # copy schedule from another product/app; --snap: nearest tier for a price that isn't one, listed
 
 # Per-IAP territory availability (independent of app's)
 ascelerate iap availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true]
@@ -259,7 +259,7 @@ ascelerate sub pricing set <app> <product-id> --price 4.99 [--territory USA] [--
   [--preserve-current | --no-preserve-current]   # required on price increases
   [--confirm-decrease]                           # required on decreases in --yes mode
 ascelerate sub pricing export <app> <product-id> [--output prices.json]
-ascelerate sub pricing import <app> <product-id> [--file prices.json]   # copy prices from another product/app; same safety flags as set
+ascelerate sub pricing import <app> <product-id> [--file prices.json] [--snap]   # copy prices from another product/app; same safety flags as set; --snap as iap
 
 # Per-subscription territory availability (independent of app's)
 ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true] [--plan upfront|monthly]   # monthly = "Monthly with 12-Month Commitment" plan (annual subs; not in USA/SGP); default upfront
@@ -833,7 +833,7 @@ ascelerate apps pricing override <app> --territory FRA --price 0.99   # one terr
 ascelerate apps pricing keep|remove <app> --territories FRA,DEU|all   # keep Apple's current prices by hand / give back to Apple
 ascelerate apps pricing sale <app> --territories all --price 0.49 --start-date D --end-date D   # temporary change; several territories: price in the base currency
 ascelerate apps pricing cancel <app> --territory USA --start-date D   # remove a planned change
-ascelerate apps pricing export|import <app> [--output|--file prices.json]   # same format as iap pricing export; import replaces the schedule
+ascelerate apps pricing export|import <app> [--output|--file prices.json] [--snap]   # same format as iap pricing export; import replaces the schedule; --snap as iap
 ascelerate apps encryption <app> --create --description "Uses HTTPS"
 ascelerate apps encryption <app> --upload-document approval.pdf [--declaration ID]   # compliance document (export classification, France's declaration); newest declaration by default
 ascelerate apps tags <app> [--json]                                  # Apple's App Store tags, shown/hidden, territories

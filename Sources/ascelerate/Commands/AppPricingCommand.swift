@@ -518,6 +518,9 @@ extension AppsCommand {
       @Option(name: .long, help: "Path to the JSON file.", completion: .file(extensions: ["json"]))
       var file: String?
 
+      @Flag(name: .long, help: "Use the nearest tier for a price that isn't one (the cheaper when two are as close), listing each, instead of failing.")
+      var snap = false
+
       @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
       var yes = false
 
@@ -530,7 +533,27 @@ extension AppsCommand {
         guard let basePrice = priceFile.prices[base] else {
           throw ValidationError("The file has no price for the base territory \(base).")
         }
-        let basePoint = try await PricingCommand.resolve(price: basePrice, territoryID: base, appID: app.id, client: client)
+        let (basePoint, points) = try await PriceSnapping.resolving(snap) {
+          try await resolve(priceFile, base: base, basePrice: basePrice, appID: app.id, client: client)
+        }
+        let dropped = Swift.Set(schedule?.manualPrices.filter(\.isCurrentOrLater).map(\.territoryID) ?? [])
+          .subtracting(points.keys)
+        var summary = [
+          "Base territory: \(base) at \(basePoint.customerPrice)",
+          "Set by hand:    \(points.count - 1) other territor\(points.count == 2 ? "y" : "ies")",
+        ]
+        if !dropped.isEmpty { summary.append("Apple's prices: \(dropped.sorted().joined(separator: ", ")) (not in the file)") }
+        try await PricingCommand.save(
+          appID: app.id, appName: app.attributes?.name ?? bundleID, base: base,
+          prices: points.sorted { $0.key < $1.key }.map { AppPricing.NewPrice(pricePointID: $0.value) },
+          summary: summary, client: client)
+      }
+
+      /// The base tier and each listed territory's tier ID.
+      private func resolve(
+        _ priceFile: ProductPricesFile, base: String, basePrice: String, appID: String, client: ASCClient
+      ) async throws -> (AppPricing.PricePoint, [String: String]) {
+        let basePoint = try await PricingCommand.resolve(price: basePrice, territoryID: base, appID: appID, client: client)
         // Territories whose price is Apple's comparable price for the base tier resolve from one
         // request; the rest read their own tier lists (four requests each).
         let equalized = try await AppPricing.equalizations(of: basePoint.id, client: client).points
@@ -546,20 +569,12 @@ extension AppsCommand {
         }
         if !others.isEmpty {
           print("Reading the tiers of \(others.count) territor\(others.count == 1 ? "y" : "ies")…")
-          let appID = app.id
           let resolved = try await boundedConcurrentMap(others, maxConcurrent: 4) { entry in
             (entry.territoryID, try await PricingCommand.resolve(price: entry.price, territoryID: entry.territoryID, appID: appID, client: client).id)
           }
           for (territoryID, pointID) in resolved { points[territoryID] = pointID }
         }
-        let dropped = Swift.Set(schedule?.manualPrices.filter(\.isCurrentOrLater).map(\.territoryID) ?? [])
-          .subtracting(points.keys)
-        var summary = ["Base territory: \(base) at \(basePrice)", "Set by hand:    \(points.count - 1) other territor\(points.count == 2 ? "y" : "ies")"]
-        if !dropped.isEmpty { summary.append("Apple's prices: \(dropped.sorted().joined(separator: ", ")) (not in the file)") }
-        try await PricingCommand.save(
-          appID: app.id, appName: app.attributes?.name ?? bundleID, base: base,
-          prices: points.sorted { $0.key < $1.key }.map { AppPricing.NewPrice(pricePointID: $0.value) },
-          summary: summary, client: client)
+        return (basePoint, points)
       }
     }
   }

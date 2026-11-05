@@ -232,6 +232,8 @@ ascelerate apps pricing import <other-bundle-id> --file prices.json
 
 Apple leitet die Preise der anderen Länder vom Basispreis ab und kann sie an Steuer- und Wechselkursänderungen anpassen; ein manuell festgelegter Preis bleibt unverändert. Bei mehreren Ländern nimmt `sale` den Preis in der Währung des Basislands und gibt den anderen Apples vergleichbare Preise; danach gilt in jedem Land wieder der frühere Preis. `import` ersetzt den gesamten Preisplan.
 
+Ein Preis, der keine Preisstufe des Ziels ist, lässt den Import fehlschlagen; die Meldung nennt die nächstgelegenen Preisstufen. Mit `--snap` erhält jeder solche Preis stattdessen die nächstgelegene Preisstufe (bei gleichem Abstand die günstigere), und die angepassten Preise werden vor der Bestätigung aufgelistet.
+
 ## Verschlüsselungserklärungen
 
 ```bash

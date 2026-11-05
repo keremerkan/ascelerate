@@ -111,6 +111,8 @@ ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices
 
 El archivo guarda los precios para el cliente con el código de cada país o región como clave. Al importar, cada precio se busca por su precio para el cliente entre los niveles de precio del producto *de destino*, de modo que el mismo archivo sirve para distintos productos y apps. La importación sustituye la programación por completo: los países o regiones que no figuran en el archivo vuelven a la equiparación automática, y si la programación actual ya coincide con el archivo, el comando no hace nada. Los errores transitorios de App Store Connect (HTTP 429/5xx) se reintentan automáticamente.
 
+Un precio que no es uno de los niveles del destino hace fallar la importación, que muestra los niveles más cercanos; con `--snap`, cada uno de esos precios toma en su lugar el nivel más cercano (el más barato si dos están a la misma distancia), y los precios ajustados se muestran antes de confirmar.
+
 ## Disponibilidad
 
 Cada compra dentro de la app tiene su propia disponibilidad por país o región, independiente de la de la app. De forma predeterminada, una compra dentro de la app hereda los países o regiones de su app; en cuanto ejecuta `iap availability` con cambios, la compra pasa a tener una lista propia.

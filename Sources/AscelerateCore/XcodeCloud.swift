@@ -35,18 +35,35 @@ public enum XcodeCloud {
     for case .apps(let app) in pages.flatMap({ $0.included ?? [] }) { bundleIDs[app.id] = app.attributes?.bundleId }
     let products = pages.flatMap(\.data)
     let repositories = try await boundedConcurrentMap(products) { product -> [String] in
-      guard includingRepositories else { return [] }
-      return try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.ciProductsPrimaryRepositoriesGetToManyRelated(path: .init(id: product.id), query: .init(limit: 200)).ok.body.json
-      }.flatMap(\.data).map(repositoryName)
+      includingRepositories ? try await repositoryNames(productID: product.id, client: client) : []
     }
     return zip(products, repositories).map { product, repositories in
-      let appID = product.relationships?.app?.data?.id
-      return Product(
-        id: product.id, name: product.attributes?.name, type: product.attributes?.productType,
-        createdDate: product.attributes?.createdDate, appID: appID, bundleID: appID.flatMap { bundleIDs[$0] },
-        repositories: repositories)
+      self.product(product, bundleIDs: bundleIDs, repositories: repositories)
     }
+  }
+
+  /// One product, with its repositories: what a link to one of its builds opens, without reading
+  /// the team's other products.
+  public static func product(id: String, client: ASCClient) async throws -> Product {
+    async let repositories = repositoryNames(productID: id, client: client)
+    let response = try await client.ciProductsGetInstance(path: .init(id: id), query: .init(include: [.app])).ok.body.json
+    var bundleIDs: [String: String] = [:]
+    for case .apps(let app) in response.included ?? [] { bundleIDs[app.id] = app.attributes?.bundleId }
+    return product(response.data, bundleIDs: bundleIDs, repositories: try await repositories)
+  }
+
+  private static func repositoryNames(productID: String, client: ASCClient) async throws -> [String] {
+    try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.ciProductsPrimaryRepositoriesGetToManyRelated(path: .init(id: productID), query: .init(limit: 200)).ok.body.json
+    }.flatMap(\.data).map(repositoryName)
+  }
+
+  private static func product(_ product: Components.Schemas.CiProduct, bundleIDs: [String: String], repositories: [String]) -> Product {
+    let appID = product.relationships?.app?.data?.id
+    return Product(
+      id: product.id, name: product.attributes?.name, type: product.attributes?.productType,
+      createdDate: product.attributes?.createdDate, appID: appID, bundleID: appID.flatMap { bundleIDs[$0] },
+      repositories: repositories)
   }
 
   /// Deletes a product with its workflows and build runs (Xcode Cloud stops building it).

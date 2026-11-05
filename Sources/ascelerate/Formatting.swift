@@ -2,6 +2,7 @@ import ArgumentParser
 import ASCKit
 import AscelerateCore
 import Foundation
+import Synchronization
 
 /// A human-readable description for inline error reporting (per-item FAIL lines and
 /// similar catch sites): Apple's error entries for API errors, and the underlying error
@@ -1312,7 +1313,8 @@ protocol ResolvablePricePoint {
 
 /// Finds the price point whose customer price matches `target` (within 0.001) in `territoryID`.
 /// Throws ValidationError for an empty tier list, or no match — listing the five nearest tiers
-/// by price distance. `priceLabel` is the original price string, used only in error text.
+/// by price distance. `priceLabel` is the original price string, used only in error text. Under
+/// `PriceSnapping` (a price import's `--snap`), a price that isn't a tier takes the nearest one.
 func findPricePoint<P: ResolvablePricePoint>(
   in tiers: [P], target: Double, priceLabel: String, territoryID: String, currency: String?
 ) throws -> P {
@@ -1325,17 +1327,63 @@ func findPricePoint<P: ResolvablePricePoint>(
   }) {
     return exact
   }
+  // Compared as decimals, the cheaper first when two are as close (as Doubles, 2.49 − 1.99 and
+  // 2.99 − 2.49 differ), as AscelerateCore's PriceFile does.
+  let wanted = Decimal(string: priceLabel.trimmingCharacters(in: .whitespaces)) ?? Decimal(target)
   let nearest = tiers
-    .compactMap { p -> (P, Double)? in
-      guard let v = p.resolverCustomerPrice.flatMap({ Double($0) }) else { return nil }
-      return (p, abs(v - target))
+    .compactMap { p -> (P, Decimal, Decimal)? in
+      guard let v = p.resolverCustomerPrice.flatMap({ Decimal(string: $0) }) else { return nil }
+      return (p, abs(v - wanted), v)
     }
-    .sorted { $0.1 < $1.1 }
+    .sorted { $0.1 != $1.1 ? $0.1 < $1.1 : $0.2 < $1.2 }
     .prefix(5)
     .map(\.0)
+  if let collector = PriceSnapping.collector, let tier = nearest.first {
+    collector.add(.init(territoryID: territoryID, price: priceLabel, tier: tier.resolverCustomerPrice ?? ""))
+    return tier
+  }
   var msg = "No tier with customer price \(priceLabel) \(currency ?? "") in territory \(territoryID).\n"
   msg += "Nearest tiers: " + nearest.compactMap { $0.resolverCustomerPrice }.joined(separator: ", ")
   throw ValidationError(msg)
+}
+
+/// A price import's `--snap`: App Store Connect takes only its own tiers, so a file price that
+/// isn't one takes the nearest tier (the cheaper when two are as close) instead of failing the
+/// import; every snap is listed before the confirmation.
+enum PriceSnapping {
+  struct Snap: Sendable {
+    let territoryID: String
+    let price: String
+    let tier: String
+  }
+
+  final class Collector: Sendable {
+    private let snaps = Mutex<[Snap]>([])
+
+    func add(_ snap: Snap) { snaps.withLock { $0.append(snap) } }
+    var all: [Snap] { snaps.withLock { $0 }.sorted { $0.territoryID < $1.territoryID } }
+  }
+
+  /// Set while an import with `--snap` matches its prices.
+  @TaskLocal static var collector: Collector?
+
+  /// Runs `body` with snapping on when `snap` is set, then lists what snapped.
+  static func resolving<T>(_ snap: Bool, _ body: () async throws -> T) async throws -> T {
+    guard snap else { return try await body() }
+    let collector = Collector()
+    let result = try await $collector.withValue(collector) { try await body() }
+    report(collector.all)
+    return result
+  }
+
+  private static func report(_ snaps: [Snap]) {
+    guard !snaps.isEmpty else { return }
+    print(yellow("Snapped to the nearest tier (\(snaps.count) territor\(snaps.count == 1 ? "y" : "ies")):"))
+    for snap in snaps {
+      let up = (Decimal(string: snap.tier) ?? 0) > (Decimal(string: snap.price) ?? 0)
+      print("  \(snap.territoryID): \(snap.price) → \(up ? green(snap.tier) : red(snap.tier))")
+    }
+  }
 }
 
 enum Table {

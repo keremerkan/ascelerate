@@ -1458,6 +1458,9 @@ struct IAPCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: today).")
       var startDate: String?
 
+      @Flag(name: .long, help: "Use the nearest tier for a price that isn't one (the cheaper when two are as close), listing each, instead of failing.")
+      var snap = false
+
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
 
@@ -1479,9 +1482,11 @@ struct IAPCommand: AsyncParsableCommand {
           .map { (territoryID: $0.key, price: $0.value) }
         print("Resolving price points for \(sortedPrices.count) territor\(sortedPrices.count == 1 ? "y" : "ies")", terminator: "")
         fflush(stdout)
-        let resolved = try await IAPCommand.resolvePricePointsBatched(
-          iapID: iap.id, prices: sortedPrices, client: client)
-        print(" done.")
+        let resolved = try await PriceSnapping.resolving(snap) {
+          let resolved = try await IAPCommand.resolvePricePointsBatched(iapID: iap.id, prices: sortedPrices, client: client)
+          print(" done.")
+          return resolved
+        }
 
         let entries = resolved.map {
           IAPCommand.ManualPriceEntry(

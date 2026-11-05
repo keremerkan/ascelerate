@@ -111,6 +111,8 @@ ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices
 
 The file stores customer prices keyed by territory code. On import, each price is matched against the *target* product's own tiers by customer price, so the same file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize, and if the current schedule already matches the file the command is a no-op. Transient App Store Connect errors (HTTP 429/5xx) are retried automatically.
 
+A price that isn't one of the target's tiers fails the import, which lists the nearest tiers; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm.
+
 ## Availability
 
 Each IAP has its own territory availability, independent of the app's. By default an IAP inherits its app's territories; once you call `iap availability` with changes, the IAP has an explicit list.

@@ -232,6 +232,8 @@ ascelerate apps pricing import <other-bundle-id> --file prices.json
 
 Apple derives the other territories' prices from the base price and may adjust them for tax and exchange rate changes; a price set by hand stays as it is. For several territories, `sale` takes the price in the base territory's currency and gives the others Apple's comparable prices; afterwards each territory's earlier price applies again. `import` replaces the whole schedule.
 
+A price that isn't one of the target's tiers fails the import, which lists the nearest tiers; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm.
+
 ## Encryption declarations
 
 ```bash

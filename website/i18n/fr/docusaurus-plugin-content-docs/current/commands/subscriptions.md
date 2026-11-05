@@ -111,6 +111,8 @@ ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices
 
 Le fichier contient les prix client indexés par code de région (les prix préservés et les prix planifiés pour le futur sont exclus de l'export). À l'import, chaque prix est mis en correspondance avec les paliers tarifaires de l'abonnement *cible* d'après le prix client ; le même fichier fonctionne donc d'un produit ou d'une app à l'autre. L'import ne touche que les régions listées dans le fichier, ignore celles déjà au prix indiqué et applique les mêmes règles de sécurité pour les hausses et les baisses que `set` — y compris `--preserve-current`/`--no-preserve-current` et `--confirm-decrease`.
 
+Un prix qui ne correspond à aucun palier de la cible fait échouer l’importation, qui indique les paliers les plus proches ; avec `--snap`, chacun de ces prix prend plutôt le palier le plus proche (le moins cher à distance égale), et les prix ajustés sont listés avant la confirmation.
+
 Les erreurs transitoires d'App Store Connect (HTTP 429/5xx) lors des écritures multi-régions sont automatiquement réessayées — d'abord sur place avec temporisation, puis dans une seconde passe en fin d'exécution. Les régions qui échouent malgré tout sont listées dans le rapport final et la commande se termine avec un code d'erreur ; relancer la même commande ne réessaie que celles-ci, les régions déjà mises à jour étant ignorées comme inchangées.
 
 ## Disponibilité territoriale

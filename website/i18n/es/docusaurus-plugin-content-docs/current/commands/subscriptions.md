@@ -111,6 +111,8 @@ ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices
 
 El archivo guarda los precios para el cliente con el código de cada país o región como clave (los precios conservados para suscriptores actuales y los programados para el futuro no se exportan). Al importar, cada precio se busca por su precio para el cliente entre los niveles de precio de la suscripción *de destino*, de modo que el mismo archivo sirve para distintos productos y apps. La importación solo modifica los países o regiones incluidos en el archivo, omite los que ya tienen el precio indicado y aplica las mismas reglas de seguridad para subidas y bajadas que `set`, incluidas `--preserve-current`/`--no-preserve-current` y `--confirm-decrease`.
 
+Un precio que no es uno de los niveles del destino hace fallar la importación, que muestra los niveles más cercanos; con `--snap`, cada uno de esos precios toma en su lugar el nivel más cercano (el más barato si dos están a la misma distancia), y los precios ajustados se muestran antes de confirmar.
+
 Los errores transitorios de App Store Connect (HTTP 429/5xx) durante las escrituras en varios países o regiones se reintentan automáticamente: primero en el momento, con esperas crecientes, y después en una segunda pasada al final de la ejecución. Los países o regiones que siguen fallando aparecen en el informe final y el comando termina con un código distinto de cero. Si vuelve a ejecutar el mismo comando, solo se reintentan esos, ya que los países o regiones ya actualizados se omiten por no tener cambios.
 
 ## Disponibilidad

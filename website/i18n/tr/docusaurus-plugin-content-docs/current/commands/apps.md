@@ -232,6 +232,8 @@ ascelerate apps pricing import <other-bundle-id> --file prices.json
 
 Apple diğer bölgelerin fiyatlarını temel fiyattan belirler ve vergi veya döviz kuru değişikliklerine göre ayarlayabilir; elle belirlenen bir fiyat olduğu gibi kalır. Birden çok bölgede `sale`, fiyatı temel bölgenin para biriminde alır ve diğer bölgelere Apple'ın karşılaştırılabilir fiyatlarını verir; sonrasında her bölgede önceki fiyat yeniden geçerli olur. `import` fiyat planını bütünüyle değiştirir.
 
+Hedefin fiyat kademelerinden biri olmayan bir fiyat içe aktarmayı durdurur ve en yakın kademeleri listeler. `--snap` ile bu fiyatların her biri bunun yerine en yakın kademeyi alır (iki kademe eşit uzaklıktaysa daha ucuz olanı); düzeltilen fiyatlar onaydan önce listelenir.
+
 ## Şifreleme beyanları
 
 ```bash

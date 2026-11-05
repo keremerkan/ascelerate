@@ -298,7 +298,21 @@ public enum Builds {
     // Newest first: the ones after the target in the list came before it.
     let earlier = builds.firstIndex { $0.id == target.id }.map { Array(builds[($0 + 1)...]) }
       ?? builds.filter { $0.id != target.id }
-    for build in earlier.prefix(20) {
+    return try await newestWithTestNotes(earlier, client: client)
+  }
+
+  /// The newest of a platform's builds whose What to Test has text in some language, with that
+  /// text: what a build about to be uploaded keeps. Nil when none of the latest 20 has any.
+  public static func latestTestNotes(
+    appID: String, platform: Platform?, client: ASCClient
+  ) async throws -> (build: Build, notes: [TestNotes])? {
+    try await newestWithTestNotes(list(appID: appID, platform: platform, limit: 20, client: client), client: client)
+  }
+
+  /// The first of `builds` (newest first; 20 at most read) with What to Test text, without the
+  /// empty languages.
+  private static func newestWithTestNotes(_ builds: [Build], client: ASCClient) async throws -> (build: Build, notes: [TestNotes])? {
+    for build in builds.prefix(20) {
       let notes = try await testNotes(buildID: build.id, client: client).filter { !($0.text ?? "").isEmpty }
       if !notes.isEmpty { return (build, notes) }
     }

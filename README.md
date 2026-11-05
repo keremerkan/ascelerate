@@ -750,7 +750,7 @@ ascelerate apps pricing cancel <bundle-id> --territory USA --start-date 2026-12-
 
 # Copy a schedule to another app (the iap pricing export format)
 ascelerate apps pricing export <bundle-id> --output prices.json
-ascelerate apps pricing import <other-bundle-id> --file prices.json
+ascelerate apps pricing import <other-bundle-id> --file prices.json [--snap]
 ```
 
 Apple derives the other territories' prices from the base price and may adjust them for tax and exchange rate changes; a price set by hand stays as it is. For several territories, `sale` takes the price in the base territory's currency and gives the others Apple's comparable prices; afterwards each territory's earlier price applies again. `import` replaces the whole schedule.
@@ -1108,7 +1108,7 @@ Filter values are case-insensitive. Types: `CONSUMABLE`, `NON_CONSUMABLE`, `NON_
 
 `iap info` and `iap pricing show` warn when an IAP has no price schedule — the same condition surfaced in `apps review preflight` (which skips products you removed from sale instead of failing them). When `set` changes the base territory price, existing per-territory manual overrides are preserved by default. If overrides exist, an interactive menu offers to revert any of them; pass `--remove-all-overrides` for a non-interactive wipe.
 
-`iap pricing export` writes the base territory and every manual price to a JSON file keyed by territory code; `iap pricing import` applies such a file to any IAP — prices are matched to the target product's own tiers by customer price, so the file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize. If the current schedule already matches the file, import is a no-op.
+`iap pricing export` writes the base territory and every manual price to a JSON file keyed by territory code; `iap pricing import` applies such a file to any IAP — prices are matched to the target product's own tiers by customer price, so the file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize. If the current schedule already matches the file, import is a no-op. A price that isn't one of the target's tiers fails the import, which lists the nearest tiers; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm.
 
 Offer code one-time-use codes are generated asynchronously. After `gen-codes`, run `view-codes <batch-id>` to fetch the actual code values. If the response is empty, retry in a few seconds. Custom codes (`add-custom-codes`) are developer-supplied strings that don't need separate generation.
 
@@ -1230,7 +1230,7 @@ Apple treats price changes differently for existing subscribers depending on dir
 - **New territory** (no existing price): no existing subscribers to consider; flags optional.
 - **Unchanged**: skipped silently.
 
-`sub pricing export` writes every territory's current customer price to a JSON file (preserved/grandfathered and future-scheduled prices are excluded); `sub pricing import` applies such a file to any subscription — prices are matched to the target subscription's own tiers by customer price, so the file works across products and apps. Import only touches listed territories, skips ones already at the listed price, and enforces the same increase/decrease safety rules as `sub pricing set`.
+`sub pricing export` writes every territory's current customer price to a JSON file (preserved/grandfathered and future-scheduled prices are excluded); `sub pricing import` applies such a file to any subscription — prices are matched to the target subscription's own tiers by customer price, so the file works across products and apps. Import only touches listed territories, skips ones already at the listed price, and enforces the same increase/decrease safety rules as `sub pricing set`. A price that isn't one of the target's tiers fails the import, which lists the nearest tiers; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm.
 
 Multi-territory price writes retry transient App Store Connect errors (HTTP 429/5xx) automatically — first in place with backoff, then in a second sweep at the end of the run. Territories that still fail are listed in the final report and the command exits non-zero; re-running the same command retries just those, since already-updated territories are skipped as unchanged.
 

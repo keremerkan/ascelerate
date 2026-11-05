@@ -33,7 +33,7 @@ extension ReportsCommand {
     @Option(
       name: .long,
       help:
-        "Report type (default: SALES). Others: SUBSCRIPTION, SUBSCRIBER, SUBSCRIPTION_EVENT, INSTALLS, PRE_ORDER, SUBSCRIPTION_OFFER_CODE_REDEMPTION."
+        "Report type (default: SALES). Others: SUBSCRIPTION, SUBSCRIBER, SUBSCRIPTION_EVENT, PRE_ORDER, SUBSCRIPTION_OFFER_CODE_REDEMPTION (INSTALLS: Apple stopped making them on November 4, 2026; earlier ones still download)."
     )
     var type: String = "SALES"
 

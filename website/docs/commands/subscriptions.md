@@ -175,6 +175,34 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+## Retention messages and offers
+
+When a subscriber goes to cancel in their App Store subscription settings, the App Store can show them a **retention message**: a header and body in their language, an optional image, and offers to stay. A message belongs to the app and goes through App Review; each subscription shows one message, with any of its **retention offers**.
+
+```bash
+ascelerate sub retention-message list <bundle-id>
+ascelerate sub retention-message info <bundle-id> "Stay with us"
+ascelerate sub retention-message create <bundle-id> --name "Stay with us" \
+  --locale en-US --header "Before you go" --body "Your plan gets new features every month."
+ascelerate sub retention-message localizations set <bundle-id> "Stay with us" \
+  --locale de-DE --header "Bevor Sie gehen" --body "Ihr Abo erhält jeden Monat neue Funktionen."
+ascelerate sub retention-message image upload <bundle-id> "Stay with us" ./retention.png
+ascelerate sub retention-message submit <bundle-id> "Stay with us"
+ascelerate sub retention-message new-version <bundle-id> "Stay with us"
+
+# Retention offers, then the message and offers a subscription shows
+ascelerate sub retention-offer create <bundle-id> <product-id> \
+  --name "Half off" --offer-id stay.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --paid-months 6 --wait-months 12 --price 4.99 --territories all
+ascelerate sub retention-offer update <bundle-id> <product-id> stay.half --paid-months 3
+ascelerate sub retention-message assign <bundle-id> <product-id> "Stay with us" --offers stay.half
+```
+
+- **Text and image:** the header takes 66 characters and the body 144. The image is 16:9 without transparency: 3840×2160 (PNG or JPEG) or 5244×2950 (PNG), one per version.
+- **Versions:** a message has one unreleased version at a time. Once App Review has it, `new-version` starts the next. `submit` adds the message to the draft submission; send it with `apps review submit`.
+- **Who gets an offer:** subscribers who have paid for at least `--paid-months` (1–24, 36, 48 or 60) and, with `--wait-months`, whose last offer was 2–24 months ago. Only these two change after an offer is created, and a wait can't be removed once set.
+- **Prices:** a paid offer's `--price` is in the first of `--territories`; the others get Apple's comparable price. A free trial takes none. `--plan monthly` targets the monthly billing plan of an annual subscription (upfront by default).
+
 ## Offer codes
 
 Offer codes are redeemable codes for subscriptions, with two flavors:
@@ -242,6 +270,23 @@ ascelerate sub review-screenshot delete <bundle-id> <product-id>
 
 Image and screenshot uploads use Apple's 3-step file upload flow (reserve → PUT chunks → commit with MD5). The CLI handles all three steps in a single `upload` call.
 
-## Win-back offers (not yet implemented)
+## Win-back offers
 
-Win-back offers (offers for churned subscribers) are not implemented yet. In Apple's API specification, the price entries of a win-back offer (`WinBackOfferPriceInlineCreate`) lack the `territory` and `subscriptionPricePoint` relationships that the prices of every other offer type carry, so a valid create request can't be built. Will revisit when Apple updates the specification.
+Win-back offers are for people whose subscription ended: the App Store offers them a discount or free time to come back, from a start date to an optional end date. Only an approved subscription takes them.
+
+```bash
+ascelerate sub win-back-offer list <bundle-id> <product-id>
+ascelerate sub win-back-offer info <bundle-id> <product-id> comeback.half
+ascelerate sub win-back-offer create <bundle-id> <product-id> \
+  --name "Come back" --offer-id comeback.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --since-months 3-12 --paid-months 6 --end-date 2027-01-31 --priority high --promote \
+  --price 4.99 --territories all
+ascelerate sub win-back-offer update <bundle-id> <product-id> comeback.half --since-months 2-24 --end-date 2027-03-31
+ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
+```
+
+- **Who gets one:** people whose subscription ended `--since-months` ago (a range, from 1–23 to 2–24 months), who had paid for at least `--paid-months` (1–24, 36, 48 or 60) and, with `--wait-months`, whose last offer was 2–24 months ago.
+- **Dates:** it starts on `--start-date` (tomorrow at the earliest, and by default) and, with `--end-date`, ends at least 3 days later.
+- **On the App Store:** `--priority high` puts it before other offers; `--promote` lets the App Store promote it with assets Apple generates.
+- **Prices:** as for retention offers, `--price` is in the first of `--territories` and the others get Apple's comparable price; a free trial takes none. A pay-as-you-go offer lasts the subscription's own period (`ONE_YEAR` for an annual one).
+- **Changes:** the eligibility, dates, priority and promotion can change; for anything else, delete the offer and create it again.

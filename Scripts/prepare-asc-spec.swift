@@ -21,6 +21,8 @@
 // - A metrics insight's `referenceVersions` (declared a string) and a data point's
 //   `percentageBreakdown` (declared an object) come as arrays.
 // - A matchmaking rule set test result comes without the `id` the spec requires.
+// - Offer price inline creates without relationships (retention and win-back offers, 4.6) get the
+//   read schema's territory and price point, which every price needs.
 // - Operations keep only their success responses (the error middleware handles the rest).
 import Foundation
 
@@ -271,6 +273,34 @@ if var allSchemas = components["schemas"] as? [String: Any], var test = allSchem
   optionalIDs += 1
 }
 
+// An offer's prices are created inline, each naming its territory and price point. The retention
+// and win-back offer prices' inline creates have no relationships at all (4.6), so no price could
+// be sent, while every other price inline create has them and their read schemas do too: those
+// get the read schema's relationships, each with only its `data`.
+var fixedPrices = 0
+if var allSchemas = components["schemas"] as? [String: Any] {
+  for (name, schema) in allSchemas where name.hasSuffix("PriceInlineCreate") {
+    guard var create = schema as? [String: Any], var properties = create["properties"] as? [String: Any],
+      properties["relationships"] == nil,
+      let read = allSchemas[String(name.dropLast("InlineCreate".count))] as? [String: Any],
+      let relationships = ((read["properties"] as? [String: Any])?["relationships"] as? [String: Any])?["properties"]
+        as? [String: Any]
+    else { continue }
+    let dataOnly = relationships.mapValues { relationship -> Any in
+      guard var relationship = relationship as? [String: Any], let inner = relationship["properties"] as? [String: Any]
+      else { return relationship }
+      relationship["properties"] = inner.filter { $0.key == "data" }
+      return relationship
+    }
+    properties["relationships"] = ["type": "object", "properties": dataOnly]
+    create["properties"] = properties
+    allSchemas[name] = create
+    fixedPrices += 1
+  }
+  components["schemas"] = allSchemas
+  spec["components"] = components
+}
+
 // Only success responses are kept: ASCKit's error middleware throws every 4xx/5xx as `ASCError`
 // before the generated client decodes it, so the typed error responses (400, 401, 403, 404, 409,
 // 422 and 429 on most operations) were never used, and they made up most of the generated code.
@@ -297,7 +327,7 @@ spec["paths"] = keepSuccessResponses(spec["paths"] ?? [:])
 let data = try JSONSerialization.data(withJSONObject: spec, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 try data.write(to: output)
 let version = (spec["info"] as? [String: Any])?["version"] as? String ?? "?"
-print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(fixedDimensions) metric dimensions made linkages, \(fixedInsights) metrics fields made arrays, \(optionalIDs) result IDs made optional, \(droppedResponses) error responses dropped)")
+print("Wrote \(output.path) (spec \(version), \(openedEnums) schema enums opened, \(emptyEnums) empty parameter enums dropped, \(droppedConstraints) constraint-only anyOfs dropped, \(misplacedDiscriminators) misplaced discriminators made anyOf, \(fixedDimensions) metric dimensions made linkages, \(fixedInsights) metrics fields made arrays, \(optionalIDs) result IDs made optional, \(fixedPrices) price inline creates given relationships, \(droppedResponses) error responses dropped)")
 
 // ASCEnums.swift: the enum catalog as Swift enums, for validating input (`parseEnum`) and
 // naming values in code; requests and responses carry the raw strings.

@@ -233,6 +233,29 @@ filter:
     - /v1/subscriptionOfferCodes/{id}/customCodes
     - /v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values
     - /v1/subscriptions/{id}/promotionalOffers
+    - /v1/apps/{id}/retentionMessages
+    - /v1/retentionMessages
+    - /v1/retentionMessages/{id}
+    - /v1/retentionMessages/{id}/versions
+    - /v1/retentionMessages/{id}/subscriptions
+    - /v1/retentionMessageVersions
+    - /v1/retentionMessageVersions/{id}
+    - /v1/retentionMessageVersions/{id}/localizations
+    - /v1/retentionMessageVersions/{id}/placement
+    - /v1/retentionMessageLocalizations
+    - /v1/retentionMessageLocalizations/{id}
+    - /v1/retentionOffers
+    - /v1/retentionOffers/{id}
+    - /v1/retentionOffers/{id}/prices
+    - /v1/subscriptions/{id}/retentionMessage
+    - /v1/subscriptions/{id}/relationships/retentionMessage
+    - /v1/subscriptions/{id}/retentionMessageOffers
+    - /v1/subscriptions/{id}/relationships/retentionMessageOffers
+    - /v1/subscriptions/{id}/retentionOffers
+    - /v1/subscriptions/{id}/winBackOffers
+    - /v1/winBackOffers
+    - /v1/winBackOffers/{id}
+    - /v1/winBackOffers/{id}/prices
     - /v1/subscriptionPromotionalOffers/{id}
     - /v1/subscriptions/{id}/images
     - /v1/subscriptions/{id}/appStoreReviewScreenshot

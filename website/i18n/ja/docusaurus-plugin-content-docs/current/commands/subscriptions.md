@@ -172,6 +172,34 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+## リテンションメッセージとオファー
+
+サブスクライバーが App Store のサブスクリプション設定から解約しようとすると、App Store は**リテンションメッセージ**を表示できます。サブスクライバーの言語の見出しと本文、任意の画像、そして継続を促すオファーです。メッセージは App に属し、App Review の審査を受けます。各サブスクリプションは1つのメッセージを表示し、その中で任意の**リテンションオファー**を提示できます。
+
+```bash
+ascelerate sub retention-message list <bundle-id>
+ascelerate sub retention-message info <bundle-id> "Stay with us"
+ascelerate sub retention-message create <bundle-id> --name "Stay with us" \
+  --locale en-US --header "Before you go" --body "Your plan gets new features every month."
+ascelerate sub retention-message localizations set <bundle-id> "Stay with us" \
+  --locale ja --header "解約する前に" --body "プランには毎月新しい機能が追加されます。"
+ascelerate sub retention-message image upload <bundle-id> "Stay with us" ./retention.png
+ascelerate sub retention-message submit <bundle-id> "Stay with us"
+ascelerate sub retention-message new-version <bundle-id> "Stay with us"
+
+# リテンションオファー、次にサブスクリプションが表示するメッセージとオファー
+ascelerate sub retention-offer create <bundle-id> <product-id> \
+  --name "Half off" --offer-id stay.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --paid-months 6 --wait-months 12 --price 4.99 --territories all
+ascelerate sub retention-offer update <bundle-id> <product-id> stay.half --paid-months 3
+ascelerate sub retention-message assign <bundle-id> <product-id> "Stay with us" --offers stay.half
+```
+
+- **テキストと画像：** 見出しは66文字、本文は144文字までです。画像は透明部分のない16:9で、3840×2160（PNG または JPEG）または5244×2950（PNG）、バージョンごとに1枚です。
+- **バージョン：** メッセージの未公開バージョンは一度に1つだけです。App Review がバージョンを受け取った後、`new-version` で次のバージョンを開始します。`submit` はメッセージを下書きの提出に追加します。提出は `apps review submit` で行ってください。
+- **オファーの対象：** `--paid-months` か月（1〜24、36、48、60）以上支払ったサブスクライバー、および `--wait-months` を指定した場合は前回のオファーから2〜24か月が経過したサブスクライバーです。オファーの作成後に変更できるのはこの2つだけで、待機期間は一度設定すると削除できません。
+- **価格：** 有料オファーの `--price` は `--territories` の最初の国または地域の価格で、その他にはAppleの同等の価格が適用されます。無料トライアルには価格がありません。`--plan monthly` は年間サブスクリプションの月払いプランを対象にします（デフォルトは前払い）。
+
 ## オファーコード
 
 サブスクリプション用の引換可能コードで、2種類あります：
@@ -239,6 +267,23 @@ ascelerate sub review-screenshot delete <bundle-id> <product-id>
 
 画像およびスクリーンショットのアップロードはAppleの3ステップフローを使用します（予約 → チャンクをPUT → MD5でコミット）。単一の `upload` 呼び出しで3つのステップすべてを処理します。
 
-## ウィンバックオファー（未実装）
+## ウィンバックオファー
 
-ウィンバックオファー（解約したサブスクライバー向けのオファー）はまだ実装されていません。Apple の API 仕様では、ウィンバックオファーの価格エントリ（`WinBackOfferPriceInlineCreate`）に、他のすべてのオファー種別の価格が持つ `territory` および `subscriptionPricePoint` の関係が定義されていないため、有効な作成リクエストを構築できません。Apple が仕様を更新したら再検討します。
+ウィンバックオファーは、サブスクリプションが終了した人を対象としたオファーです。App Store は開始日から任意の終了日まで、戻ってもらうための割引や無料期間を提示します。承認済みのサブスクリプションのみが利用できます。
+
+```bash
+ascelerate sub win-back-offer list <bundle-id> <product-id>
+ascelerate sub win-back-offer info <bundle-id> <product-id> comeback.half
+ascelerate sub win-back-offer create <bundle-id> <product-id> \
+  --name "Come back" --offer-id comeback.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --since-months 3-12 --paid-months 6 --end-date 2027-01-31 --priority high --promote \
+  --price 4.99 --territories all
+ascelerate sub win-back-offer update <bundle-id> <product-id> comeback.half --since-months 2-24 --end-date 2027-03-31
+ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
+```
+
+- **オファーの対象：** サブスクリプションが `--since-months` か月前（1〜23から2〜24か月の範囲）に終了し、`--paid-months` か月（1〜24、36、48、60）以上支払った人。`--wait-months` を指定した場合は、前回のオファーから2〜24か月が経過した人です。
+- **日付：** `--start-date` に開始し（最短かつデフォルトは翌日）、`--end-date` を指定した場合は少なくとも3日後に終了します。
+- **App Store での表示：** `--priority high` は他のオファーより先に表示します。`--promote` を指定すると、App Store が Apple の生成するアセットでオファーを宣伝します。
+- **価格：** リテンションオファーと同様に、`--price` は `--territories` の最初の国または地域の価格で、その他にはAppleの同等の価格が適用されます。無料トライアルには価格がありません。`PAY_AS_YOU_GO` のオファーの期間は、サブスクリプション自体の期間です（年間サブスクリプションでは `ONE_YEAR`）。
+- **変更：** 対象条件、日付、優先度、宣伝は変更できます。それ以外を変えるには、オファーを削除して作り直してください。

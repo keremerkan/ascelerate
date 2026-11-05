@@ -172,6 +172,34 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+## Elde tutma mesajları ve teklifleri
+
+Bir abone App Store'daki abonelik ayarlarından aboneliğini iptal etmek istediğinde App Store ona bir **elde tutma mesajı** gösterebilir: kendi dilinde bir başlık ve metin, isteğe bağlı bir görsel ve kalması için teklifler. Mesaj uygulamaya aittir ve App Review'dan geçer. Her abonelik bir mesaj gösterir ve bu mesajda kendi **elde tutma tekliflerinden** istediklerini sunar.
+
+```bash
+ascelerate sub retention-message list <bundle-id>
+ascelerate sub retention-message info <bundle-id> "Stay with us"
+ascelerate sub retention-message create <bundle-id> --name "Stay with us" \
+  --locale en-US --header "Before you go" --body "Your plan gets new features every month."
+ascelerate sub retention-message localizations set <bundle-id> "Stay with us" \
+  --locale tr --header "Gitmeden önce" --body "Planınıza her ay yeni özellikler ekleniyor."
+ascelerate sub retention-message image upload <bundle-id> "Stay with us" ./retention.png
+ascelerate sub retention-message submit <bundle-id> "Stay with us"
+ascelerate sub retention-message new-version <bundle-id> "Stay with us"
+
+# Elde tutma teklifleri, ardından aboneliğin gösterdiği mesaj ve teklifler
+ascelerate sub retention-offer create <bundle-id> <product-id> \
+  --name "Half off" --offer-id stay.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --paid-months 6 --wait-months 12 --price 4.99 --territories all
+ascelerate sub retention-offer update <bundle-id> <product-id> stay.half --paid-months 3
+ascelerate sub retention-message assign <bundle-id> <product-id> "Stay with us" --offers stay.half
+```
+
+- **Metin ve görsel:** Başlık en fazla 66, metin en fazla 144 karakter olabilir. Görsel saydamlık içermeyen, 16:9 oranında bir görseldir: 3840×2160 (PNG veya JPEG) ya da 5244×2950 (PNG). Her sürüm bir görsel alır.
+- **Sürümler:** Bir mesajın aynı anda yalnızca bir yayımlanmamış sürümü olabilir. App Review sürümü aldıktan sonra `new-version` bir sonraki sürümü başlatır. `submit` mesajı taslak gönderime ekler; gönderimi `apps review submit` ile yapın.
+- **Teklifi kimler alır:** En az `--paid-months` ay (1–24, 36, 48 veya 60) ödeme yapmış aboneler ve `--wait-months` verildiğinde son teklifini 2–24 ay önce almış olanlar. Teklif oluşturulduktan sonra yalnızca bu ikisi değiştirilebilir; bekleme süresi bir kez belirlendikten sonra kaldırılamaz.
+- **Fiyatlar:** Ücretli bir teklifin `--price` değeri, `--territories` listesindeki ilk ülke veya bölgenin fiyatıdır; diğerlerine Apple'ın karşılık gelen fiyatı uygulanır. Ücretsiz deneme fiyat almaz. `--plan monthly`, yıllık bir aboneliğin aylık ödeme planını hedefler (varsayılan: peşin ödeme).
+
 ## Teklif kodları
 
 Abonelikler için kullanılabilir kodlardır, iki türde gelir:
@@ -239,6 +267,23 @@ ascelerate sub review-screenshot delete <bundle-id> <product-id>
 
 Görsel ve ekran görüntüsü yüklemeleri Apple'ın 3 adımlı akışını kullanır (rezerve et → parçaları PUT et → MD5 ile tamamla). Tek bir `upload` çağrısı üç adımı da yönetir.
 
-## Win-back teklifleri (henüz uygulanmadı)
+## Win-back teklifleri
 
-Win-back teklifleri (kayıp aboneler için teklifler) henüz uygulanmamıştır. Apple'ın API spesifikasyonunda bir win-back teklifinin fiyat girişleri (`WinBackOfferPriceInlineCreate`), diğer tüm teklif türlerinin fiyatlarında bulunan `territory` ve `subscriptionPricePoint` ilişkilerini içermez; bu nedenle geçerli bir oluşturma isteği hazırlanamaz. Apple spesifikasyonu güncellediğinde tekrar ele alınacak.
+Win-back teklifleri, aboneliği sona ermiş kişiler içindir: App Store onlara geri dönmeleri için bir başlangıç tarihinden isteğe bağlı bir bitiş tarihine kadar indirim veya ücretsiz süre sunar. Yalnızca onaylanmış bir abonelik bu teklifleri alabilir.
+
+```bash
+ascelerate sub win-back-offer list <bundle-id> <product-id>
+ascelerate sub win-back-offer info <bundle-id> <product-id> comeback.half
+ascelerate sub win-back-offer create <bundle-id> <product-id> \
+  --name "Come back" --offer-id comeback.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --since-months 3-12 --paid-months 6 --end-date 2027-01-31 --priority high --promote \
+  --price 4.99 --territories all
+ascelerate sub win-back-offer update <bundle-id> <product-id> comeback.half --since-months 2-24 --end-date 2027-03-31
+ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
+```
+
+- **Teklifi kimler alır:** Aboneliği `--since-months` ay önce (1–23 ile 2–24 ay arasında bir aralık) sona ermiş, en az `--paid-months` ay (1–24, 36, 48 veya 60) ödeme yapmış ve `--wait-months` verildiğinde son teklifini 2–24 ay önce almış kişiler.
+- **Tarihler:** Teklif `--start-date` tarihinde başlar (en erken ve varsayılan olarak yarın); `--end-date` verildiğinde en az 3 gün sonra sona erer.
+- **App Store'da:** `--priority high` teklifi diğer tekliflerin önüne koyar; `--promote`, App Store'un teklifi Apple'ın oluşturduğu görsellerle tanıtmasını sağlar.
+- **Fiyatlar:** Elde tutma tekliflerinde olduğu gibi `--price`, `--territories` listesindeki ilk ülke veya bölgenin fiyatıdır; diğerlerine Apple'ın karşılık gelen fiyatı uygulanır. Ücretsiz deneme fiyat almaz. Kullandıkça öde (`PAY_AS_YOU_GO`) teklifinin süresi, aboneliğin kendi dönemidir (yıllık bir abonelikte `ONE_YEAR`).
+- **Değişiklikler:** Uygunluk koşulları, tarihler, öncelik ve tanıtım değiştirilebilir; diğer her şey için teklifi silip yeniden oluşturun.

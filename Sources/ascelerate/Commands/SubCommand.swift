@@ -16,7 +16,7 @@ struct SubCommand: AsyncParsableCommand {
       Create.self, Update.self, Delete.self, Submit.self,
       CreateGroup.self, UpdateGroup.self, DeleteGroup.self,
       Localizations.self, GroupLocalizations.self, Pricing.self, Availability.self,
-      IntroOffer.self, OfferCode.self, PromoOffer.self, SubmitGroup.self,
+      IntroOffer.self, OfferCode.self, PromoOffer.self, WinBackOffer.self, RetentionOffer.self, RetentionMessage.self, SubmitGroup.self,
       Images.self, ReviewScreenshot.self,
     ]
   )
@@ -544,6 +544,43 @@ struct SubCommand: AsyncParsableCommand {
       sourceCurrency: sourceCurrency,
       isEqualized: true
     )
+  }
+
+  /// The territories an offer is made in (`--territories USA,TUR|all`: every territory the
+  /// subscription has a price in, USA first) and, for a paid offer, its tier in the first territory
+  /// and Apple's comparable tiers in the others, by territory; a free trial has none. `isAll`:
+  /// they're all of the subscription's.
+  static func offerTerritories(
+    subscriptionID: String, productID: String, territories: String, price: String?, client: ASCClient
+  ) async throws -> (territories: [String], pricePoints: [String: String], isAll: Bool) {
+    var listed: [String]
+    let isAll = territories.lowercased() == "all"
+    if isAll {
+      listed = try await Subscriptions.prices(subscriptionID: subscriptionID, client: client).current.keys.sorted()
+      guard !listed.isEmpty else { throw ValidationError("\(productID) has no prices yet.") }
+      if listed.contains("USA") { listed = ["USA"] + listed.filter { $0 != "USA" } }
+    } else {
+      listed = territories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
+        .filter { !$0.isEmpty }
+      guard !listed.isEmpty else { throw ValidationError("--territories needs at least one code.") }
+    }
+    var pricePoints: [String: String] = [:]
+    if let price {
+      let first = listed[0]
+      let tiers = try await Subscriptions.pricePoints(subscriptionID: subscriptionID, territoryID: first, client: client)
+      let point = try findPricePoint(
+        in: tiers, target: try parseCustomerPrice(price), priceLabel: price, territoryID: first, currency: nil)
+      pricePoints[first] = point.id
+      for equalized in try await Subscriptions.equalizations(of: point.id, client: client).points
+      where listed.contains(equalized.territoryID) {
+        pricePoints[equalized.territoryID] = equalized.id
+      }
+      let missing = listed.filter { pricePoints[$0] == nil }
+      guard missing.isEmpty else {
+        throw ValidationError("No comparable price for \(missing.joined(separator: ", ")).")
+      }
+    }
+    return (listed, pricePoints, isAll)
   }
 
   static func pickGroup(appID: String, client: ASCClient) async throws -> GroupInfo {
@@ -2117,35 +2154,8 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let current = try await Subscriptions.prices(subscriptionID: sub.id, client: client).current
-        var listed: [String]
-        if territories.lowercased() == "all" {
-          listed = current.keys.sorted()
-          guard !listed.isEmpty else { throw ValidationError("\(productID) has no prices yet.") }
-          if listed.contains("USA") { listed = ["USA"] + listed.filter { $0 != "USA" } }
-        } else {
-          listed = territories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
-            .filter { !$0.isEmpty }
-          guard !listed.isEmpty else { throw ValidationError("--territories needs at least one code.") }
-        }
-
-        // A paid offer's tier in the first territory, and Apple's comparable tiers elsewhere.
-        var pricePoints: [String: String] = [:]
-        if let price {
-          let first = listed[0]
-          let tiers = try await Subscriptions.pricePoints(subscriptionID: sub.id, territoryID: first, client: client)
-          let point = try findPricePoint(
-            in: tiers, target: try parseCustomerPrice(price), priceLabel: price, territoryID: first, currency: nil)
-          pricePoints[first] = point.id
-          for equalized in try await Subscriptions.equalizations(of: point.id, client: client).points
-          where listed.contains(equalized.territoryID) {
-            pricePoints[equalized.territoryID] = equalized.id
-          }
-          let missing = listed.filter { pricePoints[$0] == nil }
-          guard missing.isEmpty else {
-            throw ValidationError("No comparable price for \(missing.joined(separator: ", ")).")
-          }
-        }
+        let (listed, pricePoints, isAll) = try await SubCommand.offerTerritories(
+          subscriptionID: sub.id, productID: productID, territories: territories, price: price, client: client)
 
         let existing = try await Subscriptions.introductoryOffers(subscriptionID: sub.id, client: client)
         let conflicts = Subscriptions.introductoryOfferConflicts(
@@ -2157,7 +2167,7 @@ struct SubCommand: AsyncParsableCommand {
         print("  Subscription:   \(productID)")
         print("  Mode:           \(formatState(offerMode.rawValue))")
         print("  Duration:       \(periods) × \(formatState(offerDuration.rawValue))")
-        print("  Territories:    \(targets.count == current.count && territories.lowercased() == "all" ? "All (\(targets.count))" : targets.joined(separator: ", "))")
+        print("  Territories:    \(isAll && targets.count == listed.count ? "All (\(targets.count))" : targets.joined(separator: ", "))")
         if let price { print("  Price:          \(price) in \(listed[0]), comparable prices elsewhere") }
         if let startDate { print("  Start Date:     \(startDate)") }
         if let endDate { print("  End Date:       \(endDate)") }

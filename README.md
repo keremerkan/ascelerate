@@ -1176,6 +1176,21 @@ ascelerate sub promo-offer create <bundle-id> <product-id> --name "Loyalty 50%" 
 ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> --price 5.99 --equalize-all-territories
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 
+# Retention messages (shown to subscribers who go to cancel) and retention offers
+ascelerate sub retention-message list <bundle-id>
+ascelerate sub retention-message create <bundle-id> --name "Stay with us" --locale en-US --header "Before you go" --body "Your plan gets new features every month."
+ascelerate sub retention-message localizations set <bundle-id> "Stay with us" --locale de-DE --header "Bevor Sie gehen" --body "Ihr Abo erhält jeden Monat neue Funktionen."
+ascelerate sub retention-message image upload <bundle-id> "Stay with us" ./retention.png
+ascelerate sub retention-message submit <bundle-id> "Stay with us"
+ascelerate sub retention-offer create <bundle-id> <product-id> --name "Half off" --offer-id stay.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --paid-months 6 --price 4.99 --territories all
+ascelerate sub retention-message assign <bundle-id> <product-id> "Stay with us" --offers stay.half
+
+# Win-back offers (for people whose subscription ended; approved subscriptions only)
+ascelerate sub win-back-offer list <bundle-id> <product-id>
+ascelerate sub win-back-offer create <bundle-id> <product-id> --name "Come back" --offer-id comeback.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --since-months 3-12 --paid-months 6 --price 4.99 --territories all
+ascelerate sub win-back-offer update <bundle-id> <product-id> comeback.half --end-date 2027-03-31
+ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
+
 # Offer codes (redeemable codes — one-time-use batches and custom codes)
 ascelerate sub offer-code list <bundle-id> <product-id>
 ascelerate sub offer-code create <bundle-id> <product-id> --name "Launch Free Month" --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --price 0 --territory USA --equalize-all-territories
@@ -1200,11 +1215,11 @@ When submitting an app version for review, `apps review submit` automatically de
 
 The localization import commands create missing locales automatically with confirmation, so you can add new languages without visiting App Store Connect.
 
-`sub intro-offer` is for new subscribers (free trials and intro discounts). `sub promo-offer` is for existing subscribers (requires server-side signing of the offer payload at runtime). `sub offer-code` produces redeemable code campaigns — one-time-use batches generate asynchronously (use `view-codes <batch-id>` to fetch values), while custom codes are developer-supplied strings.
+`sub intro-offer` is for new subscribers (free trials and intro discounts). `sub promo-offer` is for existing subscribers (requires server-side signing of the offer payload at runtime). `sub retention-message` sets what the App Store shows subscribers who go to cancel (a header, body and image per version, reviewed by App Review), and `sub retention-offer` the offers it can show them. `sub offer-code` produces redeemable code campaigns — one-time-use batches generate asynchronously (use `view-codes <batch-id>` to fetch values), while custom codes are developer-supplied strings.
 
 Images and review screenshots use Apple's 3-step upload flow (reserve → PUT chunks → commit with MD5) — `upload` handles all three steps.
 
-**Win-back offers** are not yet implemented: in Apple's API specification, the price entries of a win-back offer (`WinBackOfferPriceInlineCreate`) lack the territory and price-point relationships that every other offer type's prices carry, so a valid create request can't be built. Will revisit when Apple updates the specification.
+**Win-back offers** (`sub win-back-offer`) are for people whose subscription ended: eligibility by months since they last subscribed, months paid and time since their last offer, from a start date to an optional end date, with a priority and optional App Store promotion. Only approved subscriptions take them. Apple's API specification leaves their prices' territory and price point out; ascelerate adds them when it prepares the specification, as for retention offers.
 
 Subscription pricing is per-territory. There is no auto-equalize concept like IAPs have, so `--equalize-all-territories` mirrors what the App Store Connect web UI does behind the scenes: looks up the equivalent local-currency tier in every territory and POSTs one price record per territory.
 

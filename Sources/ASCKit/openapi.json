@@ -59811,6 +59811,51 @@
           "id" : {
             "type" : "string"
           },
+          "relationships" : {
+            "properties" : {
+              "subscriptionPricePoint" : {
+                "properties" : {
+                  "data" : {
+                    "properties" : {
+                      "id" : {
+                        "type" : "string"
+                      },
+                      "type" : {
+                        "type" : "string"
+                      }
+                    },
+                    "required" : [
+                      "id",
+                      "type"
+                    ],
+                    "type" : "object"
+                  }
+                },
+                "type" : "object"
+              },
+              "territory" : {
+                "properties" : {
+                  "data" : {
+                    "properties" : {
+                      "id" : {
+                        "type" : "string"
+                      },
+                      "type" : {
+                        "type" : "string"
+                      }
+                    },
+                    "required" : [
+                      "id",
+                      "type"
+                    ],
+                    "type" : "object"
+                  }
+                },
+                "type" : "object"
+              }
+            },
+            "type" : "object"
+          },
           "type" : {
             "type" : "string"
           }
@@ -72064,6 +72109,51 @@
         "properties" : {
           "id" : {
             "type" : "string"
+          },
+          "relationships" : {
+            "properties" : {
+              "subscriptionPricePoint" : {
+                "properties" : {
+                  "data" : {
+                    "properties" : {
+                      "id" : {
+                        "type" : "string"
+                      },
+                      "type" : {
+                        "type" : "string"
+                      }
+                    },
+                    "required" : [
+                      "id",
+                      "type"
+                    ],
+                    "type" : "object"
+                  }
+                },
+                "type" : "object"
+              },
+              "territory" : {
+                "properties" : {
+                  "data" : {
+                    "properties" : {
+                      "id" : {
+                        "type" : "string"
+                      },
+                      "type" : {
+                        "type" : "string"
+                      }
+                    },
+                    "required" : [
+                      "id",
+                      "type"
+                    ],
+                    "type" : "object"
+                  }
+                },
+                "type" : "object"
+              }
+            },
+            "type" : "object"
           },
           "type" : {
             "type" : "string"

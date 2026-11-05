@@ -22,7 +22,7 @@ public enum ClassicMedia {
     case .treatmentLocalization(let id):
       relationships = .init(appStoreVersionExperimentTreatmentLocalization: .init(
         data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations")))
-    case .eventLocalization:
+    case .eventLocalization, .retentionMessageVersion:
       throw MediaUploadError.noMediaSets
     }
     return try await client.appScreenshotSetsCreateInstance(body: .json(.init(data: .init(
@@ -45,7 +45,7 @@ public enum ClassicMedia {
     case .treatmentLocalization(let id):
       relationships = .init(appStoreVersionExperimentTreatmentLocalization: .init(
         data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations")))
-    case .eventLocalization:
+    case .eventLocalization, .retentionMessageVersion:
       throw MediaUploadError.noMediaSets
     }
     return try await client.appPreviewSetsCreateInstance(body: .json(.init(data: .init(

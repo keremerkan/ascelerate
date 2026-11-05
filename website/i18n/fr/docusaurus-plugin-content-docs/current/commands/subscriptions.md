@@ -172,6 +172,34 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+## Messages et offres de fidélisation
+
+Lorsqu'un abonné va résilier depuis les réglages d'abonnement de l'App Store, l'App Store peut lui montrer un **message de fidélisation** : un titre et un texte dans sa langue, une image facultative et des offres pour rester. Un message appartient à l'app et passe par App Review. Chaque abonnement affiche un message et, dans celui-ci, les **offres de fidélisation** de votre choix.
+
+```bash
+ascelerate sub retention-message list <bundle-id>
+ascelerate sub retention-message info <bundle-id> "Stay with us"
+ascelerate sub retention-message create <bundle-id> --name "Stay with us" \
+  --locale en-US --header "Before you go" --body "Your plan gets new features every month."
+ascelerate sub retention-message localizations set <bundle-id> "Stay with us" \
+  --locale fr-FR --header "Avant de partir" --body "Votre abonnement reçoit de nouvelles fonctions chaque mois."
+ascelerate sub retention-message image upload <bundle-id> "Stay with us" ./retention.png
+ascelerate sub retention-message submit <bundle-id> "Stay with us"
+ascelerate sub retention-message new-version <bundle-id> "Stay with us"
+
+# Offres de fidélisation, puis le message et les offres qu'un abonnement affiche
+ascelerate sub retention-offer create <bundle-id> <product-id> \
+  --name "Half off" --offer-id stay.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --paid-months 6 --wait-months 12 --price 4.99 --territories all
+ascelerate sub retention-offer update <bundle-id> <product-id> stay.half --paid-months 3
+ascelerate sub retention-message assign <bundle-id> <product-id> "Stay with us" --offers stay.half
+```
+
+- **Texte et image :** le titre accepte 66 caractères et le texte 144. L'image est au format 16:9 sans transparence : 3840×2160 (PNG ou JPEG) ou 5244×2950 (PNG), une par version.
+- **Versions :** un message n'a qu'une version non publiée à la fois. Une fois qu'App Review l'a reçue, `new-version` commence la suivante. `submit` ajoute le message à la soumission en brouillon ; envoyez-la avec `apps review submit`.
+- **Qui reçoit une offre :** les abonnés qui ont payé au moins `--paid-months` mois (1–24, 36, 48 ou 60) et, avec `--wait-months`, dont la dernière offre remonte à 2–24 mois. Seuls ces deux critères changent après la création d'une offre, et un délai ne peut plus être retiré une fois fixé.
+- **Prix :** le `--price` d'une offre payante s'applique au premier pays ou région de `--territories` ; les autres reçoivent le prix équivalent d'Apple. Un essai gratuit n'a pas de prix. `--plan monthly` cible le paiement mensuel d'un abonnement annuel (paiement initial par défaut).
+
 ## Codes promotionnels
 
 Codes échangeables pour abonnements, en deux variantes :
@@ -239,6 +267,23 @@ ascelerate sub review-screenshot delete <bundle-id> <product-id>
 
 Les téléchargements d'images et de captures d'écran utilisent le flux en 3 étapes d'Apple (réserver → envoyer les morceaux par PUT → valider avec MD5). Un seul appel `upload` gère les trois étapes.
 
-## Offres de reconquête (pas encore implémentées)
+## Offres de reconquête
 
-Les offres de reconquête (offres pour les abonnés perdus) ne sont pas encore implémentées. Dans la spécification de l'API d'Apple, les entrées de prix d'une offre de reconquête (`WinBackOfferPriceInlineCreate`) ne comportent pas les relations `territory` et `subscriptionPricePoint` que contiennent les prix de tous les autres types d'offres, de sorte qu'aucune requête de création valide ne peut être construite. À revoir lorsqu'Apple mettra à jour la spécification.
+Les offres de reconquête s'adressent aux personnes dont l'abonnement a pris fin : l'App Store leur propose une réduction ou une période gratuite pour revenir, d'une date de début à une date de fin facultative. Seul un abonnement approuvé peut en avoir.
+
+```bash
+ascelerate sub win-back-offer list <bundle-id> <product-id>
+ascelerate sub win-back-offer info <bundle-id> <product-id> comeback.half
+ascelerate sub win-back-offer create <bundle-id> <product-id> \
+  --name "Come back" --offer-id comeback.half --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 \
+  --since-months 3-12 --paid-months 6 --end-date 2027-01-31 --priority high --promote \
+  --price 4.99 --territories all
+ascelerate sub win-back-offer update <bundle-id> <product-id> comeback.half --since-months 2-24 --end-date 2027-03-31
+ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
+```
+
+- **Qui reçoit une offre :** les personnes dont l'abonnement a pris fin il y a `--since-months` mois (une plage, de 1–23 à 2–24 mois), qui ont payé au moins `--paid-months` mois (1–24, 36, 48 ou 60) et, avec `--wait-months`, dont la dernière offre remonte à 2–24 mois.
+- **Dates :** elle commence le `--start-date` (demain au plus tôt, et par défaut) et, avec `--end-date`, se termine au moins 3 jours plus tard.
+- **Sur l'App Store :** `--priority high` la place avant les autres offres ; `--promote` permet à l'App Store de la promouvoir avec des éléments générés par Apple.
+- **Prix :** comme pour les offres de fidélisation, `--price` s'applique au premier pays ou région de `--territories` et les autres reçoivent le prix équivalent d'Apple ; un essai gratuit n'a pas de prix. Une offre `PAY_AS_YOU_GO` dure la période de l'abonnement lui-même (`ONE_YEAR` pour un abonnement annuel).
+- **Modifications :** l'éligibilité, les dates, la priorité et la promotion peuvent changer ; pour le reste, supprimez l'offre et créez-la de nouveau.

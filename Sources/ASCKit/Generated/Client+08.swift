@@ -11,6 +11,230 @@ public import struct Foundation.Date
 #endif
 import HTTPTypes
 extension Client {
+    /// - Remark: HTTP `GET /v1/builds/{id}/relationships/individualTesters`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/relationships/individualTesters/get(builds_individualTesters_getToManyRelationship)`.
+    public func buildsIndividualTestersGetToManyRelationship(_ input: Operations.BuildsIndividualTestersGetToManyRelationship.Input) async throws -> Operations.BuildsIndividualTestersGetToManyRelationship.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildsIndividualTestersGetToManyRelationship.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/builds/{}/relationships/individualTesters",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.BuildsIndividualTestersGetToManyRelationship.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.BuildIndividualTestersLinkagesResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/builds/{id}/relationships/individualTesters`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/relationships/individualTesters/post(builds_individualTesters_createToManyRelationship)`.
+    public func buildsIndividualTestersCreateToManyRelationship(_ input: Operations.BuildsIndividualTestersCreateToManyRelationship.Input) async throws -> Operations.BuildsIndividualTestersCreateToManyRelationship.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildsIndividualTestersCreateToManyRelationship.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/builds/{}/relationships/individualTesters",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `DELETE /v1/builds/{id}/relationships/individualTesters`.
+    /// - Remark: Generated from `#/paths//v1/builds/{id}/relationships/individualTesters/delete(builds_individualTesters_deleteToManyRelationship)`.
+    public func buildsIndividualTestersDeleteToManyRelationship(_ input: Operations.BuildsIndividualTestersDeleteToManyRelationship.Input) async throws -> Operations.BuildsIndividualTestersDeleteToManyRelationship.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildsIndividualTestersDeleteToManyRelationship.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/builds/{}/relationships/individualTesters",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/buildUploadFiles`.
+    /// - Remark: Generated from `#/paths//v1/buildUploadFiles/post(buildUploadFiles_createInstance)`.
+    public func buildUploadFilesCreateInstance(_ input: Operations.BuildUploadFilesCreateInstance.Input) async throws -> Operations.BuildUploadFilesCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.BuildUploadFilesCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/buildUploadFiles",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
+                )
+                suppressMutabilityWarning(&request)
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 201:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.BuildUploadFilesCreateInstance.Output.Created.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.BuildUploadFileResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
     /// - Remark: HTTP `GET /v1/buildUploadFiles/{id}`.
     /// - Remark: Generated from `#/paths//v1/buildUploadFiles/{id}/get(buildUploadFiles_getInstance)`.
     public func buildUploadFilesGetInstance(_ input: Operations.BuildUploadFilesGetInstance.Input) async throws -> Operations.BuildUploadFilesGetInstance.Output {

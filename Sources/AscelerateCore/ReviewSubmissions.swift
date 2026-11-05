@@ -85,7 +85,7 @@ public enum ReviewSubmissions {
           .appCustomProductPageVersion, .appStoreVersionExperimentV2,
           .appAssetLibraryImage, .appAssetLibraryVideo, .backgroundAssetVersion, .gameCenterAchievementVersion,
           .gameCenterActivityVersion, .gameCenterChallengeVersion, .gameCenterLeaderboardSetVersion,
-          .gameCenterLeaderboardVersion,
+          .gameCenterLeaderboardVersion, .retentionMessageVersion,
         ])
     ).ok.body.json
     var versions: [String: Components.Schemas.AppStoreVersion] = [:]
@@ -167,6 +167,7 @@ public enum ReviewSubmissions {
       ("gameCenterChallengeVersion", relationships.gameCenterChallengeVersion?.data != nil),
       ("gameCenterLeaderboardSetVersion", relationships.gameCenterLeaderboardSetVersion?.data != nil),
       ("gameCenterLeaderboardVersion", relationships.gameCenterLeaderboardVersion?.data != nil),
+      ("retentionMessageVersion", relationships.retentionMessageVersion?.data != nil),
     ]
     return kinds.first(where: \.1)?.0 ?? "unknown"
   }
@@ -215,6 +216,8 @@ public enum ReviewSubmissions {
     case gameCenterLeaderboardSetVersion(String)
     case gameCenterActivityVersion(String)
     case gameCenterChallengeVersion(String)
+    /// A retention message's version (`RetentionMessages`).
+    case retentionMessageVersion(String)
   }
 
   /// Adds an item to the app's open draft submission for `platform` (`READY_FOR_REVIEW`, or
@@ -277,6 +280,8 @@ public enum ReviewSubmissions {
         relationships.gameCenterActivityVersion = .init(data: .init(id: id, _type: "gameCenterActivityVersions"))
       case .gameCenterChallengeVersion(let id):
         relationships.gameCenterChallengeVersion = .init(data: .init(id: id, _type: "gameCenterChallengeVersions"))
+      case .retentionMessageVersion(let id):
+        relationships.retentionMessageVersion = .init(data: .init(id: id, _type: "retentionMessageVersions"))
     }
     _ = try await unlessDryRunStopped {
       try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(

@@ -846,6 +846,251 @@ extension Operations {
             case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
+    /// - Remark: HTTP `GET /v1/apps/{id}/retentionMessages`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/retentionMessages/get(apps_retentionMessages_getToManyRelated)`.
+    public enum AppsRetentionMessagesGetToManyRelated {
+        public static let id: Swift.String = "apps_retentionMessages_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppsRetentionMessagesGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.fieldsRetentionMessagesPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fieldsSubscriptionsPayload`.
+                @frozen public enum FieldsSubscriptionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case productId = "productId"
+                    case familySharable = "familySharable"
+                    case state = "state"
+                    case subscriptionPeriod = "subscriptionPeriod"
+                    case reviewNote = "reviewNote"
+                    case groupLevel = "groupLevel"
+                    case multiSeatStatus = "multiSeatStatus"
+                    case marketSettings = "marketSettings"
+                    case subscriptionLocalizations = "subscriptionLocalizations"
+                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
+                    case group = "group"
+                    case introductoryOffers = "introductoryOffers"
+                    case promotionalOffers = "promotionalOffers"
+                    case offerCodes = "offerCodes"
+                    case prices = "prices"
+                    case pricePoints = "pricePoints"
+                    case promotedPurchase = "promotedPurchase"
+                    case subscriptionAvailability = "subscriptionAvailability"
+                    case winBackOffers = "winBackOffers"
+                    case images = "images"
+                    case planAvailabilities = "planAvailabilities"
+                    case versions = "versions"
+                    case retentionOffers = "retentionOffers"
+                    case retentionMessage = "retentionMessage"
+                    case retentionMessageOffers = "retentionMessageOffers"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fields[subscriptions]`.
+                public typealias fieldsSubscriptionsPayload = [Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.FieldsSubscriptionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptions
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/fields[subscriptions]`.
+                public var fieldsSubscriptions: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.fieldsSubscriptionsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/include`.
+                public var include: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.IncludePayload?
+                /// maximum number of related versions returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/limit[versions]`.
+                public var limitVersions: Swift.Int?
+                /// maximum number of related subscriptions returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/query/limit[subscriptions]`.
+                public var limitSubscriptions: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
+                ///   - fieldsSubscriptions: the fields to include for returned resources of type subscriptions
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitVersions: maximum number of related versions returned (when they are included)
+                ///   - limitSubscriptions: maximum number of related subscriptions returned (when they are included)
+                public init(
+                    fieldsRetentionMessages: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.fieldsRetentionMessagesPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
+                    fieldsSubscriptions: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.fieldsSubscriptionsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query.IncludePayload? = nil,
+                    limitVersions: Swift.Int? = nil,
+                    limitSubscriptions: Swift.Int? = nil
+                ) {
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
+                    self.fieldsSubscriptions = fieldsSubscriptions
+                    self.limit = limit
+                    self.include = include
+                    self.limitVersions = limitVersions
+                    self.limitSubscriptions = limitSubscriptions
+                }
+            }
+            public var query: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsRetentionMessagesGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppsRetentionMessagesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppsRetentionMessagesGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppsRetentionMessagesGetToManyRelated.Input.Path,
+                query: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query = .init(),
+                headers: Operations.AppsRetentionMessagesGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/apps/{id}/retentionMessages/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessagesResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.RetentionMessagesResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppsRetentionMessagesGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppsRetentionMessagesGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of RetentionMessages
+            ///
+            /// - Remark: Generated from `#/paths//v1/apps/{id}/retentionMessages/get(apps_retentionMessages_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppsRetentionMessagesGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppsRetentionMessagesGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/apps/{id}/reviewSubmissions`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/reviewSubmissions/get(apps_reviewSubmissions_getToManyRelated)`.
     public enum AppsReviewSubmissionsGetToManyRelated {
@@ -2800,275 +3045,6 @@ extension Operations {
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
             public var ok: Operations.AppScreenshotSetsGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/appScreenshotSets/{id}`.
-    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/delete(appScreenshotSets_deleteInstance)`.
-    public enum AppScreenshotSetsDeleteInstance {
-        public static let id: Swift.String = "appScreenshotSets_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppScreenshotSetsDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.AppScreenshotSetsDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/delete(appScreenshotSets_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.AppScreenshotSetsDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/delete(appScreenshotSets_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.AppScreenshotSetsDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `GET /v1/appScreenshotSets/{id}/appScreenshots`.
-    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelated)`.
-    public enum AppScreenshotSetsAppScreenshotsGetToManyRelated {
-        public static let id: Swift.String = "appScreenshotSets_appScreenshots_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fieldsAppScreenshotsPayload`.
-                @frozen public enum FieldsAppScreenshotsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case sourceFileChecksum = "sourceFileChecksum"
-                    case imageAsset = "imageAsset"
-                    case assetToken = "assetToken"
-                    case assetType = "assetType"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case appScreenshotSet = "appScreenshotSet"
-                }
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshots]`.
-                public typealias fieldsAppScreenshotsPayload = [Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.FieldsAppScreenshotsPayloadPayload]
-                /// the fields to include for returned resources of type appScreenshots
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshots]`.
-                public var fieldsAppScreenshots: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotsPayload?
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fieldsAppScreenshotSetsPayload`.
-                @frozen public enum FieldsAppScreenshotSetsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case screenshotDisplayType = "screenshotDisplayType"
-                    case appStoreVersionLocalization = "appStoreVersionLocalization"
-                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
-                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
-                    case appScreenshots = "appScreenshots"
-                }
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshotSets]`.
-                public typealias fieldsAppScreenshotSetsPayload = [Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.FieldsAppScreenshotSetsPayloadPayload]
-                /// the fields to include for returned resources of type appScreenshotSets
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshotSets]`.
-                public var fieldsAppScreenshotSets: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotSetsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appScreenshotSet = "appScreenshotSet"
-                }
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/include`.
-                public typealias IncludePayload = [Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/include`.
-                public var include: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsAppScreenshots: the fields to include for returned resources of type appScreenshots
-                ///   - fieldsAppScreenshotSets: the fields to include for returned resources of type appScreenshotSets
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsAppScreenshots: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotsPayload? = nil,
-                    fieldsAppScreenshotSets: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotSetsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsAppScreenshots = fieldsAppScreenshots
-                    self.fieldsAppScreenshotSets = fieldsAppScreenshotSets
-                    self.limit = limit
-                    self.include = include
-                }
-            }
-            public var query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Path,
-                query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query = .init(),
-                headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.AppScreenshotsResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppScreenshotsResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of AppScreenshots
-            ///
-            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):

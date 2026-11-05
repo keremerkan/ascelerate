@@ -371,6 +371,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `PATCH /v1/apps/{id}/relationships/promotedPurchases`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/relationships/promotedPurchases/patch(apps_promotedPurchases_replaceToManyRelationship)`.
     func appsPromotedPurchasesReplaceToManyRelationship(_ input: Operations.AppsPromotedPurchasesReplaceToManyRelationship.Input) async throws -> Operations.AppsPromotedPurchasesReplaceToManyRelationship.Output
+    /// - Remark: HTTP `GET /v1/apps/{id}/retentionMessages`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/retentionMessages/get(apps_retentionMessages_getToManyRelated)`.
+    func appsRetentionMessagesGetToManyRelated(_ input: Operations.AppsRetentionMessagesGetToManyRelated.Input) async throws -> Operations.AppsRetentionMessagesGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/apps/{id}/reviewSubmissions`.
     /// - Remark: Generated from `#/paths//v1/apps/{id}/reviewSubmissions/get(apps_reviewSubmissions_getToManyRelated)`.
     func appsReviewSubmissionsGetToManyRelated(_ input: Operations.AppsReviewSubmissionsGetToManyRelated.Input) async throws -> Operations.AppsReviewSubmissionsGetToManyRelated.Output
@@ -1340,6 +1343,60 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/promotedPurchases/{id}`.
     /// - Remark: Generated from `#/paths//v1/promotedPurchases/{id}/delete(promotedPurchases_deleteInstance)`.
     func promotedPurchasesDeleteInstance(_ input: Operations.PromotedPurchasesDeleteInstance.Input) async throws -> Operations.PromotedPurchasesDeleteInstance.Output
+    /// - Remark: HTTP `POST /v1/retentionMessageLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/post(retentionMessageLocalizations_createInstance)`.
+    func retentionMessageLocalizationsCreateInstance(_ input: Operations.RetentionMessageLocalizationsCreateInstance.Input) async throws -> Operations.RetentionMessageLocalizationsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/get(retentionMessageLocalizations_getInstance)`.
+    func retentionMessageLocalizationsGetInstance(_ input: Operations.RetentionMessageLocalizationsGetInstance.Input) async throws -> Operations.RetentionMessageLocalizationsGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/patch(retentionMessageLocalizations_updateInstance)`.
+    func retentionMessageLocalizationsUpdateInstance(_ input: Operations.RetentionMessageLocalizationsUpdateInstance.Input) async throws -> Operations.RetentionMessageLocalizationsUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/delete(retentionMessageLocalizations_deleteInstance)`.
+    func retentionMessageLocalizationsDeleteInstance(_ input: Operations.RetentionMessageLocalizationsDeleteInstance.Input) async throws -> Operations.RetentionMessageLocalizationsDeleteInstance.Output
+    /// - Remark: HTTP `POST /v1/retentionMessages`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/post(retentionMessages_createInstance)`.
+    func retentionMessagesCreateInstance(_ input: Operations.RetentionMessagesCreateInstance.Input) async throws -> Operations.RetentionMessagesCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/get(retentionMessages_getInstance)`.
+    func retentionMessagesGetInstance(_ input: Operations.RetentionMessagesGetInstance.Input) async throws -> Operations.RetentionMessagesGetInstance.Output
+    /// - Remark: HTTP `DELETE /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/delete(retentionMessages_deleteInstance)`.
+    func retentionMessagesDeleteInstance(_ input: Operations.RetentionMessagesDeleteInstance.Input) async throws -> Operations.RetentionMessagesDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/subscriptions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/subscriptions/get(retentionMessages_subscriptions_getToManyRelated)`.
+    func retentionMessagesSubscriptionsGetToManyRelated(_ input: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input) async throws -> Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/versions/get(retentionMessages_versions_getToManyRelated)`.
+    func retentionMessagesVersionsGetToManyRelated(_ input: Operations.RetentionMessagesVersionsGetToManyRelated.Input) async throws -> Operations.RetentionMessagesVersionsGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/retentionMessageVersions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/post(retentionMessageVersions_createInstance)`.
+    func retentionMessageVersionsCreateInstance(_ input: Operations.RetentionMessageVersionsCreateInstance.Input) async throws -> Operations.RetentionMessageVersionsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/get(retentionMessageVersions_getInstance)`.
+    func retentionMessageVersionsGetInstance(_ input: Operations.RetentionMessageVersionsGetInstance.Input) async throws -> Operations.RetentionMessageVersionsGetInstance.Output
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/localizations/get(retentionMessageVersions_localizations_getToManyRelated)`.
+    func retentionMessageVersionsLocalizationsGetToManyRelated(_ input: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input) async throws -> Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/placement`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/placement/get(retentionMessageVersions_placement_getToOneRelated)`.
+    func retentionMessageVersionsPlacementGetToOneRelated(_ input: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input) async throws -> Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output
+    /// - Remark: HTTP `POST /v1/retentionOffers`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/post(retentionOffers_createInstance)`.
+    func retentionOffersCreateInstance(_ input: Operations.RetentionOffersCreateInstance.Input) async throws -> Operations.RetentionOffersCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/retentionOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/get(retentionOffers_getInstance)`.
+    func retentionOffersGetInstance(_ input: Operations.RetentionOffersGetInstance.Input) async throws -> Operations.RetentionOffersGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/retentionOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/patch(retentionOffers_updateInstance)`.
+    func retentionOffersUpdateInstance(_ input: Operations.RetentionOffersUpdateInstance.Input) async throws -> Operations.RetentionOffersUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/retentionOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/delete(retentionOffers_deleteInstance)`.
+    func retentionOffersDeleteInstance(_ input: Operations.RetentionOffersDeleteInstance.Input) async throws -> Operations.RetentionOffersDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/retentionOffers/{id}/prices`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/prices/get(retentionOffers_prices_getToManyRelated)`.
+    func retentionOffersPricesGetToManyRelated(_ input: Operations.RetentionOffersPricesGetToManyRelated.Input) async throws -> Operations.RetentionOffersPricesGetToManyRelated.Output
     /// - Remark: HTTP `POST /v1/reviewSubmissionItems`.
     /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/post(reviewSubmissionItems_createInstance)`.
     func reviewSubmissionItemsCreateInstance(_ input: Operations.ReviewSubmissionItemsCreateInstance.Input) async throws -> Operations.ReviewSubmissionItemsCreateInstance.Output
@@ -1583,12 +1640,39 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/subscriptions/{id}/promotionalOffers`.
     /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/promotionalOffers/get(subscriptions_promotionalOffers_getToManyRelated)`.
     func subscriptionsPromotionalOffersGetToManyRelated(_ input: Operations.SubscriptionsPromotionalOffersGetToManyRelated.Input) async throws -> Operations.SubscriptionsPromotionalOffersGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/relationships/retentionMessage`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessage/get(subscriptions_retentionMessage_getToOneRelationship)`.
+    func subscriptionsRetentionMessageGetToOneRelationship(_ input: Operations.SubscriptionsRetentionMessageGetToOneRelationship.Input) async throws -> Operations.SubscriptionsRetentionMessageGetToOneRelationship.Output
+    /// - Remark: HTTP `PATCH /v1/subscriptions/{id}/relationships/retentionMessage`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessage/patch(subscriptions_retentionMessage_updateToOneRelationship)`.
+    func subscriptionsRetentionMessageUpdateToOneRelationship(_ input: Operations.SubscriptionsRetentionMessageUpdateToOneRelationship.Input) async throws -> Operations.SubscriptionsRetentionMessageUpdateToOneRelationship.Output
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/relationships/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessageOffers/get(subscriptions_retentionMessageOffers_getToManyRelationship)`.
+    func subscriptionsRetentionMessageOffersGetToManyRelationship(_ input: Operations.SubscriptionsRetentionMessageOffersGetToManyRelationship.Input) async throws -> Operations.SubscriptionsRetentionMessageOffersGetToManyRelationship.Output
+    /// - Remark: HTTP `POST /v1/subscriptions/{id}/relationships/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessageOffers/post(subscriptions_retentionMessageOffers_createToManyRelationship)`.
+    func subscriptionsRetentionMessageOffersCreateToManyRelationship(_ input: Operations.SubscriptionsRetentionMessageOffersCreateToManyRelationship.Input) async throws -> Operations.SubscriptionsRetentionMessageOffersCreateToManyRelationship.Output
+    /// - Remark: HTTP `DELETE /v1/subscriptions/{id}/relationships/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessageOffers/delete(subscriptions_retentionMessageOffers_deleteToManyRelationship)`.
+    func subscriptionsRetentionMessageOffersDeleteToManyRelationship(_ input: Operations.SubscriptionsRetentionMessageOffersDeleteToManyRelationship.Input) async throws -> Operations.SubscriptionsRetentionMessageOffersDeleteToManyRelationship.Output
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/retentionMessage`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/retentionMessage/get(subscriptions_retentionMessage_getToOneRelated)`.
+    func subscriptionsRetentionMessageGetToOneRelated(_ input: Operations.SubscriptionsRetentionMessageGetToOneRelated.Input) async throws -> Operations.SubscriptionsRetentionMessageGetToOneRelated.Output
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/retentionMessageOffers/get(subscriptions_retentionMessageOffers_getToManyRelated)`.
+    func subscriptionsRetentionMessageOffersGetToManyRelated(_ input: Operations.SubscriptionsRetentionMessageOffersGetToManyRelated.Input) async throws -> Operations.SubscriptionsRetentionMessageOffersGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/retentionOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/retentionOffers/get(subscriptions_retentionOffers_getToManyRelated)`.
+    func subscriptionsRetentionOffersGetToManyRelated(_ input: Operations.SubscriptionsRetentionOffersGetToManyRelated.Input) async throws -> Operations.SubscriptionsRetentionOffersGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/subscriptions/{id}/subscriptionLocalizations`.
     /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/subscriptionLocalizations/get(subscriptions_subscriptionLocalizations_getToManyRelated)`.
     func subscriptionsSubscriptionLocalizationsGetToManyRelated(_ input: Operations.SubscriptionsSubscriptionLocalizationsGetToManyRelated.Input) async throws -> Operations.SubscriptionsSubscriptionLocalizationsGetToManyRelated.Output
     /// - Remark: HTTP `GET /v1/subscriptions/{id}/versions`.
     /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/versions/get(subscriptions_versions_getToManyRelated)`.
     func subscriptionsVersionsGetToManyRelated(_ input: Operations.SubscriptionsVersionsGetToManyRelated.Input) async throws -> Operations.SubscriptionsVersionsGetToManyRelated.Output
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/winBackOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/winBackOffers/get(subscriptions_winBackOffers_getToManyRelated)`.
+    func subscriptionsWinBackOffersGetToManyRelated(_ input: Operations.SubscriptionsWinBackOffersGetToManyRelated.Input) async throws -> Operations.SubscriptionsWinBackOffersGetToManyRelated.Output
     /// - Remark: HTTP `POST /v1/subscriptionSubmissions`.
     /// - Remark: Generated from `#/paths//v1/subscriptionSubmissions/post(subscriptionSubmissions_createInstance)`.
     func subscriptionSubmissionsCreateInstance(_ input: Operations.SubscriptionSubmissionsCreateInstance.Input) async throws -> Operations.SubscriptionSubmissionsCreateInstance.Output
@@ -1652,6 +1736,21 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/webhooks/{id}/deliveries`.
     /// - Remark: Generated from `#/paths//v1/webhooks/{id}/deliveries/get(webhooks_deliveries_getToManyRelated)`.
     func webhooksDeliveriesGetToManyRelated(_ input: Operations.WebhooksDeliveriesGetToManyRelated.Input) async throws -> Operations.WebhooksDeliveriesGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/winBackOffers`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/post(winBackOffers_createInstance)`.
+    func winBackOffersCreateInstance(_ input: Operations.WinBackOffersCreateInstance.Input) async throws -> Operations.WinBackOffersCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/winBackOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/get(winBackOffers_getInstance)`.
+    func winBackOffersGetInstance(_ input: Operations.WinBackOffersGetInstance.Input) async throws -> Operations.WinBackOffersGetInstance.Output
+    /// - Remark: HTTP `PATCH /v1/winBackOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/patch(winBackOffers_updateInstance)`.
+    func winBackOffersUpdateInstance(_ input: Operations.WinBackOffersUpdateInstance.Input) async throws -> Operations.WinBackOffersUpdateInstance.Output
+    /// - Remark: HTTP `DELETE /v1/winBackOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/delete(winBackOffers_deleteInstance)`.
+    func winBackOffersDeleteInstance(_ input: Operations.WinBackOffersDeleteInstance.Input) async throws -> Operations.WinBackOffersDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/winBackOffers/{id}/prices`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/prices/get(winBackOffers_prices_getToManyRelated)`.
+    func winBackOffersPricesGetToManyRelated(_ input: Operations.WinBackOffersPricesGetToManyRelated.Input) async throws -> Operations.WinBackOffersPricesGetToManyRelated.Output
     /// - Remark: HTTP `POST /v2/appAvailabilities`.
     /// - Remark: Generated from `#/paths//v2/appAvailabilities/post(appAvailabilitiesV2_createInstance)`.
     func appAvailabilitiesV2CreateInstance(_ input: Operations.AppAvailabilitiesV2CreateInstance.Input) async throws -> Operations.AppAvailabilitiesV2CreateInstance.Output
@@ -3299,6 +3398,19 @@ extension APIProtocol {
         try await appsPromotedPurchasesReplaceToManyRelationship(Operations.AppsPromotedPurchasesReplaceToManyRelationship.Input(
             path: path,
             body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/apps/{id}/retentionMessages`.
+    /// - Remark: Generated from `#/paths//v1/apps/{id}/retentionMessages/get(apps_retentionMessages_getToManyRelated)`.
+    public func appsRetentionMessagesGetToManyRelated(
+        path: Operations.AppsRetentionMessagesGetToManyRelated.Input.Path,
+        query: Operations.AppsRetentionMessagesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.AppsRetentionMessagesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.AppsRetentionMessagesGetToManyRelated.Output {
+        try await appsRetentionMessagesGetToManyRelated(Operations.AppsRetentionMessagesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
         ))
     }
     /// - Remark: HTTP `GET /v1/apps/{id}/reviewSubmissions`.
@@ -6976,6 +7088,208 @@ extension APIProtocol {
     public func promotedPurchasesDeleteInstance(path: Operations.PromotedPurchasesDeleteInstance.Input.Path) async throws -> Operations.PromotedPurchasesDeleteInstance.Output {
         try await promotedPurchasesDeleteInstance(Operations.PromotedPurchasesDeleteInstance.Input(path: path))
     }
+    /// - Remark: HTTP `POST /v1/retentionMessageLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/post(retentionMessageLocalizations_createInstance)`.
+    public func retentionMessageLocalizationsCreateInstance(
+        headers: Operations.RetentionMessageLocalizationsCreateInstance.Input.Headers = .init(),
+        body: Operations.RetentionMessageLocalizationsCreateInstance.Input.Body
+    ) async throws -> Operations.RetentionMessageLocalizationsCreateInstance.Output {
+        try await retentionMessageLocalizationsCreateInstance(Operations.RetentionMessageLocalizationsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/get(retentionMessageLocalizations_getInstance)`.
+    public func retentionMessageLocalizationsGetInstance(
+        path: Operations.RetentionMessageLocalizationsGetInstance.Input.Path,
+        query: Operations.RetentionMessageLocalizationsGetInstance.Input.Query = .init(),
+        headers: Operations.RetentionMessageLocalizationsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.RetentionMessageLocalizationsGetInstance.Output {
+        try await retentionMessageLocalizationsGetInstance(Operations.RetentionMessageLocalizationsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/patch(retentionMessageLocalizations_updateInstance)`.
+    public func retentionMessageLocalizationsUpdateInstance(
+        path: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Path,
+        headers: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Headers = .init(),
+        body: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Body
+    ) async throws -> Operations.RetentionMessageLocalizationsUpdateInstance.Output {
+        try await retentionMessageLocalizationsUpdateInstance(Operations.RetentionMessageLocalizationsUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/delete(retentionMessageLocalizations_deleteInstance)`.
+    public func retentionMessageLocalizationsDeleteInstance(path: Operations.RetentionMessageLocalizationsDeleteInstance.Input.Path) async throws -> Operations.RetentionMessageLocalizationsDeleteInstance.Output {
+        try await retentionMessageLocalizationsDeleteInstance(Operations.RetentionMessageLocalizationsDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `POST /v1/retentionMessages`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/post(retentionMessages_createInstance)`.
+    public func retentionMessagesCreateInstance(
+        headers: Operations.RetentionMessagesCreateInstance.Input.Headers = .init(),
+        body: Operations.RetentionMessagesCreateInstance.Input.Body
+    ) async throws -> Operations.RetentionMessagesCreateInstance.Output {
+        try await retentionMessagesCreateInstance(Operations.RetentionMessagesCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/get(retentionMessages_getInstance)`.
+    public func retentionMessagesGetInstance(
+        path: Operations.RetentionMessagesGetInstance.Input.Path,
+        query: Operations.RetentionMessagesGetInstance.Input.Query = .init(),
+        headers: Operations.RetentionMessagesGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.RetentionMessagesGetInstance.Output {
+        try await retentionMessagesGetInstance(Operations.RetentionMessagesGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/delete(retentionMessages_deleteInstance)`.
+    public func retentionMessagesDeleteInstance(path: Operations.RetentionMessagesDeleteInstance.Input.Path) async throws -> Operations.RetentionMessagesDeleteInstance.Output {
+        try await retentionMessagesDeleteInstance(Operations.RetentionMessagesDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/subscriptions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/subscriptions/get(retentionMessages_subscriptions_getToManyRelated)`.
+    public func retentionMessagesSubscriptionsGetToManyRelated(
+        path: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Path,
+        query: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output {
+        try await retentionMessagesSubscriptionsGetToManyRelated(Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/versions/get(retentionMessages_versions_getToManyRelated)`.
+    public func retentionMessagesVersionsGetToManyRelated(
+        path: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Path,
+        query: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.RetentionMessagesVersionsGetToManyRelated.Output {
+        try await retentionMessagesVersionsGetToManyRelated(Operations.RetentionMessagesVersionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/retentionMessageVersions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/post(retentionMessageVersions_createInstance)`.
+    public func retentionMessageVersionsCreateInstance(
+        headers: Operations.RetentionMessageVersionsCreateInstance.Input.Headers = .init(),
+        body: Operations.RetentionMessageVersionsCreateInstance.Input.Body
+    ) async throws -> Operations.RetentionMessageVersionsCreateInstance.Output {
+        try await retentionMessageVersionsCreateInstance(Operations.RetentionMessageVersionsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/get(retentionMessageVersions_getInstance)`.
+    public func retentionMessageVersionsGetInstance(
+        path: Operations.RetentionMessageVersionsGetInstance.Input.Path,
+        query: Operations.RetentionMessageVersionsGetInstance.Input.Query = .init(),
+        headers: Operations.RetentionMessageVersionsGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.RetentionMessageVersionsGetInstance.Output {
+        try await retentionMessageVersionsGetInstance(Operations.RetentionMessageVersionsGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/localizations/get(retentionMessageVersions_localizations_getToManyRelated)`.
+    public func retentionMessageVersionsLocalizationsGetToManyRelated(
+        path: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Path,
+        query: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query = .init(),
+        headers: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output {
+        try await retentionMessageVersionsLocalizationsGetToManyRelated(Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/placement`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/placement/get(retentionMessageVersions_placement_getToOneRelated)`.
+    public func retentionMessageVersionsPlacementGetToOneRelated(
+        path: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Path,
+        query: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query = .init(),
+        headers: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output {
+        try await retentionMessageVersionsPlacementGetToOneRelated(Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/retentionOffers`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/post(retentionOffers_createInstance)`.
+    public func retentionOffersCreateInstance(
+        headers: Operations.RetentionOffersCreateInstance.Input.Headers = .init(),
+        body: Operations.RetentionOffersCreateInstance.Input.Body
+    ) async throws -> Operations.RetentionOffersCreateInstance.Output {
+        try await retentionOffersCreateInstance(Operations.RetentionOffersCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/retentionOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/get(retentionOffers_getInstance)`.
+    public func retentionOffersGetInstance(
+        path: Operations.RetentionOffersGetInstance.Input.Path,
+        query: Operations.RetentionOffersGetInstance.Input.Query = .init(),
+        headers: Operations.RetentionOffersGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.RetentionOffersGetInstance.Output {
+        try await retentionOffersGetInstance(Operations.RetentionOffersGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/retentionOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/patch(retentionOffers_updateInstance)`.
+    public func retentionOffersUpdateInstance(
+        path: Operations.RetentionOffersUpdateInstance.Input.Path,
+        headers: Operations.RetentionOffersUpdateInstance.Input.Headers = .init(),
+        body: Operations.RetentionOffersUpdateInstance.Input.Body
+    ) async throws -> Operations.RetentionOffersUpdateInstance.Output {
+        try await retentionOffersUpdateInstance(Operations.RetentionOffersUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/retentionOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/delete(retentionOffers_deleteInstance)`.
+    public func retentionOffersDeleteInstance(path: Operations.RetentionOffersDeleteInstance.Input.Path) async throws -> Operations.RetentionOffersDeleteInstance.Output {
+        try await retentionOffersDeleteInstance(Operations.RetentionOffersDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/retentionOffers/{id}/prices`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/prices/get(retentionOffers_prices_getToManyRelated)`.
+    public func retentionOffersPricesGetToManyRelated(
+        path: Operations.RetentionOffersPricesGetToManyRelated.Input.Path,
+        query: Operations.RetentionOffersPricesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.RetentionOffersPricesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.RetentionOffersPricesGetToManyRelated.Output {
+        try await retentionOffersPricesGetToManyRelated(Operations.RetentionOffersPricesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
     /// - Remark: HTTP `POST /v1/reviewSubmissionItems`.
     /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/post(reviewSubmissionItems_createInstance)`.
     public func reviewSubmissionItemsCreateInstance(
@@ -7897,6 +8211,102 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/relationships/retentionMessage`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessage/get(subscriptions_retentionMessage_getToOneRelationship)`.
+    public func subscriptionsRetentionMessageGetToOneRelationship(
+        path: Operations.SubscriptionsRetentionMessageGetToOneRelationship.Input.Path,
+        headers: Operations.SubscriptionsRetentionMessageGetToOneRelationship.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionsRetentionMessageGetToOneRelationship.Output {
+        try await subscriptionsRetentionMessageGetToOneRelationship(Operations.SubscriptionsRetentionMessageGetToOneRelationship.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/subscriptions/{id}/relationships/retentionMessage`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessage/patch(subscriptions_retentionMessage_updateToOneRelationship)`.
+    public func subscriptionsRetentionMessageUpdateToOneRelationship(
+        path: Operations.SubscriptionsRetentionMessageUpdateToOneRelationship.Input.Path,
+        body: Operations.SubscriptionsRetentionMessageUpdateToOneRelationship.Input.Body
+    ) async throws -> Operations.SubscriptionsRetentionMessageUpdateToOneRelationship.Output {
+        try await subscriptionsRetentionMessageUpdateToOneRelationship(Operations.SubscriptionsRetentionMessageUpdateToOneRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/relationships/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessageOffers/get(subscriptions_retentionMessageOffers_getToManyRelationship)`.
+    public func subscriptionsRetentionMessageOffersGetToManyRelationship(
+        path: Operations.SubscriptionsRetentionMessageOffersGetToManyRelationship.Input.Path,
+        query: Operations.SubscriptionsRetentionMessageOffersGetToManyRelationship.Input.Query = .init(),
+        headers: Operations.SubscriptionsRetentionMessageOffersGetToManyRelationship.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionsRetentionMessageOffersGetToManyRelationship.Output {
+        try await subscriptionsRetentionMessageOffersGetToManyRelationship(Operations.SubscriptionsRetentionMessageOffersGetToManyRelationship.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/subscriptions/{id}/relationships/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessageOffers/post(subscriptions_retentionMessageOffers_createToManyRelationship)`.
+    public func subscriptionsRetentionMessageOffersCreateToManyRelationship(
+        path: Operations.SubscriptionsRetentionMessageOffersCreateToManyRelationship.Input.Path,
+        body: Operations.SubscriptionsRetentionMessageOffersCreateToManyRelationship.Input.Body
+    ) async throws -> Operations.SubscriptionsRetentionMessageOffersCreateToManyRelationship.Output {
+        try await subscriptionsRetentionMessageOffersCreateToManyRelationship(Operations.SubscriptionsRetentionMessageOffersCreateToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/subscriptions/{id}/relationships/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/relationships/retentionMessageOffers/delete(subscriptions_retentionMessageOffers_deleteToManyRelationship)`.
+    public func subscriptionsRetentionMessageOffersDeleteToManyRelationship(
+        path: Operations.SubscriptionsRetentionMessageOffersDeleteToManyRelationship.Input.Path,
+        body: Operations.SubscriptionsRetentionMessageOffersDeleteToManyRelationship.Input.Body
+    ) async throws -> Operations.SubscriptionsRetentionMessageOffersDeleteToManyRelationship.Output {
+        try await subscriptionsRetentionMessageOffersDeleteToManyRelationship(Operations.SubscriptionsRetentionMessageOffersDeleteToManyRelationship.Input(
+            path: path,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/retentionMessage`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/retentionMessage/get(subscriptions_retentionMessage_getToOneRelated)`.
+    public func subscriptionsRetentionMessageGetToOneRelated(
+        path: Operations.SubscriptionsRetentionMessageGetToOneRelated.Input.Path,
+        query: Operations.SubscriptionsRetentionMessageGetToOneRelated.Input.Query = .init(),
+        headers: Operations.SubscriptionsRetentionMessageGetToOneRelated.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionsRetentionMessageGetToOneRelated.Output {
+        try await subscriptionsRetentionMessageGetToOneRelated(Operations.SubscriptionsRetentionMessageGetToOneRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/retentionMessageOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/retentionMessageOffers/get(subscriptions_retentionMessageOffers_getToManyRelated)`.
+    public func subscriptionsRetentionMessageOffersGetToManyRelated(
+        path: Operations.SubscriptionsRetentionMessageOffersGetToManyRelated.Input.Path,
+        query: Operations.SubscriptionsRetentionMessageOffersGetToManyRelated.Input.Query = .init(),
+        headers: Operations.SubscriptionsRetentionMessageOffersGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionsRetentionMessageOffersGetToManyRelated.Output {
+        try await subscriptionsRetentionMessageOffersGetToManyRelated(Operations.SubscriptionsRetentionMessageOffersGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/retentionOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/retentionOffers/get(subscriptions_retentionOffers_getToManyRelated)`.
+    public func subscriptionsRetentionOffersGetToManyRelated(
+        path: Operations.SubscriptionsRetentionOffersGetToManyRelated.Input.Path,
+        query: Operations.SubscriptionsRetentionOffersGetToManyRelated.Input.Query = .init(),
+        headers: Operations.SubscriptionsRetentionOffersGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionsRetentionOffersGetToManyRelated.Output {
+        try await subscriptionsRetentionOffersGetToManyRelated(Operations.SubscriptionsRetentionOffersGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
     /// - Remark: HTTP `GET /v1/subscriptions/{id}/subscriptionLocalizations`.
     /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/subscriptionLocalizations/get(subscriptions_subscriptionLocalizations_getToManyRelated)`.
     public func subscriptionsSubscriptionLocalizationsGetToManyRelated(
@@ -7918,6 +8328,19 @@ extension APIProtocol {
         headers: Operations.SubscriptionsVersionsGetToManyRelated.Input.Headers = .init()
     ) async throws -> Operations.SubscriptionsVersionsGetToManyRelated.Output {
         try await subscriptionsVersionsGetToManyRelated(Operations.SubscriptionsVersionsGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/subscriptions/{id}/winBackOffers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptions/{id}/winBackOffers/get(subscriptions_winBackOffers_getToManyRelated)`.
+    public func subscriptionsWinBackOffersGetToManyRelated(
+        path: Operations.SubscriptionsWinBackOffersGetToManyRelated.Input.Path,
+        query: Operations.SubscriptionsWinBackOffersGetToManyRelated.Input.Query = .init(),
+        headers: Operations.SubscriptionsWinBackOffersGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionsWinBackOffersGetToManyRelated.Output {
+        try await subscriptionsWinBackOffersGetToManyRelated(Operations.SubscriptionsWinBackOffersGetToManyRelated.Input(
             path: path,
             query: query,
             headers: headers
@@ -8151,6 +8574,61 @@ extension APIProtocol {
         headers: Operations.WebhooksDeliveriesGetToManyRelated.Input.Headers = .init()
     ) async throws -> Operations.WebhooksDeliveriesGetToManyRelated.Output {
         try await webhooksDeliveriesGetToManyRelated(Operations.WebhooksDeliveriesGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/winBackOffers`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/post(winBackOffers_createInstance)`.
+    public func winBackOffersCreateInstance(
+        headers: Operations.WinBackOffersCreateInstance.Input.Headers = .init(),
+        body: Operations.WinBackOffersCreateInstance.Input.Body
+    ) async throws -> Operations.WinBackOffersCreateInstance.Output {
+        try await winBackOffersCreateInstance(Operations.WinBackOffersCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/winBackOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/get(winBackOffers_getInstance)`.
+    public func winBackOffersGetInstance(
+        path: Operations.WinBackOffersGetInstance.Input.Path,
+        query: Operations.WinBackOffersGetInstance.Input.Query = .init(),
+        headers: Operations.WinBackOffersGetInstance.Input.Headers = .init()
+    ) async throws -> Operations.WinBackOffersGetInstance.Output {
+        try await winBackOffersGetInstance(Operations.WinBackOffersGetInstance.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `PATCH /v1/winBackOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/patch(winBackOffers_updateInstance)`.
+    public func winBackOffersUpdateInstance(
+        path: Operations.WinBackOffersUpdateInstance.Input.Path,
+        headers: Operations.WinBackOffersUpdateInstance.Input.Headers = .init(),
+        body: Operations.WinBackOffersUpdateInstance.Input.Body
+    ) async throws -> Operations.WinBackOffersUpdateInstance.Output {
+        try await winBackOffersUpdateInstance(Operations.WinBackOffersUpdateInstance.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `DELETE /v1/winBackOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/delete(winBackOffers_deleteInstance)`.
+    public func winBackOffersDeleteInstance(path: Operations.WinBackOffersDeleteInstance.Input.Path) async throws -> Operations.WinBackOffersDeleteInstance.Output {
+        try await winBackOffersDeleteInstance(Operations.WinBackOffersDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/winBackOffers/{id}/prices`.
+    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/prices/get(winBackOffers_prices_getToManyRelated)`.
+    public func winBackOffersPricesGetToManyRelated(
+        path: Operations.WinBackOffersPricesGetToManyRelated.Input.Path,
+        query: Operations.WinBackOffersPricesGetToManyRelated.Input.Query = .init(),
+        headers: Operations.WinBackOffersPricesGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.WinBackOffersPricesGetToManyRelated.Output {
+        try await winBackOffersPricesGetToManyRelated(Operations.WinBackOffersPricesGetToManyRelated.Input(
             path: path,
             query: query,
             headers: headers

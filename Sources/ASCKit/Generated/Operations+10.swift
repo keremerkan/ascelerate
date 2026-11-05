@@ -10,6 +10,275 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `DELETE /v1/appScreenshotSets/{id}`.
+    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/delete(appScreenshotSets_deleteInstance)`.
+    public enum AppScreenshotSetsDeleteInstance {
+        public static let id: Swift.String = "appScreenshotSets_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppScreenshotSetsDeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.AppScreenshotSetsDeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/delete(appScreenshotSets_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.AppScreenshotSetsDeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/delete(appScreenshotSets_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.AppScreenshotSetsDeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `GET /v1/appScreenshotSets/{id}/appScreenshots`.
+    /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelated)`.
+    public enum AppScreenshotSetsAppScreenshotsGetToManyRelated {
+        public static let id: Swift.String = "appScreenshotSets_appScreenshots_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fieldsAppScreenshotsPayload`.
+                @frozen public enum FieldsAppScreenshotsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case sourceFileChecksum = "sourceFileChecksum"
+                    case imageAsset = "imageAsset"
+                    case assetToken = "assetToken"
+                    case assetType = "assetType"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case appScreenshotSet = "appScreenshotSet"
+                }
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshots]`.
+                public typealias fieldsAppScreenshotsPayload = [Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.FieldsAppScreenshotsPayloadPayload]
+                /// the fields to include for returned resources of type appScreenshots
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshots]`.
+                public var fieldsAppScreenshots: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotsPayload?
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fieldsAppScreenshotSetsPayload`.
+                @frozen public enum FieldsAppScreenshotSetsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case screenshotDisplayType = "screenshotDisplayType"
+                    case appStoreVersionLocalization = "appStoreVersionLocalization"
+                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
+                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case appScreenshots = "appScreenshots"
+                }
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshotSets]`.
+                public typealias fieldsAppScreenshotSetsPayload = [Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.FieldsAppScreenshotSetsPayloadPayload]
+                /// the fields to include for returned resources of type appScreenshotSets
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/fields[appScreenshotSets]`.
+                public var fieldsAppScreenshotSets: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotSetsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case appScreenshotSet = "appScreenshotSet"
+                }
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/include`.
+                public typealias IncludePayload = [Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/query/include`.
+                public var include: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsAppScreenshots: the fields to include for returned resources of type appScreenshots
+                ///   - fieldsAppScreenshotSets: the fields to include for returned resources of type appScreenshotSets
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsAppScreenshots: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotsPayload? = nil,
+                    fieldsAppScreenshotSets: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.fieldsAppScreenshotSetsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsAppScreenshots = fieldsAppScreenshots
+                    self.fieldsAppScreenshotSets = fieldsAppScreenshotSets
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Path,
+                query: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/appScreenshotSets/{id}/appScreenshots/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppScreenshotsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.AppScreenshotsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of AppScreenshots
+            ///
+            /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.AppScreenshotSetsAppScreenshotsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `GET /v1/appScreenshotSets/{id}/relationships/appScreenshots`.
     /// - Remark: Generated from `#/paths//v1/appScreenshotSets/{id}/relationships/appScreenshots/get(appScreenshotSets_appScreenshots_getToManyRelationship)`.
     public enum AppScreenshotSetsAppScreenshotsGetToManyRelationship {
@@ -2968,125 +3237,6 @@ extension Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/appStoreVersionExperimentTreatments`.
-    /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatments/post(appStoreVersionExperimentTreatments_createInstance)`.
-    public enum AppStoreVersionExperimentTreatmentsCreateInstance {
-        public static let id: Swift.String = "appStoreVersionExperimentTreatments_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentTreatmentsCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.AppStoreVersionExperimentTreatmentsCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.AppStoreVersionExperimentTreatmentCreateRequest)
-            }
-            public var body: Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Input.Headers = .init(),
-                body: Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/appStoreVersionExperimentTreatments/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.AppStoreVersionExperimentTreatmentResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.AppStoreVersionExperimentTreatmentResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single AppStoreVersionExperimentTreatment
-            ///
-            /// - Remark: Generated from `#/paths//v1/appStoreVersionExperimentTreatments/post(appStoreVersionExperimentTreatments_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.AppStoreVersionExperimentTreatmentsCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
                             response: self
                         )
                     }

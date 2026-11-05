@@ -1653,15 +1653,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `POST /v1/reviewSubmissionItems`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/post(reviewSubmissionItems_createInstance)`.
-    public func reviewSubmissionItemsCreateInstance(_ input: Operations.ReviewSubmissionItemsCreateInstance.Input) async throws -> Operations.ReviewSubmissionItemsCreateInstance.Output {
+    /// - Remark: HTTP `POST /v1/retentionMessageLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/post(retentionMessageLocalizations_createInstance)`.
+    public func retentionMessageLocalizationsCreateInstance(_ input: Operations.RetentionMessageLocalizationsCreateInstance.Input) async throws -> Operations.RetentionMessageLocalizationsCreateInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ReviewSubmissionItemsCreateInstance.id,
+            forOperation: Operations.RetentionMessageLocalizationsCreateInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissionItems",
+                    template: "/v1/retentionMessageLocalizations",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -1688,7 +1688,7 @@ extension Client {
                 switch response.status.code {
                 case 201:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ReviewSubmissionItemsCreateInstance.Output.Created.Body
+                    let body: Operations.RetentionMessageLocalizationsCreateInstance.Output.Created.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1698,7 +1698,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ReviewSubmissionItemResponse.self,
+                            Components.Schemas.RetentionMessageLocalizationResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1720,15 +1720,96 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `PATCH /v1/reviewSubmissionItems/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/{id}/patch(reviewSubmissionItems_updateInstance)`.
-    public func reviewSubmissionItemsUpdateInstance(_ input: Operations.ReviewSubmissionItemsUpdateInstance.Input) async throws -> Operations.ReviewSubmissionItemsUpdateInstance.Output {
+    /// - Remark: HTTP `GET /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/get(retentionMessageLocalizations_getInstance)`.
+    public func retentionMessageLocalizationsGetInstance(_ input: Operations.RetentionMessageLocalizationsGetInstance.Input) async throws -> Operations.RetentionMessageLocalizationsGetInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ReviewSubmissionItemsUpdateInstance.id,
+            forOperation: Operations.RetentionMessageLocalizationsGetInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissionItems/{}",
+                    template: "/v1/retentionMessageLocalizations/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageLocalizations]",
+                    value: input.query.fieldsRetentionMessageLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageVersions]",
+                    value: input.query.fieldsRetentionMessageVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.RetentionMessageLocalizationsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.RetentionMessageLocalizationResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `PATCH /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/patch(retentionMessageLocalizations_updateInstance)`.
+    public func retentionMessageLocalizationsUpdateInstance(_ input: Operations.RetentionMessageLocalizationsUpdateInstance.Input) async throws -> Operations.RetentionMessageLocalizationsUpdateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.RetentionMessageLocalizationsUpdateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/retentionMessageLocalizations/{}",
                     parameters: [
                         input.path.id
                     ]
@@ -1757,7 +1838,7 @@ extension Client {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ReviewSubmissionItemsUpdateInstance.Output.Ok.Body
+                    let body: Operations.RetentionMessageLocalizationsUpdateInstance.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -1767,7 +1848,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ReviewSubmissionItemResponse.self,
+                            Components.Schemas.RetentionMessageLocalizationResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -1789,15 +1870,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `DELETE /v1/reviewSubmissionItems/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/{id}/delete(reviewSubmissionItems_deleteInstance)`.
-    public func reviewSubmissionItemsDeleteInstance(_ input: Operations.ReviewSubmissionItemsDeleteInstance.Input) async throws -> Operations.ReviewSubmissionItemsDeleteInstance.Output {
+    /// - Remark: HTTP `DELETE /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/delete(retentionMessageLocalizations_deleteInstance)`.
+    public func retentionMessageLocalizationsDeleteInstance(_ input: Operations.RetentionMessageLocalizationsDeleteInstance.Input) async throws -> Operations.RetentionMessageLocalizationsDeleteInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ReviewSubmissionItemsDeleteInstance.id,
+            forOperation: Operations.RetentionMessageLocalizationsDeleteInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissionItems/{}",
+                    template: "/v1/retentionMessageLocalizations/{}",
                     parameters: [
                         input.path.id
                     ]
@@ -1825,150 +1906,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `GET /v1/reviewSubmissions`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/get(reviewSubmissions_getCollection)`.
-    public func reviewSubmissionsGetCollection(_ input: Operations.ReviewSubmissionsGetCollection.Input) async throws -> Operations.ReviewSubmissionsGetCollection.Output {
+    /// - Remark: HTTP `POST /v1/retentionMessages`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/post(retentionMessages_createInstance)`.
+    public func retentionMessagesCreateInstance(_ input: Operations.RetentionMessagesCreateInstance.Input) async throws -> Operations.RetentionMessagesCreateInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ReviewSubmissionsGetCollection.id,
+            forOperation: Operations.RetentionMessagesCreateInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissions",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[platform]",
-                    value: input.query.filterPlatform
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[state]",
-                    value: input.query.filterState
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[app]",
-                    value: input.query.filterApp
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[reviewSubmissions]",
-                    value: input.query.fieldsReviewSubmissions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[apps]",
-                    value: input.query.fieldsApps
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[reviewSubmissionItems]",
-                    value: input.query.fieldsReviewSubmissionItems
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreVersions]",
-                    value: input.query.fieldsAppStoreVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[actors]",
-                    value: input.query.fieldsActors
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit[items]",
-                    value: input.query.limitItems
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ReviewSubmissionsGetCollection.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ReviewSubmissionsResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `POST /v1/reviewSubmissions`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/post(reviewSubmissions_createInstance)`.
-    public func reviewSubmissionsCreateInstance(_ input: Operations.ReviewSubmissionsCreateInstance.Input) async throws -> Operations.ReviewSubmissionsCreateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.ReviewSubmissionsCreateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissions",
+                    template: "/v1/retentionMessages",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -1995,7 +1941,7 @@ extension Client {
                 switch response.status.code {
                 case 201:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ReviewSubmissionsCreateInstance.Output.Created.Body
+                    let body: Operations.RetentionMessagesCreateInstance.Output.Created.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2005,7 +1951,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ReviewSubmissionResponse.self,
+                            Components.Schemas.RetentionMessageResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -2027,15 +1973,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `GET /v1/reviewSubmissions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/get(reviewSubmissions_getInstance)`.
-    public func reviewSubmissionsGetInstance(_ input: Operations.ReviewSubmissionsGetInstance.Input) async throws -> Operations.ReviewSubmissionsGetInstance.Output {
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/get(retentionMessages_getInstance)`.
+    public func retentionMessagesGetInstance(_ input: Operations.RetentionMessagesGetInstance.Input) async throws -> Operations.RetentionMessagesGetInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ReviewSubmissionsGetInstance.id,
+            forOperation: Operations.RetentionMessagesGetInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissions/{}",
+                    template: "/v1/retentionMessages/{}",
                     parameters: [
                         input.path.id
                     ]
@@ -2049,36 +1995,22 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "fields[reviewSubmissions]",
-                    value: input.query.fieldsReviewSubmissions
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "fields[apps]",
-                    value: input.query.fieldsApps
+                    name: "fields[retentionMessageVersions]",
+                    value: input.query.fieldsRetentionMessageVersions
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "fields[reviewSubmissionItems]",
-                    value: input.query.fieldsReviewSubmissionItems
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreVersions]",
-                    value: input.query.fieldsAppStoreVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[actors]",
-                    value: input.query.fieldsActors
+                    name: "fields[subscriptions]",
+                    value: input.query.fieldsSubscriptions
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2091,8 +2023,15 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: true,
-                    name: "limit[items]",
-                    value: input.query.limitItems
+                    name: "limit[subscriptions]",
+                    value: input.query.limitSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[versions]",
+                    value: input.query.limitVersions
                 )
                 converter.setAcceptHeader(
                     in: &request.headerFields,
@@ -2104,7 +2043,7 @@ extension Client {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ReviewSubmissionsGetInstance.Output.Ok.Body
+                    let body: Operations.RetentionMessagesGetInstance.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2114,7 +2053,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ReviewSubmissionResponse.self,
+                            Components.Schemas.RetentionMessageResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -2136,22 +2075,456 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `PATCH /v1/reviewSubmissions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/patch(reviewSubmissions_updateInstance)`.
-    public func reviewSubmissionsUpdateInstance(_ input: Operations.ReviewSubmissionsUpdateInstance.Input) async throws -> Operations.ReviewSubmissionsUpdateInstance.Output {
+    /// - Remark: HTTP `DELETE /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/delete(retentionMessages_deleteInstance)`.
+    public func retentionMessagesDeleteInstance(_ input: Operations.RetentionMessagesDeleteInstance.Input) async throws -> Operations.RetentionMessagesDeleteInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ReviewSubmissionsUpdateInstance.id,
+            forOperation: Operations.RetentionMessagesDeleteInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissions/{}",
+                    template: "/v1/retentionMessages/{}",
                     parameters: [
                         input.path.id
                     ]
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
                     soar_path: path,
-                    method: .patch
+                    method: .delete
+                )
+                suppressMutabilityWarning(&request)
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 204:
+                    return .noContent(.init())
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/subscriptions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/subscriptions/get(retentionMessages_subscriptions_getToManyRelated)`.
+    public func retentionMessagesSubscriptionsGetToManyRelated(_ input: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input) async throws -> Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.RetentionMessagesSubscriptionsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/retentionMessages/{}/subscriptions",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[productId]",
+                    value: input.query.filterProductId
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[name]",
+                    value: input.query.filterName
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "filter[state]",
+                    value: input.query.filterState
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "sort",
+                    value: input.query.sort
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptions]",
+                    value: input.query.fieldsSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionLocalizations]",
+                    value: input.query.fieldsSubscriptionLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionAppStoreReviewScreenshots]",
+                    value: input.query.fieldsSubscriptionAppStoreReviewScreenshots
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionGroups]",
+                    value: input.query.fieldsSubscriptionGroups
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionIntroductoryOffers]",
+                    value: input.query.fieldsSubscriptionIntroductoryOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionPromotionalOffers]",
+                    value: input.query.fieldsSubscriptionPromotionalOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionOfferCodes]",
+                    value: input.query.fieldsSubscriptionOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionPrices]",
+                    value: input.query.fieldsSubscriptionPrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[promotedPurchases]",
+                    value: input.query.fieldsPromotedPurchases
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionAvailabilities]",
+                    value: input.query.fieldsSubscriptionAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[winBackOffers]",
+                    value: input.query.fieldsWinBackOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionImages]",
+                    value: input.query.fieldsSubscriptionImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionPlanAvailabilities]",
+                    value: input.query.fieldsSubscriptionPlanAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[subscriptionVersions]",
+                    value: input.query.fieldsSubscriptionVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionOffers]",
+                    value: input.query.fieldsRetentionOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[subscriptionLocalizations]",
+                    value: input.query.limitSubscriptionLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[introductoryOffers]",
+                    value: input.query.limitIntroductoryOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[promotionalOffers]",
+                    value: input.query.limitPromotionalOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[offerCodes]",
+                    value: input.query.limitOfferCodes
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[prices]",
+                    value: input.query.limitPrices
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[winBackOffers]",
+                    value: input.query.limitWinBackOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[images]",
+                    value: input.query.limitImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[planAvailabilities]",
+                    value: input.query.limitPlanAvailabilities
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[versions]",
+                    value: input.query.limitVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[retentionOffers]",
+                    value: input.query.limitRetentionOffers
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[retentionMessageOffers]",
+                    value: input.query.limitRetentionMessageOffers
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.SubscriptionsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/versions/get(retentionMessages_versions_getToManyRelated)`.
+    public func retentionMessagesVersionsGetToManyRelated(_ input: Operations.RetentionMessagesVersionsGetToManyRelated.Input) async throws -> Operations.RetentionMessagesVersionsGetToManyRelated.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.RetentionMessagesVersionsGetToManyRelated.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/retentionMessages/{}/versions",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageVersions]",
+                    value: input.query.fieldsRetentionMessageVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageLocalizations]",
+                    value: input.query.fieldsRetentionMessageLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appAssetLibraryPlacements]",
+                    value: input.query.fieldsAppAssetLibraryPlacements
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit",
+                    value: input.query.limit
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[localizations]",
+                    value: input.query.limitLocalizations
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.RetentionMessagesVersionsGetToManyRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.RetentionMessageVersionsResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/retentionMessageVersions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/post(retentionMessageVersions_createInstance)`.
+    public func retentionMessageVersionsCreateInstance(_ input: Operations.RetentionMessageVersionsCreateInstance.Input) async throws -> Operations.RetentionMessageVersionsCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.RetentionMessageVersionsCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/retentionMessageVersions",
+                    parameters: []
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .post
                 )
                 suppressMutabilityWarning(&request)
                 converter.setAcceptHeader(
@@ -2171,9 +2544,9 @@ extension Client {
             },
             deserializer: { response, responseBody in
                 switch response.status.code {
-                case 200:
+                case 201:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ReviewSubmissionsUpdateInstance.Output.Ok.Body
+                    let body: Operations.RetentionMessageVersionsCreateInstance.Output.Created.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2183,7 +2556,109 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ReviewSubmissionResponse.self,
+                            Components.Schemas.RetentionMessageVersionResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .created(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/get(retentionMessageVersions_getInstance)`.
+    public func retentionMessageVersionsGetInstance(_ input: Operations.RetentionMessageVersionsGetInstance.Input) async throws -> Operations.RetentionMessageVersionsGetInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.RetentionMessageVersionsGetInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/retentionMessageVersions/{}",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageVersions]",
+                    value: input.query.fieldsRetentionMessageVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessages]",
+                    value: input.query.fieldsRetentionMessages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageLocalizations]",
+                    value: input.query.fieldsRetentionMessageLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appAssetLibraryPlacements]",
+                    value: input.query.fieldsAppAssetLibraryPlacements
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: true,
+                    name: "limit[localizations]",
+                    value: input.query.limitLocalizations
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.RetentionMessageVersionsGetInstance.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.RetentionMessageVersionResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -2205,15 +2680,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `GET /v1/reviewSubmissions/{id}/items`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/items/get(reviewSubmissions_items_getToManyRelated)`.
-    public func reviewSubmissionsItemsGetToManyRelated(_ input: Operations.ReviewSubmissionsItemsGetToManyRelated.Input) async throws -> Operations.ReviewSubmissionsItemsGetToManyRelated.Output {
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/localizations/get(retentionMessageVersions_localizations_getToManyRelated)`.
+    public func retentionMessageVersionsLocalizationsGetToManyRelated(_ input: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input) async throws -> Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ReviewSubmissionsItemsGetToManyRelated.id,
+            forOperation: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/reviewSubmissions/{}/items",
+                    template: "/v1/retentionMessageVersions/{}/localizations",
                     parameters: [
                         input.path.id
                     ]
@@ -2227,113 +2702,8 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "fields[reviewSubmissionItems]",
-                    value: input.query.fieldsReviewSubmissionItems
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreVersions]",
-                    value: input.query.fieldsAppStoreVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appCustomProductPageVersions]",
-                    value: input.query.fieldsAppCustomProductPageVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appStoreVersionExperiments]",
-                    value: input.query.fieldsAppStoreVersionExperiments
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appEvents]",
-                    value: input.query.fieldsAppEvents
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appAssetLibraryImages]",
-                    value: input.query.fieldsAppAssetLibraryImages
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[appAssetLibraryVideos]",
-                    value: input.query.fieldsAppAssetLibraryVideos
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[backgroundAssetVersions]",
-                    value: input.query.fieldsBackgroundAssetVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterAchievementVersions]",
-                    value: input.query.fieldsGameCenterAchievementVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterActivityVersions]",
-                    value: input.query.fieldsGameCenterActivityVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterChallengeVersions]",
-                    value: input.query.fieldsGameCenterChallengeVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterLeaderboardSetVersions]",
-                    value: input.query.fieldsGameCenterLeaderboardSetVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[gameCenterLeaderboardVersions]",
-                    value: input.query.fieldsGameCenterLeaderboardVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[inAppPurchaseVersions]",
-                    value: input.query.fieldsInAppPurchaseVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionVersions]",
-                    value: input.query.fieldsSubscriptionVersions
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[subscriptionGroupVersions]",
-                    value: input.query.fieldsSubscriptionGroupVersions
+                    name: "fields[retentionMessageLocalizations]",
+                    value: input.query.fieldsRetentionMessageLocalizations
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2366,7 +2736,7 @@ extension Client {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ReviewSubmissionsItemsGetToManyRelated.Output.Ok.Body
+                    let body: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2376,7 +2746,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ReviewSubmissionItemsResponse.self,
+                            Components.Schemas.RetentionMessageLocalizationsResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -2398,15 +2768,138 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `POST /v1/routingAppCoverages`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/post(routingAppCoverages_createInstance)`.
-    public func routingAppCoveragesCreateInstance(_ input: Operations.RoutingAppCoveragesCreateInstance.Input) async throws -> Operations.RoutingAppCoveragesCreateInstance.Output {
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/placement`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/placement/get(retentionMessageVersions_placement_getToOneRelated)`.
+    public func retentionMessageVersionsPlacementGetToOneRelated(_ input: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input) async throws -> Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.RoutingAppCoveragesCreateInstance.id,
+            forOperation: Operations.RetentionMessageVersionsPlacementGetToOneRelated.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/routingAppCoverages",
+                    template: "/v1/retentionMessageVersions/{}/placement",
+                    parameters: [
+                        input.path.id
+                    ]
+                )
+                var request: HTTPTypes.HTTPRequest = .init(
+                    soar_path: path,
+                    method: .get
+                )
+                suppressMutabilityWarning(&request)
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appAssetLibraryPlacements]",
+                    value: input.query.fieldsAppAssetLibraryPlacements
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appAssetLibraryImages]",
+                    value: input.query.fieldsAppAssetLibraryImages
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appAssetLibraryVideos]",
+                    value: input.query.fieldsAppAssetLibraryVideos
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appEventLocalizations]",
+                    value: input.query.fieldsAppEventLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appStoreVersionLocalizations]",
+                    value: input.query.fieldsAppStoreVersionLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appCustomProductPageLocalizations]",
+                    value: input.query.fieldsAppCustomProductPageLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[appStoreVersionExperimentTreatmentLocalizations]",
+                    value: input.query.fieldsAppStoreVersionExperimentTreatmentLocalizations
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionMessageVersions]",
+                    value: input.query.fieldsRetentionMessageVersions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "include",
+                    value: input.query.include
+                )
+                converter.setAcceptHeader(
+                    in: &request.headerFields,
+                    contentTypes: input.headers.accept
+                )
+                return (request, nil)
+            },
+            deserializer: { response, responseBody in
+                switch response.status.code {
+                case 200:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output.Ok.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas.AppAssetLibraryPlacementResponse.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .ok(.init(body: body))
+                default:
+                    return .undocumented(
+                        statusCode: response.status.code,
+                        .init(
+                            headerFields: response.headerFields,
+                            body: responseBody
+                        )
+                    )
+                }
+            }
+        )
+    }
+    /// - Remark: HTTP `POST /v1/retentionOffers`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/post(retentionOffers_createInstance)`.
+    public func retentionOffersCreateInstance(_ input: Operations.RetentionOffersCreateInstance.Input) async throws -> Operations.RetentionOffersCreateInstance.Output {
+        try await client.send(
+            input: input,
+            forOperation: Operations.RetentionOffersCreateInstance.id,
+            serializer: { input in
+                let path = try converter.renderedPath(
+                    template: "/v1/retentionOffers",
                     parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
@@ -2433,7 +2926,7 @@ extension Client {
                 switch response.status.code {
                 case 201:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.RoutingAppCoveragesCreateInstance.Output.Created.Body
+                    let body: Operations.RetentionOffersCreateInstance.Output.Created.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2443,7 +2936,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.RoutingAppCoverageResponse.self,
+                            Components.Schemas.RetentionOfferResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -2465,15 +2958,15 @@ extension Client {
             }
         )
     }
-    /// - Remark: HTTP `GET /v1/routingAppCoverages/{id}`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/get(routingAppCoverages_getInstance)`.
-    public func routingAppCoveragesGetInstance(_ input: Operations.RoutingAppCoveragesGetInstance.Input) async throws -> Operations.RoutingAppCoveragesGetInstance.Output {
+    /// - Remark: HTTP `GET /v1/retentionOffers/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionOffers/{id}/get(retentionOffers_getInstance)`.
+    public func retentionOffersGetInstance(_ input: Operations.RetentionOffersGetInstance.Input) async throws -> Operations.RetentionOffersGetInstance.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.RoutingAppCoveragesGetInstance.id,
+            forOperation: Operations.RetentionOffersGetInstance.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/v1/routingAppCoverages/{}",
+                    template: "/v1/retentionOffers/{}",
                     parameters: [
                         input.path.id
                     ]
@@ -2487,15 +2980,22 @@ extension Client {
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "fields[routingAppCoverages]",
-                    value: input.query.fieldsRoutingAppCoverages
+                    name: "fields[retentionOffers]",
+                    value: input.query.fieldsRetentionOffers
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
                     style: .form,
                     explode: false,
-                    name: "fields[appStoreVersions]",
-                    value: input.query.fieldsAppStoreVersions
+                    name: "fields[subscriptions]",
+                    value: input.query.fieldsSubscriptions
+                )
+                try converter.setQueryItemAsURI(
+                    in: &request,
+                    style: .form,
+                    explode: false,
+                    name: "fields[retentionOfferPrices]",
+                    value: input.query.fieldsRetentionOfferPrices
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
@@ -2503,283 +3003,13 @@ extension Client {
                     explode: false,
                     name: "include",
                     value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.RoutingAppCoveragesGetInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.RoutingAppCoverageResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `PATCH /v1/routingAppCoverages/{id}`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/patch(routingAppCoverages_updateInstance)`.
-    public func routingAppCoveragesUpdateInstance(_ input: Operations.RoutingAppCoveragesUpdateInstance.Input) async throws -> Operations.RoutingAppCoveragesUpdateInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.RoutingAppCoveragesUpdateInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/routingAppCoverages/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .patch
-                )
-                suppressMutabilityWarning(&request)
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                let body: OpenAPIRuntime.HTTPBody?
-                switch input.body {
-                case let .json(value):
-                    body = try converter.setRequiredRequestBodyAsJSON(
-                        value,
-                        headerFields: &request.headerFields,
-                        contentType: "application/json; charset=utf-8"
-                    )
-                }
-                return (request, body)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.RoutingAppCoveragesUpdateInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.RoutingAppCoverageResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `DELETE /v1/routingAppCoverages/{id}`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/delete(routingAppCoverages_deleteInstance)`.
-    public func routingAppCoveragesDeleteInstance(_ input: Operations.RoutingAppCoveragesDeleteInstance.Input) async throws -> Operations.RoutingAppCoveragesDeleteInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.RoutingAppCoveragesDeleteInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/routingAppCoverages/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .delete
-                )
-                suppressMutabilityWarning(&request)
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 204:
-                    return .noContent(.init())
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/salesReports`.
-    /// - Remark: Generated from `#/paths//v1/salesReports/get(salesReports_getCollection)`.
-    public func salesReportsGetCollection(_ input: Operations.SalesReportsGetCollection.Input) async throws -> Operations.SalesReportsGetCollection.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.SalesReportsGetCollection.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/salesReports",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[vendorNumber]",
-                    value: input.query.filterVendorNumber
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[reportType]",
-                    value: input.query.filterReportType
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[reportSubType]",
-                    value: input.query.filterReportSubType
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[frequency]",
-                    value: input.query.filterFrequency
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[reportDate]",
-                    value: input.query.filterReportDate
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[version]",
-                    value: input.query.filterVersion
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.SalesReportsGetCollection.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/a-gzip"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/a-gzip":
-                        body = try converter.getResponseBodyAsBinary(
-                            OpenAPIRuntime.HTTPBody.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .applicationAGzip(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/scmProviders`.
-    /// - Remark: Generated from `#/paths//v1/scmProviders/get(scmProviders_getCollection)`.
-    public func scmProvidersGetCollection(_ input: Operations.ScmProvidersGetCollection.Input) async throws -> Operations.ScmProvidersGetCollection.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.ScmProvidersGetCollection.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/scmProviders",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmProviders]",
-                    value: input.query.fieldsScmProviders
                 )
                 try converter.setQueryItemAsURI(
                     in: &request,
                     style: .form,
                     explode: true,
-                    name: "limit",
-                    value: input.query.limit
+                    name: "limit[prices]",
+                    value: input.query.limitPrices
                 )
                 converter.setAcceptHeader(
                     in: &request.headerFields,
@@ -2791,7 +3021,7 @@ extension Client {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ScmProvidersGetCollection.Output.Ok.Body
+                    let body: Operations.RetentionOffersGetInstance.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -2801,195 +3031,7 @@ extension Client {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ScmProvidersResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/scmRepositories`.
-    /// - Remark: Generated from `#/paths//v1/scmRepositories/get(scmRepositories_getCollection)`.
-    public func scmRepositoriesGetCollection(_ input: Operations.ScmRepositoriesGetCollection.Input) async throws -> Operations.ScmRepositoriesGetCollection.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.ScmRepositoriesGetCollection.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/scmRepositories",
-                    parameters: []
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "filter[id]",
-                    value: input.query.filterId
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmRepositories]",
-                    value: input.query.fieldsScmRepositories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmProviders]",
-                    value: input.query.fieldsScmProviders
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmGitReferences]",
-                    value: input.query.fieldsScmGitReferences
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: true,
-                    name: "limit",
-                    value: input.query.limit
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ScmRepositoriesGetCollection.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ScmRepositoriesResponse.self,
-                            from: responseBody,
-                            transforming: { value in
-                                .json(value)
-                            }
-                        )
-                    default:
-                        preconditionFailure("bestContentType chose an invalid content type.")
-                    }
-                    return .ok(.init(body: body))
-                default:
-                    return .undocumented(
-                        statusCode: response.status.code,
-                        .init(
-                            headerFields: response.headerFields,
-                            body: responseBody
-                        )
-                    )
-                }
-            }
-        )
-    }
-    /// - Remark: HTTP `GET /v1/scmRepositories/{id}`.
-    /// - Remark: Generated from `#/paths//v1/scmRepositories/{id}/get(scmRepositories_getInstance)`.
-    public func scmRepositoriesGetInstance(_ input: Operations.ScmRepositoriesGetInstance.Input) async throws -> Operations.ScmRepositoriesGetInstance.Output {
-        try await client.send(
-            input: input,
-            forOperation: Operations.ScmRepositoriesGetInstance.id,
-            serializer: { input in
-                let path = try converter.renderedPath(
-                    template: "/v1/scmRepositories/{}",
-                    parameters: [
-                        input.path.id
-                    ]
-                )
-                var request: HTTPTypes.HTTPRequest = .init(
-                    soar_path: path,
-                    method: .get
-                )
-                suppressMutabilityWarning(&request)
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmRepositories]",
-                    value: input.query.fieldsScmRepositories
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmProviders]",
-                    value: input.query.fieldsScmProviders
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "fields[scmGitReferences]",
-                    value: input.query.fieldsScmGitReferences
-                )
-                try converter.setQueryItemAsURI(
-                    in: &request,
-                    style: .form,
-                    explode: false,
-                    name: "include",
-                    value: input.query.include
-                )
-                converter.setAcceptHeader(
-                    in: &request.headerFields,
-                    contentTypes: input.headers.accept
-                )
-                return (request, nil)
-            },
-            deserializer: { response, responseBody in
-                switch response.status.code {
-                case 200:
-                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ScmRepositoriesGetInstance.Output.Ok.Body
-                    let chosenContentType = try converter.bestContentType(
-                        received: contentType,
-                        options: [
-                            "application/json"
-                        ]
-                    )
-                    switch chosenContentType {
-                    case "application/json":
-                        body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.ScmRepositoryResponse.self,
+                            Components.Schemas.RetentionOfferResponse.self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

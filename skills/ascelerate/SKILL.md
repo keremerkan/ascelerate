@@ -276,6 +276,23 @@ ascelerate sub promo-offer list/info/delete <app> <product-id> [<offer-id>]
 ascelerate sub promo-offer create <app> <product-id> --name X --code LOYALTY50 --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --price 4.99 --territory USA --equalize-all-territories
 ascelerate sub promo-offer update <app> <product-id> <offer-id> --price 5.99 --equalize-all-territories   # only prices can change
 
+# Retention messages (what the App Store shows subscribers who go to cancel; reviewed by App Review)
+ascelerate sub retention-message [list|info] <app> [<message>] [--json]
+ascelerate sub retention-message create <app> --name X [--locale en-US --header X --body X]   # header ≤66, body ≤144
+ascelerate sub retention-message localizations [view|set|delete] <app> <message> [--locale X --header X --body X]
+ascelerate sub retention-message image upload|delete <app> <message> [file]   # 16:9: 3840×2160 PNG/JPEG or 5244×2950 PNG, one per version
+ascelerate sub retention-message new-version|submit|delete <app> <message>   # one unreleased version at a time
+ascelerate sub retention-message assign <app> <product-id> <message|none> [--offers offer-id,…|none]   # the subscription's message and offers shown
+# Retention offers (offered in the retention message)
+ascelerate sub retention-offer [list|info|delete] <app> <product-id> [<offer-id>]
+ascelerate sub retention-offer create <app> <product-id> --name X --offer-id X --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --paid-months 6 [--wait-months 12] [--plan monthly] --price 4.99 --territories all
+ascelerate sub retention-offer update <app> <product-id> <offer-id> [--paid-months N] [--wait-months N]   # only eligibility changes; a wait can't be removed
+
+# Win-back offers (for people whose subscription ended; approved subscriptions only)
+ascelerate sub win-back-offer [list|info|delete] <app> <product-id> [<offer-id>]
+ascelerate sub win-back-offer create <app> <product-id> --name X --offer-id X --mode PAY_AS_YOU_GO --duration ONE_MONTH --periods 3 --since-months 3-12 --paid-months 6 [--wait-months N] [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--priority high] [--promote] [--plan monthly] --price 4.99 --territories all   # starts tomorrow at the earliest; ends ≥3 days after the start
+ascelerate sub win-back-offer update <app> <product-id> <offer-id> [--since-months A-B] [--paid-months N] [--wait-months N] [--start-date X] [--end-date X] [--priority X] [--promote true|false]
+
 # Offer codes (one-time-use batches + custom codes)
 ascelerate sub offer-code list/info <app> <product-id> [<offer-code-id>]
 ascelerate sub offer-code create <app> <product-id> --name X --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --price 0 --territory USA --equalize-all-territories
@@ -298,7 +315,7 @@ Subscription pricing safety:
 
 Offer code eligibilities for subs: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibility: `STACK_WITH_INTRO_OFFERS` or `REPLACE_INTRO_OFFERS`. Modes: `FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`.
 
-NOT YET IMPLEMENTED: `sub win-back-offer` is blocked by Apple's API spec (win-back offer price entries have no territory or price point relationships). Custom product page search-keyword linkages are blocked the same way (the spec's `AppKeyword` exposes no keyword text). `iap hosted-content` is intentionally skipped.
+NOT YET IMPLEMENTED: custom product page search-keyword linkages are blocked by Apple's API spec (the spec's `AppKeyword` exposes no keyword text). `iap hosted-content` is intentionally skipped.
 
 ### Sandbox testers
 

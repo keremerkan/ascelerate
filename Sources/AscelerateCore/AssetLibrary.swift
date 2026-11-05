@@ -109,6 +109,8 @@ public enum AssetLibrary {
     case treatmentLocalization(String)
     /// An in-app event's localization (its event card and details page media).
     case eventLocalization(String)
+    /// A retention message's version (its one image, `RetentionMessages.imageSlot`).
+    case retentionMessageVersion(String)
   }
 
   /// A library image or video.
@@ -314,19 +316,21 @@ public enum AssetLibrary {
       var productPage: Relationships.AppCustomProductPageLocalizationPayload?
       var treatment: Relationships.AppStoreVersionExperimentTreatmentLocalizationPayload?
       var event: Relationships.AppEventLocalizationPayload?
+      var retention: Relationships.RetentionMessageVersionPayload?
       switch owner {
         case .versionLocalization(let id): version = .init(data: .init(id: id, _type: "appStoreVersionLocalizations"))
         case .productPageLocalization(let id): productPage = .init(data: .init(id: id, _type: "appCustomProductPageLocalizations"))
         case .treatmentLocalization(let id):
           treatment = .init(data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations"))
         case .eventLocalization(let id): event = .init(data: .init(id: id, _type: "appEventLocalizations"))
+        case .retentionMessageVersion(let id): retention = .init(data: .init(id: id, _type: "retentionMessageVersions"))
       }
       return try await client.appAssetLibraryPlacementsCreateInstance(body: .json(.init(data: .init(
         attributes: .init(placementGroup: group, placementType: type.rawValue),
         relationships: .init(
           appCustomProductPageLocalization: productPage, appEventLocalization: event,
           appStoreVersionExperimentTreatmentLocalization: treatment,
-          appStoreVersionLocalization: version, image: image, video: video
+          appStoreVersionLocalization: version, image: image, retentionMessageVersion: retention, video: video
         ),
         _type: "appAssetLibraryPlacements"
       )))).created.body.json.data.id
@@ -403,7 +407,7 @@ public enum AssetLibrary {
       case .treatmentLocalization(let id):
         relationships.appStoreVersionExperimentTreatmentLocalization = .init(
           data: .init(id: id, _type: "appStoreVersionExperimentTreatmentLocalizations"))
-      case .eventLocalization:
+      case .eventLocalization, .retentionMessageVersion:
         return
     }
     _ = try await client.appAssetLibraryPlacementOrderingRequestsCreateInstance(body: .json(.init(data: .init(
@@ -630,6 +634,14 @@ public enum AssetLibrary {
     let groups = group.map { [$0] }
     let includingMedia = media != .none
     let stateOnly = media == .stateOnly
+    // A retention message version holds one placement, read on its own (without its media: the
+    // single placement's response is another type; `RetentionMessages.image` reads those).
+    if case .retentionMessageVersion(let id) = owner {
+      let placement = try await optionalRelated {
+        try await client.retentionMessageVersionsPlacementGetToOneRelated(path: .init(id: id)).ok.body.json.data
+      }
+      return (placement.map { [$0] } ?? [], [])
+    }
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         switch owner {
@@ -669,6 +681,8 @@ public enum AssetLibrary {
                 fieldsAppAssetLibraryImages: stateOnly ? [.state] : nil, fieldsAppAssetLibraryVideos: stateOnly ? [.state] : nil,
                 limit: 200, include: includingMedia ? [.image, .video] : nil)
             ).ok.body.json
+          case .retentionMessageVersion:
+            preconditionFailure("A retention message version's placement is read above.")
         }
       }
     }

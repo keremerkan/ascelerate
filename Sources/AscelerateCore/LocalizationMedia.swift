@@ -14,7 +14,7 @@ public enum LocalizationMedia {
       try await client.appCustomProductPageLocalizationsAppScreenshotSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
     case .treatmentLocalization(let id):
       try await client.appStoreVersionExperimentTreatmentLocalizationsAppScreenshotSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    case .eventLocalization:
+    case .eventLocalization, .retentionMessageVersion:
       // An event's media are library placements only.
       []
     }
@@ -28,7 +28,7 @@ public enum LocalizationMedia {
       try await client.appCustomProductPageLocalizationsAppPreviewSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
     case .treatmentLocalization(let id):
       try await client.appStoreVersionExperimentTreatmentLocalizationsAppPreviewSetsGetToManyRelated(path: .init(id: id), query: .init(limit: 50)).ok.body.json.data
-    case .eventLocalization:
+    case .eventLocalization, .retentionMessageVersion:
       []
     }
   }

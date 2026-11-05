@@ -456,37 +456,37 @@ extension Operations {
             case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
-    /// - Remark: HTTP `POST /v1/reviewSubmissionItems`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/post(reviewSubmissionItems_createInstance)`.
-    public enum ReviewSubmissionItemsCreateInstance {
-        public static let id: Swift.String = "reviewSubmissionItems_createInstance"
+    /// - Remark: HTTP `POST /v1/retentionMessageLocalizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/post(retentionMessageLocalizations_createInstance)`.
+    public enum RetentionMessageLocalizationsCreateInstance {
+        public static let id: Swift.String = "retentionMessageLocalizations_createInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/POST/header`.
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionItemsCreateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageLocalizationsCreateInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionItemsCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageLocalizationsCreateInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.ReviewSubmissionItemsCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/POST/requestBody`.
+            public var headers: Operations.RetentionMessageLocalizationsCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.ReviewSubmissionItemCreateRequest)
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.RetentionMessageLocalizationCreateRequest)
             }
-            public var body: Operations.ReviewSubmissionItemsCreateInstance.Input.Body
+            public var body: Operations.RetentionMessageLocalizationsCreateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
             ///   - body:
             public init(
-                headers: Operations.ReviewSubmissionItemsCreateInstance.Input.Headers = .init(),
-                body: Operations.ReviewSubmissionItemsCreateInstance.Input.Body
+                headers: Operations.RetentionMessageLocalizationsCreateInstance.Input.Headers = .init(),
+                body: Operations.RetentionMessageLocalizationsCreateInstance.Input.Body
             ) {
                 self.headers = headers
                 self.body = body
@@ -494,15 +494,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/POST/responses/201/content`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/POST/responses/201/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.ReviewSubmissionItemResponse)
+                    /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageLocalizationResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ReviewSubmissionItemResponse {
+                    public var json: Components.Schemas.RetentionMessageLocalizationResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -512,26 +512,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.ReviewSubmissionItemsCreateInstance.Output.Created.Body
+                public var body: Operations.RetentionMessageLocalizationsCreateInstance.Output.Created.Body
                 /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.ReviewSubmissionItemsCreateInstance.Output.Created.Body) {
+                public init(body: Operations.RetentionMessageLocalizationsCreateInstance.Output.Created.Body) {
                     self.body = body
                 }
             }
-            /// Single ReviewSubmissionItem
+            /// Single RetentionMessageLocalization
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/post(reviewSubmissionItems_createInstance)/responses/201`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/post(retentionMessageLocalizations_createInstance)/responses/201`.
             ///
             /// HTTP response code: `201 created`.
-            case created(Operations.ReviewSubmissionItemsCreateInstance.Output.Created)
+            case created(Operations.RetentionMessageLocalizationsCreateInstance.Output.Created)
             /// The associated value of the enum case if `self` is `.created`.
             ///
             /// - Throws: An error if `self` is not `.created`.
             /// - SeeAlso: `.created`.
-            public var created: Operations.ReviewSubmissionItemsCreateInstance.Output.Created {
+            public var created: Operations.RetentionMessageLocalizationsCreateInstance.Output.Created {
                 get throws {
                     switch self {
                     case let .created(response):
@@ -575,16 +575,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `PATCH /v1/reviewSubmissionItems/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/{id}/patch(reviewSubmissionItems_updateInstance)`.
-    public enum ReviewSubmissionItemsUpdateInstance {
-        public static let id: Swift.String = "reviewSubmissionItems_updateInstance"
+    /// - Remark: HTTP `GET /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/get(retentionMessageLocalizations_getInstance)`.
+    public enum RetentionMessageLocalizationsGetInstance {
+        public static let id: Swift.String = "retentionMessageLocalizations_getInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/PATCH/path`.
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/PATCH/path/id`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -594,52 +594,101 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.ReviewSubmissionItemsUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/PATCH/header`.
+            public var path: Operations.RetentionMessageLocalizationsGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/fieldsRetentionMessageLocalizationsPayload`.
+                @frozen public enum FieldsRetentionMessageLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case header = "header"
+                    case body = "body"
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/fields[retentionMessageLocalizations]`.
+                public typealias fieldsRetentionMessageLocalizationsPayload = [Operations.RetentionMessageLocalizationsGetInstance.Input.Query.FieldsRetentionMessageLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/fields[retentionMessageLocalizations]`.
+                public var fieldsRetentionMessageLocalizations: Operations.RetentionMessageLocalizationsGetInstance.Input.Query.fieldsRetentionMessageLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.RetentionMessageLocalizationsGetInstance.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.RetentionMessageLocalizationsGetInstance.Input.Query.fieldsRetentionMessageVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.RetentionMessageLocalizationsGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/query/include`.
+                public var include: Operations.RetentionMessageLocalizationsGetInstance.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsRetentionMessageLocalizations: the fields to include for returned resources of type retentionMessageLocalizations
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsRetentionMessageLocalizations: Operations.RetentionMessageLocalizationsGetInstance.Input.Query.fieldsRetentionMessageLocalizationsPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.RetentionMessageLocalizationsGetInstance.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
+                    include: Operations.RetentionMessageLocalizationsGetInstance.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsRetentionMessageLocalizations = fieldsRetentionMessageLocalizations
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
+                    self.include = include
+                }
+            }
+            public var query: Operations.RetentionMessageLocalizationsGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionItemsUpdateInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageLocalizationsGetInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionItemsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageLocalizationsGetInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.ReviewSubmissionItemsUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.ReviewSubmissionItemUpdateRequest)
-            }
-            public var body: Operations.ReviewSubmissionItemsUpdateInstance.Input.Body
+            public var headers: Operations.RetentionMessageLocalizationsGetInstance.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - path:
+            ///   - query:
             ///   - headers:
-            ///   - body:
             public init(
-                path: Operations.ReviewSubmissionItemsUpdateInstance.Input.Path,
-                headers: Operations.ReviewSubmissionItemsUpdateInstance.Input.Headers = .init(),
-                body: Operations.ReviewSubmissionItemsUpdateInstance.Input.Body
+                path: Operations.RetentionMessageLocalizationsGetInstance.Input.Path,
+                query: Operations.RetentionMessageLocalizationsGetInstance.Input.Query = .init(),
+                headers: Operations.RetentionMessageLocalizationsGetInstance.Input.Headers = .init()
             ) {
                 self.path = path
+                self.query = query
                 self.headers = headers
-                self.body = body
             }
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/PATCH/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ReviewSubmissionItemResponse)
+                    /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageLocalizationResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ReviewSubmissionItemResponse {
+                    public var json: Components.Schemas.RetentionMessageLocalizationResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -649,26 +698,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.ReviewSubmissionItemsUpdateInstance.Output.Ok.Body
+                public var body: Operations.RetentionMessageLocalizationsGetInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.ReviewSubmissionItemsUpdateInstance.Output.Ok.Body) {
+                public init(body: Operations.RetentionMessageLocalizationsGetInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single ReviewSubmissionItem
+            /// Single RetentionMessageLocalization
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/{id}/patch(reviewSubmissionItems_updateInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/get(retentionMessageLocalizations_getInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.ReviewSubmissionItemsUpdateInstance.Output.Ok)
+            case ok(Operations.RetentionMessageLocalizationsGetInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.ReviewSubmissionItemsUpdateInstance.Output.Ok {
+            public var ok: Operations.RetentionMessageLocalizationsGetInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -712,16 +761,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `DELETE /v1/reviewSubmissionItems/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/{id}/delete(reviewSubmissionItems_deleteInstance)`.
-    public enum ReviewSubmissionItemsDeleteInstance {
-        public static let id: Swift.String = "reviewSubmissionItems_deleteInstance"
+    /// - Remark: HTTP `PATCH /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/patch(retentionMessageLocalizations_updateInstance)`.
+    public enum RetentionMessageLocalizationsUpdateInstance {
+        public static let id: Swift.String = "retentionMessageLocalizations_updateInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/DELETE/path`.
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/PATCH/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissionItems/{id}/DELETE/path/id`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/PATCH/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -731,12 +780,149 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.ReviewSubmissionItemsDeleteInstance.Input.Path
+            public var path: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/PATCH/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageLocalizationsUpdateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageLocalizationsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/PATCH/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/PATCH/requestBody/content/application\/json`.
+                case json(Components.Schemas.RetentionMessageLocalizationUpdateRequest)
+            }
+            public var body: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - path:
-            public init(path: Operations.ReviewSubmissionItemsDeleteInstance.Input.Path) {
+            ///   - headers:
+            ///   - body:
+            public init(
+                path: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Path,
+                headers: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Headers = .init(),
+                body: Operations.RetentionMessageLocalizationsUpdateInstance.Input.Body
+            ) {
+                self.path = path
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/PATCH/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/PATCH/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageLocalizationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.RetentionMessageLocalizationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.RetentionMessageLocalizationsUpdateInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.RetentionMessageLocalizationsUpdateInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single RetentionMessageLocalization
+            ///
+            /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/patch(retentionMessageLocalizations_updateInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.RetentionMessageLocalizationsUpdateInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.RetentionMessageLocalizationsUpdateInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `DELETE /v1/retentionMessageLocalizations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/delete(retentionMessageLocalizations_deleteInstance)`.
+    public enum RetentionMessageLocalizationsDeleteInstance {
+        public static let id: Swift.String = "retentionMessageLocalizations_deleteInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageLocalizations/{id}/DELETE/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.RetentionMessageLocalizationsDeleteInstance.Input.Path
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            public init(path: Operations.RetentionMessageLocalizationsDeleteInstance.Input.Path) {
                 self.path = path
             }
         }
@@ -747,13 +933,13 @@ extension Operations {
             }
             /// Success (no content)
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/{id}/delete(reviewSubmissionItems_deleteInstance)/responses/204`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/delete(retentionMessageLocalizations_deleteInstance)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
-            case noContent(Operations.ReviewSubmissionItemsDeleteInstance.Output.NoContent)
+            case noContent(Operations.RetentionMessageLocalizationsDeleteInstance.Output.NoContent)
             /// Success (no content)
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissionItems/{id}/delete(reviewSubmissionItems_deleteInstance)/responses/204`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessageLocalizations/{id}/delete(retentionMessageLocalizations_deleteInstance)/responses/204`.
             ///
             /// HTTP response code: `204 noContent`.
             public static var noContent: Self {
@@ -763,7 +949,7 @@ extension Operations {
             ///
             /// - Throws: An error if `self` is not `.noContent`.
             /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.ReviewSubmissionItemsDeleteInstance.Output.NoContent {
+            public var noContent: Operations.RetentionMessageLocalizationsDeleteInstance.Output.NoContent {
                 get throws {
                     switch self {
                     case let .noContent(response):
@@ -782,406 +968,37 @@ extension Operations {
             case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
-    /// - Remark: HTTP `GET /v1/reviewSubmissions`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/get(reviewSubmissions_getCollection)`.
-    public enum ReviewSubmissionsGetCollection {
-        public static let id: Swift.String = "reviewSubmissions_getCollection"
+    /// - Remark: HTTP `POST /v1/retentionMessages`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/post(retentionMessages_createInstance)`.
+    public enum RetentionMessagesCreateInstance {
+        public static let id: Swift.String = "retentionMessages_createInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/filterPlatformPayload`.
-                @frozen public enum FilterPlatformPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case ios = "IOS"
-                    case macOs = "MAC_OS"
-                    case tvOs = "TV_OS"
-                    case visionOs = "VISION_OS"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/filter[platform]`.
-                public typealias filterPlatformPayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FilterPlatformPayloadPayload]
-                /// filter by attribute 'platform'
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/filter[platform]`.
-                public var filterPlatform: Operations.ReviewSubmissionsGetCollection.Input.Query.filterPlatformPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/filterStatePayload`.
-                @frozen public enum FilterStatePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case readyForReview = "READY_FOR_REVIEW"
-                    case waitingForReview = "WAITING_FOR_REVIEW"
-                    case inReview = "IN_REVIEW"
-                    case unresolvedIssues = "UNRESOLVED_ISSUES"
-                    case canceling = "CANCELING"
-                    case completing = "COMPLETING"
-                    case complete = "COMPLETE"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/filter[state]`.
-                public typealias filterStatePayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FilterStatePayloadPayload]
-                /// filter by attribute 'state'
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/filter[state]`.
-                public var filterState: Operations.ReviewSubmissionsGetCollection.Input.Query.filterStatePayload?
-                /// filter by id(s) of related 'app'
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/filter[app]`.
-                public var filterApp: [Swift.String]
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fieldsReviewSubmissionsPayload`.
-                @frozen public enum FieldsReviewSubmissionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platform = "platform"
-                    case submittedDate = "submittedDate"
-                    case state = "state"
-                    case app = "app"
-                    case items = "items"
-                    case appStoreVersionForReview = "appStoreVersionForReview"
-                    case submittedByActor = "submittedByActor"
-                    case lastUpdatedByActor = "lastUpdatedByActor"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[reviewSubmissions]`.
-                public typealias fieldsReviewSubmissionsPayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FieldsReviewSubmissionsPayloadPayload]
-                /// the fields to include for returned resources of type reviewSubmissions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[reviewSubmissions]`.
-                public var fieldsReviewSubmissions: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsReviewSubmissionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fieldsAppsPayload`.
-                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case accessibilityUrl = "accessibilityUrl"
-                    case name = "name"
-                    case bundleId = "bundleId"
-                    case sku = "sku"
-                    case primaryLocale = "primaryLocale"
-                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
-                    case subscriptionStatusUrl = "subscriptionStatusUrl"
-                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
-                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
-                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
-                    case contentRightsDeclaration = "contentRightsDeclaration"
-                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
-                    case accessibilityDeclarations = "accessibilityDeclarations"
-                    case appEncryptionDeclarations = "appEncryptionDeclarations"
-                    case appStoreIcon = "appStoreIcon"
-                    case ciProduct = "ciProduct"
-                    case betaTesters = "betaTesters"
-                    case betaGroups = "betaGroups"
-                    case appStoreVersions = "appStoreVersions"
-                    case appTags = "appTags"
-                    case preReleaseVersions = "preReleaseVersions"
-                    case betaAppLocalizations = "betaAppLocalizations"
-                    case builds = "builds"
-                    case betaLicenseAgreement = "betaLicenseAgreement"
-                    case betaAppReviewDetail = "betaAppReviewDetail"
-                    case appInfos = "appInfos"
-                    case appClips = "appClips"
-                    case appPricePoints = "appPricePoints"
-                    case endUserLicenseAgreement = "endUserLicenseAgreement"
-                    case appPriceSchedule = "appPriceSchedule"
-                    case appAvailabilityV2 = "appAvailabilityV2"
-                    case inAppPurchases = "inAppPurchases"
-                    case subscriptionGroups = "subscriptionGroups"
-                    case retentionMessages = "retentionMessages"
-                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
-                    case performanceOverviews = "performanceOverviews"
-                    case perfPowerMetrics = "perfPowerMetrics"
-                    case appCustomProductPages = "appCustomProductPages"
-                    case inAppPurchasesV2 = "inAppPurchasesV2"
-                    case promotedPurchases = "promotedPurchases"
-                    case appEvents = "appEvents"
-                    case reviewSubmissions = "reviewSubmissions"
-                    case subscriptionGracePeriod = "subscriptionGracePeriod"
-                    case customerReviews = "customerReviews"
-                    case customerReviewSummarizations = "customerReviewSummarizations"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case alternativeDistributionKey = "alternativeDistributionKey"
-                    case analyticsReportRequests = "analyticsReportRequests"
-                    case marketplaceSearchDetail = "marketplaceSearchDetail"
-                    case buildUploads = "buildUploads"
-                    case backgroundAssets = "backgroundAssets"
-                    case assetLibrary = "assetLibrary"
-                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
-                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
-                    case searchKeywords = "searchKeywords"
-                    case webhooks = "webhooks"
-                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[apps]`.
-                public typealias fieldsAppsPayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FieldsAppsPayloadPayload]
-                /// the fields to include for returned resources of type apps
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[apps]`.
-                public var fieldsApps: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsAppsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fieldsReviewSubmissionItemsPayload`.
-                @frozen public enum FieldsReviewSubmissionItemsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case state = "state"
-                    case appStoreVersion = "appStoreVersion"
-                    case appCustomProductPageVersion = "appCustomProductPageVersion"
-                    case appStoreVersionExperiment = "appStoreVersionExperiment"
-                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
-                    case appEvent = "appEvent"
-                    case appAssetLibraryImage = "appAssetLibraryImage"
-                    case appAssetLibraryVideo = "appAssetLibraryVideo"
-                    case backgroundAssetVersion = "backgroundAssetVersion"
-                    case gameCenterAchievementVersion = "gameCenterAchievementVersion"
-                    case gameCenterActivityVersion = "gameCenterActivityVersion"
-                    case gameCenterChallengeVersion = "gameCenterChallengeVersion"
-                    case gameCenterLeaderboardSetVersion = "gameCenterLeaderboardSetVersion"
-                    case gameCenterLeaderboardVersion = "gameCenterLeaderboardVersion"
-                    case inAppPurchaseVersion = "inAppPurchaseVersion"
-                    case subscriptionVersion = "subscriptionVersion"
-                    case subscriptionGroupVersion = "subscriptionGroupVersion"
-                    case retentionMessageVersion = "retentionMessageVersion"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[reviewSubmissionItems]`.
-                public typealias fieldsReviewSubmissionItemsPayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FieldsReviewSubmissionItemsPayloadPayload]
-                /// the fields to include for returned resources of type reviewSubmissionItems
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[reviewSubmissionItems]`.
-                public var fieldsReviewSubmissionItems: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsReviewSubmissionItemsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fieldsAppStoreVersionsPayload`.
-                @frozen public enum FieldsAppStoreVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platform = "platform"
-                    case versionString = "versionString"
-                    case appStoreState = "appStoreState"
-                    case appVersionState = "appVersionState"
-                    case copyright = "copyright"
-                    case reviewType = "reviewType"
-                    case releaseType = "releaseType"
-                    case earliestReleaseDate = "earliestReleaseDate"
-                    case usesIdfa = "usesIdfa"
-                    case downloadable = "downloadable"
-                    case createdDate = "createdDate"
-                    case app = "app"
-                    case appStoreVersionLocalizations = "appStoreVersionLocalizations"
-                    case build = "build"
-                    case appStoreVersionPhasedRelease = "appStoreVersionPhasedRelease"
-                    case gameCenterAppVersion = "gameCenterAppVersion"
-                    case routingAppCoverage = "routingAppCoverage"
-                    case appStoreReviewDetail = "appStoreReviewDetail"
-                    case appStoreVersionSubmission = "appStoreVersionSubmission"
-                    case appClipDefaultExperience = "appClipDefaultExperience"
-                    case appStoreVersionExperiments = "appStoreVersionExperiments"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case customerReviews = "customerReviews"
-                    case alternativeDistributionPackage = "alternativeDistributionPackage"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[appStoreVersions]`.
-                public typealias fieldsAppStoreVersionsPayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FieldsAppStoreVersionsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[appStoreVersions]`.
-                public var fieldsAppStoreVersions: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsAppStoreVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fieldsActorsPayload`.
-                @frozen public enum FieldsActorsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case actorType = "actorType"
-                    case userFirstName = "userFirstName"
-                    case userLastName = "userLastName"
-                    case userEmail = "userEmail"
-                    case apiKeyId = "apiKeyId"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[actors]`.
-                public typealias fieldsActorsPayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.FieldsActorsPayloadPayload]
-                /// the fields to include for returned resources of type actors
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/fields[actors]`.
-                public var fieldsActors: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsActorsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case app = "app"
-                    case items = "items"
-                    case appStoreVersionForReview = "appStoreVersionForReview"
-                    case submittedByActor = "submittedByActor"
-                    case lastUpdatedByActor = "lastUpdatedByActor"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/include`.
-                public typealias IncludePayload = [Operations.ReviewSubmissionsGetCollection.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/include`.
-                public var include: Operations.ReviewSubmissionsGetCollection.Input.Query.IncludePayload?
-                /// maximum number of related items returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/query/limit[items]`.
-                public var limitItems: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterPlatform: filter by attribute 'platform'
-                ///   - filterState: filter by attribute 'state'
-                ///   - filterApp: filter by id(s) of related 'app'
-                ///   - fieldsReviewSubmissions: the fields to include for returned resources of type reviewSubmissions
-                ///   - fieldsApps: the fields to include for returned resources of type apps
-                ///   - fieldsReviewSubmissionItems: the fields to include for returned resources of type reviewSubmissionItems
-                ///   - fieldsAppStoreVersions: the fields to include for returned resources of type appStoreVersions
-                ///   - fieldsActors: the fields to include for returned resources of type actors
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitItems: maximum number of related items returned (when they are included)
-                public init(
-                    filterPlatform: Operations.ReviewSubmissionsGetCollection.Input.Query.filterPlatformPayload? = nil,
-                    filterState: Operations.ReviewSubmissionsGetCollection.Input.Query.filterStatePayload? = nil,
-                    filterApp: [Swift.String],
-                    fieldsReviewSubmissions: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsReviewSubmissionsPayload? = nil,
-                    fieldsApps: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsAppsPayload? = nil,
-                    fieldsReviewSubmissionItems: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsReviewSubmissionItemsPayload? = nil,
-                    fieldsAppStoreVersions: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsAppStoreVersionsPayload? = nil,
-                    fieldsActors: Operations.ReviewSubmissionsGetCollection.Input.Query.fieldsActorsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.ReviewSubmissionsGetCollection.Input.Query.IncludePayload? = nil,
-                    limitItems: Swift.Int? = nil
-                ) {
-                    self.filterPlatform = filterPlatform
-                    self.filterState = filterState
-                    self.filterApp = filterApp
-                    self.fieldsReviewSubmissions = fieldsReviewSubmissions
-                    self.fieldsApps = fieldsApps
-                    self.fieldsReviewSubmissionItems = fieldsReviewSubmissionItems
-                    self.fieldsAppStoreVersions = fieldsAppStoreVersions
-                    self.fieldsActors = fieldsActors
-                    self.limit = limit
-                    self.include = include
-                    self.limitItems = limitItems
-                }
-            }
-            public var query: Operations.ReviewSubmissionsGetCollection.Input.Query
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/header`.
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/POST/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsGetCollection.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesCreateInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsGetCollection.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesCreateInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.ReviewSubmissionsGetCollection.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.ReviewSubmissionsGetCollection.Input.Query,
-                headers: Operations.ReviewSubmissionsGetCollection.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/reviewSubmissions/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ReviewSubmissionsResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ReviewSubmissionsResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.ReviewSubmissionsGetCollection.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.ReviewSubmissionsGetCollection.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of ReviewSubmissions
-            ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissions/get(reviewSubmissions_getCollection)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.ReviewSubmissionsGetCollection.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.ReviewSubmissionsGetCollection.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/reviewSubmissions`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/post(reviewSubmissions_createInstance)`.
-    public enum ReviewSubmissionsCreateInstance {
-        public static let id: Swift.String = "reviewSubmissions_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.ReviewSubmissionsCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/POST/requestBody`.
+            public var headers: Operations.RetentionMessagesCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.ReviewSubmissionCreateRequest)
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.RetentionMessageCreateRequest)
             }
-            public var body: Operations.ReviewSubmissionsCreateInstance.Input.Body
+            public var body: Operations.RetentionMessagesCreateInstance.Input.Body
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
             ///   - body:
             public init(
-                headers: Operations.ReviewSubmissionsCreateInstance.Input.Headers = .init(),
-                body: Operations.ReviewSubmissionsCreateInstance.Input.Body
+                headers: Operations.RetentionMessagesCreateInstance.Input.Headers = .init(),
+                body: Operations.RetentionMessagesCreateInstance.Input.Body
             ) {
                 self.headers = headers
                 self.body = body
@@ -1189,15 +1006,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/POST/responses/201/content`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/POST/responses/201/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/reviewSubmissions/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.ReviewSubmissionResponse)
+                    /// - Remark: Generated from `#/paths/v1/retentionMessages/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ReviewSubmissionResponse {
+                    public var json: Components.Schemas.RetentionMessageResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -1207,26 +1024,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.ReviewSubmissionsCreateInstance.Output.Created.Body
+                public var body: Operations.RetentionMessagesCreateInstance.Output.Created.Body
                 /// Creates a new `Created`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.ReviewSubmissionsCreateInstance.Output.Created.Body) {
+                public init(body: Operations.RetentionMessagesCreateInstance.Output.Created.Body) {
                     self.body = body
                 }
             }
-            /// Single ReviewSubmission
+            /// Single RetentionMessage
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissions/post(reviewSubmissions_createInstance)/responses/201`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessages/post(retentionMessages_createInstance)/responses/201`.
             ///
             /// HTTP response code: `201 created`.
-            case created(Operations.ReviewSubmissionsCreateInstance.Output.Created)
+            case created(Operations.RetentionMessagesCreateInstance.Output.Created)
             /// The associated value of the enum case if `self` is `.created`.
             ///
             /// - Throws: An error if `self` is not `.created`.
             /// - SeeAlso: `.created`.
-            public var created: Operations.ReviewSubmissionsCreateInstance.Output.Created {
+            public var created: Operations.RetentionMessagesCreateInstance.Output.Created {
                 get throws {
                     switch self {
                     case let .created(response):
@@ -1270,16 +1087,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `GET /v1/reviewSubmissions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/get(reviewSubmissions_getInstance)`.
-    public enum ReviewSubmissionsGetInstance {
-        public static let id: Swift.String = "reviewSubmissions_getInstance"
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/get(retentionMessages_getInstance)`.
+    public enum RetentionMessagesGetInstance {
+        public static let id: Swift.String = "retentionMessages_getInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/path`.
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/path/id`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -1289,226 +1106,126 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.ReviewSubmissionsGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query`.
+            public var path: Operations.RetentionMessagesGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fieldsReviewSubmissionsPayload`.
-                @frozen public enum FieldsReviewSubmissionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platform = "platform"
-                    case submittedDate = "submittedDate"
-                    case state = "state"
-                    case app = "app"
-                    case items = "items"
-                    case appStoreVersionForReview = "appStoreVersionForReview"
-                    case submittedByActor = "submittedByActor"
-                    case lastUpdatedByActor = "lastUpdatedByActor"
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[reviewSubmissions]`.
-                public typealias fieldsReviewSubmissionsPayload = [Operations.ReviewSubmissionsGetInstance.Input.Query.FieldsReviewSubmissionsPayloadPayload]
-                /// the fields to include for returned resources of type reviewSubmissions
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.RetentionMessagesGetInstance.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[reviewSubmissions]`.
-                public var fieldsReviewSubmissions: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsReviewSubmissionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fieldsAppsPayload`.
-                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case accessibilityUrl = "accessibilityUrl"
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.RetentionMessagesGetInstance.Input.Query.fieldsRetentionMessagesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.RetentionMessagesGetInstance.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.RetentionMessagesGetInstance.Input.Query.fieldsRetentionMessageVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fieldsSubscriptionsPayload`.
+                @frozen public enum FieldsSubscriptionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case name = "name"
-                    case bundleId = "bundleId"
-                    case sku = "sku"
-                    case primaryLocale = "primaryLocale"
-                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
-                    case subscriptionStatusUrl = "subscriptionStatusUrl"
-                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
-                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
-                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
-                    case contentRightsDeclaration = "contentRightsDeclaration"
-                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
-                    case accessibilityDeclarations = "accessibilityDeclarations"
-                    case appEncryptionDeclarations = "appEncryptionDeclarations"
-                    case appStoreIcon = "appStoreIcon"
-                    case ciProduct = "ciProduct"
-                    case betaTesters = "betaTesters"
-                    case betaGroups = "betaGroups"
-                    case appStoreVersions = "appStoreVersions"
-                    case appTags = "appTags"
-                    case preReleaseVersions = "preReleaseVersions"
-                    case betaAppLocalizations = "betaAppLocalizations"
-                    case builds = "builds"
-                    case betaLicenseAgreement = "betaLicenseAgreement"
-                    case betaAppReviewDetail = "betaAppReviewDetail"
-                    case appInfos = "appInfos"
-                    case appClips = "appClips"
-                    case appPricePoints = "appPricePoints"
-                    case endUserLicenseAgreement = "endUserLicenseAgreement"
-                    case appPriceSchedule = "appPriceSchedule"
-                    case appAvailabilityV2 = "appAvailabilityV2"
-                    case inAppPurchases = "inAppPurchases"
-                    case subscriptionGroups = "subscriptionGroups"
-                    case retentionMessages = "retentionMessages"
-                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
-                    case performanceOverviews = "performanceOverviews"
-                    case perfPowerMetrics = "perfPowerMetrics"
-                    case appCustomProductPages = "appCustomProductPages"
-                    case inAppPurchasesV2 = "inAppPurchasesV2"
-                    case promotedPurchases = "promotedPurchases"
-                    case appEvents = "appEvents"
-                    case reviewSubmissions = "reviewSubmissions"
-                    case subscriptionGracePeriod = "subscriptionGracePeriod"
-                    case customerReviews = "customerReviews"
-                    case customerReviewSummarizations = "customerReviewSummarizations"
-                    case gameCenterDetail = "gameCenterDetail"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case alternativeDistributionKey = "alternativeDistributionKey"
-                    case analyticsReportRequests = "analyticsReportRequests"
-                    case marketplaceSearchDetail = "marketplaceSearchDetail"
-                    case buildUploads = "buildUploads"
-                    case backgroundAssets = "backgroundAssets"
-                    case assetLibrary = "assetLibrary"
-                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
-                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
-                    case searchKeywords = "searchKeywords"
-                    case webhooks = "webhooks"
-                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[apps]`.
-                public typealias fieldsAppsPayload = [Operations.ReviewSubmissionsGetInstance.Input.Query.FieldsAppsPayloadPayload]
-                /// the fields to include for returned resources of type apps
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[apps]`.
-                public var fieldsApps: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsAppsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fieldsReviewSubmissionItemsPayload`.
-                @frozen public enum FieldsReviewSubmissionItemsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case productId = "productId"
+                    case familySharable = "familySharable"
                     case state = "state"
-                    case appStoreVersion = "appStoreVersion"
-                    case appCustomProductPageVersion = "appCustomProductPageVersion"
-                    case appStoreVersionExperiment = "appStoreVersionExperiment"
-                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
-                    case appEvent = "appEvent"
-                    case appAssetLibraryImage = "appAssetLibraryImage"
-                    case appAssetLibraryVideo = "appAssetLibraryVideo"
-                    case backgroundAssetVersion = "backgroundAssetVersion"
-                    case gameCenterAchievementVersion = "gameCenterAchievementVersion"
-                    case gameCenterActivityVersion = "gameCenterActivityVersion"
-                    case gameCenterChallengeVersion = "gameCenterChallengeVersion"
-                    case gameCenterLeaderboardSetVersion = "gameCenterLeaderboardSetVersion"
-                    case gameCenterLeaderboardVersion = "gameCenterLeaderboardVersion"
-                    case inAppPurchaseVersion = "inAppPurchaseVersion"
-                    case subscriptionVersion = "subscriptionVersion"
-                    case subscriptionGroupVersion = "subscriptionGroupVersion"
-                    case retentionMessageVersion = "retentionMessageVersion"
+                    case subscriptionPeriod = "subscriptionPeriod"
+                    case reviewNote = "reviewNote"
+                    case groupLevel = "groupLevel"
+                    case multiSeatStatus = "multiSeatStatus"
+                    case marketSettings = "marketSettings"
+                    case subscriptionLocalizations = "subscriptionLocalizations"
+                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
+                    case group = "group"
+                    case introductoryOffers = "introductoryOffers"
+                    case promotionalOffers = "promotionalOffers"
+                    case offerCodes = "offerCodes"
+                    case prices = "prices"
+                    case pricePoints = "pricePoints"
+                    case promotedPurchase = "promotedPurchase"
+                    case subscriptionAvailability = "subscriptionAvailability"
+                    case winBackOffers = "winBackOffers"
+                    case images = "images"
+                    case planAvailabilities = "planAvailabilities"
+                    case versions = "versions"
+                    case retentionOffers = "retentionOffers"
+                    case retentionMessage = "retentionMessage"
+                    case retentionMessageOffers = "retentionMessageOffers"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[reviewSubmissionItems]`.
-                public typealias fieldsReviewSubmissionItemsPayload = [Operations.ReviewSubmissionsGetInstance.Input.Query.FieldsReviewSubmissionItemsPayloadPayload]
-                /// the fields to include for returned resources of type reviewSubmissionItems
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fields[subscriptions]`.
+                public typealias fieldsSubscriptionsPayload = [Operations.RetentionMessagesGetInstance.Input.Query.FieldsSubscriptionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptions
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[reviewSubmissionItems]`.
-                public var fieldsReviewSubmissionItems: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsReviewSubmissionItemsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fieldsAppStoreVersionsPayload`.
-                @frozen public enum FieldsAppStoreVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platform = "platform"
-                    case versionString = "versionString"
-                    case appStoreState = "appStoreState"
-                    case appVersionState = "appVersionState"
-                    case copyright = "copyright"
-                    case reviewType = "reviewType"
-                    case releaseType = "releaseType"
-                    case earliestReleaseDate = "earliestReleaseDate"
-                    case usesIdfa = "usesIdfa"
-                    case downloadable = "downloadable"
-                    case createdDate = "createdDate"
-                    case app = "app"
-                    case appStoreVersionLocalizations = "appStoreVersionLocalizations"
-                    case build = "build"
-                    case appStoreVersionPhasedRelease = "appStoreVersionPhasedRelease"
-                    case gameCenterAppVersion = "gameCenterAppVersion"
-                    case routingAppCoverage = "routingAppCoverage"
-                    case appStoreReviewDetail = "appStoreReviewDetail"
-                    case appStoreVersionSubmission = "appStoreVersionSubmission"
-                    case appClipDefaultExperience = "appClipDefaultExperience"
-                    case appStoreVersionExperiments = "appStoreVersionExperiments"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case customerReviews = "customerReviews"
-                    case alternativeDistributionPackage = "alternativeDistributionPackage"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[appStoreVersions]`.
-                public typealias fieldsAppStoreVersionsPayload = [Operations.ReviewSubmissionsGetInstance.Input.Query.FieldsAppStoreVersionsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[appStoreVersions]`.
-                public var fieldsAppStoreVersions: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsAppStoreVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fieldsActorsPayload`.
-                @frozen public enum FieldsActorsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case actorType = "actorType"
-                    case userFirstName = "userFirstName"
-                    case userLastName = "userLastName"
-                    case userEmail = "userEmail"
-                    case apiKeyId = "apiKeyId"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[actors]`.
-                public typealias fieldsActorsPayload = [Operations.ReviewSubmissionsGetInstance.Input.Query.FieldsActorsPayloadPayload]
-                /// the fields to include for returned resources of type actors
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/fields[actors]`.
-                public var fieldsActors: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsActorsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/IncludePayload`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/fields[subscriptions]`.
+                public var fieldsSubscriptions: Operations.RetentionMessagesGetInstance.Input.Query.fieldsSubscriptionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/IncludePayload`.
                 @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case app = "app"
-                    case items = "items"
-                    case appStoreVersionForReview = "appStoreVersionForReview"
-                    case submittedByActor = "submittedByActor"
-                    case lastUpdatedByActor = "lastUpdatedByActor"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.ReviewSubmissionsGetInstance.Input.Query.IncludePayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.RetentionMessagesGetInstance.Input.Query.IncludePayloadPayload]
                 /// comma-separated list of relationships to include
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/include`.
-                public var include: Operations.ReviewSubmissionsGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related items returned (when they are included)
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/include`.
+                public var include: Operations.RetentionMessagesGetInstance.Input.Query.IncludePayload?
+                /// maximum number of related subscriptions returned (when they are included)
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/query/limit[items]`.
-                public var limitItems: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/limit[subscriptions]`.
+                public var limitSubscriptions: Swift.Int?
+                /// maximum number of related versions returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/query/limit[versions]`.
+                public var limitVersions: Swift.Int?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - fieldsReviewSubmissions: the fields to include for returned resources of type reviewSubmissions
-                ///   - fieldsApps: the fields to include for returned resources of type apps
-                ///   - fieldsReviewSubmissionItems: the fields to include for returned resources of type reviewSubmissionItems
-                ///   - fieldsAppStoreVersions: the fields to include for returned resources of type appStoreVersions
-                ///   - fieldsActors: the fields to include for returned resources of type actors
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
+                ///   - fieldsSubscriptions: the fields to include for returned resources of type subscriptions
                 ///   - include: comma-separated list of relationships to include
-                ///   - limitItems: maximum number of related items returned (when they are included)
+                ///   - limitSubscriptions: maximum number of related subscriptions returned (when they are included)
+                ///   - limitVersions: maximum number of related versions returned (when they are included)
                 public init(
-                    fieldsReviewSubmissions: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsReviewSubmissionsPayload? = nil,
-                    fieldsApps: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsAppsPayload? = nil,
-                    fieldsReviewSubmissionItems: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsReviewSubmissionItemsPayload? = nil,
-                    fieldsAppStoreVersions: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsAppStoreVersionsPayload? = nil,
-                    fieldsActors: Operations.ReviewSubmissionsGetInstance.Input.Query.fieldsActorsPayload? = nil,
-                    include: Operations.ReviewSubmissionsGetInstance.Input.Query.IncludePayload? = nil,
-                    limitItems: Swift.Int? = nil
+                    fieldsRetentionMessages: Operations.RetentionMessagesGetInstance.Input.Query.fieldsRetentionMessagesPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.RetentionMessagesGetInstance.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
+                    fieldsSubscriptions: Operations.RetentionMessagesGetInstance.Input.Query.fieldsSubscriptionsPayload? = nil,
+                    include: Operations.RetentionMessagesGetInstance.Input.Query.IncludePayload? = nil,
+                    limitSubscriptions: Swift.Int? = nil,
+                    limitVersions: Swift.Int? = nil
                 ) {
-                    self.fieldsReviewSubmissions = fieldsReviewSubmissions
-                    self.fieldsApps = fieldsApps
-                    self.fieldsReviewSubmissionItems = fieldsReviewSubmissionItems
-                    self.fieldsAppStoreVersions = fieldsAppStoreVersions
-                    self.fieldsActors = fieldsActors
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
+                    self.fieldsSubscriptions = fieldsSubscriptions
                     self.include = include
-                    self.limitItems = limitItems
+                    self.limitSubscriptions = limitSubscriptions
+                    self.limitVersions = limitVersions
                 }
             }
-            public var query: Operations.ReviewSubmissionsGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/header`.
+            public var query: Operations.RetentionMessagesGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsGetInstance.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesGetInstance.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesGetInstance.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.ReviewSubmissionsGetInstance.Input.Headers
+            public var headers: Operations.RetentionMessagesGetInstance.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -1516,9 +1233,9 @@ extension Operations {
             ///   - query:
             ///   - headers:
             public init(
-                path: Operations.ReviewSubmissionsGetInstance.Input.Path,
-                query: Operations.ReviewSubmissionsGetInstance.Input.Query = .init(),
-                headers: Operations.ReviewSubmissionsGetInstance.Input.Headers = .init()
+                path: Operations.RetentionMessagesGetInstance.Input.Path,
+                query: Operations.RetentionMessagesGetInstance.Input.Query = .init(),
+                headers: Operations.RetentionMessagesGetInstance.Input.Headers = .init()
             ) {
                 self.path = path
                 self.query = query
@@ -1527,15 +1244,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ReviewSubmissionResponse)
+                    /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ReviewSubmissionResponse {
+                    public var json: Components.Schemas.RetentionMessageResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -1545,26 +1262,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.ReviewSubmissionsGetInstance.Output.Ok.Body
+                public var body: Operations.RetentionMessagesGetInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.ReviewSubmissionsGetInstance.Output.Ok.Body) {
+                public init(body: Operations.RetentionMessagesGetInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single ReviewSubmission
+            /// Single RetentionMessage
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/get(reviewSubmissions_getInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/get(retentionMessages_getInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.ReviewSubmissionsGetInstance.Output.Ok)
+            case ok(Operations.RetentionMessagesGetInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.ReviewSubmissionsGetInstance.Output.Ok {
+            public var ok: Operations.RetentionMessagesGetInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -1608,16 +1325,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `PATCH /v1/reviewSubmissions/{id}`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/patch(reviewSubmissions_updateInstance)`.
-    public enum ReviewSubmissionsUpdateInstance {
-        public static let id: Swift.String = "reviewSubmissions_updateInstance"
+    /// - Remark: HTTP `DELETE /v1/retentionMessages/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/delete(retentionMessages_deleteInstance)`.
+    public enum RetentionMessagesDeleteInstance {
+        public static let id: Swift.String = "retentionMessages_deleteInstance"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/PATCH/path`.
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/DELETE/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/PATCH/path/id`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/DELETE/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -1627,52 +1344,975 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.ReviewSubmissionsUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.ReviewSubmissionsUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.ReviewSubmissionUpdateRequest)
-            }
-            public var body: Operations.ReviewSubmissionsUpdateInstance.Input.Body
+            public var path: Operations.RetentionMessagesDeleteInstance.Input.Path
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - path:
+            public init(path: Operations.RetentionMessagesDeleteInstance.Input.Path) {
+                self.path = path
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct NoContent: Sendable, Hashable {
+                /// Creates a new `NoContent`.
+                public init() {}
+            }
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/delete(retentionMessages_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            case noContent(Operations.RetentionMessagesDeleteInstance.Output.NoContent)
+            /// Success (no content)
+            ///
+            /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/delete(retentionMessages_deleteInstance)/responses/204`.
+            ///
+            /// HTTP response code: `204 noContent`.
+            public static var noContent: Self {
+                .noContent(.init())
+            }
+            /// The associated value of the enum case if `self` is `.noContent`.
+            ///
+            /// - Throws: An error if `self` is not `.noContent`.
+            /// - SeeAlso: `.noContent`.
+            public var noContent: Operations.RetentionMessagesDeleteInstance.Output.NoContent {
+                get throws {
+                    switch self {
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/subscriptions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/subscriptions/get(retentionMessages_subscriptions_getToManyRelated)`.
+    public enum RetentionMessagesSubscriptionsGetToManyRelated {
+        public static let id: Swift.String = "retentionMessages_subscriptions_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// filter by attribute 'productId'
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/filter[productId]`.
+                public var filterProductId: [Swift.String]?
+                /// filter by attribute 'name'
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/filter[name]`.
+                public var filterName: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/filterStatePayload`.
+                @frozen public enum FilterStatePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case missingMetadata = "MISSING_METADATA"
+                    case readyToSubmit = "READY_TO_SUBMIT"
+                    case waitingForReview = "WAITING_FOR_REVIEW"
+                    case inReview = "IN_REVIEW"
+                    case developerActionNeeded = "DEVELOPER_ACTION_NEEDED"
+                    case pendingBinaryApproval = "PENDING_BINARY_APPROVAL"
+                    case approved = "APPROVED"
+                    case developerRemovedFromSale = "DEVELOPER_REMOVED_FROM_SALE"
+                    case removedFromSale = "REMOVED_FROM_SALE"
+                    case rejected = "REJECTED"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/filter[state]`.
+                public typealias filterStatePayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FilterStatePayloadPayload]
+                /// filter by attribute 'state'
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/filter[state]`.
+                public var filterState: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.filterStatePayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/SortPayload`.
+                @frozen public enum SortPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case minusName = "-name"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/sort`.
+                public typealias SortPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.SortPayloadPayload]
+                /// comma-separated list of sort expressions; resources will be sorted as specified
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/sort`.
+                public var sort: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.SortPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionsPayload`.
+                @frozen public enum FieldsSubscriptionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case productId = "productId"
+                    case familySharable = "familySharable"
+                    case state = "state"
+                    case subscriptionPeriod = "subscriptionPeriod"
+                    case reviewNote = "reviewNote"
+                    case groupLevel = "groupLevel"
+                    case multiSeatStatus = "multiSeatStatus"
+                    case marketSettings = "marketSettings"
+                    case subscriptionLocalizations = "subscriptionLocalizations"
+                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
+                    case group = "group"
+                    case introductoryOffers = "introductoryOffers"
+                    case promotionalOffers = "promotionalOffers"
+                    case offerCodes = "offerCodes"
+                    case prices = "prices"
+                    case pricePoints = "pricePoints"
+                    case promotedPurchase = "promotedPurchase"
+                    case subscriptionAvailability = "subscriptionAvailability"
+                    case winBackOffers = "winBackOffers"
+                    case images = "images"
+                    case planAvailabilities = "planAvailabilities"
+                    case versions = "versions"
+                    case retentionOffers = "retentionOffers"
+                    case retentionMessage = "retentionMessage"
+                    case retentionMessageOffers = "retentionMessageOffers"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptions]`.
+                public typealias fieldsSubscriptionsPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptions
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptions]`.
+                public var fieldsSubscriptions: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionLocalizationsPayload`.
+                @frozen public enum FieldsSubscriptionLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case locale = "locale"
+                    case description = "description"
+                    case state = "state"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionLocalizations]`.
+                public typealias fieldsSubscriptionLocalizationsPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionLocalizations]`.
+                public var fieldsSubscriptionLocalizations: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionAppStoreReviewScreenshotsPayload`.
+                @frozen public enum FieldsSubscriptionAppStoreReviewScreenshotsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case sourceFileChecksum = "sourceFileChecksum"
+                    case imageAsset = "imageAsset"
+                    case assetToken = "assetToken"
+                    case assetType = "assetType"
+                    case uploadOperations = "uploadOperations"
+                    case assetDeliveryState = "assetDeliveryState"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionAppStoreReviewScreenshots]`.
+                public typealias fieldsSubscriptionAppStoreReviewScreenshotsPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionAppStoreReviewScreenshotsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionAppStoreReviewScreenshots
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionAppStoreReviewScreenshots]`.
+                public var fieldsSubscriptionAppStoreReviewScreenshots: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAppStoreReviewScreenshotsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionGroupsPayload`.
+                @frozen public enum FieldsSubscriptionGroupsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case subscriptions = "subscriptions"
+                    case subscriptionGroupLocalizations = "subscriptionGroupLocalizations"
+                    case versions = "versions"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionGroups]`.
+                public typealias fieldsSubscriptionGroupsPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionGroupsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionGroups
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionGroups]`.
+                public var fieldsSubscriptionGroups: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionIntroductoryOffersPayload`.
+                @frozen public enum FieldsSubscriptionIntroductoryOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case startDate = "startDate"
+                    case endDate = "endDate"
+                    case duration = "duration"
+                    case offerMode = "offerMode"
+                    case numberOfPeriods = "numberOfPeriods"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case subscription = "subscription"
+                    case territory = "territory"
+                    case subscriptionPricePoint = "subscriptionPricePoint"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionIntroductoryOffers]`.
+                public typealias fieldsSubscriptionIntroductoryOffersPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionIntroductoryOffersPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionIntroductoryOffers
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionIntroductoryOffers]`.
+                public var fieldsSubscriptionIntroductoryOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionIntroductoryOffersPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionPromotionalOffersPayload`.
+                @frozen public enum FieldsSubscriptionPromotionalOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case duration = "duration"
+                    case name = "name"
+                    case numberOfPeriods = "numberOfPeriods"
+                    case offerCode = "offerCode"
+                    case offerMode = "offerMode"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case subscription = "subscription"
+                    case prices = "prices"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionPromotionalOffers]`.
+                public typealias fieldsSubscriptionPromotionalOffersPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionPromotionalOffersPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionPromotionalOffers
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionPromotionalOffers]`.
+                public var fieldsSubscriptionPromotionalOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPromotionalOffersPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionOfferCodesPayload`.
+                @frozen public enum FieldsSubscriptionOfferCodesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case name = "name"
+                    case customerEligibilities = "customerEligibilities"
+                    case offerEligibility = "offerEligibility"
+                    case duration = "duration"
+                    case offerMode = "offerMode"
+                    case numberOfPeriods = "numberOfPeriods"
+                    case totalNumberOfCodes = "totalNumberOfCodes"
+                    case productionCodeCount = "productionCodeCount"
+                    case sandboxCodeCount = "sandboxCodeCount"
+                    case active = "active"
+                    case autoRenewEnabled = "autoRenewEnabled"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case subscription = "subscription"
+                    case oneTimeUseCodes = "oneTimeUseCodes"
+                    case customCodes = "customCodes"
+                    case prices = "prices"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionOfferCodes]`.
+                public typealias fieldsSubscriptionOfferCodesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionOfferCodesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionOfferCodes
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionOfferCodes]`.
+                public var fieldsSubscriptionOfferCodes: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionPricesPayload`.
+                @frozen public enum FieldsSubscriptionPricesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case startDate = "startDate"
+                    case preserved = "preserved"
+                    case planType = "planType"
+                    case territory = "territory"
+                    case subscriptionPricePoint = "subscriptionPricePoint"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionPrices]`.
+                public typealias fieldsSubscriptionPricesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionPricesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionPrices
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionPrices]`.
+                public var fieldsSubscriptionPrices: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPricesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsPromotedPurchasesPayload`.
+                @frozen public enum FieldsPromotedPurchasesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case visibleForAllUsers = "visibleForAllUsers"
+                    case enabled = "enabled"
+                    case state = "state"
+                    case inAppPurchaseV2 = "inAppPurchaseV2"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[promotedPurchases]`.
+                public typealias fieldsPromotedPurchasesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsPromotedPurchasesPayloadPayload]
+                /// the fields to include for returned resources of type promotedPurchases
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[promotedPurchases]`.
+                public var fieldsPromotedPurchases: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsPromotedPurchasesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionAvailabilitiesPayload`.
+                @frozen public enum FieldsSubscriptionAvailabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case availableInNewTerritories = "availableInNewTerritories"
+                    case availableTerritories = "availableTerritories"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionAvailabilities]`.
+                public typealias fieldsSubscriptionAvailabilitiesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionAvailabilitiesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionAvailabilities
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionAvailabilities]`.
+                public var fieldsSubscriptionAvailabilities: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAvailabilitiesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsWinBackOffersPayload`.
+                @frozen public enum FieldsWinBackOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case offerId = "offerId"
+                    case duration = "duration"
+                    case offerMode = "offerMode"
+                    case periodCount = "periodCount"
+                    case customerEligibilityPaidSubscriptionDurationInMonths = "customerEligibilityPaidSubscriptionDurationInMonths"
+                    case customerEligibilityTimeSinceLastSubscribedInMonths = "customerEligibilityTimeSinceLastSubscribedInMonths"
+                    case customerEligibilityWaitBetweenOffersInMonths = "customerEligibilityWaitBetweenOffersInMonths"
+                    case startDate = "startDate"
+                    case endDate = "endDate"
+                    case priority = "priority"
+                    case promotionIntent = "promotionIntent"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case prices = "prices"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[winBackOffers]`.
+                public typealias fieldsWinBackOffersPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsWinBackOffersPayloadPayload]
+                /// the fields to include for returned resources of type winBackOffers
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[winBackOffers]`.
+                public var fieldsWinBackOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsWinBackOffersPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionImagesPayload`.
+                @frozen public enum FieldsSubscriptionImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case fileSize = "fileSize"
+                    case fileName = "fileName"
+                    case sourceFileChecksum = "sourceFileChecksum"
+                    case assetToken = "assetToken"
+                    case imageAsset = "imageAsset"
+                    case uploadOperations = "uploadOperations"
+                    case state = "state"
+                    case subscription = "subscription"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionImages]`.
+                public typealias fieldsSubscriptionImagesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionImagesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionImages
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionImages]`.
+                public var fieldsSubscriptionImages: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionImagesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionPlanAvailabilitiesPayload`.
+                @frozen public enum FieldsSubscriptionPlanAvailabilitiesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case availableInNewTerritories = "availableInNewTerritories"
+                    case planType = "planType"
+                    case availableTerritories = "availableTerritories"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionPlanAvailabilities]`.
+                public typealias fieldsSubscriptionPlanAvailabilitiesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionPlanAvailabilitiesPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionPlanAvailabilities
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionPlanAvailabilities]`.
+                public var fieldsSubscriptionPlanAvailabilities: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPlanAvailabilitiesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsSubscriptionVersionsPayload`.
+                @frozen public enum FieldsSubscriptionVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case version = "version"
+                    case state = "state"
+                    case subscription = "subscription"
+                    case image = "image"
+                    case images = "images"
+                    case localizations = "localizations"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionVersions]`.
+                public typealias fieldsSubscriptionVersionsPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionVersionsPayloadPayload]
+                /// the fields to include for returned resources of type subscriptionVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionVersions]`.
+                public var fieldsSubscriptionVersions: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsRetentionOffersPayload`.
+                @frozen public enum FieldsRetentionOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case offerId = "offerId"
+                    case duration = "duration"
+                    case offerMode = "offerMode"
+                    case periodCount = "periodCount"
+                    case customerEligibilityPaidSubscriptionDurationInMonths = "customerEligibilityPaidSubscriptionDurationInMonths"
+                    case customerEligibilityWaitBetweenOffersInMonths = "customerEligibilityWaitBetweenOffersInMonths"
+                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
+                    case subscription = "subscription"
+                    case prices = "prices"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[retentionOffers]`.
+                public typealias fieldsRetentionOffersPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsRetentionOffersPayloadPayload]
+                /// the fields to include for returned resources of type retentionOffers
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[retentionOffers]`.
+                public var fieldsRetentionOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsRetentionOffersPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsRetentionMessagesPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case subscriptionLocalizations = "subscriptionLocalizations"
+                    case appStoreReviewScreenshot = "appStoreReviewScreenshot"
+                    case group = "group"
+                    case introductoryOffers = "introductoryOffers"
+                    case promotionalOffers = "promotionalOffers"
+                    case offerCodes = "offerCodes"
+                    case prices = "prices"
+                    case promotedPurchase = "promotedPurchase"
+                    case subscriptionAvailability = "subscriptionAvailability"
+                    case winBackOffers = "winBackOffers"
+                    case images = "images"
+                    case planAvailabilities = "planAvailabilities"
+                    case versions = "versions"
+                    case retentionOffers = "retentionOffers"
+                    case retentionMessage = "retentionMessage"
+                    case retentionMessageOffers = "retentionMessageOffers"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/include`.
+                public typealias IncludePayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/include`.
+                public var include: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.IncludePayload?
+                /// maximum number of related subscriptionLocalizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[subscriptionLocalizations]`.
+                public var limitSubscriptionLocalizations: Swift.Int?
+                /// maximum number of related introductoryOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[introductoryOffers]`.
+                public var limitIntroductoryOffers: Swift.Int?
+                /// maximum number of related promotionalOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[promotionalOffers]`.
+                public var limitPromotionalOffers: Swift.Int?
+                /// maximum number of related offerCodes returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[offerCodes]`.
+                public var limitOfferCodes: Swift.Int?
+                /// maximum number of related prices returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[prices]`.
+                public var limitPrices: Swift.Int?
+                /// maximum number of related winBackOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[winBackOffers]`.
+                public var limitWinBackOffers: Swift.Int?
+                /// maximum number of related images returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[images]`.
+                public var limitImages: Swift.Int?
+                /// maximum number of related planAvailabilities returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[planAvailabilities]`.
+                public var limitPlanAvailabilities: Swift.Int?
+                /// maximum number of related versions returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[versions]`.
+                public var limitVersions: Swift.Int?
+                /// maximum number of related retentionOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[retentionOffers]`.
+                public var limitRetentionOffers: Swift.Int?
+                /// maximum number of related retentionMessageOffers returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/limit[retentionMessageOffers]`.
+                public var limitRetentionMessageOffers: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterProductId: filter by attribute 'productId'
+                ///   - filterName: filter by attribute 'name'
+                ///   - filterState: filter by attribute 'state'
+                ///   - sort: comma-separated list of sort expressions; resources will be sorted as specified
+                ///   - fieldsSubscriptions: the fields to include for returned resources of type subscriptions
+                ///   - fieldsSubscriptionLocalizations: the fields to include for returned resources of type subscriptionLocalizations
+                ///   - fieldsSubscriptionAppStoreReviewScreenshots: the fields to include for returned resources of type subscriptionAppStoreReviewScreenshots
+                ///   - fieldsSubscriptionGroups: the fields to include for returned resources of type subscriptionGroups
+                ///   - fieldsSubscriptionIntroductoryOffers: the fields to include for returned resources of type subscriptionIntroductoryOffers
+                ///   - fieldsSubscriptionPromotionalOffers: the fields to include for returned resources of type subscriptionPromotionalOffers
+                ///   - fieldsSubscriptionOfferCodes: the fields to include for returned resources of type subscriptionOfferCodes
+                ///   - fieldsSubscriptionPrices: the fields to include for returned resources of type subscriptionPrices
+                ///   - fieldsPromotedPurchases: the fields to include for returned resources of type promotedPurchases
+                ///   - fieldsSubscriptionAvailabilities: the fields to include for returned resources of type subscriptionAvailabilities
+                ///   - fieldsWinBackOffers: the fields to include for returned resources of type winBackOffers
+                ///   - fieldsSubscriptionImages: the fields to include for returned resources of type subscriptionImages
+                ///   - fieldsSubscriptionPlanAvailabilities: the fields to include for returned resources of type subscriptionPlanAvailabilities
+                ///   - fieldsSubscriptionVersions: the fields to include for returned resources of type subscriptionVersions
+                ///   - fieldsRetentionOffers: the fields to include for returned resources of type retentionOffers
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitSubscriptionLocalizations: maximum number of related subscriptionLocalizations returned (when they are included)
+                ///   - limitIntroductoryOffers: maximum number of related introductoryOffers returned (when they are included)
+                ///   - limitPromotionalOffers: maximum number of related promotionalOffers returned (when they are included)
+                ///   - limitOfferCodes: maximum number of related offerCodes returned (when they are included)
+                ///   - limitPrices: maximum number of related prices returned (when they are included)
+                ///   - limitWinBackOffers: maximum number of related winBackOffers returned (when they are included)
+                ///   - limitImages: maximum number of related images returned (when they are included)
+                ///   - limitPlanAvailabilities: maximum number of related planAvailabilities returned (when they are included)
+                ///   - limitVersions: maximum number of related versions returned (when they are included)
+                ///   - limitRetentionOffers: maximum number of related retentionOffers returned (when they are included)
+                ///   - limitRetentionMessageOffers: maximum number of related retentionMessageOffers returned (when they are included)
+                public init(
+                    filterProductId: [Swift.String]? = nil,
+                    filterName: [Swift.String]? = nil,
+                    filterState: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.filterStatePayload? = nil,
+                    sort: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.SortPayload? = nil,
+                    fieldsSubscriptions: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionsPayload? = nil,
+                    fieldsSubscriptionLocalizations: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionLocalizationsPayload? = nil,
+                    fieldsSubscriptionAppStoreReviewScreenshots: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAppStoreReviewScreenshotsPayload? = nil,
+                    fieldsSubscriptionGroups: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionGroupsPayload? = nil,
+                    fieldsSubscriptionIntroductoryOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionIntroductoryOffersPayload? = nil,
+                    fieldsSubscriptionPromotionalOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPromotionalOffersPayload? = nil,
+                    fieldsSubscriptionOfferCodes: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionOfferCodesPayload? = nil,
+                    fieldsSubscriptionPrices: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPricesPayload? = nil,
+                    fieldsPromotedPurchases: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsPromotedPurchasesPayload? = nil,
+                    fieldsSubscriptionAvailabilities: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionAvailabilitiesPayload? = nil,
+                    fieldsWinBackOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsWinBackOffersPayload? = nil,
+                    fieldsSubscriptionImages: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionImagesPayload? = nil,
+                    fieldsSubscriptionPlanAvailabilities: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionPlanAvailabilitiesPayload? = nil,
+                    fieldsSubscriptionVersions: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsSubscriptionVersionsPayload? = nil,
+                    fieldsRetentionOffers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsRetentionOffersPayload? = nil,
+                    fieldsRetentionMessages: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.fieldsRetentionMessagesPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.IncludePayload? = nil,
+                    limitSubscriptionLocalizations: Swift.Int? = nil,
+                    limitIntroductoryOffers: Swift.Int? = nil,
+                    limitPromotionalOffers: Swift.Int? = nil,
+                    limitOfferCodes: Swift.Int? = nil,
+                    limitPrices: Swift.Int? = nil,
+                    limitWinBackOffers: Swift.Int? = nil,
+                    limitImages: Swift.Int? = nil,
+                    limitPlanAvailabilities: Swift.Int? = nil,
+                    limitVersions: Swift.Int? = nil,
+                    limitRetentionOffers: Swift.Int? = nil,
+                    limitRetentionMessageOffers: Swift.Int? = nil
+                ) {
+                    self.filterProductId = filterProductId
+                    self.filterName = filterName
+                    self.filterState = filterState
+                    self.sort = sort
+                    self.fieldsSubscriptions = fieldsSubscriptions
+                    self.fieldsSubscriptionLocalizations = fieldsSubscriptionLocalizations
+                    self.fieldsSubscriptionAppStoreReviewScreenshots = fieldsSubscriptionAppStoreReviewScreenshots
+                    self.fieldsSubscriptionGroups = fieldsSubscriptionGroups
+                    self.fieldsSubscriptionIntroductoryOffers = fieldsSubscriptionIntroductoryOffers
+                    self.fieldsSubscriptionPromotionalOffers = fieldsSubscriptionPromotionalOffers
+                    self.fieldsSubscriptionOfferCodes = fieldsSubscriptionOfferCodes
+                    self.fieldsSubscriptionPrices = fieldsSubscriptionPrices
+                    self.fieldsPromotedPurchases = fieldsPromotedPurchases
+                    self.fieldsSubscriptionAvailabilities = fieldsSubscriptionAvailabilities
+                    self.fieldsWinBackOffers = fieldsWinBackOffers
+                    self.fieldsSubscriptionImages = fieldsSubscriptionImages
+                    self.fieldsSubscriptionPlanAvailabilities = fieldsSubscriptionPlanAvailabilities
+                    self.fieldsSubscriptionVersions = fieldsSubscriptionVersions
+                    self.fieldsRetentionOffers = fieldsRetentionOffers
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
+                    self.limit = limit
+                    self.include = include
+                    self.limitSubscriptionLocalizations = limitSubscriptionLocalizations
+                    self.limitIntroductoryOffers = limitIntroductoryOffers
+                    self.limitPromotionalOffers = limitPromotionalOffers
+                    self.limitOfferCodes = limitOfferCodes
+                    self.limitPrices = limitPrices
+                    self.limitWinBackOffers = limitWinBackOffers
+                    self.limitImages = limitImages
+                    self.limitPlanAvailabilities = limitPlanAvailabilities
+                    self.limitVersions = limitVersions
+                    self.limitRetentionOffers = limitRetentionOffers
+                    self.limitRetentionMessageOffers = limitRetentionMessageOffers
+                }
+            }
+            public var query: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesSubscriptionsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesSubscriptionsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Path,
+                query: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.SubscriptionsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.SubscriptionsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of Subscriptions
+            ///
+            /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/subscriptions/get(retentionMessages_subscriptions_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.RetentionMessagesSubscriptionsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessages/{id}/versions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/versions/get(retentionMessages_versions_getToManyRelated)`.
+    public enum RetentionMessagesVersionsGetToManyRelated {
+        public static let id: Swift.String = "retentionMessages_versions_getToManyRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsRetentionMessagesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fieldsRetentionMessageLocalizationsPayload`.
+                @frozen public enum FieldsRetentionMessageLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case header = "header"
+                    case body = "body"
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[retentionMessageLocalizations]`.
+                public typealias fieldsRetentionMessageLocalizationsPayload = [Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.FieldsRetentionMessageLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[retentionMessageLocalizations]`.
+                public var fieldsRetentionMessageLocalizations: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsRetentionMessageLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fieldsAppAssetLibraryPlacementsPayload`.
+                @frozen public enum FieldsAppAssetLibraryPlacementsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case mediaType = "mediaType"
+                    case placementType = "placementType"
+                    case placementGroup = "placementGroup"
+                    case createdDate = "createdDate"
+                    case lastModifiedDate = "lastModifiedDate"
+                    case state = "state"
+                    case stateDetails = "stateDetails"
+                    case image = "image"
+                    case video = "video"
+                    case appEventLocalization = "appEventLocalization"
+                    case appStoreVersionLocalization = "appStoreVersionLocalization"
+                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
+                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[appAssetLibraryPlacements]`.
+                public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
+                /// the fields to include for returned resources of type appAssetLibraryPlacements
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/fields[appAssetLibraryPlacements]`.
+                public var fieldsAppAssetLibraryPlacements: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsAppAssetLibraryPlacementsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/include`.
+                public typealias IncludePayload = [Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/include`.
+                public var include: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.IncludePayload?
+                /// maximum number of related localizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/query/limit[localizations]`.
+                public var limitLocalizations: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
+                ///   - fieldsRetentionMessageLocalizations: the fields to include for returned resources of type retentionMessageLocalizations
+                ///   - fieldsAppAssetLibraryPlacements: the fields to include for returned resources of type appAssetLibraryPlacements
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitLocalizations: maximum number of related localizations returned (when they are included)
+                public init(
+                    fieldsRetentionMessageVersions: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
+                    fieldsRetentionMessages: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsRetentionMessagesPayload? = nil,
+                    fieldsRetentionMessageLocalizations: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsRetentionMessageLocalizationsPayload? = nil,
+                    fieldsAppAssetLibraryPlacements: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.fieldsAppAssetLibraryPlacementsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query.IncludePayload? = nil,
+                    limitLocalizations: Swift.Int? = nil
+                ) {
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
+                    self.fieldsRetentionMessageLocalizations = fieldsRetentionMessageLocalizations
+                    self.fieldsAppAssetLibraryPlacements = fieldsAppAssetLibraryPlacements
+                    self.limit = limit
+                    self.include = include
+                    self.limitLocalizations = limitLocalizations
+                }
+            }
+            public var query: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesVersionsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessagesVersionsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Path,
+                query: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.RetentionMessagesVersionsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/versions/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageVersionsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.RetentionMessageVersionsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.RetentionMessagesVersionsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.RetentionMessagesVersionsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of RetentionMessageVersions
+            ///
+            /// - Remark: Generated from `#/paths//v1/retentionMessages/{id}/versions/get(retentionMessages_versions_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.RetentionMessagesVersionsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.RetentionMessagesVersionsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /v1/retentionMessageVersions`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/post(retentionMessageVersions_createInstance)`.
+    public enum RetentionMessageVersionsCreateInstance {
+        public static let id: Swift.String = "retentionMessageVersions_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.RetentionMessageVersionsCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.RetentionMessageVersionCreateRequest)
+            }
+            public var body: Operations.RetentionMessageVersionsCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
             ///   - headers:
             ///   - body:
             public init(
-                path: Operations.ReviewSubmissionsUpdateInstance.Input.Path,
-                headers: Operations.ReviewSubmissionsUpdateInstance.Input.Headers = .init(),
-                body: Operations.ReviewSubmissionsUpdateInstance.Input.Body
+                headers: Operations.RetentionMessageVersionsCreateInstance.Input.Headers = .init(),
+                body: Operations.RetentionMessageVersionsCreateInstance.Input.Body
             ) {
-                self.path = path
                 self.headers = headers
                 self.body = body
             }
         }
         @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/PATCH/responses/200/content`.
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/POST/responses/201/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ReviewSubmissionResponse)
+                    /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageVersionResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ReviewSubmissionResponse {
+                    public var json: Components.Schemas.RetentionMessageVersionResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -1682,26 +2322,262 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.ReviewSubmissionsUpdateInstance.Output.Ok.Body
+                public var body: Operations.RetentionMessageVersionsCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.RetentionMessageVersionsCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single RetentionMessageVersion
+            ///
+            /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/post(retentionMessageVersions_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.RetentionMessageVersionsCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.RetentionMessageVersionsCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/get(retentionMessageVersions_getInstance)`.
+    public enum RetentionMessageVersionsGetInstance {
+        public static let id: Swift.String = "retentionMessageVersions_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.RetentionMessageVersionsGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case state = "state"
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.RetentionMessageVersionsGetInstance.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsRetentionMessageVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fieldsRetentionMessagesPayload`.
+                @frozen public enum FieldsRetentionMessagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case referenceName = "referenceName"
+                    case versions = "versions"
+                    case subscriptions = "subscriptions"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[retentionMessages]`.
+                public typealias fieldsRetentionMessagesPayload = [Operations.RetentionMessageVersionsGetInstance.Input.Query.FieldsRetentionMessagesPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessages
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[retentionMessages]`.
+                public var fieldsRetentionMessages: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsRetentionMessagesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fieldsRetentionMessageLocalizationsPayload`.
+                @frozen public enum FieldsRetentionMessageLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case header = "header"
+                    case body = "body"
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[retentionMessageLocalizations]`.
+                public typealias fieldsRetentionMessageLocalizationsPayload = [Operations.RetentionMessageVersionsGetInstance.Input.Query.FieldsRetentionMessageLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageLocalizations
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[retentionMessageLocalizations]`.
+                public var fieldsRetentionMessageLocalizations: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsRetentionMessageLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fieldsAppAssetLibraryPlacementsPayload`.
+                @frozen public enum FieldsAppAssetLibraryPlacementsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case mediaType = "mediaType"
+                    case placementType = "placementType"
+                    case placementGroup = "placementGroup"
+                    case createdDate = "createdDate"
+                    case lastModifiedDate = "lastModifiedDate"
+                    case state = "state"
+                    case stateDetails = "stateDetails"
+                    case image = "image"
+                    case video = "video"
+                    case appEventLocalization = "appEventLocalization"
+                    case appStoreVersionLocalization = "appStoreVersionLocalization"
+                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
+                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[appAssetLibraryPlacements]`.
+                public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.RetentionMessageVersionsGetInstance.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
+                /// the fields to include for returned resources of type appAssetLibraryPlacements
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/fields[appAssetLibraryPlacements]`.
+                public var fieldsAppAssetLibraryPlacements: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case retentionMessage = "retentionMessage"
+                    case localizations = "localizations"
+                    case placement = "placement"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.RetentionMessageVersionsGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/include`.
+                public var include: Operations.RetentionMessageVersionsGetInstance.Input.Query.IncludePayload?
+                /// maximum number of related localizations returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/query/limit[localizations]`.
+                public var limitLocalizations: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
+                ///   - fieldsRetentionMessages: the fields to include for returned resources of type retentionMessages
+                ///   - fieldsRetentionMessageLocalizations: the fields to include for returned resources of type retentionMessageLocalizations
+                ///   - fieldsAppAssetLibraryPlacements: the fields to include for returned resources of type appAssetLibraryPlacements
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitLocalizations: maximum number of related localizations returned (when they are included)
+                public init(
+                    fieldsRetentionMessageVersions: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
+                    fieldsRetentionMessages: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsRetentionMessagesPayload? = nil,
+                    fieldsRetentionMessageLocalizations: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsRetentionMessageLocalizationsPayload? = nil,
+                    fieldsAppAssetLibraryPlacements: Operations.RetentionMessageVersionsGetInstance.Input.Query.fieldsAppAssetLibraryPlacementsPayload? = nil,
+                    include: Operations.RetentionMessageVersionsGetInstance.Input.Query.IncludePayload? = nil,
+                    limitLocalizations: Swift.Int? = nil
+                ) {
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
+                    self.fieldsRetentionMessages = fieldsRetentionMessages
+                    self.fieldsRetentionMessageLocalizations = fieldsRetentionMessageLocalizations
+                    self.fieldsAppAssetLibraryPlacements = fieldsAppAssetLibraryPlacements
+                    self.include = include
+                    self.limitLocalizations = limitLocalizations
+                }
+            }
+            public var query: Operations.RetentionMessageVersionsGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsGetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.RetentionMessageVersionsGetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.RetentionMessageVersionsGetInstance.Input.Path,
+                query: Operations.RetentionMessageVersionsGetInstance.Input.Query = .init(),
+                headers: Operations.RetentionMessageVersionsGetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageVersionResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.RetentionMessageVersionResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.RetentionMessageVersionsGetInstance.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.ReviewSubmissionsUpdateInstance.Output.Ok.Body) {
+                public init(body: Operations.RetentionMessageVersionsGetInstance.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// Single ReviewSubmission
+            /// Single RetentionMessageVersion
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/patch(reviewSubmissions_updateInstance)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/get(retentionMessageVersions_getInstance)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.ReviewSubmissionsUpdateInstance.Output.Ok)
+            case ok(Operations.RetentionMessageVersionsGetInstance.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.ReviewSubmissionsUpdateInstance.Output.Ok {
+            public var ok: Operations.RetentionMessageVersionsGetInstance.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -1745,16 +2621,16 @@ extension Operations {
             }
         }
     }
-    /// - Remark: HTTP `GET /v1/reviewSubmissions/{id}/items`.
-    /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/items/get(reviewSubmissions_items_getToManyRelated)`.
-    public enum ReviewSubmissionsItemsGetToManyRelated {
-        public static let id: Swift.String = "reviewSubmissions_items_getToManyRelated"
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/localizations`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/localizations/get(retentionMessageVersions_localizations_getToManyRelated)`.
+    public enum RetentionMessageVersionsLocalizationsGetToManyRelated {
+        public static let id: Swift.String = "retentionMessageVersions_localizations_getToManyRelated"
         public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/path`.
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/path`.
             public struct Path: Sendable, Hashable {
                 /// the id of the requested resource
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/path/id`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/path/id`.
                 public var id: Swift.String
                 /// Creates a new `Path`.
                 ///
@@ -1764,125 +2640,226 @@ extension Operations {
                     self.id = id
                 }
             }
-            public var path: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query`.
+            public var path: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query`.
             public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsReviewSubmissionItemsPayload`.
-                @frozen public enum FieldsReviewSubmissionItemsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case state = "state"
-                    case appStoreVersion = "appStoreVersion"
-                    case appCustomProductPageVersion = "appCustomProductPageVersion"
-                    case appStoreVersionExperiment = "appStoreVersionExperiment"
-                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
-                    case appEvent = "appEvent"
-                    case appAssetLibraryImage = "appAssetLibraryImage"
-                    case appAssetLibraryVideo = "appAssetLibraryVideo"
-                    case backgroundAssetVersion = "backgroundAssetVersion"
-                    case gameCenterAchievementVersion = "gameCenterAchievementVersion"
-                    case gameCenterActivityVersion = "gameCenterActivityVersion"
-                    case gameCenterChallengeVersion = "gameCenterChallengeVersion"
-                    case gameCenterLeaderboardSetVersion = "gameCenterLeaderboardSetVersion"
-                    case gameCenterLeaderboardVersion = "gameCenterLeaderboardVersion"
-                    case inAppPurchaseVersion = "inAppPurchaseVersion"
-                    case subscriptionVersion = "subscriptionVersion"
-                    case subscriptionGroupVersion = "subscriptionGroupVersion"
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/fieldsRetentionMessageLocalizationsPayload`.
+                @frozen public enum FieldsRetentionMessageLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case header = "header"
+                    case body = "body"
                     case retentionMessageVersion = "retentionMessageVersion"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[reviewSubmissionItems]`.
-                public typealias fieldsReviewSubmissionItemsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsReviewSubmissionItemsPayloadPayload]
-                /// the fields to include for returned resources of type reviewSubmissionItems
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/fields[retentionMessageLocalizations]`.
+                public typealias fieldsRetentionMessageLocalizationsPayload = [Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.FieldsRetentionMessageLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageLocalizations
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[reviewSubmissionItems]`.
-                public var fieldsReviewSubmissionItems: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsReviewSubmissionItemsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsAppStoreVersionsPayload`.
-                @frozen public enum FieldsAppStoreVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platform = "platform"
-                    case versionString = "versionString"
-                    case appStoreState = "appStoreState"
-                    case appVersionState = "appVersionState"
-                    case copyright = "copyright"
-                    case reviewType = "reviewType"
-                    case releaseType = "releaseType"
-                    case earliestReleaseDate = "earliestReleaseDate"
-                    case usesIdfa = "usesIdfa"
-                    case downloadable = "downloadable"
-                    case createdDate = "createdDate"
-                    case app = "app"
-                    case appStoreVersionLocalizations = "appStoreVersionLocalizations"
-                    case build = "build"
-                    case appStoreVersionPhasedRelease = "appStoreVersionPhasedRelease"
-                    case gameCenterAppVersion = "gameCenterAppVersion"
-                    case routingAppCoverage = "routingAppCoverage"
-                    case appStoreReviewDetail = "appStoreReviewDetail"
-                    case appStoreVersionSubmission = "appStoreVersionSubmission"
-                    case appClipDefaultExperience = "appClipDefaultExperience"
-                    case appStoreVersionExperiments = "appStoreVersionExperiments"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case customerReviews = "customerReviews"
-                    case alternativeDistributionPackage = "alternativeDistributionPackage"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appStoreVersions]`.
-                public typealias fieldsAppStoreVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsAppStoreVersionsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appStoreVersions]`.
-                public var fieldsAppStoreVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppStoreVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsAppCustomProductPageVersionsPayload`.
-                @frozen public enum FieldsAppCustomProductPageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/fields[retentionMessageLocalizations]`.
+                public var fieldsRetentionMessageLocalizations: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.fieldsRetentionMessageLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/fieldsRetentionMessageVersionsPayload`.
+                @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case state = "state"
-                    case deepLink = "deepLink"
-                    case appCustomProductPage = "appCustomProductPage"
-                    case appCustomProductPageLocalizations = "appCustomProductPageLocalizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appCustomProductPageVersions]`.
-                public typealias fieldsAppCustomProductPageVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsAppCustomProductPageVersionsPayloadPayload]
-                /// the fields to include for returned resources of type appCustomProductPageVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appCustomProductPageVersions]`.
-                public var fieldsAppCustomProductPageVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppCustomProductPageVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsAppStoreVersionExperimentsPayload`.
-                @frozen public enum FieldsAppStoreVersionExperimentsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case name = "name"
-                    case trafficProportion = "trafficProportion"
-                    case state = "state"
-                    case reviewRequired = "reviewRequired"
-                    case startDate = "startDate"
-                    case endDate = "endDate"
-                    case appStoreVersion = "appStoreVersion"
-                    case appStoreVersionExperimentTreatments = "appStoreVersionExperimentTreatments"
-                    case platform = "platform"
-                    case app = "app"
-                    case latestControlVersion = "latestControlVersion"
-                    case controlVersions = "controlVersions"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appStoreVersionExperiments]`.
-                public typealias fieldsAppStoreVersionExperimentsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsAppStoreVersionExperimentsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersionExperiments
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appStoreVersionExperiments]`.
-                public var fieldsAppStoreVersionExperiments: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsAppEventsPayload`.
-                @frozen public enum FieldsAppEventsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case referenceName = "referenceName"
-                    case badge = "badge"
-                    case eventState = "eventState"
-                    case deepLink = "deepLink"
-                    case purchaseRequirement = "purchaseRequirement"
-                    case primaryLocale = "primaryLocale"
-                    case priority = "priority"
-                    case purpose = "purpose"
-                    case territorySchedules = "territorySchedules"
-                    case archivedTerritorySchedules = "archivedTerritorySchedules"
+                    case retentionMessage = "retentionMessage"
                     case localizations = "localizations"
+                    case placement = "placement"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appEvents]`.
-                public typealias fieldsAppEventsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsAppEventsPayloadPayload]
-                /// the fields to include for returned resources of type appEvents
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// the fields to include for returned resources of type retentionMessageVersions
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appEvents]`.
-                public var fieldsAppEvents: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppEventsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsAppAssetLibraryImagesPayload`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/include`.
+                public typealias IncludePayload = [Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/query/include`.
+                public var include: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.IncludePayload?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsRetentionMessageLocalizations: the fields to include for returned resources of type retentionMessageLocalizations
+                ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                public init(
+                    fieldsRetentionMessageLocalizations: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.fieldsRetentionMessageLocalizationsPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query.IncludePayload? = nil
+                ) {
+                    self.fieldsRetentionMessageLocalizations = fieldsRetentionMessageLocalizations
+                    self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
+                    self.limit = limit
+                    self.include = include
+                }
+            }
+            public var query: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Path,
+                query: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Query = .init(),
+                headers: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/localizations/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.RetentionMessageLocalizationsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.RetentionMessageLocalizationsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of RetentionMessageLocalizations
+            ///
+            /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/localizations/get(retentionMessageVersions_localizations_getToManyRelated)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.RetentionMessageVersionsLocalizationsGetToManyRelated.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/retentionMessageVersions/{id}/placement`.
+    /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/placement/get(retentionMessageVersions_placement_getToOneRelated)`.
+    public enum RetentionMessageVersionsPlacementGetToOneRelated {
+        public static let id: Swift.String = "retentionMessageVersions_placement_getToOneRelated"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Path
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsAppAssetLibraryPlacementsPayload`.
+                @frozen public enum FieldsAppAssetLibraryPlacementsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case mediaType = "mediaType"
+                    case placementType = "placementType"
+                    case placementGroup = "placementGroup"
+                    case createdDate = "createdDate"
+                    case lastModifiedDate = "lastModifiedDate"
+                    case state = "state"
+                    case stateDetails = "stateDetails"
+                    case image = "image"
+                    case video = "video"
+                    case appEventLocalization = "appEventLocalization"
+                    case appStoreVersionLocalization = "appStoreVersionLocalization"
+                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
+                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
+                    case retentionMessageVersion = "retentionMessageVersion"
+                }
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appAssetLibraryPlacements]`.
+                public typealias fieldsAppAssetLibraryPlacementsPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsAppAssetLibraryPlacementsPayloadPayload]
+                /// the fields to include for returned resources of type appAssetLibraryPlacements
+                ///
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appAssetLibraryPlacements]`.
+                public var fieldsAppAssetLibraryPlacements: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppAssetLibraryPlacementsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsAppAssetLibraryImagesPayload`.
                 @frozen public enum FieldsAppAssetLibraryImagesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case category = "category"
                     case createdDate = "createdDate"
@@ -1897,13 +2874,13 @@ extension Operations {
                     case uploadOperations = "uploadOperations"
                     case placements = "placements"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appAssetLibraryImages]`.
-                public typealias fieldsAppAssetLibraryImagesPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsAppAssetLibraryImagesPayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appAssetLibraryImages]`.
+                public typealias fieldsAppAssetLibraryImagesPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsAppAssetLibraryImagesPayloadPayload]
                 /// the fields to include for returned resources of type appAssetLibraryImages
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appAssetLibraryImages]`.
-                public var fieldsAppAssetLibraryImages: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppAssetLibraryImagesPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsAppAssetLibraryVideosPayload`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appAssetLibraryImages]`.
+                public var fieldsAppAssetLibraryImages: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppAssetLibraryImagesPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsAppAssetLibraryVideosPayload`.
                 @frozen public enum FieldsAppAssetLibraryVideosPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case category = "category"
                     case createdDate = "createdDate"
@@ -1920,267 +2897,156 @@ extension Operations {
                     case videoAsset = "videoAsset"
                     case placements = "placements"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appAssetLibraryVideos]`.
-                public typealias fieldsAppAssetLibraryVideosPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsAppAssetLibraryVideosPayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appAssetLibraryVideos]`.
+                public typealias fieldsAppAssetLibraryVideosPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsAppAssetLibraryVideosPayloadPayload]
                 /// the fields to include for returned resources of type appAssetLibraryVideos
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[appAssetLibraryVideos]`.
-                public var fieldsAppAssetLibraryVideos: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppAssetLibraryVideosPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsBackgroundAssetVersionsPayload`.
-                @frozen public enum FieldsBackgroundAssetVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case createdDate = "createdDate"
-                    case platforms = "platforms"
-                    case state = "state"
-                    case stateDetails = "stateDetails"
-                    case version = "version"
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appAssetLibraryVideos]`.
+                public var fieldsAppAssetLibraryVideos: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppAssetLibraryVideosPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsAppEventLocalizationsPayload`.
+                @frozen public enum FieldsAppEventLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case locale = "locale"
-                    case backgroundAsset = "backgroundAsset"
-                    case internalBetaRelease = "internalBetaRelease"
-                    case externalBetaRelease = "externalBetaRelease"
-                    case appStoreRelease = "appStoreRelease"
-                    case assetFile = "assetFile"
-                    case manifestFile = "manifestFile"
-                    case backgroundAssetUploadFiles = "backgroundAssetUploadFiles"
+                    case name = "name"
+                    case shortDescription = "shortDescription"
+                    case longDescription = "longDescription"
+                    case appEvent = "appEvent"
+                    case appEventScreenshots = "appEventScreenshots"
+                    case appEventVideoClips = "appEventVideoClips"
+                    case placements = "placements"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[backgroundAssetVersions]`.
-                public typealias fieldsBackgroundAssetVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsBackgroundAssetVersionsPayloadPayload]
-                /// the fields to include for returned resources of type backgroundAssetVersions
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appEventLocalizations]`.
+                public typealias fieldsAppEventLocalizationsPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsAppEventLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appEventLocalizations
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[backgroundAssetVersions]`.
-                public var fieldsBackgroundAssetVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsBackgroundAssetVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsGameCenterAchievementVersionsPayload`.
-                @frozen public enum FieldsGameCenterAchievementVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case achievement = "achievement"
-                    case localizations = "localizations"
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appEventLocalizations]`.
+                public var fieldsAppEventLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppEventLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsAppStoreVersionLocalizationsPayload`.
+                @frozen public enum FieldsAppStoreVersionLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case description = "description"
+                    case locale = "locale"
+                    case keywords = "keywords"
+                    case marketingUrl = "marketingUrl"
+                    case promotionalText = "promotionalText"
+                    case supportUrl = "supportUrl"
+                    case whatsNew = "whatsNew"
+                    case appStoreVersion = "appStoreVersion"
+                    case appScreenshotSets = "appScreenshotSets"
+                    case appPreviewSets = "appPreviewSets"
+                    case searchKeywords = "searchKeywords"
+                    case placements = "placements"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterAchievementVersions]`.
-                public typealias fieldsGameCenterAchievementVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsGameCenterAchievementVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterAchievementVersions
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appStoreVersionLocalizations]`.
+                public typealias fieldsAppStoreVersionLocalizationsPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsAppStoreVersionLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionLocalizations
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterAchievementVersions]`.
-                public var fieldsGameCenterAchievementVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterAchievementVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsGameCenterActivityVersionsPayload`.
-                @frozen public enum FieldsGameCenterActivityVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case fallbackUrl = "fallbackUrl"
-                    case activity = "activity"
-                    case localizations = "localizations"
-                    case defaultImage = "defaultImage"
-                    case releases = "releases"
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appStoreVersionLocalizations]`.
+                public var fieldsAppStoreVersionLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppStoreVersionLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsAppCustomProductPageLocalizationsPayload`.
+                @frozen public enum FieldsAppCustomProductPageLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case promotionalText = "promotionalText"
+                    case appCustomProductPageVersion = "appCustomProductPageVersion"
+                    case appScreenshotSets = "appScreenshotSets"
+                    case appPreviewSets = "appPreviewSets"
+                    case searchKeywords = "searchKeywords"
+                    case placements = "placements"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterActivityVersions]`.
-                public typealias fieldsGameCenterActivityVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsGameCenterActivityVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterActivityVersions
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appCustomProductPageLocalizations]`.
+                public typealias fieldsAppCustomProductPageLocalizationsPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsAppCustomProductPageLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appCustomProductPageLocalizations
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterActivityVersions]`.
-                public var fieldsGameCenterActivityVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterActivityVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsGameCenterChallengeVersionsPayload`.
-                @frozen public enum FieldsGameCenterChallengeVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case challenge = "challenge"
-                    case localizations = "localizations"
-                    case releases = "releases"
-                    case defaultImage = "defaultImage"
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appCustomProductPageLocalizations]`.
+                public var fieldsAppCustomProductPageLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppCustomProductPageLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload`.
+                @frozen public enum FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case locale = "locale"
+                    case appStoreVersionExperimentTreatment = "appStoreVersionExperimentTreatment"
+                    case appScreenshotSets = "appScreenshotSets"
+                    case appPreviewSets = "appPreviewSets"
+                    case placements = "placements"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterChallengeVersions]`.
-                public typealias fieldsGameCenterChallengeVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsGameCenterChallengeVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterChallengeVersions
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
+                public typealias fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsAppStoreVersionExperimentTreatmentLocalizationsPayloadPayload]
+                /// the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterChallengeVersions]`.
-                public var fieldsGameCenterChallengeVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterChallengeVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsGameCenterLeaderboardSetVersionsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardSetVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case leaderboardSet = "leaderboardSet"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterLeaderboardSetVersions]`.
-                public typealias fieldsGameCenterLeaderboardSetVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsGameCenterLeaderboardSetVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardSetVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterLeaderboardSetVersions]`.
-                public var fieldsGameCenterLeaderboardSetVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardSetVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsGameCenterLeaderboardVersionsPayload`.
-                @frozen public enum FieldsGameCenterLeaderboardVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case leaderboard = "leaderboard"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public typealias fieldsGameCenterLeaderboardVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsGameCenterLeaderboardVersionsPayloadPayload]
-                /// the fields to include for returned resources of type gameCenterLeaderboardVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[gameCenterLeaderboardVersions]`.
-                public var fieldsGameCenterLeaderboardVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsInAppPurchaseVersionsPayload`.
-                @frozen public enum FieldsInAppPurchaseVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case inAppPurchase = "inAppPurchase"
-                    case image = "image"
-                    case images = "images"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[inAppPurchaseVersions]`.
-                public typealias fieldsInAppPurchaseVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsInAppPurchaseVersionsPayloadPayload]
-                /// the fields to include for returned resources of type inAppPurchaseVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[inAppPurchaseVersions]`.
-                public var fieldsInAppPurchaseVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsInAppPurchaseVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsSubscriptionVersionsPayload`.
-                @frozen public enum FieldsSubscriptionVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case subscription = "subscription"
-                    case image = "image"
-                    case images = "images"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[subscriptionVersions]`.
-                public typealias fieldsSubscriptionVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsSubscriptionVersionsPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[subscriptionVersions]`.
-                public var fieldsSubscriptionVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsSubscriptionVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsSubscriptionGroupVersionsPayload`.
-                @frozen public enum FieldsSubscriptionGroupVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case version = "version"
-                    case state = "state"
-                    case subscriptionGroup = "subscriptionGroup"
-                    case localizations = "localizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[subscriptionGroupVersions]`.
-                public typealias fieldsSubscriptionGroupVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsSubscriptionGroupVersionsPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionGroupVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[subscriptionGroupVersions]`.
-                public var fieldsSubscriptionGroupVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fieldsRetentionMessageVersionsPayload`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[appStoreVersionExperimentTreatmentLocalizations]`.
+                public var fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fieldsRetentionMessageVersionsPayload`.
                 @frozen public enum FieldsRetentionMessageVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
                     case state = "state"
                     case retentionMessage = "retentionMessage"
                     case localizations = "localizations"
                     case placement = "placement"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[retentionMessageVersions]`.
-                public typealias fieldsRetentionMessageVersionsPayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[retentionMessageVersions]`.
+                public typealias fieldsRetentionMessageVersionsPayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.FieldsRetentionMessageVersionsPayloadPayload]
                 /// the fields to include for returned resources of type retentionMessageVersions
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/fields[retentionMessageVersions]`.
-                public var fieldsRetentionMessageVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/IncludePayload`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/fields[retentionMessageVersions]`.
+                public var fieldsRetentionMessageVersions: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsRetentionMessageVersionsPayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/IncludePayload`.
                 @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appStoreVersion = "appStoreVersion"
-                    case appCustomProductPageVersion = "appCustomProductPageVersion"
-                    case appStoreVersionExperiment = "appStoreVersionExperiment"
-                    case appStoreVersionExperimentV2 = "appStoreVersionExperimentV2"
-                    case appEvent = "appEvent"
-                    case appAssetLibraryImage = "appAssetLibraryImage"
-                    case appAssetLibraryVideo = "appAssetLibraryVideo"
-                    case backgroundAssetVersion = "backgroundAssetVersion"
-                    case gameCenterAchievementVersion = "gameCenterAchievementVersion"
-                    case gameCenterActivityVersion = "gameCenterActivityVersion"
-                    case gameCenterChallengeVersion = "gameCenterChallengeVersion"
-                    case gameCenterLeaderboardSetVersion = "gameCenterLeaderboardSetVersion"
-                    case gameCenterLeaderboardVersion = "gameCenterLeaderboardVersion"
-                    case inAppPurchaseVersion = "inAppPurchaseVersion"
-                    case subscriptionVersion = "subscriptionVersion"
-                    case subscriptionGroupVersion = "subscriptionGroupVersion"
+                    case image = "image"
+                    case video = "video"
+                    case appEventLocalization = "appEventLocalization"
+                    case appStoreVersionLocalization = "appStoreVersionLocalization"
+                    case appCustomProductPageLocalization = "appCustomProductPageLocalization"
+                    case appStoreVersionExperimentTreatmentLocalization = "appStoreVersionExperimentTreatmentLocalization"
                     case retentionMessageVersion = "retentionMessageVersion"
                 }
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/include`.
-                public typealias IncludePayload = [Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.IncludePayloadPayload]
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/include`.
+                public typealias IncludePayload = [Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.IncludePayloadPayload]
                 /// comma-separated list of relationships to include
                 ///
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/query/include`.
-                public var include: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.IncludePayload?
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/query/include`.
+                public var include: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.IncludePayload?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
-                ///   - fieldsReviewSubmissionItems: the fields to include for returned resources of type reviewSubmissionItems
-                ///   - fieldsAppStoreVersions: the fields to include for returned resources of type appStoreVersions
-                ///   - fieldsAppCustomProductPageVersions: the fields to include for returned resources of type appCustomProductPageVersions
-                ///   - fieldsAppStoreVersionExperiments: the fields to include for returned resources of type appStoreVersionExperiments
-                ///   - fieldsAppEvents: the fields to include for returned resources of type appEvents
+                ///   - fieldsAppAssetLibraryPlacements: the fields to include for returned resources of type appAssetLibraryPlacements
                 ///   - fieldsAppAssetLibraryImages: the fields to include for returned resources of type appAssetLibraryImages
                 ///   - fieldsAppAssetLibraryVideos: the fields to include for returned resources of type appAssetLibraryVideos
-                ///   - fieldsBackgroundAssetVersions: the fields to include for returned resources of type backgroundAssetVersions
-                ///   - fieldsGameCenterAchievementVersions: the fields to include for returned resources of type gameCenterAchievementVersions
-                ///   - fieldsGameCenterActivityVersions: the fields to include for returned resources of type gameCenterActivityVersions
-                ///   - fieldsGameCenterChallengeVersions: the fields to include for returned resources of type gameCenterChallengeVersions
-                ///   - fieldsGameCenterLeaderboardSetVersions: the fields to include for returned resources of type gameCenterLeaderboardSetVersions
-                ///   - fieldsGameCenterLeaderboardVersions: the fields to include for returned resources of type gameCenterLeaderboardVersions
-                ///   - fieldsInAppPurchaseVersions: the fields to include for returned resources of type inAppPurchaseVersions
-                ///   - fieldsSubscriptionVersions: the fields to include for returned resources of type subscriptionVersions
-                ///   - fieldsSubscriptionGroupVersions: the fields to include for returned resources of type subscriptionGroupVersions
+                ///   - fieldsAppEventLocalizations: the fields to include for returned resources of type appEventLocalizations
+                ///   - fieldsAppStoreVersionLocalizations: the fields to include for returned resources of type appStoreVersionLocalizations
+                ///   - fieldsAppCustomProductPageLocalizations: the fields to include for returned resources of type appCustomProductPageLocalizations
+                ///   - fieldsAppStoreVersionExperimentTreatmentLocalizations: the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations
                 ///   - fieldsRetentionMessageVersions: the fields to include for returned resources of type retentionMessageVersions
-                ///   - limit: maximum resources per page
                 ///   - include: comma-separated list of relationships to include
                 public init(
-                    fieldsReviewSubmissionItems: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsReviewSubmissionItemsPayload? = nil,
-                    fieldsAppStoreVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppStoreVersionsPayload? = nil,
-                    fieldsAppCustomProductPageVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppCustomProductPageVersionsPayload? = nil,
-                    fieldsAppStoreVersionExperiments: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppStoreVersionExperimentsPayload? = nil,
-                    fieldsAppEvents: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppEventsPayload? = nil,
-                    fieldsAppAssetLibraryImages: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppAssetLibraryImagesPayload? = nil,
-                    fieldsAppAssetLibraryVideos: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsAppAssetLibraryVideosPayload? = nil,
-                    fieldsBackgroundAssetVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsBackgroundAssetVersionsPayload? = nil,
-                    fieldsGameCenterAchievementVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterAchievementVersionsPayload? = nil,
-                    fieldsGameCenterActivityVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterActivityVersionsPayload? = nil,
-                    fieldsGameCenterChallengeVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterChallengeVersionsPayload? = nil,
-                    fieldsGameCenterLeaderboardSetVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardSetVersionsPayload? = nil,
-                    fieldsGameCenterLeaderboardVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsGameCenterLeaderboardVersionsPayload? = nil,
-                    fieldsInAppPurchaseVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsInAppPurchaseVersionsPayload? = nil,
-                    fieldsSubscriptionVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsSubscriptionVersionsPayload? = nil,
-                    fieldsSubscriptionGroupVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsSubscriptionGroupVersionsPayload? = nil,
-                    fieldsRetentionMessageVersions: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query.IncludePayload? = nil
+                    fieldsAppAssetLibraryPlacements: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppAssetLibraryPlacementsPayload? = nil,
+                    fieldsAppAssetLibraryImages: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppAssetLibraryImagesPayload? = nil,
+                    fieldsAppAssetLibraryVideos: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppAssetLibraryVideosPayload? = nil,
+                    fieldsAppEventLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppEventLocalizationsPayload? = nil,
+                    fieldsAppStoreVersionLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppStoreVersionLocalizationsPayload? = nil,
+                    fieldsAppCustomProductPageLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppCustomProductPageLocalizationsPayload? = nil,
+                    fieldsAppStoreVersionExperimentTreatmentLocalizations: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsAppStoreVersionExperimentTreatmentLocalizationsPayload? = nil,
+                    fieldsRetentionMessageVersions: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.fieldsRetentionMessageVersionsPayload? = nil,
+                    include: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query.IncludePayload? = nil
                 ) {
-                    self.fieldsReviewSubmissionItems = fieldsReviewSubmissionItems
-                    self.fieldsAppStoreVersions = fieldsAppStoreVersions
-                    self.fieldsAppCustomProductPageVersions = fieldsAppCustomProductPageVersions
-                    self.fieldsAppStoreVersionExperiments = fieldsAppStoreVersionExperiments
-                    self.fieldsAppEvents = fieldsAppEvents
+                    self.fieldsAppAssetLibraryPlacements = fieldsAppAssetLibraryPlacements
                     self.fieldsAppAssetLibraryImages = fieldsAppAssetLibraryImages
                     self.fieldsAppAssetLibraryVideos = fieldsAppAssetLibraryVideos
-                    self.fieldsBackgroundAssetVersions = fieldsBackgroundAssetVersions
-                    self.fieldsGameCenterAchievementVersions = fieldsGameCenterAchievementVersions
-                    self.fieldsGameCenterActivityVersions = fieldsGameCenterActivityVersions
-                    self.fieldsGameCenterChallengeVersions = fieldsGameCenterChallengeVersions
-                    self.fieldsGameCenterLeaderboardSetVersions = fieldsGameCenterLeaderboardSetVersions
-                    self.fieldsGameCenterLeaderboardVersions = fieldsGameCenterLeaderboardVersions
-                    self.fieldsInAppPurchaseVersions = fieldsInAppPurchaseVersions
-                    self.fieldsSubscriptionVersions = fieldsSubscriptionVersions
-                    self.fieldsSubscriptionGroupVersions = fieldsSubscriptionGroupVersions
+                    self.fieldsAppEventLocalizations = fieldsAppEventLocalizations
+                    self.fieldsAppStoreVersionLocalizations = fieldsAppStoreVersionLocalizations
+                    self.fieldsAppCustomProductPageLocalizations = fieldsAppCustomProductPageLocalizations
+                    self.fieldsAppStoreVersionExperimentTreatmentLocalizations = fieldsAppStoreVersionExperimentTreatmentLocalizations
                     self.fieldsRetentionMessageVersions = fieldsRetentionMessageVersions
-                    self.limit = limit
                     self.include = include
                 }
             }
-            public var query: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/header`.
+            public var query: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query
+            /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsItemsGetToManyRelated.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsPlacementGetToOneRelated.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.ReviewSubmissionsItemsGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RetentionMessageVersionsPlacementGetToOneRelated.AcceptableContentType>] = .defaultValues()) {
                     self.accept = accept
                 }
             }
-            public var headers: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Headers
+            public var headers: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
@@ -2188,9 +3054,9 @@ extension Operations {
             ///   - query:
             ///   - headers:
             public init(
-                path: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Path,
-                query: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Query = .init(),
-                headers: Operations.ReviewSubmissionsItemsGetToManyRelated.Input.Headers = .init()
+                path: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Path,
+                query: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Query = .init(),
+                headers: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Input.Headers = .init()
             ) {
                 self.path = path
                 self.query = query
@@ -2199,15 +3065,15 @@ extension Operations {
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/responses/200/content`.
+                /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/responses/200/content`.
                 @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/reviewSubmissions/{id}/items/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.ReviewSubmissionItemsResponse)
+                    /// - Remark: Generated from `#/paths/v1/retentionMessageVersions/{id}/placement/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.AppAssetLibraryPlacementResponse)
                     /// The associated value of the enum case if `self` is `.json`.
                     ///
                     /// - Throws: An error if `self` is not `.json`.
                     /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.ReviewSubmissionItemsResponse {
+                    public var json: Components.Schemas.AppAssetLibraryPlacementResponse {
                         get throws {
                             switch self {
                             case let .json(body):
@@ -2217,26 +3083,26 @@ extension Operations {
                     }
                 }
                 /// Received HTTP response body
-                public var body: Operations.ReviewSubmissionsItemsGetToManyRelated.Output.Ok.Body
+                public var body: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output.Ok.Body
                 /// Creates a new `Ok`.
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.ReviewSubmissionsItemsGetToManyRelated.Output.Ok.Body) {
+                public init(body: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output.Ok.Body) {
                     self.body = body
                 }
             }
-            /// List of ReviewSubmissionItems
+            /// Single AppAssetLibraryPlacement
             ///
-            /// - Remark: Generated from `#/paths//v1/reviewSubmissions/{id}/items/get(reviewSubmissions_items_getToManyRelated)/responses/200`.
+            /// - Remark: Generated from `#/paths//v1/retentionMessageVersions/{id}/placement/get(retentionMessageVersions_placement_getToOneRelated)/responses/200`.
             ///
             /// HTTP response code: `200 ok`.
-            case ok(Operations.ReviewSubmissionsItemsGetToManyRelated.Output.Ok)
+            case ok(Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output.Ok)
             /// The associated value of the enum case if `self` is `.ok`.
             ///
             /// - Throws: An error if `self` is not `.ok`.
             /// - SeeAlso: `.ok`.
-            public var ok: Operations.ReviewSubmissionsItemsGetToManyRelated.Output.Ok {
+            public var ok: Operations.RetentionMessageVersionsPlacementGetToOneRelated.Output.Ok {
                 get throws {
                     switch self {
                     case let .ok(response):
@@ -2276,739 +3142,6 @@ extension Operations {
             public static var allCases: [Self] {
                 [
                     .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `POST /v1/routingAppCoverages`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/post(routingAppCoverages_createInstance)`.
-    public enum RoutingAppCoveragesCreateInstance {
-        public static let id: Swift.String = "routingAppCoverages_createInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/POST/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RoutingAppCoveragesCreateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RoutingAppCoveragesCreateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.RoutingAppCoveragesCreateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/POST/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/POST/requestBody/content/application\/json`.
-                case json(Components.Schemas.RoutingAppCoverageCreateRequest)
-            }
-            public var body: Operations.RoutingAppCoveragesCreateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - headers:
-            ///   - body:
-            public init(
-                headers: Operations.RoutingAppCoveragesCreateInstance.Input.Headers = .init(),
-                body: Operations.RoutingAppCoveragesCreateInstance.Input.Body
-            ) {
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Created: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/POST/responses/201/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/routingAppCoverages/POST/responses/201/content/application\/json`.
-                    case json(Components.Schemas.RoutingAppCoverageResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.RoutingAppCoverageResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.RoutingAppCoveragesCreateInstance.Output.Created.Body
-                /// Creates a new `Created`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.RoutingAppCoveragesCreateInstance.Output.Created.Body) {
-                    self.body = body
-                }
-            }
-            /// Single RoutingAppCoverage
-            ///
-            /// - Remark: Generated from `#/paths//v1/routingAppCoverages/post(routingAppCoverages_createInstance)/responses/201`.
-            ///
-            /// HTTP response code: `201 created`.
-            case created(Operations.RoutingAppCoveragesCreateInstance.Output.Created)
-            /// The associated value of the enum case if `self` is `.created`.
-            ///
-            /// - Throws: An error if `self` is not `.created`.
-            /// - SeeAlso: `.created`.
-            public var created: Operations.RoutingAppCoveragesCreateInstance.Output.Created {
-                get throws {
-                    switch self {
-                    case let .created(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/routingAppCoverages/{id}`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/get(routingAppCoverages_getInstance)`.
-    public enum RoutingAppCoveragesGetInstance {
-        public static let id: Swift.String = "routingAppCoverages_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.RoutingAppCoveragesGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/fieldsRoutingAppCoveragesPayload`.
-                @frozen public enum FieldsRoutingAppCoveragesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case fileSize = "fileSize"
-                    case fileName = "fileName"
-                    case sourceFileChecksum = "sourceFileChecksum"
-                    case uploadOperations = "uploadOperations"
-                    case assetDeliveryState = "assetDeliveryState"
-                    case appStoreVersion = "appStoreVersion"
-                }
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/fields[routingAppCoverages]`.
-                public typealias fieldsRoutingAppCoveragesPayload = [Operations.RoutingAppCoveragesGetInstance.Input.Query.FieldsRoutingAppCoveragesPayloadPayload]
-                /// the fields to include for returned resources of type routingAppCoverages
-                ///
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/fields[routingAppCoverages]`.
-                public var fieldsRoutingAppCoverages: Operations.RoutingAppCoveragesGetInstance.Input.Query.fieldsRoutingAppCoveragesPayload?
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/fieldsAppStoreVersionsPayload`.
-                @frozen public enum FieldsAppStoreVersionsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case platform = "platform"
-                    case versionString = "versionString"
-                    case appStoreState = "appStoreState"
-                    case appVersionState = "appVersionState"
-                    case copyright = "copyright"
-                    case reviewType = "reviewType"
-                    case releaseType = "releaseType"
-                    case earliestReleaseDate = "earliestReleaseDate"
-                    case usesIdfa = "usesIdfa"
-                    case downloadable = "downloadable"
-                    case createdDate = "createdDate"
-                    case app = "app"
-                    case appStoreVersionLocalizations = "appStoreVersionLocalizations"
-                    case build = "build"
-                    case appStoreVersionPhasedRelease = "appStoreVersionPhasedRelease"
-                    case gameCenterAppVersion = "gameCenterAppVersion"
-                    case routingAppCoverage = "routingAppCoverage"
-                    case appStoreReviewDetail = "appStoreReviewDetail"
-                    case appStoreVersionSubmission = "appStoreVersionSubmission"
-                    case appClipDefaultExperience = "appClipDefaultExperience"
-                    case appStoreVersionExperiments = "appStoreVersionExperiments"
-                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
-                    case customerReviews = "customerReviews"
-                    case alternativeDistributionPackage = "alternativeDistributionPackage"
-                }
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/fields[appStoreVersions]`.
-                public typealias fieldsAppStoreVersionsPayload = [Operations.RoutingAppCoveragesGetInstance.Input.Query.FieldsAppStoreVersionsPayloadPayload]
-                /// the fields to include for returned resources of type appStoreVersions
-                ///
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/fields[appStoreVersions]`.
-                public var fieldsAppStoreVersions: Operations.RoutingAppCoveragesGetInstance.Input.Query.fieldsAppStoreVersionsPayload?
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case appStoreVersion = "appStoreVersion"
-                }
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.RoutingAppCoveragesGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/query/include`.
-                public var include: Operations.RoutingAppCoveragesGetInstance.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsRoutingAppCoverages: the fields to include for returned resources of type routingAppCoverages
-                ///   - fieldsAppStoreVersions: the fields to include for returned resources of type appStoreVersions
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    fieldsRoutingAppCoverages: Operations.RoutingAppCoveragesGetInstance.Input.Query.fieldsRoutingAppCoveragesPayload? = nil,
-                    fieldsAppStoreVersions: Operations.RoutingAppCoveragesGetInstance.Input.Query.fieldsAppStoreVersionsPayload? = nil,
-                    include: Operations.RoutingAppCoveragesGetInstance.Input.Query.IncludePayload? = nil
-                ) {
-                    self.fieldsRoutingAppCoverages = fieldsRoutingAppCoverages
-                    self.fieldsAppStoreVersions = fieldsAppStoreVersions
-                    self.include = include
-                }
-            }
-            public var query: Operations.RoutingAppCoveragesGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RoutingAppCoveragesGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RoutingAppCoveragesGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.RoutingAppCoveragesGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.RoutingAppCoveragesGetInstance.Input.Path,
-                query: Operations.RoutingAppCoveragesGetInstance.Input.Query = .init(),
-                headers: Operations.RoutingAppCoveragesGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.RoutingAppCoverageResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.RoutingAppCoverageResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.RoutingAppCoveragesGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.RoutingAppCoveragesGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single RoutingAppCoverage
-            ///
-            /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/get(routingAppCoverages_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.RoutingAppCoveragesGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.RoutingAppCoveragesGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/routingAppCoverages/{id}`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/patch(routingAppCoverages_updateInstance)`.
-    public enum RoutingAppCoveragesUpdateInstance {
-        public static let id: Swift.String = "routingAppCoverages_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.RoutingAppCoveragesUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RoutingAppCoveragesUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.RoutingAppCoveragesUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.RoutingAppCoveragesUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.RoutingAppCoverageUpdateRequest)
-            }
-            public var body: Operations.RoutingAppCoveragesUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.RoutingAppCoveragesUpdateInstance.Input.Path,
-                headers: Operations.RoutingAppCoveragesUpdateInstance.Input.Headers = .init(),
-                body: Operations.RoutingAppCoveragesUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.RoutingAppCoverageResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.RoutingAppCoverageResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.RoutingAppCoveragesUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.RoutingAppCoveragesUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single RoutingAppCoverage
-            ///
-            /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/patch(routingAppCoverages_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.RoutingAppCoveragesUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.RoutingAppCoveragesUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/routingAppCoverages/{id}`.
-    /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/delete(routingAppCoverages_deleteInstance)`.
-    public enum RoutingAppCoveragesDeleteInstance {
-        public static let id: Swift.String = "routingAppCoverages_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/routingAppCoverages/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.RoutingAppCoveragesDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.RoutingAppCoveragesDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/delete(routingAppCoverages_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.RoutingAppCoveragesDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/routingAppCoverages/{id}/delete(routingAppCoverages_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.RoutingAppCoveragesDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `GET /v1/salesReports`.
-    /// - Remark: Generated from `#/paths//v1/salesReports/get(salesReports_getCollection)`.
-    public enum SalesReportsGetCollection {
-        public static let id: Swift.String = "salesReports_getCollection"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/salesReports/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// filter by attribute 'vendorNumber'
-                ///
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[vendorNumber]`.
-                public var filterVendorNumber: [Swift.String]
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filterReportTypePayload`.
-                @frozen public enum FilterReportTypePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case sales = "SALES"
-                    case preOrder = "PRE_ORDER"
-                    case newsstand = "NEWSSTAND"
-                    case subscription = "SUBSCRIPTION"
-                    case subscriptionEvent = "SUBSCRIPTION_EVENT"
-                    case subscriber = "SUBSCRIBER"
-                    case subscriptionOfferCodeRedemption = "SUBSCRIPTION_OFFER_CODE_REDEMPTION"
-                    case installs = "INSTALLS"
-                    case firstAnnual = "FIRST_ANNUAL"
-                    case winBackEligibility = "WIN_BACK_ELIGIBILITY"
-                }
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[reportType]`.
-                public typealias filterReportTypePayload = [Operations.SalesReportsGetCollection.Input.Query.FilterReportTypePayloadPayload]
-                /// filter by attribute 'reportType'
-                ///
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[reportType]`.
-                public var filterReportType: Operations.SalesReportsGetCollection.Input.Query.filterReportTypePayload
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filterReportSubTypePayload`.
-                @frozen public enum FilterReportSubTypePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case summary = "SUMMARY"
-                    case detailed = "DETAILED"
-                    case summaryInstallType = "SUMMARY_INSTALL_TYPE"
-                    case summaryTerritory = "SUMMARY_TERRITORY"
-                    case summaryChannel = "SUMMARY_CHANNEL"
-                }
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[reportSubType]`.
-                public typealias filterReportSubTypePayload = [Operations.SalesReportsGetCollection.Input.Query.FilterReportSubTypePayloadPayload]
-                /// filter by attribute 'reportSubType'
-                ///
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[reportSubType]`.
-                public var filterReportSubType: Operations.SalesReportsGetCollection.Input.Query.filterReportSubTypePayload
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filterFrequencyPayload`.
-                @frozen public enum FilterFrequencyPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case daily = "DAILY"
-                    case weekly = "WEEKLY"
-                    case monthly = "MONTHLY"
-                    case yearly = "YEARLY"
-                }
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[frequency]`.
-                public typealias filterFrequencyPayload = [Operations.SalesReportsGetCollection.Input.Query.FilterFrequencyPayloadPayload]
-                /// filter by attribute 'frequency'
-                ///
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[frequency]`.
-                public var filterFrequency: Operations.SalesReportsGetCollection.Input.Query.filterFrequencyPayload
-                /// filter by attribute 'reportDate'
-                ///
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[reportDate]`.
-                public var filterReportDate: [Swift.String]?
-                /// filter by attribute 'version'
-                ///
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/query/filter[version]`.
-                public var filterVersion: [Swift.String]?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterVendorNumber: filter by attribute 'vendorNumber'
-                ///   - filterReportType: filter by attribute 'reportType'
-                ///   - filterReportSubType: filter by attribute 'reportSubType'
-                ///   - filterFrequency: filter by attribute 'frequency'
-                ///   - filterReportDate: filter by attribute 'reportDate'
-                ///   - filterVersion: filter by attribute 'version'
-                public init(
-                    filterVendorNumber: [Swift.String],
-                    filterReportType: Operations.SalesReportsGetCollection.Input.Query.filterReportTypePayload,
-                    filterReportSubType: Operations.SalesReportsGetCollection.Input.Query.filterReportSubTypePayload,
-                    filterFrequency: Operations.SalesReportsGetCollection.Input.Query.filterFrequencyPayload,
-                    filterReportDate: [Swift.String]? = nil,
-                    filterVersion: [Swift.String]? = nil
-                ) {
-                    self.filterVendorNumber = filterVendorNumber
-                    self.filterReportType = filterReportType
-                    self.filterReportSubType = filterReportSubType
-                    self.filterFrequency = filterFrequency
-                    self.filterReportDate = filterReportDate
-                    self.filterVersion = filterVersion
-                }
-            }
-            public var query: Operations.SalesReportsGetCollection.Input.Query
-            /// - Remark: Generated from `#/paths/v1/salesReports/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SalesReportsGetCollection.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.SalesReportsGetCollection.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.SalesReportsGetCollection.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - query:
-            ///   - headers:
-            public init(
-                query: Operations.SalesReportsGetCollection.Input.Query,
-                headers: Operations.SalesReportsGetCollection.Input.Headers = .init()
-            ) {
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/salesReports/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/salesReports/GET/responses/200/content/application\/a-gzip`.
-                    case applicationAGzip(OpenAPIRuntime.HTTPBody)
-                    /// The associated value of the enum case if `self` is `.applicationAGzip`.
-                    ///
-                    /// - Throws: An error if `self` is not `.applicationAGzip`.
-                    /// - SeeAlso: `.applicationAGzip`.
-                    public var applicationAGzip: OpenAPIRuntime.HTTPBody {
-                        get throws {
-                            switch self {
-                            case let .applicationAGzip(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.SalesReportsGetCollection.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.SalesReportsGetCollection.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of SalesReports
-            ///
-            /// - Remark: Generated from `#/paths//v1/salesReports/get(salesReports_getCollection)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.SalesReportsGetCollection.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.SalesReportsGetCollection.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case applicationAGzip
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/a-gzip":
-                    self = .applicationAGzip
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .applicationAGzip:
-                    return "application/a-gzip"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .applicationAGzip
                 ]
             }
         }

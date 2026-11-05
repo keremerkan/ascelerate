@@ -60,6 +60,8 @@ public struct PriceFile: Codable, Sendable, Equatable {
     public let price: String
     /// The territory's closest customer prices, nearest first.
     public let nearest: [String]
+    /// The closest tier, the cheaper one when two are as close: what the price would snap to.
+    public let nearestTier: AppPricing.PricePoint?
   }
 
   /// The tier of each file price, and the prices no tier has.
@@ -96,7 +98,7 @@ public struct PriceFile: Codable, Sendable, Equatable {
             }
           }
         case .failure(let nearest):
-          resolution.mismatches.append(Mismatch(territoryID: base, price: basePrice, nearest: nearest.prices))
+          resolution.mismatches.append(Mismatch(territoryID: base, price: basePrice, nearest: nearest.prices, nearestTier: nearest.tier))
       }
     }
     let settled = Mutex(total - pending.count)
@@ -116,7 +118,7 @@ public struct PriceFile: Codable, Sendable, Equatable {
       switch result {
         case .success(let point): resolution.points[territoryID] = point
         case .failure(let nearest):
-          resolution.mismatches.append(Mismatch(territoryID: territoryID, price: price, nearest: nearest.prices))
+          resolution.mismatches.append(Mismatch(territoryID: territoryID, price: price, nearest: nearest.prices, nearestTier: nearest.tier))
       }
     }
     resolution.mismatches.sort { $0.territoryID < $1.territoryID }
@@ -125,15 +127,21 @@ public struct PriceFile: Codable, Sendable, Equatable {
 
   private struct Nearest: Error {
     let prices: [String]
+    let tier: AppPricing.PricePoint?
   }
 
-  /// The tier with this customer price, or the five nearest prices.
+  /// The tier with this customer price, or the five nearest prices (the cheaper first when two are
+  /// as close) and the nearest tier.
   private static func match(_ price: String, in tiers: [AppPricing.PricePoint]) -> Result<AppPricing.PricePoint, Nearest> {
     if let point = tiers.first(where: { isSame(price, $0.customerPrice) }) { return .success(point) }
-    let target = Double(price.trimmingCharacters(in: .whitespaces)) ?? 0
-    let nearest = tiers.sorted { abs((Double($0.customerPrice) ?? 0) - target) < abs((Double($1.customerPrice) ?? 0) - target) }
-      .prefix(5).map(\.customerPrice)
-    return .failure(Nearest(prices: Array(nearest)))
+    // Decimal, so two tiers as close are found equal (as Doubles, 2.49 − 1.99 and 2.99 − 2.49 differ).
+    let target = Decimal(string: price.trimmingCharacters(in: .whitespaces)) ?? 0
+    let nearest = tiers.sorted { lhs, rhs in
+      let (left, right) = (Decimal(string: lhs.customerPrice) ?? 0, Decimal(string: rhs.customerPrice) ?? 0)
+      let (leftDistance, rightDistance) = (abs(left - target), abs(right - target))
+      return leftDistance != rightDistance ? leftDistance < rightDistance : left < right
+    }
+    return .failure(Nearest(prices: nearest.prefix(5).map(\.customerPrice), tier: nearest.first))
   }
 
   private static func isSame(_ price: String, _ tierPrice: String) -> Bool {

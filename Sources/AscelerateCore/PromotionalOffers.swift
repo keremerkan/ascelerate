@@ -47,6 +47,28 @@ extension Subscriptions {
     return (promotionalOffer(data), prices?.meta?.paging.total ?? prices?.data?.count ?? 0)
   }
 
+  /// An offer's tier in each territory it has a price in, to start a price change from (the offer
+  /// itself includes 50 prices at most).
+  public static func promotionalOfferPrices(id: String, client: ASCClient) async throws -> [String: AppPricing.PricePoint] {
+    let pages = try await withTransientRetry {
+      try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.subscriptionPromotionalOffersPricesGetToManyRelated(
+          path: .init(id: id), query: .init(limit: 200, include: [.subscriptionPricePoint, .territory])
+        ).ok.body.json
+      }
+    }
+    var points: [String: Components.Schemas.SubscriptionPricePoint] = [:]
+    for included in pages.flatMap({ $0.included ?? [] }) {
+      if case .subscriptionPricePoints(let point) = included { points[point.id] = point }
+    }
+    return pages.flatMap(\.data).reduce(into: [:]) { prices, price in
+      guard let territoryID = price.relationships?.territory?.data?.id,
+        let pointID = price.relationships?.subscriptionPricePoint?.data?.id, let point = points[pointID]
+      else { return }
+      prices[territoryID] = pricePoint(point, territoryID: territoryID)
+    }
+  }
+
   /// Creates an offer with its prices in one request.
   public static func createPromotionalOffer(
     subscriptionID: String, name: String, offerCode: String, mode: String, duration: String, periods: Int,

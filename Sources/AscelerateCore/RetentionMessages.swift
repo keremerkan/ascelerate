@@ -10,7 +10,7 @@ import Foundation
 /// version is refused (409 "Version already exists"); a message still shown by a subscription can be
 /// deleted; a subscription showed four offers at once.
 public enum RetentionMessages {
-  public struct Message: Hashable, Identifiable, Sendable {
+  public struct Message: Codable, Hashable, Identifiable, Sendable {
     public let id: String
     public let name: String
     /// Newest first as Apple lists them; the unreleased one, if any, is `editable`.
@@ -22,7 +22,7 @@ public enum RetentionMessages {
     public var current: Version? { versions.first(where: \.isEditable) ?? versions.first }
   }
 
-  public struct Version: Hashable, Identifiable, Sendable {
+  public struct Version: Codable, Hashable, Identifiable, Sendable {
     public let id: String
     /// PREPARE_FOR_SUBMISSION, WAITING_FOR_REVIEW, IN_REVIEW, APPROVED, REJECTED…
     public let state: String
@@ -44,6 +44,10 @@ public enum RetentionMessages {
     public let imageID: String?
     public let fileName: String?
     public let state: String?
+    /// The image's address (`{w}x{h}bb.{f}` placeholders) and size, once Apple has processed it.
+    public let imageTemplate: String?
+    public let width: Int?
+    public let height: Int?
   }
 
   public static let editableStates: Set = ["PREPARE_FOR_SUBMISSION", "REJECTED", "DEVELOPER_REJECTED"]
@@ -169,12 +173,34 @@ public enum RetentionMessages {
       })
     else { return nil }
     let imageID = response.data.relationships?.value1?.value2.image?.data?.id
-    var fileName: String?, state: String?
-    for case .appAssetLibraryImages(let image) in response.included ?? [] where image.id == imageID {
-      fileName = image.attributes?.common.fileName
-      state = image.attributes?.stateName
-    }
-    return Image(placementID: response.data.id, imageID: imageID, fileName: fileName, state: state)
+    let image = (response.included ?? []).lazy.compactMap { item -> Components.Schemas.AppAssetLibraryImage? in
+      if case .appAssetLibraryImages(let image) = item, image.id == imageID { image } else { nil }
+    }.first
+    let asset = image?.attributes?.common.imageAsset
+    // An empty address comes before Apple has processed it.
+    return Image(
+      placementID: response.data.id, imageID: imageID, fileName: image?.attributes?.common.fileName, state: image?.attributes?.stateName,
+      imageTemplate: asset?.templateUrl.flatMap { $0.isEmpty ? nil : $0 }, width: asset?.width, height: asset?.height)
+  }
+
+  /// Uploads an image to the app's asset library and places it on the version, then removes the
+  /// image it replaces. Check its size first (`imageSlot.imageSpecs`).
+  public static func setImage(
+    _ file: MediaFile, versionID: String, appID: String, replacing current: Image?, client: ASCClient
+  ) async throws {
+    let libraryID = try await AssetLibrary.libraryID(appID: appID, client: client)
+    let imageID = try await AssetLibrary.uploadImage(file, category: imageSlot.category, libraryID: libraryID, client: client)
+    if let current { try await removeImage(current, client: client) }
+    _ = try await AssetLibrary.place(
+      .image(imageID), on: .retentionMessageVersion(versionID), type: imageSlot.placementType, group: imageSlot.group,
+      client: client)
+  }
+
+  /// Takes a version's image off it, and out of the library when nothing else uses it (a removed
+  /// placement leaves its image in the library otherwise).
+  public static func removeImage(_ image: Image, client: ASCClient) async throws {
+    try await AssetLibrary.deletePlacement(id: image.placementID, client: client)
+    if let imageID = image.imageID { _ = try await AssetLibrary.deleteIfUnused([.image(imageID)], client: client) }
   }
 
   // MARK: Subscriptions

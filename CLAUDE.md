@@ -37,6 +37,7 @@ Tests/ASCKitTests/
 Tests/AscelerateCoreTests/
   AppPricingTests.swift               # Price schedule edits (base price now or dated, manual prices, planned changes)
   XcodeProjectFileTests.swift         # Both project file formats give the same targets, Release settings and languages
+  ProfileCertificatesTests.swift      # Which certificates a profile type takes
 Sources/AscelerateCore/               # App Store Connect logic without terminal I/O (see "AscelerateCore")
   Lookup.swift                        # findApp(exactBundleID:), findVersion(…, choose:), Platform, platformFilter, optionalRelated, attachedBuild, AppLookupError
   ProductVersions.swift               # Pending-version detection for IAPs/subs/groups (versions endpoints) + review-item resolution
@@ -90,7 +91,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   SandboxTesters.swift                # Sandbox testers (/v2): list, find by Apple Account or ID, update (storefront, interrupted purchases, renewal rate), clear purchase history (one request for many)
   BundleIDs.swift                     # Bundle IDs (App IDs): list (platform, identifier prefix, capability types in the same request), find, register, rename, delete; capabilities with their settings, enable (with settings), update settings, disable
   Devices.swift                       # Registered devices: list (name, platforms, statuses), find (UDID or name), register, update (name, status), UDID check
-  Profiles.swift                      # Provisioning profiles: list (name, types, states, with bundle IDs, optionally device IDs), find, a profile's bundle ID/certificates/devices, create, delete, reissue (optionally adding devices; typed error says whether the old one was deleted); certificate families per type; which device fits which profile type
+  Profiles.swift                      # Provisioning profiles: list (name, types, states, with bundle IDs, optionally device IDs), find, a profile's bundle ID/certificates/devices, create, delete, reissue (optionally adding devices; typed error says whether the old one was deleted); which certificates fit a profile type (`certificateFits`: its family, iOS certificates only in iOS profiles and Mac ones only in Mac profiles, Mac Installer Distribution in none, as the developer portal offers them); which device fits which profile type
   Certificates.swift                  # Signing certificates: list (types, display name), find (serial or name), create from a CSR, revoke, CSR from a private key (X509) or a keychain SecKey
   AppPricing.swift                    # App price schedule: read (manual + automatic prices, currencies), tiers per territory, equalizations, replace; edits (base price now or dated, manual prices, planned changes)
   ReviewSubmissions.swift             # Review submissions with actors and resolved items (version + build, product/event names, other kinds by relationship); submit, cancel, remove item (DELETE in a draft), resolve item, add an event, custom product page version, experiment or library asset to an open draft (or a given one), creating it when there's none

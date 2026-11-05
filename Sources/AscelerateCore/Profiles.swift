@@ -77,10 +77,13 @@ public enum Profiles {
 
   /// Groups certificate types that serve the same profiles: Apple replaced the platform types
   /// (IOS_DISTRIBUTION, MAC_APP_DISTRIBUTION) with universal ones (DISTRIBUTION), but older
-  /// certificates keep theirs.
+  /// certificates keep theirs. A Mac Installer Distribution certificate signs installer packages
+  /// and is in no profile (the developer portal doesn't offer it for one), so it's a family of its
+  /// own that no profile type asks for.
   public static func certificateFamily(_ certificateType: String) -> String {
     switch ASCEnum.CertificateType(rawValue: certificateType) {
-      case .distribution, .iosDistribution, .macAppDistribution, .macInstallerDistribution: "Distribution"
+      case .distribution, .iosDistribution, .macAppDistribution: "Distribution"
+      case .macInstallerDistribution: "Mac Installer Distribution"
       case .development, .iosDevelopment, .macAppDevelopment: "Development"
       case .developerIdApplication, .developerIdApplicationG2: "Developer ID Application"
       case .developerIdKext, .developerIdKextG2: "Developer ID Kext"
@@ -111,9 +114,25 @@ public enum Profiles {
     return !isTV
   }
 
-  /// The team's certificates by family.
-  public static func certificatesByFamily(client: ASCClient) async throws -> [String: [Certificates.Certificate]] {
-    Dictionary(grouping: try await Certificates.list(client: client).filter { $0.type != nil }) { certificateFamily($0.type!) }
+  /// Whether a certificate can go in a profile of a type, as the developer portal offers them: its
+  /// family is the one the profile type is made with, and an older platform certificate only in
+  /// its own platform's profiles (iOS Development and iOS Distribution not in a Mac or Mac Catalyst
+  /// profile, Mac Development and Mac App Distribution only in one).
+  public static func certificateFits(_ certificateType: String, profileType: String) -> Bool {
+    guard certificateFamily(certificateType) == certificateFamily(forProfileType: profileType) else { return false }
+    let isMacProfile = profileType.hasPrefix("MAC_")
+    switch ASCEnum.CertificateType(rawValue: certificateType) {
+      case .iosDevelopment, .iosDistribution: return !isMacProfile
+      case .macAppDevelopment, .macAppDistribution: return isMacProfile
+      default: return true
+    }
+  }
+
+  /// The ones of `certificates` that can go in a profile of a type (`certificateFits`).
+  public static func certificates(
+    _ certificates: [Certificates.Certificate], fitting profileType: String
+  ) -> [Certificates.Certificate] {
+    certificates.filter { $0.type.map { certificateFits($0, profileType: profileType) } ?? false }
   }
 
   // MARK: Reading

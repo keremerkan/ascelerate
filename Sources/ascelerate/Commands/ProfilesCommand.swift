@@ -199,7 +199,7 @@ struct ProfilesCommand: AsyncParsableCommand {
     private func promptCertificates(profileType: ASCEnum.ProfileCreateRequestProfileType, client: ASCClient) async throws -> [String] {
       let neededFamily = Profiles.certificateFamily(forProfileType: profileType.rawValue)
 
-      let filtered = try await fetchCertificates(family: neededFamily, client: client).sorted {
+      let filtered = try await fetchCertificates(fitting: profileType.rawValue, client: client).sorted {
         ($0.expirationDate ?? .distantPast) > ($1.expirationDate ?? .distantPast)
       }
 
@@ -287,7 +287,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       if let certificates {
         if certificates.lowercased() == "all" {
           let neededFamily = Profiles.certificateFamily(forProfileType: profileType.rawValue)
-          let filtered = try await fetchCertificates(family: neededFamily, client: client)
+          let filtered = try await fetchCertificates(fitting: profileType.rawValue, client: client)
           guard !filtered.isEmpty else {
             throw ValidationError("No \(neededFamily.lowercased()) certificates found in your account.")
           }
@@ -459,7 +459,7 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       // Resolve certificates
       var explicitCerts: [Certificates.Certificate]?
-      var certsByFamily: [String: [Certificates.Certificate]] = [:]
+      var allCerts: [Certificates.Certificate] = []
 
       if let toCerts {
         // Explicit certificates specified
@@ -472,8 +472,8 @@ struct ProfilesCommand: AsyncParsableCommand {
         explicitCerts = resolved
         print("Using \(resolved.count) specified certificate(s).")
       } else {
-        // Auto-detect: group all certificates by family
-        certsByFamily = try await Profiles.certificatesByFamily(client: client)
+        // Auto-detect: each profile takes the certificates that fit its type
+        allCerts = try await Certificates.list(client: client)
       }
 
       // Fetch all enabled devices upfront if --all-devices
@@ -497,7 +497,7 @@ struct ProfilesCommand: AsyncParsableCommand {
             certInfo = "\(explicitCerts.count) specified"
           } else {
             let neededFamily = Profiles.certificateFamily(forProfileType: profileTypeRaw)
-            let count = certsByFamily[neededFamily]?.count ?? 0
+            let count = Profiles.certificates(allCerts, fitting: profileTypeRaw).count
             certInfo = count == 0 ? "—" : "\(count) \(neededFamily.lowercased())"
           }
           return [profileName, profileTypeRaw, bidIdentifier, certInfo]
@@ -521,7 +521,7 @@ struct ProfilesCommand: AsyncParsableCommand {
           certs = explicitCerts
         } else {
           let neededFamily = Profiles.certificateFamily(forProfileType: profile.type ?? "")
-          let familyCerts = certsByFamily[neededFamily] ?? []
+          let familyCerts = Profiles.certificates(allCerts, fitting: profile.type ?? "")
           guard !familyCerts.isEmpty else {
             print("  SKIP \(profile.name.isEmpty ? "—" : profile.name) — no \(neededFamily.lowercased()) certificate found")
             failed += 1
@@ -642,11 +642,12 @@ private func profileChoice(_ profile: Profiles.Profile) -> String {
   "\(profile.name.isEmpty ? "—" : profile.name) (\(profile.type.map { formatState($0) } ?? "—"), \(profile.state.map { formatState($0) } ?? "—"))"
 }
 
-/// Fetches all signing certificates in the account, filtered to `family` if given.
-func fetchCertificates(family: String? = nil, client: ASCClient) async throws -> [Certificates.Certificate] {
+/// Fetches all signing certificates in the account; with `profileType`, the ones that can go in a
+/// profile of that type (`Profiles.certificateFits`).
+func fetchCertificates(fitting profileType: String? = nil, client: ASCClient) async throws -> [Certificates.Certificate] {
   let allCerts = try await Certificates.list(client: client)
-  guard let family else { return allCerts }
-  return allCerts.filter { $0.type.map { Profiles.certificateFamily($0) } == family }
+  guard let profileType else { return allCerts }
+  return Profiles.certificates(allCerts, fitting: profileType)
 }
 
 /// Reissues `profile` (`Profiles.reissue`) and prints an OK/FAIL/SKIP line, plus a recovery

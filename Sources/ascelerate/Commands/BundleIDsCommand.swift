@@ -434,7 +434,7 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: AS
 
   guard !matchingProfiles.isEmpty else { return }
 
-  let certsByFamily = try await Profiles.certificatesByFamily(client: client)
+  let allCerts = try await Certificates.list(client: client)
 
   print()
   print("Capability changes require provisioning profile regeneration.")
@@ -457,7 +457,7 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: AS
 
   for profile in matchingProfiles {
     let neededFamily = Profiles.certificateFamily(forProfileType: profile.type ?? "")
-    let certs = certsByFamily[neededFamily] ?? []
+    let certs = Profiles.certificates(allCerts, fitting: profile.type ?? "")
     guard !certs.isEmpty else {
       print("  SKIP \(profile.name.isEmpty ? "—" : profile.name) — no \(neededFamily.lowercased()) certificate found")
       failed += 1

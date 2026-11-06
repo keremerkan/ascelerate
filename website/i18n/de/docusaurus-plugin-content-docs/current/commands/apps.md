@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-Der Befehl prüft den Status und den Build der Version (verarbeitet, mit beantworteter Exportkonformität), das Copyright, den Kontakt und die Anmeldung für die App-Prüfung sowie die primäre Kategorie, die Inhaltsrechte, den Preis und die Verfügbarkeit der App. Dann geht er jede Sprache durch: App-Info (Name, in der Primärsprache auch die Datenschutzrichtlinien-URL), die Texte der Version (Beschreibung und Schlüsselwörter in jeder Sprache, die Support-URL in der Primärsprache) und Screenshots. Eine Sprache ohne eigene Screenshots zeigt im App Store die der Primärsprache, daher braucht nur die Primärsprache welche:
+Der Befehl prüft den Status und den Build der Version (verarbeitet, mit beantworteter Exportkonformität), das Copyright, den Kontakt und die Anmeldung für die App-Prüfung sowie die primäre Kategorie, die Inhaltsrechte, die Altersfreigabe (jede Frage des Fragebogens beantwortet), den Preis und die Verfügbarkeit der App. Dann geht er jede Sprache durch: App-Info (Name, in der Primärsprache auch die Datenschutzrichtlinien-URL), die Texte der Version (Beschreibung und Schlüsselwörter in jeder Sprache, die Support-URL in der Primärsprache) und Screenshots. Eine Sprache ohne eigene Screenshots zeigt im App Store die der Primärsprache, daher braucht nur die Primärsprache welche:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -122,6 +122,7 @@ Review contact                       ✓ Jane Doe, jane@example.com
 Sign-in                              ✓ Not required
 Category                             ✓ Productivity
 Content rights                       ✓ Does Not Use Third Party Content
+Age rating                           ✓ Answered
 Price                                ✓ Set
 Availability                         ✓ 175 territories
 
@@ -135,8 +136,11 @@ de-DE (German (Germany))
   Localizations                      ✗ Missing: Keywords, What's New
   Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 14 passed, 1 failed
+Result: 15 passed, 1 failed
+Not checked: App Privacy. Its answers must be published in App Store Connect: https://appstoreconnect.apple.com/apps/1234567890/distribution/privacy
 ```
+
+App-Datenschutz wird nicht geprüft: Die App Store Connect API hat dafür keine Endpunkte. App Store Connect lehnt eine Einreichung ab, solange die Antworten zum App-Datenschutz nicht veröffentlicht sind; die Textausgabe endet deshalb mit einem Link zu dieser Seite.
 
 In-App-Käufe und Abonnements werden auf Preise und einen Status geprüft, der mit einer Einreichung mitgehen kann. Ein Produkt, das Sie aus dem Verkauf genommen haben (Developer Removed from Sale), wird als übersprungen (–) aufgeführt und lässt die Prüfung nicht fehlschlagen; die Ergebniszeile zählt es gesondert.
 

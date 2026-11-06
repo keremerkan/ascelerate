@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-The command checks the version's state and build (processed, with export compliance answered), its copyright, App Review contact and sign-in, and the app's primary category, content rights, price and availability. Then it goes through each language: app info (name, and the privacy policy URL in the primary language), the version's text (description and keywords in every language, the support URL in the primary language) and screenshots. A language without screenshots of its own shows the primary language's on the App Store, so only the primary language needs them:
+The command checks the version's state and build (processed, with export compliance answered), its copyright, App Review contact and sign-in, and the app's primary category, content rights, age rating (every question of the questionnaire answered), price and availability. Then it goes through each language: app info (name, and the privacy policy URL in the primary language), the version's text (description and keywords in every language, the support URL in the primary language) and screenshots. A language without screenshots of its own shows the primary language's on the App Store, so only the primary language needs them:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -122,6 +122,7 @@ Review contact                       ✓ Jane Doe, jane@example.com
 Sign-in                              ✓ Not required
 Category                             ✓ Productivity
 Content rights                       ✓ Does Not Use Third Party Content
+Age rating                           ✓ Answered
 Price                                ✓ Set
 Availability                         ✓ 175 territories
 
@@ -135,8 +136,11 @@ de-DE (German (Germany))
   Localizations                      ✗ Missing: Keywords, What's New
   Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 14 passed, 1 failed
+Result: 15 passed, 1 failed
+Not checked: App Privacy. Its answers must be published in App Store Connect: https://appstoreconnect.apple.com/apps/1234567890/distribution/privacy
 ```
+
+App Privacy isn't checked: the App Store Connect API has no endpoints for it. App Store Connect refuses a submission until the app's App Privacy answers are published, so the text output ends with a link to that page.
 
 In-app purchases and subscriptions are checked for prices and a state that can go with a submission. A product you removed from sale (Developer Removed from Sale) is listed as skipped (–) and doesn't fail the check; the result line counts it separately.
 

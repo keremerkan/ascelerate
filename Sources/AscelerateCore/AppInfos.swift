@@ -417,4 +417,22 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
       ageRatingOverride: attributes?.ageRatingOverrideV2
     )
   }
+
+  /// The questionnaire's questions without an answer (nil), which App Store Connect asks for before
+  /// a submission: every content intensity and yes-or-no question, whether a social media app is
+  /// restricted by age only when it's one. The Kids category and the override are optional.
+  public var unanswered: Int {
+    let levels = [
+      alcoholTobaccoOrDrugUseOrReferences, contests, gamblingSimulated, gunsOrOtherWeapons, horrorOrFearThemes,
+      matureOrSuggestiveThemes, profanityOrCrudeHumor, sexualContentOrNudity, sexualContentGraphicAndNudity,
+      violenceCartoonOrFantasy, violenceRealistic, violenceRealisticProlongedGraphicOrSadistic,
+      medicalOrTreatmentInformation,
+    ]
+    var flags = [
+      isAdvertising, isGambling, isUnrestrictedWebAccess, isUserGeneratedContent, isMessagingAndChat, isLootBox,
+      isHealthOrWellnessTopics, isParentalControls, isAgeAssurance, isSocialMedia,
+    ]
+    if isSocialMedia == true { flags.append(isSocialMediaAgeRestricted) }
+    return levels.count { $0 == nil } + flags.count { $0 == nil }
+  }
 }

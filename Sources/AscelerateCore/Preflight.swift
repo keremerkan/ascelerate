@@ -9,8 +9,9 @@ import Foundation
 /// The rules follow App Store Connect: a language without screenshots of its own shows the
 /// primary language's, so only the primary language needs them; the description and keywords
 /// have no such fallback; What's New exists only once a version of the platform was released.
-/// App Store Connect also checks what the API doesn't show (App Privacy, the age rating
-/// questionnaire), so a submission can still be refused for its own reasons.
+/// App Store Connect also checks what the API doesn't show: App Privacy (the data usage answers
+/// must be published; the API has no endpoints for them, 4.6), so a submission can still be
+/// refused for its own reasons.
 public enum Preflight {
   /// Version states a version can go to App Review from.
   public static let submittableStates: Set<String> = [
@@ -71,6 +72,8 @@ public enum Preflight {
     public let hasPrice: Bool
     /// The territories it's available in; nil when availability was never set up.
     public let availableTerritories: Int?
+    /// The age rating questions without an answer (`AgeRatingFields.unanswered`).
+    public let unansweredAgeRatingQuestions: Int
 
     public var checks: [Check] {
       var checks: [Check] = []
@@ -101,6 +104,7 @@ public enum Preflight {
       add(.contentRights, contentRights == nil ? [.missing] : [])
       add(.price, hasPrice ? [] : [.missing])
       add(.availability, availableTerritories == nil ? [.notSetUp] : availableTerritories == 0 ? [.missing] : [])
+      add(.ageRating, unansweredAgeRatingQuestions > 0 ? [.missing] : [])
 
       for language in languages {
         if let fields = language.appInfo {
@@ -134,7 +138,7 @@ public enum Preflight {
 
   /// What a check is about.
   public enum Item: Sendable, Hashable {
-    case versionState, build, copyright, reviewContact, signIn, category, contentRights, price, availability
+    case versionState, build, copyright, reviewContact, signIn, category, contentRights, price, availability, ageRating
     case appInformation(String), localization(String), screenshots(String)
 
     /// The language of a per-language check.
@@ -193,7 +197,8 @@ public enum Preflight {
     async let screenshots = screenshotCounts(localizationIDs: versionLocalizations.map(\.id), client: client)
 
     let primaryLocale = try await app.attributes?.primaryLocale ?? ""
-    let (category, infoLocalizations) = try await appInfo
+    let (appInfoID, category, infoLocalizations) = try await appInfo
+    async let ageRating = AppInfos.ageRatingDeclaration(appInfoID: appInfoID, client: client)
     let versionByLocale = Dictionary(
       versionLocalizations.compactMap { localization in localization.attributes?.locale.map { ($0, localization) } },
       uniquingKeysWith: { first, _ in first })
@@ -227,15 +232,16 @@ public enum Preflight {
       build: try await build.map { Builds.Build($0) }, requiresWhatsNew: try await released, primaryLocale: primaryLocale,
       languages: languages, review: try await review?.information, primaryCategory: category,
       contentRights: try await app.attributes?.contentRightsDeclaration, hasPrice: try await schedule != nil,
-      availableTerritories: try await availability.map { $0.territories.count(where: \.available) })
+      availableTerritories: try await availability.map { $0.territories.count(where: \.available) },
+      unansweredAgeRatingQuestions: AgeRatingFields(try await ageRating.attributes).unanswered)
   }
 
-  /// The active app info's primary category and localizations.
+  /// The active app info's ID, primary category and localizations.
   private static func appInformation(
     appID: String, client: ASCClient
-  ) async throws -> (category: String?, localizations: [Components.Schemas.AppInfoLocalization]) {
+  ) async throws -> (id: String, category: String?, localizations: [Components.Schemas.AppInfoLocalization]) {
     let (appInfo, localizations) = try await AppInfos.activeWithLocalizations(appID: appID, client: client)
-    return (appInfo.relationships?.primaryCategory?.data?.id, localizations)
+    return (appInfo.id, appInfo.relationships?.primaryCategory?.data?.id, localizations)
   }
 
   /// Each version localization's screenshot sets that hold screenshots, and their screenshots.

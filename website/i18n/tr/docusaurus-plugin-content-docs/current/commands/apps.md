@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-Komut; sürümün durumunu ve build'ini (işlenmiş ve ihracat uyumluluğu yanıtlanmış olmalı), telif hakkını, App Review iletişim ve giriş bilgilerini, ayrıca uygulamanın birincil kategorisini, içerik haklarını, fiyatını ve bulunabilirliğini denetler. Ardından her dili inceler: uygulama bilgileri (ad ve ana dilde gizlilik politikası URL'si), sürümün metinleri (her dilde açıklama ve anahtar kelimeler, ana dilde destek URL'si) ve ekran görüntüleri. Kendi ekran görüntüleri olmayan bir dil App Store'da ana dilin ekran görüntülerini gösterdiğinden yalnızca ana dilde ekran görüntüsü gerekir:
+Komut; sürümün durumunu ve build'ini (işlenmiş ve ihracat uyumluluğu yanıtlanmış olmalı), telif hakkını, App Review iletişim ve giriş bilgilerini, ayrıca uygulamanın birincil kategorisini, içerik haklarını, yaş derecelendirmesini (anketteki her soru yanıtlanmış olmalı), fiyatını ve bulunabilirliğini denetler. Ardından her dili inceler: uygulama bilgileri (ad ve ana dilde gizlilik politikası URL'si), sürümün metinleri (her dilde açıklama ve anahtar kelimeler, ana dilde destek URL'si) ve ekran görüntüleri. Kendi ekran görüntüleri olmayan bir dil App Store'da ana dilin ekran görüntülerini gösterdiğinden yalnızca ana dilde ekran görüntüsü gerekir:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -122,6 +122,7 @@ Review contact                       ✓ Jane Doe, jane@example.com
 Sign-in                              ✓ Not required
 Category                             ✓ Productivity
 Content rights                       ✓ Does Not Use Third Party Content
+Age rating                           ✓ Answered
 Price                                ✓ Set
 Availability                         ✓ 175 territories
 
@@ -135,8 +136,11 @@ de-DE (German (Germany))
   Localizations                      ✗ Missing: Keywords, What's New
   Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 14 passed, 1 failed
+Result: 15 passed, 1 failed
+Not checked: App Privacy. Its answers must be published in App Store Connect: https://appstoreconnect.apple.com/apps/1234567890/distribution/privacy
 ```
+
+Uygulama gizliliği denetlenmez: App Store Connect API'sinde bunun için uç nokta yoktur. App Store Connect, uygulama gizliliği yanıtları yayımlanana kadar gönderimi reddeder; bu yüzden metin çıktısı o sayfanın bağlantısıyla biter.
 
 Uygulama içi satın almalar ve abonelikler, fiyat ve gönderimle birlikte gidebilecek bir durum açısından denetlenir. Satıştan kaldırdığınız bir ürün (Developer Removed from Sale) atlandı (–) olarak listelenir ve kontrolün başarısız olmasına yol açmaz; sonuç satırı onu ayrıca sayar.
 

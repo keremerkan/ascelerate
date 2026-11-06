@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-El comando comprueba el estado y la compilación de la versión (procesada y con el cumplimiento de exportación respondido), el copyright, el contacto y el inicio de sesión para la revisión, y la categoría principal, los derechos de contenido, el precio y la disponibilidad de la app. Después recorre cada idioma: la información de la app (nombre y, en el idioma principal, la URL de la política de privacidad), los textos de la versión (descripción y palabras clave en todos los idiomas, la URL de soporte en el idioma principal) y las capturas de pantalla. Un idioma sin capturas propias muestra en el App Store las del idioma principal, así que solo el idioma principal las necesita:
+El comando comprueba el estado y la compilación de la versión (procesada y con el cumplimiento de exportación respondido), el copyright, el contacto y el inicio de sesión para la revisión, y la categoría principal, los derechos de contenido, la clasificación por edad (todas las preguntas del cuestionario respondidas), el precio y la disponibilidad de la app. Después recorre cada idioma: la información de la app (nombre y, en el idioma principal, la URL de la política de privacidad), los textos de la versión (descripción y palabras clave en todos los idiomas, la URL de soporte en el idioma principal) y las capturas de pantalla. Un idioma sin capturas propias muestra en el App Store las del idioma principal, así que solo el idioma principal las necesita:
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -122,6 +122,7 @@ Review contact                       ✓ Jane Doe, jane@example.com
 Sign-in                              ✓ Not required
 Category                             ✓ Productivity
 Content rights                       ✓ Does Not Use Third Party Content
+Age rating                           ✓ Answered
 Price                                ✓ Set
 Availability                         ✓ 175 territories
 
@@ -135,8 +136,11 @@ de-DE (German (Germany))
   Localizations                      ✗ Missing: Keywords, What's New
   Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 14 passed, 1 failed
+Result: 15 passed, 1 failed
+Not checked: App Privacy. Its answers must be published in App Store Connect: https://appstoreconnect.apple.com/apps/1234567890/distribution/privacy
 ```
+
+La privacidad de la app no se comprueba: la API de App Store Connect no tiene endpoints para ello. App Store Connect rechaza un envío mientras las respuestas de privacidad de la app no estén publicadas, así que la salida de texto termina con un enlace a esa página.
 
 En las compras dentro de la app y las suscripciones se comprueba que tengan precios y un estado compatible con un envío. Un producto que haya retirado de la venta (Developer Removed from Sale) aparece como omitido (–) y no hace fallar la comprobación; la línea del resultado lo cuenta aparte.
 

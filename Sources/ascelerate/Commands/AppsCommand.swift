@@ -1286,6 +1286,8 @@ struct AppsCommand: AsyncParsableCommand {
         let skipText = skipCount > 0 ? ", \(yellow("\(skipCount) skipped"))" : ""
         let resultText = "\(green("\(passCount) passed"))\(skipText), \(failCount > 0 ? red("\(failCount) failed") : "\(failCount) failed")"
         print("Result: \(resultText)")
+        // The API has no App Privacy endpoints, and a submission without published answers is refused.
+        print("Not checked: App Privacy. Its answers must be published in App Store Connect: https://appstoreconnect.apple.com/apps/\(app.id)/distribution/privacy")
 
         if failCount > 0 {
           throw ExitCode.failure
@@ -1334,6 +1336,8 @@ struct AppsCommand: AsyncParsableCommand {
             (name, detail) = ("Content rights", report.contentRights.map(formatState) ?? "Not answered")
           case .price:
             (name, detail) = ("Price", check.passed ? "Set" : "Not set")
+          case .ageRating:
+            (name, detail) = ("Age rating", check.passed ? "Answered" : "\(report.unansweredAgeRatingQuestions) question\(report.unansweredAgeRatingQuestions == 1 ? "" : "s") unanswered")
           case .availability:
             name = "Availability"
             detail = report.availableTerritories.map { $0 == 0 ? "Not available anywhere" : "\($0) territor\($0 == 1 ? "y" : "ies")" } ?? "Not set up"

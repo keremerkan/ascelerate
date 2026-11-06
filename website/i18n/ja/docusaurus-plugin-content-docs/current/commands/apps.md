@@ -108,7 +108,7 @@ ascelerate apps review preflight <bundle-id>
 ascelerate apps review preflight <bundle-id> --version 2.1.0
 ```
 
-バージョンの状態とビルド（処理済みで、輸出コンプライアンスに回答済み）、著作権、App Reviewの連絡先とサインイン、アプリのプライマリカテゴリ、コンテンツ配信権、価格、配信状況を確認します。続いて各言語について、アプリ情報（名前と、主要言語ではプライバシーポリシーURL）、バージョンのテキスト（すべての言語の説明文とキーワード、主要言語のサポートURL）、スクリーンショットを確認します。独自のスクリーンショットがない言語ではApp Storeに主要言語のスクリーンショットが表示されるため、スクリーンショットが必要なのは主要言語だけです：
+バージョンの状態とビルド（処理済みで、輸出コンプライアンスに回答済み）、著作権、App Reviewの連絡先とサインイン、アプリのプライマリカテゴリ、コンテンツ配信権、年齢制限指定（質問票のすべての質問に回答済み）、価格、配信状況を確認します。続いて各言語について、アプリ情報（名前と、主要言語ではプライバシーポリシーURL）、バージョンのテキスト（すべての言語の説明文とキーワード、主要言語のサポートURL）、スクリーンショットを確認します。独自のスクリーンショットがない言語ではApp Storeに主要言語のスクリーンショットが表示されるため、スクリーンショットが必要なのは主要言語だけです：
 
 ```
 Preflight checks for MyApp v2.1.0 (Prepare for Submission)
@@ -122,6 +122,7 @@ Review contact                       ✓ Jane Doe, jane@example.com
 Sign-in                              ✓ Not required
 Category                             ✓ Productivity
 Content rights                       ✓ Does Not Use Third Party Content
+Age rating                           ✓ Answered
 Price                                ✓ Set
 Availability                         ✓ 175 territories
 
@@ -135,8 +136,11 @@ de-DE (German (Germany))
   Localizations                      ✗ Missing: Keywords, What's New
   Screenshots                        ✓ None (uses en-US's)
 ──────────────────────────────────────────────────────────────────
-Result: 14 passed, 1 failed
+Result: 15 passed, 1 failed
+Not checked: App Privacy. Its answers must be published in App Store Connect: https://appstoreconnect.apple.com/apps/1234567890/distribution/privacy
 ```
+
+アプリのプライバシーは確認しません。App Store Connect APIにはそのためのエンドポイントがないためです。アプリのプライバシーの回答が公開されるまでApp Store Connectは提出を受け付けないため、テキスト出力の最後にそのページへのリンクを表示します。
 
 App 内課金とサブスクリプションは、価格と、提出に含められる状態かどうかを確認します。販売を停止した商品（Developer Removed from Sale）はスキップ（–）として表示され、チェックの失敗にはなりません。結果行では別に数えられます。
 

@@ -138,7 +138,9 @@ struct InstallCompletionsCommand: ParsableCommand {
     let entries = Ascelerate.configuration.subcommands
       .map { sub in
         let name = sub._commandName
-        let abstract = sub.configuration.abstract
+        // In single quotes: an apostrophe ("The team's people") ends the string, so it's closed,
+        // escaped and opened again; unescaped, zsh failed to read the whole file.
+        let abstract = sub.configuration.abstract.replacingOccurrences(of: "'", with: "'\\''")
         return "            '\(name):\(abstract)'"
       }
       .joined(separator: "\n")

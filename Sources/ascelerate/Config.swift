@@ -21,7 +21,22 @@ struct Config: Codable {
 
     let data = try Data(contentsOf: configFile)
     let config = try JSONDecoder().decode(Config.self, from: data)
+    config.tightenKeys()
     return config
+  }
+
+  /// Makes the keys in the config directory owner-only. `configure` does as it copies a key in, but
+  /// a key put there by hand or by an early version kept its download's 644. Keys elsewhere are
+  /// the user's own files and stay as they are.
+  private func tightenKeys() {
+    let fm = FileManager.default
+    for path in [privateKeyPath, ads?.privateKeyPath].compactMap({ $0 }).map(expandPath) {
+      guard path.hasPrefix(Config.configDirectory.path + "/"),
+        let mode = (try? fm.attributesOfItem(atPath: path))?[.posixPermissions] as? Int, mode & 0o077 != 0
+      else { continue }
+      // Best effort: a key that stays readable still works, as before.
+      try? fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+    }
   }
 
   /// Creates the config directory owner-only from the start: keys must never be readable by

@@ -134,6 +134,63 @@ public enum ClassicMedia {
     return previews.count
   }
 
+  /// How a set's uploaded screenshots or previews line up with a folder's files (`media upload
+  /// --replace`). Apple keeps the MD5 sent when an item was committed (`sourceFileChecksum`), so an
+  /// item with a file's checksum is that file, uploaded already: it's kept. Files without one are
+  /// uploaded, items no file matches are deleted, and the set is then put in the files' order. A
+  /// file in the folder twice takes two items.
+  public struct SetSync: Equatable, Sendable {
+    /// An item of the set as it stands: its checksum, nil when it can't be kept (failed, or
+    /// its file never arrived).
+    public struct Item: Equatable, Sendable {
+      public let id: String
+      public let checksum: String?
+
+      public init(id: String, checksum: String?) {
+        self.id = id
+        self.checksum = checksum
+      }
+    }
+
+    /// Per file, in the files' order: the item it matches (kept), or nil (to upload).
+    public let kept: [String?]
+    /// Items no file matches, in the set's order.
+    public let deletions: [String]
+    /// The set holds the files already, in their order, and nothing else.
+    public let isUnchanged: Bool
+
+    /// `files`: the files' MD5 checksums, in order; `current`: the set's items, in its order.
+    public init(files: [String], current: [Item]) {
+      var available = current.filter { $0.checksum != nil }
+      var kept: [String?] = []
+      for checksum in files {
+        if let index = available.firstIndex(where: { $0.checksum?.caseInsensitiveCompare(checksum) == .orderedSame }) {
+          kept.append(available.remove(at: index).id)
+        } else {
+          kept.append(nil)
+        }
+      }
+      let keptIDs = Set(kept.compactMap(\.self))
+      self.kept = kept
+      deletions = current.map(\.id).filter { !keptIDs.contains($0) }
+      isUnchanged = deletions.isEmpty && kept.allSatisfy { $0 != nil } && kept.compactMap(\.self) == current.map(\.id)
+    }
+
+    /// A screenshot as an item: kept unless it failed or is still awaiting its file.
+    public static func item(_ screenshot: Components.Schemas.AppScreenshot) -> Item {
+      Item(id: screenshot.id, checksum: keepable(screenshot.attributes?.assetDeliveryState) ? screenshot.attributes?.sourceFileChecksum : nil)
+    }
+
+    /// A preview as an item: kept unless it failed or is still awaiting its file.
+    public static func item(_ preview: Components.Schemas.AppPreview) -> Item {
+      Item(id: preview.id, checksum: keepable(preview.attributes?.assetDeliveryState) ? preview.attributes?.sourceFileChecksum : nil)
+    }
+
+    private static func keepable(_ state: Components.Schemas.AppMediaAssetState?) -> Bool {
+      !["FAILED", "AWAITING_UPLOAD"].contains(state?.state ?? "")
+    }
+  }
+
   /// Sets the order of a screenshot set's screenshots.
   public static func reorderScreenshots(setID: String, ids: [String], client: ASCClient) async throws {
     _ = try await client.appScreenshotSetsAppScreenshotsReplaceToManyRelationship(

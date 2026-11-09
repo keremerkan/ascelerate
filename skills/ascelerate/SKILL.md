@@ -123,7 +123,7 @@ ascelerate apps media download <app> --locale en-US,tr          # Only some loca
 ascelerate apps media upload <app> media/
 ascelerate apps media upload <app> screenshots.zip            # Zip/tar/tar.gz support
 ascelerate apps media upload <app>                            # Interactive picker
-ascelerate apps media upload <app> media/ --replace           # Replace existing
+ascelerate apps media upload <app> media/ --replace           # Make sets match the folder: unchanged files stay (checksum), only new/changed ones upload, then reordered
 ascelerate apps media verify <app>                            # Check processing status
 ascelerate apps media verify <app> media/                     # Retry stuck items (incl. screenshots whose asset library placement is stuck processing, which App Review refuses with ASSET_IN_POST_PROCESSING)
 ascelerate apps media prune <app> media/                      # Delete server sets with no matching local folder

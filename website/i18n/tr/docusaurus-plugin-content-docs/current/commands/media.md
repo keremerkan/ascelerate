@@ -118,7 +118,7 @@ App Store Connect, iPhone uygulamaları için **`APP_IPHONE_67`** ve iPad uygula
 </details>
 
 :::note
-Watch ve iMessage display type'lar yalnızca ekran görüntülerini destekler -- bu klasörlerdeki video dosyaları uyarıyla atlanır. `--replace` flag'i, yenilerini yüklemeden önce eşleşen her setteki tüm mevcut varlıkları siler.
+Watch ve iMessage display type'lar yalnızca ekran görüntülerini destekler -- bu klasörlerdeki video dosyaları uyarıyla atlanır. `--replace` ile eşleşen her set, klasördeki dosyaların tam olarak aynısını içerir hâle gelir: Yüklenmiş ekran görüntüleri ve önizlemeler olduğu gibi kalır (dosya adları ne olursa olsun sağlama toplamlarından tanınır), setteki diğer öğeler silinir, yalnızca yeni veya değişmiş dosyalar yüklenir ve set klasördeki sıraya konur. Hiçbir şey değişmediyse yeniden çalıştırmak hiçbir şey yüklemez; dosyaları yeniden adlandırıp yerlerini değiştirmek yalnızca seti yeniden sıralar. iPhone Duo, başlık ve arama sonuçları görselleri varlık kitaplığından geçer ve bütünüyle değiştirilir.
 :::
 
 ### iPhone Duo
@@ -177,7 +177,7 @@ Bir ekran görüntüsü tamamlanmış görünse de varlık kitaplığındaki yer
 
 ## Eski Setleri Temizleme
 
-Yükleme sırasındaki `--replace` yalnızca yerel bir klasörle eşleşen setleri boşaltır; artık sunmadığınız ekran boyutlarına ait sunucu setleri eski ekran görüntülerini korur. `media prune`, eşleşen yerel locale/display-type klasörü olmayan setleri, öğe sayılarıyla birlikte listeleyip onay aldıktan sonra siler:
+Yükleme sırasındaki `--replace` yalnızca yerel bir klasörle eşleşen setleri değiştirir; artık sunmadığınız ekran boyutlarına ait sunucu setleri eski ekran görüntülerini korur. `media prune`, eşleşen yerel locale/display-type klasörü olmayan setleri, öğe sayılarıyla birlikte listeleyip onay aldıktan sonra siler:
 
 ```bash
 ascelerate apps media prune <bundle-id> media/

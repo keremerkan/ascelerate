@@ -118,7 +118,7 @@ App Store Connect exige capturas de pantalla **`APP_IPHONE_67`** para las apps d
 </details>
 
 :::note
-Los tipos de pantalla de Watch e iMessage solo admiten capturas de pantalla: los vídeos de esas carpetas se omiten con una advertencia. La opción `--replace` elimina todo el contenido existente de cada conjunto correspondiente antes de subir el nuevo.
+Los tipos de pantalla de Watch e iMessage solo admiten capturas de pantalla: los vídeos de esas carpetas se omiten con una advertencia. Con `--replace`, cada conjunto correspondiente queda con exactamente los archivos de la carpeta: las capturas de pantalla y vistas previas ya subidas se conservan tal como están (se reconocen por su suma de comprobación, sea cual sea su nombre de archivo), el resto de elementos del conjunto se eliminan, solo se suben los archivos nuevos o modificados y el conjunto se pone en el orden de la carpeta. Una nueva ejecución sin cambios no sube nada, y cambiar el nombre de los archivos para moverlos solo reordena el conjunto. Las imágenes de iPhone Duo, de cabecera y de resultados de búsqueda pasan por la biblioteca multimedia y se reemplazan por completo.
 :::
 
 ### iPhone Duo
@@ -177,7 +177,7 @@ Una captura de pantalla también cuenta como bloqueada cuando figura como comple
 
 ## Eliminar conjuntos obsoletos
 
-`--replace` al subir solo vacía los conjuntos que coinciden con una carpeta local: los conjuntos del servidor para tamaños de pantalla que ya no utiliza conservan sus capturas de pantalla antiguas. `media prune` elimina los conjuntos que no tienen una carpeta local de idioma y tipo de pantalla correspondiente, tras mostrarlos con su número de elementos y pedir confirmación:
+`--replace` al subir solo modifica los conjuntos que coinciden con una carpeta local: los conjuntos del servidor para tamaños de pantalla que ya no utiliza conservan sus capturas de pantalla antiguas. `media prune` elimina los conjuntos que no tienen una carpeta local de idioma y tipo de pantalla correspondiente, tras mostrarlos con su número de elementos y pedir confirmación:
 
 ```bash
 ascelerate apps media prune <bundle-id> media/

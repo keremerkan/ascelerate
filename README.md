@@ -503,7 +503,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 </details>
 
-> **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. The `--replace` flag deletes all existing assets in each matching set before uploading new ones.
+> **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. With `--replace`, each matching set ends up holding exactly the folder's files: screenshots and previews already uploaded stay as they are (recognized by their checksum, whatever their file name), the set's other items are deleted, only new or changed files are uploaded, and the set is put in the folder's order. A rerun with nothing changed uploads nothing, and renaming files to move them only reorders the set. iPhone Duo, header and search results images go through the asset library and are replaced whole.
 >
 > App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ (a set holding the folder's files in another order is put in file order after you confirm, without uploading again); `media download` doesn't include them yet, and `media prune` never deletes them.
 >
@@ -548,7 +548,7 @@ A screenshot also counts as stuck when it reads complete but its asset library p
 
 #### Prune stale sets
 
-`--replace` on upload only clears sets that match a local folder — server sets for screen sizes you no longer ship (say, an old 5.8-inch set) keep their outdated screenshots. `media prune` deletes the sets that have no matching local locale/display-type folder, after listing them with asset counts and confirming:
+`--replace` on upload only changes sets that match a local folder — server sets for screen sizes you no longer ship (say, an old 5.8-inch set) keep their outdated screenshots. `media prune` deletes the sets that have no matching local locale/display-type folder, after listing them with asset counts and confirming:
 
 ```bash
 ascelerate apps media prune <bundle-id> media/

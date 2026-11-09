@@ -118,7 +118,7 @@ App Store Connect exige des captures d'écran **`APP_IPHONE_67`** pour les appli
 </details>
 
 :::note
-Les types d'affichage Watch et iMessage ne prennent en charge que les captures d'écran -- les fichiers vidéo dans ces dossiers sont ignorés avec un avertissement. L'option `--replace` supprime tous les éléments existants dans chaque ensemble correspondant avant le téléversement.
+Les types d'affichage Watch et iMessage ne prennent en charge que les captures d'écran -- les fichiers vidéo dans ces dossiers sont ignorés avec un avertissement. Avec `--replace`, chaque ensemble correspondant contient ensuite exactement les fichiers du dossier : les captures d'écran et aperçus déjà téléversés restent tels quels (reconnus par leur somme de contrôle, quel que soit leur nom de fichier), les autres éléments de l'ensemble sont supprimés, seuls les fichiers nouveaux ou modifiés sont téléversés, et l'ensemble est remis dans l'ordre du dossier. Une nouvelle exécution sans changement ne téléverse rien, et renommer des fichiers pour les déplacer ne fait que réordonner l'ensemble. Les images iPhone Duo, d'en-tête et de résultats de recherche passent par la bibliothèque de ressources et sont remplacées entièrement.
 :::
 
 ### iPhone Duo
@@ -177,7 +177,7 @@ Une capture compte aussi comme bloquée quand elle apparaît complète mais que 
 
 ## Purger les ensembles obsolètes
 
-`--replace` lors du téléversement ne vide que les ensembles correspondant à un dossier local -- les ensembles côté serveur pour des tailles d'écran que vous ne fournissez plus conservent leurs captures d'écran obsolètes. `media prune` supprime les ensembles sans dossier local correspondant (locale/type d'affichage), après les avoir listés avec le nombre d'éléments et demandé confirmation :
+`--replace` lors du téléversement ne modifie que les ensembles correspondant à un dossier local -- les ensembles côté serveur pour des tailles d'écran que vous ne fournissez plus conservent leurs captures d'écran obsolètes. `media prune` supprime les ensembles sans dossier local correspondant (locale/type d'affichage), après les avoir listés avec le nombre d'éléments et demandé confirmation :
 
 ```bash
 ascelerate apps media prune <bundle-id> media/

@@ -118,7 +118,7 @@ App Store Connect erfordert **`APP_IPHONE_67`**-Screenshots für iPhone-Apps und
 </details>
 
 :::note
-Watch- und iMessage-Anzeigetypen unterstützen nur Screenshots — Videodateien in diesen Ordnern werden mit einer Warnung übersprungen. Das `--replace`-Flag löscht alle bestehenden Assets in jedem passenden Set, bevor neue hochgeladen werden.
+Watch- und iMessage-Anzeigetypen unterstützen nur Screenshots — Videodateien in diesen Ordnern werden mit einer Warnung übersprungen. Mit `--replace` enthält jedes passende Set danach genau die Dateien des Ordners: Bereits hochgeladene Screenshots und Vorschauen bleiben, wie sie sind (erkannt an ihrer Prüfsumme, unabhängig vom Dateinamen), die übrigen Elemente des Sets werden gelöscht, nur neue oder geänderte Dateien werden hochgeladen, und das Set wird in die Reihenfolge des Ordners gebracht. Ein erneuter Durchlauf ohne Änderungen lädt nichts hoch, und umbenannte Dateien ändern nur die Reihenfolge. iPhone-Duo-, Header- und Suchergebnisbilder laufen über die Asset-Bibliothek und werden vollständig ersetzt.
 :::
 
 ### iPhone Duo
@@ -177,7 +177,7 @@ Ein Screenshot gilt auch dann als blockiert, wenn er als abgeschlossen erscheint
 
 ## Veraltete Sets entfernen
 
-`--replace` beim Hochladen leert nur Sets, die einem lokalen Ordner entsprechen — Server-Sets für Bildschirmgrößen, die Sie nicht mehr ausliefern, behalten ihre veralteten Screenshots. `media prune` löscht die Sets ohne passenden lokalen Locale-/Display-Type-Ordner, nachdem sie mit Asset-Anzahl aufgelistet und bestätigt wurden:
+`--replace` beim Hochladen ändert nur Sets, die einem lokalen Ordner entsprechen — Server-Sets für Bildschirmgrößen, die Sie nicht mehr ausliefern, behalten ihre veralteten Screenshots. `media prune` löscht die Sets ohne passenden lokalen Locale-/Display-Type-Ordner, nachdem sie mit Asset-Anzahl aufgelistet und bestätigt wurden:
 
 ```bash
 ascelerate apps media prune <bundle-id> media/

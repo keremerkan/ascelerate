@@ -236,8 +236,10 @@ struct UploadTally {
   var failed = 0
   /// Files whose first write dry run stopped.
   var notSent = 0
+  /// Files `--replace` found uploaded already (`ClassicMedia.SetSync`), left as they are.
+  var unchanged = 0
 
-  var total: Int { succeeded + failed + notSent }
+  var total: Int { succeeded + failed + notSent + unchanged }
 
   /// Runs one file's upload and counts it: done, failed, or not sent under dry run.
   mutating func record(_ upload: () async throws -> Void) async {
@@ -258,11 +260,13 @@ struct UploadTally {
     succeeded += other.succeeded
     failed += other.failed
     notSent += other.notSent
+    unchanged += other.unchanged
   }
 
   var summary: String {
     var parts: [String] = []
     if succeeded > 0 || total == 0 { parts.append(green("\(succeeded) succeeded")) }
+    if unchanged > 0 { parts.append("\(unchanged) unchanged") }
     if notSent > 0 { parts.append("\(notSent) not sent") }
     if failed > 0 { parts.append(red("\(failed) failed")) }
     return parts.joined(separator: ", ")
@@ -275,6 +279,13 @@ func printDeleted(_ count: Int, _ noun: String, libraryAssets: Int = 0) {
   let kind = noun == "preview" ? "video" : "image"
   let images = libraryAssets > 0 ? " and \(libraryAssets) unused library \(kind)\(libraryAssets == 1 ? "" : "s")" : ""
   print("    \(ClientFactory.isDryRun ? "Would delete" : "Deleted") \(count) existing \(noun)\(count == 1 ? "" : "s")\(images).")
+}
+
+/// Prints how many library images (or videos) the items `syncClassicSet` deleted left unused, and so were deleted too.
+func printDeletedLibraryAssets(_ count: Int, _ noun: String) {
+  guard count > 0 else { return }
+  let kind = noun == "preview" ? "video" : "image"
+  print("    Deleted \(count) unused library \(kind)\(count == 1 ? "" : "s").")
 }
 
 /// Numbers the files of a whole `media upload` run: each file's line starts with `[n/total]`.
@@ -292,6 +303,61 @@ struct UploadCounter {
     print("    [\(position)/\(total)] \(kind) \(index + 1)/\(count): \(fileName)... ", terminator: "")
     fflush(stdout)
   }
+
+  /// Counts files that get no line of their own (a set found unchanged).
+  mutating func skip(_ count: Int) {
+    current += count
+  }
+}
+
+/// `--replace` on a classic set that exists: keeps the items uploaded already (matched by
+/// checksum, `ClassicMedia.SetSync`), deletes the others, uploads only new or changed files and
+/// puts the set in the files' order. Returns how many items it deleted. Delete before upload: a
+/// set holds ten at most.
+func syncClassicSet(
+  _ files: [MediaFile], kind: String, noun: String, current: [ClassicMedia.SetSync.Item],
+  upload: (MediaFile) async throws -> String, delete: (String) async throws -> Void,
+  reorder: ([String]) async throws -> Void, counter: inout UploadCounter, tally: inout UploadTally
+) async throws -> Int {
+  let sync = ClassicMedia.SetSync(files: try files.map { try md5Hex(filePath: $0.path) }, current: current)
+  if sync.isUnchanged {
+    counter.skip(files.count)
+    tally.unchanged += files.count
+    print("    Unchanged: the \(files.count == 1 ? noun : "\(files.count) \(noun)s") as uploaded.")
+    return 0
+  }
+  for id in sync.deletions {
+    _ = try await unlessDryRunStopped { try await delete(id) }
+  }
+  printDeleted(sync.deletions.count, noun)
+  var order: [String] = []
+  var added: [String] = []
+  for (i, file) in files.enumerated() {
+    counter.printLine(kind, i, of: files.count, file.fileName)
+    if let id = sync.kept[i] {
+      print("Unchanged.")
+      tally.unchanged += 1
+      order.append(id)
+      continue
+    }
+    var newID: String?
+    await tally.record { newID = try await upload(file) }
+    // Under dry run a new item has no ID yet: a placeholder shows where the order puts it.
+    if let id = newID ?? (ClientFactory.isDryRun ? "DRY-RUN-\(noun.uppercased())-\(i + 1)" : nil) {
+      order.append(id)
+      added.append(id)
+    }
+  }
+  // The set now holds the kept items in their old order, then the new ones as uploaded: put it in
+  // the files' order unless that's it already.
+  let keptIDs = Set(sync.kept.compactMap(\.self))
+  let standing = current.map(\.id).filter(keptIDs.contains) + added
+  if order.count > 1 && order != standing {
+    if try await unlessDryRunStopped({ try await reorder(order) }) != nil {
+      print("    Put in the folder's order.")
+    }
+  }
+  return sync.deletions.count
 }
 
 /// Uploads images and videos through the asset library and places them in `slot`, in file
@@ -406,7 +472,7 @@ extension AppsCommand {
 
       @OptionGroup var platformOption: PlatformOption
 
-      @Flag(name: .long, help: "Delete existing media in matching sets before uploading.")
+      @Flag(name: .long, help: "Make matching sets hold the folder's files: files already uploaded stay (matched by checksum), others are deleted, only new or changed files are uploaded, and each set is put in the folder's order. iPhone Duo, header and search results images are replaced whole.")
       var replace = false
 
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -618,17 +684,29 @@ extension AppsCommand {
               // Handle screenshots
               if !dt.screenshots.isEmpty, let displayType = dt.screenshotDisplayType {
                 let screenshotSetID: String
+                // With --replace an existing set is synced to the folder (`syncClassicSet`), not
+                // uploaded to.
+                var isSynced = false
                 if let existingSetID = screenshotSetsByType[displayType.rawValue] {
                   screenshotSetID = existingSetID
 
                   if replace {
-                    // The set's library images, read before it's cleared, are deleted after it
-                    // when nothing else uses them (not under dry run, where nothing is cleared).
+                    isSynced = true
+                    // The set's library images, read before its items go, are deleted after them
+                    // when nothing else uses them: those of the deleted items (not under dry run,
+                    // where nothing is deleted).
                     let assets = ClientFactory.isDryRun ? [] : try await AssetLibrary.classicSetAssets(
                       localizationID: localization.id, displayType: displayType.rawValue, type: .appScreenshot, client: ascClient)
-                    let deleted = try await ClassicMedia.deleteAllScreenshots(inSet: screenshotSetID, client: ascClient)
-                    let deletedAssets = try await AssetLibrary.deleteIfUnused(assets, client: ascClient)
-                    printDeleted(deleted, "screenshot", libraryAssets: deletedAssets)
+                    let current = try await LocalizationMedia.screenshots(setID: screenshotSetID, client: ascClient)
+                    let deleted = try await syncClassicSet(
+                      dt.screenshots, kind: "Screenshot", noun: "screenshot", current: current.map(ClassicMedia.SetSync.item),
+                      upload: { try await ClassicMedia.uploadScreenshot($0, setID: screenshotSetID, client: ascClient) },
+                      delete: { try await ClassicMedia.deleteScreenshot($0, client: ascClient) },
+                      reorder: { try await ClassicMedia.reorderScreenshots(setID: screenshotSetID, ids: $0, client: ascClient) },
+                      counter: &counter, tally: &tally)
+                    if deleted > 0 {
+                      printDeletedLibraryAssets(try await AssetLibrary.deleteIfUnused(assets, client: ascClient), "screenshot")
+                    }
                   }
                 } else {
                   screenshotSetID = try await unlessDryRunStopped {
@@ -637,7 +715,7 @@ extension AppsCommand {
                   } ?? "DRY-RUN-SET"
                 }
 
-                for (i, file) in dt.screenshots.enumerated() {
+                for (i, file) in dt.screenshots.enumerated() where !isSynced {
                   counter.printLine("Screenshot", i, of: dt.screenshots.count, file.fileName)
                   await tally.record {
                     _ = try await ClassicMedia.uploadScreenshot(file, setID: screenshotSetID, client: ascClient)
@@ -648,16 +726,27 @@ extension AppsCommand {
               // Handle previews
               if !dt.previews.isEmpty, let pvType = dt.previewType {
                 let previewSetID: String
+                // With --replace an existing set is synced to the folder (`syncClassicSet`), not
+                // uploaded to.
+                var isSynced = false
                 if let existingSetID = previewSetsByType[pvType.rawValue] {
                   previewSetID = existingSetID
 
                   if replace {
-                    // Same cleanup as for screenshots: the previews' library videos.
+                    isSynced = true
+                    // Same cleanup as for screenshots: the deleted previews' library videos.
                     let assets = ClientFactory.isDryRun ? [] : try await AssetLibrary.classicSetAssets(
                       localizationID: localization.id, displayType: dt.folderName, type: .appPreview, client: ascClient)
-                    let deleted = try await ClassicMedia.deleteAllPreviews(inSet: previewSetID, client: ascClient)
-                    let deletedAssets = try await AssetLibrary.deleteIfUnused(assets, client: ascClient)
-                    printDeleted(deleted, "preview", libraryAssets: deletedAssets)
+                    let current = try await LocalizationMedia.previews(setID: previewSetID, client: ascClient)
+                    let deleted = try await syncClassicSet(
+                      dt.previews, kind: "Preview  ", noun: "preview", current: current.map(ClassicMedia.SetSync.item),
+                      upload: { try await ClassicMedia.uploadPreview($0, setID: previewSetID, client: ascClient) },
+                      delete: { try await ClassicMedia.deletePreview($0, client: ascClient) },
+                      reorder: { try await ClassicMedia.reorderPreviews(setID: previewSetID, ids: $0, client: ascClient) },
+                      counter: &counter, tally: &tally)
+                    if deleted > 0 {
+                      printDeletedLibraryAssets(try await AssetLibrary.deleteIfUnused(assets, client: ascClient), "preview")
+                    }
                   }
                 } else {
                   previewSetID = try await unlessDryRunStopped {
@@ -666,7 +755,7 @@ extension AppsCommand {
                   } ?? "DRY-RUN-SET"
                 }
 
-                for (i, file) in dt.previews.enumerated() {
+                for (i, file) in dt.previews.enumerated() where !isSynced {
                   counter.printLine("Preview  ", i, of: dt.previews.count, file.fileName)
                   await tally.record {
                     _ = try await ClassicMedia.uploadPreview(file, setID: previewSetID, client: ascClient)
@@ -678,7 +767,8 @@ extension AppsCommand {
               // One rejected set must not sink the rest — count this set's
               // unattempted files as failed and continue with the next set.
               print("    Failed: \(describeError(error))")
-              tally.failed = (dt.screenshots.count + dt.previews.count) - tally.succeeded - tally.notSent
+              // At least one: a set whose files all went up can still fail to be put in order.
+              tally.failed = max(1, (dt.screenshots.count + dt.previews.count) - tally.succeeded - tally.notSent - tally.unchanged)
             }
 
             if tally.total > 0 {
@@ -722,10 +812,13 @@ extension AppsCommand {
 
         print()
         if total.failed == 0 {
-          if total.notSent > 0 {
-            print("Dry run complete. \(total.notSent) file\(total.notSent == 1 ? "" : "s") would be uploaded; no writes were sent.")
+          let unchanged = total.unchanged > 0 ? " \(total.unchanged) unchanged, as uploaded." : ""
+          if total.notSent == 0 && total.succeeded == 0 && total.unchanged > 0 {
+            print("Nothing to upload: all \(total.unchanged) files are uploaded already, in order.")
+          } else if total.notSent > 0 {
+            print("Dry run complete. \(total.notSent) file\(total.notSent == 1 ? "" : "s") would be uploaded; no writes were sent.\(unchanged)")
           } else {
-            print("Done. \(total.succeeded) file\(total.succeeded == 1 ? "" : "s") uploaded successfully.")
+            print("Done. \(total.succeeded) file\(total.succeeded == 1 ? "" : "s") uploaded successfully.\(unchanged)")
           }
         } else {
           var rows: [[String]] = []

@@ -96,7 +96,9 @@ public enum CustomerReviews {
     return review(response.data, response: responses.first)
   }
 
-  /// Publishes a response to a review. A review takes one response: replace one by deleting it first.
+  /// Publishes a response to a review, replacing the one it has: no delete first (the review then
+  /// reads a new response, with a new ID, pending until Apple publishes it). The same text as the
+  /// current response is accepted but changes nothing.
   @discardableResult
   public static func respond(reviewID: String, body: String, client: ASCClient) async throws -> Response {
     let created = try await client.customerReviewResponsesCreateInstance(body: .json(.init(data: .init(

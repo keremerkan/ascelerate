@@ -203,30 +203,19 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
       CustomerReviewsCommand.printReview(ReviewEntry(review))
       print()
 
-      let replacedBody = existing?.body
       if let existing {
+        // Apple accepts the same text again but changes nothing (the response stays as it is).
+        guard existing.body != body else {
+          print("The response already has this text; nothing to send.")
+          return
+        }
         guard confirm("This review already has a response. Replace it? [y/N] ") else {
           cancelled()
           return
         }
-        try await CustomerReviews.deleteResponse(id: existing.id, client: client)
       }
 
-      let resp: CustomerReviews.Response
-      do {
-        resp = try await CustomerReviews.respond(reviewID: reviewID, body: body, client: client)
-      } catch {
-        // The old response is already deleted at this point — the API only allows
-        // one response per review, so replace works as delete-then-create.
-        if let replacedBody {
-          print()
-          print(red("The previous response was deleted but publishing the new one failed."))
-          print("Previous response text (for recovery):")
-          print("  \(replacedBody)")
-        }
-        throw error
-      }
-
+      let resp = try await CustomerReviews.respond(reviewID: reviewID, body: body, client: client)
       let state = resp.state.map { formatState($0) } ?? "—"
       print()
       success("Responded", "to review (state: \(state)).")

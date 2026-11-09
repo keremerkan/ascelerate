@@ -70,6 +70,20 @@ struct APICredentials {
 
   static let environmentNames = ["ASCELERATE_KEY_ID", "ASCELERATE_ISSUER_ID", "ASCELERATE_PRIVATE_KEY_PATH"]
 
+  /// The variables as the process started with them, read once (`removeFromEnvironment`).
+  private static let environmentValues: [String?] = environmentNames.map { name in
+    ProcessInfo.processInfo.environment[name].flatMap { $0.isEmpty ? nil : $0 }
+  }
+
+  /// Keeps the key's variables for this run, then removes them from the environment, so the tools
+  /// the CLI starts don't inherit them: `builds archive` runs the project's build phases, package
+  /// plugins and test runners, which have no business reading the key's location. Where a tool
+  /// needs the key, the CLI passes it itself (`xcodebuildArguments`). Called first thing in `main`.
+  static func removeFromEnvironment() {
+    _ = environmentValues
+    for name in environmentNames { unsetenv(name) }
+  }
+
   static func current() throws -> APICredentials {
     if let key = try fromEnvironment() { return key }
     let config = try Config.load()
@@ -80,8 +94,7 @@ struct APICredentials {
 
   /// The key in the environment; nil when none of its variables is set.
   static func fromEnvironment() throws -> APICredentials? {
-    let environment = ProcessInfo.processInfo.environment
-    let values = environmentNames.map { environment[$0].flatMap { $0.isEmpty ? nil : $0 } }
+    let values = environmentValues
     guard values.contains(where: { $0 != nil }) else { return nil }
     let missing = zip(environmentNames, values).filter { $0.1 == nil }.map(\.0)
     guard missing.isEmpty, let keyID = values[0], let issuerID = values[1], let path = values[2] else {

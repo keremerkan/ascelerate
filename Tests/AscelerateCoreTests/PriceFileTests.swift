@@ -16,6 +16,34 @@ import Testing
     #expect(throws: PriceFile.FileError.self) { try PriceFile.decode(Data(#"{"prices": {}}"#.utf8)) }
   }
 
+  private func decode(_ prices: [String: String]) throws -> PriceFile {
+    try PriceFile.decode(JSONEncoder().encode(PriceFile(prices: prices)))
+  }
+
+  @Test func plainNumbersStayAsTheyAre() throws {
+    #expect(try decode(["usa": " 4.99 ", "FRA": "5"]).prices == ["USA": "4.99", "FRA": "5"])
+  }
+
+  @Test func aDecimalCommaReadsAsAPoint() throws {
+    #expect(try decode(["DEU": "4,99", "TUR": "99,9"]).prices == ["DEU": "4.99", "TUR": "99.9"])
+  }
+
+  @Test func whatIsntAPlainNumberIsRefused() {
+    // "4,99" read as 4 before; "4.99x" as 4.99; "1,300" could be either 1.3 or 1300.
+    for price in ["4.99x", "1,300", "abc", "", "-4.99", "4.99.1"] {
+      #expect(throws: PriceFile.FileError.self) { try decode(["USA": price]) }
+    }
+  }
+
+  @Test func theRefusalNamesEveryUnreadPrice() {
+    do {
+      _ = try decode(["USA": "4.99", "JPN": "1,300", "DEU": "x"])
+      Issue.record("decoded")
+    } catch {
+      #expect(error.localizedDescription == "These prices aren't plain numbers (such as 4.99): DEU \"x\", JPN \"1,300\".")
+    }
+  }
+
   @Test func resolve() async throws {
     let tiers: [String: [AppPricing.PricePoint]] = [
       "USA": [point("USA", "3.99"), point("USA", "4.99")],

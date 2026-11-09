@@ -17,13 +17,29 @@ public struct PriceFile: Codable, Sendable, Equatable {
   public enum FileError: LocalizedError {
     case unreadable
     case empty
+    /// Prices that aren't plain numbers, by territory code.
+    case notNumbers([String: String])
 
     public var errorDescription: String? {
       switch self {
         case .unreadable: "This isn't a price file: it needs \"prices\", one customer price per territory code."
         case .empty: "The price file has no prices."
+        case .notNumbers(let prices):
+          "These prices aren't plain numbers (such as 4.99): "
+            + prices.sorted { $0.key < $1.key }.map { "\($0.key) \"\($0.value)\"" }.joined(separator: ", ") + "."
       }
     }
+  }
+
+  /// A customer price as the matching reads it ("4.99"), or nil when it isn't a plain number. A
+  /// decimal comma with one or two digits after it reads as a point ("4,99", as a hand-edited file
+  /// may have it); "1,300" is left unread rather than guessed (one point three, or a thousand and
+  /// three hundred?), as is anything after the number ("4.99x", which would otherwise read as 4.99).
+  static func normalized(_ price: String) -> String? {
+    let trimmed = price.trimmingCharacters(in: .whitespaces)
+    if trimmed.wholeMatch(of: /[0-9]+(\.[0-9]+)?/) != nil { return trimmed }
+    if trimmed.wholeMatch(of: /[0-9]+,[0-9]{1,2}/) != nil { return trimmed.replacingOccurrences(of: ",", with: ".") }
+    return nil
   }
 
   /// A schedule's file without a price for its base territory.
@@ -39,10 +55,18 @@ public struct PriceFile: Codable, Sendable, Equatable {
     }
   }
 
-  /// Reads a file, territory codes in uppercase.
+  /// Reads a file, territory codes in uppercase and prices as plain numbers (`normalized`); a
+  /// price that isn't one is refused with the others like it.
   public static func decode(_ data: Data) throws -> PriceFile {
     guard let file = try? JSONDecoder().decode(PriceFile.self, from: data) else { throw FileError.unreadable }
-    let prices = Dictionary(file.prices.map { ($0.key.uppercased(), $0.value) }) { first, _ in first }
+    var prices: [String: String] = [:]
+    var unread: [String: String] = [:]
+    for (territory, price) in file.prices {
+      let code = territory.uppercased()
+      guard prices[code] == nil else { continue }
+      if let number = normalized(price) { prices[code] = number } else { unread[code] = price }
+    }
+    guard unread.isEmpty else { throw FileError.notNumbers(unread) }
     guard !prices.isEmpty else { throw FileError.empty }
     return PriceFile(baseTerritory: file.baseTerritory?.uppercased(), prices: prices)
   }

@@ -18,6 +18,11 @@ import Testing
     #expect(testers == [.init(email: "d@example.com", lastName: "Hopper")])
   }
 
+  @Test func anEmailListedAgainIsOneTester() {
+    let testers = BetaTesters.parseCSV("g@example.com,Grace\nG@Example.com,Other\nh@example.com\n")
+    #expect(testers == [.init(email: "g@example.com", firstName: "Grace"), .init(email: "h@example.com")])
+  }
+
   @Test func readsWindowsLineEndings() {
     #expect(BetaTesters.parseCSV("e@example.com\r\nf@example.com\r\n") == [.init(email: "e@example.com"), .init(email: "f@example.com")])
   }

@@ -108,11 +108,16 @@ public enum BetaTesters {
 
   /// The testers of a CSV file, one per line: `email[,first name[,last name]]`, fields quoted
   /// when they hold commas ("Appleseed, Jane"). Blank lines, lines starting with #, and a header row
-  /// (a first field without @) are skipped; App Store Connect's own export has this shape.
+  /// (a first field without @) are skipped; App Store Connect's own export has this shape. An
+  /// email listed again (in any case) is skipped too.
   public static func parseCSV(_ content: String) -> [NewTester] {
-    CSV.rows(content).compactMap { row in
+    // An email listed twice is one tester (the first row's names): Apple would refuse the second.
+    var seen = Set<String>()
+    return CSV.rows(content).compactMap { row in
       let fields = row.map { $0.trimmingCharacters(in: .whitespaces) }
-      guard let first = fields.first, !first.hasPrefix("#"), first.contains("@") else { return nil }
+      guard let first = fields.first, !first.hasPrefix("#"), first.contains("@"),
+        seen.insert(first.lowercased()).inserted
+      else { return nil }
       return NewTester(
         email: fields[0],
         firstName: fields.count > 1 && !fields[1].isEmpty ? fields[1] : nil,

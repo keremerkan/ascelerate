@@ -239,6 +239,7 @@ public enum ReviewSubmissions {
           filterState: [.readyForReview, .unresolvedIssues], limit: 10)
       ).ok.body.json.data.first?.id
     }
+    let foundBeforeCreating = found
     if found == nil {
       found = try await unlessDryRunStopped {
         try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
@@ -249,6 +250,15 @@ public enum ReviewSubmissions {
       } ?? "DRY-RUN-SUBMISSION"
     }
     let draftID = found ?? ""
+    // A draft found (not made here) may hold the version already: one left by an earlier try whose
+    // products were refused, or by a quit half-way. Adding it again would be refused.
+    if case .appStoreVersion(let versionID) = item, draftID == foundBeforeCreating {
+      // The version relationship only carries its ID when included.
+      let items = try await client.reviewSubmissionsItemsGetToManyRelated(
+        path: .init(id: draftID), query: .init(fieldsAppStoreVersions: [.versionString], include: [.appStoreVersion])
+      ).ok.body.json.data
+      if items.contains(where: { $0.relationships?.appStoreVersion?.data?.id == versionID }) { return draftID }
+    }
     var relationships = Components.Schemas.ReviewSubmissionItemCreateRequest.DataPayload.RelationshipsPayload(
       reviewSubmission: .init(data: .init(id: draftID, _type: "reviewSubmissions")))
     switch item {

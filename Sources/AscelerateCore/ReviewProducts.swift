@@ -131,9 +131,28 @@ public enum ReviewProducts {
         added.append(product)
       } catch {
         guard let reply = ASCError.from(error), [400, 404, 409, 422].contains(reply.statusCode) else { throw error }
+        // Another draft took it meanwhile (Send Update adds each platform's version side by side,
+        // and each platform has a draft of its own): it's on its way to App Review.
+        if await isInDraft(product, client: client) { continue }
         refused.append(Refusal(product: product, error: reply))
       }
     }
     return (added, refused)
+  }
+
+  /// Whether the product's pending version is in a draft now. False when it can't be read: the
+  /// refusal then stands as Apple gave it.
+  private static func isInDraft(_ product: Product, client: ASCClient) async -> Bool {
+    let pending: ProductVersions.Pending?
+    do {
+      switch product.kind {
+        case .inAppPurchase: pending = try await ProductVersions.pendingIAP(product.id, client: client)
+        case .subscription: pending = try await ProductVersions.pendingSubscription(product.id, client: client)
+        case .subscriptionGroup: pending = try await ProductVersions.pendingGroup(product.id, client: client)
+      }
+    } catch {
+      return false
+    }
+    return pending?.state == "READY_FOR_REVIEW"
   }
 }

@@ -166,6 +166,12 @@ public struct ASCError: Error, Sendable {
       associatedErrors = (try? container.decodeIfPresent(Meta.self, forKey: .meta))??.associatedErrors ?? [:]
     }
 
+    /// The entry in one sentence: Apple's detail, or the title when the detail is empty or still
+    /// holds an unfilled placeholder (seen: "…your primary language to @@LANGUAGE_VALUE@@, …").
+    public var text: String {
+      detail.isEmpty || detail.contains("@@") ? title : detail
+    }
+
     /// Every associated reason, in a stable order, without repeats.
     public var reasons: [Entry] {
       var seen = Set<String>()
@@ -185,12 +191,10 @@ public struct ASCError: Error, Sendable {
     })
   }
 
-  /// Apple's reply as one text: each entry's detail (its title when the detail is empty or holds
-  /// an unfilled `@@` placeholder), a state error's reasons after it.
+  /// Apple's reply as one text: each entry's `text`, a state error's reasons after it, apart.
   public var summary: String {
-    func text(_ entry: Entry) -> String { entry.detail.isEmpty || entry.detail.contains("@@") ? entry.title : entry.detail }
-    let texts = errors.flatMap { [text($0)] + $0.reasons.map(text) }.filter { !$0.isEmpty }
-    return texts.isEmpty ? "HTTP \(statusCode)" : texts.joined(separator: " ")
+    let texts = errors.flatMap { [$0.text] + $0.reasons.map(\.text) }.filter { !$0.isEmpty }
+    return texts.isEmpty ? "HTTP \(statusCode)" : texts.joined(separator: "; ")
   }
 
   public let statusCode: Int

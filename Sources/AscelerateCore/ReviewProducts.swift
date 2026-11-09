@@ -97,17 +97,34 @@ public enum ReviewProducts {
   }
 
   /// Adds the ready products that aren't in a draft yet to the draft `draftID`, groups before
-  /// their subscriptions; returns those added.
+  /// their subscriptions; returns those added. One App Store Connect refuses doesn't stop the
+  /// others: once all are tried, the refusals are thrown together (`NotAdded`), the rest in.
   @discardableResult
   public static func addReady(
     _ products: [Product], appID: String, platform: String, draftID: String, client: ASCClient
   ) async throws -> [Product] {
     var added: [Product] = []
+    var refused: [(name: String, reason: String)] = []
     for product in products where product.isReady && !product.isInDraft {
-      _ = try await ReviewSubmissions.add(
-        product.draftItem, appID: appID, platform: platform, draftID: draftID, client: client)
-      added.append(product)
+      do {
+        _ = try await ReviewSubmissions.add(
+          product.draftItem, appID: appID, platform: platform, draftID: draftID, client: client)
+        added.append(product)
+      } catch where ASCError.from(error) != nil {
+        refused.append((product.name, error.localizedDescription))
+      }
     }
+    if !refused.isEmpty { throw NotAdded(refused: refused) }
     return added
+  }
+
+  /// Products App Store Connect wouldn't add to the draft, while the others went in.
+  public struct NotAdded: LocalizedError {
+    public let refused: [(name: String, reason: String)]
+
+    public var errorDescription: String? {
+      let names = refused.map(\.name).formatted(.list(type: .and))
+      return "Not added for review: \(names). " + refused.map(\.reason).joined(separator: " ")
+    }
   }
 }

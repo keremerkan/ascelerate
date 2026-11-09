@@ -296,8 +296,12 @@ public enum Builds {
   ) async throws -> (build: Build, notes: [TestNotes])? {
     let builds = try await list(appID: appID, platform: target.platform.flatMap(Platform.init(rawValue:)), limit: 41, client: client)
     // Newest first: the ones after the target in the list came before it.
+    // When the target isn't among them (an older build), the ones uploaded before it.
     let earlier = builds.firstIndex { $0.id == target.id }.map { Array(builds[($0 + 1)...]) }
-      ?? builds.filter { $0.id != target.id }
+      ?? builds.filter { build in
+        guard build.id != target.id, let uploaded = build.uploadedDate, let targetUploaded = target.uploadedDate else { return false }
+        return uploaded < targetUploaded
+      }
     return try await newestWithTestNotes(earlier, client: client)
   }
 

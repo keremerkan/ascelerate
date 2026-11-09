@@ -87,7 +87,8 @@ public enum OfferCodes {
         let r = data.relationships
         return Detail(
           offer: offerCode(data), priceCount: r?.prices?.meta?.paging.total ?? r?.prices?.data?.count ?? 0,
-          batchCount: r?.oneTimeUseCodes?.data?.count ?? 0, customCodeCount: r?.customCodes?.data?.count ?? 0)
+          batchCount: r?.oneTimeUseCodes?.meta?.paging.total ?? r?.oneTimeUseCodes?.data?.count ?? 0,
+          customCodeCount: r?.customCodes?.meta?.paging.total ?? r?.customCodes?.data?.count ?? 0)
       case .subscription:
         let data = try await client.subscriptionOfferCodesGetInstance(
           path: .init(id: id),
@@ -96,7 +97,8 @@ public enum OfferCodes {
         let r = data.relationships
         return Detail(
           offer: offerCode(data), priceCount: r?.prices?.meta?.paging.total ?? r?.prices?.data?.count ?? 0,
-          batchCount: r?.oneTimeUseCodes?.data?.count ?? 0, customCodeCount: r?.customCodes?.data?.count ?? 0)
+          batchCount: r?.oneTimeUseCodes?.meta?.paging.total ?? r?.oneTimeUseCodes?.data?.count ?? 0,
+          customCodeCount: r?.customCodes?.meta?.paging.total ?? r?.customCodes?.data?.count ?? 0)
     }
   }
 

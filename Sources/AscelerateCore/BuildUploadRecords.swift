@@ -64,7 +64,8 @@ public enum BuildUploadRecords {
   public static func stale(in uploads: [Upload], now: Date = .now) -> [Upload] {
     let key = { (u: Upload) in [u.version, u.build, u.platform].map { $0 ?? "" } }
     let waiting = { (u: Upload) in u.state == "AWAITING_UPLOAD" }
-    let movedOn = Set(uploads.filter { !waiting($0) }.map(key))
+    // A sibling that went through (a failed one doesn't: the build can be uploaded again).
+    let movedOn = Set(uploads.filter { ["PROCESSING", "COMPLETE"].contains($0.state) }.map(key))
     let dayAgo = now.addingTimeInterval(-24 * 3600)
     return uploads.filter { u in
       waiting(u) && (movedOn.contains(key(u)) || (u.createdDate ?? .distantFuture) < dayAgo)

@@ -143,8 +143,9 @@ public enum Subscriptions {
       for group in page.data {
         let ids = group.relationships?.subscriptions?.data?.map(\.id) ?? []
         var subscriptions = ids.compactMap { byID[$0] }
-        if ids.count >= 50 {
-          // The include is capped at 50: a group at the cap may have more.
+        if ids.count >= 50 || subscriptions.count < ids.count {
+          // The include is capped at 50, for the whole page: a group at the cap may have more, and
+          // several groups together can leave some of a group's out.
           subscriptions = try await ASCPaging.allPages(next: { $0.links.next }) {
             try await client.subscriptionGroupsSubscriptionsGetToManyRelated(path: .init(id: group.id), query: .init(limit: 50))
               .ok.body.json

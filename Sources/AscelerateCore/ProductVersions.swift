@@ -35,7 +35,9 @@ public enum ProductVersions {
       path: .init(id: iapID),
       query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
     ).ok.body.json
-    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
+    // The newest: an older rejected version can still be listed beside the one being prepared.
+    return response.data.max { ($0.attributes?.version ?? 0) < ($1.attributes?.version ?? 0) }
+      .map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
   }
 
   public static func pendingSubscription(_ subID: String, client: ASCClient) async throws -> Pending? {
@@ -43,7 +45,9 @@ public enum ProductVersions {
       path: .init(id: subID),
       query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
     ).ok.body.json
-    return response.data.first.map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
+    // The newest: an older rejected version can still be listed beside the one being prepared.
+    return response.data.max { ($0.attributes?.version ?? 0) < ($1.attributes?.version ?? 0) }
+      .map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
   }
 
   /// A group's pending version. A PREPARE_FOR_SUBMISSION draft only counts when its

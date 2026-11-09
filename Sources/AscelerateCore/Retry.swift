@@ -27,7 +27,8 @@ public func withTransientRetry<T>(_ operation: () async throws -> T) async throw
     do {
       return try await operation()
     } catch where isTransientError(error) {
-      try? await Task.sleep(for: delay)
+      // A cancelled task stops here rather than trying again at once.
+      try await Task.sleep(for: delay)
     }
   }
   return try await operation()

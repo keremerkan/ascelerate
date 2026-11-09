@@ -34,11 +34,14 @@ public enum MediaDownload {
   public enum DownloadError: LocalizedError, Sendable {
     case invalidURL(String)
     case noURL(String)
+    /// The download answered with this HTTP status instead of the file.
+    case http(Int)
 
     public var errorDescription: String? {
       switch self {
         case .invalidURL(let url): "Invalid download URL: \(url)"
         case .noURL(let fileName): "No download URL available for '\(fileName)'."
+        case .http(let status): "The download failed with HTTP status \(status)."
       }
     }
   }
@@ -134,7 +137,12 @@ public enum MediaDownload {
   /// Downloads a file to `destination`, replacing a file already there.
   public static func download(_ file: File, to destination: URL) async throws {
     let url = try file.source.get()
-    let (temporary, _) = try await URLSession.shared.download(from: url)
+    let (temporary, response) = try await URLSession.shared.download(from: url)
+    // An expired or refused address answers with an error page, which isn't the file.
+    if let status = (response as? HTTPURLResponse)?.statusCode, !(200..<300).contains(status) {
+      try? FileManager.default.removeItem(at: temporary)
+      throw DownloadError.http(status)
+    }
     let manager = FileManager.default
     if manager.fileExists(atPath: destination.path(percentEncoded: false)) {
       try manager.removeItem(at: destination)

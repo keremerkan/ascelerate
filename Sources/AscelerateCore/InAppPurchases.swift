@@ -106,7 +106,8 @@ public enum InAppPurchases {
     let response = try await client.appsInAppPurchasesV2GetToManyRelated(
       path: .init(id: appID), query: .init(filterProductId: [productID])
     ).ok.body.json
-    guard let purchase = response.data.first(where: { $0.attributes?.productId == productID }) ?? response.data.first else {
+    // An exact match only: another product the filter let through would then be edited.
+    guard let purchase = response.data.first(where: { $0.attributes?.productId == productID }) else {
       throw LookupError.notFound(productID)
     }
     return Purchase(purchase)

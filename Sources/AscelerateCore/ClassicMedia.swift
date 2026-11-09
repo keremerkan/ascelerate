@@ -118,22 +118,6 @@ public enum ClassicMedia {
     _ = try await client.appPreviewSetsDeleteInstance(path: .init(id: id)).noContent
   }
 
-  /// Deletes every screenshot in a set; returns how many there were. Under dry run the
-  /// stopped deletes count as done.
-  public static func deleteAllScreenshots(inSet setID: String, client: ASCClient) async throws -> Int {
-    let screenshots = try await LocalizationMedia.screenshots(setID: setID, client: client)
-    for screenshot in screenshots { _ = try await unlessDryRunStopped { try await deleteScreenshot(screenshot.id, client: client) } }
-    return screenshots.count
-  }
-
-  /// Deletes every preview in a set; returns how many there were. Under dry run the
-  /// stopped deletes count as done.
-  public static func deleteAllPreviews(inSet setID: String, client: ASCClient) async throws -> Int {
-    let previews = try await LocalizationMedia.previews(setID: setID, client: client)
-    for preview in previews { _ = try await unlessDryRunStopped { try await deletePreview(preview.id, client: client) } }
-    return previews.count
-  }
-
   /// How a set's uploaded screenshots or previews line up with a folder's files (`media upload
   /// --replace`). Apple keeps the MD5 sent when an item was committed (`sourceFileChecksum`), so an
   /// item with a file's checksum is that file, uploaded already: it's kept. Files without one are

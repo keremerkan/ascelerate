@@ -294,15 +294,20 @@ public enum Builds {
   public static func earlierTestNotes(
     before target: Build, appID: String, client: ASCClient
   ) async throws -> (build: Build, notes: [TestNotes])? {
-    let builds = try await list(appID: appID, platform: target.platform.flatMap(Platform.init(rawValue:)), limit: 41, client: client)
-    // Newest first: the ones after the target in the list came before it.
-    // When the target isn't among them (an older build), the ones uploaded before it.
-    let earlier = builds.firstIndex { $0.id == target.id }.map { Array(builds[($0 + 1)...]) }
-      ?? builds.filter { build in
-        guard build.id != target.id, let uploaded = build.uploadedDate, let targetUploaded = target.uploadedDate else { return false }
-        return uploaded < targetUploaded
-      }
-    return try await newestWithTestNotes(earlier, client: client)
+    // Newest first, so the 20 after the target came before it: pages are read until it and those
+    // are in (at most 1,000 builds, past which a build is too old to look for).
+    let platform = target.platform.flatMap(Platform.init(rawValue:))
+    var builds: [Build] = []
+    var next: String?
+    var index: Int?
+    repeat {
+      let page = try await page(appID: appID, platform: platform, after: next, client: client)
+      builds += page.builds
+      next = page.next
+      index = index ?? builds.firstIndex { $0.id == target.id }
+    } while next != nil && (index.map { builds.count <= $0 + 20 } ?? (builds.count < 1000))
+    guard let index else { return nil }
+    return try await newestWithTestNotes(Array(builds[(index + 1)...]), client: client)
   }
 
   /// The newest of a platform's builds whose What to Test has text in some language, with that

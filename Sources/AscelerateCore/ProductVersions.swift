@@ -30,24 +30,31 @@ public enum ProductVersions {
     "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "REJECTED", "DEVELOPER_REJECTED",
   ]
 
+  // A product's pending version is its newest one, when that is in a pending state: an older
+  // rejected version can stay listed beside a newer one being prepared, or one already with App
+  // Review or approved. All of them are read (few), since filtering by state would leave out the
+  // newer one that shows the rejected version is behind.
+
   public static func pendingIAP(_ iapID: String, client: ASCClient) async throws -> Pending? {
-    let response = try await client.inAppPurchasesV2VersionsGetToManyRelated(
-      path: .init(id: iapID),
-      query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
-    ).ok.body.json
-    // The newest: an older rejected version can still be listed beside the one being prepared.
-    return response.data.max { ($0.attributes?.version ?? 0) < ($1.attributes?.version ?? 0) }
-      .map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
+    let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.inAppPurchasesV2VersionsGetToManyRelated(path: .init(id: iapID)).ok.body.json
+    }.flatMap(\.data)
+    return newestIfPending(versions.map { ($0.id, $0.attributes?.version, $0.attributes?.state) })
   }
 
   public static func pendingSubscription(_ subID: String, client: ASCClient) async throws -> Pending? {
-    let response = try await client.subscriptionsVersionsGetToManyRelated(
-      path: .init(id: subID),
-      query: .init(filterState: [.prepareForSubmission, .readyForReview, .rejected, .developerRejected])
-    ).ok.body.json
-    // The newest: an older rejected version can still be listed beside the one being prepared.
-    return response.data.max { ($0.attributes?.version ?? 0) < ($1.attributes?.version ?? 0) }
-      .map { Pending(id: $0.id, version: $0.attributes?.version, state: $0.attributes?.state ?? "UNKNOWN") }
+    let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.subscriptionsVersionsGetToManyRelated(path: .init(id: subID)).ok.body.json
+    }.flatMap(\.data)
+    return newestIfPending(versions.map { ($0.id, $0.attributes?.version, $0.attributes?.state) })
+  }
+
+  /// The newest of `versions` when it's pending.
+  static func newestIfPending(_ versions: [(id: String, version: Int?, state: String?)]) -> Pending? {
+    guard let newest = versions.max(by: { ($0.version ?? 0) < ($1.version ?? 0) }),
+      let state = newest.state, pendingStates.contains(state)
+    else { return nil }
+    return Pending(id: newest.id, version: newest.version, state: state)
   }
 
   /// A group's pending version. A PREPARE_FOR_SUBMISSION draft only counts when its
@@ -59,7 +66,7 @@ public enum ProductVersions {
       try await client.subscriptionGroupsVersionsGetToManyRelated(path: .init(id: groupID)).ok.body.json
     }.flatMap(\.data)
     let newestFirst = versions.sorted { ($0.attributes?.version ?? 0) > ($1.attributes?.version ?? 0) }
-    guard let pending = newestFirst.first(where: { pendingStates.contains($0.attributes?.state ?? "") }) else {
+    guard let pending = newestFirst.first, pendingStates.contains(pending.attributes?.state ?? "") else {
       return nil
     }
     if pending.attributes?.state == "PREPARE_FOR_SUBMISSION",

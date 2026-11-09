@@ -185,6 +185,14 @@ public struct ASCError: Error, Sendable {
     })
   }
 
+  /// Apple's reply as one text: each entry's detail (its title when the detail is empty or holds
+  /// an unfilled `@@` placeholder), a state error's reasons after it.
+  public var summary: String {
+    func text(_ entry: Entry) -> String { entry.detail.isEmpty || entry.detail.contains("@@") ? entry.title : entry.detail }
+    let texts = errors.flatMap { [text($0)] + $0.reasons.map(text) }.filter { !$0.isEmpty }
+    return texts.isEmpty ? "HTTP \(statusCode)" : texts.joined(separator: " ")
+  }
+
   public let statusCode: Int
   public let errors: [Entry]
   /// Hourly limit and remaining requests from the `X-Rate-Limit` header, when present.

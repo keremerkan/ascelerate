@@ -103,16 +103,12 @@ public enum RetentionMessages {
       _type: "retentionMessageVersions")))).created.body.json.data.id
   }
 
-  /// Deletes a message, and its image placements first, so the images can still be deleted from
-  /// the library (a placement left on a deleted owner keeps its image for good). A version holds
-  /// one placement, read with its image here (`clearPlacements` reads a version's without it, so
-  /// it can't tell a reviewed image from an unreviewed one); one of a reviewed image stays.
+  /// Deletes a message, and its image placements first (`AssetLibrary.clearPlacements`), so the
+  /// images can still be deleted from the library (a placement left on a deleted owner keeps its
+  /// image for good); one of a reviewed image stays.
   public static func delete(_ message: Message, client: ASCClient) async throws {
     for version in message.versions where version.isEditable {
-      guard let image = try await image(versionID: version.id, client: client), let state = image.state,
-        AssetLibrary.unreviewedStates.contains(state)
-      else { continue }
-      _ = try await unlessDryRunStopped { try await AssetLibrary.deletePlacement(id: image.placementID, client: client) }
+      try await AssetLibrary.clearPlacements(on: .retentionMessageVersion(version.id), client: client)
     }
     _ = try await client.retentionMessagesDeleteInstance(path: .init(id: message.id)).noContent
   }

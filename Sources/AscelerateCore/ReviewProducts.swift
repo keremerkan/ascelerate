@@ -85,46 +85,55 @@ public enum ReviewProducts {
     return products
   }
 
+  /// A product App Store Connect wouldn't add to the draft, with its reply.
+  public struct Refusal: Sendable {
+    public let product: Product
+    public let error: ASCError
+
+    /// Apple's reason, as one text.
+    public var reason: String { error.summary }
+  }
+
+  /// What adding a version for review did: the draft holding it, and the products that went in
+  /// with it and those App Store Connect refused.
+  public struct Added: Sendable {
+    public let draftID: String
+    public let added: [Product]
+    public let refused: [Refusal]
+  }
+
   /// Adds an app version for review with the products waiting to go with it: the version to the
   /// platform's draft submission (made when there's none), then each ready product that isn't in
   /// a draft yet (`pending`, read after the version is added). One that isn't ready stays out.
-  /// Returns the draft's ID.
+  /// A product App Store Connect refuses doesn't stop the others; it's in `refused`, and the
+  /// caller decides whether to submit the draft without it.
   @discardableResult
-  public static func addVersion(_ versionID: String, appID: String, platform: String, client: ASCClient) async throws -> String {
+  public static func addVersion(_ versionID: String, appID: String, platform: String, client: ASCClient) async throws -> Added {
     let draftID = try await ReviewSubmissions.add(.appStoreVersion(versionID), appID: appID, platform: platform, client: client)
-    try await addReady(pending(appID: appID, client: client), appID: appID, platform: platform, draftID: draftID, client: client)
-    return draftID
+    let (added, refused) = try await addReady(
+      pending(appID: appID, client: client), appID: appID, platform: platform, draftID: draftID, client: client)
+    return Added(draftID: draftID, added: added, refused: refused)
   }
 
   /// Adds the ready products that aren't in a draft yet to the draft `draftID`, groups before
-  /// their subscriptions; returns those added. One App Store Connect refuses doesn't stop the
-  /// others: once all are tried, the refusals are thrown together (`NotAdded`), the rest in.
-  @discardableResult
+  /// their subscriptions. A product App Store Connect refuses (400, 404, 409, 422: about the
+  /// product itself) is collected and the rest still tried; any other failure (the key, the rate
+  /// limit, the server) is thrown.
   public static func addReady(
     _ products: [Product], appID: String, platform: String, draftID: String, client: ASCClient
-  ) async throws -> [Product] {
+  ) async throws -> (added: [Product], refused: [Refusal]) {
     var added: [Product] = []
-    var refused: [(name: String, reason: String)] = []
+    var refused: [Refusal] = []
     for product in products where product.isReady && !product.isInDraft {
       do {
         _ = try await ReviewSubmissions.add(
           product.draftItem, appID: appID, platform: platform, draftID: draftID, client: client)
         added.append(product)
-      } catch where ASCError.from(error) != nil {
-        refused.append((product.name, error.localizedDescription))
+      } catch {
+        guard let reply = ASCError.from(error), [400, 404, 409, 422].contains(reply.statusCode) else { throw error }
+        refused.append(Refusal(product: product, error: reply))
       }
     }
-    if !refused.isEmpty { throw NotAdded(refused: refused) }
-    return added
-  }
-
-  /// Products App Store Connect wouldn't add to the draft, while the others went in.
-  public struct NotAdded: LocalizedError {
-    public let refused: [(name: String, reason: String)]
-
-    public var errorDescription: String? {
-      let names = refused.map(\.name).formatted(.list(type: .and))
-      return "Not added for review: \(names). " + refused.map(\.reason).joined(separator: " ")
-    }
+    return (added, refused)
   }
 }

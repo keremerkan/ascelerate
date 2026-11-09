@@ -698,6 +698,15 @@ public enum AssetLibrary {
   /// are left: those can't be deleted anyway, and there can be hundreds. Returns how many it deleted.
   @discardableResult
   public static func clearPlacements(on owner: Owner, client: ASCClient) async throws -> Int {
+    // A retention message version's one placement is read with its image's state on its own:
+    // `ownerPlacements` reads it without it.
+    if case .retentionMessageVersion(let versionID) = owner {
+      guard let image = try await RetentionMessages.image(versionID: versionID, client: client), let state = image.state,
+        unreviewedStates.contains(state)
+      else { return 0 }
+      _ = try await unlessDryRunStopped { try await deletePlacement(id: image.placementID, client: client) }
+      return 1
+    }
     let placements = try await ownerPlacements(on: owner, media: .stateOnly, client: client)
     var unreviewed = Set<String>()
     for included in placements.included {

@@ -18,7 +18,7 @@ import Foundation
 /// localization-state heuristic missed.
 public enum ProductVersions {
   /// A product version awaiting submission.
-  public struct Pending: Encodable, Sendable {
+  public struct Pending: Encodable, Hashable, Sendable {
     public let id: String
     public let version: Int?
     public let state: String

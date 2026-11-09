@@ -64,7 +64,7 @@ extension AppsCommand {
         throw ValidationError("\(option) must be a date in YYYY-MM-DD format.")
       }
       guard value > AppPricing.today else {
-        throw ValidationError("\(option) must be after today (\(AppPricing.today), UTC).")
+        throw ValidationError("\(option) must be after today (\(AppPricing.today)).")
       }
       return value
     }

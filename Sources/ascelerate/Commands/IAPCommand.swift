@@ -95,26 +95,20 @@ struct IAPCommand: AsyncParsableCommand {
 
   /// POSTs a new schedule that fully replaces any prior one, retrying transient API
   /// errors. The first entry in `manualPrices` must be the base territory's entry.
-  /// The POST is atomic — on failure the existing schedule is untouched.
+  /// The POST is atomic — on failure the existing schedule is untouched. Without a `startDate` the
+  /// prices apply now: no date is sent, rather than today's, which is already past in the
+  /// storefronts that start the day first (Apple starts a date at each storefront's own time).
   static func postSchedule(
     iapID: String,
     baseTerritoryID: String,
     manualPrices: [ManualPriceEntry],
-    startDate: String,
+    startDate: String?,
     client: ASCClient
   ) async throws {
     try await InAppPurchases.setSchedule(
       purchaseID: iapID, baseTerritoryID: baseTerritoryID,
       manualPrices: manualPrices.map { AppPricing.NewPrice(pricePointID: $0.pricePointID, startDate: startDate) },
       client: client)
-  }
-
-  /// Returns today's date in YYYY-MM-DD UTC.
-  static func todayDateString() -> String {
-    let f = DateFormatter()
-    f.dateFormat = "yyyy-MM-dd"
-    f.timeZone = TimeZone(identifier: "UTC")
-    return f.string(from: Date())
   }
 
   /// Resolves a customer price (e.g. "4.99") to a price point ID in the given territory.
@@ -1166,14 +1160,14 @@ struct IAPCommand: AsyncParsableCommand {
           }
         }
 
-        let dateStr = startDate ?? IAPCommand.todayDateString()
+        let dateStr = startDate
 
         print()
         print("Set base price:")
         print("  Product ID:     \(productID)")
         print("  Base Territory: \(newBase)")
         print("  Customer Price: \(basePoint.attributes?.customerPrice ?? "—") \(baseCurrency)")
-        print("  Start Date:     \(dateStr)")
+        print("  Start Date:     \(dateStr ?? "now")")
         if let existingBase = existing?.baseTerritoryID, existingBase != newBase {
           print("  Old base:       \(existingBase) (will revert to auto-equalize)")
         }
@@ -1259,14 +1253,14 @@ struct IAPCommand: AsyncParsableCommand {
         let currency = resolved.currency ?? ""
 
         let isUpdate = existing.nonBaseOverrides.contains { $0.territoryID == territoryID }
-        let dateStr = startDate ?? IAPCommand.todayDateString()
+        let dateStr = startDate
 
         print()
         print("\(isUpdate ? "Update" : "Add") manual price:")
         print("  Product ID:     \(productID)")
         print("  Territory:      \(territoryID)")
         print("  Customer Price: \(newPoint.attributes?.customerPrice ?? "—") \(currency)")
-        print("  Start Date:     \(dateStr)")
+        print("  Start Date:     \(dateStr ?? "now")")
         print("  Base Territory: \(existing.baseTerritoryID) (preserved)")
         let otherOverrides = existing.nonBaseOverrides.filter { $0.territoryID != territoryID }
         if !otherOverrides.isEmpty {
@@ -1346,7 +1340,7 @@ struct IAPCommand: AsyncParsableCommand {
           throw ValidationError("No manual override exists for territory \(territoryID).")
         }
 
-        let dateStr = startDate ?? IAPCommand.todayDateString()
+        let dateStr = startDate
 
         print()
         print("Remove manual price:")
@@ -1511,7 +1505,7 @@ struct IAPCommand: AsyncParsableCommand {
           }
         }
 
-        let dateStr = startDate ?? IAPCommand.todayDateString()
+        let dateStr = startDate
         let dropped = (existing?.nonBaseOverrides ?? [])
           .map(\.territoryID)
           .filter { $0 != base && priceFile.prices[$0] == nil }
@@ -1533,7 +1527,7 @@ struct IAPCommand: AsyncParsableCommand {
         if !dropped.isEmpty {
           print("  Drop overrides: \(dropped.sorted().joined(separator: ", ")) (not in file; revert to auto-equalize)")
         }
-        print("  Start Date:     \(dateStr)")
+        print("  Start Date:     \(dateStr ?? "now")")
         print()
 
         guard confirm("Apply this schedule? [y/N] ") else {

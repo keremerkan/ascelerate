@@ -193,11 +193,7 @@ struct SubCommand: AsyncParsableCommand {
   private static func currentRecord<Price>(
     _ prices: [Price], preserved: (Price) -> Bool?, startDate: (Price) -> String?
   ) -> Price? {
-    let df = DateFormatter()
-    df.dateFormat = "yyyy-MM-dd"
-    df.locale = Locale(identifier: "en_US_POSIX")
-    df.timeZone = TimeZone(identifier: "UTC")
-    let today = df.string(from: Date())
+    let today = AppPricing.today
     return prices
       .filter { preserved($0) != true }
       .filter { (startDate($0) ?? "") <= today }

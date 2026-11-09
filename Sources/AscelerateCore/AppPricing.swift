@@ -42,9 +42,14 @@ public enum AppPricing {
     public let currencies: [String: String]
   }
 
-  /// Today in UTC (yyyy-MM-dd), the day price dates are compared with.
+  /// Today in the user's time zone (yyyy-MM-dd, Gregorian), the day price dates are compared with:
+  /// the day a date typed or picked means, as App Store Connect's own pages show them. Apple has no
+  /// single "today" for a price date: a change dated D starts in each storefront at its own local
+  /// time (App Store Connect Help, "App Store pricing and availability start times by country or
+  /// region"), some a day earlier in UTC, so on D itself it can be live in some places and not yet
+  /// in others.
   public static var today: String {
-    Date().formatted(.iso8601.year().month().day().dateSeparator(.dash))
+    Date().formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day().dateSeparator(.dash))
   }
 
   /// A manual price for `setSchedule`.

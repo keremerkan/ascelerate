@@ -33,6 +33,24 @@ struct NominationsCommand: AsyncParsableCommand {
     }
   }
 
+  /// A publish date: `yyyy-MM-dd` is noon of that day in the user's time zone, as App Store
+  /// Connect's own form sends it (a day picked in Türkiye is stored as 09:00 UTC), so the day it
+  /// shows is the one given; midnight UTC read as the day before west of UTC. ISO 8601 as given.
+  static func publishDate(_ value: String, field: String) throws -> Date {
+    if let date = ISO8601DateFormatter().date(from: value) { return date }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    guard let day = formatter.date(from: value),
+      let noon = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: day)
+    else {
+      throw ValidationError("Invalid \(field) date '\(value)'. Use yyyy-MM-dd or ISO 8601 (2026-11-16T09:00:00Z).")
+    }
+    return noon
+  }
+
   static func list(_ value: String?) -> [String]? {
     value.map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
   }
@@ -156,8 +174,8 @@ struct NominationsCommand: AsyncParsableCommand {
     func run() async throws {
       if yes { autoConfirm = true }
       let type = try NominationsCommand.type(fields.type ?? "")
-      let start = try AppEventsCommand.parseEventDate(fields.publishStart ?? "", field: "publish-start")
-      let end = try fields.publishEnd.map { try AppEventsCommand.parseEventDate($0, field: "publish-end") }
+      let start = try NominationsCommand.publishDate(fields.publishStart ?? "", field: "--publish-start")
+      let end = try fields.publishEnd.map { try NominationsCommand.publishDate($0, field: "--publish-end") }
       let devices = try NominationsCommand.devices(fields.devices)
       let client = try ClientFactory.makeClient()
       var appIDs: [String] = []
@@ -192,8 +210,8 @@ struct NominationsCommand: AsyncParsableCommand {
 
     func run() async throws {
       if yes { autoConfirm = true }
-      let start = try fields.publishStart.map { try AppEventsCommand.parseEventDate($0, field: "publish-start") }
-      let end = try fields.publishEnd.map { try AppEventsCommand.parseEventDate($0, field: "publish-end") }
+      let start = try fields.publishStart.map { try NominationsCommand.publishDate($0, field: "--publish-start") }
+      let end = try fields.publishEnd.map { try NominationsCommand.publishDate($0, field: "--publish-end") }
       let type = try fields.type.map { try NominationsCommand.type($0).rawValue }
       guard confirm("Update nomination \(id)? [y/N] ") else {
         print(yellow("Cancelled."))

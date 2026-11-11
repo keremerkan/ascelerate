@@ -95,10 +95,25 @@ public enum BetaFeedback {
     }
   }
 
-  /// A crash submission's crash log; nil when there's none.
+  /// How long App Store Connect keeps a crash report's log, as reported on the web (Apple doesn't
+  /// document it): a report's log read 106 days after it came was gone at 125 days, while the report
+  /// itself was still there (seen 2026-11-11).
+  public static let crashLogRetentionDays = 120
+
+  /// Whether a crash report is old enough for App Store Connect to have dropped its log.
+  public static func isPastCrashLogRetention(_ submission: Submission, now: Date = .now) -> Bool {
+    guard let created = submission.createdDate else { return false }
+    return now.timeIntervalSince(created) >= TimeInterval(crashLogRetentionDays * 24 * 60 * 60)
+  }
+
+  /// A crash submission's crash log; nil when there's none: an empty text, or Apple's 404 "There is
+  /// no resource of type 'betaCrashLogs'", which a report gives once its log is dropped
+  /// (`crashLogRetentionDays`).
   public static func crashLog(submissionID: String, client: ASCClient) async throws -> String? {
-    let text = try await client.betaFeedbackCrashSubmissionsCrashLogGetToOneRelated(path: .init(id: submissionID))
-      .ok.body.json.data.attributes?.logText
+    let text = try await optionalRelated {
+      try await client.betaFeedbackCrashSubmissionsCrashLogGetToOneRelated(path: .init(id: submissionID))
+        .ok.body.json.data.attributes?.logText
+    } ?? nil
     return text?.isEmpty == false ? text : nil
   }
 

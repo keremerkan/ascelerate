@@ -2066,7 +2066,12 @@ struct TestFlightCommand: AsyncParsableCommand {
         func run() async throws {
           let client = try ClientFactory.makeClient()
           guard let logText = try await BetaFeedback.crashLog(submissionID: submissionID, client: client) else {
-            print("No crash log available for this submission.")
+            let submission = try? await BetaFeedback.submission(.crash, id: submissionID, client: client)
+            if let submission, BetaFeedback.isPastCrashLogRetention(submission) {
+              print("App Store Connect no longer has this crash report's log: it keeps crash logs for about \(BetaFeedback.crashLogRetentionDays) days.")
+            } else {
+              print("No crash log available for this submission.")
+            }
             return
           }
           if let output {

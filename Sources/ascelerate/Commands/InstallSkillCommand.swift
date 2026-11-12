@@ -32,6 +32,17 @@ struct InstallSkillCommand: AsyncParsableCommand {
   ]
 
   private static var home: URL { homeDirectory }
+  /// The skill with the version stamp the update check reads (`skillVersionDetail`), placed right
+  /// after its frontmatter: agents read the frontmatter only when the file starts with it, and a
+  /// stamp on the first line made Claude Code show the stamp as the skill's description.
+  static func stamped(_ content: String, version: String) -> String {
+    let stamp = "<!-- ascelerate v\(version) -->\n"
+    guard content.hasPrefix("---\n"),
+      let end = content.range(of: "\n---\n", range: content.index(content.startIndex, offsetBy: 3)..<content.endIndex)
+    else { return stamp + content }
+    return String(content[..<end.upperBound]) + stamp + content[end.upperBound...]
+  }
+
   static func skillFileURL(_ a: Agent) -> URL {
     home.appendingPathComponent(a.dir).appendingPathComponent(a.file)
   }
@@ -84,7 +95,7 @@ struct InstallSkillCommand: AsyncParsableCommand {
     guard let content = String(data: data, encoding: .utf8) else {
       throw ValidationError("Invalid skill file content.")
     }
-    let stamped = "<!-- ascelerate v\(Ascelerate.appVersion) -->\n" + content
+    let stamped = Self.stamped(content, version: Ascelerate.appVersion)
 
     print()
     for agent in targets {

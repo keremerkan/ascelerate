@@ -988,7 +988,7 @@ extension AppsCommand {
           {
             for set in misordered {
               guard let order = set.order else { continue }
-              let done = try await unlessDryRunStopped {
+              let done: Void? = try await unlessDryRunStopped {
                 try await AssetLibrary.reorder(
                   placementIDs: order.placementIDs, group: order.group, on: .versionLocalization(order.localizationID),
                   client: ascClient)

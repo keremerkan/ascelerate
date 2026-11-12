@@ -936,7 +936,8 @@ public enum XcodeCloud {
     }
     let order = ["ci_post_clone", "resolve_package_dependencies", "ci_pre_xcodebuild", "ci_post_xcodebuild"]
     let rank = { (name: String) in order.firstIndex { name.hasPrefix($0) } ?? (name.hasPrefix("xcodebuild") ? order.count + 1 : order.count) }
-    return try ZipReader.files(in: data)
+    // Apple's own download, so generous limits: they only keep a damaged bundle from filling memory.
+    return try ZipReader.files(in: data, limits: .init(totalSize: 1 << 30))
       .filter { $0.path.hasSuffix(".log") || $0.path.hasSuffix(".txt") }
       .map { file -> (export: String, file: String, log: LogFile) in
         let name = (file.path as NSString).lastPathComponent

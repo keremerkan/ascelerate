@@ -5,7 +5,7 @@ import Foundation
 
 @main
 struct Ascelerate: AsyncParsableCommand {
-  static let appVersion = "0.34.0"
+  static let appVersion = "0.35.0"
 
   static let configuration = CommandConfiguration(
     commandName: "ascelerate",

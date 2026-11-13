@@ -838,7 +838,7 @@ public enum AssetLibrary {
   /// Where an image or video is placed: one entry per placement, with what holds it.
   public struct Usage: Hashable, Sendable {
     public enum Kind: String, Sendable {
-      case version, customProductPage, experimentTreatment, event
+      case version, customProductPage, experimentTreatment, event, retentionMessage
     }
 
     public let placementID: String
@@ -846,11 +846,12 @@ public enum AssetLibrary {
     public let placementGroup: String?
     public let state: String?
     public let kind: Kind
-    /// The localization holding it and its language.
+    /// The localization holding it and its language; for a retention message, the message's
+    /// version, which has no language (its one image serves every language).
     public let localizationID: String?
     public let locale: String?
     /// What the localization belongs to: an App Store version, a custom product page version, a
-    /// treatment or an in-app event (by ID).
+    /// treatment, an in-app event or a retention message (by ID).
     public let parentID: String?
   }
 
@@ -874,7 +875,7 @@ public enum AssetLibrary {
                 limit: 200,
                 include: [
                   .appStoreVersionLocalization, .appCustomProductPageLocalization, .appStoreVersionExperimentTreatmentLocalization,
-                  .appEventLocalization,
+                  .appEventLocalization, .retentionMessageVersion,
                 ])
             ).ok.body.json
           case .video(let id):
@@ -886,7 +887,7 @@ public enum AssetLibrary {
                 limit: 200,
                 include: [
                   .appStoreVersionLocalization, .appCustomProductPageLocalization, .appStoreVersionExperimentTreatmentLocalization,
-                  .appEventLocalization,
+                  .appEventLocalization, .retentionMessageVersion,
                 ])
             ).ok.body.json
         }
@@ -910,6 +911,7 @@ public enum AssetLibrary {
       if let id = common?.appCustomProductPageLocalization?.data?.id { return (placement, .customProductPage, id) }
       if let id = common?.appStoreVersionExperimentTreatmentLocalization?.data?.id { return (placement, .experimentTreatment, id) }
       if let id = common?.appEventLocalization?.data?.id { return (placement, .event, id) }
+      if let id = common?.retentionMessageVersion?.data?.id { return (placement, .retentionMessage, id) }
       return nil
     }
     // Included localizations come without their relationships (with or without fields), so each
@@ -928,7 +930,7 @@ public enum AssetLibrary {
   }
 
   /// What a localization holding a placement belongs to: its App Store version, custom product
-  /// page version, treatment or in-app event.
+  /// page version, treatment or in-app event; for a retention message's version, the message.
   private static func parentID(of kind: Usage.Kind, localizationID id: String, client: ASCClient) async throws -> String? {
     switch kind {
       case .version:
@@ -945,6 +947,9 @@ public enum AssetLibrary {
       case .event:
         try await client.appEventLocalizationsGetInstance(path: .init(id: id), query: .init(include: [.appEvent]))
           .ok.body.json.data.relationships?.appEvent?.data?.id
+      case .retentionMessage:
+        try await client.retentionMessageVersionsGetInstance(path: .init(id: id), query: .init(include: [.retentionMessage]))
+          .ok.body.json.data.relationships?.retentionMessage?.data?.id
     }
   }
 

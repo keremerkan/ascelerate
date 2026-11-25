@@ -4,17 +4,19 @@ import Foundation
 enum Aliases {
   static let aliasFile = Config.configDirectory.appendingPathComponent("aliases.json")
 
-  static func load() -> [String: String] {
-    guard FileManager.default.fileExists(atPath: aliasFile.path),
-      let data = try? Data(contentsOf: aliasFile),
-      let aliases = try? JSONDecoder().decode([String: String].self, from: data)
-    else {
-      return [:]
+  /// The aliases; none when there's no file. A file that can't be read is an error, so a hand
+  /// edit gone wrong is reported (and `alias add` doesn't save over it).
+  static func load() throws -> [String: String] {
+    guard FileManager.default.fileExists(atPath: aliasFile.path) else { return [:] }
+    do {
+      return try JSONDecoder().decode([String: String].self, from: Data(contentsOf: aliasFile))
+    } catch {
+      throw ValidationError("Can't read \(aliasFile.path): \(error.localizedDescription) Fix or remove the file (it maps alias names to bundle IDs, as JSON).")
     }
-    return aliases
   }
 
   static func save(_ aliases: [String: String]) throws {
+    try Config.createDirectory()
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     let data = try encoder.encode(aliases)
@@ -33,9 +35,9 @@ enum Aliases {
 
 /// If the input contains no dots, look it up in aliases.
 /// Returns the resolved bundle ID or the original input unchanged.
-func resolveAlias(_ input: String) -> String {
+func resolveAlias(_ input: String) throws -> String {
   guard !input.contains(".") else { return input }
-  let aliases = Aliases.load()
+  let aliases = try Aliases.load()
   return aliases[input] ?? input
 }
 

@@ -105,7 +105,7 @@ ascelerate game-center achievements image delete <bundle-id> first.win --locale 
 
 Une nouvelle langue d’un succès demande son nom et ses deux descriptions. Une langue d’un classement a un nom, une description facultative, son propre `--formatter` et l’unité qui suit un score (`--suffix " points"`, `--suffix-singular " point"`). Une langue d’un groupe a un nom ; celle d’une activité ou d’un défi a un nom et une description (`--name`, `--description`).
 
-Une image appartient à une langue. Pour les succès, classements et groupes, elle doit être carrée et faire au moins 512 × 512 (le plus souvent 512 × 512 ou 1024 × 1024) ; pour les activités et les défis, exactement 3840 × 2160, et leurs versions acceptent aussi une image par défaut (`image upload --default`). En PNG ou JPEG. Le téléversement remplace l’image actuelle et attend la vérification d’Apple, si bien qu’une image refusée est signalée aussitôt.
+Une image appartient à une langue. Pour les succès, classements et groupes, elle doit être carrée et faire au moins 512 × 512 (le plus souvent 512 × 512 ou 1024 × 1024) ; pour les activités et les défis, exactement 3840 × 2160, et leurs versions acceptent aussi une image par défaut (`image upload --default`). En PNG ou JPEG. Le téléversement remplace l’image actuelle et attend la vérification d’Apple, si bien qu’une image refusée est signalée aussitôt. Le type et la taille du fichier sont vérifiés avant la suppression de l'image actuelle ; si Apple refuse ensuite la nouvelle, le message indique l'image supprimée.
 
 ## Ordre et App Review
 
@@ -114,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` (succès, classements et groupes) place en tête ceux qui sont indiqués, dans cet ordre ; les autres suivent tels quels. `submit` ajoute la nouvelle version de l’élément au brouillon de soumission de l’app (en créant un s’il n’y en a pas). Elle part en App Review quand vous soumettez le brouillon avec `ascelerate apps review submit`. `apps review submit` liste aussi tous les éléments dont les modifications attendent la vérification et propose de les ajouter à la soumission ; `game-center <bundle-id>` indique leur nombre.
+`reorder` (succès, classements et groupes) place en tête ceux qui sont indiqués, dans cet ordre ; les autres suivent tels quels. `submit` ajoute la nouvelle version de l’élément au brouillon de soumission de l’app (en créant un s’il n’y en a pas). Elle part en App Review quand vous soumettez le brouillon avec `ascelerate apps review submit`. `apps review submit` liste aussi tous les éléments dont les modifications attendent la vérification et propose de les ajouter à la soumission ; `game-center <bundle-id>` indique leur nombre. Sans `--platform`, `submit` utilise la seule plateforme de l'app, ou celle qui a une version en préparation, et demande `--platform` sinon (une soumission créée pour la mauvaise plateforme ne peut pas être supprimée).
 
 ## Groupes Game Center
 
@@ -128,7 +128,7 @@ ascelerate game-center groups delete "Our Games"
 ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
 ```
 
-Ajouter une app à un groupe Game Center est irréversible : l’app ne peut plus quitter le groupe, et ses succès, classements et autres éléments passent dans le groupe. `add-app` le signale et demande d’abord ; essayez-le avec `--dry-run`. Pour une app d’un groupe, les autres commandes `game-center` listent, créent et ordonnent les éléments du groupe, et `leaderboards default` définit le classement du groupe sur lequel s’ouvre Game Center pour cette app.
+Ajouter une app à un groupe Game Center est irréversible : l’app ne peut plus quitter le groupe, et ses succès, classements et autres éléments passent dans le groupe. `add-app` le signale et demande d’abord ; essayez-le avec `--dry-run`. Pour une app d’un groupe, les autres commandes `game-center` listent, créent et ordonnent les éléments du groupe, et `leaderboards default` définit le classement du groupe sur lequel s’ouvre Game Center pour cette app. `--yes` seul n'y répond pas : ajoutez aussi `--confirm-permanent`. La question indique l'ID du groupe, car deux groupes peuvent porter le même nom.
 
 ## Matchmaking
 

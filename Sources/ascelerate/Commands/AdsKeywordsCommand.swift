@@ -435,10 +435,18 @@ extension AdsCommand {
     }
 
     struct Remove: AsyncParsableCommand {
-      static let configuration = CommandConfiguration(abstract: "Remove negative keywords from a campaign.")
+      static let configuration = CommandConfiguration(
+        abstract: "Remove negative keywords from a campaign or one of its ad groups.",
+        discussion: "Like 'negatives add': the campaign's own unless --ad-group names one; --all-levels removes them everywhere.")
 
       @Option(name: .long, help: "Campaign name or ID.")
       var campaign: String
+
+      @Option(name: .long, help: "Only this ad group's (name or ID); default: the campaign-level ones.")
+      var adGroup: String?
+
+      @Flag(name: .long, help: "The campaign's and every ad group's.")
+      var allLevels = false
 
       @Option(name: .long, help: "Only this match type: exact or broad.")
       var match: String?
@@ -449,6 +457,10 @@ extension AdsCommand {
       @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
       var yes = false
 
+      func validate() throws {
+        if adGroup != nil && allLevels { throw ValidationError("Pass --ad-group or --all-levels, not both.") }
+      }
+
       func run() async throws {
         if yes { autoConfirm = true }
         let ads = try Ads.config()
@@ -457,18 +469,25 @@ extension AdsCommand {
           let campaign = try await Ads.campaign(self.campaign, ads, client: client)
           let campaignID = campaign.id ?? 0
           let groups = try await Ads.adGroups(campaignID: campaignID, ads, client: client)
+          let group = try adGroup.map { try Ads.adGroup($0, in: groups) }
+          func level(_ n: Components.Schemas.NegativeKeyword) -> String {
+            guard let id = n.adGroupId else { return "campaign" }
+            return "ad group \(groups.first { $0.id == id }?.name ?? String(id))"
+          }
           let all = try await Ads.negativeKeywords(
             campaignID: campaignID, adGroupIDs: groups.compactMap(\.id), ads, client: client
           ).filter { matchType == nil || $0.matchType?.value1 == matchType }
+            .filter { n in allLevels || (group.map { n.adGroupId == $0.id } ?? (n.adGroupId == nil)) }
+          let place = allLevels ? "\(campaign.name ?? "-") (all levels)" : group.map { "ad group \($0.name ?? "-")" } ?? "\(campaign.name ?? "-") (campaign level)"
           var targets: [Components.Schemas.NegativeKeyword] = []
           for text in Ads.unique(terms) {
             let matches = all.filter { $0.text?.caseInsensitiveCompare(text) == .orderedSame }
-            if matches.isEmpty { throw ValidationError("No negative keyword '\(text)' in \(campaign.name ?? "-").") }
+            if matches.isEmpty { throw ValidationError("No negative keyword '\(text)' in \(place).") }
             targets += matches
           }
-          print("Removing \(targets.count) negative keyword(s) from \(campaign.name ?? "-"):")
+          print("Removing \(targets.count) negative keyword(s) from \(place):")
           for n in targets {
-            print("  \(n.text ?? "-") (\(formatState(n.matchType?.value1.rawValue ?? "").lowercased()))")
+            print("  \(n.text ?? "-") (\(formatState(n.matchType?.value1.rawValue ?? "").lowercased()), \(level(n)))")
           }
           guard confirm("Remove them? [y/N] ") else {
             print(yellow("Cancelled."))

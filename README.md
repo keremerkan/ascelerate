@@ -1322,6 +1322,8 @@ ascelerate game-center groups create --name "My Games"
 ascelerate game-center groups add-app "My Games" <bundle-id> --dry-run
 ```
 
+Adding an app to a group can't be undone, so `--yes` alone doesn't answer it: add `--confirm-permanent` too.
+
 Rule-based matchmaking belongs to the team, so it takes no bundle ID:
 
 ```bash
@@ -1587,7 +1589,7 @@ ascelerate run-workflow release.txt --check # every step parses (--json: each st
 ascelerate run-workflow release.txt --json-events   # JSON events on stdout (steps, outcomes, prompts answered on stdin); output on stderr
 ```
 
-A workflow file is a plain text file with one command per line (without the `ascelerate` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported.
+A workflow file is a plain text file with one command per line (without the `ascelerate` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported. Quotes group an argument with spaces; inside them, `\"`, `\'` and `\\` stand for the character itself. Tabs separate arguments like spaces.
 
 **Example** -- `release.txt` for submitting version 2.1.0 of a sample app:
 

@@ -13,7 +13,7 @@ ascelerate run-workflow release.txt --yes   # omite todas las preguntas (CI/CD)
 ascelerate run-workflow                     # elige de forma interactiva entre los archivos .workflow/.txt
 ```
 
-Un archivo de workflow es un archivo de texto sin formato con un comando por línea (sin el prefijo `ascelerate`). Las líneas que empiezan por `#` son comentarios y las líneas en blanco se ignoran. Se admiten las extensiones `.workflow` y `.txt`.
+Un archivo de workflow es un archivo de texto sin formato con un comando por línea (sin el prefijo `ascelerate`). Las líneas que empiezan por `#` son comentarios y las líneas en blanco se ignoran. Se admiten las extensiones `.workflow` y `.txt`. Las comillas agrupan un argumento con espacios; dentro de ellas, `\"`, `\'` y `\\` representan el propio carácter (`--body "the \"great\" one"`). Los tabuladores separan argumentos como los espacios.
 
 ## Ejemplo
 

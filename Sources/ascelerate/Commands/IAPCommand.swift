@@ -1624,6 +1624,8 @@ struct IAPCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         _ = try await findIAP(productID: productID, appID: app.id, client: client)
+        // Shown under this product's name only when it's this product's.
+        try await IAPCommand.validateOwnedOfferCode(offerCodeID, bundleID: bundleID, productID: productID, client: client)
 
         let detail = try await OfferCodes.detail(.inAppPurchase, id: offerCodeID, client: client)
         let offer = detail.offer
@@ -2031,7 +2033,12 @@ struct IAPCommand: AsyncParsableCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let iap = try await findIAP(productID: productID, appID: app.id, client: client)
+        // Only this product's image: an ID from another product isn't deleted under its name.
+        guard try await InAppPurchases.images(purchaseID: iap.id, client: client).contains(where: { $0.id == imageID }) else {
+          throw ValidationError("Image \(imageID) isn't one of \(productID)'s images; see 'ascelerate iap images list'.")
+        }
 
         try await runProductImageDelete(imageID: imageID) {
           try await InAppPurchases.deleteImage(id: imageID, client: client)

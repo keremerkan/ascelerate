@@ -71,10 +71,10 @@ public enum Experiments {
     }.flatMap(\.data).map(experiment)
   }
 
-  /// An app's test by name (any case) or ID.
+  /// An app's test by ID or name (any case); a name of several tests throws `Reference.Ambiguous`.
   public static func find(_ ref: String, appID: String, client: ASCClient) async throws -> Experiment {
     let all = try await list(appID: appID, client: client)
-    guard let match = all.first(where: { $0.id == ref || $0.name.lowercased() == ref.lowercased() }) else {
+    guard let match = try Reference.find(ref, in: all, kind: "test", id: \.id, name: \.name, label: { "\($0.name) (\($0.id))" }) else {
       throw LookupError.notFound(ref, names: all.map(\.name))
     }
     return match

@@ -39,15 +39,17 @@ struct GameCenterCommand: AsyncParsableCommand {
 
   /// Vendor identifiers, reference names or Apple IDs as Apple IDs, in that order.
   static func ids<Item: GameCenterItem>(_ list: String, in items: [Item]) throws -> [String] {
-    try list.split(separator: ",").map { try find(String($0).trimmingCharacters(in: .whitespaces), in: items).id }
+    // Each item once, in the order named (a, a or an item named twice by two of its names).
+    Reference.unique(try Reference.unique(list.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) })
+      .map { try find($0, in: items).id })
   }
 
   /// An item by vendor identifier, reference name or Apple ID.
   static func find<Item: GameCenterItem>(_ reference: String, in items: [Item]) throws -> Item {
-    let key = reference.lowercased()
-    guard let found = items.first(where: {
-      $0.id == reference || $0.vendorIdentifier?.lowercased() == key || $0.referenceName?.lowercased() == key
-    }) else {
+    guard let found = try Reference.find(
+      reference, in: items, kind: Item.noun, id: { $0.id }, identifiers: [{ $0.vendorIdentifier }], name: { $0.referenceName },
+      label: { "\($0.displayName) (\($0.id))" })
+    else {
       let known = items.map(\.displayName).joined(separator: ", ")
       throw ValidationError("No \(Item.noun) '\(reference)'.\(known.isEmpty ? "" : " Known: \(known).")")
     }
@@ -292,8 +294,24 @@ struct GameCenterSubmit<Item: GameCenterItem>: AsyncParsableCommand {
 
   @OptionGroup var arguments: GameCenterItemArguments
 
-  @Option(name: .long, help: "The submission's platform: ios, macos, tvos, visionos (default ios).")
+  @Option(name: .long, help: "The submission's platform: ios, macos, tvos, visionos (default: the app's platform, or the one with a version being prepared).")
   var platform: String?
+
+  /// The app's only platform, or the only one with a version App Review can take; otherwise
+  /// --platform is needed (a submission made for the wrong platform can't be deleted).
+  private func defaultPlatform(appID: String, client: ASCClient) async throws -> String {
+    let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.appsAppStoreVersionsGetToManyRelated(path: .init(id: appID), query: .init(limit: 200)).ok.body.json
+    }.flatMap(\.data)
+    let platforms = Swift.Set(versions.compactMap { $0.attributes?.platform })
+    if platforms.count == 1, let only = platforms.first { return only }
+    let preparing = Swift.Set(versions.filter {
+      AscelerateCore.Preflight.submittableStates.contains($0.attributes?.appVersionState ?? "")
+    }.compactMap { $0.attributes?.platform })
+    if preparing.count == 1, let only = preparing.first { return only }
+    throw ValidationError(
+      "The app has \(platforms.sorted().map(formatState).joined(separator: ", ")) versions\(preparing.isEmpty ? "" : ", \(preparing.count) being prepared"); pass --platform.")
+  }
 
   @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
   var yes = false
@@ -308,7 +326,12 @@ struct GameCenterSubmit<Item: GameCenterItem>: AsyncParsableCommand {
     else {
       throw ValidationError("'\(item.displayName)' has no version to submit (latest: \(GameCenterCommand.versionText(item.latestVersion))).")
     }
-    let platform = (try platform.map(parsePlatform) ?? .ios).rawValue
+    let platform: String
+    if let given = self.platform {
+      platform = try parsePlatform(given).rawValue
+    } else {
+      platform = try await defaultPlatform(appID: appID, client: client)
+    }
     guard confirm("Add '\(item.displayName)' version \(version.version ?? 0) to the \(formatState(platform)) draft submission? [y/N] ") else {
       print(yellow("Cancelled."))
       return
@@ -375,7 +398,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
       if let version = item.latestVersion { localizations = try await Item.localizations(versionID: version.id, client: client) }
       guard !localizations.isEmpty else { throw ValidationError("'\(item.displayName)' has no languages to export.") }
       let file = Dictionary(localizations.map { ($0.locale, $0.fields) }, uniquingKeysWith: { a, _ in a })
-      let path = confirmOutputPath(expandPath(output ?? "\(item.displayName)-localizations.json"), isDirectory: false)
+      let path = try confirmOutputPath(expandPath(output ?? "\(item.displayName)-localizations.json"), isDirectory: false)
       try LocalizationFile.encode(file).write(to: URL(fileURLWithPath: path))
       print(green("Exported") + " \(file.count) language\(file.count == 1 ? "" : "s") to \(path).")
     }
@@ -481,6 +504,11 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
       let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
       let width = properties[kCGImagePropertyPixelWidth] as? Int, let height = properties[kCGImagePropertyPixelHeight] as? Int
     else { throw ValidationError("'\(path)' isn't an image.") }
+    // Checked here, before the current image is deleted: Apple takes PNG and JPEG.
+    let type = CGImageSourceGetType(source) as String?
+    guard type == "public.png" || type == "public.jpeg" else {
+      throw ValidationError("'\(path)' is \(type ?? "an unknown type"); Game Center images are PNG or JPEG.")
+    }
     guard Item.imageSize.accepts(width: width, height: height) else {
       throw ValidationError("The image is \(width)×\(height); \(GameCenterCommand.article(Item.noun)) image must be \(Item.imageSize.description).")
     }
@@ -555,10 +583,19 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
         print(yellow("Cancelled."))
         return
       }
+      // A language holds one image, so the current one goes first; everything checkable about the
+      // new file was checked above.
       if let old = target.current {
         guard try await unlessDryRunStopped({ try await Item.deleteImage(id: old.id, client: client) }) != nil else { return }
       }
-      let imageID = try await target.upload(path)
+      let removed = target.current.map { "The previous image (\($0.fileName)) was removed; upload it again to put it back." }
+      let imageID: String
+      do {
+        imageID = try await target.upload(path)
+      } catch {
+        if let removed { FileHandle.standardError.write(Data((removed + "\n").utf8)) }
+        throw error
+      }
       // Apple checks the file in a few seconds; wait for its verdict, up to half a minute.
       for _ in 0..<15 {
         try await Task.sleep(for: .seconds(2))
@@ -569,6 +606,7 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
         }
         if image.state == "FAILED" {
           print(red("Apple refused the image") + ": \((image.errors ?? []).joined(separator: ", ")).")
+          if let removed { print(removed) }
           throw ExitCode.failure
         }
       }

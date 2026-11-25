@@ -18,14 +18,14 @@ extension GameCenterCommand {
     )
 
     static func findRuleSet(_ reference: String, in sets: [GameCenter.RuleSet]) throws -> GameCenter.RuleSet {
-      guard let found = sets.first(where: { $0.id == reference || $0.referenceName?.lowercased() == reference.lowercased() }) else {
+      guard let found = try Reference.find(reference, in: sets, kind: "rule set", id: \.id, name: \.referenceName, label: { "\($0.referenceName ?? "-") (\($0.id))" }) else {
         throw ValidationError("No rule set '\(reference)'. Rule sets: \(sets.compactMap(\.referenceName).joined(separator: ", ")).")
       }
       return found
     }
 
     static func findQueue(_ reference: String, in queues: [GameCenter.Queue]) throws -> GameCenter.Queue {
-      guard let found = queues.first(where: { $0.id == reference || $0.referenceName?.lowercased() == reference.lowercased() }) else {
+      guard let found = try Reference.find(reference, in: queues, kind: "queue", id: \.id, name: \.referenceName, label: { "\($0.referenceName ?? "-") (\($0.id))" }) else {
         throw ValidationError("No queue '\(reference)'. Queues: \(queues.compactMap(\.referenceName).joined(separator: ", ")).")
       }
       return found
@@ -211,7 +211,7 @@ extension GameCenterCommand {
         subcommands: [Add.self, Update.self, Delete.self])
 
       static func find(_ reference: String, in set: GameCenter.RuleSet) throws -> GameCenter.Rule {
-        guard let found = set.rules.first(where: { $0.id == reference || $0.referenceName?.lowercased() == reference.lowercased() }) else {
+        guard let found = try Reference.find(reference, in: set.rules, kind: "rule", id: \.id, name: \.referenceName, label: { "\($0.referenceName ?? "-") (\($0.id))" }) else {
           throw ValidationError("No rule '\(reference)' in '\(set.referenceName ?? set.id)'.")
         }
         return found
@@ -323,7 +323,7 @@ extension GameCenterCommand {
         subcommands: [Add.self, Update.self, Delete.self])
 
       static func find(_ reference: String, in set: GameCenter.RuleSet) throws -> GameCenter.Team {
-        guard let found = set.teams.first(where: { $0.id == reference || $0.referenceName?.lowercased() == reference.lowercased() }) else {
+        guard let found = try Reference.find(reference, in: set.teams, kind: "team", id: \.id, name: \.referenceName, label: { "\($0.referenceName ?? "-") (\($0.id))" }) else {
           throw ValidationError("No team '\(reference)' in '\(set.referenceName ?? set.id)'.")
         }
         return found

@@ -105,7 +105,7 @@ ascelerate game-center achievements image delete <bundle-id> first.win --locale 
 
 Eine neue Sprache eines Erfolgs braucht den Namen und beide Beschreibungen. Eine Sprache einer Bestenliste hat einen Namen, eine optionale Beschreibung, einen eigenen `--formatter` und die Einheit nach einer Punktzahl (`--suffix " points"`, `--suffix-singular " point"`). Eine Sprache einer Gruppe hat einen Namen, eine Sprache einer Aktivität oder Herausforderung einen Namen und eine Beschreibung (`--name`, `--description`).
 
-Ein Bild gehört zu einer Sprache. Für Erfolge, Bestenlisten und Gruppen muss es quadratisch und mindestens 512 × 512 groß sein (üblich sind 512 × 512 oder 1024 × 1024), für Aktivitäten und Herausforderungen genau 3840 × 2160; deren Versionen nehmen außerdem ein Standardbild (`image upload --default`). PNG oder JPEG. Der Upload ersetzt das aktuelle Bild und wartet auf Apples Prüfung, sodass ein abgelehntes Bild sofort gemeldet wird.
+Ein Bild gehört zu einer Sprache. Für Erfolge, Bestenlisten und Gruppen muss es quadratisch und mindestens 512 × 512 groß sein (üblich sind 512 × 512 oder 1024 × 1024), für Aktivitäten und Herausforderungen genau 3840 × 2160; deren Versionen nehmen außerdem ein Standardbild (`image upload --default`). PNG oder JPEG. Der Upload ersetzt das aktuelle Bild und wartet auf Apples Prüfung, sodass ein abgelehntes Bild sofort gemeldet wird. Typ und Größe der Datei werden geprüft, bevor das aktuelle Bild gelöscht wird; lehnt Apple das neue danach ab, nennt die Meldung das entfernte Bild.
 
 ## Reihenfolge und App Review
 
@@ -114,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` (Erfolge, Bestenlisten und Gruppen) stellt die aufgeführten Elemente in dieser Reihenfolge an den Anfang; die übrigen folgen unverändert. `submit` fügt die neue Version des Elements dem Einreichungsentwurf der App hinzu (und legt einen an, wenn es keinen gibt). Sie geht zum App Review, wenn Sie den Entwurf mit `ascelerate apps review submit` einreichen. Auch `apps review submit` listet alle Elemente mit Änderungen, die auf die Prüfung warten, und bietet an, sie der Einreichung hinzuzufügen; wie viele es sind, zeigt `game-center <bundle-id>`.
+`reorder` (Erfolge, Bestenlisten und Gruppen) stellt die aufgeführten Elemente in dieser Reihenfolge an den Anfang; die übrigen folgen unverändert. `submit` fügt die neue Version des Elements dem Einreichungsentwurf der App hinzu (und legt einen an, wenn es keinen gibt). Sie geht zum App Review, wenn Sie den Entwurf mit `ascelerate apps review submit` einreichen. Auch `apps review submit` listet alle Elemente mit Änderungen, die auf die Prüfung warten, und bietet an, sie der Einreichung hinzuzufügen; wie viele es sind, zeigt `game-center <bundle-id>`. Ohne `--platform` nimmt `submit` die einzige Plattform der App oder die mit einer Version in Vorbereitung und verlangt sonst `--platform` (eine Einreichung für die falsche Plattform lässt sich nicht löschen).
 
 ## Game-Center-Gruppen
 
@@ -128,7 +128,7 @@ ascelerate game-center groups delete "Our Games"
 ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
 ```
 
-Eine App einer Game-Center-Gruppe hinzuzufügen lässt sich nicht rückgängig machen: Die App kann die Gruppe nicht verlassen, und ihre Erfolge, Bestenlisten und übrigen Elemente wandern in die Gruppe. `add-app` weist darauf hin und fragt zuerst; probieren Sie es mit `--dry-run` aus. Für eine App in einer Game-Center-Gruppe listen, erstellen und ordnen die übrigen `game-center`-Befehle die Elemente der Gruppe, und `leaderboards default` legt die Gruppen-Bestenliste fest, mit der Game Center für diese App öffnet.
+Eine App einer Game-Center-Gruppe hinzuzufügen lässt sich nicht rückgängig machen: Die App kann die Gruppe nicht verlassen, und ihre Erfolge, Bestenlisten und übrigen Elemente wandern in die Gruppe. `add-app` weist darauf hin und fragt zuerst; probieren Sie es mit `--dry-run` aus. Für eine App in einer Game-Center-Gruppe listen, erstellen und ordnen die übrigen `game-center`-Befehle die Elemente der Gruppe, und `leaderboards default` legt die Gruppen-Bestenliste fest, mit der Game Center für diese App öffnet. `--yes` allein beantwortet es nicht: Fügen Sie auch `--confirm-permanent` hinzu. Die Frage nennt die ID der Gruppe, da zwei Gruppen denselben Namen haben können.
 
 ## Matchmaking
 

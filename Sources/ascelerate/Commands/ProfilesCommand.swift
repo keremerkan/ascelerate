@@ -146,7 +146,7 @@ struct ProfilesCommand: AsyncParsableCommand {
         .replacingOccurrences(of: " ", with: "_")
         .replacingOccurrences(of: "/", with: "_")
       let outputPath = expandPath(
-        confirmOutputPath(output ?? "\(defaultName).mobileprovision", isDirectory: false)
+        try confirmOutputPath(output ?? "\(defaultName).mobileprovision", isDirectory: false)
       )
       try profileData.write(to: URL(fileURLWithPath: outputPath))
       success("Downloaded", "profile to \(outputPath)")
@@ -364,7 +364,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print("  Expires: \(created.expirationDate.map { formatDate($0) } ?? "—")")
 
       if let output, let profileData = created.content {
-        let outputPath = expandPath(confirmOutputPath(output, isDirectory: false))
+        let outputPath = expandPath(try confirmOutputPath(output, isDirectory: false))
         try profileData.write(to: URL(fileURLWithPath: outputPath))
         print("  Saved to: \(outputPath)")
       }

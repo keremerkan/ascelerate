@@ -1007,7 +1007,7 @@ extension AppsCommand {
         print()
 
         let outputFolder = expandPath(
-          confirmOutputPath(folder ?? "\(bundleID)-media", isDirectory: true))
+          try confirmOutputPath(folder ?? "\(bundleID)-media", isDirectory: true))
         let fm = FileManager.default
 
         var screenshotCount = 0

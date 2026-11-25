@@ -20,7 +20,7 @@ Apple Ads utilise ses propres identifiants, distincts de votre clé d'API App St
 ascelerate ads configure
 ```
 
-ascelerate crée la paire de clés et affiche la clé publique. Connectez-vous à Apple Ads avec l'utilisateur API, collez la clé dans **Réglages du compte → API**, puis saisissez l'identifiant client (client ID), l'identifiant d'équipe (team ID) et l'identifiant de clé (key ID) qui y sont affichés. ascelerate liste ensuite les comptes publicitaires auxquels l'utilisateur a accès et enregistre celui que vous choisissez dans une section `ads` de `~/.ascelerate/config.json`. `--new-key` crée une nouvelle paire de clés.
+ascelerate crée la paire de clés et affiche la clé publique. Connectez-vous à Apple Ads avec l'utilisateur API, collez la clé dans **Réglages du compte → API**, puis saisissez l'identifiant client (client ID), l'identifiant d'équipe (team ID) et l'identifiant de clé (key ID) qui y sont affichés. ascelerate liste ensuite les comptes publicitaires auxquels l'utilisateur a accès et enregistre celui que vous choisissez dans une section `ads` de `~/.ascelerate/config.json`. `--new-key` crée une nouvelle paire de clés. La nouvelle clé attend dans `ads-private-key.new.pem` et ne remplace l'actuelle qu'une fois la connexion réussie ; une exécution interrompue laisse l'ancienne clé en service, et la suivante reprend celle qui attend.
 
 ```bash
 ascelerate ads accounts          # comptes publicitaires et rôles de l'utilisateur API
@@ -101,7 +101,7 @@ ascelerate ads adgroups pause "Exact" --campaign "MyApp US"
 ascelerate ads adgroups resume "Exact" --campaign "MyApp US"
 ```
 
-`create` reprend la tarification, les enchères et le ciblage d'un groupe d'annonces existant (`--like`, ou le seul groupe de la campagne) ; le groupe est créé **en pause**, sauf avec `--enabled`. `--min-age`/`--max-age` ciblent les âges de 18 à 64 ans (sans `--max-age`, le ciblage couvre 65 ans et plus). Le ciblage par âge n'atteint que les utilisateurs qui ont autorisé les publicités personnalisées, et Apple n'attribue pas à la campagne, dans les autres outils, les installations issues de groupes d'annonces ciblés par âge : jugez donc ces groupes sur leurs chiffres Apple Ads.
+`create` reprend la tarification, les enchères et le ciblage d'un groupe d'annonces existant (`--like`, ou le seul groupe de la campagne) ; le groupe est créé **en pause**, sauf avec `--enabled`. `--min-age`/`--max-age` ciblent les âges de 18 à 64 ans (sans `--max-age`, le ciblage couvre 65 ans et plus). Le ciblage par âge n'atteint que les utilisateurs qui ont autorisé les publicités personnalisées, et Apple n'attribue pas à la campagne, dans les autres outils, les installations issues de groupes d'annonces ciblés par âge : jugez donc ces groupes sur leurs chiffres Apple Ads. Si l'une d'elles est donnée, les deux bornes viennent des options (une absente signifie aucune borne), pas du groupe copié. Un groupe `--automated` est créé activé, donc dans une campagne active il diffuse aussitôt ; la commande le signale avant de demander.
 
 ## Mots-clés et mots-clés négatifs
 
@@ -118,7 +118,7 @@ ascelerate ads negatives add --campaign "MyApp US" --ad-group "Discovery" --matc
 ascelerate ads negatives remove --campaign "MyApp US" "free wifi"
 ```
 
-`--ad-group` désigne le groupe d'annonces lorsqu'une campagne en compte plusieurs. Les mots-clés négatifs s'appliquent à la campagne, sauf si `--ad-group` est indiqué, et sont en correspondance exacte, sauf avec `--match broad`. `keywords add` ignore les mots-clés qui existent déjà. Les campagnes Max Conversions fixent elles-mêmes leurs enchères : les enchères par mot-clé ne s'y appliquent pas.
+`--ad-group` désigne le groupe d'annonces lorsqu'une campagne en compte plusieurs. Les mots-clés négatifs s'appliquent à la campagne, sauf si `--ad-group` est indiqué, et sont en correspondance exacte, sauf avec `--match broad`. `keywords add` ignore les mots-clés qui existent déjà. Les campagnes Max Conversions fixent elles-mêmes leurs enchères : les enchères par mot-clé ne s'y appliquent pas. `negatives remove` fonctionne de même : les mots-clés négatifs de la campagne, sauf si `--ad-group` désigne un groupe, ou tous les niveaux avec `--all-levels`.
 
 ## Quoi modifier
 
@@ -175,7 +175,7 @@ ascelerate ads ads create --campaign "MyApp US" --ad-group "Scanner" --product-p
 ascelerate ads ads pause "Scanner Page ad" --campaign "MyApp US"
 ```
 
-Une annonce envoie les taps d'un groupe d'annonces vers une page produit. Les groupes d'annonces sans annonce de votre part utilisent la page produit par défaut. Pour diriger les recherches liées à un besoin précis vers une [page de produit personnalisée](product-pages.md), donnez-leur un groupe d'annonces dédié (`adgroups create`, `keywords add`) et créez-lui une annonce. Une seule annonce est diffusée par groupe d'annonces : `--enabled` met donc en pause celle qui était diffusée jusque-là. Apple examine les nouvelles annonces ; `ads ads` affiche leur état d'examen.
+Une annonce envoie les taps d'un groupe d'annonces vers une page produit. Les groupes d'annonces sans annonce de votre part utilisent la page produit par défaut. Pour diriger les recherches liées à un besoin précis vers une [page de produit personnalisée](product-pages.md), donnez-leur un groupe d'annonces dédié (`adgroups create`, `keywords add`) et créez-lui une annonce. Une seule annonce est diffusée par groupe d'annonces : `--enabled` met donc en pause celle qui était diffusée jusque-là. Apple examine les nouvelles annonces ; `ads ads` affiche leur état d'examen. La nouvelle annonce est créée en pause, puis celle qui diffuse est mise en pause et la nouvelle activée ; en cas d'échec, le message indique les annonces mises en pause. `pause` et `resume` prennent `--ad-group` quand des annonces du même nom se trouvent dans plusieurs groupes.
 
 ## Avec un agent IA
 

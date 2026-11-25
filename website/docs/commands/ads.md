@@ -20,7 +20,7 @@ Apple Ads uses its own credentials, separate from your App Store Connect API key
 ascelerate ads configure
 ```
 
-ascelerate creates the key pair and prints the public key. Sign in to Apple Ads as the API user, paste the key in **Account Settings → API**, and enter the client ID, team ID, and key ID shown there. ascelerate then lists the ad accounts the user can access and stores the one you pick in an `ads` section of `~/.ascelerate/config.json`. `--new-key` creates a new key pair.
+ascelerate creates the key pair and prints the public key. Sign in to Apple Ads as the API user, paste the key in **Account Settings → API**, and enter the client ID, team ID, and key ID shown there. ascelerate then lists the ad accounts the user can access and stores the one you pick in an `ads` section of `~/.ascelerate/config.json`. `--new-key` creates a new key pair. The new key waits in `ads-private-key.new.pem` and replaces the working one only once it has signed in; a run that stops on the way leaves the old key in use, and the next run takes up the waiting key.
 
 ```bash
 ascelerate ads accounts          # ad accounts and roles of the API user
@@ -101,7 +101,7 @@ ascelerate ads adgroups pause "Exact" --campaign "MyApp US"
 ascelerate ads adgroups resume "Exact" --campaign "MyApp US"
 ```
 
-`create` copies an existing ad group's pricing, bidding, and targeting (`--like`, or the campaign's only group) and is created **paused** unless `--enabled`. `--min-age`/`--max-age` target ages 18 to 64 (no `--max-age` means 65 and older). Age targeting reaches only users who allowed Personalized Ads, and Apple doesn't attribute installs from age-targeted ad groups to the campaign in other tools, so judge such groups on their Apple Ads numbers.
+`create` copies an existing ad group's pricing, bidding, and targeting (`--like`, or the campaign's only group) and is created **paused** unless `--enabled`. `--min-age`/`--max-age` target ages 18 to 64 (no `--max-age` means 65 and older). Age targeting reaches only users who allowed Personalized Ads, and Apple doesn't attribute installs from age-targeted ad groups to the campaign in other tools, so judge such groups on their Apple Ads numbers. Given either, both bounds come from the flags (a missing one means no bound), not from the copied group. An `--automated` group is created enabled, so in a running campaign it serves at once; the command says so before asking.
 
 ## Keywords & negative keywords
 
@@ -118,7 +118,7 @@ ascelerate ads negatives add --campaign "MyApp US" --ad-group "Discovery" --matc
 ascelerate ads negatives remove --campaign "MyApp US" "free wifi"
 ```
 
-`--ad-group` picks the ad group when a campaign has several. Negative keywords are campaign-level unless `--ad-group` is given, and exact match unless `--match broad`. `keywords add` skips keywords that already exist. Max Conversions campaigns choose their own bids, so keyword bids don't apply to them.
+`--ad-group` picks the ad group when a campaign has several. Negative keywords are campaign-level unless `--ad-group` is given, and exact match unless `--match broad`. `keywords add` skips keywords that already exist. Max Conversions campaigns choose their own bids, so keyword bids don't apply to them. `negatives remove` works the same way: campaign-level negatives unless `--ad-group` names one, or every level with `--all-levels`.
 
 ## What to change
 
@@ -175,7 +175,7 @@ ascelerate ads ads create --campaign "MyApp US" --ad-group "Scanner" --product-p
 ascelerate ads ads pause "Scanner Page ad" --campaign "MyApp US"
 ```
 
-An ad sends an ad group's taps to a product page. Ad groups without an ad of yours use the default product page. To send searches for a specific need to a [custom product page](product-pages.md), give them an ad group of their own (`adgroups create`, `keywords add`) and create an ad for it. Only one ad serves per ad group, so `--enabled` pauses the one serving before. Apple reviews new ads; `ads ads` shows their review state.
+An ad sends an ad group's taps to a product page. Ad groups without an ad of yours use the default product page. To send searches for a specific need to a [custom product page](product-pages.md), give them an ad group of their own (`adgroups create`, `keywords add`) and create an ad for it. Only one ad serves per ad group, so `--enabled` pauses the one serving before. Apple reviews new ads; `ads ads` shows their review state. The new ad is created paused, the serving one then paused and the new one enabled; if that fails, the message says which ads were paused. `pause` and `resume` take `--ad-group` when ads of the same name are in several ad groups.
 
 ## Using it with an AI agent
 

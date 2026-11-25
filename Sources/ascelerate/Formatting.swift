@@ -259,41 +259,6 @@ private func descendantProcesses(of pid: pid_t) -> [pid_t] {
   return result
 }
 
-/// Splits a string into arguments, respecting single and double quotes.
-/// Quoted empty strings (`--body ""`) are preserved as empty arguments, and an
-/// unterminated quote throws instead of silently gluing the rest of the line.
-func splitArguments(_ string: String) throws -> [String] {
-  var result: [String] = []
-  var current = ""
-  var currentWasQuoted = false
-  var inQuote: Character?
-
-  func flush() {
-    if !current.isEmpty || currentWasQuoted { result.append(current) }
-    current = ""
-    currentWasQuoted = false
-  }
-
-  for char in string {
-    if let quote = inQuote {
-      if char == quote { inQuote = nil } else { current.append(char) }
-    } else if char == "'" || char == "\"" {
-      inQuote = char
-      currentWasQuoted = true
-    } else if char == " " {
-      flush()
-    } else {
-      current.append(char)
-    }
-  }
-
-  if inQuote != nil {
-    throw ValidationError("Unterminated quote in: \(string)")
-  }
-  flush()
-  return result
-}
-
 /// When true, all interactive confirmation prompts are automatically accepted.
 nonisolated(unsafe) var autoConfirm = false
 
@@ -754,7 +719,7 @@ func expandPath(_ path: String) -> String {
 
 /// Checks if a path exists. If so, warns and prompts for a new name (pre-filled with the current name).
 /// Returns the confirmed path to use.
-func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
+func confirmOutputPath(_ path: String, isDirectory: Bool) throws -> String {
   var current = path
   let fm = FileManager.default
 
@@ -774,7 +739,10 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) -> String {
     print("\(kind) '\(current)' already exists. Press Enter to overwrite or type a new name:")
     fflush(stdout)
 
-    guard let line = readAnswer("> ", optional: true) else { return current }
+    // End of input isn't Enter: nothing answered, so nothing is replaced.
+    guard let line = readAnswer("> ", optional: true) else {
+      throw ValidationError("'\(current)' exists and no answer came (end of input); pass --yes to replace it or choose another path.")
+    }
     let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty { return current }
     current = trimmed
@@ -895,6 +863,8 @@ func checkForUpdatesInteractively() async -> Bool {
   struct Once { nonisolated(unsafe) static var checked = false }
   guard !Once.checked else { return false }
   Once.checked = true
+  // Offered only to someone at a terminal: a script's or an agent's closed stdin isn't a yes.
+  guard isatty(STDIN_FILENO) != 0 else { return false }
 
   let completions = completionsVersionDetail()
   let skill = skillVersionDetail()
@@ -907,8 +877,10 @@ func checkForUpdatesInteractively() async -> Bool {
   if let detail = skill { items.append("ascelerate skill\(detail)") }
 
   let label = items.joined(separator: " and ")
-  let answer = readAnswer("\(label.prefix(1).uppercased())\(label.dropFirst()) outdated. Update now? [Y/n] ", kind: .confirm, optional: true)?
-    .trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+  // End of input is no.
+  guard let answer = readAnswer("\(label.prefix(1).uppercased())\(label.dropFirst()) outdated. Update now? [Y/n] ", kind: .confirm, optional: true)?
+    .trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+  else { print(); return true }
   guard answer.isEmpty || answer == "y" || answer == "yes" else { return true }
 
   if completions != nil {
@@ -1157,7 +1129,7 @@ func exportProductLocalizations(
   let data = try encoder.encode(result)
 
   let outputPath = expandPath(
-    confirmOutputPath(output ?? "\(productID)-localizations.json", isDirectory: false))
+    try confirmOutputPath(output ?? "\(productID)-localizations.json", isDirectory: false))
   try data.write(to: URL(fileURLWithPath: outputPath))
 
   success("Exported", "\(result.count) locale(s) to \(outputPath)")
@@ -1248,7 +1220,7 @@ func exportProductPrices(_ file: ProductPricesFile, productID: String, output: S
   let data = try encoder.encode(file)
 
   let outputPath = expandPath(
-    confirmOutputPath(output ?? "\(productID)-prices.json", isDirectory: false))
+    try confirmOutputPath(output ?? "\(productID)-prices.json", isDirectory: false))
   try data.write(to: URL(fileURLWithPath: outputPath))
 
   success("Exported", "prices for \(file.prices.count) territor\(file.prices.count == 1 ? "y" : "ies") to \(outputPath)")

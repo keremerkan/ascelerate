@@ -23,7 +23,7 @@ ascelerate alias list
 ascelerate alias remove myapp
 ```
 
-Les alias sont stockés dans `~/.ascelerate/aliases.json`. Tout argument ne contenant pas de point est recherché comme alias -- les vrais bundle IDs (qui contiennent toujours des points) fonctionnent sans modification.
+Les alias sont stockés dans `~/.ascelerate/aliases.json`. Tout argument ne contenant pas de point est recherché comme alias -- les vrais bundle IDs (qui contiennent toujours des points) fonctionnent sans modification. Un fichier illisible est signalé au lieu d'être considéré comme vide, pour qu'une modification manuelle ratée ne soit pas écrasée.
 
 :::tip
 Les alias fonctionnent avec toutes les commandes d'applications, d'achats intégrés, d'abonnements et de builds. Les commandes de provisionnement (`devices`, `certs`, `bundle-ids`, `profiles`) utilisent un domaine d'identifiants différent et ne résolvent pas les alias.

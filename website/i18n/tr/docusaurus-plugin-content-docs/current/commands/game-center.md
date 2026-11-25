@@ -105,7 +105,7 @@ ascelerate game-center achievements image delete <bundle-id> first.win --locale 
 
 Bir başarının yeni dili için adı ve iki açıklaması gerekir. Bir puan tablosu dilinde ad, isteğe bağlı bir açıklama, kendine ait bir `--formatter` ve skordan sonra gelen birim (`--suffix " points"`, `--suffix-singular " point"`) bulunur. Bir set dilinin yalnızca adı vardır; bir etkinlik veya meydan okuma dilinin adı ve açıklaması vardır (`--name`, `--description`).
 
-Bir görsel tek bir dile aittir. Başarılar, puan tabloları ve setler için kare ve en az 512×512 olmalıdır (genellikle 512×512 veya 1024×1024); etkinlikler ve meydan okumalar için tam olarak 3840×2160 olmalıdır ve sürümleri ayrıca varsayılan bir görsel alır (`image upload --default`). PNG ya da JPEG. Yükleme mevcut görselin yerini alır ve Apple'ın kontrolünü bekler; böylece reddedilen bir görsel hemen bildirilir.
+Bir görsel tek bir dile aittir. Başarılar, puan tabloları ve setler için kare ve en az 512×512 olmalıdır (genellikle 512×512 veya 1024×1024); etkinlikler ve meydan okumalar için tam olarak 3840×2160 olmalıdır ve sürümleri ayrıca varsayılan bir görsel alır (`image upload --default`). PNG ya da JPEG. Yükleme mevcut görselin yerini alır ve Apple'ın kontrolünü bekler; böylece reddedilen bir görsel hemen bildirilir. Mevcut görsel silinmeden önce dosyanın türü ve boyutu denetlenir; Apple ardından yenisini reddederse ileti, kaldırılan görseli belirtir.
 
 ## Sıralama ve App Review
 
@@ -114,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` (başarılar, puan tabloları ve setler), listelenenleri bu sırayla başa koyar; diğerleri oldukları gibi ardından gelir. `submit`, öğenin yeni sürümünü uygulamanın taslak gönderimine ekler (yoksa bir tane oluşturur). Taslağı `ascelerate apps review submit` ile gönderdiğinizde App Review'a gider. `apps review submit` de incelemeyi bekleyen değişiklikleri olan tüm öğeleri listeler ve gönderime eklemeyi önerir; kaç tane olduğunu `game-center <bundle-id>` gösterir.
+`reorder` (başarılar, puan tabloları ve setler), listelenenleri bu sırayla başa koyar; diğerleri oldukları gibi ardından gelir. `submit`, öğenin yeni sürümünü uygulamanın taslak gönderimine ekler (yoksa bir tane oluşturur). Taslağı `ascelerate apps review submit` ile gönderdiğinizde App Review'a gider. `apps review submit` de incelemeyi bekleyen değişiklikleri olan tüm öğeleri listeler ve gönderime eklemeyi önerir; kaç tane olduğunu `game-center <bundle-id>` gösterir. `--platform` verilmezse `submit`, uygulamanın tek platformunu ya da hazırlanan sürümü olan platformu kullanır; aksi halde `--platform` ister (yanlış platform için oluşturulan bir gönderim silinemez).
 
 ## Gruplar
 
@@ -128,7 +128,7 @@ ascelerate game-center groups delete "Our Games"
 ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
 ```
 
-Bir uygulamayı gruba eklemek geri alınamaz: Uygulama gruptan çıkamaz ve başarıları, puan tabloları ve diğer öğeleri gruba taşınır. `add-app` bunu belirtir ve önce sorar; `--dry-run` ile deneyin. Bir gruptaki uygulama için diğer `game-center` komutları grubun öğelerini listeler, oluşturur ve sıralar; `leaderboards default` ise Game Center'ın o uygulama için açtığı grup puan tablosunu belirler.
+Bir uygulamayı gruba eklemek geri alınamaz: Uygulama gruptan çıkamaz ve başarıları, puan tabloları ve diğer öğeleri gruba taşınır. `add-app` bunu belirtir ve önce sorar; `--dry-run` ile deneyin. Bir gruptaki uygulama için diğer `game-center` komutları grubun öğelerini listeler, oluşturur ve sıralar; `leaderboards default` ise Game Center'ın o uygulama için açtığı grup puan tablosunu belirler. Yalnızca `--yes` bunu yanıtlamaz: `--confirm-permanent` de ekleyin. İki grubun adı aynı olabileceğinden soru grubun kimliğini de belirtir.
 
 ## Eşleştirme
 

@@ -105,7 +105,7 @@ ascelerate game-center achievements image delete <bundle-id> first.win --locale 
 
 アチーブメントに新しい言語を追加するには、名前と 2 つの説明が必要です。リーダーボードの言語には、名前、任意の説明、言語ごとの `--formatter`、スコアの後に付く単位（`--suffix " points"`、`--suffix-singular " point"`）があります。セットの言語には名前が、アクティビティとチャレンジの言語には名前と説明（`--name`、`--description`）があります。
 
-画像は 1 つの言語に属します。アチーブメント、リーダーボード、セットでは正方形で 512×512 以上（通常は 512×512 または 1024×1024）、アクティビティとチャレンジではちょうど 3840×2160 にしてください。アクティビティとチャレンジのバージョンにはデフォルト画像も設定できます（`image upload --default`）。形式は PNG または JPEG です。アップロードすると現在の画像が置き換えられ、Apple の確認を待つので、却下された画像はすぐに報告されます。
+画像は 1 つの言語に属します。アチーブメント、リーダーボード、セットでは正方形で 512×512 以上（通常は 512×512 または 1024×1024）、アクティビティとチャレンジではちょうど 3840×2160 にしてください。アクティビティとチャレンジのバージョンにはデフォルト画像も設定できます（`image upload --default`）。形式は PNG または JPEG です。アップロードすると現在の画像が置き換えられ、Apple の確認を待つので、却下された画像はすぐに報告されます。 現在の画像を削除する前に、ファイルの種類とサイズを確認します。その後Appleが新しい画像を受け付けなかった場合は、削除した画像をメッセージで示します。
 
 ## 並び順と App Review
 
@@ -114,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder`（アチーブメント、リーダーボード、セット）は指定したものをその順序で先頭に置き、残りは今の順序のまま続きます。`submit` は項目の新しいバージョンをアプリの下書きの提出に追加します（なければ作成します）。下書きを `ascelerate apps review submit` で提出すると App Review に送られます。 `apps review submit` も審査待ちの変更があるすべての項目を表示し、提出に追加するか確認します。件数は `game-center <bundle-id>` で確認できます。
+`reorder`（アチーブメント、リーダーボード、セット）は指定したものをその順序で先頭に置き、残りは今の順序のまま続きます。`submit` は項目の新しいバージョンをアプリの下書きの提出に追加します（なければ作成します）。下書きを `ascelerate apps review submit` で提出すると App Review に送られます。 `apps review submit` も審査待ちの変更があるすべての項目を表示し、提出に追加するか確認します。件数は `game-center <bundle-id>` で確認できます。 `--platform` を指定しない場合、`submit` はアプリの唯一のプラットフォーム、または準備中のバージョンがあるプラットフォームを使い、それ以外の場合は `--platform` を求めます（誤ったプラットフォームで作成された提出は削除できません）。
 
 ## グループ
 
@@ -128,7 +128,7 @@ ascelerate game-center groups delete "Our Games"
 ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
 ```
 
-アプリをグループに追加すると元に戻せません。アプリはグループから外れることができず、アチーブメントやリーダーボードなどはグループに移ります。`add-app` はその旨を表示してから確認するので、まず `--dry-run` で試してください。グループに属するアプリでは、ほかの `game-center` コマンドがグループの項目を一覧、作成、並べ替えし、`leaderboards default` はそのアプリで Game Center を開いたときのグループのリーダーボードを設定します。
+アプリをグループに追加すると元に戻せません。アプリはグループから外れることができず、アチーブメントやリーダーボードなどはグループに移ります。`add-app` はその旨を表示してから確認するので、まず `--dry-run` で試してください。グループに属するアプリでは、ほかの `game-center` コマンドがグループの項目を一覧、作成、並べ替えし、`leaderboards default` はそのアプリで Game Center を開いたときのグループのリーダーボードを設定します。 `--yes` だけでは確認に答えられません。`--confirm-permanent` も加えてください。2つのグループが同じ名前を持つことがあるため、確認ではグループのIDも表示します。
 
 ## マッチメイキング
 

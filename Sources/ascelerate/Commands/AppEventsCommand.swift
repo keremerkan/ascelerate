@@ -491,7 +491,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
         let refName = appEvent.referenceName
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "\(refName)-localizations.json", isDirectory: false))
+          try confirmOutputPath(output ?? "\(refName)-localizations.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
 
         print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")

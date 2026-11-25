@@ -189,8 +189,8 @@ struct CertsCommand: AsyncParsableCommand {
       var pemPath: String?
       var cerPath: String?
       if let base {
-        cerPath = expandPath(confirmOutputPath(rsaKey != nil ? "\(base).cer" : base, isDirectory: false))
-        if rsaKey != nil { pemPath = expandPath(confirmOutputPath("\(base).pem", isDirectory: false)) }
+        cerPath = expandPath(try confirmOutputPath(rsaKey != nil ? "\(base).cer" : base, isDirectory: false))
+        if rsaKey != nil { pemPath = expandPath(try confirmOutputPath("\(base).pem", isDirectory: false)) }
       }
 
       print()

@@ -212,20 +212,30 @@ extension AdsCommand {
               ).ok.body.json.result
             }
             creativeID = created??.id
+            if creativeID == nil && !ClientFactory.isDryRun {
+              throw ValidationError("Apple created the creative but sent no ID for it, so no ad was made; run the command again (the creative is reused).")
+            }
           }
-          if enabled {
-            for ad in serving { try await Ads.setAdStatus(ad, .paused, ads, client: client) }
-          }
-          let ad = try await unlessDryRunStopped {
+          // Made paused first: the group's serving ad is paused only once the new one exists, and
+          // the new one enabled after that.
+          let made = try await unlessDryRunStopped {
             try await client.postAds(
               headers: .init(xApContext: Ads.context(ads)),
               body: .json(.init(
-                adGroupId: group.id ?? 0, creativeId: creativeID ?? 0, name: adName,
-                status: .init(value1: enabled ? .enabled : .paused)
+                adGroupId: group.id ?? 0, creativeId: creativeID ?? 0, name: adName, status: .init(value1: .paused)
               ))
             ).ok.body.json.result
           }
-          if let ad { print(green("Created") + " ad '\(adName)' (ID \(ad?.id.map(String.init) ?? "-")).") }
+          if let made { print(green("Created") + " ad '\(adName)' (ID \(made?.id.map(String.init) ?? "-")), paused.") }
+          guard enabled else { return }
+          // Nil only under dry run (the pauses are previewed); a real POST that answered without
+          // the ad would otherwise pause the serving ads and enable nothing.
+          let newAd = made ?? nil
+          if newAd?.id == nil && !ClientFactory.isDryRun {
+            throw ValidationError(
+              "The ad was created paused but Apple sent no ID for it, so nothing was paused; resume it with 'ascelerate ads ads resume --campaign \"\(campaign.name ?? "-")\" --ad-group \"\(group.name ?? "-")\" \"\(adName)\"'.")
+          }
+          try await Ads.enable(newAd, pausing: serving, in: group.name ?? "-", ads, client: client)
         }
       }
     }
@@ -233,38 +243,56 @@ extension AdsCommand {
     struct Pause: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "Pause an ad.")
       @Option(name: .long, help: "Campaign name or ID.") var campaign: String
+      @Option(name: .long, help: "Ad group name or ID (needed when ads of that name are in more than one).") var adGroup: String?
       @Argument(help: "Ad name or ID.") var ad: String
       @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.") var yes = false
 
       func run() async throws {
         if yes { autoConfirm = true }
-        try await AdsCommand.Ads_.change(campaign: campaign, ad: ad, to: .paused)
+        try await AdsCommand.Ads_.change(campaign: campaign, adGroup: adGroup, ad: ad, to: .paused)
       }
     }
 
     struct Resume: AsyncParsableCommand {
       static let configuration = CommandConfiguration(abstract: "Resume an ad (pausing the ad that serves in its ad group now).")
       @Option(name: .long, help: "Campaign name or ID.") var campaign: String
+      @Option(name: .long, help: "Ad group name or ID (needed when ads of that name are in more than one).") var adGroup: String?
       @Argument(help: "Ad name or ID.") var ad: String
       @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.") var yes = false
 
       func run() async throws {
         if yes { autoConfirm = true }
-        try await AdsCommand.Ads_.change(campaign: campaign, ad: ad, to: .enabled)
+        try await AdsCommand.Ads_.change(campaign: campaign, adGroup: adGroup, ad: ad, to: .enabled)
       }
     }
 
-    static func change(campaign ref: String, ad ref2: String, to status: Components.Schemas.AdStatus) async throws {
+    static func change(
+      campaign ref: String, adGroup groupRef: String?, ad ref2: String, to status: Components.Schemas.AdStatus
+    ) async throws {
       let ads = try Ads.config()
       try await Ads.withClient(ads) { client in
         let campaign = try await Ads.campaign(ref, ads, client: client)
-        let all = try await Ads.ads(campaignID: campaign.id ?? 0, ads, client: client)
-        guard let ad = all.first(where: { $0.id.map(String.init) == ref2 || $0.name?.caseInsensitiveCompare(ref2) == .orderedSame }) else {
-          let names = all.compactMap(\.name).sorted().map { "  - \($0)" }.joined(separator: "\n")
+        let groups = try await Ads.adGroups(campaignID: campaign.id ?? 0, ads, client: client)
+        var all = try await Ads.ads(campaignID: campaign.id ?? 0, ads, client: client)
+        if let groupRef {
+          let group = try Ads.adGroup(groupRef, in: groups)
+          all = all.filter { $0.adGroupId == group.id }
+        }
+        func groupName(_ ad: Components.Schemas.Ad) -> String {
+          groups.first { $0.id == ad.adGroupId }?.name ?? "ad group \(ad.adGroupId.map(String.init) ?? "-")"
+        }
+        // An ID first, then the name; a name in several ad groups needs --ad-group.
+        let byName = all.filter { $0.name?.caseInsensitiveCompare(ref2) == .orderedSame }
+        guard let ad = all.first(where: { $0.id.map(String.init) == ref2 }) ?? byName.first else {
+          let names = all.map { "  - \($0.name ?? "-") (\(groupName($0)))" }.sorted().joined(separator: "\n")
           throw ValidationError("No ad '\(ref2)' in \(campaign.name ?? "-"). Ads:\n\(names)")
         }
+        if all.first(where: { $0.id.map(String.init) == ref2 }) == nil, byName.count > 1 {
+          throw ValidationError(
+            "\(byName.count) ads are named '\(ref2)', in \(byName.map(groupName).joined(separator: ", ")); pass --ad-group or the ad's ID.")
+        }
         guard ad.status?.value1 != status else {
-          print("\(ad.name ?? "-") is already \(formatState(status.rawValue).lowercased()).")
+          print("\(ad.name ?? "-") in \(groupName(ad)) is already \(formatState(status.rawValue).lowercased()).")
           return
         }
         // Only one ad per ad group serves: resuming one pauses the other.
@@ -272,12 +300,15 @@ extension AdsCommand {
           ? all.filter { $0.adGroupId == ad.adGroupId && $0.id != ad.id && $0.status?.value1 == .enabled } : []
         let pausing = others.isEmpty ? "" : ", pausing \(others.map { $0.name ?? "-" }.joined(separator: ", "))"
         let verb = status == .enabled ? "Resume" : "Pause"
-        guard confirm("\(verb) \(ad.name ?? "-")\(pausing)? [y/N] ") else {
+        guard confirm("\(verb) \(ad.name ?? "-") in \(campaign.name ?? "-") › \(groupName(ad))\(pausing)? [y/N] ") else {
           print(yellow("Cancelled."))
           return
         }
-        for other in others { try await Ads.setAdStatus(other, .paused, ads, client: client) }
-        try await Ads.setAdStatus(ad, status, ads, client: client)
+        if status == .enabled {
+          try await Ads.enable(ad, pausing: others, in: groupName(ad), ads, client: client)
+        } else {
+          try await Ads.setAdStatus(ad, status, ads, client: client)
+        }
       }
     }
   }
@@ -314,6 +345,28 @@ extension Ads {
   }
 
   /// Sets an ad's status (one request; shown and skipped under dry run).
+  /// Pauses the ad group's serving ads, then enables `ad` (one ad per ad group serves). When
+  /// the enabling fails, the error says which ads were paused, so the group isn't left without a
+  /// serving ad unnoticed. A nil `ad` (a dry run's) only previews the pauses.
+  static func enable(
+    _ ad: Components.Schemas.Ad?, pausing serving: [Components.Schemas.Ad], in group: String, _ ads: AdsConfig, client: Client
+  ) async throws {
+    var paused: [String] = []
+    do {
+      for other in serving {
+        try await setAdStatus(other, .paused, ads, client: client)
+        paused.append(other.name ?? String(other.id ?? 0))
+      }
+      if let ad { try await setAdStatus(ad, .enabled, ads, client: client) }
+    } catch {
+      if !paused.isEmpty {
+        FileHandle.standardError.write(Data(
+          "Paused in \(group): \(paused.joined(separator: ", ")), but the new ad wasn't enabled, so nothing serves there; resume one with 'ascelerate ads ads resume'.\n".utf8))
+      }
+      throw error
+    }
+  }
+
   static func setAdStatus(_ ad: Components.Schemas.Ad, _ status: Components.Schemas.AdStatus, _ ads: AdsConfig, client: Client) async throws {
     guard try await unlessDryRunStopped({
       try await client.putAdsId(

@@ -19,7 +19,7 @@ struct AdsCommand: AsyncParsableCommand {
       abstract: "Set up Apple Ads API credentials (creates the key pair for you)."
     )
 
-    @Flag(name: .long, help: "Create a new key pair even if one exists.")
+    @Flag(name: .long, help: "Create a new key pair even if one exists (the old one stays in use until the new one signs in).")
     var newKey = false
 
     func run() async throws {
@@ -27,15 +27,26 @@ struct AdsCommand: AsyncParsableCommand {
       try Config.createDirectory()
 
       let keyURL = Config.configDirectory.appendingPathComponent("ads-private-key.pem")
+      // A new key waits here until it has signed in, so a run that stops on the way (Ctrl-C, a
+      // typo, a refused sign-in) leaves the working key and config as they were. A pending key is
+      // used again on the next run: its public key may already be in Apple Ads.
+      let pendingURL = Config.configDirectory.appendingPathComponent("ads-private-key.new.pem")
       let privateKey: P256.Signing.PrivateKey
+      let isNew: Bool
       if !newKey, FileManager.default.fileExists(atPath: keyURL.path) {
         privateKey = try P256.Signing.PrivateKey(pemRepresentation: String(contentsOf: keyURL, encoding: .utf8))
+        isNew = false
         print("Using the existing key at \(keyURL.path).")
+      } else if FileManager.default.fileExists(atPath: pendingURL.path) {
+        privateKey = try P256.Signing.PrivateKey(pemRepresentation: String(contentsOf: pendingURL, encoding: .utf8))
+        isNew = true
+        print("Using the new key from the earlier run (\(pendingURL.path)), not yet in use.")
       } else {
         privateKey = P256.Signing.PrivateKey()
-        try Data(privateKey.pemRepresentation.utf8).write(to: keyURL, options: .atomic)
-        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: keyURL.path)
-        print("Created a new key at \(keyURL.path).")
+        try Data(privateKey.pemRepresentation.utf8).write(to: pendingURL, options: .atomic)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: pendingURL.path)
+        isNew = true
+        print("Created a new key at \(pendingURL.path); it replaces the current one once it has signed in.")
       }
 
       print("""
@@ -53,7 +64,7 @@ struct AdsCommand: AsyncParsableCommand {
         clientId: try promptText("clientId: "),
         teamId: try promptText("teamId: "),
         keyId: try promptText("keyId: "),
-        privateKeyPath: keyURL.path
+        privateKeyPath: isNew ? pendingURL.path : keyURL.path
       )
 
       let accounts = try await Ads.withClient(ads) { client in
@@ -66,6 +77,16 @@ struct AdsCommand: AsyncParsableCommand {
         ? accounts[0]
         : try promptSelection("Ad accounts", items: accounts, display: { "\($0.name ?? "-") (\($0.id ?? 0))" })
       ads.adAccountId = account.id
+      if isNew {
+        // Signed in: the new key takes the working key's place, then the config names it.
+        if FileManager.default.fileExists(atPath: keyURL.path) {
+          _ = try FileManager.default.replaceItemAt(keyURL, withItemAt: pendingURL)
+        } else {
+          try FileManager.default.moveItem(at: pendingURL, to: keyURL)
+        }
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: keyURL.path)
+        ads.privateKeyPath = keyURL.path
+      }
       config.ads = ads
       try config.save()
 

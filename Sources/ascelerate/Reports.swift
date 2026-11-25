@@ -49,7 +49,7 @@ enum Reports {
   /// when `raw` is set. Returns true if the caller should stop (output written or raw printed).
   static func emitRaw(_ text: String, output: String?, raw: Bool) throws -> Bool {
     if let output {
-      let path = expandPath(confirmOutputPath(output, isDirectory: false))
+      let path = expandPath(try confirmOutputPath(output, isDirectory: false))
       try text.write(toFile: path, atomically: true, encoding: .utf8)
       success("Saved", "report to \(path)")
       return true

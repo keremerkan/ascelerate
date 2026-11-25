@@ -1468,7 +1468,7 @@ struct SubCommand: AsyncParsableCommand {
 
         let safeName = group.name.replacingOccurrences(of: " ", with: "-").lowercased()
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "\(safeName)-group-localizations.json", isDirectory: false))
+          try confirmOutputPath(output ?? "\(safeName)-group-localizations.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
 
         success("Exported", "\(result.count) locale(s) to \(outputPath)")
@@ -2483,8 +2483,10 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        _ = try await SubCommand.findSubscription(
+        let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
+        // Shown under this product's name only when it's this product's.
+        try await SubCommand.ensureOfferBelongs(offerCodeID, kind: .offerCode, subID: sub.id, productID: productID, client: client)
 
         let detail = try await OfferCodes.detail(.subscription, id: offerCodeID, client: client)
         let offer = detail.offer
@@ -2878,8 +2880,10 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        _ = try await SubCommand.findSubscription(
+        let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
+        // Shown under this product's name only when it's this product's.
+        try await SubCommand.ensureOfferBelongs(offerID, kind: .promoOffer, subID: sub.id, productID: productID, client: client)
 
         let (offer, priceCount) = try await Subscriptions.promotionalOffer(id: offerID, client: client)
         print("Promotional Offer: \(offer.name ?? "—")")
@@ -3228,7 +3232,12 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
-        _ = try await findApp(bundleID: bundleID, client: client)
+        let app = try await findApp(bundleID: bundleID, client: client)
+        let (sub, _) = try await SubCommand.findSubscription(productID: productID, appID: app.id, client: client)
+        // Only this product's image: an ID from another product isn't deleted under its name.
+        guard try await Subscriptions.images(subscriptionID: sub.id, client: client).contains(where: { $0.id == imageID }) else {
+          throw ValidationError("Image \(imageID) isn't one of \(productID)'s images; see 'ascelerate sub images list'.")
+        }
 
         try await runProductImageDelete(imageID: imageID) {
           try await Subscriptions.deleteImage(id: imageID, client: client)

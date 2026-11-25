@@ -105,7 +105,7 @@ ascelerate game-center achievements image delete <bundle-id> first.win --locale 
 
 A new achievement language needs its name and both descriptions. A leaderboard language has a name, an optional description, its own `--formatter`, and the unit after a score (`--suffix " points"`, `--suffix-singular " point"`). A set language has a name; an activity or challenge language has a name and a description (`--name`, `--description`).
 
-An image belongs to one language. For achievements, leaderboards and sets it must be square and at least 512×512 (512×512 or 1024×1024 are usual); for activities and challenges exactly 3840×2160, and their versions also take a default image (`image upload --default`). PNG or JPEG. The upload replaces the current image and waits for Apple's check, so a refused image is reported at once.
+An image belongs to one language. For achievements, leaderboards and sets it must be square and at least 512×512 (512×512 or 1024×1024 are usual); for activities and challenges exactly 3840×2160, and their versions also take a default image (`image upload --default`). PNG or JPEG. The upload replaces the current image and waits for Apple's check, so a refused image is reported at once. The file's type and size are checked before the current image is deleted; if Apple then refuses the new one, the message names the image that was removed.
 
 ## Order and App Review
 
@@ -114,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` (achievements, leaderboards and sets) puts the ones listed first, in that order; the rest follow as they are. `submit` adds the item's new version to the app's draft submission (making one when there's none). It goes to App Review when you submit the draft with `ascelerate apps review submit`. `apps review submit` also lists every item with changes waiting for review and offers to add them to the submission; `game-center <bundle-id>` shows how many there are.
+`reorder` (achievements, leaderboards and sets) puts the ones listed first, in that order; the rest follow as they are. `submit` adds the item's new version to the app's draft submission (making one when there's none). It goes to App Review when you submit the draft with `ascelerate apps review submit`. `apps review submit` also lists every item with changes waiting for review and offers to add them to the submission; `game-center <bundle-id>` shows how many there are. Without `--platform`, `submit` uses the app's only platform, or the one with a version being prepared, and asks for `--platform` otherwise (a submission made for the wrong platform can't be deleted).
 
 ## Groups
 
@@ -128,7 +128,7 @@ ascelerate game-center groups delete "Our Games"
 ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
 ```
 
-Adding an app to a group can't be undone: the app can't leave it, and its achievements, leaderboards and the rest move into the group. `add-app` says so and asks first; try it with `--dry-run`. For an app in a group, the other `game-center` commands list, create and order the group's items, and `leaderboards default` sets the group leaderboard Game Center opens on for that app.
+Adding an app to a group can't be undone: the app can't leave it, and its achievements, leaderboards and the rest move into the group. `add-app` says so and asks first; try it with `--dry-run`. For an app in a group, the other `game-center` commands list, create and order the group's items, and `leaderboards default` sets the group leaderboard Game Center opens on for that app. `--yes` alone doesn't answer it: add `--confirm-permanent` too. The question names the group's ID, since two groups can share a name.
 
 ## Matchmaking
 

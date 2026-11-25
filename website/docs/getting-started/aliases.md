@@ -23,7 +23,7 @@ ascelerate alias list
 ascelerate alias remove myapp
 ```
 
-Aliases are stored in `~/.ascelerate/aliases.json`. Any argument that doesn't contain a dot is looked up as an alias — real bundle IDs (which always contain dots) work unchanged.
+Aliases are stored in `~/.ascelerate/aliases.json`. Any argument that doesn't contain a dot is looked up as an alias — real bundle IDs (which always contain dots) work unchanged. A file that can't be read is reported rather than taken as empty, so a hand edit gone wrong isn't saved over.
 
 :::tip
 Aliases work with all app, IAP, subscription, and build commands. Provisioning commands (`devices`, `certs`, `bundle-ids`, `profiles`) use a different identifier domain and don't resolve aliases.

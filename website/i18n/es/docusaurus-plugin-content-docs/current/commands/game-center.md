@@ -105,7 +105,7 @@ ascelerate game-center achievements image delete <bundle-id> first.win --locale 
 
 Un idioma nuevo de un logro necesita su nombre y las dos descripciones. Un idioma de una tabla tiene un nombre, una descripción opcional, su propio `--formatter` y la unidad que sigue a una puntuación (`--suffix " points"`, `--suffix-singular " point"`). Un idioma de un grupo tiene un nombre; uno de una actividad o un desafío, un nombre y una descripción (`--name`, `--description`).
 
-Una imagen pertenece a un idioma. Para logros, tablas y grupos debe ser cuadrada y de al menos 512×512 (lo habitual es 512×512 o 1024×1024); para actividades y desafíos, exactamente de 3840×2160, y sus versiones admiten además una imagen predeterminada (`image upload --default`). En PNG o JPEG. La subida sustituye la imagen actual y espera la comprobación de Apple, de modo que una imagen rechazada se notifica al momento.
+Una imagen pertenece a un idioma. Para logros, tablas y grupos debe ser cuadrada y de al menos 512×512 (lo habitual es 512×512 o 1024×1024); para actividades y desafíos, exactamente de 3840×2160, y sus versiones admiten además una imagen predeterminada (`image upload --default`). En PNG o JPEG. La subida sustituye la imagen actual y espera la comprobación de Apple, de modo que una imagen rechazada se notifica al momento. El tipo y el tamaño del archivo se comprueban antes de eliminar la imagen actual; si Apple rechaza después la nueva, el mensaje indica la imagen eliminada.
 
 ## Orden y App Review
 
@@ -114,7 +114,7 @@ ascelerate game-center achievements reorder <bundle-id> first.win,high.five
 ascelerate game-center achievements submit <bundle-id> first.win [--platform ios]
 ```
 
-`reorder` (logros, tablas y grupos) coloca primero los indicados, en ese orden; el resto les sigue tal como está. `submit` añade la nueva versión del elemento al borrador de envío de la app (y crea uno si no lo hay). Va a App Review cuando envíe el borrador con `ascelerate apps review submit`. `apps review submit` también muestra todos los elementos con cambios pendientes de revisión y ofrece añadirlos al envío; `game-center <bundle-id>` muestra cuántos hay.
+`reorder` (logros, tablas y grupos) coloca primero los indicados, en ese orden; el resto les sigue tal como está. `submit` añade la nueva versión del elemento al borrador de envío de la app (y crea uno si no lo hay). Va a App Review cuando envíe el borrador con `ascelerate apps review submit`. `apps review submit` también muestra todos los elementos con cambios pendientes de revisión y ofrece añadirlos al envío; `game-center <bundle-id>` muestra cuántos hay. Sin `--platform`, `submit` usa la única plataforma de la app, o la que tiene una versión en preparación, y si no pide `--platform` (un envío creado para la plataforma equivocada no se puede eliminar).
 
 ## Grupos de Game Center
 
@@ -128,7 +128,7 @@ ascelerate game-center groups delete "Our Games"
 ascelerate game-center groups add-app "Our Games" <bundle-id> --dry-run
 ```
 
-Añadir una app a un grupo de Game Center no se puede deshacer: la app no puede salir del grupo y sus logros, tablas y demás elementos pasan al grupo. `add-app` lo advierte y pregunta antes; pruébelo con `--dry-run`. Para una app de un grupo de Game Center, los demás comandos `game-center` listan, crean y ordenan los elementos del grupo, y `leaderboards default` fija la tabla del grupo con la que se abre Game Center para esa app.
+Añadir una app a un grupo de Game Center no se puede deshacer: la app no puede salir del grupo y sus logros, tablas y demás elementos pasan al grupo. `add-app` lo advierte y pregunta antes; pruébelo con `--dry-run`. Para una app de un grupo de Game Center, los demás comandos `game-center` listan, crean y ordenan los elementos del grupo, y `leaderboards default` fija la tabla del grupo con la que se abre Game Center para esa app. `--yes` por sí solo no lo responde: añada también `--confirm-permanent`. La pregunta indica el ID del grupo, ya que dos grupos pueden compartir nombre.
 
 ## Emparejamiento
 

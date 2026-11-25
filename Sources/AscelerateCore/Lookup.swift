@@ -140,3 +140,45 @@ public enum AppLookupError: LocalizedError {
     }
   }
 }
+
+/// Finding the one item a reference names, the same way everywhere: its ID first (exact), then
+/// an identifier such as a bundle ID or vendor ID, then its name, both of those without case. A
+/// pass that matches more than one item is refused rather than the first taken.
+public enum Reference {
+  /// A reference that names more than one item.
+  public struct Ambiguous: LocalizedError, Equatable, Sendable {
+    /// What was looked for ("product", "test", "webhook").
+    public let kind: String
+    public let reference: String
+    /// How each match is shown (its name and ID).
+    public let matches: [String]
+
+    public var errorDescription: String? {
+      "'\(reference)' names \(matches.count) \(kind)s (\(matches.joined(separator: ", "))); use the ID."
+    }
+  }
+
+  /// The item `reference` names, nil for none. `identifierReference` is matched against the
+  /// identifiers instead of `reference` (a bundle ID an alias stands for).
+  public static func find<T>(
+    _ reference: String, in items: [T], kind: String, id: (T) -> String?, identifiers: [(T) -> String?] = [],
+    identifierReference: String? = nil, name: (T) -> String?, label: (T) -> String
+  ) throws(Ambiguous) -> T? {
+    if let match = items.first(where: { id($0) == reference }) { return match }
+    func same(_ value: String?, _ ref: String) -> Bool { value.map { $0.caseInsensitiveCompare(ref) == .orderedSame } ?? false }
+    func one(_ matches: [T]) throws(Ambiguous) -> T? {
+      if matches.count > 1 { throw Ambiguous(kind: kind, reference: reference, matches: matches.map(label)) }
+      return matches.first
+    }
+    for identifier in identifiers {
+      if let match = try one(items.filter { same(identifier($0), identifierReference ?? reference) }) { return match }
+    }
+    return try one(items.filter { same(name($0), reference) })
+  }
+
+  /// The items of `list` (comma separated) in order, each once.
+  public static func unique(_ list: [String]) -> [String] {
+    var seen: Set<String> = []
+    return list.filter { seen.insert($0).inserted }
+  }
+}

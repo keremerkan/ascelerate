@@ -13,7 +13,7 @@ ascelerate run-workflow release.txt --yes   # tüm soruları atla (CI/CD)
 ascelerate run-workflow                     # .workflow/.txt dosyalarından interaktif olarak seç
 ```
 
-Bir workflow dosyası, her satırda bir komut bulunan düz metin dosyasıdır (`ascelerate` öneki olmadan). `#` ile başlayan satırlar yorumdur, boş satırlar yok sayılır. Hem `.workflow` hem de `.txt` uzantıları desteklenir.
+Bir workflow dosyası, her satırda bir komut bulunan düz metin dosyasıdır (`ascelerate` öneki olmadan). `#` ile başlayan satırlar yorumdur, boş satırlar yok sayılır. Hem `.workflow` hem de `.txt` uzantıları desteklenir. Tırnak işaretleri boşluk içeren bir bağımsız değişkeni bir arada tutar; içlerinde `\"`, `\'` ve `\\` karakterin kendisini ifade eder (`--body "the \"great\" one"`). Sekmeler de boşluklar gibi bağımsız değişkenleri ayırır.
 
 ## Örnek
 

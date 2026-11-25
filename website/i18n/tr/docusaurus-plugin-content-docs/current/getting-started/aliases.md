@@ -23,7 +23,7 @@ ascelerate alias list
 ascelerate alias remove myapp
 ```
 
-Takma adlar `~/.ascelerate/aliases.json` dosyasında saklanır. Nokta içermeyen her argüman takma ad olarak aranır -- gerçek bundle ID'ler (her zaman nokta içerir) değişmeden çalışır.
+Takma adlar `~/.ascelerate/aliases.json` dosyasında saklanır. Nokta içermeyen her argüman takma ad olarak aranır -- gerçek bundle ID'ler (her zaman nokta içerir) değişmeden çalışır. Okunamayan bir dosya boş sayılmak yerine bildirilir; böylece hatalı bir elle düzenleme üzerine yazılmaz.
 
 :::tip
 Takma adlar tüm app, IAP, subscription ve build komutlarıyla çalışır. Provisioning komutları (`devices`, `certs`, `bundle-ids`, `profiles`) farklı bir tanımlayıcı alanı kullanır ve takma adları çözmez.

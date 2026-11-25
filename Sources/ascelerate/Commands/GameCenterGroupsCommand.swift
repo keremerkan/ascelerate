@@ -18,7 +18,7 @@ extension GameCenterCommand {
     )
 
     static func find(_ reference: String, in groups: [GameCenter.Group]) throws -> GameCenter.Group {
-      guard let found = groups.first(where: { $0.id == reference || $0.referenceName?.lowercased() == reference.lowercased() }) else {
+      guard let found = try Reference.find(reference, in: groups, kind: "group", id: \.id, name: \.referenceName, label: { "\(name($0)) (\($0.id))" }) else {
         throw ValidationError("No group '\(reference)'.\(groups.isEmpty ? " The team has none." : " Groups: \(groups.compactMap(\.referenceName).joined(separator: ", ")).")")
       }
       return found
@@ -112,7 +112,8 @@ extension GameCenterCommand {
         abstract: "Put an app in a group. This can't be undone.",
         discussion: """
           Apple documents this as permanent: the app can't leave the group, and its achievements, \
-          leaderboards and the rest move into it. Try it with --dry-run first.
+          leaderboards and the rest move into it. Try it with --dry-run first. --yes alone doesn't \
+          answer it: add --confirm-permanent as well.
           """)
 
       @Argument(help: "The group's reference name or ID.")
@@ -121,10 +122,20 @@ extension GameCenterCommand {
       @Argument(help: "The app's bundle ID or alias.", completion: appAliasCompletion)
       var app: String
 
-      @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
+      @Flag(name: .shortAndLong, help: "Skip the confirmation prompt (needs --confirm-permanent too).")
       var yes = false
 
+      @Flag(name: .long, help: "With --yes: accept that the app can never leave the group.")
+      var confirmPermanent = false
+
       func run() async throws {
+        if yes || autoConfirm {
+          // A permanent change isn't answered by a --yes meant for ordinary questions (a workflow's
+          // included).
+          guard confirmPermanent else {
+            throw ValidationError("--yes doesn't answer this: adding an app to a group can't be undone. Add --confirm-permanent as well, or run it without --yes.")
+          }
+        }
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let found = try Groups.find(group, in: try await GameCenter.groups(client: client))
@@ -133,7 +144,7 @@ extension GameCenterCommand {
           throw ValidationError(current == found.id ? "The app is already in '\(Groups.name(found))'." : "The app is already in another group (\(current)); an app can't move between groups.")
         }
         print(yellow("This can't be undone:") + " the app can't leave the group, and its achievements, leaderboards, sets, activities and challenges move into '\(Groups.name(found))'.")
-        try await Matchmaking.write("Add \(app) to group '\(Groups.name(found))'?", done: green("Added") + " \(app) to '\(Groups.name(found))'.") {
+        try await Matchmaking.write("Add \(app) to group '\(Groups.name(found))' (\(found.id)) for good?", done: green("Added") + " \(app) to '\(Groups.name(found))'.") {
           try await GameCenter.addToGroup(detailID: detail.id, groupID: found.id, client: client)
         }
       }

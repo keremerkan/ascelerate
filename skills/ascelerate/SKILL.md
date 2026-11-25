@@ -370,7 +370,7 @@ ascelerate game-center <kind> info|delete <app> <item>
 ascelerate game-center <kind> reorder <app> a,b,c              # listed first, rest keep their order
 ascelerate game-center <kind> localizations [view|set|export|import|delete] <app> <item> [--locale X] [--file X]
 ascelerate game-center <kind> image upload|delete <app> <item> (--locale X | --default) [file]   # waits for Apple's check; --default: an activity's/challenge's version image
-ascelerate game-center <kind> submit <app> <item> [--platform ios]   # adds the version to the draft submission (apps review submit sends it)
+ascelerate game-center <kind> submit <app> <item> [--platform X]     # platform: the app's only one or the one being prepared, else required; adds the version to the draft submission (apps review submit sends it)
 ```
 
 Groups (team-wide; share achievements, leaderboards, sets, activities, challenges between apps):
@@ -378,7 +378,7 @@ Groups (team-wide; share achievements, leaderboards, sets, activities, challenge
 ```bash
 ascelerate game-center groups [--json]                     # groups with their apps
 ascelerate game-center groups create|rename|delete ...     # create --name X; rename <group> --name X
-ascelerate game-center groups add-app <group> <app>        # IRREVERSIBLE (the app can't leave; its items move into the group): always --dry-run first and confirm with the user
+ascelerate game-center groups add-app <group> <app>        # IRREVERSIBLE (the app can't leave; its items move into the group): always --dry-run first and confirm with the user; -y also needs --confirm-permanent
 ```
 
 For an app in a group, the item commands work on the group's items transparently; `leaderboards default` sets the app's default group leaderboard.
@@ -528,13 +528,13 @@ ascelerate ads negatives remove --campaign X [--match exact|broad] "term"...
 ascelerate ads adgroups create --campaign X --name "Exact" [--like "Existing Group"] [--default-bid 1.00] [--search-match on|off] [--cpa-goal 0.80] [--min-age 18] [--max-age 24] [--enabled]   # copies --like's pricing, bidding, CPA goal and targeting; created PAUSED unless --enabled
 ascelerate ads keywords copy --campaign X --from "Group A" --to "Group B" [--match exact|broad]   # text, match type, bid, status; skips ones already there
 ascelerate ads adgroups update "Group" --campaign X [--name N] [--default-bid B] [--search-match on|off] [--cpa-goal G]
-ascelerate ads adgroups create --campaign X --automated               # the automated ad group a Max Conversions campaign needs (campaigns create adds it)
+ascelerate ads adgroups create --campaign X --automated               # the automated ad group a Max Conversions campaign needs (campaigns create adds it); created ENABLED, serves at once in a running campaign
 ascelerate ads adgroups pause|resume --campaign X "Group"...
 ascelerate ads recommendations apply|dismiss <recommendation-id>...    # IDs from `ads recommendations`; apply changes the budget/target CPA
 ascelerate ads product-pages --app <app> [--json]                      # the app's product pages as Apple Ads sees them (custom pages come from App Store Connect)
 ascelerate ads ads [--app <app>] [--campaign X] [--json]               # ads you created, with product page and review state
 ascelerate ads ads create --campaign X [--ad-group Y] --product-page <name|id|default> [--name N] [--enabled]   # ad variation: sends the ad group's taps to that page (Apple reviews it)
-ascelerate ads ads pause|resume --campaign X <ad>                      # resume pauses the ad group's serving ad (one serves per ad group)
+ascelerate ads ads pause|resume --campaign X [--ad-group G] <ad>       # resume pauses the ad group's serving ad (one serves per ad group); a name in several groups needs --ad-group
 ```
 
 `--campaign` takes a campaign name (case-insensitive) or ID; a wrong name lists the valid ones. Report dates are in the ad account's time zone and `--days N` includes today (partial data) — for decisions, end ranges yesterday (`--to`) or compare complete periods. Keyword and search term reports take one request per campaign (Apple requires it), so an unscoped report over many campaigns takes a few seconds. `ads history` shows times in the ad account's zone too. `--by region` adds the country and `--by city` the region and country (Apple requires them; same-named places stay apart). `search-terms` refuses `--all` (Apple has no empty search term rows). Amounts take at most two decimals and are sent exactly.

@@ -355,7 +355,7 @@ struct BuildsCommand: AsyncParsableCommand {
       if let output {
         let dir = expandPath(output)
         let path = (dir as NSString).appendingPathComponent("\(schemeName).xcarchive")
-        let confirmed = confirmOutputPath(path, isDirectory: true)
+        let confirmed = try confirmOutputPath(path, isDirectory: true)
         let confirmedDir = (confirmed as NSString).deletingLastPathComponent
         try FileManager.default.createDirectory(atPath: confirmedDir, withIntermediateDirectories: true)
         args += ["-archivePath", confirmed]

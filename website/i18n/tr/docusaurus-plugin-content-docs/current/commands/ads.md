@@ -20,7 +20,7 @@ Apple Ads, App Store Connect API anahtarınızdan ayrı, kendi kimlik bilgilerin
 ascelerate ads configure
 ```
 
-ascelerate anahtar çiftini oluşturur ve genel anahtarı yazdırır. API kullanıcısıyla Apple Ads hesabına giriş yapın, anahtarı **Account Settings → API** bölümüne yapıştırın ve orada gösterilen client ID, team ID ve key ID değerlerini girin. ascelerate ardından kullanıcının erişebildiği reklam hesaplarını listeler ve seçtiğiniz hesabı `~/.ascelerate/config.json` dosyasındaki bir `ads` bölümüne kaydeder. `--new-key` yeni bir anahtar çifti oluşturur.
+ascelerate anahtar çiftini oluşturur ve genel anahtarı yazdırır. API kullanıcısıyla Apple Ads hesabına giriş yapın, anahtarı **Account Settings → API** bölümüne yapıştırın ve orada gösterilen client ID, team ID ve key ID değerlerini girin. ascelerate ardından kullanıcının erişebildiği reklam hesaplarını listeler ve seçtiğiniz hesabı `~/.ascelerate/config.json` dosyasındaki bir `ads` bölümüne kaydeder. `--new-key` yeni bir anahtar çifti oluşturur. Yeni anahtar `ads-private-key.new.pem` dosyasında bekler ve ancak oturum açabildikten sonra kullanılan anahtarın yerini alır; yarıda kalan bir çalıştırma eski anahtarı kullanımda bırakır, sonraki çalıştırma bekleyen anahtarı kullanır.
 
 ```bash
 ascelerate ads accounts          # API kullanıcısının reklam hesapları ve rolleri
@@ -101,7 +101,7 @@ ascelerate ads adgroups pause "Exact" --campaign "MyApp US"
 ascelerate ads adgroups resume "Exact" --campaign "MyApp US"
 ```
 
-`create`, mevcut bir reklam grubunun fiyatlandırmasını, teklif ayarlarını ve hedeflemesini kopyalar (`--like` ile verilen grubu ya da kampanyanın tek grubunu); `--enabled` verilmedikçe yeni grup **duraklatılmış** olarak oluşturulur. `--min-age`/`--max-age` 18 ile 64 arasındaki yaşları hedefler (`--max-age` verilmezse 65 yaş ve üstü de hedeflenir). Yaş hedeflemesi yalnızca Kişiselleştirilmiş Reklamlar'a izin veren kullanıcılara ulaşır ve Apple, yaş hedefli reklam gruplarından gelen yüklemeleri diğer araçlarda kampanyaya atfetmez; bu yüzden bu grupları Apple Ads rakamlarına göre değerlendirin.
+`create`, mevcut bir reklam grubunun fiyatlandırmasını, teklif ayarlarını ve hedeflemesini kopyalar (`--like` ile verilen grubu ya da kampanyanın tek grubunu); `--enabled` verilmedikçe yeni grup **duraklatılmış** olarak oluşturulur. `--min-age`/`--max-age` 18 ile 64 arasındaki yaşları hedefler (`--max-age` verilmezse 65 yaş ve üstü de hedeflenir). Yaş hedeflemesi yalnızca Kişiselleştirilmiş Reklamlar'a izin veren kullanıcılara ulaşır ve Apple, yaş hedefli reklam gruplarından gelen yüklemeleri diğer araçlarda kampanyaya atfetmez; bu yüzden bu grupları Apple Ads rakamlarına göre değerlendirin. Bunlardan biri verilirse iki sınır da kopyalanan gruptan değil, seçeneklerden gelir (verilmeyen sınır yok demektir). `--automated` grubu etkin olarak oluşturulur, bu yüzden çalışan bir kampanyada hemen yayına girer; komut sormadan önce bunu belirtir.
 
 ## Anahtar kelimeler ve negatif anahtar kelimeler
 
@@ -118,7 +118,7 @@ ascelerate ads negatives add --campaign "MyApp US" --ad-group "Discovery" --matc
 ascelerate ads negatives remove --campaign "MyApp US" "free wifi"
 ```
 
-Bir kampanyada birden fazla reklam grubu olduğunda hangisinin kullanılacağını `--ad-group` belirler. Negatif anahtar kelimeler, `--ad-group` verilmedikçe kampanya düzeyindedir ve `--match broad` verilmedikçe tam eşleme kullanır. `keywords add` zaten var olan anahtar kelimeleri atlar. Max Conversions kampanyaları tekliflerini kendileri belirlediğinden anahtar kelime teklifleri bu kampanyalara uygulanmaz.
+Bir kampanyada birden fazla reklam grubu olduğunda hangisinin kullanılacağını `--ad-group` belirler. Negatif anahtar kelimeler, `--ad-group` verilmedikçe kampanya düzeyindedir ve `--match broad` verilmedikçe tam eşleme kullanır. `keywords add` zaten var olan anahtar kelimeleri atlar. Max Conversions kampanyaları tekliflerini kendileri belirlediğinden anahtar kelime teklifleri bu kampanyalara uygulanmaz. `negatives remove` da aynı şekilde çalışır: `--ad-group` bir grup belirtmedikçe kampanya düzeyindeki negatif anahtar kelimeleri, `--all-levels` ile tüm düzeylerdekileri kaldırır.
 
 ## Değişiklik önerileri
 
@@ -175,7 +175,7 @@ ascelerate ads ads create --campaign "MyApp US" --ad-group "Scanner" --product-p
 ascelerate ads ads pause "Scanner Page ad" --campaign "MyApp US"
 ```
 
-Bir reklam, bir reklam grubunun dokunmalarını bir ürün sayfasına yönlendirir. Sizin oluşturduğunuz bir reklamı olmayan reklam grupları varsayılan ürün sayfasını kullanır. Belirli bir ihtiyaca yönelik aramaları bir [özel ürün sayfasına](product-pages.md) yönlendirmek için bu aramalara ayrı bir reklam grubu açın (`adgroups create`, `keywords add`) ve o grup için bir reklam oluşturun. Her reklam grubunda aynı anda yalnızca bir reklam yayında olabilir; bu yüzden `--enabled` o ana kadar yayında olan reklamı duraklatır. Apple yeni reklamları inceler; `ads ads` inceleme durumlarını gösterir.
+Bir reklam, bir reklam grubunun dokunmalarını bir ürün sayfasına yönlendirir. Sizin oluşturduğunuz bir reklamı olmayan reklam grupları varsayılan ürün sayfasını kullanır. Belirli bir ihtiyaca yönelik aramaları bir [özel ürün sayfasına](product-pages.md) yönlendirmek için bu aramalara ayrı bir reklam grubu açın (`adgroups create`, `keywords add`) ve o grup için bir reklam oluşturun. Her reklam grubunda aynı anda yalnızca bir reklam yayında olabilir; bu yüzden `--enabled` o ana kadar yayında olan reklamı duraklatır. Apple yeni reklamları inceler; `ads ads` inceleme durumlarını gösterir. Yeni reklam duraklatılmış olarak oluşturulur, ardından yayındaki reklam duraklatılır ve yenisi etkinleştirilir; bu başarısız olursa ileti hangi reklamların duraklatıldığını belirtir. Aynı adlı reklamlar birden çok reklam grubundaysa `pause` ve `resume` için `--ad-group` verin.
 
 ## Yapay zeka ajanıyla kullanım
 

@@ -99,9 +99,12 @@ public enum AppEvents {
     }.flatMap(\.data).map(event)
   }
 
-  /// An app's event by reference name or ID.
+  /// An app's event by ID or reference name (any case); a name of several events throws
+  /// `Reference.Ambiguous`.
   public static func find(_ ref: String, appID: String, client: ASCClient) async throws -> Event {
-    guard let event = try await list(appID: appID, client: client).first(where: { $0.referenceName == ref || $0.id == ref })
+    guard let event = try Reference.find(
+      ref, in: try await list(appID: appID, client: client), kind: "event", id: \.id, name: \.referenceName,
+      label: { "\($0.referenceName) (\($0.id))" })
     else { throw LookupError.notFound(ref) }
     return event
   }

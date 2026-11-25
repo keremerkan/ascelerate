@@ -335,7 +335,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
 
         let pageName = productPage.name
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "\(pageName)-localizations.json", isDirectory: false))
+          try confirmOutputPath(output ?? "\(pageName)-localizations.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
 
         print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")

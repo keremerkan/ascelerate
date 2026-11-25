@@ -23,7 +23,7 @@ ascelerate alias list
 ascelerate alias remove myapp
 ```
 
-エイリアスは `~/.ascelerate/aliases.json` に保存されます。ドットを含まない引数はエイリアスとして検索されます。実際のbundle ID（常にドットを含む）はそのまま使用できます。
+エイリアスは `~/.ascelerate/aliases.json` に保存されます。ドットを含まない引数はエイリアスとして検索されます。実際のbundle ID（常にドットを含む）はそのまま使用できます。 読み取れないファイルは空として扱わずにエラーとして報告するため、手作業の編集に誤りがあっても上書きされません。
 
 :::tip
 エイリアスはすべてのアプリ、IAP、サブスクリプション、ビルドコマンドで使用できます。プロビジョニングコマンド（`devices`、`certs`、`bundle-ids`、`profiles`）は異なる識別子ドメインを使用するため、エイリアスを解決しません。

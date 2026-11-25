@@ -1361,7 +1361,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let data = try encoder.encode(result)
 
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "what-to-test.json", isDirectory: false))
+          try confirmOutputPath(output ?? "what-to-test.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
 
         print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
@@ -1662,7 +1662,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let data = try LocalizationFile.encode(result)
 
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "beta-app-info.json", isDirectory: false))
+          try confirmOutputPath(output ?? "beta-app-info.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
 
         print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
@@ -2075,7 +2075,7 @@ struct TestFlightCommand: AsyncParsableCommand {
             return
           }
           if let output {
-            let path = expandPath(confirmOutputPath(output, isDirectory: false))
+            let path = expandPath(try confirmOutputPath(output, isDirectory: false))
             try logText.write(to: URL(fileURLWithPath: path), atomically: true, encoding: .utf8)
             print(green("Saved") + " crash log to \(path)")
           } else {
@@ -2269,7 +2269,7 @@ struct TestFlightCommand: AsyncParsableCommand {
           if fm.fileExists(atPath: target, isDirectory: &isFolder), isFolder.boolValue {
             target = (target as NSString).appendingPathComponent(fileName)
           }
-          let zipPath = expandPath(confirmOutputPath(target, isDirectory: false))
+          let zipPath = expandPath(try confirmOutputPath(target, isDirectory: false))
           if fm.fileExists(atPath: zipPath, isDirectory: &isFolder) {
             guard !isFolder.boolValue else {
               throw ValidationError("\(zipPath) is a folder; give a file name with --output.")

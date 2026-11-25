@@ -546,7 +546,7 @@ struct AppsCommand: AsyncParsableCommand {
         let data = try LocalizationFile.encode(result)
         
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "\(bundleID)-localizations.json", isDirectory: false))
+          try confirmOutputPath(output ?? "\(bundleID)-localizations.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
         
         let versionString = version.attributes?.versionString ?? "unknown"
@@ -1174,8 +1174,16 @@ struct AppsCommand: AsyncParsableCommand {
       let fileAttrs = try fm.attributesOfItem(atPath: expandedPath)
       let fileSize = (fileAttrs[.size] as? Int) ?? 0
       let fileName = (expandedPath as NSString).lastPathComponent
+      // Checked before the current file is deleted: a GeoJSON object App Store Connect can read.
+      guard fileSize > 0,
+        let json = try? JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: expandedPath))) as? [String: Any],
+        json["type"] is String
+      else {
+        throw ValidationError("'\(fileName)' isn't a GeoJSON file (a JSON object with a \"type\").")
+      }
       
       // Check for existing coverage
+      var removed: String?
       if let existingCoverage = try await AscelerateCore.RoutingCoverage.coverage(versionID: appVersion.id, client: client) {
         let existingName = existingCoverage.fileName ?? "unknown"
         print("Existing routing coverage: \(existingName)")
@@ -1183,16 +1191,26 @@ struct AppsCommand: AsyncParsableCommand {
           cancelled()
           return
         }
-        try await AscelerateCore.RoutingCoverage.delete(id: existingCoverage.id, client: client)
+        guard try await unlessDryRunStopped({
+          try await AscelerateCore.RoutingCoverage.delete(id: existingCoverage.id, client: client)
+        }) != nil else { return }
         success("Deleted", "existing coverage.")
+        removed = existingName
         print()
       }
       
       print("Uploading \(fileName) (\(formatBytes(fileSize)))...")
       fflush(stdout)
       
-      try await AscelerateCore.RoutingCoverage.upload(
-        MediaFile(path: expandedPath, fileName: fileName, fileSize: fileSize), versionID: appVersion.id, client: client)
+      do {
+        try await AscelerateCore.RoutingCoverage.upload(
+          MediaFile(path: expandedPath, fileName: fileName, fileSize: fileSize), versionID: appVersion.id, client: client)
+      } catch {
+        if let removed {
+          FileHandle.standardError.write(Data("The previous routing coverage (\(removed)) was removed; upload it again to put it back.\n".utf8))
+        }
+        throw error
+      }
       
       success("Uploaded", "routing coverage '\(fileName)' for version \(versionString).")
     }
@@ -2647,7 +2665,7 @@ struct AppsCommand: AsyncParsableCommand {
         let data = try LocalizationFile.encode(result)
         
         let outputPath = expandPath(
-          confirmOutputPath(output ?? "\(bundleID)-app-infos.json", isDirectory: false))
+          try confirmOutputPath(output ?? "\(bundleID)-app-infos.json", isDirectory: false))
         try data.write(to: URL(fileURLWithPath: outputPath))
         
         success("Exported", "\(result.count) locale(s) to \(outputPath)")
@@ -2787,7 +2805,7 @@ struct AppsCommand: AsyncParsableCommand {
           encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
           let jsonData = try encoder.encode(exported)
 
-          let outputPath = confirmOutputPath(output ?? "age-rating.json", isDirectory: false)
+          let outputPath = try confirmOutputPath(output ?? "age-rating.json", isDirectory: false)
           let expandedOutput = expandPath(outputPath)
           try jsonData.write(to: URL(fileURLWithPath: expandedOutput))
           success("Exported", "age rating for \(appName) → \(outputPath)")
@@ -3509,7 +3527,7 @@ func parsePlatform(_ raw: String) throws -> Platform {
 
 /// Looks up an app by bundle ID or alias.
 func findApp(bundleID: String, client: ASCClient) async throws -> Components.Schemas.App {
-  try await findApp(exactBundleID: resolveAlias(bundleID), client: client)
+  try await findApp(exactBundleID: try resolveAlias(bundleID), client: client)
 }
 
 /// Resolves an App Store version, prompting when several platforms match.

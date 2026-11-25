@@ -77,12 +77,15 @@ public enum CustomProductPages {
     return pages
   }
 
-  /// An app's page by name or ID (without its versions).
+  /// An app's page by ID or name (any case), without its versions; a name of several pages throws
+  /// `Reference.Ambiguous`.
   public static func find(_ ref: String, appID: String, client: ASCClient) async throws -> Page {
     let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
       try await client.appsAppCustomProductPagesGetToManyRelated(path: .init(id: appID), query: .init(limit: 200)).ok.body.json
     }.flatMap(\.data)
-    guard let match = pages.first(where: { $0.attributes?.name == ref || $0.id == ref }) else {
+    guard let match = try Reference.find(
+      ref, in: pages, kind: "product page", id: \.id, name: { $0.attributes?.name }, label: { "\($0.attributes?.name ?? "-") (\($0.id))" })
+    else {
       throw LookupError.notFound(ref)
     }
     return page(match, versions: [])

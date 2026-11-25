@@ -381,11 +381,11 @@ ascelerate game-center challenges [list|info] <app> [<ch>] [--json]
 ascelerate game-center challenges create <app> --id X --name X --leaderboard LB [--repeatable] [-y]
 ascelerate game-center challenges update <app> <ch> [--name X] [--leaderboard LB] [--repeatable B] [--archived B] [-y]
 ascelerate game-center achievements|leaderboards|sets reorder <app> a,b [-y]
-ascelerate game-center achievements|leaderboards|sets|activities|challenges delete|submit <app> <item> [-y]   # submit: adds the latest version to the draft submission
+ascelerate game-center achievements|leaderboards|sets|activities|challenges delete|submit <app> <item> [--platform X] [-y]   # submit: adds the latest version to the draft submission (platform: the app's only one or the one being prepared, else --platform)
 ascelerate game-center <kind> localizations [view|set|export|import|delete] <app> <item> [--locale X] [--file X] [-y]
 ascelerate game-center <kind> image upload|delete <app> <item> (--locale X | --default) [file] [-y]   # --default: activities/challenges
 ascelerate game-center groups [list|create|rename|delete] ... [--json] [-y]          # Team-wide groups with their apps
-ascelerate game-center groups add-app <group> <app> [-y]                          # Permanent; only ever dry-run it on our apps
+ascelerate game-center groups add-app <group> <app> [-y --confirm-permanent]      # Permanent (-y alone refused); only ever dry-run it on our apps
 ascelerate game-center matchmaking [rule-sets [list|info|create|update|delete]] [--json]   # Team-wide rule sets (players, rules, teams, queues)
 ascelerate game-center matchmaking rules add|update|delete <set> ... [-y]          # --type compatible|distance|match|team --expression X --description X [--weight N]
 ascelerate game-center matchmaking teams add|update|delete <set> ... [-y]          # --name X --min N --max N
@@ -466,7 +466,7 @@ ascelerate install-skill [--all] [--uninstall]                    # Install/upda
 ascelerate screenshot [--languages en-US,tr-TR]                   # Capture screenshots (optional language subset override)
 ascelerate screenshot init                                        # Create ascelerate/screenshot.yml + ScreenshotHelper.swift
 ascelerate screenshot create-helper [-o file]                     # Generate UITest helper file
-ascelerate ads configure [--new-key]                              # Apple Ads API credentials: creates the key pair, prints the public key, picks the ad account
+ascelerate ads configure [--new-key]                              # Apple Ads API credentials: creates the key pair, prints the public key, picks the ad account (a new key waits in ads-private-key.new.pem until it signs in)
 ascelerate ads accounts                                           # Ad accounts and roles of the API user
 ascelerate ads campaigns list [--app X] [--json]                  # Campaigns with status, countries, daily budget, bidding
 ascelerate ads campaigns pause|resume <campaign>... [-y]          # By name or ID
@@ -485,7 +485,7 @@ ascelerate ads keywords add --campaign X [--ad-group Y] --match exact|broad [--b
 ascelerate ads keywords pause|resume|bid --campaign X [--ad-group Y] [--match M] [--bid X] <kw>... [-y]
 ascelerate ads keywords suggest --app X [--seed T...] [--country C...] [--limit N] [--json]  # Apple's suggestions + where already targeted
 ascelerate ads keywords popularity --country C... (--app X | --genre G) [--term T... | --contains T] [--monthly] [--json]
-ascelerate ads negatives list|add|remove ...                      # Campaign- or ad group-level negative keywords
+ascelerate ads negatives list|add|remove ...                      # Campaign- or ad group-level negative keywords (remove: campaign level, --ad-group G, or --all-levels)
 ascelerate ads reports campaigns|keywords|search-terms [--days N | --from D --to D] [--app X] [--campaign X] [--all] [--json]  # campaigns also: --by age gender device country region city
 ascelerate ads insights impression-share --app X [--country C...] [--term T...] [--weeks 1-4] [--first-slot] [--json]
 ascelerate ads recommendations [--app X] [--json]                 # Apple's open daily budget / target CPA recommendations
@@ -495,7 +495,7 @@ ascelerate ads history [--app X] [--campaign X] [--days N | --from D --to D] [--
 ascelerate ads product-pages --app X [--json]                     # Product pages Apple Ads can send taps to
 ascelerate ads ads [--app X] [--campaign X] [--json]              # Ads (product page per ad group, review state)
 ascelerate ads ads create --campaign X [--ad-group Y] --product-page <name|id|default> [--name N] [--enabled] [-y]  # Creative (reused if one exists) + ad
-ascelerate ads ads pause|resume --campaign X <ad> [-y]            # Resume pauses the group's serving ad
+ascelerate ads ads pause|resume --campaign X [--ad-group G] <ad> [-y]   # Resume pauses the group's serving ad, then enables (`Ads.enable` names what it paused if that fails)
 ascelerate ads reports ads [same options as reports]              # Performance per ad / product page
 ascelerate version [--json]                                       # Print version number (also: --version, -v); --json adds completions/skill status (current|outdated|missing|unsupported)
 ascelerate update [--check] [-y]                                  # Update a GitHub-release install (not Homebrew's): digest + Developer ID (team GH4CGS3B5H) checked before replacing itself; sudo for /usr/local/bin
@@ -538,8 +538,11 @@ ascelerate <any command> --dry-run                                # Global: send
 
 When adding a new subcommand, place it in the appropriate `CommandGroup` or create a new one. Shell completions are alphabetically sorted by zsh — don't try to force custom ordering there.
 
+### Lookups by name
+- `Reference.find` (AscelerateCore/Lookup.swift, tested) is the one finder for products, workflows, Game Center items, groups, rule sets, queues, rules, teams, tests, events, product pages and webhooks: the ID first, then an identifier (a bundle ID, a vendor ID), then the name, both without case; a pass that matches more than one throws `Reference.Ambiguous` instead of taking the first. `Reference.unique` keeps comma lists (reorder, `--leaderboards`) to one of each.
+
 ### App aliases
-- Aliases map short names to bundle IDs, stored in `~/.ascelerate/aliases.json`
+- Aliases map short names to bundle IDs, stored in `~/.ascelerate/aliases.json` (a missing file is no aliases; one that can't be read is an error, so `alias add` never saves over it; `save` creates the folder)
 - `resolveAlias()` in `Aliases.swift` is the single resolution function — if input contains no dots, look up in aliases
 - `findApp()` in `AppsCommand.swift` calls `resolveAlias()` at the top — this covers all app, IAP, subscription, and build commands automatically
 - Alias names must match `^[a-zA-Z0-9_-]+$` — no dots (dots distinguish real bundle IDs from aliases)
@@ -606,7 +609,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - **Events (`--json-events`):** `runWithEvents` keeps the original stdout for events (`EventOutput.eventDescriptor`) and points stdout at stderr for the run (`dup2`), so a step's partial lines (progress dots) can't run into an event line. Events: `workflow`, `step` (running, succeeded, failed, dry-run), `finished`, nested workflows with `depth`. The workflow isn't confirmed (the caller did). Every stdin read in the CLI goes through `readAnswer(_:kind:options:optional:)` (Formatting.swift), which in event mode prints the question as a whole line and emits a `prompt` event (kind confirm, choice, choices or text) before reading; never call `readLine()` directly. `--check` parses each step (ArgumentParser's message for one that doesn't, with its line). The steps' own command events (`builds upload`'s `finished`, the archive's and screenshot's) stay out of the workflow's stream (`EventOutput.inWorkflow`): a program took an upload's `finished` for the workflow's end. An `--api` upload's progress comes as the workflow's own `progress` event (step `index`, `sent`, `bytes`; `EventOutput.step`). A step whose xcodebuild or altool fails reports their error lines (`runReportingErrors` → `ToolFailure`; the output is still forwarded as it comes), and a bare `ExitCode` reads "The command ended with exit code N" (`describeError`).
 - One command per line, without the `ascelerate` prefix
 - Lines starting with `#` are comments, blank lines are ignored
-- Quoted strings are respected for arguments with spaces (e.g. `--file "path with spaces.json"`)
+- Quoted strings are respected for arguments with spaces (e.g. `--file "path with spaces.json"`); `\"`, `\'` and `\\` are escapes, and any whitespace separates (`splitArguments`, AscelerateCore/Arguments.swift, tested)
 - Without `--yes`: prompts once to confirm the workflow, then individual commands still prompt normally
 - With `--yes`: sets `autoConfirm = true` globally, all prompts are skipped
 - `autoConfirm` is restored after each step — a single step with `-y` (or a nested `run-workflow --yes`) must not auto-accept prompts in later steps of a non-`--yes` workflow

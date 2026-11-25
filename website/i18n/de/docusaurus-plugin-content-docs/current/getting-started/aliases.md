@@ -23,7 +23,7 @@ ascelerate alias list
 ascelerate alias remove myapp
 ```
 
-Aliase werden in `~/.ascelerate/aliases.json` gespeichert. Jedes Argument ohne Punkt wird als Alias-Name interpretiert — echte Bundle IDs (die immer Punkte enthalten) funktionieren unverändert.
+Aliase werden in `~/.ascelerate/aliases.json` gespeichert. Jedes Argument ohne Punkt wird als Alias-Name interpretiert — echte Bundle IDs (die immer Punkte enthalten) funktionieren unverändert. Eine Datei, die sich nicht lesen lässt, wird gemeldet statt als leer behandelt, damit eine fehlerhafte Bearbeitung von Hand nicht überschrieben wird.
 
 :::tip
 Aliase funktionieren mit allen App-, IAP-, Abonnement- und Build-Befehlen. Provisioning-Befehle (`devices`, `certs`, `bundle-ids`, `profiles`) verwenden eine andere Kennung und lösen keine Aliase auf.

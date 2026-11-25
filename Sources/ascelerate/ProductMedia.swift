@@ -22,7 +22,7 @@ func runOfferCodeViewCodes(
   }
 
   if let output {
-    let path = expandPath(confirmOutputPath(output, isDirectory: false))
+    let path = expandPath(try confirmOutputPath(output, isDirectory: false))
     try raw.write(toFile: path, atomically: true, encoding: .utf8)
     let lineCount = raw.split(separator: "\n").count
     success("Wrote", "\(lineCount) code(s) to \(path).")

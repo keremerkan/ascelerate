@@ -106,7 +106,11 @@ extension AdsCommand {
 
     struct Create: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
-        abstract: "Create an ad group as a copy of an existing one's settings and targeting (created paused)."
+        abstract: "Create an ad group as a copy of an existing one's settings and targeting (created paused; an --automated one enabled).",
+        discussion: """
+          An --automated group, the one a Max Conversions campaign requires, is created enabled: \
+          whether Apple takes it paused isn't known. In a running campaign it starts serving at once.
+          """
       )
 
       @Option(name: .long, help: "Campaign name or ID.")
@@ -115,7 +119,7 @@ extension AdsCommand {
       @Option(name: .long, help: "Name of the new ad group (default with --automated: Automated).")
       var name: String?
 
-      @Flag(name: .long, help: "The automated ad group a Max Conversions campaign requires (Search Match, no keywords).")
+      @Flag(name: .long, help: "The automated ad group a Max Conversions campaign requires (Search Match, no keywords); created enabled.")
       var automated = false
 
       @Option(name: .long, help: "Ad group to copy pricing, bidding, CPA goal and targeting from (default: the campaign's only one).")
@@ -157,7 +161,12 @@ extension AdsCommand {
             guard try await Ads.adGroups(campaignID: campaign.id ?? 0, ads, client: client).isEmpty else {
               throw ValidationError("\(campaign.name ?? "-") already has an ad group.")
             }
-            guard confirm("Create the automated ad group of \(campaign.name ?? "-")? [y/N] ") else {
+            let running = campaign.status?.value1 == .enabled
+            print("The automated ad group is created enabled" + (enabled ? "." : " (--enabled or not)."))
+            if running {
+              print(yellow("Warning:") + " \(campaign.name ?? "-") is running, so the group starts serving (and spending) as soon as it's created.")
+            }
+            guard confirm("Create the automated ad group of \(campaign.name ?? "-"), enabled? [y/N] ") else {
               print(yellow("Cancelled."))
               return
             }
@@ -166,7 +175,7 @@ extension AdsCommand {
                 headers: .init(xApContext: Ads.context(ads)), body: .json(Ads.automatedAdGroup(campaignID: campaign.id ?? 0))
               ).ok.body.json.result
             }) else { return }
-            print(green("Created") + " ad group 'Automated' (ID \(created?.id.map(String.init) ?? "-")).")
+            print(green("Created") + " ad group 'Automated' (ID \(created?.id.map(String.init) ?? "-")), enabled" + (running ? " and serving." : "; it serves once the campaign runs."))
           }
           return
         }
@@ -202,9 +211,11 @@ extension AdsCommand {
           if let goal = settings.cpaGoal { cpaGoal = .init(value: try Ads.money(goal, currency: currency)) }
           var targeting = try source.targeting.map { try Ads.convert($0.value1, to: Components.Schemas.AdGroupTargetingCreate.self) }
           if minAge != nil || maxAge != nil {
+            // Both bounds from the flags (a missing one is no bound), so the range confirmed is the
+            // range sent, not an overlay on the copied group's.
             var t = targeting ?? .init()
-            if let minAge { t.minAge = .init(value1: .init(include: [String(minAge)])) }
-            if let maxAge { t.maxAge = .init(value1: .init(include: [String(maxAge)])) }
+            t.minAge = minAge.map { .init(value1: .init(include: [String($0)])) }
+            t.maxAge = maxAge.map { .init(value1: .init(include: [String($0)])) }
             targeting = t
           }
 

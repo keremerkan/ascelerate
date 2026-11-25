@@ -1,3 +1,4 @@
+import AscelerateCore
 import Foundation
 
 struct SimulatorManager: Sendable {

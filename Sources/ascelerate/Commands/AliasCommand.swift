@@ -54,7 +54,7 @@ struct AliasCommand: AsyncParsableCommand {
           "Invalid alias name '\(name)'. Use only letters, numbers, dashes, and underscores.")
       }
 
-      var aliases = Aliases.load()
+      var aliases = try Aliases.load()
       if let existing = aliases[name], existing != selected.bundleID {
         guard confirm("Alias '\(name)' already points to \(existing). Update? [y/N] ") else { return }
       }
@@ -79,7 +79,7 @@ struct AliasCommand: AsyncParsableCommand {
     func run() throws {
       if yes { autoConfirm = true }
 
-      var aliases = Aliases.load()
+      var aliases = try Aliases.load()
 
       guard !aliases.isEmpty else {
         print("No aliases configured.")
@@ -122,8 +122,8 @@ struct AliasCommand: AsyncParsableCommand {
       abstract: "List all aliases."
     )
 
-    func run() {
-      let aliases = Aliases.load()
+    func run() throws {
+      let aliases = try Aliases.load()
 
       guard !aliases.isEmpty else {
         print("No aliases configured. Use 'ascelerate alias add' to create one.")

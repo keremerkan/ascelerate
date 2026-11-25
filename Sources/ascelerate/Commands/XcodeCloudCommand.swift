@@ -24,10 +24,12 @@ struct XcodeCloudCommand: AsyncParsableCommand {
   /// A product by its ID, name (case-insensitive) or app's bundle ID (aliases resolved).
   static func findProduct(_ ref: String, client: ASCClient) async throws -> XcodeCloud.Product {
     let products = try await XcodeCloud.products(client: client)
-    let bundleID = resolveAlias(ref)
-    if let match = products.first(where: {
-      $0.id == ref || $0.bundleID == bundleID || $0.name?.lowercased() == ref.lowercased()
-    }) {
+    let bundleID = try resolveAlias(ref)
+    // ID, then the app's bundle ID (an alias resolved), then the name; a name of several refused.
+    if let match = try Reference.find(
+      ref, in: products, kind: "product", id: \.id, identifiers: [\.bundleID], identifierReference: bundleID, name: \.name,
+      label: { "\(productName($0)) (\($0.id))" })
+    {
       return match
     }
     let names = products.map { $0.bundleID ?? $0.name ?? $0.id }
@@ -41,7 +43,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
 
   static func findWorkflow(_ ref: String, product: XcodeCloud.Product, client: ASCClient) async throws -> XcodeCloud.Workflow {
     let workflows = try await XcodeCloud.workflows(productID: product.id, client: client)
-    if let match = workflows.first(where: { $0.id == ref || $0.name?.lowercased() == ref.lowercased() }) {
+    if let match = try Reference.find(ref, in: workflows, kind: "workflow", id: \.id, name: \.name, label: { "\($0.name ?? "-") (\($0.id))" }) {
       return match
     }
     let names = workflows.compactMap(\.name)
@@ -999,7 +1001,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
               n += 1
             }
             used.insert(name.lowercased())
-            let target = URL(filePath: expandPath(confirmOutputPath(folder.appending(path: name).path(percentEncoded: false), isDirectory: false)))
+            let target = URL(filePath: expandPath(try confirmOutputPath(folder.appending(path: name).path(percentEncoded: false), isDirectory: false)))
             say("Downloading \(target.lastPathComponent)…", terminator: "")
             // On a terminal, the share received so far after the name, redrawn as it grows.
             let showsProgress = isTerminal && !jsonOption.json

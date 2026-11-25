@@ -25,7 +25,7 @@ struct WebhooksCommand: AsyncParsableCommand {
   static func find(_ ref: String, bundleID: String, client: ASCClient) async throws -> Components.Schemas.Webhook {
     let app = try await findApp(bundleID: bundleID, client: client)
     let hooks = try await webhooks(appID: app.id, client: client)
-    if let match = hooks.first(where: { $0.id == ref || $0.attributes?.name?.lowercased() == ref.lowercased() }) {
+    if let match = try Reference.find(ref, in: hooks, kind: "webhook", id: \.id, name: { $0.attributes?.name }, label: { "\($0.attributes?.name ?? "-") (\($0.id))" }) {
       return match
     }
     let names = hooks.compactMap { $0.attributes?.name }

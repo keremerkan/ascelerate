@@ -81,7 +81,10 @@ ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```bash
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 5.99 --start-date 2027-03-01
 ```
+
+`--start-date` (YYYY-AA-GG, bugünden sonra) ile yeni temel fiyat o gün başlar ve o güne kadar mevcut fiyat geçerli olur; bir ürünün ilk fiyatı ve yeni bir temel bölge hemen geçerli olur. Diğer bölgelerde elle belirlenen fiyatlar ile planlanmış veya geçici fiyatlar olduğu gibi kalır. `pricing show` planlanan değişiklikleri listeler, onay ekranı da değişikliğin sona erdirdiği planlanmış veya geçici fiyatları gösterir.
 
 `--base-territory` mevcut temel bölgeye varsayılan olarak ayarlanır (yeni bir çizelgede ise USA). Çizelgede bölgeye özel manuel geçersiz kılmalar varsa, `set` komutu bunlardan herhangi birini yeni temel bölgeden otomatik eşitlemeye geri çevirme seçeneği sunan etkileşimli bir menü gösterir. Tüm geçersiz kılmaları onay almadan silmek için `--remove-all-overrides` bayrağını kullanın.
 
@@ -94,6 +97,8 @@ ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territor
 # Geçersiz kılmayı kaldır (bölge, temel bölgeden otomatik eşitlemeye geri döner)
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 ```
+
+`override` ve `remove` da `--start-date` alır: O güne kadar bölgenin mevcut fiyatı geçerli olur.
 
 `override` ve `remove` yalnızca temel olmayan bölgelerde çalışır. Temel bölgenin fiyatını değiştirmek için `set` komutunu kullanın.
 
@@ -108,6 +113,8 @@ ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
 # Başka bir IAP'ye uygula (aynı uygulamada veya farklı bir uygulamada)
 ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
 ```
+
+İçe aktarma planlanmış fiyatları da değiştirir (onaydan önce listelenir). `--start-date` ile dosyadaki fiyatlar o gün başlar ve o güne kadar bugünkü fiyatlar geçerli olur.
 
 Dosya, bölge koduna göre anahtarlanmış müşteri fiyatlarını içerir. İçe aktarma sırasında her fiyat, müşteri fiyatı üzerinden *hedef* ürünün kendi fiyat kademeleriyle eşleştirilir; bu sayede aynı dosya farklı ürünlerde ve uygulamalarda kullanılabilir. İçe aktarma, fiyat çizelgesini bütünüyle değiştirir: dosyada yer almayan bölgeler otomatik eşitlemeye geri döner; mevcut çizelge dosyayla zaten eşleşiyorsa komut hiçbir değişiklik yapmaz. App Store Connect'in geçici hataları (HTTP 429/5xx) otomatik olarak yeniden denenir.
 

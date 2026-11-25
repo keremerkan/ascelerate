@@ -382,6 +382,95 @@ func placeAssetLibraryMedia(
   return (tally, placementIDs)
 }
 
+/// Replaces an ordered library set (an iPhone Duo set's screenshots or previews) with the
+/// folder's files: every file is uploaded to the library first, and only once all of them are
+/// there are the `current` placements removed and the new ones placed, in file order. A file that
+/// doesn't upload leaves the set as it was (the files uploaded so far are deleted again, as
+/// unused). `placingFailed` says a placement failed after the old ones were removed: the set is
+/// then incomplete and worth placing again.
+func replaceAssetLibrarySet(
+  _ files: [MediaFile], slot: AssetLibrary.Slot, type: AssetLibrary.PlacementType, current: [String], noun: String,
+  localizationID: String, libraryID: String, counter: inout UploadCounter, client: ASCClient
+) async -> (tally: UploadTally, placementIDs: [String], placingFailed: Bool) {
+  var tally = UploadTally()
+  var uploaded: [AssetLibrary.Asset] = []
+  var uploadFailed = false
+  for (i, file) in files.enumerated() {
+    let isVideo = videoExtensions.contains((file.fileName as NSString).pathExtension.lowercased())
+    counter.printLine(isVideo ? slot.videoLabel : slot.fileLabel, i, of: files.count, file.fileName)
+    do {
+      if isVideo {
+        try await AssetLibrary.validateVideo(file, slot: slot)
+        uploaded.append(.video(try await unlessDryRunStopped {
+          try await AssetLibrary.uploadVideo(file, category: slot.category, libraryID: libraryID, client: client)
+        } ?? "DRY-RUN-VIDEO"))
+      } else {
+        try AssetLibrary.validateSize(of: file, slot: slot)
+        uploaded.append(.image(try await unlessDryRunStopped {
+          try await AssetLibrary.uploadImage(file, category: slot.category, libraryID: libraryID, client: client)
+        } ?? "DRY-RUN-IMAGE"))
+      }
+      print(ClientFactory.isDryRun ? "Not sent (dry run)." : "Uploaded.")
+    } catch {
+      print("Failed: \(describeError(error))")
+      uploadFailed = true
+    }
+  }
+  // The new files that uploaded but won't be placed, deleted again: "deleted N" or, for the ones
+  // that couldn't be, how many stay in the library unplaced.
+  func discardUploads() async -> String {
+    guard !ClientFactory.isDryRun, !uploaded.isEmpty else { return "" }
+    var deleted = 0
+    var left = 0
+    for asset in uploaded {
+      do {
+        if try await AssetLibrary.deleteIfUnused(asset, client: client) { deleted += 1 } else { left += 1 }
+      } catch {
+        left += 1
+      }
+    }
+    return "; deleted \(deleted) new upload\(deleted == 1 ? "" : "s") again" + (left > 0 ? ", \(left) stay in the library unplaced" : "")
+  }
+  if uploadFailed {
+    // Keep the set as it is.
+    let cleanup = await discardUploads()
+    print("    Kept the current \(current.count) \(noun)\(current.count == 1 ? "" : "s"): not every file uploaded\(cleanup).")
+    tally.failed = files.count
+    return (tally, [], false)
+  }
+  var removedAssets = 0
+  var removed = 0
+  do {
+    for id in current {
+      if try await AssetLibrary.removePlacement(id: id, client: client) { removedAssets += 1 }
+      removed += 1
+    }
+  } catch {
+    // Some old placements may be gone and the new files aren't placed: the set is fixed by
+    // running --replace again, not by placing the new files behind what's left.
+    let cleanup = await discardUploads()
+    print("    Failed to remove the current \(noun)s (\(removed) of \(current.count) removed): \(describeError(error))\(cleanup). Run the upload with --replace again.")
+    tally.failed = files.count
+    return (tally, [], false)
+  }
+  printDeleted(current.count, noun, libraryAssets: removedAssets)
+  var placementIDs: [String] = []
+  for asset in uploaded {
+    do {
+      placementIDs.append(try await AssetLibrary.place(
+        asset, on: .versionLocalization(localizationID), type: type, group: slot.group, client: client))
+      tally.succeeded += 1
+    } catch where ASCDryRunStop.from(error) != nil {
+      tally.notSent += 1
+    } catch {
+      print("    Failed to place a \(noun): \(describeError(error))")
+      tally.failed += 1
+    }
+  }
+  if tally.succeeded > 0 { print("    Placed \(tally.succeeded) \(noun)\(tally.succeeded == 1 ? "" : "s") in file order.") }
+  return (tally, placementIDs, tally.failed > 0)
+}
+
 /// A library image or video as `media library` lists it.
 struct LibraryEntry: Sendable {
   let asset: AssetLibrary.Asset
@@ -513,6 +602,32 @@ extension AppsCommand {
         guard !plan.locales.isEmpty else {
           throw ValidationError(
             "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0.rawValue) } ?? "?") version's platform.")
+        }
+
+        // Every asset library file (iPhone Duo, header, search results) is checked against its
+        // slot before anything is asked or sent: a file that doesn't fit would otherwise fail only
+        // after the run had changed the set.
+        var unfit: [String] = []
+        for localeMedia in plan.locales {
+          for dt in localeMedia.displayTypes {
+            guard let slot = AssetLibrary.slots[dt.folderName] else { continue }
+            for file in dt.screenshots + dt.previews {
+              do {
+                if videoExtensions.contains((file.fileName as NSString).pathExtension.lowercased()), slot.videoPlacementType != nil {
+                  try await AssetLibrary.validateVideo(file, slot: slot)
+                } else {
+                  try AssetLibrary.validateSize(of: file, slot: slot)
+                }
+              } catch {
+                unfit.append("  \(localeMedia.locale)/\(dt.folderName)/\(file.fileName): \(describeError(error))")
+              }
+            }
+          }
+        }
+        guard unfit.isEmpty else {
+          throw ValidationError(
+            "\(unfit.count) file\(unfit.count == 1 ? " doesn't" : "s don't") fit their asset library slot, so nothing was uploaded:\n"
+              + unfit.prefix(20).joined(separator: "\n") + (unfit.count > 20 ? "\n  … and \(unfit.count - 20) more" : ""))
         }
 
         // Print confirmation summary
@@ -663,10 +778,19 @@ extension AppsCommand {
                     if replace {
                       let current = try await AssetLibrary.placements(
                         localizationID: localization.id, type: type, group: slot.group, client: ascClient)
-                      for placement in current {
-                        try await AssetLibrary.removePlacement(id: placement.id, client: ascClient)
+                      if !current.isEmpty {
+                        // The old ones go only once every new file is in the library.
+                        let replaced = await replaceAssetLibrarySet(
+                          set.files, slot: slot, type: type, current: current.map(\.id), noun: set.noun,
+                          localizationID: localization.id, libraryID: assetLibraryID!, counter: &counter, client: ascClient)
+                        tally.add(replaced.tally)
+                        if replaced.placingFailed && !ClientFactory.isDryRun {
+                          duoRedos.append(DuoRedo(
+                            resultIndex: results.count, locale: localeMedia.locale, files: set.files,
+                            localizationID: localization.id, slot: slot, placementIDs: replaced.placementIDs))
+                        }
+                        continue
                       }
-                      printDeleted(current.count, set.noun)
                     }
                     let placed = await placeAssetLibraryMedia(
                       set.files, slot: slot, localizationID: localization.id, libraryID: assetLibraryID!,

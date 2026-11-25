@@ -196,8 +196,8 @@ ascelerate iap localizations import <app> <product-id> --file iap-de.json
 # Pricing — wholesale schedule POST is read-modify-write, preserves overrides
 ascelerate iap pricing show <app> <product-id>
 ascelerate iap pricing tiers <app> <product-id> --territory USA
-ascelerate iap pricing set <app> <product-id> --price 4.99 [--base-territory USA] [--remove-all-overrides]
-ascelerate iap pricing override <app> <product-id> --price 5.99 --territory FRA
+ascelerate iap pricing set <app> <product-id> --price 4.99 [--base-territory USA] [--start-date YYYY-MM-DD] [--remove-all-overrides]   # planned/temporary prices elsewhere stay; show lists planned changes
+ascelerate iap pricing override <app> <product-id> --price 5.99 --territory FRA [--start-date YYYY-MM-DD]
 ascelerate iap pricing remove <app> <product-id> --territory FRA   # revert to auto-equalize
 ascelerate iap pricing export <app> <product-id> [--output prices.json]
 ascelerate iap pricing import <app> <product-id> [--file prices.json] [--snap]   # copy schedule from another product/app; --snap: nearest tier for a price that isn't one, listed
@@ -812,7 +812,7 @@ ascelerate devices list
 ascelerate devices register
 
 # Certificates (auto-generates CSR)
-ascelerate certs create --type DISTRIBUTION
+ascelerate certs create --type DISTRIBUTION [--output ~/signing/dist] [--delete-local-files]   # key written owner-only first; files stay under --output/-y unless --delete-local-files
 ascelerate certs revoke
 
 # Bundle IDs & capabilities

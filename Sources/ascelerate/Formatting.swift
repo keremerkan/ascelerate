@@ -340,23 +340,30 @@ func printJSON(_ value: some Encodable) throws {
 /// (`await-processing`, `build attach-latest`) can wait for this specific build.
 /// Tracked per platform — one workflow can upload iOS and macOS builds with
 /// different build numbers.
-nonisolated(unsafe) private var lastUploadedByPlatform: [Platform: String] = [:]
-nonisolated(unsafe) private var lastUploadedAnyPlatform: String?
+nonisolated(unsafe) private var uploadedBuilds: [UploadedBuild] = []
 
-/// Records a successful upload's build number (platform nil when undetectable,
-/// e.g. a bare .ipa input).
-func recordUploadedBuild(_ buildNumber: String, platform: Platform?) {
-  if let platform { lastUploadedByPlatform[platform] = buildNumber }
-  lastUploadedAnyPlatform = buildNumber
+/// A build `builds upload` sent: its number, and as far as the file says, its platform, version
+/// and app, so the wait finds this build and not another app's or version's of the same number.
+struct UploadedBuild: Sendable {
+  let number: String
+  let platform: Platform?
+  let version: String?
+  let bundleID: String?
 }
 
-/// The build number uploaded earlier in this process for `platform`; with no
-/// platform, the most recent upload of any platform. A platform-specific miss
-/// deliberately does NOT fall back to another platform's number — that's how a
-/// macOS await would end up polling for an iOS build number.
-func lastUploadedBuild(for platform: Platform?) -> String? {
-  guard let platform else { return lastUploadedAnyPlatform }
-  return lastUploadedByPlatform[platform]
+/// Records a successful upload.
+func recordUploadedBuild(_ build: UploadedBuild) {
+  uploadedBuilds.append(build)
+}
+
+/// The latest build uploaded earlier in this process for the app (nil: any) and `platform`; with
+/// no platform, the most recent upload of any platform. A platform-specific miss deliberately does
+/// NOT fall back to another platform's build — that's how a macOS await would end up polling for
+/// an iOS build number.
+func lastUploadedBuild(for platform: Platform?, bundleID: String? = nil) -> UploadedBuild? {
+  uploadedBuilds.last { build in
+    (bundleID == nil || build.bundleID == nil || build.bundleID == bundleID) && (platform == nil || build.platform == platform)
+  }
 }
 
 /// Archive extensions recognized by `resolveFolder`.

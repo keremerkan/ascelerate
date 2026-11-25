@@ -29,6 +29,8 @@ Die Konfiguration wird unter `~/.ascelerate/config.json` gespeichert:
 
 `configure` fragt außerdem nach einer optionalen **Vendor-Nummer** (App Store Connect → Zahlungen und Finanzberichte). Sie wird nur für [Sales- und Finanzberichte](../commands/reports.md) benötigt und als Feld `vendorNumber` gespeichert; Sie können sie überspringen und später hinzufügen oder pro Befehl mit `--vendor-number` übergeben.
 
+Bei einem erneuten `configure` bleibt die gespeicherte Vendor-Nummer erhalten, wenn Sie Enter drücken (geben Sie `-` ein, um sie zu entfernen), und Ihre Apple Ads-Einstellungen bleiben ebenfalls.
+
 Für [Apple Ads](../commands/ads.md) benötigt ascelerate eigene Zugangsdaten, die `ascelerate ads configure` einrichtet und in einem Abschnitt `ads` derselben Datei speichert. Ein erneuter Aufruf von `configure` behält sie bei.
 
 ### Ein Schlüssel für einen einzelnen Aufruf

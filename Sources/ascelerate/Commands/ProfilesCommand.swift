@@ -375,15 +375,17 @@ struct ProfilesCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       abstract: "Reissue provisioning profiles.",
       discussion: """
-        Deletes and recreates profiles using all certificates of the matching \
-        type. By default, includes every distribution or development certificate \
-        so any team member can sign with the profile.
+        Deletes and recreates profiles. Without --to-certs, each profile gets every \
+        certificate that fits its type (not only the ones it had), so any team member \
+        can sign with it. --to-certs names exact certificates by serial number or name \
+        (a name must be one certificate); every profile must be able to hold them. \
+        Development and ad hoc profiles keep their own enabled devices, or get every \
+        enabled device with --all-devices, as far as each fits the profile's platform. \
+        All of this is checked before any profile is deleted.
 
-        Without arguments, shows a list of invalid profiles to select from. \
+        Without arguments, shows a list of profiles to select from. \
         Use --all-invalid to reissue every invalid profile, or --all to \
         reissue every profile regardless of state.
-
-        Use --to-certs to specify exact certificates instead of auto-detecting.
         """
     )
 
@@ -402,6 +404,19 @@ struct ProfilesCommand: AsyncParsableCommand {
     @Flag(name: .customLong("all-devices"), help: "Use all enabled devices for dev/adhoc profiles instead of preserving the original set.")
     var allDevices = false
 
+    /// A certificate named by serial number (exact) or by name, which must be one certificate:
+    /// a team's distribution certificates share one name.
+    static func certificate(_ identifier: String, in certificates: [Certificates.Certificate]) throws -> Certificates.Certificate {
+      if let bySerial = certificates.first(where: { $0.serialNumber == identifier }) { return bySerial }
+      let byName = certificates.filter { $0.displayName == identifier || $0.name == identifier }
+      guard let first = byName.first else { throw ValidationError("No certificate with serial number or name '\(identifier)'.") }
+      guard byName.count == 1 else {
+        throw ValidationError(
+          "\(byName.count) certificates are named '\(identifier)': \(byName.map(certLabel).joined(separator: ", ")). Name it by serial number.")
+      }
+      return first
+    }
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
@@ -419,8 +434,13 @@ struct ProfilesCommand: AsyncParsableCommand {
       // Determine which profiles to reissue
       let targets: [Profiles.Profile]
       if let name {
-        guard let profile = allProfiles.first(where: { $0.name == name }) else {
+        let named = allProfiles.filter { $0.name == name }
+        guard let profile = named.first else {
           throw ValidationError("No profile found with name '\(name)'.")
+        }
+        guard named.count == 1 else {
+          throw ValidationError(
+            "\(named.count) profiles are named '\(name)' (\(named.map { $0.type ?? "?" }.joined(separator: ", "))); reissue them with --all or interactively.")
         }
         targets = [profile]
       } else if all {
@@ -457,55 +477,91 @@ struct ProfilesCommand: AsyncParsableCommand {
         )
       }
 
-      // Resolve certificates
+      // Certificates: the ones named (each one certificate, and fitting every profile), or each
+      // profile's fitting ones. Devices: each profile's own enabled ones, or every enabled device,
+      // as far as they fit its type. All of it is settled before any profile is deleted.
+      let allCerts = try await Certificates.list(client: client)
       var explicitCerts: [Certificates.Certificate]?
-      var allCerts: [Certificates.Certificate] = []
-
       if let toCerts {
-        // Explicit certificates specified
-        let identifiers = toCerts.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        var resolved: [Certificates.Certificate] = []
-        for identifier in identifiers {
-          let cert = try await Certificates.find(serialOrName: identifier, client: client)
-          resolved.append(cert)
-        }
-        explicitCerts = resolved
-        print("Using \(resolved.count) specified certificate(s).")
-      } else {
-        // Auto-detect: each profile takes the certificates that fit its type
-        allCerts = try await Certificates.list(client: client)
+        let identifiers = toCerts.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        explicitCerts = try identifiers.map { try Self.certificate($0, in: allCerts) }
       }
+      let enabledDevices = allDevices && targets.contains(where: \.needsDevices)
+        ? try await Devices.list(statuses: ["ENABLED"], client: client) : []
 
-      // Fetch all enabled devices upfront if --all-devices
-      var allEnabledDeviceIDs: [String]?
-      if allDevices, targets.contains(where: \.needsDevices) {
-        allEnabledDeviceIDs = try await Devices.list(statuses: ["ENABLED"], client: client).map(\.id)
+      struct Plan {
+        let profile: Profiles.Profile
+        let certs: [Certificates.Certificate]
+        /// Nil for a profile without devices.
+        let devices: [Devices.Device]?
+      }
+      var plans: [Plan] = []
+      var unfit: [String] = []
+      var skipped: [String] = []
+      for profile in targets {
+        let type = profile.type ?? ""
+        let certs: [Certificates.Certificate]
+        if let explicitCerts {
+          let wrong = explicitCerts.filter { !Profiles.certificateFits($0.type ?? "", profileType: type) }
+          if !wrong.isEmpty {
+            unfit.append("\(profile.name.isEmpty ? "—" : profile.name) (\(type)) can't hold \(wrong.map(certLabel).joined(separator: ", "))")
+            continue
+          }
+          certs = explicitCerts
+        } else {
+          certs = Profiles.certificates(allCerts, fitting: type)
+          guard !certs.isEmpty else {
+            skipped.append("\(profile.name.isEmpty ? "—" : profile.name) — no \(Profiles.certificateFamily(forProfileType: type).lowercased()) certificate found")
+            continue
+          }
+        }
+        var devices: [Devices.Device]?
+        if profile.needsDevices {
+          let pool = allDevices ? enabledDevices : try await Profiles.devices(profileID: profile.id, client: client)
+          let fitting = pool.filter { ($0.status ?? "ENABLED") == "ENABLED" && Profiles.fits($0, profileType: type) }
+          // A development or ad hoc profile needs a device: without one the create would fail
+          // after the delete.
+          guard !fitting.isEmpty else {
+            skipped.append("\(profile.name.isEmpty ? "—" : profile.name) — no enabled device fits a \(type) profile")
+            continue
+          }
+          devices = fitting
+        }
+        plans.append(Plan(profile: profile, certs: certs, devices: devices))
+      }
+      guard unfit.isEmpty else {
+        throw ValidationError(
+          "These profiles can't take the certificates named, so nothing was reissued:\n" + unfit.map { "  \($0)" }.joined(separator: "\n"))
       }
 
       // Display summary
       print()
-      print("Profiles to reissue (\(targets.count)):")
+      print("Profiles to reissue (\(plans.count)):")
       print()
       Table.print(
-        headers: ["Name", "Type", "Bundle ID", "Certificates"],
-        rows: targets.map { profile in
-          let profileName = profile.name.isEmpty ? "—" : profile.name
-          let profileTypeRaw = profile.type ?? "—"
-          let bidIdentifier = profile.bundleIdentifier ?? "—"
-          let certInfo: String
-          if let explicitCerts {
-            certInfo = "\(explicitCerts.count) specified"
-          } else {
-            let neededFamily = Profiles.certificateFamily(forProfileType: profileTypeRaw)
-            let count = Profiles.certificates(allCerts, fitting: profileTypeRaw).count
-            certInfo = count == 0 ? "—" : "\(count) \(neededFamily.lowercased())"
-          }
-          return [profileName, profileTypeRaw, bidIdentifier, certInfo]
+        headers: ["Name", "Type", "Bundle ID", "Certificates", "Devices"],
+        rows: plans.map { plan in
+          [plan.profile.name.isEmpty ? "—" : plan.profile.name, plan.profile.type ?? "—", plan.profile.bundleIdentifier ?? "—",
+           "\(plan.certs.count)", plan.devices.map { "\($0.count)" } ?? "—"]
         }
       )
+      let usedCerts = Swift.Set(plans.flatMap { $0.certs.map(\.id) })
+      let certList = allCerts.filter { usedCerts.contains($0.id) }
+      if !certList.isEmpty {
+        print()
+        print("Certificates:")
+        for cert in certList {
+          print("  \(certLabel(cert)) — \(cert.type.map { formatState($0) } ?? "?")")
+        }
+      }
+      for line in skipped { print("  SKIP \(line)") }
       print()
+      guard !plans.isEmpty else {
+        print("Done. 0 reissued, \(skipped.count) failed.")
+        return
+      }
 
-      guard confirm("Reissue \(targets.count) profile(s)? This will delete and recreate each profile. [y/N] ") else {
+      guard confirm("Reissue \(plans.count) profile(s)? This will delete and recreate each profile. [y/N] ") else {
         cancelled()
         return
       }
@@ -513,28 +569,14 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       // Reissue each profile
       var succeeded = 0
-      var failed = 0
-
-      for profile in targets {
-        let certs: [Certificates.Certificate]
-        if let explicitCerts {
-          certs = explicitCerts
-        } else {
-          let neededFamily = Profiles.certificateFamily(forProfileType: profile.type ?? "")
-          let familyCerts = Profiles.certificates(allCerts, fitting: profile.type ?? "")
-          guard !familyCerts.isEmpty else {
-            print("  SKIP \(profile.name.isEmpty ? "—" : profile.name) — no \(neededFamily.lowercased()) certificate found")
-            failed += 1
-            continue
-          }
-          certs = familyCerts
-        }
-
+      var failed = skipped.count
+      for plan in plans {
         if await reissueProfile(
-          profile,
-          bundleIDIdentifier: profile.bundleIdentifier ?? "—",
-          certs: certs,
-          overrideDeviceIDs: allEnabledDeviceIDs,
+          plan.profile,
+          bundleIDIdentifier: plan.profile.bundleIdentifier ?? "—",
+          certs: plan.certs,
+          overrideDeviceIDs: plan.devices?.map(\.id),
+          deviceUDIDs: plan.devices?.map(\.udid),
           verb: "reissued",
           client: client
         ) {
@@ -658,6 +700,7 @@ func reissueProfile(
   bundleIDIdentifier: String,
   certs: [Certificates.Certificate],
   overrideDeviceIDs: [String]? = nil,
+  deviceUDIDs: [String]? = nil,
   verb: String,
   client: ASCClient
 ) async -> Bool {
@@ -674,11 +717,14 @@ func reissueProfile(
         print("  SKIP \(profileName) — \(error.localizedDescription)")
       case .devicesUnreadable(let underlying):
         print("  FAIL \(profileName) — could not fetch its devices: \(describeError(underlying))")
+      case .deleteFailed(let underlying) where ASCDryRunStop.from(underlying) != nil:
+        print("  DRY  \(profileName) — not sent (dry run): the delete and the create with \(certs.count) cert(s)")
       case .deleteFailed(let underlying):
         print("  FAIL \(profileName) — delete failed: \(describeError(underlying))")
-      case .createFailed(let underlying, let deviceUDIDs):
+      case .createFailed(let underlying, let readUDIDs):
         let certSpec = certs.compactMap(\.serialNumber).joined(separator: ",")
-        let devicesArg = deviceUDIDs.isEmpty ? "" : " --devices \(deviceUDIDs.joined(separator: ","))"
+        let udids = deviceUDIDs ?? readUDIDs
+        let devicesArg = udids.isEmpty ? "" : " --devices \(udids.joined(separator: ","))"
         print("  FAIL \(profileName) — recreate failed: \(describeError(underlying))")
         print("         Recovery: ascelerate profiles create --name \"\(profileName)\" --type \(profile.type ?? "") --bundle-id \(bundleIDIdentifier) --certificates \(certSpec)\(devicesArg)")
     }

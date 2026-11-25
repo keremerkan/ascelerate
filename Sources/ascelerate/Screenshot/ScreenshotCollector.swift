@@ -73,13 +73,34 @@ struct ScreenshotCollector: Sendable {
         return screenshots.count
     }
 
+    /// How many PNG screenshots a device's cache holds after its tests.
+    func cachedScreenshotCount(udid: String) -> Int {
+        let files = (try? FileManager.default.contentsOfDirectory(at: screenshotsCache(for: udid), includingPropertiesForKeys: nil)) ?? []
+        return files.filter { $0.pathExtension.lowercased() == "png" }.count
+    }
+
+    /// Removes the tool's own files from a language's output folder (its `*.png` screenshots and
+    /// `*-error.log` files), then the folder if nothing else is left in it. Anything else there
+    /// (designed images, previews, notes) stays.
     func clearLanguageScreenshots(language: String) throws {
         let fm = FileManager.default
         let langDir = URL(fileURLWithPath: config.outputDirectory)
             .appendingPathComponent(language)
 
-        if fm.fileExists(atPath: langDir.path) {
+        guard fm.fileExists(atPath: langDir.path) else { return }
+        let files = try fm.contentsOfDirectory(at: langDir, includingPropertiesForKeys: [.isRegularFileKey])
+        for file in files where Self.isOwnFile(file) {
+            try fm.removeItem(at: file)
+        }
+        let left = try fm.contentsOfDirectory(atPath: langDir.path).filter { $0 != ".DS_Store" }
+        if left.isEmpty {
             try fm.removeItem(at: langDir)
         }
+    }
+
+    /// A screenshot or error log the tool writes into a language folder.
+    static func isOwnFile(_ url: URL) -> Bool {
+        guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else { return false }
+        return url.pathExtension.lowercased() == "png" || url.lastPathComponent.hasSuffix("-error.log")
     }
 }

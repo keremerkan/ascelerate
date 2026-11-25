@@ -127,6 +127,8 @@ ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
 ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
 ```
 
+Un precio fijado para ahora sustituye el precio programado del país o región, que la confirmación indica. Un precio con fecha para un país o región que ya tiene otro programado se rechaza antes de enviar nada; uno que ya tiene el mismo precio programado ese día se omite, de modo que un cambio con fecha puede volver a ejecutarse tras un fallo parcial.
+
 Un precio que ya está vigente no se puede eliminar: programe uno posterior en su lugar.
 
 ## Varias plazas y precios por volumen {#multiseat-and-volume-pricing}

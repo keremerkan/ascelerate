@@ -231,9 +231,19 @@ extension AppPricing.Schedule {
   public func changingBase(
     to territoryID: String, pricePointID: String, from day: String?, keepingOthers: Bool
   ) -> [AppPricing.NewPrice] {
+    changingBase(
+      to: territoryID, pricePointID: pricePointID, from: day,
+      dropping: keepingOthers ? [] : Set(manualPrices.map(\.territoryID)))
+  }
+
+  /// The base price changed as `changingBase(to:pricePointID:from:keepingOthers:)` does, with the
+  /// other territories whose manual prices end that day named: the rest keep theirs.
+  public func changingBase(
+    to territoryID: String, pricePointID: String, from day: String?, dropping: Set<String>
+  ) -> [AppPricing.NewPrice] {
     let bases: Set<String> = [baseTerritoryID, territoryID]
     let kept = zip(manualPrices.filter(\.isCurrentOrLater), newPrices).compactMap { price, new -> AppPricing.NewPrice? in
-      guard bases.contains(price.territoryID) || !keepingOthers else { return new }
+      guard bases.contains(price.territoryID) || dropping.contains(price.territoryID) else { return new }
       return Self.ending(new, on: day)
     }
     return kept + [AppPricing.NewPrice(pricePointID: pricePointID, startDate: day)]
@@ -242,6 +252,38 @@ extension AppPricing.Schedule {
   /// A territory's manual price set to a tier from now on, its later prices dropped.
   public func settingManual(territoryID: String, pricePointID: String) -> [AppPricing.NewPrice] {
     removingManual(territoryID: territoryID) + [AppPricing.NewPrice(pricePointID: pricePointID)]
+  }
+
+  /// A territory's manual price set to a tier from the day (nil: now): its price until then ends
+  /// that day and its later prices go; the other territories' prices stay as they are.
+  public func settingManual(territoryID: String, pricePointID: String, from day: String?) -> [AppPricing.NewPrice] {
+    guard let day else { return settingManual(territoryID: territoryID, pricePointID: pricePointID) }
+    let kept = zip(manualPrices.filter(\.isCurrentOrLater), newPrices).compactMap { price, new in
+      price.territoryID == territoryID ? Self.ending(new, on: day) : new
+    }
+    return kept + [AppPricing.NewPrice(pricePointID: pricePointID, startDate: day)]
+  }
+
+  /// Territories' manual prices removed from the day (nil: now): they end that day and their later
+  /// prices go, so Apple's automatic prices apply from then (the base territory's stay).
+  public func removingManual(territoryIDs: Set<String>, from day: String?) -> [AppPricing.NewPrice] {
+    guard let day else { return removingManual(territoryIDs: territoryIDs) }
+    return zip(manualPrices.filter(\.isCurrentOrLater), newPrices).compactMap { price, new in
+      price.territoryID == baseTerritoryID || !territoryIDs.contains(price.territoryID) ? new : Self.ending(new, on: day)
+    }
+  }
+
+  /// The whole schedule replaced from the day (nil: now): every manual price ends then (its later
+  /// ones go), and the given prices start.
+  public func replacing(with pricePointIDs: [String], from day: String?) -> [AppPricing.NewPrice] {
+    newPrices.compactMap { Self.ending($0, on: day) } + pricePointIDs.map { AppPricing.NewPrice(pricePointID: $0, startDate: day) }
+  }
+
+  /// The manual prices that apply today or later and don't stay as they are in `prices`: dropped,
+  /// or cut short. What a confirmation should list besides the change asked for.
+  public func pricesChanged(by prices: [AppPricing.NewPrice]) -> [AppPricing.Price] {
+    let sent = Set(prices)
+    return zip(manualPrices.filter(\.isCurrentOrLater), newPrices).filter { !sent.contains($0.1) }.map(\.0)
   }
 
   /// A territory's manual prices removed: Apple's automatic price applies there.

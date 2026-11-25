@@ -37,6 +37,8 @@ ascelerate certs create --type DISTRIBUTION
 ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
+Der private Schlüssel wird geschrieben (nur für Sie lesbar) und der Ausgabeordner geprüft, bevor das Zertifikat angefordert wird; schlägt die Anforderung fehl, wird der Schlüssel wieder entfernt. Ein mit `--csr` erstelltes Zertifikat wird ebenfalls gespeichert, ohne `--output` als `<Seriennummer>.cer`. Nach dem Import in den Schlüsselbund bietet der Befehl an, die lokalen Dateien zu löschen; mit `--output` oder `--yes` bleiben sie erhalten, außer Sie geben `--delete-local-files` an.
+
 Wenn kein `--csr` angegeben wird, generiert der Befehl automatisch ein RSA-Schlüsselpaar und eine CSR und importiert alles in den Anmelde-Schlüsselbund.
 
 ## Widerrufen

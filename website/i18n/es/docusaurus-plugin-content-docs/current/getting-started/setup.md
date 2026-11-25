@@ -29,6 +29,8 @@ La configuración se guarda en `~/.ascelerate/config.json`:
 
 `configure` también le pide un **número de proveedor** opcional (App Store Connect → Pagos e informes financieros). Solo se necesita para los [informes de ventas y financieros](../commands/reports.md) y se guarda en el campo `vendorNumber`. Puede omitirlo y añadirlo más tarde, o indicar `--vendor-number` en cada comando.
 
+Al volver a ejecutar `configure`, el número de proveedor guardado se conserva si pulsa Intro (escriba `-` para eliminarlo), al igual que sus ajustes de Apple Ads.
+
 Para [Apple Ads](../commands/ads.md), ascelerate necesita credenciales aparte, que `ascelerate ads configure` configura y guarda en una sección `ads` del mismo archivo. Si vuelve a ejecutar `configure`, se conservan.
 
 ### Una clave para una sola ejecución

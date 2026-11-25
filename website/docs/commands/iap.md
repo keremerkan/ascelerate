@@ -81,7 +81,10 @@ ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```bash
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 5.99 --start-date 2027-03-01
 ```
+
+With `--start-date` (YYYY-MM-DD, after today) the new base price starts that day and the current one applies until then; a product's first price and a new base territory apply now. Prices set by hand in other territories, and planned or temporary prices, stay as they are; `pricing show` lists planned changes, and the confirmation lists any planned or temporary price the change ends.
 
 `--base-territory` defaults to the existing base territory (or USA on a brand-new schedule). When the schedule has per-territory manual overrides, `set` shows an interactive menu offering to revert any of them to auto-equalize from the new base. To wipe all overrides without the prompt, pass `--remove-all-overrides`.
 
@@ -94,6 +97,8 @@ ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territor
 # Drop the override (territory reverts to auto-equalize from base)
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 ```
+
+`override` and `remove` take `--start-date` too: the territory's current price applies until that day.
 
 `override` and `remove` only operate on non-base territories. To change the base territory's price, use `set`.
 
@@ -108,6 +113,8 @@ ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
 # Apply it to another IAP — in the same app or a different one
 ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
 ```
+
+The import also replaces planned prices (they're listed before you confirm). With `--start-date` the file's prices start that day and today's apply until then.
 
 The file stores customer prices keyed by territory code. On import, each price is matched against the *target* product's own tiers by customer price, so the same file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize, and if the current schedule already matches the file the command is a no-op. Transient App Store Connect errors (HTTP 429/5xx) are retried automatically.
 

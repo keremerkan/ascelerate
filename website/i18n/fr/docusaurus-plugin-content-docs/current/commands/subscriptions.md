@@ -127,6 +127,8 @@ ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
 ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
 ```
 
+Un prix défini pour maintenant remplace le prix planifié de la région, que la confirmation indique. Un prix daté pour une région qui a déjà un autre prix planifié est refusé avant tout envoi ; une région qui a déjà le même prix planifié ce jour-là est ignorée, de sorte qu'un changement daté peut être relancé après un échec partiel.
+
 Un prix déjà en vigueur ne peut pas être retiré : définissez plutôt un prix ultérieur.
 
 ## Plusieurs places et tarifs dégressifs {#multiseat-and-volume-pricing}

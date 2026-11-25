@@ -2235,23 +2235,48 @@ struct TestFlightCommand: AsyncParsableCommand {
           try details.write(to: detailsFile, atomically: true, encoding: .utf8)
           files.append(detailsFile)
 
+          var missing = 0
           for (i, shot) in screenshots.enumerated() {
             guard let urlString = shot.url, let url = URL(string: urlString) else {
               print("  Screenshot \(i + 1): \(red("no URL")) — the download link may have expired.")
+              missing += 1
               continue
             }
-            // Presigned CDN URL — plain URLSession, no App Store Connect auth.
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let ext = url.pathExtension.isEmpty ? "png" : url.pathExtension
-            let file = stagingDir.appendingPathComponent("screenshot-\(i + 1).\(ext)")
-            try data.write(to: file)
-            files.append(file)
+            // Presigned CDN URL — plain URLSession, no App Store Connect auth. An expired link
+            // answers with an error page, which isn't a screenshot.
+            do {
+              let (data, response) = try await URLSession.shared.data(from: url)
+              let status = (response as? HTTPURLResponse)?.statusCode ?? 200
+              guard (200..<300).contains(status) else {
+                print("  Screenshot \(i + 1): \(red("HTTP \(status)")) — the download link may have expired.")
+                missing += 1
+                continue
+              }
+              let ext = url.pathExtension.isEmpty ? "png" : url.pathExtension
+              let file = stagingDir.appendingPathComponent("screenshot-\(i + 1).\(ext)")
+              try data.write(to: file)
+              files.append(file)
+            } catch {
+              print("  Screenshot \(i + 1): \(red("failed")) — \(describeError(error))")
+              missing += 1
+            }
           }
 
-          let zipPath = expandPath(
-            confirmOutputPath(output ?? "feedback-\(id).zip", isDirectory: false))
-          // `zip` appends into an existing archive, so clear any previous file first.
-          if fm.fileExists(atPath: zipPath) { try fm.removeItem(atPath: zipPath) }
+          // An existing folder gets the zip inside it; only a regular file is ever replaced.
+          let fileName = "feedback-\(id).zip"
+          var target = expandPath(output ?? fileName)
+          var isFolder: ObjCBool = false
+          if fm.fileExists(atPath: target, isDirectory: &isFolder), isFolder.boolValue {
+            target = (target as NSString).appendingPathComponent(fileName)
+          }
+          let zipPath = expandPath(confirmOutputPath(target, isDirectory: false))
+          if fm.fileExists(atPath: zipPath, isDirectory: &isFolder) {
+            guard !isFolder.boolValue else {
+              throw ValidationError("\(zipPath) is a folder; give a file name with --output.")
+            }
+            // `zip` appends into an existing archive, so clear the previous file first.
+            try fm.removeItem(atPath: zipPath)
+          }
 
           let zip = Process()
           zip.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
@@ -2264,6 +2289,10 @@ struct TestFlightCommand: AsyncParsableCommand {
 
           print()
           success("Downloaded", "\(files.count - 1) screenshot(s) + comment to \(zipPath)")
+          if missing > 0 {
+            print(red("\(missing) screenshot\(missing == 1 ? " is" : "s are") missing from the zip."))
+            throw ExitCode.failure
+          }
         }
       }
 

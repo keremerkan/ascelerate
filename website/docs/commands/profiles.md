@@ -70,3 +70,5 @@ ascelerate profiles reissue --all --all-devices
 # Use specific certificates instead of auto-detect
 ascelerate profiles reissue --all --to-certs ABC123,DEF456
 ```
+
+Without `--to-certs`, each profile gets every certificate that fits its type, not only the ones it had. `--to-certs` names exact certificates by serial number or name (a name must be one certificate), and every profile must be able to hold them. Development and ad hoc profiles keep their own enabled devices, or get every enabled device with `--all-devices`, as far as each fits the profile's platform. All of this is checked before any profile is deleted.

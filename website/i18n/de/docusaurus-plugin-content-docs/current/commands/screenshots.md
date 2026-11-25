@@ -245,7 +245,7 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 
 | Option | Beschreibung |
 |---|---|
-| `clearPreviousScreenshots` | Sprachordner vor dem Sammeln leeren (nur wenn alle Geräte erfolgreich sind) |
+| `clearPreviousScreenshots` | Vor dem Sammeln die bisherigen Screenshots (`*.png`) und Fehlerprotokolle des Sprachordners entfernen, nur wenn jedes Gerät Screenshots erzeugt hat; der Ordner selbst nur, wenn sonst nichts darin liegt |
 | `eraseSimulator` | Simulator vor jeder Sprache zurücksetzen |
 | `localizeSimulator` | Simulator-Sprache/-Locale pro Sprache setzen |
 | `overrideStatusBar` | Statusleiste überschreiben (9:41, volle Balken, WLAN) |

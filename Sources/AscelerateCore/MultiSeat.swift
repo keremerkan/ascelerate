@@ -125,7 +125,7 @@ extension Subscriptions {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.subscriptionsPricesGetToManyRelated(
           path: .init(id: subscriptionID),
-          query: .init(fieldsSubscriptionPrices: [.additionalPriceTiers], limit: 200, include: [.additionalPriceTiers], limitAdditionalPriceTiers: 50)
+          query: .init(filterPlanType: [.upfront], fieldsSubscriptionPrices: [.additionalPriceTiers], limit: 200, include: [.additionalPriceTiers], limitAdditionalPriceTiers: 50)
         ).ok.body.json
       }
     }

@@ -127,6 +127,8 @@ ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
 ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
 ```
 
+A price set for now replaces the territory's planned price, which the confirmation lists. A dated price for a territory that has another planned one is refused before anything is sent; a territory that already has the same price planned on that day is skipped, so a dated change can be re-run after a partial failure.
+
 A price already in effect can't be removed: set a later one instead.
 
 ## Multiseat and volume pricing

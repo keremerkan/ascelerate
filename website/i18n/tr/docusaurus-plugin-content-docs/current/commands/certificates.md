@@ -37,6 +37,8 @@ ascelerate certs create --type DISTRIBUTION
 ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
+Sertifika istenmeden önce özel anahtar (yalnızca sizin okuyabileceğiniz şekilde) yazılır ve çıktı klasörü denetlenir; istek başarısız olursa anahtar yeniden silinir. `--csr` ile oluşturulan sertifika da kaydedilir; `--output` verilmezse `<seri numarası>.cer` adıyla. Anahtar zincirine aktarımdan sonra komut yerel dosyaları silmeyi önerir; `--output` veya `--yes` ile dosyalar korunur, `--delete-local-files` verirseniz silinir.
+
 `--csr` belirtilmediğinde komut otomatik olarak bir RSA anahtar çifti ve CSR oluşturur, ardından her şeyi login keychain'e aktarır.
 
 ## İptal etme

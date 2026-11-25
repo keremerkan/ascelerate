@@ -319,7 +319,7 @@ public enum Subscriptions {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.subscriptionsPricesGetToManyRelated(
-          path: .init(id: subscriptionID), query: .init(limit: 200, include: [.subscriptionPricePoint, .territory])
+          path: .init(id: subscriptionID), query: .init(filterPlanType: [.upfront], limit: 200, include: [.subscriptionPricePoint, .territory])
         ).ok.body.json
       }
     }
@@ -358,7 +358,7 @@ public enum Subscriptions {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.subscriptionsPricePointsGetToManyRelated(
           path: .init(id: subscriptionID),
-          query: .init(filterTerritory: [territoryID], fieldsSubscriptionPricePoints: [.customerPrice, .proceeds], limit: 200)
+          query: .init(filterTerritory: [territoryID], filterPlanType: ["UPFRONT"], fieldsSubscriptionPricePoints: [.customerPrice, .proceeds], limit: 200)
         ).ok.body.json
       }
     }.flatMap(\.data).map { pricePoint($0, territoryID: territoryID) }
@@ -374,7 +374,7 @@ public enum Subscriptions {
         try await client.subscriptionsPricePointsGetToManyRelated(
           path: .init(id: subscriptionID),
           query: .init(
-            filterTerritory: territoryIDs, fieldsSubscriptionPricePoints: [.customerPrice, .proceeds, .territory], limit: 8000,
+            filterTerritory: territoryIDs, filterPlanType: ["UPFRONT"], fieldsSubscriptionPricePoints: [.customerPrice, .proceeds, .territory], limit: 8000,
             include: [.territory])
         ).ok.body.json
       }
@@ -394,7 +394,7 @@ public enum Subscriptions {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.subscriptionPricePointsEqualizationsGetToManyRelated(
-          path: .init(id: pricePointID), query: .init(limit: 200, include: [.territory])
+          path: .init(id: pricePointID), query: .init(filterPlanType: ["UPFRONT"], limit: 200, include: [.territory])
         ).ok.body.json
       }
     }

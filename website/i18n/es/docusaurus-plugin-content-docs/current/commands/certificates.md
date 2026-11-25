@@ -37,6 +37,8 @@ ascelerate certs create --type DISTRIBUTION
 ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
+La clave privada se escribe (solo usted puede leerla) y la carpeta de salida se comprueba antes de solicitar el certificado; si la solicitud falla, la clave se elimina. Un certificado creado con `--csr` también se guarda, como `<número de serie>.cer` sin `--output`. Tras la importación al llavero, el comando ofrece eliminar los archivos locales; con `--output` o `--yes` se conservan, salvo que indique `--delete-local-files`.
+
 Si no se indica `--csr`, el comando genera automáticamente un par de claves RSA y una solicitud de firma de certificado (CSR), y después lo importa todo en el llavero de inicio de sesión.
 
 ## Revocar

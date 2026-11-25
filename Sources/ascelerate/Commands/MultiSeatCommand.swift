@@ -360,9 +360,25 @@ extension SubCommand.Pricing {
         }
       }
 
-      // A territory with a planned price takes no other (409).
-      let plannedTerritories = Swift.Set(prices.planned.map(\.territoryID))
-      let blocked = targets.map(\.proposed.territoryID).filter(plannedTerritories.contains).sorted()
+      // A territory with a planned price takes no other (409). One whose planned price is this one
+      // already (a re-run after a partial failure) is skipped.
+      let plannedByTerritory = Dictionary(grouping: prices.planned, by: \.territoryID)
+      let plannedTiers = startDate != nil && targets.contains(where: { plannedByTerritory[$0.proposed.territoryID] != nil })
+        ? try await Subscriptions.volumeTiers(subscriptionID: sub.id, client: client) : [:]
+      func sameTiers(_ a: [Subscriptions.VolumeTier], _ b: [Subscriptions.VolumeTier]) -> Bool {
+        a.map { "\($0.minQuantity) \($0.pricePointID)" } == b.map { "\($0.minQuantity) \($0.pricePointID)" }
+      }
+      let alreadyPlanned = Swift.Set(targets.filter { target in
+        plannedByTerritory[target.proposed.territoryID]?.contains {
+          startDate != nil && $0.startDate == startDate && $0.pricePointID == target.proposed.pricePointID
+            && sameTiers(plannedTiers[$0.id] ?? [], target.tiers)
+        } ?? false
+      }.map(\.proposed.territoryID))
+      if !alreadyPlanned.isEmpty {
+        targets.removeAll { alreadyPlanned.contains($0.proposed.territoryID) }
+        print("\(alreadyPlanned.count) territor\(alreadyPlanned.count == 1 ? "y already has" : "ies already have") this price planned on this day (skipped).")
+      }
+      let blocked = targets.map(\.proposed.territoryID).filter { plannedByTerritory[$0] != nil }.sorted()
       guard blocked.isEmpty else {
         throw ValidationError(
           "These territories already have a planned price: \(blocked.joined(separator: ", ")). Remove it first with 'sub pricing cancel \(bundleID) \(productID) --territories \(blocked.joined(separator: ","))'.")

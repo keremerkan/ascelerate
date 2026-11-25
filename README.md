@@ -871,6 +871,7 @@ ascelerate certs info "Apple Distribution: Example Inc"
 ascelerate certs create
 ascelerate certs create --type DISTRIBUTION
 ascelerate certs create --type DEVELOPMENT --csr my-request.pem
+ascelerate certs create --type DISTRIBUTION --output ~/signing/dist -y   # keeps the files; add --delete-local-files to remove them after the keychain import
 
 # Revoke a certificate (interactive picker if omitted)
 ascelerate certs revoke
@@ -1083,6 +1084,7 @@ ascelerate iap pricing show <bundle-id> <product-id>
 ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 5.99 --start-date 2027-03-01   # current price until then; planned prices elsewhere stay
 
 # Pricing — manage per-territory manual overrides
 ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territory FRA

@@ -204,7 +204,7 @@ ascelerate iap pricing show <bundle-id> <product-id> [--json]     # Show current
 ascelerate iap pricing tiers <bundle-id> <product-id> [--territory USA]  # List available price tiers for a territory
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 [--base-territory USA] [--start-date YYYY-MM-DD] [--remove-all-overrides] [-y]  # Set base price; preserves overrides (interactive menu to drop)
 ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territory FRA [--start-date YYYY-MM-DD] [-y]  # Add/update per-territory manual price override
-ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA [-y]  # Drop a per-territory override (revert to auto-equalize)
+ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA [--start-date YYYY-MM-DD] [-y]  # Drop a per-territory override (revert to auto-equalize, now or from the day)
 ascelerate iap pricing export <bundle-id> <product-id> [--output X]  # Export price schedule (base + manual prices) to JSON
 ascelerate iap pricing import <bundle-id> <product-id> [--file X] [--start-date X] [--snap] [-y]  # Apply exported schedule (wholesale replace; matches by customer price; --snap: nearest tier for a price that isn't one)
 ascelerate iap availability <bundle-id> <product-id> [--add X] [--remove X] [--available-in-new-territories true|false] [-y]  # View/update per-IAP territory availability
@@ -301,7 +301,7 @@ ascelerate devices register [--name X] [--udid X] [--platform X] [-y]  # Registe
 ascelerate devices update [name-or-udid] [--name X] [--status X] [-y]  # Update device (interactive if omitted)
 ascelerate certs list [--type X] [--display-name X]               # List signing certificates
 ascelerate certs info [serial-or-name]                            # Certificate details (interactive picker if omitted)
-ascelerate certs create [--type X] [--csr <file>] [--output X] [-y]  # Create certificate (interactive type picker if omitted)
+ascelerate certs create [--type X] [--csr <file>] [--output X] [--delete-local-files] [-y]  # Create certificate (interactive type picker if omitted); the key is written 0600 before the request; local files stay under --output/-y unless --delete-local-files
 ascelerate certs revoke [serial-number] [-y]                      # Revoke a certificate (interactive picker if omitted)
 ascelerate bundle-ids list [--platform X] [--identifier X]        # List bundle identifiers
 ascelerate bundle-ids info [identifier]                           # Bundle ID details with capabilities (interactive picker if omitted)
@@ -315,7 +315,7 @@ ascelerate profiles info [name]                                   # Profile deta
 ascelerate profiles download [name] [--output X]                  # Download profile (interactive picker if omitted)
 ascelerate profiles create [--name X] [--type X] [--bundle-id X] [--certificates X] [--devices X] [--output X] [-y]  # Create a profile (interactive if omitted; --certificates all = all of matching family)
 ascelerate profiles delete [name] [-y]                            # Delete a profile (interactive picker if omitted)
-ascelerate profiles reissue [name] [--all] [--all-invalid] [--to-certs X] [--all-devices] [-y]  # Reissue profiles with latest cert (or specific certs)
+ascelerate profiles reissue [name] [--all] [--all-invalid] [--to-certs X] [--all-devices] [-y]  # Reissue profiles with every fitting cert (or specific certs, checked to fit); devices filtered to the enabled ones that fit; all checked before any delete
 ascelerate alias add [name]                                       # Add/update an alias (interactive app picker if name omitted)
 ascelerate alias remove [name] [-y]                               # Remove an alias (interactive picker if name omitted)
 ascelerate alias list                                             # List all aliases

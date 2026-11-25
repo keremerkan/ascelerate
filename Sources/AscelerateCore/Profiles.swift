@@ -267,12 +267,36 @@ public enum Profiles {
     } catch {
       throw .deleteFailed(error)
     }
-    do {
+    func createNew() async throws -> Profile {
       var new = try await create(
         name: profile.name, type: type, bundleIDResourceID: bundleIDResourceID, certificateIDs: certificateIDs,
         deviceIDs: devices, client: client)
       new.bundleIdentifier = profile.bundleIdentifier
       return new
+    }
+    do {
+      return try await createNew()
+    } catch where isTransientError(error) {
+      // The create may have gone through before the connection failed: a profile of exactly that
+      // name and type that isn't the deleted one is the new one (Apple's name filter also matches
+      // longer names). Otherwise try the create once more. A lookup that fails says nothing about
+      // whether the create went through, so it's reported rather than followed by a blind create.
+      let made: Profile?
+      do {
+        made = try await list(name: profile.name, types: [type], client: client)
+          .first { $0.name == profile.name && $0.id != profile.id }
+      } catch {
+        throw .createFailed(error, deviceUDIDs: udids)
+      }
+      if var found = made {
+        found.bundleIdentifier = profile.bundleIdentifier
+        return found
+      }
+      do {
+        return try await createNew()
+      } catch {
+        throw .createFailed(error, deviceUDIDs: udids)
+      }
     } catch {
       throw .createFailed(error, deviceUDIDs: udids)
     }

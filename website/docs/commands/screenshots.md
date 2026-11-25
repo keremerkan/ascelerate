@@ -245,7 +245,7 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 
 | Option | Description |
 |---|---|
-| `clearPreviousScreenshots` | Clear language folder before collecting (only if all devices succeed) |
+| `clearPreviousScreenshots` | Remove the language folder's previous screenshots (`*.png`) and error logs before collecting, only if every device produced screenshots; the folder goes too when nothing else is in it |
 | `eraseSimulator` | Erase simulator before each language |
 | `localizeSimulator` | Set simulator language/locale per language |
 | `overrideStatusBar` | Override status bar (9:41, full bars, Wi-Fi) |

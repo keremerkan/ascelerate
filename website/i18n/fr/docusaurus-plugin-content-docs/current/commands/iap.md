@@ -81,7 +81,10 @@ ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```bash
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 5.99 --start-date 2027-03-01
 ```
+
+Avec `--start-date` (AAAA-MM-JJ, après aujourd'hui), le nouveau prix de base s'applique à partir de ce jour et le prix actuel jusque-là ; le premier prix d'un produit et une nouvelle région de base s'appliquent tout de suite. Les prix définis à la main dans d'autres régions, ainsi que les prix planifiés ou temporaires, restent tels quels ; `pricing show` liste les changements planifiés, et la confirmation indique tout prix planifié ou temporaire auquel le changement met fin.
 
 `--base-territory` prend par défaut la région de base existante (ou USA pour un nouveau calendrier). Si le calendrier comporte des prix manuels spécifiques à une région, `set` affiche un menu interactif proposant de réinitialiser certains d'entre eux à l'alignement automatique depuis la nouvelle région de base. Pour effacer tous les prix manuels sans confirmation, utilisez `--remove-all-overrides`.
 
@@ -94,6 +97,8 @@ ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territor
 # Supprimer le prix manuel (la région revient à l'alignement automatique depuis la base)
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 ```
+
+`override` et `remove` acceptent aussi `--start-date` : le prix actuel de la région s'applique jusqu'à ce jour.
 
 `override` et `remove` ne fonctionnent qu'avec des régions non-base. Pour modifier le prix de la région de base, utilisez `set`.
 
@@ -108,6 +113,8 @@ ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
 # L'appliquer à un autre achat intégré — dans la même app ou une autre
 ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
 ```
+
+L'import remplace aussi les prix planifiés (ils sont listés avant la confirmation). Avec `--start-date`, les prix du fichier s'appliquent à partir de ce jour et ceux d'aujourd'hui jusque-là.
 
 Le fichier contient les prix client indexés par code de région. À l'import, chaque prix est mis en correspondance avec les paliers tarifaires du produit *cible* d'après le prix client ; le même fichier fonctionne donc d'un produit ou d'une app à l'autre. L'import remplace intégralement le calendrier : les régions absentes du fichier reviennent à l'alignement automatique, et si le calendrier actuel correspond déjà au fichier, la commande ne fait rien. Les erreurs transitoires d'App Store Connect (HTTP 429/5xx) sont automatiquement réessayées.
 

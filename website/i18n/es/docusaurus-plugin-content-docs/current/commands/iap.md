@@ -81,7 +81,10 @@ ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```bash
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 5.99 --start-date 2027-03-01
 ```
+
+Con `--start-date` (AAAA-MM-DD, posterior a hoy) el nuevo precio base empieza ese día y el actual sigue hasta entonces; el primer precio de un producto y una nueva región base se aplican de inmediato. Los precios fijados a mano en otros países o regiones, y los precios programados o temporales, se mantienen; `pricing show` muestra los cambios programados, y la confirmación indica cualquier precio programado o temporal que el cambio termine.
 
 De forma predeterminada, `--base-territory` toma el país o región base actual (o USA en una programación nueva). Si la programación tiene precios manuales por país o región, `set` muestra un menú interactivo que permite devolver cualquiera de ellos a la equiparación automática a partir de la nueva base. Para eliminar todos los precios manuales sin que se le pregunte, use `--remove-all-overrides`.
 
@@ -94,6 +97,8 @@ ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territor
 # Quitar el precio manual (el país o región vuelve a equipararse automáticamente a partir de la base)
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 ```
+
+`override` y `remove` también aceptan `--start-date`: el precio actual del país o región se aplica hasta ese día.
 
 `override` y `remove` solo actúan sobre países o regiones que no son la base. Para cambiar el precio del país o región base, use `set`.
 
@@ -108,6 +113,8 @@ ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
 # Aplicarla a otra compra dentro de la app, de la misma app o de otra
 ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
 ```
+
+La importación también sustituye los precios programados (se muestran antes de confirmar). Con `--start-date` los precios del archivo empiezan ese día y los de hoy siguen hasta entonces.
 
 El archivo guarda los precios para el cliente con el código de cada país o región como clave. Al importar, cada precio se busca por su precio para el cliente entre los niveles de precio del producto *de destino*, de modo que el mismo archivo sirve para distintos productos y apps. La importación sustituye la programación por completo: los países o regiones que no figuran en el archivo vuelven a la equiparación automática, y si la programación actual ya coincide con el archivo, el comando no hace nada. Los errores transitorios de App Store Connect (HTTP 429/5xx) se reintentan automáticamente.
 

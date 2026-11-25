@@ -479,13 +479,13 @@ public enum Builds {
   /// another state, when App Store Connect rejected the uploaded file (no build appears then) or
   /// when the time runs out.
   public static func waitForProcessing(
-    appID: String, number: String?, platform: Platform? = nil, interval: Int = 30, timeout: Int = 30,
+    appID: String, number: String?, platform: Platform? = nil, version: String? = nil, interval: Int = 30, timeout: Int = 30,
     client: ASCClient, report: (ProcessingUpdate) -> Void = { _ in }
   ) async throws -> Build {
     let deadline = Date().addingTimeInterval(Double(timeout * 60))
     var elapsed = 0
     while Date() < deadline {
-      if let build = try await list(appID: appID, platform: platform, number: number, limit: 1, client: client).first,
+      if let build = try await list(appID: appID, platform: platform, version: version, number: number, limit: 1, client: client).first,
         let state = build.processingState
       {
         switch state {

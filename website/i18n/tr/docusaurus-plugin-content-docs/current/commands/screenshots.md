@@ -245,7 +245,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 
 | Seçenek | Açıklama |
 |---|---|
-| `clearPreviousScreenshots` | Toplamadan önce dil klasörünü temizle (yalnızca tüm cihazlar başarılı olursa) |
+| `clearPreviousScreenshots` | Toplamadan önce dil klasöründeki önceki ekran görüntülerini (`*.png`) ve hata kayıtlarını sil (yalnızca tüm cihazlar ekran görüntüsü ürettiyse); başka bir şey kalmadıysa klasörü de sil |
 | `eraseSimulator` | Her dilden önce simülatörü sıfırla |
 | `localizeSimulator` | Her dil için simülatör dilini/locale'ini ayarla |
 | `overrideStatusBar` | Durum çubuğunu değiştir (9:41, tam çubuklar, Wi-Fi) |

@@ -127,6 +127,8 @@ ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
 ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
 ```
 
+Hemen geçerli olacak bir fiyat, bölgenin planlanmış fiyatının yerini alır; onay ekranı bunu gösterir. Başka bir planlanmış fiyatı olan bir bölge için tarihli bir fiyat, hiçbir şey gönderilmeden reddedilir. Aynı fiyatı aynı gün için zaten planlanmış bir bölge atlanır; böylece tarihli bir değişiklik kısmen başarısız olduktan sonra yeniden çalıştırılabilir.
+
 Yürürlüğe girmiş bir fiyat kaldırılamaz; bunun yerine daha sonra başlayan bir fiyat belirleyin.
 
 ## Çok koltuklu abonelikler ve hacim fiyatlandırması {#multiseat-and-volume-pricing}

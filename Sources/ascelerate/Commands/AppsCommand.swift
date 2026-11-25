@@ -310,13 +310,17 @@ struct AppsCommand: AsyncParsableCommand {
         && keywords == nil && marketingURL == nil && supportURL == nil
         try Localizations.checkEditable(version, promotionalTextOnly: onlyPromoText)
         
-        // Find the localization
+        // Find the localization: the one named, or the app's primary language's.
+        guard let wantedLocale = locale ?? app.attributes?.primaryLocale else {
+          throw ValidationError("Couldn't read the app's primary language; name the language with --locale.")
+        }
+        // All of the version's languages, matched without case ('en-us' is Apple's 'en-US').
         let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: version.id), query: .init(filterLocale: locale.map { [$0] })
+          path: .init(id: version.id), query: .init(limit: 200)
         ).ok.body.json
-        guard let localization = locsResponse.data.first else {
-          let localeDesc = locale ?? "primary"
-          throw ValidationError("No localization found for locale '\(localeDesc)'.")
+        guard let localization = locsResponse.data.first(where: { $0.attributes?.locale?.lowercased() == wantedLocale.lowercased() }) else {
+          let known = locsResponse.data.compactMap(\.attributes?.locale).sorted().joined(separator: ", ")
+          throw ValidationError("No localization found for locale '\(wantedLocale)'. The version has: \(known).")
         }
         
         let updated = try await VersionLocalizations.update(
@@ -746,19 +750,21 @@ struct AppsCommand: AsyncParsableCommand {
         
         // If a build was just uploaded in this workflow for THIS version's platform,
         // wait for it to appear and process
-        if let pendingBuild = lastUploadedBuild(for: versionPlatform(appVersion)) {
+        if let uploaded = lastUploadedBuild(for: versionPlatform(appVersion), bundleID: app.attributes?.bundleId) {
+          let pendingBuild = uploaded.number
           print("Waiting for uploaded build \(pendingBuild) to become available...")
           print()
           let awaitedBuild = try await awaitBuildProcessing(
             appID: app.id,
             buildVersion: pendingBuild,
             platform: versionPlatform(appVersion),
+            version: uploaded.version,
             client: client
           )
-          let uploaded = awaitedBuild.uploadedDate.map { formatDate($0) } ?? "—"
+          let uploadedOn = awaitedBuild.uploadedDate.map { formatDate($0) } ?? "—"
           print()
           print("Version: \(versionString)")
-          print("Build:   \(pendingBuild)  VALID  \(uploaded)")
+          print("Build:   \(pendingBuild)  VALID  \(uploadedOn)")
           print()
           
           guard confirm("Attach this build? [y/N] ") else {
@@ -2453,14 +2459,19 @@ struct AppsCommand: AsyncParsableCommand {
         let appInfo = try await AppInfoCommand.findActiveAppInfo(appID: app.id, client: client)
         try AppInfoCommand.checkEditable(appInfo)
         
+        // The language named, or the app's primary one.
+        let wantedLocale = locale ?? app.attributes?.primaryLocale
+        if hasLocalizationFields && wantedLocale == nil {
+          throw ValidationError("Couldn't read the app's primary language; name the language with --locale.")
+        }
+
         let appName = app.attributes?.name ?? bundleID
         print("App:   \(appName)")
         print("State: \(appInfo.attributes?.state.map { formatState($0) } ?? "—")")
         print()
         
-        if hasLocalizationFields {
-          let localeDesc = locale.map { localeName($0) } ?? "primary"
-          print("Localization [\(localeDesc)]:")
+        if hasLocalizationFields, let wantedLocale {
+          print("Localization [\(localeName(wantedLocale))\(locale == nil ? ", the primary language" : "")]:")
           if let v = name { print("  Name:               \(v)") }
           if let v = subtitle { print("  Subtitle:           \(v)") }
           if let v = privacyPolicyURL { print("  Privacy Policy URL: \(v)") }
@@ -2487,12 +2498,15 @@ struct AppsCommand: AsyncParsableCommand {
         
         // Update localization
         if hasLocalizationFields {
+          // All of the app info's languages, matched without case ('en-us' is Apple's 'en-US').
           let locsResponse = try await client.appInfosAppInfoLocalizationsGetToManyRelated(
-            path: .init(id: appInfo.id), query: .init(filterLocale: locale.map { [$0] })
+            path: .init(id: appInfo.id), query: .init(limit: 200)
           ).ok.body.json
-          guard let localization = locsResponse.data.first else {
-            let localeDesc = locale ?? "primary"
-            throw ValidationError("No localization found for locale '\(localeDesc)'.")
+          guard let localization = locsResponse.data.first(where: {
+            $0.attributes?.locale?.lowercased() == wantedLocale?.lowercased()
+          }) else {
+            let known = locsResponse.data.compactMap(\.attributes?.locale).sorted().joined(separator: ", ")
+            throw ValidationError("No localization found for locale '\(wantedLocale ?? "?")'. The app info has: \(known).")
           }
           
           let updated = try await AppInfos.updateLocalization(
@@ -3579,6 +3593,7 @@ func awaitBuildProcessing(
   appID: String,
   buildVersion: String?,
   platform: Platform? = nil,
+  version: String? = nil,
   client: ASCClient,
   interval: Int = 30,
   timeout: Int = 30
@@ -3593,7 +3608,8 @@ func awaitBuildProcessing(
   }
   do {
     let build = try await Builds.waitForProcessing(
-      appID: appID, number: buildVersion, platform: platform, interval: interval, timeout: timeout, client: client
+      appID: appID, number: buildVersion, platform: platform, version: version, interval: interval, timeout: timeout,
+      client: client
     ) { update in
       switch update {
         case .notFound(let elapsed):

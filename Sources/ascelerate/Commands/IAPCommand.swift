@@ -55,60 +55,31 @@ struct IAPCommand: AsyncParsableCommand {
   static let missingScheduleWarning =
     "⚠ No price schedule set — product cannot be submitted. Use 'iap pricing set ...' to configure."
 
-  /// One manual-price entry: the territory and the price point it references.
-  /// `customerPrice`/`currency` are display data captured from the schedule fetch's
-  /// included payload (write paths that build new entries don't need them).
-  struct ManualPriceEntry: Sendable {
-    let territoryID: String
-    let pricePointID: String
-    var customerPrice: String?
-    var currency: String?
+  /// A schedule price as "4.99 USD".
+  static func describe(_ price: AppPricing.Price, in schedule: AppPricing.Schedule) -> String {
+    "\(price.point.customerPrice) \(schedule.currencies[price.territoryID] ?? "")".trimmingCharacters(in: .whitespaces)
   }
 
-  /// Snapshot of an existing IAP price schedule.
-  struct ExistingSchedule: Sendable {
-    let baseTerritoryID: String
-    let manualPrices: [ManualPriceEntry]  // includes the base territory entry
-
-    var nonBaseOverrides: [ManualPriceEntry] {
-      manualPrices.filter { $0.territoryID != baseTerritoryID }
-    }
-
-    var basePriceEntry: ManualPriceEntry? {
-      manualPrices.first { $0.territoryID == baseTerritoryID }
-    }
-  }
-
-  /// The IAP's current price schedule: its base territory and the manual prices that apply today.
-  /// Returns nil if no schedule exists (404 or null data).
-  static func fetchExistingSchedule(iapID: String, client: ASCClient) async throws -> ExistingSchedule? {
-    guard let schedule = try await InAppPurchases.schedule(purchaseID: iapID, client: client) else { return nil }
+  /// Lists the manual prices a schedule change drops or cuts short besides the territories the
+  /// summary already names: planned and temporary prices above all, which the summary doesn't show.
+  static func printChangedPrices(
+    _ prices: [AppPricing.Price], in schedule: AppPricing.Schedule, besides named: Swift.Set<String> = [],
+    replacing edited: Swift.Set<String> = []
+  ) {
     let today = AppPricing.today
-    return ExistingSchedule(
-      baseTerritoryID: schedule.baseTerritoryID,
-      manualPrices: schedule.manualPrices.filter { $0.applies(on: today) }.map {
-        ManualPriceEntry(
-          territoryID: $0.territoryID, pricePointID: $0.point.id, customerPrice: $0.point.customerPrice,
-          currency: schedule.currencies[$0.territoryID])
-      })
-  }
-
-  /// POSTs a new schedule that fully replaces any prior one, retrying transient API
-  /// errors. The first entry in `manualPrices` must be the base territory's entry.
-  /// The POST is atomic — on failure the existing schedule is untouched. Without a `startDate` the
-  /// prices apply now: no date is sent, rather than today's, which is already past in the
-  /// storefronts that start the day first (Apple starts a date at each storefront's own time).
-  static func postSchedule(
-    iapID: String,
-    baseTerritoryID: String,
-    manualPrices: [ManualPriceEntry],
-    startDate: String?,
-    client: ASCClient
-  ) async throws {
-    try await InAppPurchases.setSchedule(
-      purchaseID: iapID, baseTerritoryID: baseTerritoryID,
-      manualPrices: manualPrices.map { AppPricing.NewPrice(pricePointID: $0.pricePointID, startDate: startDate) },
-      client: client)
+    // A territory named in the summary, and the current open-ended price of the one being edited,
+    // are shown already.
+    let listed = prices.filter {
+      !named.contains($0.territoryID) && !(edited.contains($0.territoryID) && $0.applies(on: today) && $0.endDate == nil)
+    }
+    guard !listed.isEmpty else { return }
+    print("  Also changes:")
+    for price in listed.sorted(by: { ($0.territoryID, $0.startDate ?? "") < ($1.territoryID, $1.startDate ?? "") }) {
+      let when = price.applies(on: today)
+        ? (price.endDate.map { "until \($0)" } ?? "now")
+        : "from \(price.startDate ?? "?")\(price.endDate.map { " until \($0)" } ?? "")"
+      print("    \(price.territoryID) \(describe(price, in: schedule)) (\(when))")
+    }
   }
 
   /// Resolves a customer price (e.g. "4.99") to a price point ID in the given territory.
@@ -967,6 +938,8 @@ struct IAPCommand: AsyncParsableCommand {
           let territory: String
           let price: String?
           let currency: String?
+          let startDate: String?
+          let endDate: String?
         }
         let baseTerritory: String?
         let prices: [Price]
@@ -978,8 +951,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client),
-              !existing.manualPrices.isEmpty else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
           if jsonOption.json {
             try printJSON(Schedule(baseTerritory: nil, prices: []))
             return
@@ -988,31 +960,44 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        // The base entry comes first; overrides follow.
-        let ordered: [IAPCommand.ManualPriceEntry] =
-          (existing.basePriceEntry.map { [$0] } ?? []) + existing.nonBaseOverrides
-        let schedule = Schedule(
-          baseTerritory: existing.baseTerritoryID,
-          prices: ordered.map {
-            Schedule.Price(territory: $0.territoryID, price: $0.customerPrice, currency: $0.currency)
-          }
-        )
+        // Today's prices, the base first, then planned and temporary ones by date.
+        let today = AppPricing.today
+        func order(_ price: AppPricing.Price) -> (Int, String, Int, String) {
+          price.applies(on: today)
+            ? (0, "", price.territoryID == schedule.baseTerritoryID ? 0 : 1, price.territoryID)
+            : (1, price.startDate ?? "", 0, price.territoryID)
+        }
+        let prices = schedule.manualPrices.filter(\.isCurrentOrLater).sorted { order($0) < order($1) }
+        let result = Schedule(
+          baseTerritory: schedule.baseTerritoryID,
+          prices: prices.map {
+            Schedule.Price(
+              territory: $0.territoryID, price: $0.point.customerPrice, currency: schedule.currencies[$0.territoryID],
+              startDate: $0.applies(on: today) ? nil : $0.startDate, endDate: $0.endDate)
+          })
 
         if jsonOption.json {
-          try printJSON(schedule)
+          try printJSON(result)
           return
         }
 
-        print("Base region: \(existing.baseTerritoryID)")
+        print("Base region: \(schedule.baseTerritoryID)")
         print()
-
-        let rows = schedule.prices.map { entry -> [String] in
-          let label = entry.territory == schedule.baseTerritory ? "\(entry.territory) (base)" : entry.territory
-          let priceStr = entry.price.map { "\($0) \(entry.currency ?? "")" } ?? "(unknown tier)"
-          return [label, priceStr]
+        let current = prices.filter { $0.applies(on: today) }
+        Table.print(
+          headers: ["Territory", "Customer Price", "Until"],
+          rows: current.map {
+            [$0.territoryID == schedule.baseTerritoryID ? "\($0.territoryID) (base)" : $0.territoryID,
+             IAPCommand.describe($0, in: schedule), $0.endDate ?? "-"]
+          })
+        let planned = prices.filter { !$0.applies(on: today) }
+        if !planned.isEmpty {
+          print()
+          print(bold("Planned changes"))
+          Table.print(
+            headers: ["Start", "End", "Territory", "Customer Price"],
+            rows: planned.map { [$0.startDate ?? "-", $0.endDate ?? "-", $0.territoryID, IAPCommand.describe($0, in: schedule)] })
         }
-
-        Table.print(headers: ["Territory", "Customer Price"], rows: rows)
       }
     }
 
@@ -1068,9 +1053,11 @@ struct IAPCommand: AsyncParsableCommand {
         abstract: "Set the base price for an in-app purchase.",
         discussion: """
           Sets or updates the price in the base territory (the territory Apple uses to
-          auto-equalize prices in all other territories). Existing per-territory manual
-          overrides are preserved by default — when there are overrides, an interactive
-          menu offers to revert any of them to auto-equalize from the new base.
+          auto-equalize prices in all other territories). Prices set by hand in other territories,
+          and planned or temporary prices, stay unless you drop them: when there are manual prices,
+          an interactive menu offers to revert any of them to auto-equalize from the new base. With
+          --start-date the current price applies until that day; a new base territory, and a
+          product's first price, apply now.
           """
       )
 
@@ -1087,7 +1074,7 @@ struct IAPCommand: AsyncParsableCommand {
       @Option(name: .customLong("base-territory"), help: "Base territory code. Defaults to the existing base territory, or USA if no schedule exists yet.")
       var baseTerritory: String?
 
-      @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: today).")
+      @Option(name: .long, help: "The day the price starts (YYYY-MM-DD, after today; default: now).")
       var startDate: String?
 
       @Flag(name: .customLong("remove-all-overrides"), help: "Drop all per-territory manual overrides; revert all non-base territories to auto-equalize.")
@@ -1098,84 +1085,84 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
+        let day = try startDate.map { try AppsCommand.PricingCommand.laterDay($0, option: "--start-date") }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client)
-        let newBase = (baseTerritory ?? existing?.baseTerritoryID ?? "USA").uppercased()
+        let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client)
+        let newBase = (baseTerritory ?? schedule?.baseTerritoryID ?? "USA").uppercased()
+        if day != nil, schedule.map({ $0.baseTerritoryID != newBase }) ?? true {
+          throw ValidationError(schedule == nil
+            ? "The product's first price applies now; leave out --start-date."
+            : "A new base territory applies now; leave out --start-date.")
+        }
 
         let resolved = try await IAPCommand.resolvePricePoint(
           iapID: iap.id, territoryID: newBase, customerPrice: price, client: client)
         let basePoint = resolved.point
         let baseCurrency = resolved.currency ?? ""
 
-        // The OLD base entry is dropped automatically — that territory becomes
-        // auto-equalized from the new base. Other manual overrides are preserved.
-        let preservableOverrides: [IAPCommand.ManualPriceEntry] = (existing?.nonBaseOverrides ?? [])
-          .filter { $0.territoryID != newBase }
-
-        var keptOverrides: [IAPCommand.ManualPriceEntry] = preservableOverrides
-        var droppedOverrideTerritories: [String] = []
-
-        if !preservableOverrides.isEmpty {
+        // The old base territory and the new one take Apple's price or the new base price; the
+        // other territories priced by hand keep theirs unless dropped here.
+        let today = AppPricing.today
+        let others = Swift.Set((schedule?.manualPrices ?? []).filter(\.isCurrentOrLater).map(\.territoryID))
+          .subtracting([newBase, schedule?.baseTerritoryID ?? ""]).sorted()
+        var dropped: [String] = []
+        if !others.isEmpty {
           if removeAllOverrides {
-            keptOverrides = []
-            droppedOverrideTerritories = preservableOverrides.map(\.territoryID)
-          } else if !autoConfirm {
-            // Customer prices for the menu come from the schedule fetch's included payload
-            let labels = preservableOverrides.map {
-              "\($0.territoryID) — \($0.customerPrice ?? "?") \($0.currency ?? "")"
+            dropped = others
+          } else if !autoConfirm, let schedule {
+            let labels = others.map { territory -> String in
+              let current = schedule.manualPrices.first { $0.territoryID == territory && $0.applies(on: today) }
+              return "\(territory) — \(current.map { IAPCommand.describe($0, in: schedule) } ?? "planned")"
             }
             print()
-            print("This product currently has manual prices in \(preservableOverrides.count) other territor\(preservableOverrides.count == 1 ? "y" : "ies"):")
+            print("This product currently has manual prices in \(others.count) other territor\(others.count == 1 ? "y" : "ies"):")
             for (i, label) in labels.enumerated() {
               print("  [\(i + 1)] \(label)")
             }
             print()
             print("Revert any of these to auto-equalize from the new base?")
             let input = readAnswer("Select to revert (comma-separated numbers, 'all', or press Enter to keep all): ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-            if input.isEmpty {
-              // keep all
-            } else if input.lowercased() == "all" {
-              keptOverrides = []
-              droppedOverrideTerritories = preservableOverrides.map(\.territoryID)
-            } else {
-              let parts = input.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-              var dropIndices: Swift.Set<Int> = []
-              for part in parts {
-                guard let n = Int(part), n >= 1, n <= preservableOverrides.count else {
-                  throw ValidationError("Invalid selection '\(part)'. Enter numbers between 1 and \(preservableOverrides.count).")
+            if input.lowercased() == "all" {
+              dropped = others
+            } else if !input.isEmpty {
+              var indices: Swift.Set<Int> = []
+              for part in input.split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) {
+                guard let n = Int(part), n >= 1, n <= others.count else {
+                  throw ValidationError("Invalid selection '\(part)'. Enter numbers between 1 and \(others.count).")
                 }
-                dropIndices.insert(n - 1)
+                indices.insert(n - 1)
               }
-              keptOverrides = preservableOverrides.enumerated()
-                .filter { !dropIndices.contains($0.offset) }
-                .map(\.element)
-              droppedOverrideTerritories = preservableOverrides.enumerated()
-                .filter { dropIndices.contains($0.offset) }
-                .map(\.element.territoryID)
+              dropped = indices.sorted().map { others[$0] }
             }
           }
         }
 
-        let dateStr = startDate
+        let prices = schedule?.changingBase(to: newBase, pricePointID: basePoint.id, from: day, dropping: Swift.Set(dropped))
+          ?? [AppPricing.NewPrice(pricePointID: basePoint.id)]
+        let kept = others.filter { !dropped.contains($0) }
 
         print()
         print("Set base price:")
         print("  Product ID:     \(productID)")
         print("  Base Territory: \(newBase)")
         print("  Customer Price: \(basePoint.attributes?.customerPrice ?? "—") \(baseCurrency)")
-        print("  Start Date:     \(dateStr ?? "now")")
-        if let existingBase = existing?.baseTerritoryID, existingBase != newBase {
+        print("  Start Date:     \(day ?? "now")")
+        if let existingBase = schedule?.baseTerritoryID, existingBase != newBase {
           print("  Old base:       \(existingBase) (will revert to auto-equalize)")
         }
-        if !keptOverrides.isEmpty {
-          print("  Keep overrides: \(keptOverrides.map(\.territoryID).sorted().joined(separator: ", "))")
+        if !kept.isEmpty {
+          print("  Keep overrides: \(kept.joined(separator: ", "))")
         }
-        if !droppedOverrideTerritories.isEmpty {
-          print("  Drop overrides: \(droppedOverrideTerritories.sorted().joined(separator: ", ")) (revert to auto-equalize)")
+        if !dropped.isEmpty {
+          print("  Drop overrides: \(dropped.joined(separator: ", ")) (revert to auto-equalize\(day.map { " from \($0)" } ?? ""))")
+        }
+        if let schedule {
+          IAPCommand.printChangedPrices(
+            schedule.pricesChanged(by: prices), in: schedule, besides: Swift.Set(dropped),
+            replacing: [newBase, schedule.baseTerritoryID])
         }
         print()
 
@@ -1184,17 +1171,7 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        let baseEntry = IAPCommand.ManualPriceEntry(
-          territoryID: newBase, pricePointID: basePoint.id)
-        let allEntries = [baseEntry] + keptOverrides
-
-        try await IAPCommand.postSchedule(
-          iapID: iap.id,
-          baseTerritoryID: newBase,
-          manualPrices: allEntries,
-          startDate: dateStr,
-          client: client
-        )
+        try await InAppPurchases.setSchedule(purchaseID: iap.id, baseTerritoryID: newBase, manualPrices: prices, client: client)
 
         print()
         success("Updated", "price for '\(iap.name)'.")
@@ -1207,9 +1184,10 @@ struct IAPCommand: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "Add or update a per-territory manual price override.",
         discussion: """
-          Adds an explicit price for a single territory on top of the existing base price.
-          The base territory's price and any other manual overrides are preserved. To revert
-          a territory to auto-equalize, use 'iap pricing remove --territory X'.
+          Adds an explicit price for a single territory on top of the existing base price, now or
+          from --start-date (the territory's current price applies until then; its later planned
+          prices are replaced). The base territory's price and the other territories' prices are
+          preserved. To revert a territory to auto-equalize, use 'iap pricing remove --territory X'.
           """
       )
 
@@ -1226,7 +1204,7 @@ struct IAPCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Territory code to override (e.g. FRA).")
       var territory: String
 
-      @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: today).")
+      @Option(name: .long, help: "The day the price starts (YYYY-MM-DD, after today; default: now).")
       var startDate: String?
 
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1234,16 +1212,17 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
+        let day = try startDate.map { try AppsCommand.PricingCommand.laterDay($0, option: "--start-date") }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client) else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
           throw ValidationError("No price schedule exists yet. Use 'iap pricing set' to create one first.")
         }
 
         let territoryID = territory.uppercased()
-        if territoryID == existing.baseTerritoryID {
+        if territoryID == schedule.baseTerritoryID {
           throw ValidationError("\(territoryID) is the base territory. Use 'iap pricing set' to change the base price.")
         }
 
@@ -1251,21 +1230,17 @@ struct IAPCommand: AsyncParsableCommand {
           iapID: iap.id, territoryID: territoryID, customerPrice: price, client: client)
         let newPoint = resolved.point
         let currency = resolved.currency ?? ""
-
-        let isUpdate = existing.nonBaseOverrides.contains { $0.territoryID == territoryID }
-        let dateStr = startDate
+        let prices = schedule.settingManual(territoryID: territoryID, pricePointID: newPoint.id, from: day)
+        let isUpdate = schedule.manualPrices.contains { $0.territoryID == territoryID && $0.isCurrentOrLater }
 
         print()
         print("\(isUpdate ? "Update" : "Add") manual price:")
         print("  Product ID:     \(productID)")
         print("  Territory:      \(territoryID)")
         print("  Customer Price: \(newPoint.attributes?.customerPrice ?? "—") \(currency)")
-        print("  Start Date:     \(dateStr ?? "now")")
-        print("  Base Territory: \(existing.baseTerritoryID) (preserved)")
-        let otherOverrides = existing.nonBaseOverrides.filter { $0.territoryID != territoryID }
-        if !otherOverrides.isEmpty {
-          print("  Other overrides: \(otherOverrides.map(\.territoryID).sorted().joined(separator: ", ")) (preserved)")
-        }
+        print("  Start Date:     \(day ?? "now")")
+        print("  Base Territory: \(schedule.baseTerritoryID) (preserved)")
+        IAPCommand.printChangedPrices(schedule.pricesChanged(by: prices), in: schedule, replacing: [territoryID])
         print()
 
         guard confirm("Apply this override? [y/N] ") else {
@@ -1273,21 +1248,8 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        var newEntries: [IAPCommand.ManualPriceEntry] = []
-        if let baseEntry = existing.basePriceEntry {
-          newEntries.append(baseEntry)
-        }
-        newEntries.append(contentsOf: otherOverrides)
-        newEntries.append(IAPCommand.ManualPriceEntry(
-          territoryID: territoryID, pricePointID: newPoint.id))
-
-        try await IAPCommand.postSchedule(
-          iapID: iap.id,
-          baseTerritoryID: existing.baseTerritoryID,
-          manualPrices: newEntries,
-          startDate: dateStr,
-          client: client
-        )
+        try await InAppPurchases.setSchedule(
+          purchaseID: iap.id, baseTerritoryID: schedule.baseTerritoryID, manualPrices: prices, client: client)
 
         print()
         success(isUpdate ? "Updated" : "Added", "manual price for \(territoryID).")
@@ -1300,9 +1262,9 @@ struct IAPCommand: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "Remove a per-territory manual price override.",
         discussion: """
-          Drops the manual price for a territory; that territory will revert to the
-          auto-equalized price computed from the base territory. The base territory itself
-          cannot be removed — use 'iap pricing set --base-territory X' to change the base.
+          Drops the manual prices for a territory, now or from --start-date; that territory then
+          takes the auto-equalized price computed from the base territory. The base territory
+          itself cannot be removed — use 'iap pricing set --base-territory X' to change the base.
           """
       )
 
@@ -1316,7 +1278,7 @@ struct IAPCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Territory code to revert to auto-equalize (e.g. FRA).")
       var territory: String
 
-      @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: today).")
+      @Option(name: .long, help: "The day Apple's price takes over (YYYY-MM-DD, after today; default: now).")
       var startDate: String?
 
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1324,32 +1286,29 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
+        let day = try startDate.map { try AppsCommand.PricingCommand.laterDay($0, option: "--start-date") }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client) else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
           throw ValidationError("No price schedule exists yet. Use 'iap pricing set' to create one first.")
         }
 
         let territoryID = territory.uppercased()
-        if territoryID == existing.baseTerritoryID {
+        if territoryID == schedule.baseTerritoryID {
           throw ValidationError("\(territoryID) is the base territory. Use 'iap pricing set --base-territory X' to change the base territory first.")
         }
-        guard existing.nonBaseOverrides.contains(where: { $0.territoryID == territoryID }) else {
+        guard schedule.manualPrices.contains(where: { $0.territoryID == territoryID && $0.isCurrentOrLater }) else {
           throw ValidationError("No manual override exists for territory \(territoryID).")
         }
-
-        let dateStr = startDate
+        let prices = schedule.removingManual(territoryIDs: [territoryID], from: day)
 
         print()
         print("Remove manual price:")
         print("  Product ID:    \(productID)")
-        print("  Territory:     \(territoryID) (will auto-equalize from \(existing.baseTerritoryID))")
-        let remainingOverrides = existing.nonBaseOverrides.filter { $0.territoryID != territoryID }
-        if !remainingOverrides.isEmpty {
-          print("  Other manual:  \(remainingOverrides.map(\.territoryID).sorted().joined(separator: ", ")) (preserved)")
-        }
+        print("  Territory:     \(territoryID) (will auto-equalize from \(schedule.baseTerritoryID)\(day.map { " from \($0)" } ?? ""))")
+        IAPCommand.printChangedPrices(schedule.pricesChanged(by: prices), in: schedule, replacing: [territoryID])
         print()
 
         guard confirm("Remove this override? [y/N] ") else {
@@ -1357,19 +1316,8 @@ struct IAPCommand: AsyncParsableCommand {
           return
         }
 
-        var newEntries: [IAPCommand.ManualPriceEntry] = []
-        if let baseEntry = existing.basePriceEntry {
-          newEntries.append(baseEntry)
-        }
-        newEntries.append(contentsOf: remainingOverrides)
-
-        try await IAPCommand.postSchedule(
-          iapID: iap.id,
-          baseTerritoryID: existing.baseTerritoryID,
-          manualPrices: newEntries,
-          startDate: dateStr,
-          client: client
-        )
+        try await InAppPurchases.setSchedule(
+          purchaseID: iap.id, baseTerritoryID: schedule.baseTerritoryID, manualPrices: prices, client: client)
 
         print()
         success("Removed", "manual price for \(territoryID).")
@@ -1382,10 +1330,10 @@ struct IAPCommand: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
         abstract: "Export the price schedule to a JSON file.",
         discussion: """
-          Writes the base territory and every manual price to a JSON file that
-          'iap pricing import' can apply to another in-app purchase — in this app or
-          any other. Auto-equalized territories are not part of the schedule and are
-          not exported.
+          Writes the base territory and every manual price that applies today to a JSON file that
+          'iap pricing import' can apply to another in-app purchase — in this app or any other.
+          Auto-equalized territories are not part of the schedule and are not exported, and
+          neither are planned prices (the file has no dates).
           """
       )
 
@@ -1405,21 +1353,21 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client),
-              !existing.manualPrices.isEmpty else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
           throw ValidationError("No price schedule exists for '\(productID)' — nothing to export.")
         }
-
+        let today = AppPricing.today
         var prices: [String: String] = [:]
-        for entry in existing.manualPrices {
-          guard let cp = entry.customerPrice else {
-            throw ValidationError("Could not resolve the customer price for territory \(entry.territoryID). Retry, or inspect with 'iap pricing show'.")
-          }
-          prices[entry.territoryID] = cp
+        for price in schedule.manualPrices where price.applies(on: today) {
+          prices[price.territoryID] = price.point.customerPrice
+        }
+        let planned = schedule.manualPrices.filter { !$0.applies(on: today) && $0.isCurrentOrLater }.count
+        if planned > 0 {
+          print(yellow("Note:") + " \(planned) planned price\(planned == 1 ? " isn't" : "s aren't") exported (see 'iap pricing show').")
         }
 
         try exportProductPrices(
-          ProductPricesFile(baseTerritory: existing.baseTerritoryID, prices: prices),
+          ProductPricesFile(baseTerritory: schedule.baseTerritoryID, prices: prices),
           productID: productID, output: output)
       }
     }
@@ -1433,8 +1381,9 @@ struct IAPCommand: AsyncParsableCommand {
           Applies a file produced by 'iap pricing export' (from this or any other
           product): the base territory plus one manual price per listed territory.
           Prices are matched to this product's own tiers by customer price. The
-          schedule is replaced wholesale — existing overrides in territories not
-          listed in the file revert to auto-equalize.
+          schedule is replaced wholesale, now or from --start-date (today's prices apply
+          until then): manual prices in territories not listed in the file revert to
+          auto-equalize, and planned prices are replaced (both are listed before you confirm).
           """
       )
 
@@ -1449,7 +1398,7 @@ struct IAPCommand: AsyncParsableCommand {
               completion: .file(extensions: ["json"]))
       var file: String?
 
-      @Option(name: .long, help: "Start date in YYYY-MM-DD format (default: today).")
+      @Option(name: .long, help: "The day the file's prices start (YYYY-MM-DD, after today; default: now).")
       var startDate: String?
 
       @Flag(name: .long, help: "Use the nearest tier for a price that isn't one (the cheaper when two are as close), listing each, instead of failing.")
@@ -1460,15 +1409,21 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
+        let day = try startDate.map { try AppsCommand.PricingCommand.laterDay($0, option: "--start-date") }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         let priceFile = try loadProductPricesFile(file)
-        let existing = try await IAPCommand.fetchExistingSchedule(iapID: iap.id, client: client)
-        let base = priceFile.baseTerritory ?? existing?.baseTerritoryID ?? "USA"
+        let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client)
+        let base = (priceFile.baseTerritory ?? schedule?.baseTerritoryID ?? "USA").uppercased()
         guard priceFile.prices[base] != nil else {
           throw ValidationError("The file has no price for the base territory \(base).")
+        }
+        if day != nil, schedule.map({ $0.baseTerritoryID != base }) ?? true {
+          throw ValidationError(schedule == nil
+            ? "The product's first price applies now; leave out --start-date."
+            : "A new base territory applies now; leave out --start-date.")
         }
 
         // Resolve every listed price against this product's own tiers.
@@ -1481,53 +1436,52 @@ struct IAPCommand: AsyncParsableCommand {
           print(" done.")
           return resolved
         }
-
-        let entries = resolved.map {
-          IAPCommand.ManualPriceEntry(
-            territoryID: $0.territoryID, pricePointID: $0.point.id,
-            customerPrice: $0.point.attributes?.customerPrice, currency: $0.currency)
-        }
-        guard let baseEntry = entries.first(where: { $0.territoryID == base }) else {
+        guard let baseEntry = resolved.first(where: { $0.territoryID == base }) else {
           throw ValidationError("The file has no price for the base territory \(base).")
         }
-        let overrides = entries.filter { $0.territoryID != base }
+        let overrides = resolved.filter { $0.territoryID != base }
 
-        if let existing, existing.baseTerritoryID == base {
-          let existingByTerritory = Dictionary(
-            existing.manualPrices.map { ($0.territoryID, $0.pricePointID) },
+        let today = AppPricing.today
+        if let schedule, schedule.baseTerritoryID == base, day == nil {
+          let current = Dictionary(
+            schedule.manualPrices.filter { $0.applies(on: today) }.map { ($0.territoryID, $0.point.id) },
             uniquingKeysWith: { first, _ in first })
-          let newByTerritory = Dictionary(
-            entries.map { ($0.territoryID, $0.pricePointID) },
-            uniquingKeysWith: { first, _ in first })
-          if existingByTerritory == newByTerritory {
+          let wanted = Dictionary(resolved.map { ($0.territoryID, $0.point.id) }, uniquingKeysWith: { first, _ in first })
+          let changesLater = schedule.manualPrices.contains { $0.isCurrentOrLater && ($0.endDate != nil || !$0.applies(on: today)) }
+          if current == wanted && !changesLater {
             print("The current price schedule already matches the file. Nothing to do.")
             return
           }
         }
 
-        let dateStr = startDate
-        let dropped = (existing?.nonBaseOverrides ?? [])
-          .map(\.territoryID)
-          .filter { $0 != base && priceFile.prices[$0] == nil }
+        let newIDs = [baseEntry.point.id] + overrides.map(\.point.id)
+        let prices = schedule?.replacing(with: newIDs, from: day) ?? newIDs.map { AppPricing.NewPrice(pricePointID: $0) }
+        let dropped = Swift.Set((schedule?.manualPrices ?? []).filter(\.isCurrentOrLater).map(\.territoryID))
+          .subtracting(priceFile.prices.keys.map { $0.uppercased() }).subtracting([base])
 
         print()
         print("Import price schedule:")
         print("  Product ID:     \(productID)")
-        print("  Base Territory: \(base) at \(baseEntry.customerPrice ?? "?") \(baseEntry.currency ?? "")")
+        print("  Base Territory: \(base) at \(baseEntry.point.attributes?.customerPrice ?? "?") \(baseEntry.currency ?? "")")
         if overrides.count <= 10 {
           for entry in overrides {
-            print("  Override:       \(entry.territoryID) at \(entry.customerPrice ?? "?") \(entry.currency ?? "")")
+            print("  Override:       \(entry.territoryID) at \(entry.point.attributes?.customerPrice ?? "?") \(entry.currency ?? "")")
           }
         } else if !overrides.isEmpty {
           print("  Overrides:      \(overrides.count) territories")
         }
-        if let existingBase = existing?.baseTerritoryID, existingBase != base {
+        if let existingBase = schedule?.baseTerritoryID, existingBase != base {
           print("  Old base:       \(existingBase) (will revert to auto-equalize)")
         }
         if !dropped.isEmpty {
           print("  Drop overrides: \(dropped.sorted().joined(separator: ", ")) (not in file; revert to auto-equalize)")
         }
-        print("  Start Date:     \(dateStr ?? "now")")
+        print("  Start Date:     \(day ?? "now")")
+        if let schedule {
+          // Today's prices end anyway; list only the planned and temporary ones that go.
+          let laterOnes = schedule.pricesChanged(by: prices).filter { $0.endDate != nil || !$0.applies(on: today) }
+          IAPCommand.printChangedPrices(laterOnes, in: schedule, besides: dropped)
+        }
         print()
 
         guard confirm("Apply this schedule? [y/N] ") else {
@@ -1536,13 +1490,7 @@ struct IAPCommand: AsyncParsableCommand {
         }
 
         do {
-          try await IAPCommand.postSchedule(
-            iapID: iap.id,
-            baseTerritoryID: base,
-            manualPrices: [baseEntry] + overrides,
-            startDate: dateStr,
-            client: client
-          )
+          try await InAppPurchases.setSchedule(purchaseID: iap.id, baseTerritoryID: base, manualPrices: prices, client: client)
         } catch {
           print()
           print(red("The schedule POST failed") + " — no changes were applied. Re-run the same command to retry.")

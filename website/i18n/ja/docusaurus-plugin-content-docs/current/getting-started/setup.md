@@ -29,6 +29,8 @@ ascelerate configure
 
 `configure` では、オプションの**ベンダー番号**も入力を求められます（App Store Connect → お支払いと財務レポート）。これは[売上レポートと財務レポート](../commands/reports.md)にのみ必要で、`vendorNumber` フィールドとして保存されます。スキップして後で追加することも、コマンドごとに `--vendor-number` で渡すこともできます。
 
+`configure` をもう一度実行した場合、Enter を押すと保存済みのベンダー番号はそのまま残ります（削除するには `-` を入力）。Apple Ads の設定も保持されます。
+
 [Apple Ads](../commands/ads.md) を利用するには別の認証情報が必要です。`ascelerate ads configure` で設定すると、同じファイルの `ads` セクションに保存されます。`configure` を再度実行しても、この認証情報は保持されます。
 
 ### 1回の実行だけ別のキーを使う

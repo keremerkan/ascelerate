@@ -37,6 +37,8 @@ ascelerate certs create --type DISTRIBUTION
 ascelerate certs create --type DEVELOPMENT --csr my-request.pem
 ```
 
+The private key is written (readable by you only) and the output folder checked before the certificate is requested; if the request fails, the key is removed again. A certificate made from `--csr` is saved too, as `<serial>.cer` without `--output`. After the keychain import the command offers to delete the local files; with `--output` or `--yes` they stay, unless you pass `--delete-local-files`.
+
 When no `--csr` is provided, the command auto-generates an RSA key pair and CSR, then imports everything into the login keychain.
 
 ## Revoke

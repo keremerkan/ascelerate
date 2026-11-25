@@ -76,7 +76,7 @@ struct SubCommand: AsyncParsableCommand {
 
   static func subscriptionHasPrices(subscriptionID: String, client: ASCClient) async throws -> Bool {
     let response = try await client.subscriptionsPricesGetToManyRelated(
-      path: .init(id: subscriptionID), query: .init(limit: 1)
+      path: .init(id: subscriptionID), query: .init(filterPlanType: [.upfront], limit: 1)
     ).ok.body.json
     return !response.data.isEmpty
   }
@@ -171,76 +171,74 @@ struct SubCommand: AsyncParsableCommand {
     return target > current ? .increase : .decrease
   }
 
-  /// Fetches the customer-price string for a single territory's current SubscriptionPrice.
-  /// Returns nil if no price exists. Picks the most recent record (by startDate desc).
-  static func fetchCurrentPrice(
-    subID: String, territoryID: String, client: ASCClient
-  ) async throws -> String? {
-    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.subscriptionsPricesGetToManyRelated(
-        path: .init(id: subID),
-        query: .init(filterTerritory: [territoryID], limit: 200, include: [.subscriptionPricePoint])
-      ).ok.body.json
-    }
-    var pointPrices: [String: String] = [:]
-    for case .subscriptionPricePoints(let p) in pages.flatMap({ $0.included ?? [] }) {
-      if let cp = p.attributes?.customerPrice { pointPrices[p.id] = cp }
-    }
-    guard let current = currentPriceRecord(pages.flatMap(\.data)) else {
-      return nil
-    }
-    let pointID = current.relationships?.subscriptionPricePoint?.data?.id ?? ""
-    guard let cp = pointPrices[pointID] else {
-      throw ValidationError("Could not resolve the current price for territory \(territoryID). Retry, or inspect with 'sub pricing show'.")
-    }
-    return cp
+  /// What new subscribers pay today in each territory, as customer prices: the core's
+  /// `Prices.current`, which keeps a price that existing subscribers were kept on and that new ones
+  /// still pay until a dated raise starts.
+  static func currentByTerritory(_ prices: Subscriptions.Prices) -> [String: String] {
+    prices.current.mapValues(\.customerPrice)
   }
 
-  /// Picks the record that represents the price customers pay *today*: preserved
-  /// (grandfathered) records are ignored, and future-scheduled records don't count —
-  /// increase/decrease gating must compare against the live price, not a scheduled one.
-  /// A nil startDate means "active since the beginning".
-  static func currentPriceRecord(_ prices: [Components.Schemas.SubscriptionPrice]) -> Components.Schemas.SubscriptionPrice? {
-    currentRecord(prices, preserved: { $0.attributes?.preserved }, startDate: { $0.attributes?.startDate })
-  }
-
-  private static func currentRecord<Price>(
-    _ prices: [Price], preserved: (Price) -> Bool?, startDate: (Price) -> String?
-  ) -> Price? {
-    let today = AppPricing.today
-    return prices
-      .filter { preserved($0) != true }
-      .filter { (startDate($0) ?? "") <= today }
-      .max { (startDate($0) ?? "") < (startDate($1) ?? "") }
-  }
-
-  /// Fetches the current customer price for every territory the subscription is priced in,
-  /// as [territoryID: customerPrice].
-  static func fetchCurrentPricesByTerritory(subID: String, client: ASCClient) async throws -> [String: String] {
-    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.subscriptionsPricesGetToManyRelated(
-        path: .init(id: subID), query: .init(limit: 200, include: [.subscriptionPricePoint, .territory])
-      ).ok.body.json
+  /// Sorts proposed prices against the territories' planned ones. A territory takes one planned
+  /// price (a second is refused with 409, seen 2026-11-25): with a start date, a territory whose
+  /// planned price is this one already is skipped (a re-run after a partial failure), and one with
+  /// another planned price is refused before anything is sent. Without a start date the price
+  /// applies now, and Apple removes the territory's planned price (seen 2026-11-25): those are
+  /// returned for the confirmation to list.
+  static func sortPlanned(
+    _ entries: [(territoryID: String, pricePointID: String, newPrice: String?)], prices: Subscriptions.Prices,
+    startDate: String?, bundleID: String, productID: String
+  ) throws -> (entries: [(territoryID: String, pricePointID: String, newPrice: String?)], alreadyPlanned: Int, dropped: [Subscriptions.Price]) {
+    let planned = Dictionary(grouping: prices.planned, by: \.territoryID)
+    let wanted = Swift.Set(entries.map(\.territoryID))
+    guard let startDate else {
+      return (entries, 0, prices.planned.filter { wanted.contains($0.territoryID) })
     }
-    var pointPrices: [String: String] = [:]
-    for case .subscriptionPricePoints(let p) in pages.flatMap({ $0.included ?? [] }) {
-      if let cp = p.attributes?.customerPrice { pointPrices[p.id] = cp }
-    }
-    // Group records by territory, then pick the live (non-preserved, non-future) one.
-    let recordsByTerritory = Dictionary(grouping: pages.flatMap(\.data).filter { $0.relationships?.territory?.data?.id != nil }) {
-      $0.relationships!.territory!.data!.id
-    }
-    var result: [String: String] = [:]
-    for (territoryID, records) in recordsByTerritory {
-      guard let current = currentPriceRecord(records) else { continue }
-      guard let cp = pointPrices[current.relationships?.subscriptionPricePoint?.data?.id ?? ""] else {
-        // A price record exists but couldn't be resolved — treating it as "no current price"
-        // would classify the territory as new and bypass the increase/decrease safety gates.
-        throw ValidationError("Could not resolve the current price for territory \(territoryID). Retry, or inspect with 'sub pricing show'.")
+    var kept: [(territoryID: String, pricePointID: String, newPrice: String?)] = []
+    var already = 0
+    var blocked: [String] = []
+    for entry in entries {
+      guard let existing = planned[entry.territoryID] else {
+        kept.append(entry)
+        continue
       }
-      result[territoryID] = cp
+      if existing.contains(where: { $0.pricePointID == entry.pricePointID && $0.startDate == startDate }) {
+        already += 1
+      } else {
+        blocked.append(entry.territoryID)
+      }
     }
-    return result
+    guard blocked.isEmpty else {
+      let list = blocked.sorted()
+      throw ValidationError(
+        "\(list.count) territor\(list.count == 1 ? "y has" : "ies have") another planned price, and a territory takes one at a time: \(list.prefix(10).joined(separator: ", "))\(list.count > 10 ? ", …" : ""). Remove it first with 'sub pricing cancel \(bundleID) \(productID) --territories \(list.joined(separator: ","))'.")
+    }
+    return (kept, already, [])
+  }
+
+  /// A line for territories skipped because they already have this price planned on this day.
+  static func alreadyPlannedLines(_ count: Int) -> [String] {
+    count == 0 ? [] : ["  Already planned:  \(count) territor\(count == 1 ? "y" : "ies") (this price on this day; skipped)"]
+  }
+
+  /// Lines naming the planned prices a price set for now removes: only in the territories that are
+  /// posted (with `posted`, those not unchanged); an unchanged territory's planned price stays.
+  static func droppedPlannedLines(
+    _ dropped: [Subscriptions.Price], posted: [PriceChangeTarget]? = nil, prices: Subscriptions.Prices
+  ) -> [String] {
+    let postedTerritories = posted.map { Swift.Set($0.filter { $0.direction != .unchanged }.map(\.territoryID)) }
+    let removed = dropped.filter { postedTerritories?.contains($0.territoryID) ?? true }
+    let staying = dropped.count - removed.count
+    var lines: [String] = []
+    if !removed.isEmpty {
+      let list = removed.sorted { $0.territoryID < $1.territoryID }
+      lines += ["  Planned prices removed (a price for now replaces them):"]
+        + list.prefix(10).map { "    \($0.territoryID) \($0.customerPrice) \(prices.currencies[$0.territoryID] ?? "") from \($0.startDate ?? "?")" }
+        + (list.count > 10 ? ["    … and \(list.count - 10) more"] : [])
+    }
+    if staying > 0 {
+      lines.append("  Planned prices kept: \(staying) (their territories are unchanged and not sent)")
+    }
+    return lines
   }
 
   /// Builds a clear error message for a price increase that lacks --preserve-current.
@@ -273,7 +271,7 @@ struct SubCommand: AsyncParsableCommand {
     let target = try parseCustomerPrice(customerPrice)
     let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
       try await client.subscriptionsPricePointsGetToManyRelated(
-        path: .init(id: subID), query: .init(filterTerritory: [territoryID], limit: 200, include: [.territory])
+        path: .init(id: subID), query: .init(filterTerritory: [territoryID], filterPlanType: ["UPFRONT"], limit: 200, include: [.territory])
       ).ok.body.json
     }
     let tiers = pages.flatMap(\.data)
@@ -299,7 +297,7 @@ struct SubCommand: AsyncParsableCommand {
         try await client.subscriptionsPricePointsGetToManyRelated(
           path: .init(id: subID),
           query: .init(
-            filterTerritory: chunk.map(\.territoryID),
+            filterTerritory: chunk.map(\.territoryID), filterPlanType: ["UPFRONT"],
             fieldsSubscriptionPricePoints: [.customerPrice, .territory],
             limit: 8000, include: [.territory])
         ).ok.body.json
@@ -329,7 +327,7 @@ struct SubCommand: AsyncParsableCommand {
   ) async throws -> [Components.Schemas.SubscriptionPricePoint] {
     var equalized = try await ASCPaging.allPages(next: { $0.links.next }) {
       try await client.subscriptionPricePointsEqualizationsGetToManyRelated(
-        path: .init(id: sourcePoint.id), query: .init(limit: 200, include: [.territory])
+        path: .init(id: sourcePoint.id), query: .init(filterPlanType: ["UPFRONT"], limit: 200, include: [.territory])
       ).ok.body.json
     }.flatMap(\.data)
     if !equalized.contains(where: { $0.relationships?.territory?.data?.id == sourceTerritory }) {
@@ -388,10 +386,8 @@ struct SubCommand: AsyncParsableCommand {
   }
 
   /// The territories whose current price has volume tiers, which a price set without tiers ends.
-  static func territoriesWithVolumeTiers(subID: String, client: ASCClient) async throws -> Swift.Set<String> {
-    async let pricesTask = Subscriptions.prices(subscriptionID: subID, client: client)
-    async let tiersTask = Subscriptions.volumeTiers(subscriptionID: subID, client: client)
-    let (prices, tiers) = try await (pricesTask, tiersTask)
+  static func territoriesWithVolumeTiers(_ prices: Subscriptions.Prices, subID: String, client: ASCClient) async throws -> Swift.Set<String> {
+    let tiers = try await Subscriptions.volumeTiers(subscriptionID: subID, client: client)
     return Swift.Set(prices.current.values.filter { !(tiers[$0.id] ?? []).isEmpty }.map(\.territoryID))
   }
 
@@ -410,6 +406,7 @@ struct SubCommand: AsyncParsableCommand {
     _ targets: [PriceChangeTarget],
     subID: String,
     headerLines: [String],
+    extraLines: [String] = [],
     confirmPrompt: String,
     preserveCurrent: Bool?,
     confirmDecrease: Bool,
@@ -459,6 +456,7 @@ struct SubCommand: AsyncParsableCommand {
 
     print()
     for line in headerLines { print(line) }
+    for line in extraLines { print(line) }
     print("  Total territories: \(targets.count)")
     print("    New:             \(news.count)")
     print("    Increases:       \(increases.count)")
@@ -546,7 +544,7 @@ struct SubCommand: AsyncParsableCommand {
     if !failures.isEmpty {
       print()
       print(red("Failed territories: ") + failures.map(\.target.territoryID).sorted().joined(separator: ", "))
-      print("Re-run the same command to retry — territories already updated will be skipped as unchanged.")
+      print("Re-run the same command to retry — territories already updated (or already planned at this price and date) are skipped.")
       // A half-repriced subscription must not look like success to scripts/workflows.
       throw ExitCode.failure
     }
@@ -1613,7 +1611,7 @@ struct SubCommand: AsyncParsableCommand {
 
         let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
           try await client.subscriptionsPricesGetToManyRelated(
-            path: .init(id: sub.id), query: .init(limit: 200, include: [.territory, .subscriptionPricePoint])
+            path: .init(id: sub.id), query: .init(filterPlanType: [.upfront], limit: 200, include: [.territory, .subscriptionPricePoint])
           ).ok.body.json
         }
         let prices = pages.flatMap(\.data)
@@ -1701,7 +1699,7 @@ struct SubCommand: AsyncParsableCommand {
         var currency: String?
         let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
           try await client.subscriptionsPricePointsGetToManyRelated(
-            path: .init(id: sub.id), query: .init(filterTerritory: [territoryID], limit: 200, include: [.territory])
+            path: .init(id: sub.id), query: .init(filterTerritory: [territoryID], filterPlanType: ["UPFRONT"], limit: 200, include: [.territory])
           ).ok.body.json
         }
         for page in pages {
@@ -1787,20 +1785,31 @@ struct SubCommand: AsyncParsableCommand {
         sub: Subscriptions.Subscription, territoryID: String, point: Components.Schemas.SubscriptionPricePoint,
         currency: String?, client: ASCClient
       ) async throws {
-        // Fetch existing price for this territory (if any) and compare against the target.
-        let currentPriceStr = try await SubCommand.fetchCurrentPrice(
-          subID: sub.id, territoryID: territoryID, client: client)
+        // The territory's price today (a preserved one included) and its planned one, if any.
+        let prices = try await Subscriptions.prices(subscriptionID: sub.id, client: client)
+        let currentPriceStr = SubCommand.currentByTerritory(prices)[territoryID]
+        let planned = try SubCommand.sortPlanned(
+          [(territoryID, point.id, point.attributes?.customerPrice)], prices: prices, startDate: startDate,
+          bundleID: bundleID, productID: productID)
+        if planned.alreadyPlanned > 0 {
+          print()
+          print("\(territoryID) already has \(point.attributes?.customerPrice ?? "?") \(currency ?? "") planned from \(startDate ?? "?"). Nothing to do.")
+          return
+        }
         let direction = try await SubCommand.previewedPriceChanges(
           [(territoryID, point.id, point.attributes?.customerPrice)],
           currentByTerritory: currentPriceStr.map { [territoryID: $0] } ?? [:],
           subID: sub.id, startDate: startDate, client: client
         ).first?.direction ?? .new
-        let tiered = try await SubCommand.territoriesWithVolumeTiers(subID: sub.id, client: client).contains(territoryID)
+        let tiered = try await SubCommand.territoriesWithVolumeTiers(prices, subID: sub.id, client: client).contains(territoryID)
 
         switch direction {
         case .unchanged:
           print()
           print("Already at \(point.attributes?.customerPrice ?? "?") \(currency ?? "") in \(territoryID). Nothing to do.")
+          if let next = prices.planned.first(where: { $0.territoryID == territoryID }) {
+            print("Its planned price stays: \(next.customerPrice) \(currency ?? "") from \(next.startDate ?? "?") ('sub pricing cancel' removes it).")
+          }
           return
         case .increase:
           if preserveCurrent == nil {
@@ -1843,6 +1852,7 @@ struct SubCommand: AsyncParsableCommand {
         if let p = preserveCurrent {
           print("  Preserve Current: \(p ? "Yes" : "No")")
         }
+        for line in SubCommand.droppedPlannedLines(planned.dropped, prices: prices) { print(line) }
         if direction == .decrease {
           print()
           print(yellow("⚠ Price decrease:") + " all existing subscribers in \(territoryID) will move to the new lower price.")
@@ -1878,18 +1888,20 @@ struct SubCommand: AsyncParsableCommand {
         let equalized = try await SubCommand.fetchEqualizedPoints(
           sourcePoint: sourcePoint, sourceTerritory: sourceTerritory, client: client)
 
-        // Fetch all current prices for the subscription so we can categorize per territory.
-        let currentByTerritory = try await SubCommand.fetchCurrentPricesByTerritory(
-          subID: sub.id, client: client)
+        // The subscription's prices, read once: today's (preserved ones included) and planned ones.
+        let prices = try await Subscriptions.prices(subscriptionID: sub.id, client: client)
 
-        let entries = equalized.compactMap {
+        let allEntries = equalized.compactMap {
           point -> (territoryID: String, pricePointID: String, newPrice: String?)? in
           guard let territoryID = point.relationships?.territory?.data?.id else { return nil }
           return (territoryID, point.id, point.attributes?.customerPrice)
         }
+        let planned = try SubCommand.sortPlanned(
+          allEntries, prices: prices, startDate: startDate, bundleID: bundleID, productID: productID)
         let targets = try await SubCommand.previewedPriceChanges(
-          entries, currentByTerritory: currentByTerritory, subID: sub.id, startDate: startDate, client: client)
-        let tiered = try await SubCommand.territoriesWithVolumeTiers(subID: sub.id, client: client)
+          planned.entries, currentByTerritory: SubCommand.currentByTerritory(prices), subID: sub.id, startDate: startDate,
+          client: client)
+        let tiered = try await SubCommand.territoriesWithVolumeTiers(prices, subID: sub.id, client: client)
 
         try await SubCommand.gateAndApplyPriceChanges(
           targets,
@@ -1899,6 +1911,8 @@ struct SubCommand: AsyncParsableCommand {
             "  Product ID:        \(productID)",
             "  Source Territory:  \(sourceTerritory) at \(sourcePoint.attributes?.customerPrice ?? "?") \(sourceCurrency ?? "")",
           ],
+          extraLines: SubCommand.alreadyPlannedLines(planned.alreadyPlanned)
+            + SubCommand.droppedPlannedLines(planned.dropped, posted: targets, prices: prices),
           confirmPrompt: "Apply equalized pricing? [y/N] ",
           preserveCurrent: preserveCurrent,
           confirmDecrease: confirmDecrease,
@@ -1939,8 +1953,7 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let prices = try await SubCommand.fetchCurrentPricesByTerritory(
-          subID: sub.id, client: client)
+        let prices = SubCommand.currentByTerritory(try await Subscriptions.prices(subscriptionID: sub.id, client: client))
         guard !prices.isEmpty else {
           throw ValidationError("No prices set for '\(productID)' — nothing to export.")
         }
@@ -2008,11 +2021,13 @@ struct SubCommand: AsyncParsableCommand {
           try await resolve(sortedPrices, anchor: anchor, subID: sub.id, client: client)
         }
 
-        let currentByTerritory = try await SubCommand.fetchCurrentPricesByTerritory(
-          subID: sub.id, client: client)
+        let prices = try await Subscriptions.prices(subscriptionID: sub.id, client: client)
+        let planned = try SubCommand.sortPlanned(
+          entries, prices: prices, startDate: startDate, bundleID: bundleID, productID: productID)
         let targets = try await SubCommand.previewedPriceChanges(
-          entries, currentByTerritory: currentByTerritory, subID: sub.id, startDate: startDate, client: client)
-        let tiered = try await SubCommand.territoriesWithVolumeTiers(subID: sub.id, client: client)
+          planned.entries, currentByTerritory: SubCommand.currentByTerritory(prices), subID: sub.id, startDate: startDate,
+          client: client)
+        let tiered = try await SubCommand.territoriesWithVolumeTiers(prices, subID: sub.id, client: client)
 
         try await SubCommand.gateAndApplyPriceChanges(
           targets,
@@ -2021,6 +2036,8 @@ struct SubCommand: AsyncParsableCommand {
             "Import prices:",
             "  Product ID:        \(productID)",
           ],
+          extraLines: SubCommand.alreadyPlannedLines(planned.alreadyPlanned)
+            + SubCommand.droppedPlannedLines(planned.dropped, posted: targets, prices: prices),
           confirmPrompt: "Apply imported pricing? [y/N] ",
           preserveCurrent: preserveCurrent,
           confirmDecrease: confirmDecrease,

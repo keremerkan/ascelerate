@@ -109,6 +109,9 @@ struct CertsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Base path for output files. Auto mode: <base>.pem + <base>.cer. Manual CSR: <base>.cer.")
     var output: String?
 
+    @Flag(name: .customLong("delete-local-files"), help: "After the key and certificate are imported into the login keychain, delete the local files without asking (with --yes they stay otherwise).")
+    var deleteLocalFiles = false
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
@@ -172,6 +175,24 @@ struct CertsCommand: AsyncParsableCommand {
         print("  CSR:  (auto-generated)")
       }
 
+      // Where the files go is settled before the certificate exists: the folder must be there and
+      // writable, and the private key is on disk (owner-only) before Apple issues a certificate
+      // that only it can use. Without --output the files are named after the serial number, so
+      // the key waits under a temporary name.
+      let fm = FileManager.default
+      let base = output.map(expandPath)
+      let folder = base.map { ($0 as NSString).deletingLastPathComponent }.flatMap { $0.isEmpty ? nil : $0 } ?? fm.currentDirectoryPath
+      var isDirectory: ObjCBool = false
+      guard fm.fileExists(atPath: folder, isDirectory: &isDirectory), isDirectory.boolValue, fm.isWritableFile(atPath: folder) else {
+        throw ValidationError("Can't write to \(folder): the folder doesn't exist or isn't writable.")
+      }
+      var pemPath: String?
+      var cerPath: String?
+      if let base {
+        cerPath = expandPath(confirmOutputPath(rsaKey != nil ? "\(base).cer" : base, isDirectory: false))
+        if rsaKey != nil { pemPath = expandPath(confirmOutputPath("\(base).pem", isDirectory: false)) }
+      }
+
       print()
 
       guard confirm("Create this certificate? [y/N] ") else {
@@ -179,7 +200,21 @@ struct CertsCommand: AsyncParsableCommand {
         return
       }
 
-      let created = try await Certificates.create(type: certType.rawValue, csr: csrContent, client: client)
+      var keyPath: String?
+      if let rsaKey {
+        let path = pemPath ?? (folder as NSString).appendingPathComponent("ascelerate-key-\(UUID().uuidString).pem")
+        try Self.writePrivate(Data(rsaKey.pemRepresentation.utf8), to: path)
+        keyPath = path
+      }
+
+      let created: Certificates.Certificate
+      do {
+        created = try await Certificates.create(type: certType.rawValue, csr: csrContent, client: client)
+      } catch {
+        // No certificate was made, so its key is of no use.
+        if let keyPath { try? fm.removeItem(atPath: keyPath) }
+        throw error
+      }
 
       print()
       success("Created", "certificate.")
@@ -187,49 +222,64 @@ struct CertsCommand: AsyncParsableCommand {
       print("  Serial Number: \(created.serialNumber ?? "—")")
       print("  Expires:       \(created.expirationDate.map { formatDate($0) } ?? "—")")
 
-      // Determine output base name
-      let baseName: String?
-      if let output {
-        baseName = output
-      } else if rsaKey != nil {
-        // Auto mode without --output: use serial number
-        baseName = created.serialNumber
-      } else {
-        baseName = nil
-      }
-
-      // Save certificate
-      if let baseName, let certData = created.content {
-        let cerName = rsaKey != nil ? "\(baseName).cer" : baseName
-        let cerPath = expandPath(confirmOutputPath(cerName, isDirectory: false))
-        try certData.write(to: URL(fileURLWithPath: cerPath))
-        print("  Certificate:   \(cerPath)")
-
-        // Save private key (auto mode only)
-        if let rsaKey {
-          let pemPath = expandPath(confirmOutputPath("\(baseName).pem", isDirectory: false))
-          try rsaKey.pemRepresentation.write(toFile: pemPath, atomically: true, encoding: .utf8)
-          print("  Private key:   \(pemPath)")
-
-          // Import into macOS Keychain (best-effort)
-          let imported = importToKeychain(pemPath: pemPath, cerPath: cerPath)
-
-          // Offer to clean up files if both were imported successfully
-          if imported {
-            let pemName = URL(fileURLWithPath: pemPath).lastPathComponent
-            let cerName = URL(fileURLWithPath: cerPath).lastPathComponent
-            print()
-            print("The private key and certificate have been imported into your login keychain.")
-            print("The local files (\(pemName), \(cerName)) are no longer needed unless you")
-            print("want to keep a backup or import them on another machine.")
-            print()
-            if confirm("Delete the local files? [y/N] ") {
-              try? FileManager.default.removeItem(atPath: pemPath)
-              try? FileManager.default.removeItem(atPath: cerPath)
-              print("Deleted.")
-            }
-          }
+      // The key's final name, now that the serial number is known.
+      let name = created.serialNumber ?? created.id
+      if let path = keyPath, pemPath == nil {
+        let named = (folder as NSString).appendingPathComponent("\(name).pem")
+        if !fm.fileExists(atPath: named), (try? fm.moveItem(atPath: path, toPath: named)) != nil {
+          keyPath = named
         }
+      }
+      if let keyPath { print("  Private key:   \(keyPath)") }
+
+      guard let certData = created.content else {
+        print(yellow("Note:") + " App Store Connect sent no certificate file; download it from the developer portal.\(keyPath != nil ? " Keep the private key: the certificate works only with it." : "")")
+        return
+      }
+      let cerTarget = cerPath ?? (folder as NSString).appendingPathComponent("\(name).cer")
+      try certData.write(to: URL(fileURLWithPath: cerTarget))
+      print("  Certificate:   \(cerTarget)")
+
+      // Import into macOS Keychain (best-effort, auto mode only)
+      guard let keyPath, importToKeychain(pemPath: keyPath, cerPath: cerTarget) else { return }
+      let pemName = URL(fileURLWithPath: keyPath).lastPathComponent
+      let cerName = URL(fileURLWithPath: cerTarget).lastPathComponent
+      print()
+      print("The private key and certificate have been imported into your login keychain.")
+      // Files asked for with --output stay unless --delete-local-files; with --yes they stay too.
+      let delete: Bool
+      if deleteLocalFiles {
+        delete = true
+      } else if output != nil || autoConfirm {
+        delete = false
+      } else {
+        print("The local files (\(pemName), \(cerName)) are no longer needed unless you")
+        print("want to keep a backup or import them on another machine.")
+        print()
+        delete = confirm("Delete the local files? [y/N] ")
+      }
+      guard delete else { return }
+      var failures: [String] = []
+      for path in [keyPath, cerTarget] {
+        do { try fm.removeItem(atPath: path) } catch { failures.append("\(URL(fileURLWithPath: path).lastPathComponent): \(error.localizedDescription)") }
+      }
+      if failures.isEmpty {
+        print("Deleted \(pemName) and \(cerName).")
+      } else {
+        print(yellow("Couldn't delete ") + failures.joined(separator: "; "))
+      }
+    }
+
+    /// Writes data readable by its owner only (0600), as the project keeps key files.
+    static func writePrivate(_ data: Data, to path: String) throws {
+      let fm = FileManager.default
+      var isDirectory: ObjCBool = false
+      if fm.fileExists(atPath: path, isDirectory: &isDirectory) {
+        guard !isDirectory.boolValue else { throw ValidationError("\(path) is a folder; give a file name with --output.") }
+        try fm.removeItem(atPath: path)
+      }
+      guard fm.createFile(atPath: path, contents: data, attributes: [.posixPermissions: 0o600]) else {
+        throw ValidationError("Couldn't write \(path).")
       }
     }
 

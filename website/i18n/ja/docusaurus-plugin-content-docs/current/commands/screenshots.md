@@ -245,7 +245,7 @@ screenshots/framed/
 
 | オプション | 説明 |
 |---|---|
-| `clearPreviousScreenshots` | 収集前に言語フォルダをクリア（すべてのデバイスが成功した場合のみ） |
+| `clearPreviousScreenshots` | 収集の前に言語フォルダの以前のスクリーンショット（`*.png`）とエラーログを削除（すべてのデバイスがスクリーンショットを作成した場合のみ）。ほかに何もなければフォルダも削除 |
 | `eraseSimulator` | 各言語の前にシミュレーターをリセット |
 | `localizeSimulator` | 言語ごとにシミュレーターの言語/ロケールを設定 |
 | `overrideStatusBar` | ステータスバーをオーバーライド（9:41、フルバー、Wi-Fi） |

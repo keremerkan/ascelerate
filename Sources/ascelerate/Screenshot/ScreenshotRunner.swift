@@ -179,10 +179,15 @@ struct ScreenshotRunner: Sendable {
             }
             }
 
-            // Clear previous screenshots only if all devices succeeded (including after retries)
-            let allSucceeded = languageResults.allSatisfy(\.success)
+            // Clear previous screenshots only if every device succeeded (including after retries),
+            // and a device succeeds only with screenshots in its cache (evaluateTestResults).
+            let allSucceeded = !languageResults.isEmpty && languageResults.allSatisfy(\.success)
             if config.clearPreviousScreenshots && allSucceeded {
-                try? collector.clearLanguageScreenshots(language: language)
+                do {
+                    try collector.clearLanguageScreenshots(language: language)
+                } catch {
+                    EventOutput.log("  " + yellow("Warning:") + " couldn't clear the previous \(language) screenshots: \(error.localizedDescription)")
+                }
             }
 
             // Collect screenshots from cache to output directory
@@ -328,6 +333,7 @@ struct ScreenshotRunner: Sendable {
         simulatorManager: SimulatorManager
     ) -> [Result] {
         var results: [Result] = []
+        let collector = ScreenshotCollector(config: config)
 
         for (device, sim, error) in deviceResults {
             if let error {
@@ -343,6 +349,14 @@ struct ScreenshotRunner: Sendable {
                 try? FileManager.default.removeItem(at: errorDest)
                 try? FileManager.default.copyItem(at: logFile, to: errorDest)
                 results.append(Result(language: language, device: device.simulator, success: false, error: "\(error)"))
+            } else if collector.cachedScreenshotCount(udid: sim.udid) == 0 {
+                // The tests passed without writing a screenshot (a scheme or plan of unit tests
+                // only, tests that never call setupScreenshots, a write that failed): the
+                // previous screenshots must stay.
+                let message = "The tests passed but saved no screenshots. Check that the UI tests call setupScreenshots() and snapshot(_:)."
+                EventOutput.log("  [\(device.simulator)] " + red("Failed: \(message)"))
+                EventOutput.emit(.device("failed", device.simulator, language: language, message: message))
+                results.append(Result(language: language, device: device.simulator, success: false, error: message))
             } else {
                 EventOutput.emit(.device("passed", device.simulator, language: language))
                 results.append(Result(language: language, device: device.simulator, success: true, error: nil))

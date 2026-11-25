@@ -81,7 +81,10 @@ ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```bash
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 5.99 --start-date 2027-03-01
 ```
+
+`--start-date`（YYYY-MM-DD、今日より後）を付けると、新しい基準価格はその日から適用され、それまでは現在の価格が適用されます。製品の最初の価格と新しい基準地域はすぐに適用されます。ほかの地域で手動設定した価格や、予定・期間限定の価格はそのまま残ります。`pricing show` は予定された変更を一覧表示し、確認では変更によって終了する予定・期間限定の価格を示します。
 
 `--base-territory` のデフォルトは既存のベース地域（新規スケジュールの場合はUSA）です。スケジュールに地域別手動価格が含まれている場合、`set` はそれらをいずれも新しいベース地域からの自動均等化に戻すかどうかを尋ねるインタラクティブなメニューを表示します。確認なしですべての手動価格を削除するには、`--remove-all-overrides` を指定してください。
 
@@ -94,6 +97,8 @@ ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territor
 # 手動価格を削除（地域はベース地域からの自動均等化に戻ります）
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 ```
+
+`override` と `remove` も `--start-date` を受け付けます。その日までは地域の現在の価格が適用されます。
 
 `override` および `remove` はベース以外の地域でのみ動作します。ベース地域の価格を変更するには `set` を使用してください。
 
@@ -108,6 +113,8 @@ ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
 # 別のApp内課金に適用（同じアプリでも別のアプリでも可）
 ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
 ```
+
+インポートは予定された価格も置き換えます（確認の前に一覧表示されます）。`--start-date` を付けると、ファイルの価格はその日から適用され、それまでは今日の価格が適用されます。
 
 ファイルには地域コードをキーとした顧客価格が保存されます。インポート時には各価格が顧客価格に基づいて*適用先*製品自身の価格層と照合されるため、同じファイルを製品やアプリをまたいで使えます。インポートは価格スケジュール全体を置き換えます。ファイルに含まれない地域はベース地域からの自動均等化に戻り、現在のスケジュールがすでにファイルと一致している場合は何も変更されません。App Store Connect の一時的なエラー（HTTP 429/5xx）は自動的に再試行されます。
 

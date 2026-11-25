@@ -93,6 +93,58 @@ import Testing
       "FRA-0.49 2099-01-01 2099-01-08", "USA-0.49 2099-01-01 2099-01-08",
     ])
   }
+
+  // MARK: Dated edits (iap pricing)
+
+  static let sooner = "2098-06-01"
+
+  @Test func datedBaseChangeDropsOnlyTheNamedTerritories() {
+    let schedule = Self.schedule([Self.price("USA", "0.99"), Self.price("DEU", "1.99"), Self.price("FRA", "2.99")])
+    #expect(Self.sent(schedule.changingBase(to: "USA", pricePointID: "USA-2.99", from: Self.later, dropping: ["FRA"]))
+      == ["USA-0.99 - \(Self.later)", "DEU-1.99 - -", "FRA-2.99 - \(Self.later)", "USA-2.99 \(Self.later) -"])
+    // The keepingOthers form gives the same lists.
+    #expect(schedule.changingBase(to: "USA", pricePointID: "USA-2.99", from: Self.later, keepingOthers: false)
+      == schedule.changingBase(to: "USA", pricePointID: "USA-2.99", from: Self.later, dropping: ["DEU", "FRA"]))
+  }
+
+  @Test func manualPriceFromADayKeepsOtherPlannedChanges() {
+    let schedule = Self.schedule([
+      Self.price("USA", "0.99", end: Self.later), Self.price("USA", "1.99", start: Self.later),
+      Self.price("DEU", "2.99"),
+    ])
+    #expect(Self.sent(schedule.settingManual(territoryID: "DEU", pricePointID: "DEU-3.99", from: Self.sooner))
+      == ["USA-0.99 - \(Self.later)", "USA-1.99 \(Self.later) -", "DEU-2.99 - \(Self.sooner)", "DEU-3.99 \(Self.sooner) -"])
+    // Now: the territory's price is replaced, the planned base change stays.
+    #expect(Self.sent(schedule.settingManual(territoryID: "DEU", pricePointID: "DEU-3.99", from: nil))
+      == ["USA-0.99 - \(Self.later)", "USA-1.99 \(Self.later) -", "DEU-3.99 - -"])
+  }
+
+  @Test func removingFromADayEndsThePriceThen() {
+    let schedule = Self.schedule([Self.price("USA", "0.99"), Self.price("DEU", "2.99"), Self.price("DEU", "1.99", start: Self.later)])
+    #expect(Self.sent(schedule.removingManual(territoryIDs: ["DEU"], from: Self.sooner))
+      == ["USA-0.99 - -", "DEU-2.99 - \(Self.sooner)"])
+    #expect(Self.sent(schedule.removingManual(territoryIDs: ["DEU", "USA"], from: nil)) == ["USA-0.99 - -"])
+  }
+
+  @Test func replacingFromADayEndsEveryPriceThen() {
+    let schedule = Self.schedule([
+      Self.price("USA", "0.99"), Self.price("DEU", "2.99"), Self.price("USA", "1.99", start: Self.later),
+    ])
+    #expect(Self.sent(schedule.replacing(with: ["USA-4.99", "FRA-5.99"], from: Self.sooner))
+      == ["USA-0.99 - \(Self.sooner)", "DEU-2.99 - \(Self.sooner)", "USA-4.99 \(Self.sooner) -", "FRA-5.99 \(Self.sooner) -"])
+    #expect(Self.sent(schedule.replacing(with: ["USA-4.99"], from: nil)) == ["USA-4.99 - -"])
+  }
+
+  @Test func changedPricesAreTheOnesNotSentAsTheyWere() {
+    let schedule = Self.schedule([
+      Self.price("USA", "0.99", end: Self.later), Self.price("USA", "1.99", start: Self.later), Self.price("DEU", "2.99"),
+    ])
+    let prices = schedule.settingManual(territoryID: "DEU", pricePointID: "DEU-3.99", from: nil)
+    #expect(schedule.pricesChanged(by: prices).map(\.id) == ["DEU-2.99-"])
+    let base = schedule.changingBase(to: "USA", pricePointID: "USA-4.99", from: nil, dropping: [])
+    #expect(schedule.pricesChanged(by: base).map(\.id) == ["USA-0.99-", "USA-1.99-\(Self.later)"])
+  }
+
 }
 
 @Suite struct TesterCSVTests {

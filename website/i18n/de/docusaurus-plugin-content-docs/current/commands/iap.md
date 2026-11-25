@@ -81,7 +81,10 @@ ascelerate iap pricing tiers <bundle-id> <product-id> --territory USA
 ```bash
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99
 ascelerate iap pricing set <bundle-id> <product-id> --price 4.99 --base-territory GBR
+ascelerate iap pricing set <bundle-id> <product-id> --price 5.99 --start-date 2027-03-01
 ```
+
+Mit `--start-date` (JJJJ-MM-TT, nach heute) gilt der neue Basispreis ab diesem Tag und der aktuelle bis dahin; der erste Preis eines Produkts und eine neue Basisregion gelten sofort. Von Hand gesetzte Preise anderer Regionen sowie geplante oder befristete Preise bleiben, wie sie sind; `pricing show` listet geplante Änderungen, und die Bestätigung nennt jeden geplanten oder befristeten Preis, den die Änderung beendet.
 
 `--base-territory` verwendet standardmäßig die bestehende Basisregion (oder USA bei einem neuen Plan). Wenn der Plan regionsspezifische manuelle Preise enthält, zeigt `set` ein interaktives Menü an, in dem Sie diese optional zur automatischen Anpassung von der neuen Basisregion zurücksetzen können. Mit `--remove-all-overrides` werden alle manuellen Preise ohne Rückfrage entfernt.
 
@@ -94,6 +97,8 @@ ascelerate iap pricing override <bundle-id> <product-id> --price 5.99 --territor
 # Manuellen Preis entfernen (Region wird wieder automatisch von der Basisregion angepasst)
 ascelerate iap pricing remove <bundle-id> <product-id> --territory FRA
 ```
+
+Auch `override` und `remove` akzeptieren `--start-date`: Bis zu diesem Tag gilt der aktuelle Preis der Region.
 
 `override` und `remove` arbeiten nur mit Nicht-Basisregionen. Um den Preis der Basisregion zu ändern, verwenden Sie `set`.
 
@@ -108,6 +113,8 @@ ascelerate iap pricing export <bundle-id> <product-id> --output prices.json
 # Auf einen anderen In-App-Kauf anwenden — in derselben oder einer anderen App
 ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices.json
 ```
+
+Der Import ersetzt auch geplante Preise (sie werden vor der Bestätigung aufgelistet). Mit `--start-date` gelten die Preise der Datei ab diesem Tag und die heutigen bis dahin.
 
 Die Datei enthält Kundenpreise, indiziert nach Regionscode. Beim Import wird jeder Preis anhand des Kundenpreises den Preisstufen des *Zielprodukts* zugeordnet — dieselbe Datei funktioniert daher produkt- und app-übergreifend. Der Import ersetzt den Preisplan vollständig: Regionen, die nicht in der Datei aufgeführt sind, kehren zur automatischen Anpassung zurück; entspricht der aktuelle Preisplan bereits der Datei, ändert der Befehl nichts. Vorübergehende Fehler von App Store Connect (HTTP 429/5xx) werden automatisch wiederholt.
 

@@ -245,7 +245,7 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 
 | Option | Description |
 |---|---|
-| `clearPreviousScreenshots` | Vider le dossier de langue avant la collecte (uniquement si tous les appareils réussissent) |
+| `clearPreviousScreenshots` | Supprimer les captures précédentes (`*.png`) et journaux d'erreurs du dossier de langue avant la collecte, seulement si chaque appareil a produit des captures ; le dossier lui-même seulement s'il ne contient rien d'autre |
 | `eraseSimulator` | Réinitialiser le simulateur avant chaque langue |
 | `localizeSimulator` | Définir la langue/locale du simulateur par langue |
 | `overrideStatusBar` | Remplacer la barre d'état (9:41, barres pleines, Wi-Fi) |

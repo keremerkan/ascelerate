@@ -70,3 +70,5 @@ ascelerate profiles reissue --all --all-devices
 # Usar certificados concretos en lugar de detectarlos automáticamente
 ascelerate profiles reissue --all --to-certs ABC123,DEF456
 ```
+
+Sin `--to-certs`, cada perfil recibe todos los certificados que encajan con su tipo, no solo los que tenía. `--to-certs` indica certificados concretos por número de serie o nombre (un nombre debe corresponder a un solo certificado), y todos los perfiles deben poder contenerlos. Los perfiles de desarrollo y ad hoc conservan sus propios dispositivos activados, o reciben todos los dispositivos activados con `--all-devices`, en la medida en que encajen con la plataforma del perfil. Todo esto se comprueba antes de eliminar ningún perfil.

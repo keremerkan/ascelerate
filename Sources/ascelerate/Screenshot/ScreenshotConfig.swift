@@ -64,6 +64,14 @@ struct ScreenshotConfig: Codable, Sendable {
         let decoder = YAMLDecoder()
         let config = try decoder.decode(ScreenshotConfig.self, from: raw)
 
+        // A run needs at least one device and one language: with none, every device "passed".
+        guard !config.devices.isEmpty else {
+            throw ValidationError("The config lists no devices; add at least one under 'devices'.")
+        }
+        guard !config.languages.isEmpty else {
+            throw ValidationError("The config lists no languages; add at least one under 'languages'.")
+        }
+
         // Validate language codes contain only safe characters
         for lang in config.languages {
             guard lang.range(of: #"^[a-zA-Z0-9_-]+$"#, options: .regularExpression) != nil else {

@@ -245,7 +245,7 @@ Solo se enmarcan los dispositivos con `frameDevice: true`. El enmarcado se ejecu
 
 | Opción | Descripción |
 |---|---|
-| `clearPreviousScreenshots` | Vacía la carpeta del idioma antes de reunir las capturas (solo si todos los dispositivos terminan correctamente) |
+| `clearPreviousScreenshots` | Eliminar las capturas anteriores (`*.png`) y los registros de errores de la carpeta del idioma antes de recopilar, solo si todos los dispositivos generaron capturas; la carpeta también, si no contiene nada más |
 | `eraseSimulator` | Borra el simulador antes de cada idioma |
 | `localizeSimulator` | Configura el idioma y la región del simulador para cada idioma |
 | `overrideStatusBar` | Sustituye la barra de estado (9:41, cobertura completa, Wi-Fi) |

@@ -224,7 +224,8 @@ struct BuildsCommand: AsyncParsableCommand {
 
       // Per-platform lookup: with two uploads in one workflow (iOS + macOS), each
       // await must inherit its own platform's build number, not the last upload's.
-      let effectiveVersion = buildVersion ?? lastUploadedBuild(for: platform)
+      let uploaded = buildVersion == nil ? lastUploadedBuild(for: platform, bundleID: app.attributes?.bundleId) : nil
+      let effectiveVersion = buildVersion ?? uploaded?.number
       let label: String
       if let v = effectiveVersion {
         label = "build \(v)"
@@ -242,6 +243,7 @@ struct BuildsCommand: AsyncParsableCommand {
         appID: app.id,
         buildVersion: effectiveVersion,
         platform: platform,
+        version: uploaded?.version,
         client: client,
         interval: interval,
         timeout: timeout
@@ -694,13 +696,24 @@ struct BuildsCommand: AsyncParsableCommand {
       let (uploadPath, tempDir, archivePlatform) = try resolveUploadable(expandedPath)
       defer { if let dir = tempDir { try? FileManager.default.removeItem(atPath: dir) } }
 
+      // What the file holds (every path ends with an .ipa or a .pkg), for the record the later
+      // await-processing and attach-latest wait on. A file whose Info.plist can't be read still
+      // uploads; its record then has what the archive told.
+      let fileInfo = try? BuildUploader.info(path: uploadPath)
+      func record(_ number: String?) {
+        guard let number = number ?? fileInfo?.buildNumber else { return }
+        recordUploadedBuild(UploadedBuild(
+          number: number, platform: fileInfo.flatMap { Platform(rawValue: $0.platform) } ?? archivePlatform?.ascPlatform,
+          version: fileInfo?.version, bundleID: fileInfo?.bundleID))
+      }
+
       if api {
         // Through ASCKit, so dry run shows the requests and stops at the first write.
         guard uploadPath.hasSuffix(".ipa") || uploadPath.hasSuffix(".pkg") else {
           throw ValidationError("--api uploads an .ipa or a .pkg.")
         }
         let buildNumber = try await BuildUploader.upload(path: uploadPath)
-        recordUploadedBuild(uploadedBuildNumber ?? buildNumber, platform: archivePlatform?.ascPlatform)
+        record(uploadedBuildNumber ?? buildNumber)
         return
       }
 
@@ -736,10 +749,8 @@ struct BuildsCommand: AsyncParsableCommand {
 
       try runReportingErrors(process, tool: "altool", errors: .altool)
 
-      if let buildNumber = uploadedBuildNumber {
-        recordUploadedBuild(buildNumber, platform: archivePlatform?.ascPlatform)
-      }
-      EventOutput.emit(BuildEvent(event: "finished", build: uploadedBuildNumber))
+      record(uploadedBuildNumber)
+      EventOutput.emit(BuildEvent(event: "finished", build: uploadedBuildNumber ?? fileInfo?.buildNumber))
     }
   }
 

@@ -127,6 +127,8 @@ ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
 ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
 ```
 
+今すぐ適用する価格は、その地域の予定された価格を置き換えます（確認で表示されます）。別の価格が予定されている地域への日付付きの価格は、何かを送信する前に拒否されます。同じ日に同じ価格がすでに予定されている地域はスキップされるため、日付付きの変更は一部が失敗した後に再実行できます。
+
 すでに適用中の価格は削除できません。代わりに、より後に始まる価格を設定してください。
 
 ## 複数シートと数量割引 {#multiseat-and-volume-pricing}

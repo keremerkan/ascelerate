@@ -29,6 +29,8 @@ Yapılandırma `~/.ascelerate/config.json` dosyasında saklanır:
 
 `configure` ayrıca isteğe bağlı bir **satıcı numarası** sorar (App Store Connect → Payments and Financial Reports). Bu yalnızca [Satış ve Finans raporları](../commands/reports.md) için gereklidir ve bir `vendorNumber` alanı olarak saklanır; bunu atlayıp daha sonra ekleyebilir veya her komutta `--vendor-number` ile geçebilirsiniz.
 
+`configure` komutunu yeniden çalıştırdığınızda Enter'a basarsanız kayıtlı satıcı numarası korunur (silmek için `-` yazın); Apple Ads ayarlarınız da korunur.
+
 [Apple Ads](../commands/ads.md) için ascelerate ayrı kimlik bilgilerine ihtiyaç duyar. Bunları `ascelerate ads configure` ayarlar ve aynı dosyadaki bir `ads` bölümüne kaydeder; `configure` komutunu yeniden çalıştırdığınızda bu bilgiler korunur.
 
 ### Tek bir çalıştırma için anahtar

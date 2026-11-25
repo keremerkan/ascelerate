@@ -149,7 +149,9 @@ public enum CustomProductPages {
       }
       return created
     }
-    return page(response.data, versions: try await versions(pageID: response.data.id, client: client))
+    // The write went through: the read after it is retried rather than failing the command (a
+    // rerun would write again).
+    return page(response.data, versions: try await withTransientRetry { try await versions(pageID: response.data.id, client: client) })
   }
 
   /// Renames a page or turns its link on or off; nil values are left as they are.

@@ -107,7 +107,7 @@ ascelerate reviews list <bundle-id> --json | jq '[.[] | select(.response == null
 
 ## 終了コード
 
-コマンドは失敗時にゼロ以外のステータスで終了するため、`set -e` や `&&` チェーンを使用するスクリプトで安全に使用できます。`preflight` コマンドはチェックが失敗するとゼロ以外で終了するため、提出のゲートとして使用できます：
+コマンドは失敗時にゼロ以外のステータスで終了するため、`set -e` や `&&` チェーンを使用するスクリプトで安全に使用できます。`preflight` コマンドはチェックが失敗するとゼロ以外で終了するため、提出のゲートとして使用できます： 部分的な失敗も含まれます。多くの項目を処理するコマンド（プロファイル、証明書、国や地域、メディアファイル、スクリーンショットのデバイス、予定価格）はいずれかが失敗するとゼロ以外のステータスで終了し、`media verify` は完了していない項目があるとき、`screenshot doctor` はチェックが失敗したときに同様に終了するため、ワークフローはそこで止まります。
 
 ```bash
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>

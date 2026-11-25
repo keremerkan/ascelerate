@@ -35,6 +35,8 @@ struct ScreenshotTestRunner: Sendable {
                 args += ["clean"]
             }
 
+            // The xcodebuild output setting, as builds archive takes it (quiet when a program follows).
+            if XcodebuildOutput.resolve(nil, followed: EventOutput.emitsEvents) == .quiet { args += ["-quiet"] }
             args += ["build-for-testing"]
 
             let status = try ScreenshotShell.stream("/usr/bin/xcodebuild", arguments: Array(args.dropFirst()))

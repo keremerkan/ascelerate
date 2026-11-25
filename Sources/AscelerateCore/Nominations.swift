@@ -100,7 +100,9 @@ public enum Nominations {
       ),
       _type: "nominations"
     )))).created.body.json.data
-    return try await get(id: created.id, client: client)
+    // The write went through: the read after it is retried rather than failing the command (a
+    // rerun would write again).
+    return try await withTransientRetry { try await get(id: created.id, client: client) }
   }
 
   /// Changes a nomination; nil values are left as they are. `publishEndDate` given as `.some(nil)`

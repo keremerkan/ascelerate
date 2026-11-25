@@ -107,7 +107,7 @@ ascelerate reviews list <bundle-id> --json | jq '[.[] | select(.response == null
 
 ## Códigos de salida
 
-Los comandos terminan con un código distinto de cero cuando fallan, así que puede usarlos sin riesgo en scripts con `set -e` o encadenarlos con `&&`. En concreto, `preflight` termina con un código distinto de cero cuando falla alguna comprobación, de modo que puede condicionar los envíos a su resultado:
+Los comandos terminan con un código distinto de cero cuando fallan, así que puede usarlos sin riesgo en scripts con `set -e` o encadenarlos con `&&`. En concreto, `preflight` termina con un código distinto de cero cuando falla alguna comprobación, de modo que puede condicionar los envíos a su resultado: Esto incluye los fallos parciales: un comando que procesa muchos elementos (perfiles, certificados, países, archivos multimedia, dispositivos de capturas, precios planificados) termina con un estado distinto de cero si alguno falló, `media verify` si algún elemento no está completo y `screenshot doctor` si falla una comprobación, así que un flujo de trabajo se detiene ahí.
 
 ```bash
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>

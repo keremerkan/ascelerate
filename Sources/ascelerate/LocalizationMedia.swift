@@ -8,32 +8,44 @@ import Foundation
 /// (`experiments media`). Screenshots and previews go to classic sets; PRODUCT_PAGE_HEADER,
 /// APP_STORE_SEARCH_RESULTS and APP_IPHONE_DUO go through the asset library.
 extension LocalizationMedia {
-  /// `[locale, kind, type, state, media ID]` rows for every screenshot, preview and library placement.
-  static func rows(locale: String, on owner: Owner, client: ASCClient) async throws -> [[String]] {
-    var rows: [[String]] = []
+  /// One screenshot, preview or library placement of a localization, with raw values: `kind` is
+  /// `screenshot`, `preview`, `image` or `video`, `type` the display or preview type (raw, as the
+  /// options take it) or the slot, `state` Apple's (`COMPLETE`, `ACTIVE`, …).
+  struct Item: Encodable {
+    let id: String
+    let kind: String
+    let type: String?
+    let state: String?
+  }
+
+  /// Every screenshot, preview and library placement of the localization.
+  static func items(on owner: Owner, client: ASCClient) async throws -> [Item] {
+    var items: [Item] = []
     for set in try await classicScreenshotSets(on: owner, client: client) {
-      // Raw, as `--display-type` takes it.
-      let displayType = set.attributes?.screenshotDisplayType ?? "—"
-      let shots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
-      for s in shots {
-        rows.append([locale, "Screenshot", displayType, s.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", s.id])
+      for s in try await LocalizationMedia.screenshots(setID: set.id, client: client) {
+        items.append(Item(id: s.id, kind: "screenshot", type: set.attributes?.screenshotDisplayType, state: s.attributes?.assetDeliveryState?.state))
       }
     }
     for set in try await classicPreviewSets(on: owner, client: client) {
-      let previewType = set.attributes?.previewType ?? "—"
-      let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
-      for p in previews {
-        rows.append([locale, "Preview", previewType, p.attributes?.assetDeliveryState?.state.map { formatState($0) } ?? "—", p.id])
+      for p in try await LocalizationMedia.previews(setID: set.id, client: client) {
+        items.append(Item(id: p.id, kind: "preview", type: set.attributes?.previewType, state: p.attributes?.assetDeliveryState?.state))
       }
     }
     // Asset library placements: header, search results, iPhone Duo.
-    for (kind, placement) in try await AssetLibrary.slotPlacements(on: owner, client: client) {
-      rows.append([
-        locale, placement.attributes?.mediaType == "VIDEO" ? "Video" : "Image", kind,
-        placement.attributes?.state.map { formatState($0) } ?? "—", placement.id,
-      ])
+    for (slot, placement) in try await AssetLibrary.slotPlacements(on: owner, client: client) {
+      items.append(Item(
+        id: placement.id, kind: placement.attributes?.mediaType == "VIDEO" ? "video" : "image", type: slot,
+        state: placement.attributes?.state))
     }
-    return rows
+    return items
+  }
+
+  /// `[locale, kind, type, state, media ID]` table rows for every screenshot, preview and library
+  /// placement, from `items`.
+  static func rows(locale: String, on owner: Owner, client: ASCClient) async throws -> [[String]] {
+    try await items(on: owner, client: client).map { item in
+      [locale, item.kind.prefix(1).uppercased() + item.kind.dropFirst(), item.type ?? "—", item.state.map { formatState($0) } ?? "—", item.id]
+    }
   }
 
   static let uploadDiscussion = """

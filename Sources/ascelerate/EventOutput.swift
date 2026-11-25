@@ -24,6 +24,31 @@ enum EventOutput {
 
   @TaskLocal static var step: Step?
 
+  /// Runs a command with `--json-events` (`on`): the original stdout keeps the events, and stdout
+  /// points at stderr until the command ends, so its prompts, "(auto)" answers and the output of
+  /// the tools it starts (xcodebuild) can't land between events. Inside an event run already going
+  /// (a workflow's, which does the same) events simply stay on, so a step's prompts still come as
+  /// `prompt` events, whether or not the step has `--json-events` itself.
+  static func stream<T>(_ on: Bool, _ body: () async throws -> T) async throws -> T {
+    if emitsEvents || !on { return try await body() }
+    fflush(stdout)
+    let events = dup(STDOUT_FILENO)
+    guard events >= 0 else { throw SetupFailed() }
+    dup2(STDERR_FILENO, STDOUT_FILENO)
+    eventDescriptor = events
+    defer {
+      fflush(stdout)
+      dup2(events, STDOUT_FILENO)
+      close(events)
+      eventDescriptor = nil
+    }
+    return try await $emitsEvents.withValue(true) { try await body() }
+  }
+
+  struct SetupFailed: LocalizedError {
+    var errorDescription: String? { "Couldn't set up the event output." }
+  }
+
   /// A line of the readable progress.
   static func log(_ text: String = "") {
     if emitsEvents {

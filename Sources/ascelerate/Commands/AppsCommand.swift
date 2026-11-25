@@ -3060,6 +3060,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         if !failed.isEmpty {
           print("Failed: \(failed.joined(separator: ", "))")
+          throw ExitCode.failure
         }
         return
       }

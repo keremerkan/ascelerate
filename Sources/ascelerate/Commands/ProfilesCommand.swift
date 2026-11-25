@@ -556,7 +556,7 @@ struct ProfilesCommand: AsyncParsableCommand {
       print()
       guard !plans.isEmpty else {
         print("Done. 0 reissued, \(skipped.count) failed.")
-        return
+        throw ExitCode.failure
       }
 
       guard confirm("Reissue \(plans.count) profile(s)? This will delete and recreate each profile. [y/N] ") else {
@@ -586,6 +586,7 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       print()
       print("Done. \(succeeded) reissued, \(failed) failed.")
+      if failed > 0 { throw ExitCode.failure }
     }
   }
 
@@ -660,6 +661,7 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       print()
       print("Done. \(succeeded) deleted, \(failed) failed.")
+      if failed > 0 { throw ExitCode.failure }
     }
   }
 }

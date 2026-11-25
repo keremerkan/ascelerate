@@ -1617,6 +1617,8 @@ apps review submit com.example.MyApp
 
 Without `--yes`, the workflow asks for confirmation before starting, and individual commands still prompt where they normally would (e.g., before submitting for review). With `--yes`, all prompts are skipped for fully unattended execution.
 
+Every step is parsed before the first one runs. A step whose command fails stops the workflow, partial failures included: a command that works through many items (profiles, certificates, territories, media files, screenshot devices, planned prices) exits non-zero when any of them failed, `media verify` when any item isn't complete, and `screenshot doctor` when a check fails.
+
 ### Automation
 
 Most commands that prompt for confirmation support `--yes` / `-y` to skip prompts, making them suitable for CI/CD pipelines and scripts. When using `--yes` with provisioning commands, all required arguments must be provided explicitly (interactive mode is disabled):

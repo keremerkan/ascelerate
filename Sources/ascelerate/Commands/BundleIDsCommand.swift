@@ -504,7 +504,7 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, asked: Boo
   guard !plans.isEmpty else {
     print()
     print("Done. 0 regenerated, \(skipped.count) failed.")
-    return
+    throw ExitCode.failure
   }
 
   if !asked {
@@ -535,6 +535,7 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, asked: Boo
 
   print()
   print("Done. \(succeeded) regenerated, \(failed) failed.")
+  if failed > 0 { throw ExitCode.failure }
 }
 
 /// Prompts the user to select a bundle identifier from a numbered list.

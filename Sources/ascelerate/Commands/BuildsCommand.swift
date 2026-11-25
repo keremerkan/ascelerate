@@ -127,6 +127,11 @@ struct BuildsCommand: AsyncParsableCommand {
 
     @OptionGroup var jsonOption: JSONOption
 
+    func validate() throws {
+      // --json is for reading: the cleanup lists and asks in prose.
+      if deleteStale && jsonOption.json { throw ValidationError("--delete-stale doesn't take --json; list the uploads with --json, then clean up without it.") }
+    }
+
     struct Detail: Encodable {
       let code: String?
       let description: String?
@@ -293,7 +298,7 @@ struct BuildsCommand: AsyncParsableCommand {
     var xcodebuildOutput: XcodebuildOutput?
 
     func run() async throws {
-      try await EventOutput.$emitsEvents.withValue(jsonEvents) { try await archive() }
+      try await EventOutput.stream(jsonEvents) { try await archive() }
     }
 
     private var isAutomaticNumber: Bool { buildNumber?.lowercased() == "auto" }
@@ -644,7 +649,7 @@ struct BuildsCommand: AsyncParsableCommand {
         }
       }
       guard jsonEvents else { return try await upload() }
-      try await EventOutput.$emitsEvents.withValue(true) {
+      try await EventOutput.stream(true) {
         try await UploadProgress.$observe.withValue({ total in UploadProgressEvents(total: total) }) {
           try await upload()
         }

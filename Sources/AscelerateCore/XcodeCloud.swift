@@ -732,7 +732,9 @@ public enum XcodeCloud {
         sourceBranchOrTag: gitReferenceID.map { .init(data: .init(id: $0, _type: "scmGitReferences")) },
         workflow: .init(data: .init(id: workflowID, _type: "ciWorkflows"))),
       _type: "ciBuildRuns")))).created.body.json.data
-    return try await run(id: created.id, client: client)
+    // The write went through: the read after it is retried rather than failing the command (a
+    // rerun would write again).
+    return try await withTransientRetry { try await run(id: created.id, client: client) }
   }
 
   // MARK: A run's actions

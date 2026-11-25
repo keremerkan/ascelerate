@@ -577,6 +577,13 @@ extension SubCommand {
         let paidMonths: Int?
         let waitMonths: Int?
         let planType: String?
+        /// `info` only: the territories it has prices in.
+        var priceCount: Int? = nil
+
+        init(_ o: Subscriptions.RetentionOffer, priceCount: Int? = nil) {
+          id = o.id; offerID = o.offerID; name = o.name; mode = o.mode; duration = o.duration; periods = o.periods
+          paidMonths = o.paidMonths; waitMonths = o.waitMonths; planType = o.planType; self.priceCount = priceCount
+        }
       }
 
       func run() async throws {
@@ -586,11 +593,7 @@ extension SubCommand {
         let (sub, _) = try await SubCommand.findSubscription(productID: arguments.productID, appID: app.id, client: client)
         let offers = try await Subscriptions.retentionOffers(subscriptionID: sub.id, client: client)
         if jsonOption.json {
-          return try printJSON(offers.map {
-            Entry(
-              id: $0.id, offerID: $0.offerID, name: $0.name, mode: $0.mode, duration: $0.duration, periods: $0.periods,
-              paidMonths: $0.paidMonths, waitMonths: $0.waitMonths, planType: $0.planType)
-          })
+          return try printJSON(offers.map { Entry($0) })
         }
         guard !offers.isEmpty else { return print("No retention offers for \(arguments.productID).") }
         Table.print(
@@ -613,10 +616,14 @@ extension SubCommand {
       @Argument(help: "The offer's offer ID (or its App Store Connect ID).")
       var offer: String
 
+      @OptionGroup var jsonOption: JSONOption
+
       func run() async throws {
+        jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let found = try await RetentionOffer.find(offer, arguments: arguments, client: client)
         let (offer, priceCount) = try await Subscriptions.retentionOffer(id: found.id, client: client)
+        if jsonOption.json { return try printJSON(List.Entry(offer, priceCount: priceCount)) }
         print("Retention Offer: \(offer.name ?? "—")")
         print("Offer ID:        \(offer.offerID ?? "—")")
         print("Mode:            \(offer.mode.map(formatState) ?? "—")")

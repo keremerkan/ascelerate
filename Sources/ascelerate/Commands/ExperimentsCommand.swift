@@ -76,11 +76,13 @@ struct ExperimentsCommand: AsyncParsableCommand {
     let media: [MediaEntry]
   }
 
+  /// A treatment localization's media: `kind` screenshot, preview, image or video; `type` the raw
+  /// display or preview type or library slot; `state` Apple's raw state. Missing values omitted.
   struct MediaEntry: Encodable {
     let id: String
     let kind: String
-    let type: String
-    let state: String
+    let type: String?
+    let state: String?
   }
 
   struct List: AsyncParsableCommand {
@@ -126,8 +128,9 @@ struct ExperimentsCommand: AsyncParsableCommand {
       for t in try await Experiments.treatments(experimentID: experiment.id, client: client) {
         var localizations: [LocalizationEntry] = []
         for loc in try await Experiments.localizations(treatmentID: t.id, client: client) {
-          let media = try await LocalizationMedia.rows(locale: "", on: .treatmentLocalization(loc.id), client: client)
-            .map { MediaEntry(id: $0[4], kind: $0[1], type: $0[2], state: $0[3]) }
+          // Raw values, as the JSON contract has them (not the text table's cells).
+          let media = try await LocalizationMedia.items(on: .treatmentLocalization(loc.id), client: client)
+            .map { MediaEntry(id: $0.id, kind: $0.kind, type: $0.type, state: $0.state) }
           localizations.append(LocalizationEntry(id: loc.id, locale: loc.locale, media: media))
         }
         treatments.append(TreatmentEntry(id: t.id, name: t.name, appIconName: t.appIconName, localizations: localizations))
@@ -151,7 +154,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
         print(bold(t.name ?? "-") + " (\(t.id))" + (t.appIconName.map { ", app icon \($0)" } ?? ""))
         if t.localizations.isEmpty { print("  No localizations yet: upload media with 'ascelerate experiments media upload'.") }
         for loc in t.localizations {
-          let counts = Dictionary(grouping: loc.media, by: \.type).sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value.count)" }
+          let counts = Dictionary(grouping: loc.media, by: { $0.type ?? "—" }).sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value.count)" }
           print("  \(localeName(loc.locale ?? "-")): \(counts.isEmpty ? "no media" : counts.joined(separator: ", "))")
         }
       }

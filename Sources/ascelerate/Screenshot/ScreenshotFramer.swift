@@ -9,13 +9,15 @@ struct ScreenshotFramer: Sendable {
     /// Frame all screenshots for all languages. Used by `screenshot frame` subcommand.
     func frameAll() throws {
         let bezels = loadBezels()
-        guard !bezels.isEmpty else { return }
+        guard !bezels.isEmpty else { throw ScreenshotError.framingFailed("No device bezel could be loaded; nothing was framed.") }
 
+        var failures = 0
         for language in config.languages {
-            frameLanguage(language, bezels: bezels)
+            failures += frameLanguage(language, bezels: bezels)
         }
 
         printFramingSummary()
+        if failures > 0 { throw ScreenshotError.framingFailed("\(failures) screenshot(s) couldn't be framed.") }
     }
 
     struct Bezel {
@@ -25,13 +27,16 @@ struct ScreenshotFramer: Sendable {
     }
 
     /// Frame screenshots for a single language. Used by the runner after each language completes.
-    func frameLanguage(_ language: String, bezels: [(device: ScreenshotConfig.Device, images: [Bezel])]) {
+    /// Returns how many couldn't be framed.
+    @discardableResult
+    func frameLanguage(_ language: String, bezels: [(device: ScreenshotConfig.Device, images: [Bezel])]) -> Int {
         let outputDir = URL(fileURLWithPath: config.outputDirectory)
         let framedDir = resolvedFramedDir()
         let langDir = outputDir.appendingPathComponent(language)
         let framedLangDir = framedDir.appendingPathComponent(language)
 
-        guard FileManager.default.fileExists(atPath: langDir.path) else { return }
+        guard FileManager.default.fileExists(atPath: langDir.path) else { return 0 }
+        var failures = 0
         try? FileManager.default.createDirectory(at: framedLangDir, withIntermediateDirectories: true)
 
         for (device, deviceBezels) in bezels {
@@ -62,6 +67,7 @@ struct ScreenshotFramer: Sendable {
                         deviceFramed += 1
                     } catch {
                         EventOutput.log("  [\(device.simulator)] " + red("\(error)"))
+                        failures += 1
                     }
                 }
             }
@@ -70,6 +76,7 @@ struct ScreenshotFramer: Sendable {
                 EventOutput.log("  [\(device.simulator)] Framed \(deviceFramed) screenshot(s) → \(language)/")
             }
         }
+        return failures
     }
 
     /// Load bezels for all devices with framing enabled. Prints errors for missing/invalid bezels.

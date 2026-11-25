@@ -64,7 +64,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             }
 
             let runner = ScreenshotRunner(config: screenshotConfig)
-            try await EventOutput.$emitsEvents.withValue(jsonEvents) {
+            try await EventOutput.stream(jsonEvents) {
                 EventOutput.log("ascelerate screenshot")
                 EventOutput.log("  Scheme: \(screenshotConfig.scheme)")
                 EventOutput.log("  Devices: \(screenshotConfig.devices.map(\.simulator).joined(separator: ", "))")
@@ -344,9 +344,11 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 checks: checks))
         }
 
+        /// Prints the report, then exits 1 when a check failed (warnings don't), text and JSON alike.
         private func report(_ report: Report) throws {
             if jsonOption.json {
                 try printJSON(report)
+                if report.checks.contains(where: { $0.status == "fail" }) { throw ExitCode.failure }
                 return
             }
             let checks = report.checks
@@ -374,6 +376,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
                 if warnings > 0 { parts.append(yellow("\(warnings) warning(s)")) }
                 print(parts.joined(separator: ", "))
             }
+            if failures > 0 { throw ExitCode.failure }
         }
     }
 

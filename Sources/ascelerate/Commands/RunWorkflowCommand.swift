@@ -29,6 +29,11 @@ struct RunWorkflowCommand: AsyncParsableCommand {
 
   @OptionGroup var jsonOption: JSONOption
 
+  func validate() throws {
+    // --json is the --check report's format; a run reports with --json-events.
+    if jsonOption.json && !check { throw ValidationError("--json goes with --check; to follow a run, use --json-events.") }
+  }
+
   @Flag(
     name: .customLong("json-events"),
     help: """
@@ -64,8 +69,10 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     }
 
     // Each step with its line in the file (from 1), for messages and editors.
+    // Split on line ends as characters (CRLF is one), so a Windows file keeps its line numbers.
     let numbered = contents
-      .components(separatedBy: .newlines)
+      .split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+      .map(String.init)
       .enumerated()
       .map { (line: $0.offset + 1, text: $0.element.trimmingCharacters(in: .whitespaces)) }
       .filter { !$0.text.isEmpty && !$0.text.hasPrefix("#") }
@@ -93,6 +100,36 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     }
     print()
 
+    func stepEvent(_ i: Int, _ state: String, message: String? = nil) {
+      EventOutput.emit(WorkflowEvent(
+        event: "step", index: i + 1, count: steps.count, command: steps[i], line: numbered[i].line, state: state, message: message,
+        depth: depth))
+    }
+
+    // Every step split and parsed before the first runs: a malformed one stops the workflow here,
+    // with its failed step and the finished event, instead of after the steps before it ran.
+    var stepArguments: [[String]] = []
+    // Whether the step's own --dry-run was taken out (and so must apply when it runs).
+    var stepDryRun: [Bool] = []
+    let dryRunBefore = dryRunFlag
+    for (i, step) in steps.enumerated() {
+      do {
+        defer { dryRunFlag = dryRunBefore }
+        let args = try extractDryRunFlag(splitArguments(step))
+        _ = try Ascelerate.parseAsRoot(args)
+        stepArguments.append(args)
+        stepDryRun.append(dryRunFlag)
+      } catch {
+        let message = (error as? UnterminatedQuote)?.errorDescription ?? Ascelerate.message(for: error)
+        print("Error in step \(i + 1) (line \(numbered[i].line)): \(message)")
+        print("\nThe workflow didn't start; check it with --check.")
+        stepEvent(i, "failed", message: message)
+        EventOutput.emit(WorkflowEvent(
+          event: "finished", count: steps.count, message: message, succeeded: false, completed: 0, depth: depth))
+        throw ExitCode.failure
+      }
+    }
+
     if yes { autoConfirm = true }
 
     // With events, the program running the workflow confirmed it.
@@ -113,19 +150,14 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     let workflowJSONMode = jsonMode
     let workflowDryRun = dryRunFlag
 
-    func stepEvent(_ i: Int, _ state: String, message: String? = nil) {
-      EventOutput.emit(WorkflowEvent(
-        event: "step", index: i + 1, count: steps.count, command: steps[i], line: numbered[i].line, state: state, message: message,
-        depth: depth))
-    }
-
     for (i, step) in steps.enumerated() {
       let label = "[\(i + 1)/\(steps.count)]"
       print("\(label) \(step)")
       stepEvent(i, "running")
 
-      let args = try extractDryRunFlag(splitArguments(step))
-      let blockedBefore = ASCDryRun.blockedWrites
+      let args = stepArguments[i]
+      // The step's own --dry-run (taken out when it was parsed above) applies to this step only.
+      if stepDryRun[i] { dryRunFlag = true }
       do {
         defer {
           autoConfirm = workflowAutoConfirm
@@ -148,9 +180,10 @@ struct RunWorkflowCommand: AsyncParsableCommand {
           }
         }
         stepEvent(i, "succeeded")
-      } catch where ASCDryRun.blockedWrites > blockedBefore {
-        // In a dry run a step fails at its first stopped write; keep going so the
-        // run shows every step's writes. Later steps can still fail on what wasn't created.
+      } catch where ASCDryRunStop.from(error) != nil {
+        // In a dry run a step fails at its first stopped write; keep going so the run shows every
+        // step's writes. Only that stop counts: a real error in the step still stops the run.
+        // Later steps can still fail on what wasn't created.
         print(yellow("\nDry run: this step's writes were not sent. Continuing."))
         stepEvent(i, "dry-run")
       } catch {
@@ -190,6 +223,8 @@ struct RunWorkflowCommand: AsyncParsableCommand {
     }
     var command = self
     command.jsonEvents = false
+    // The file chosen already (the picker isn't shown again, on the event channel).
+    command.file = path
     try await EventOutput.$emitsEvents.withValue(true) {
       try await EventOutput.$inWorkflow.withValue(true) {
         try await XcodebuildOutput.$followedByProgram.withValue(true) {
@@ -273,4 +308,3 @@ private func selectWorkflowFile() throws -> String {
 
   return files[choice - 1]
 }
-

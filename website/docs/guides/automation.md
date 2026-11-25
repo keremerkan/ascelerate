@@ -107,7 +107,7 @@ ascelerate reviews list <bundle-id> --json | jq '[.[] | select(.response == null
 
 ## Exit codes
 
-Commands exit with a non-zero status on failure, making them safe to use in scripts with `set -e` or `&&` chaining. The `preflight` command specifically exits non-zero when any check fails, so you can gate submissions on it:
+Commands exit with a non-zero status on failure, making them safe to use in scripts with `set -e` or `&&` chaining. The `preflight` command specifically exits non-zero when any check fails, so you can gate submissions on it: That includes partial failures: a command that works through many items (profiles, certificates, territories, media files, screenshot devices, planned prices) exits non-zero when any of them failed, `media verify` when any item isn't complete, and `screenshot doctor` when a check fails, so a workflow stops there.
 
 ```bash
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>

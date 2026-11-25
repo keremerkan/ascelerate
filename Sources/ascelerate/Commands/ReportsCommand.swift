@@ -70,7 +70,8 @@ extension ReportsCommand {
         appleID = try await findApp(bundleID: bundleID, client: client).id
       }
 
-      print("Fetching \(formatState(freq)) \(reportType.rawValue) report for \(reportDate)…")
+      // Progress on stderr: stdout holds the report itself (--raw > file).
+      FileHandle.standardError.write(Data(("Fetching \(formatState(freq)) \(reportType.rawValue) report for \(reportDate)…" + "\n").utf8))
 
       let text: String
       do {
@@ -129,7 +130,8 @@ extension ReportsCommand {
 
       let client = try ClientFactory.makeClient()
 
-      print("Fetching \(reportType.rawValue) report for \(date), region \(region.uppercased())…")
+      // Progress on stderr: stdout holds the report itself (--raw > file).
+      FileHandle.standardError.write(Data(("Fetching \(reportType.rawValue) report for \(date), region \(region.uppercased())…" + "\n").utf8))
 
       let text: String
       do {

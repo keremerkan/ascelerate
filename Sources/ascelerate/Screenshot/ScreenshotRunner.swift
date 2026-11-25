@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 
 struct ScreenshotRunner: Sendable {
@@ -225,6 +226,8 @@ struct ScreenshotRunner: Sendable {
             },
             elapsed: Int(elapsed)))
         printSummary(results, elapsed: elapsed)
+        // A run with a failed device stops a workflow (its finished event came first).
+        if results.contains(where: { !$0.success }) { throw ExitCode.failure }
     }
 
     /// Runs the full per-device prep flow for every device concurrently: optional erase,

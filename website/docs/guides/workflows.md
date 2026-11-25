@@ -13,7 +13,7 @@ ascelerate run-workflow release.txt --yes   # skip all prompts (CI/CD)
 ascelerate run-workflow                     # interactively select from .workflow/.txt files
 ```
 
-A workflow file is a plain text file with one command per line (without the `ascelerate` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported. Quotes group an argument with spaces; inside them, `\"`, `\'` and `\\` stand for the character itself (`--body "the \"great\" one"`). Tabs separate arguments like spaces.
+A workflow file is a plain text file with one command per line (without the `ascelerate` prefix). Lines starting with `#` are comments, blank lines are ignored. Both `.workflow` and `.txt` extensions are supported. Quotes group an argument with spaces; inside them, `\"`, `\'` and `\\` stand for the character itself (`--body "the \"great\" one"`). Tabs separate arguments like spaces. Every step is parsed before the first one runs, so a step that doesn't parse stops the workflow before anything has happened.
 
 ## Example
 

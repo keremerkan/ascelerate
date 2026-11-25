@@ -107,7 +107,7 @@ ascelerate reviews list <bundle-id> --json | jq '[.[] | select(.response == null
 
 ## Çıkış kodları
 
-Komutlar başarısızlıkta sıfır olmayan çıkış kodu döndürür, bu sayede `set -e` veya `&&` zincirleme ile betiklerde güvenle kullanılabilirler. `preflight` komutu özellikle herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu döndürür, böylece incelemeye göndermeyi buna bağlayabilirsiniz:
+Komutlar başarısızlıkta sıfır olmayan çıkış kodu döndürür, bu sayede `set -e` veya `&&` zincirleme ile betiklerde güvenle kullanılabilirler. `preflight` komutu özellikle herhangi bir kontrol başarısız olduğunda sıfır olmayan çıkış kodu döndürür, böylece incelemeye göndermeyi buna bağlayabilirsiniz: Kısmi hatalar da buna dahildir: Birçok öğeyi işleyen bir komut (profiller, sertifikalar, ülkeler, medya dosyaları, ekran görüntüsü cihazları, planlanmış fiyatlar) bunlardan biri başarısız olursa, `media verify` tamamlanmamış bir öğe varsa, `screenshot doctor` da bir denetim başarısız olursa sıfırdan farklı bir durumla çıkar; böylece iş akışı orada durur.
 
 ```bash
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>

@@ -107,7 +107,7 @@ ascelerate reviews list <bundle-id> --json | jq '[.[] | select(.response == null
 
 ## Codes de sortie
 
-Les commandes se terminent avec un code de sortie non nul en cas d'échec, ce qui les rend sûres pour une utilisation dans des scripts avec `set -e` ou un chaînage `&&`. La commande `preflight` se termine spécifiquement avec un code non nul lorsqu'une vérification échoue, vous permettant de conditionner les soumissions :
+Les commandes se terminent avec un code de sortie non nul en cas d'échec, ce qui les rend sûres pour une utilisation dans des scripts avec `set -e` ou un chaînage `&&`. La commande `preflight` se termine spécifiquement avec un code non nul lorsqu'une vérification échoue, vous permettant de conditionner les soumissions : Cela vaut aussi pour les échecs partiels : une commande qui traite de nombreux éléments (profils, certificats, pays, fichiers multimédias, appareils de capture, prix planifiés) se termine avec un statut non nul si l'un d'eux a échoué, `media verify` si un élément n'est pas terminé et `screenshot doctor` si une vérification échoue, de sorte qu'un workflow s'arrête là.
 
 ```bash
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>

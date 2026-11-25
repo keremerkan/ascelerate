@@ -132,7 +132,11 @@ extension SubCommand {
       let current = try await Subscriptions.multiSeat(subscriptionID: sub.id, client: client)
 
       guard newEnabled != nil || newMarkets != nil else {
-        if jsonOption.json { return try printJSON(current) }
+        if jsonOption.json {
+          // An API resource's object carries its id (the subscription's).
+          struct Setting: Encodable { let id: String; let productID: String; let enabled: Bool; let markets: [String] }
+          return try printJSON(Setting(id: sub.id, productID: productID, enabled: current.enabled, markets: current.markets))
+        }
         print("Multiseat: \(current.enabled ? "On" : "Off")")
         print("Markets:   \(marketNames(current.markets))\(current.enabled ? "" : " (not offered while off)")")
         return
@@ -522,10 +526,25 @@ extension SubCommand.Pricing {
         cancelled()
         return
       }
+      // Each one tried; what was removed and what wasn't are both said.
+      var removed: [String] = []
+      var failed: [String] = []
       for price in planned {
-        try await Subscriptions.deletePrice(id: price.id, client: client)
+        do {
+          guard try await unlessDryRunStopped({ try await Subscriptions.deletePrice(id: price.id, client: client) }) != nil else { continue }
+          removed.append(price.territoryID)
+        } catch {
+          failed.append(price.territoryID)
+          FileHandle.standardError.write(Data("\(price.territoryID): \(describeError(error))\n".utf8))
+        }
       }
-      success("Removed", "\(planned.count) planned price\(planned.count == 1 ? "" : "s").")
+      if !removed.isEmpty {
+        success("Removed", "\(removed.count) planned price\(removed.count == 1 ? "" : "s") (\(removed.joined(separator: ", "))).")
+      }
+      if !failed.isEmpty {
+        print("Not removed: \(failed.joined(separator: ", ")); they're still planned.")
+        throw ExitCode.failure
+      }
     }
   }
 }

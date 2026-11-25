@@ -88,7 +88,9 @@ extension GameCenter {
         versions: .init(data: [.init(id: "${version}", _type: "gameCenterLeaderboardSetVersions")])),
       _type: "gameCenterLeaderboardSets"),
       included: [.init(id: "${version}", _type: "gameCenterLeaderboardSetVersions")]))).created.body.json.data
-    return try await leaderboardSet(id: created.id, client: client)
+    // The write went through: the read after it is retried rather than failing the command (a
+    // rerun would write again).
+    return try await withTransientRetry { try await leaderboardSet(id: created.id, client: client) }
   }
 
   public static func renameLeaderboardSet(id: String, referenceName: String, client: ASCClient) async throws {

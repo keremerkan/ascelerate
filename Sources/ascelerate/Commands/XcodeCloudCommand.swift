@@ -915,16 +915,23 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           guard !actions.isEmpty else { throw ValidationError("No action '\(action)' in build \(run).") }
         }
         var rows: [[String]] = []
+        var names: [String] = []
+        var shown = 0
         for a in actions {
           for log in try await XcodeCloud.logs(actionID: a.id, client: client) {
+            names.append(log.name)
             if let show {
               guard log.name == show else { continue }
               if actions.count > 1 { print(bold("\(a.name ?? "-") · \(log.name)")) }
               print(log.text)
+              shown += 1
             } else {
               rows.append([a.name ?? "-", log.name, "\(log.text.split(separator: "\n", omittingEmptySubsequences: false).count)"])
             }
           }
+        }
+        if let show, shown == 0 {
+          throw ValidationError("No log named '\(show)'." + (names.isEmpty ? " The run has no logs yet." : " Logs: \(Array(Swift.Set(names)).sorted().joined(separator: ", ")).") )
         }
         if show == nil {
           guard !rows.isEmpty else {

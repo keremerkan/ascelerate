@@ -13,7 +13,7 @@ ascelerate run-workflow release.txt --yes   # alle Abfragen überspringen (CI/CD
 ascelerate run-workflow                     # interaktiv aus .workflow/.txt-Dateien auswählen
 ```
 
-Eine Workflow-Datei ist eine einfache Textdatei mit einem Befehl pro Zeile (ohne das `ascelerate`-Präfix). Zeilen, die mit `#` beginnen, sind Kommentare, leere Zeilen werden ignoriert. Sowohl `.workflow`- als auch `.txt`-Erweiterungen werden unterstützt. Anführungszeichen fassen ein Argument mit Leerzeichen zusammen; darin stehen `\"`, `\'` und `\\` für das Zeichen selbst (`--body "the \"great\" one"`). Tabulatoren trennen Argumente wie Leerzeichen.
+Eine Workflow-Datei ist eine einfache Textdatei mit einem Befehl pro Zeile (ohne das `ascelerate`-Präfix). Zeilen, die mit `#` beginnen, sind Kommentare, leere Zeilen werden ignoriert. Sowohl `.workflow`- als auch `.txt`-Erweiterungen werden unterstützt. Anführungszeichen fassen ein Argument mit Leerzeichen zusammen; darin stehen `\"`, `\'` und `\\` für das Zeichen selbst (`--body "the \"great\" one"`). Tabulatoren trennen Argumente wie Leerzeichen. Jeder Schritt wird geprüft, bevor der erste läuft; ein Schritt, der sich nicht verarbeiten lässt, hält den Workflow also an, bevor etwas geschehen ist.
 
 ## Beispiel
 

@@ -112,7 +112,9 @@ extension GameCenter {
         versions: .init(data: [.init(id: "${version}", _type: "gameCenterAchievementVersions")])),
       _type: "gameCenterAchievements"),
       included: [.init(id: "${version}", _type: "gameCenterAchievementVersions")]))).created.body.json.data
-    return try await achievement(id: created.id, client: client)
+    // The write went through: the read after it is retried rather than failing the command (a
+    // rerun would write again).
+    return try await withTransientRetry { try await achievement(id: created.id, client: client) }
   }
 
   /// Changes an achievement; nil leaves a value as it is.

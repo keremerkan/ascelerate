@@ -13,7 +13,7 @@ ascelerate run-workflow release.txt --yes   # ignore toutes les invites (CI/CD)
 ascelerate run-workflow                     # sélection interactive parmi les fichiers .workflow/.txt
 ```
 
-Un fichier de workflow est un fichier texte brut avec une commande par ligne (sans le préfixe `ascelerate`). Les lignes commençant par `#` sont des commentaires, les lignes vides sont ignorées. Les extensions `.workflow` et `.txt` sont toutes deux prises en charge. Les guillemets regroupent un argument contenant des espaces ; à l'intérieur, `\"`, `\'` et `\\` représentent le caractère lui-même (`--body "the \"great\" one"`). Les tabulations séparent les arguments comme les espaces.
+Un fichier de workflow est un fichier texte brut avec une commande par ligne (sans le préfixe `ascelerate`). Les lignes commençant par `#` sont des commentaires, les lignes vides sont ignorées. Les extensions `.workflow` et `.txt` sont toutes deux prises en charge. Les guillemets regroupent un argument contenant des espaces ; à l'intérieur, `\"`, `\'` et `\\` représentent le caractère lui-même (`--body "the \"great\" one"`). Les tabulations séparent les arguments comme les espaces. Chaque étape est analysée avant l'exécution de la première : une étape qui ne s'analyse pas arrête le workflow avant que quoi que ce soit ne se produise.
 
 ## Exemple
 

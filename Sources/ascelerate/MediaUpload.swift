@@ -637,6 +637,25 @@ extension AppsCommand {
               + unfit.prefix(20).joined(separator: "\n") + (unfit.count > 20 ? "\n  … and \(unfit.count - 20) more" : ""))
         }
 
+        // Fetch all localizations for this version
+        let locsResponse = try await ascClient.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: appVersion.id)
+        ).ok.body.json
+        // Keyed lowercased so a local `pt-br/` folder still matches ASC's `pt-BR`.
+        let locByLocale = Dictionary(
+          locsResponse.data.compactMap { loc in
+            loc.attributes?.locale.map { ($0.lowercased(), loc) }
+          },
+          uniquingKeysWith: { first, _ in first }
+        )
+        // A folder for a language the version doesn't have is refused before anything is asked,
+        // as media remove does; it used to be skipped while the confirmation counted its files.
+        let missing = plan.locales.map(\.locale).filter { locByLocale[$0.lowercased()] == nil }
+        if !missing.isEmpty {
+          throw ValidationError(
+            "Version \(versionString) has no \(missing.map(localeName).joined(separator: ", ")). Add the language first ('apps localizations import' with a file that has it creates it) or take its folder out.")
+        }
+
         // Print confirmation summary
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Version: \(versionString)")
@@ -671,17 +690,6 @@ extension AppsCommand {
         }
         print()
 
-        // Fetch all localizations for this version
-        let locsResponse = try await ascClient.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: appVersion.id)
-        ).ok.body.json
-        // Keyed lowercased so a local `pt-br/` folder still matches ASC's `pt-BR`.
-        let locByLocale = Dictionary(
-          locsResponse.data.compactMap { loc in
-            loc.attributes?.locale.map { ($0.lowercased(), loc) }
-          },
-          uniquingKeysWith: { first, _ in first }
-        )
 
         struct UploadResult {
           let locale: String
@@ -1044,7 +1052,10 @@ extension AppsCommand {
         // Final summary
         print()
         let total = screenshotCount + previewCount
-        if total == 0 {
+        if total == 0 && failureCount > 0 {
+          print("Every one of the \(failureCount) file\(failureCount == 1 ? "" : "s") failed to download.")
+          throw ExitCode.failure
+        } else if total == 0 {
           print("No media found for this version.")
         } else if failureCount == 0 {
           print(
@@ -1053,6 +1064,7 @@ extension AppsCommand {
         } else {
           print(
             "Done. \(total) succeeded, \(failureCount) failed. Output: \(outputFolder)")
+          throw ExitCode.failure
         }
       }
     }
@@ -1147,12 +1159,13 @@ extension AppsCommand {
         if pendingPlacements > 0 {
           print("\(pendingPlacements) asset library item\(pendingPlacements == 1 ? " is" : "s are") still processing; check again later, or replace \(pendingPlacements == 1 ? "it" : "them") with `media upload` if \(pendingPlacements == 1 ? "it stays" : "they stay") stuck.")
         }
-        guard stuck > pendingPlacements else { return }
+        // Exit 0 only when everything is complete, so a script can gate on it.
+        guard stuck > pendingPlacements else { throw ExitCode.failure }
 
         // Without --folder, just show status
         guard let plan else {
-          print("Use --folder to provide the media folder and retry stuck uploads.")
-          return
+          print("Pass the media folder (ascelerate apps media verify <bundle-id> <folder>) to retry stuck uploads.")
+          throw ExitCode.failure
         }
 
         // Build local file index from the folder
@@ -1175,7 +1188,7 @@ extension AppsCommand {
 
         if matchedRetries.isEmpty {
           print("No matching local files found for stuck items.")
-          return
+          throw ExitCode.failure
         }
 
         if unmatchedCount > 0 {
@@ -1270,6 +1283,7 @@ extension AppsCommand {
         if failureCount > 0 {
           print("\(successCount) retried successfully, \(failureCount) failed.")
         }
+        if failureCount > 0 || newStuck > 0 { throw ExitCode.failure }
       }
     }
 

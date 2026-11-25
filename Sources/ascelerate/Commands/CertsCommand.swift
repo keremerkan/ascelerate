@@ -400,6 +400,7 @@ struct CertsCommand: AsyncParsableCommand {
 
       print()
       print("Done. \(succeeded) revoked, \(failed) failed.")
+      if failed > 0 { throw ExitCode.failure }
     }
   }
 }

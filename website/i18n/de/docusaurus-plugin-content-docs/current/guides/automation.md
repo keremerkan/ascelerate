@@ -107,7 +107,7 @@ ascelerate reviews list <bundle-id> --json | jq '[.[] | select(.response == null
 
 ## Exit-Codes
 
-Befehle beenden sich bei Fehlern mit einem Exit-Code ungleich Null, sodass sie sicher in Skripten mit `set -e` oder `&&`-Verkettung verwendet werden können. Der `preflight`-Befehl gibt speziell einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt, sodass Sie Einreichungen davon abhängig machen können:
+Befehle beenden sich bei Fehlern mit einem Exit-Code ungleich Null, sodass sie sicher in Skripten mit `set -e` oder `&&`-Verkettung verwendet werden können. Der `preflight`-Befehl gibt speziell einen Exit-Code ungleich Null zurück, wenn eine Prüfung fehlschlägt, sodass Sie Einreichungen davon abhängig machen können: Das gilt auch für Teilfehler: Ein Befehl, der viele Elemente abarbeitet (Profile, Zertifikate, Länder, Mediendateien, Screenshot-Geräte, geplante Preise), endet mit einem Status ungleich null, wenn eines davon fehlschlug, `media verify`, wenn ein Element nicht fertig ist, und `screenshot doctor`, wenn eine Prüfung fehlschlägt; ein Workflow hält dort an.
 
 ```bash
 ascelerate apps review preflight <bundle-id> && ascelerate apps review submit <bundle-id>

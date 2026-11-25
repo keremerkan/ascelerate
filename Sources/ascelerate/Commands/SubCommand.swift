@@ -138,6 +138,7 @@ struct SubCommand: AsyncParsableCommand {
     case unchanged // new == current
     case increase  // new > current
     case decrease  // new < current
+    case mixed     // higher for some seat counts, lower for others (a price with volume tiers)
 
     var label: String {
       switch self {
@@ -145,6 +146,19 @@ struct SubCommand: AsyncParsableCommand {
       case .unchanged: return "unchanged"
       case .increase: return "increase"
       case .decrease: return "decrease"
+      case .mixed: return "higher for some seat counts, lower for others"
+      }
+    }
+
+    /// Apple's price change preview result (`Subscriptions.previewPriceChanges`); nil for one it
+    /// doesn't name.
+    init?(changeType: String) {
+      switch changeType {
+      case "INCREASE_PRESERVABLE": self = .increase
+      case "DECREASE_NOT_PRESERVABLE": self = .decrease
+      case "MIXED_NOT_PRESERVABLE": self = .mixed
+      case "NO_CHANGE": self = .unchanged
+      default: return nil
       }
     }
   }
@@ -348,6 +362,46 @@ struct SubCommand: AsyncParsableCommand {
     }
   }
 
+  /// The proposed changes with Apple's own comparison for every territory that has a price: it
+  /// compares at every seat count, so a price with volume tiers that the new price drops (or
+  /// changes) counts too, which the single-seat prices alone don't show. Territories without a
+  /// price stay new.
+  static func previewedPriceChanges(
+    _ entries: [(territoryID: String, pricePointID: String, newPrice: String?)],
+    currentByTerritory: [String: String], subID: String, startDate: String?, client: ASCClient
+  ) async throws -> [PriceChangeTarget] {
+    let targets = categorizePriceChanges(entries, currentByTerritory: currentByTerritory)
+    let priced = targets.filter { $0.direction != .new }
+    guard !priced.isEmpty else { return targets }
+    let changes = try await Subscriptions.previewPriceChanges(
+      subscriptionID: subID,
+      prices: priced.map { .init(territoryID: $0.territoryID, pricePointID: $0.pricePointID, startDate: startDate) },
+      client: client)
+    return targets.map { target in
+      guard target.direction != .new, let direction = changes[target.territoryID].flatMap(PriceDirection.init(changeType:)) else {
+        return target
+      }
+      return PriceChangeTarget(
+        territoryID: target.territoryID, pricePointID: target.pricePointID, currentPrice: target.currentPrice,
+        newPrice: target.newPrice, direction: direction)
+    }
+  }
+
+  /// The territories whose current price has volume tiers, which a price set without tiers ends.
+  static func territoriesWithVolumeTiers(subID: String, client: ASCClient) async throws -> Swift.Set<String> {
+    async let pricesTask = Subscriptions.prices(subscriptionID: subID, client: client)
+    async let tiersTask = Subscriptions.volumeTiers(subscriptionID: subID, client: client)
+    let (prices, tiers) = try await (pricesTask, tiersTask)
+    return Swift.Set(prices.current.values.filter { !(tiers[$0.id] ?? []).isEmpty }.map(\.territoryID))
+  }
+
+  /// A warning line for prices that end volume tiers, or nil.
+  static func volumeTiersEndingNote(_ territories: [String]) -> String? {
+    guard !territories.isEmpty else { return nil }
+    let list = territories.sorted().prefix(8).joined(separator: ", ") + (territories.count > 8 ? ", …" : "")
+    return yellow("⚠ Volume tiers end") + " in \(list): the current price there has per-seat tiers ('sub pricing volume') and this one has none. Use 'sub pricing volume-set' to keep them."
+  }
+
   /// Shared gate-confirm-apply driver for multi-territory price changes
   /// ('sub pricing set --equalize-all-territories' and 'sub pricing import'):
   /// enforces the increase/decrease safety flags, prints the change summary,
@@ -360,15 +414,17 @@ struct SubCommand: AsyncParsableCommand {
     preserveCurrent: Bool?,
     confirmDecrease: Bool,
     startDate: String?,
+    tieredTerritories: Swift.Set<String> = [],
     client: ASCClient
   ) async throws {
     let increases = targets.filter { $0.direction == .increase }
     let decreases = targets.filter { $0.direction == .decrease }
+    let mixed = targets.filter { $0.direction == .mixed }
     let news = targets.filter { $0.direction == .new }
     let unchanged = targets.filter { $0.direction == .unchanged }
 
     if !increases.isEmpty && preserveCurrent == nil {
-      var msg = "\(increases.count) territor\(increases.count == 1 ? "y has" : "ies have") an existing price lower than the new price (i.e. price increases).\n"
+      var msg = "\(increases.count) territor\(increases.count == 1 ? "y gets" : "ies get") a price increase for existing subscribers (Apple's comparison at every seat count).\n"
       msg += "You must explicitly choose how to handle existing subscribers across all increases:\n"
       msg += "  --preserve-current        Grandfather existing subscribers at their old price\n"
       msg += "  --no-preserve-current     Push the new price to existing subscribers (after Apple's notification period)\n"
@@ -389,6 +445,11 @@ struct SubCommand: AsyncParsableCommand {
       throw ValidationError(msg)
     }
 
+    if !mixed.isEmpty && autoConfirm && !confirmDecrease {
+      throw ValidationError(
+        "\(mixed.count) territor\(mixed.count == 1 ? "y's" : "ies'") existing subscribers would pay more for some seat counts and less for others, from their next renewal (\(mixed.prefix(5).map(\.territoryID).joined(separator: ", "))). Plain --yes is not enough: add --confirm-decrease.")
+    }
+
     let toApply = targets.filter { $0.direction != .unchanged }
     guard !toApply.isEmpty else {
       print()
@@ -402,6 +463,9 @@ struct SubCommand: AsyncParsableCommand {
     print("    New:             \(news.count)")
     print("    Increases:       \(increases.count)")
     print("    Decreases:       \(decreases.count)")
+    if !mixed.isEmpty {
+      print("    Mixed:           \(mixed.count) (higher for some seat counts, lower for others)")
+    }
     print("    Unchanged:       \(unchanged.count) (skipped)")
     if let startDate {
       print("  Start Date:        \(startDate)")
@@ -415,6 +479,10 @@ struct SubCommand: AsyncParsableCommand {
       print()
       print(yellow("⚠ \(decreases.count) territor\(decreases.count == 1 ? "y" : "ies") will see a price decrease") + " — existing subscribers in those territories will move to the new lower price.")
     }
+    if let note = volumeTiersEndingNote(toApply.map(\.territoryID).filter(tieredTerritories.contains)) {
+      print()
+      print(note)
+    }
     print()
     print(yellow("Note:") + " This will issue \(toApply.count) API call\(toApply.count == 1 ? "" : "s") (one per territory that needs updating).")
     print()
@@ -426,12 +494,17 @@ struct SubCommand: AsyncParsableCommand {
     print()
 
     var succeeded = 0
+    var notSent = 0
     var failures: [(target: PriceChangeTarget, isTransient: Bool)] = []
 
     func post(_ target: PriceChangeTarget) async throws {
-      try await postSubscriptionPrice(
-        subID: subID, territoryID: target.territoryID, pricePointID: target.pricePointID,
-        startDate: startDate, preserveCurrent: preserveCurrent, client: client)
+      // Only a raise can keep existing subscribers on their price.
+      let sent: Void? = try await unlessDryRunStopped {
+        try await postSubscriptionPrice(
+          subID: subID, territoryID: target.territoryID, pricePointID: target.pricePointID,
+          startDate: startDate, preserveCurrent: target.direction == .increase ? preserveCurrent : nil, client: client)
+      }
+      if sent == nil { notSent += 1 }
     }
 
     for target in toApply {
@@ -463,6 +536,11 @@ struct SubCommand: AsyncParsableCommand {
       }
     }
 
+    if notSent > 0 {
+      print()
+      print("Dry run complete. \(notSent) territor\(notSent == 1 ? "y" : "ies") would be updated, \(unchanged.count) unchanged (skipped).")
+      return
+    }
     print()
     print("Done. \(succeeded) territor\(succeeded == 1 ? "y" : "ies") updated, \(failures.count) failed, \(unchanged.count) unchanged (skipped).")
     if !failures.isEmpty {
@@ -1712,8 +1790,12 @@ struct SubCommand: AsyncParsableCommand {
         // Fetch existing price for this territory (if any) and compare against the target.
         let currentPriceStr = try await SubCommand.fetchCurrentPrice(
           subID: sub.id, territoryID: territoryID, client: client)
-        let direction = SubCommand.priceDirection(
-          current: currentPriceStr, target: point.attributes?.customerPrice)
+        let direction = try await SubCommand.previewedPriceChanges(
+          [(territoryID, point.id, point.attributes?.customerPrice)],
+          currentByTerritory: currentPriceStr.map { [territoryID: $0] } ?? [:],
+          subID: sub.id, startDate: startDate, client: client
+        ).first?.direction ?? .new
+        let tiered = try await SubCommand.territoriesWithVolumeTiers(subID: sub.id, client: client).contains(territoryID)
 
         switch direction {
         case .unchanged:
@@ -1722,15 +1804,24 @@ struct SubCommand: AsyncParsableCommand {
           return
         case .increase:
           if preserveCurrent == nil {
-            throw ValidationError(SubCommand.priceIncreaseGuidance(
+            var guidance = SubCommand.priceIncreaseGuidance(
               from: currentPriceStr, to: point.attributes?.customerPrice,
-              currency: currency, territoryID: territoryID))
+              currency: currency, territoryID: territoryID)
+            if tiered {
+              guidance += "\n(The current price has volume tiers and this one has none, so subscribers with several seats pay more.)"
+            }
+            throw ValidationError(guidance)
           }
         case .decrease:
           if autoConfirm && !confirmDecrease {
             throw ValidationError(SubCommand.priceDecreaseGuidance(
               from: currentPriceStr, to: point.attributes?.customerPrice,
               currency: currency, territoryID: territoryID))
+          }
+        case .mixed:
+          if autoConfirm && !confirmDecrease {
+            throw ValidationError(
+              "Existing subscribers in \(territoryID) would pay more for some seat counts and less for others (the current price has volume tiers), from their next renewal.\nPlain --yes is not enough: add --confirm-decrease.")
           }
         case .new:
           break
@@ -1755,6 +1846,13 @@ struct SubCommand: AsyncParsableCommand {
         if direction == .decrease {
           print()
           print(yellow("⚠ Price decrease:") + " all existing subscribers in \(territoryID) will move to the new lower price.")
+        } else if direction == .mixed {
+          print()
+          print(yellow("⚠ Mixed change:") + " existing subscribers in \(territoryID) pay more for some seat counts and less for others, from their next renewal.")
+        }
+        if tiered, let note = SubCommand.volumeTiersEndingNote([territoryID]) {
+          print()
+          print(note)
         }
         print()
 
@@ -1765,7 +1863,7 @@ struct SubCommand: AsyncParsableCommand {
 
         try await SubCommand.postSubscriptionPrice(
           subID: sub.id, territoryID: territoryID, pricePointID: point.id,
-          startDate: startDate, preserveCurrent: preserveCurrent, client: client)
+          startDate: startDate, preserveCurrent: direction == .increase ? preserveCurrent : nil, client: client)
 
         print()
         success("Updated", "price for '\(sub.name)' in \(territoryID).")
@@ -1789,8 +1887,9 @@ struct SubCommand: AsyncParsableCommand {
           guard let territoryID = point.relationships?.territory?.data?.id else { return nil }
           return (territoryID, point.id, point.attributes?.customerPrice)
         }
-        let targets = SubCommand.categorizePriceChanges(
-          entries, currentByTerritory: currentByTerritory)
+        let targets = try await SubCommand.previewedPriceChanges(
+          entries, currentByTerritory: currentByTerritory, subID: sub.id, startDate: startDate, client: client)
+        let tiered = try await SubCommand.territoriesWithVolumeTiers(subID: sub.id, client: client)
 
         try await SubCommand.gateAndApplyPriceChanges(
           targets,
@@ -1804,6 +1903,7 @@ struct SubCommand: AsyncParsableCommand {
           preserveCurrent: preserveCurrent,
           confirmDecrease: confirmDecrease,
           startDate: startDate,
+          tieredTerritories: tiered,
           client: client
         )
       }
@@ -1910,8 +2010,9 @@ struct SubCommand: AsyncParsableCommand {
 
         let currentByTerritory = try await SubCommand.fetchCurrentPricesByTerritory(
           subID: sub.id, client: client)
-        let targets = SubCommand.categorizePriceChanges(
-          entries, currentByTerritory: currentByTerritory)
+        let targets = try await SubCommand.previewedPriceChanges(
+          entries, currentByTerritory: currentByTerritory, subID: sub.id, startDate: startDate, client: client)
+        let tiered = try await SubCommand.territoriesWithVolumeTiers(subID: sub.id, client: client)
 
         try await SubCommand.gateAndApplyPriceChanges(
           targets,
@@ -1924,6 +2025,7 @@ struct SubCommand: AsyncParsableCommand {
           preserveCurrent: preserveCurrent,
           confirmDecrease: confirmDecrease,
           startDate: startDate,
+          tieredTerritories: tiered,
           client: client
         )
       }

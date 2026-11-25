@@ -80,7 +80,7 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 ### Price changes and existing subscribers
 
-Apple treats price changes differently for existing subscribers depending on the direction. `sub pricing set` fetches the current price for each affected territory, classifies the change, and enforces the right behavior:
+Apple treats price changes differently for existing subscribers depending on the direction. `sub pricing set` has Apple compare the new price with the current one in each affected territory, at every seat count (so volume tiers count too), and enforces the right behavior:
 
 - **Decrease**: existing subscribers automatically move to the lower price. Interactive runs prompt with a warning. In `--yes` mode, you must add `--confirm-decrease` to acknowledge the revenue impact — plain `--yes` is not enough.
 - **Increase**: you must explicitly choose how to handle existing subscribers. The command errors unless one of the following is set:
@@ -88,6 +88,9 @@ Apple treats price changes differently for existing subscribers depending on the
   - `--no-preserve-current` — push the new price to existing subscribers (after Apple's notification period)
 - **New territory** (no existing price): no existing subscribers; flags optional.
 - **Unchanged**: skipped silently.
+- **Mixed** (a current price with volume tiers): higher for some seat counts and lower for others. Existing subscribers move at their next renewal, as for a decrease: in `--yes` mode, add `--confirm-decrease`.
+
+A price set with `sub pricing set` or `import` has no volume tiers, so it ends the current price's tiers in that territory; the summary warns. To keep them, use [`sub pricing volume-set`](#volume-pricing).
 
 The same rules apply aggregated across `--equalize-all-territories`. If any territory in the fan-out is an increase, the preserve flag is required for all of them. If any is a decrease in `--yes` mode, `--confirm-decrease` is required.
 

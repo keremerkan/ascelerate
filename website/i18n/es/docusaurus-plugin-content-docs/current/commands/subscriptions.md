@@ -80,7 +80,7 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 ### Cambios de precio y suscriptores actuales
 
-Apple trata de forma distinta los cambios de precio para los suscriptores actuales según su sentido. `sub pricing set` obtiene el precio actual de cada país o región afectado, clasifica el cambio y aplica el comportamiento adecuado:
+Apple trata de forma distinta los cambios de precio para los suscriptores actuales según su sentido. `sub pricing set` pide a Apple que compare el precio nuevo con el actual en cada país o región afectado, para cada número de plazas (así cuentan también los tramos por volumen), y aplica el comportamiento adecuado:
 
 - **Bajada**: los suscriptores actuales pasan automáticamente al precio más bajo. En modo interactivo se muestra una advertencia y se pide confirmación. En modo `--yes` debe añadir `--confirm-decrease` para confirmar el impacto en los ingresos; `--yes` por sí solo no basta.
 - **Subida**: debe elegir explícitamente qué ocurre con los suscriptores actuales. El comando falla si no se indica una de estas opciones:
@@ -88,6 +88,9 @@ Apple trata de forma distinta los cambios de precio para los suscriptores actual
   - `--no-preserve-current`: aplica el nuevo precio a los suscriptores actuales (tras el periodo de notificación de Apple)
 - **País o región nuevo** (sin precio previo): no hay suscriptores actuales, así que no hace falta ninguna de estas opciones.
 - **Sin cambios**: se omite sin aviso.
+- **Mixto** (precio actual con tramos por volumen): más alto para algunos números de plazas y más bajo para otros. Los suscriptores actuales pasan al precio nuevo en su próxima renovación, como en una bajada; en modo `--yes`, añada `--confirm-decrease`.
+
+Un precio definido con `sub pricing set` o `import` no tiene tramos por volumen, así que termina los tramos del precio actual en ese país o región; el resumen lo advierte. Para conservarlos, use [`sub pricing volume-set`](#volume-pricing).
 
 Las mismas reglas se aplican en conjunto con `--equalize-all-territories`. Si el cambio supone una subida en alguno de los países o regiones, la opción sobre el precio actual es obligatoria para todos ellos. Si alguno supone una bajada en modo `--yes`, `--confirm-decrease` es obligatoria.
 

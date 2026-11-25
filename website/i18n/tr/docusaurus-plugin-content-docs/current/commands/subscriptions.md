@@ -80,7 +80,7 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 ### Fiyat değişiklikleri ve mevcut aboneler
 
-Apple, fiyat değişikliklerini değişikliğin yönüne göre mevcut aboneler için farklı şekilde uygular. `sub pricing set` komutu her etkilenen bölgenin mevcut fiyatını alır, değişikliği sınıflandırır ve doğru davranışı uygular:
+Apple, fiyat değişikliklerini değişikliğin yönüne göre mevcut aboneler için farklı şekilde uygular. `sub pricing set` komutu etkilenen her bölgede yeni fiyatı mevcut fiyatla Apple'a karşılaştırtır (her koltuk sayısında, böylece hacim kademeleri de hesaba katılır) ve doğru davranışı uygular:
 
 - **Düşürme**: mevcut aboneler otomatik olarak düşük fiyata geçer. Etkileşimli çalıştırmalarda uyarı ile birlikte sorulur. `--yes` modunda, gelir etkisini onaylamak için `--confirm-decrease` eklemeniz gerekir; sadece `--yes` yeterli değildir.
 - **Artış**: mevcut abonelerle nasıl başa çıkılacağını açıkça seçmeniz gerekir. Aşağıdakilerden biri ayarlanmadığı sürece komut hata verir:
@@ -88,6 +88,9 @@ Apple, fiyat değişikliklerini değişikliğin yönüne göre mevcut aboneler i
   - `--no-preserve-current`: Apple'ın bildirim süresinden sonra yeni fiyatı mevcut abonelere uygular
 - **Yeni bölge** (mevcut fiyat yok): değerlendirilecek mevcut abone yok; bayraklar isteğe bağlıdır.
 - **Değişiklik yok**: sessizce atlanır.
+- **Karışık** (mevcut fiyatta hacim kademeleri varsa): bazı koltuk sayılarında daha yüksek, bazılarında daha düşük. Mevcut aboneler düşürmede olduğu gibi bir sonraki yenilemede yeni fiyata geçer; `--yes` modunda `--confirm-decrease` ekleyin.
+
+`sub pricing set` ya da `import` ile belirlenen bir fiyatta hacim kademesi olmaz; bu yüzden o bölgedeki mevcut fiyatın kademeleri sona erer ve özet bu konuda uyarır. Kademeleri korumak için [`sub pricing volume-set`](#volume-pricing) kullanın.
 
 `--equalize-all-territories` için aynı kurallar toplu olarak uygulanır. Yayılan bölgelerden herhangi biri artış ise, korunma bayrağı hepsi için gereklidir. Herhangi biri `--yes` modunda düşüş ise, `--confirm-decrease` gereklidir.
 

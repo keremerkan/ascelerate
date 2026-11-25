@@ -257,7 +257,8 @@ ascelerate sub pricing show <app> <product-id>
 ascelerate sub pricing tiers <app> <product-id> --territory USA
 ascelerate sub pricing set <app> <product-id> --price 4.99 [--territory USA] [--equalize-all-territories]
   [--preserve-current | --no-preserve-current]   # required on price increases
-  [--confirm-decrease]                           # required on decreases in --yes mode
+  [--confirm-decrease]                           # required on decreases (and mixed changes) in --yes mode
+  # Apple's price change preview classifies each territory, at every seat count: a plain price ends a current price's volume tiers (warned)
 ascelerate sub pricing export <app> <product-id> [--output prices.json]
 ascelerate sub pricing import <app> <product-id> [--file prices.json] [--snap]   # copy prices from another product/app; same safety flags as set; --snap as iap
 ascelerate sub pricing cancel <app> <product-id> --territories USA,TUR|all [--start-date YYYY-MM-DD]   # remove planned prices (not started)

@@ -80,7 +80,7 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 ### Preisänderungen und bestehende Abonnenten
 
-Apple behandelt Preisänderungen je nach Richtung unterschiedlich für bestehende Abonnenten. `sub pricing set` ruft den aktuellen Preis für jede betroffene Region ab, klassifiziert die Änderung und erzwingt das richtige Verhalten:
+Apple behandelt Preisänderungen je nach Richtung unterschiedlich für bestehende Abonnenten. `sub pricing set` lässt Apple in jeder betroffenen Region den neuen Preis mit dem aktuellen vergleichen, bei jeder Platzzahl (Mengenstaffeln zählen also mit), und erzwingt das richtige Verhalten:
 
 - **Senkung**: bestehende Abonnenten erhalten automatisch den niedrigeren Preis. Interaktive Ausführungen geben eine Warnung aus und fragen nach. Im `--yes`-Modus müssen Sie `--confirm-decrease` hinzufügen, um die Auswirkung auf den Umsatz zu bestätigen — `--yes` allein reicht nicht aus.
 - **Erhöhung**: Sie müssen ausdrücklich entscheiden, wie mit bestehenden Abonnenten umgegangen werden soll. Der Befehl gibt einen Fehler aus, sofern keine der folgenden Optionen gesetzt ist:
@@ -88,6 +88,9 @@ Apple behandelt Preisänderungen je nach Richtung unterschiedlich für bestehend
   - `--no-preserve-current` — bestehende Abonnenten werden nach Apples Benachrichtigungsfrist auf den neuen Preis umgestellt
 - **Neue Region** (kein bestehender Preis): keine bestehenden Abonnenten zu berücksichtigen; Flags optional.
 - **Unverändert**: wird stillschweigend übersprungen.
+- **Gemischt** (aktueller Preis mit Mengenstaffeln): bei manchen Platzzahlen höher, bei anderen niedriger. Bestehende Abonnenten wechseln wie bei einer Senkung bei ihrer nächsten Verlängerung; im `--yes`-Modus fügen Sie `--confirm-decrease` hinzu.
+
+Ein mit `sub pricing set` oder `import` festgelegter Preis hat keine Mengenstaffeln und beendet daher die Staffeln des aktuellen Preises in dieser Region; die Zusammenfassung weist darauf hin. Um sie zu behalten, verwenden Sie [`sub pricing volume-set`](#volume-pricing).
 
 Die gleichen Regeln gelten zusammengefasst für `--equalize-all-territories`. Wenn eine Region in der Verteilung eine Erhöhung darstellt, ist das Beibehaltungs-Flag für alle erforderlich. Wenn eine im `--yes`-Modus eine Senkung ist, ist `--confirm-decrease` erforderlich.
 

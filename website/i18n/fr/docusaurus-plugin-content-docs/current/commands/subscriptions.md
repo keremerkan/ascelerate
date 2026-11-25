@@ -80,7 +80,7 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 --equalize-all-
 
 ### Changements de prix et abonnés existants
 
-Apple traite les changements de prix différemment pour les abonnés existants selon le sens du changement. `sub pricing set` récupère le prix actuel pour chaque région concernée, classe le changement et applique le bon comportement :
+Apple traite les changements de prix différemment pour les abonnés existants selon le sens du changement. `sub pricing set` fait comparer par Apple le nouveau prix au prix actuel dans chaque région concernée, pour chaque nombre de places (les paliers de volume comptent donc aussi), et applique le bon comportement :
 
 - **Baisse** : les abonnés existants passent automatiquement au prix inférieur. Les exécutions interactives demandent confirmation avec un avertissement. En mode `--yes`, vous devez ajouter `--confirm-decrease` pour reconnaître l'impact sur les revenus — `--yes` seul ne suffit pas.
 - **Hausse** : vous devez choisir explicitement comment gérer les abonnés existants. La commande échoue à moins que l'une des options suivantes ne soit définie :
@@ -88,6 +88,9 @@ Apple traite les changements de prix différemment pour les abonnés existants s
   - `--no-preserve-current` — applique le nouveau prix aux abonnés existants après la période de notification d'Apple
 - **Nouvelle région** (aucun prix existant) : pas d'abonnés existants à considérer ; les drapeaux sont facultatifs.
 - **Inchangé** : ignoré silencieusement.
+- **Mixte** (prix actuel avec paliers de volume) : plus élevé pour certains nombres de places et plus bas pour d'autres. Les abonnés existants passent au nouveau prix à leur prochain renouvellement, comme pour une baisse ; en mode `--yes`, ajoutez `--confirm-decrease`.
+
+Un prix défini avec `sub pricing set` ou `import` n'a pas de paliers de volume : il met donc fin aux paliers du prix actuel dans cette région, ce que le récapitulatif signale. Pour les garder, utilisez [`sub pricing volume-set`](#volume-pricing).
 
 Les mêmes règles s'appliquent de manière agrégée pour `--equalize-all-territories`. Si une région de la diffusion est une hausse, le drapeau de préservation est requis pour toutes. Si l'une est une baisse en mode `--yes`, `--confirm-decrease` est requis.
 

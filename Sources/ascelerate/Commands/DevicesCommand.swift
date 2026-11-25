@@ -215,7 +215,9 @@ struct DevicesCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
 
       let device = if let nameOrUDID {
-        try await Devices.find(nameOrUDID: nameOrUDID, client: client)
+        try await findForWrite(nameOrUDID, "device", describe: { "\($0.name) (\($0.udid))" }) { exact in
+          try await Devices.find(nameOrUDID: nameOrUDID, exact: exact, client: client)
+        }
       } else {
         try await promptDevice(client: client)
       }

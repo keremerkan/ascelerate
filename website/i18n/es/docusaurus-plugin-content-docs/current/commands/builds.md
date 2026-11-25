@@ -136,4 +136,6 @@ ascelerate apps build detach <bundle-id>
 
 Si la compilación más reciente aún se está procesando, `build attach-latest` pregunta si desea esperar. Con `--yes`, espera automáticamente.
 
+`build attach` no elige una compilación con `--yes`: la más reciente puede estar aún en proceso, caducada o no válida. Use `build attach-latest`, que lo comprueba.
+
 La búsqueda de compilaciones tiene en cuenta la plataforma: en las apps de compra universal, las compilaciones de iOS y macOS pueden compartir número de compilación, así que los comandos de asociación solo consideran las compilaciones de la misma plataforma que la versión de destino.

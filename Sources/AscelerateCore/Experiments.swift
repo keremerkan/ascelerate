@@ -176,10 +176,25 @@ public enum Experiments {
     }
   }
 
-  /// Deletes a treatment, after its placements (`AssetLibrary.clearPlacements`).
+  /// Deletes a treatment, after its placements (`AssetLibrary.clearPlacements`). Checked first: its
+  /// test must be editable.
   public static func deleteTreatment(id: String, client: ASCClient) async throws {
+    try await checkEditable(treatmentID: id, removing: .treatment, client: client)
     try await clearPlacements(treatmentID: id, client: client)
     _ = try await client.appStoreVersionExperimentTreatmentsDeleteInstance(path: .init(id: id)).noContent
+  }
+
+  /// Refuses a change to a treatment whose test can't be edited any more (submitted, running,
+  /// stopped), before anything is removed.
+  private static func checkEditable(
+    treatmentID: String, removing: LanguageDeleteError.Removing, client: ASCClient
+  ) async throws {
+    let treatment = try await client.appStoreVersionExperimentTreatmentsGetInstance(
+      path: .init(id: treatmentID), query: .init(include: [.appStoreVersionExperimentV2])
+    ).ok.body.json.data
+    guard let experimentID = treatment.relationships?.appStoreVersionExperimentV2?.data?.id else { return }
+    let state = try await get(id: experimentID, client: client).state ?? ""
+    guard ["PREPARE_FOR_SUBMISSION", "REJECTED"].contains(state) else { throw LanguageDeleteError.notEditable(removing: removing, owner: .productPageTest, state: state) }
   }
 
   private static func clearPlacements(treatmentID: String, client: ASCClient) async throws {
@@ -213,6 +228,12 @@ public enum Experiments {
   /// Removes a language from a treatment, after its placements (`AssetLibrary.clearPlacements`);
   /// that language then shows the original page.
   public static func deleteLocalization(id: String, client: ASCClient) async throws {
+    let localization = try await client.appStoreVersionExperimentTreatmentLocalizationsGetInstance(
+      path: .init(id: id), query: .init(include: [.appStoreVersionExperimentTreatment])
+    ).ok.body.json.data
+    if let treatmentID = localization.relationships?.appStoreVersionExperimentTreatment?.data?.id {
+      try await checkEditable(treatmentID: treatmentID, removing: .language, client: client)
+    }
     try await AssetLibrary.clearPlacements(on: .treatmentLocalization(id), client: client)
     _ = try await client.appStoreVersionExperimentTreatmentLocalizationsDeleteInstance(path: .init(id: id)).noContent
   }

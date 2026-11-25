@@ -31,6 +31,12 @@ public enum MediaDownload {
     public let source: Result<URL, DownloadError>
   }
 
+  /// A download's destination is a folder, which a download never replaces.
+  public struct FolderInTheWay: LocalizedError, Sendable {
+    public let path: String
+    public var errorDescription: String? { "\(path) is a folder; nothing was saved over it." }
+  }
+
   public enum DownloadError: LocalizedError, Sendable {
     case invalidURL(String)
     case noURL(String)
@@ -98,7 +104,7 @@ public enum MediaDownload {
       let skipped = slot.isSingle ? placements.count - images.count : 0
       // Names that are unique and already sort into display order are kept, so the folder
       // round-trips through upload and verify; otherwise each gets its position as a prefix.
-      let names = images.map { ($0.attributes?.common.fileName ?? "\($0.id).png").replacingOccurrences(of: "/", with: "_") }
+      let names = images.map { safeFileName($0.attributes?.common.fileName, fallback: "\($0.id).png") }
       let keepNames = Set(names).count == names.count && names == names.sorted()
       let files = images.enumerated().map { i, image in
         let asset = image.attributes?.common.imageAsset
@@ -119,7 +125,7 @@ public enum MediaDownload {
       let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
       guard !previews.isEmpty else { continue }
       let files = previews.enumerated().map { i, preview in
-        let originalName = (preview.attributes?.fileName ?? "\(preview.id).mp4").replacingOccurrences(of: "/", with: "_")
+        let originalName = safeFileName(preview.attributes?.fileName, fallback: "\(preview.id).mp4")
         let source: Result<URL, DownloadError> =
           if let string = preview.attributes?.videoUrl {
             URL(string: string).map { .success($0) } ?? .failure(.invalidURL(string))
@@ -134,7 +140,25 @@ public enum MediaDownload {
     return sets
   }
 
-  /// Downloads a file to `destination`, replacing a file already there.
+  /// A file name from Apple to save under a folder: its last path component (no folder can be
+  /// named), never empty, `.` or `..`; `fallback` when nothing usable is left.
+  public static func safeFileName(_ name: String?, fallback: String) -> String {
+    let last = ((name ?? "").replacingOccurrences(of: "/", with: "_") as NSString).lastPathComponent
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    return ["", ".", ".."].contains(last) ? fallback : last
+  }
+
+  /// Removes a regular file at `destination` before something is saved there; a folder is refused,
+  /// never removed.
+  public static func clearFile(at destination: URL) throws {
+    let manager = FileManager.default
+    var isDirectory: ObjCBool = false
+    guard manager.fileExists(atPath: destination.path(percentEncoded: false), isDirectory: &isDirectory) else { return }
+    guard !isDirectory.boolValue else { throw FolderInTheWay(path: destination.path(percentEncoded: false)) }
+    try manager.removeItem(at: destination)
+  }
+
+  /// Downloads a file to `destination`, replacing a file (never a folder) already there.
   public static func download(_ file: File, to destination: URL) async throws {
     let url = try file.source.get()
     let (temporary, response) = try await URLSession.shared.download(from: url)
@@ -143,11 +167,13 @@ public enum MediaDownload {
       try? FileManager.default.removeItem(at: temporary)
       throw DownloadError.http(status)
     }
-    let manager = FileManager.default
-    if manager.fileExists(atPath: destination.path(percentEncoded: false)) {
-      try manager.removeItem(at: destination)
+    do {
+      try clearFile(at: destination)
+    } catch {
+      try? FileManager.default.removeItem(at: temporary)
+      throw error
     }
-    try manager.moveItem(at: temporary, to: destination)
+    try FileManager.default.moveItem(at: temporary, to: destination)
   }
 
   /// An image's URL from its template (`{w}x{h}bb.{f}`), as JPEG for a .jpg/.jpeg file and PNG

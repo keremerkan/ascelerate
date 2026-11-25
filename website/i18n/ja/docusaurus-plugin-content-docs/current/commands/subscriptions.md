@@ -187,6 +187,8 @@ ascelerate sub availability <bundle-id> <product-id> --available-in-new-territor
 ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
 
+独自のリストがない製品に `--add` や `--remove` を使うと、アプリの国や地域から始めるため、製品はそれらを保持します。
+
 年間サブスクリプションは**12か月契約の月払い**としても提供できます（毎月請求。米国とシンガポールでは提供されません）。この課金プランには独自の地域リストがあり、`--plan monthly` を付けると表示・編集できます。`--plan` を省略すると、通常の前払いプランが対象になります。
 
 ## 導入オファー

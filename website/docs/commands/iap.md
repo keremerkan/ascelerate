@@ -134,6 +134,8 @@ ascelerate iap availability <bundle-id> <product-id> --remove ITA
 ascelerate iap availability <bundle-id> <product-id> --available-in-new-territories true
 ```
 
+`--add` and `--remove` on a product without a list of its own start from the app's territories, so the product keeps them.
+
 ## Offer codes
 
 Offer codes are redeemable codes that unlock a one-time discount on an IAP. They come in two flavors, managed under the same offer code resource:

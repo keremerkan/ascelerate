@@ -187,6 +187,8 @@ ascelerate sub availability <bundle-id> <product-id> --available-in-new-territor
 ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
 
+`--add` y `--remove` en un producto sin lista propia parten de los países o regiones de la app, así que el producto los conserva.
+
 Las suscripciones anuales también pueden venderse como **mensuales con compromiso de 12 meses** (facturadas cada mes; no disponible en Estados Unidos ni en Singapur). Ese plan de facturación tiene su propia lista de países o regiones: añada `--plan monthly` para verla o editarla. Sin `--plan`, el comando gestiona el plan habitual de pago por adelantado.
 
 ## Ofertas introductorias

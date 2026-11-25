@@ -7,6 +7,27 @@ extension AppPricing.PricePoint: ResolvablePricePoint {
   var resolverCustomerPrice: String? { customerPrice }
 }
 
+/// Lines listing the manual prices a schedule change drops or cuts short, besides the territories
+/// a summary already names and the current open-ended price of the ones being edited: planned and
+/// temporary prices above all, which the summary doesn't show. Empty when there are none.
+func changedPriceLines(
+  _ prices: [AppPricing.Price], in schedule: AppPricing.Schedule, besides named: Swift.Set<String> = [],
+  replacing edited: Swift.Set<String> = []
+) -> [String] {
+  let today = AppPricing.today
+  let listed = prices.filter {
+    !named.contains($0.territoryID) && !(edited.contains($0.territoryID) && $0.applies(on: today) && $0.endDate == nil)
+  }
+  guard !listed.isEmpty else { return [] }
+  return ["Also changes:"] + listed.sorted(by: { ($0.territoryID, $0.startDate ?? "") < ($1.territoryID, $1.startDate ?? "") }).map { price in
+    let when = price.applies(on: today)
+      ? (price.endDate.map { "until \($0)" } ?? "now")
+      : "from \(price.startDate ?? "?")\(price.endDate.map { " until \($0)" } ?? "")"
+    let amount = "\(price.point.customerPrice) \(schedule.currencies[price.territoryID] ?? "")".trimmingCharacters(in: .whitespaces)
+    return "  \(price.territoryID) \(amount) (\(when))"
+  }
+}
+
 extension AppsCommand {
   /// The app's own price: its base territory and price, prices set by hand, planned and temporary
   /// changes, and Apple's prices everywhere else.
@@ -50,7 +71,8 @@ extension AppsCommand {
     static func territories(_ value: String, client: ASCClient) async throws -> Swift.Set<String> {
       let known = Swift.Set(try await AppPricing.currencies(client: client).keys)
       if value.lowercased() == "all" { return known }
-      let codes = Swift.Set(value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() })
+      let codes = Swift.Set(value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty })
+      guard !codes.isEmpty else { throw ValidationError("--territories names no territory; give codes (USA,FRA) or 'all'.") }
       let unknown = codes.subtracting(known)
       guard unknown.isEmpty else {
         throw ValidationError("Unknown territory codes: \(unknown.sorted().joined(separator: ", ")).")
@@ -253,6 +275,11 @@ extension AppsCommand {
         ]
         if let old = schedule?.baseTerritoryID, old != base { summary.append("Old base:       \(old) (Apple's price from now on)") }
         if dropManual { summary.append("Prices set by hand in other territories go back to Apple's.") }
+        if let schedule {
+          let others = dropManual ? Swift.Set(schedule.manualPrices.map(\.territoryID)).subtracting([base, schedule.baseTerritoryID]) : []
+          summary += changedPriceLines(
+            schedule.pricesChanged(by: prices), in: schedule, besides: others, replacing: [base, schedule.baseTerritoryID])
+        }
         try await PricingCommand.save(
           appID: app.id, appName: app.attributes?.name ?? bundleID, base: base, prices: prices, summary: summary, client: client)
       }
@@ -289,10 +316,13 @@ extension AppsCommand {
         }
         let point = try await PricingCommand.resolve(price: price, territoryID: territoryID, appID: app.id, client: client)
         let currency = try await AppPricing.currencies(client: client)[territoryID]
+        let prices = schedule.settingManual(territoryID: territoryID, pricePointID: point.id)
         try await PricingCommand.save(
           appID: app.id, appName: app.attributes?.name ?? bundleID, base: schedule.baseTerritoryID,
-          prices: schedule.settingManual(territoryID: territoryID, pricePointID: point.id),
-          summary: ["\(territoryID): \(PricingCommand.describe(point, currency: currency)), set by hand"], client: client)
+          prices: prices,
+          summary: ["\(territoryID): \(PricingCommand.describe(point, currency: currency)), set by hand"]
+            + changedPriceLines(schedule.pricesChanged(by: prices), in: schedule, replacing: [territoryID]),
+          client: client)
       }
     }
 

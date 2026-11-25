@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 Der `--release-type` ist optional — wird er weggelassen, wird die Einstellung der vorherigen Version verwendet.
 
 :::note Universalkauf
-Bei Apps mit Universalkauf (ein App Store-Eintrag, der iOS, macOS, tvOS und/oder visionOS umfasst) kann dieselbe Versionsnummer einmal pro Plattform existieren. `create-version` und `review submit` verwenden standardmäßig iOS — übergeben Sie `--platform macos` (oder `tvos`, `visionos`), um eine andere Plattform anzusprechen. Alle anderen versionsbezogenen Befehle (Lokalisierungen, Medien, Build-Zuordnung, Review-Preflight/-Informationen/-Anhänge, `resolve-issues`/`cancel-submission`, stufenweise Veröffentlichung, manuelle Veröffentlichung) akzeptieren ebenfalls ein optionales `--platform`; ohne diese Option fragen sie nach, wenn eine Version (oder eine aktive Review-Einreichung) für mehr als eine Plattform existiert — mit `--yes` brechen sie stattdessen mit einem Hinweis ab.
+Bei Apps mit Universalkauf (ein App Store-Eintrag, der iOS, macOS, tvOS und/oder visionOS umfasst) kann dieselbe Versionsnummer einmal pro Plattform existieren. `create-version` verwendet standardmäßig iOS — übergeben Sie `--platform macos` (oder `tvos`, `visionos`), um eine andere Plattform anzusprechen. Alle anderen versionsbezogenen Befehle (Lokalisierungen, Medien, Build-Zuordnung, Review-Preflight/-Informationen/-Anhänge, `resolve-issues`/`cancel-submission`, stufenweise Veröffentlichung, manuelle Veröffentlichung) akzeptieren ebenfalls ein optionales `--platform`; ohne diese Option fragen sie nach, wenn eine Version (oder eine aktive Review-Einreichung) für mehr als eine Plattform existiert — mit `--yes` brechen sie stattdessen mit einem Hinweis ab.
 :::
 
 ## Copyright
@@ -67,6 +67,8 @@ ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 Beim Einreichen erkennt der Befehl automatisch IAPs und Abonnements mit ausstehenden Änderungen und bietet an, diese zusammen mit der App-Version einzureichen. Ausstehende Änderungen werden aus dem Versionsverlauf jedes Produkts gelesen (eine Version im Status „Prepare for Submission“, „Ready for Review“ oder einem abgelehnten Status), sodass auch reine Screenshot-Änderungen erkannt werden. `apps review status` löst die Einträge aktiver Einreichungen zur App-Version bzw. zum Produkt auf, auf das sie sich beziehen. Außerdem bietet er an, die Game-Center-Erfolge, -Bestenlisten, -Bestenlistengruppen, -Aktivitäten und -Herausforderungen mit Änderungen, die auf die Prüfung warten, hinzuzufügen, und warnt, wenn Game Center für die Version ausgeschaltet ist.
+
+Vor der Bestätigung wird nichts geschrieben. Die Version muss eine sein, die App Review annimmt (Vorbereitung für Einreichung oder aus der Prüfung zurück); ohne `--platform` nimmt der Befehl die Version in Vorbereitung und fragt, wenn mehrere Plattformen eine haben. Ein Entwurf, der die Version enthält, oder der offene Entwurf der Plattform wird verwendet, und seine anderen Einträge werden vor der Bestätigung aufgelistet, da sie ebenfalls zu App Review gehen; eine Einreichung der Plattform, die ohne diese Version schon bei App Review liegt, beendet den Befehl. Ohne zugeordneten Build wählen Sie einen; unter `--yes` lehnt der Befehl ab und verweist auf `apps build attach-latest`.
 
 ### Abgelehnte Elemente lösen
 
@@ -166,6 +168,8 @@ ascelerate apps phased-release <bundle-id> --complete
 ascelerate apps phased-release <bundle-id> --disable
 ```
 
+Ohne `--version` wirken die Anzeige, `--pause`, `--resume` und `--complete` auf die veröffentlichte Version, deren stufenweise Veröffentlichung aktiv oder pausiert ist (mit Rückfrage, wenn mehrere Plattformen gleichzeitig ausrollen), nicht auf die Version in Vorbereitung; `--enable` und `--disable` wirken auf die Version in Vorbereitung.
+
 ## Manuelle Veröffentlichung
 
 Wenn die Veröffentlichungsoption einer Version auf manuell gesetzt ist, verbleibt die genehmigte Version im Status „Pending Developer Release", bis Sie sie veröffentlichen:
@@ -194,6 +198,8 @@ ascelerate apps accessibility publish <bundle-id>
 ```
 
 `set` gibt die vollständige Liste an: Funktionen, die Sie weglassen, gelten als nicht unterstützt (`--supports none` gibt keine an). Gerätefamilien: `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. Ohne `--publish` bleibt die Angabe ein Entwurf. Wird eine geänderte Angabe veröffentlicht, ersetzt sie die bisher veröffentlichte; `--all` listet auch ersetzte Angaben auf. Geben Sie nur an, worauf sich Nutzer bei den üblichen Aufgaben in der App verlassen können.
+
+Eine veröffentlichte Angabe lässt sich nicht bearbeiten: `set` ändert den Entwurf der Gerätefamilie oder legt einen Entwurf an, der die veröffentlichte Angabe ersetzt, sobald er veröffentlicht wird.
 
 ## Länderverfügbarkeit
 

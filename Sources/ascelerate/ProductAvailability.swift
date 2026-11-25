@@ -16,6 +16,7 @@ func runProductAvailability(
   availableInNewTerritories: String?,
   verbose: Bool,
   fetchCurrent: () async throws -> (availableInNew: Bool?, territories: [String])?,
+  inherited: (() async throws -> [String]?)? = nil,
   post: (_ availableInNew: Bool, _ territories: [String]) async throws -> Void
 ) async throws {
   // Fetch current availability
@@ -28,7 +29,8 @@ func runProductAvailability(
       currentTerritories = current.territories
       hasAvailability = true
     }
-  } catch where ASCError.isMissingRelated(error) {
+  } catch where ASCError.isNotFound(error) {
+    // Only a 404 means "none of its own"; a list that fails to decode must not read as empty.
     hasAvailability = false
   }
 
@@ -66,6 +68,17 @@ func runProductAvailability(
   let overlap = addCodes.intersection(removeCodes)
   if !overlap.isEmpty {
     throw ValidationError("Territory codes in both --add and --remove: \(overlap.sorted().joined(separator: ", "))")
+  }
+
+  // A product without availability of its own is sold where the app is: --add and --remove start
+  // from there, or the product would be left on sale in the added territories alone.
+  if !hasAvailability, let inherited {
+    guard let appTerritories = try await inherited(), !appTerritories.isEmpty else {
+      throw ValidationError(
+        "\(productID) follows the app's availability, which couldn't be read. Set the app's availability first, or list every territory with --add.")
+    }
+    currentTerritories = appTerritories
+    print("\(productID) has no availability of its own; starting from the app's \(appTerritories.count) territories.")
   }
 
   var newTerritories = Set(currentTerritories)

@@ -38,7 +38,7 @@ Shows the full review body and the developer response (if any). Review IDs come 
 ascelerate reviews respond <review-id> --body "Thanks for the feedback! We've fixed this in the latest update."
 ```
 
-Publishes a developer response. If the review already has a response, it is replaced (after confirmation).
+Publishes a developer response, which is public: the command shows the review and the text and asks first (`--yes` skips the question). If the review already has a response, it is replaced.
 
 ## Delete a response
 

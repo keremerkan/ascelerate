@@ -70,7 +70,7 @@ ascelerate bundle-ids disable-capability
 ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
-Nach dem Aktivieren oder Deaktivieren einer Fähigkeit bietet der Befehl an, vorhandene Provisioning-Profile für diese Bundle ID neu zu generieren (erforderlich, damit Änderungen wirksam werden).
+Nach dem Aktivieren oder Deaktivieren einer Fähigkeit bietet der Befehl an, die Bereitstellungsprofile der Bundle-ID neu zu erstellen (nötig, damit die Änderung wirkt). Jedes wird mit seinen eigenen Zertifikaten, die noch bestehen und nicht abgelaufen sind, und seinen eigenen aktivierten, passenden Geräten neu erstellt; ein Profil ohne eines davon wird übersprungen, bevor etwas gelöscht wird. `--yes` beantwortet nur die Änderung der Fähigkeit: Mit `--regenerate-profiles` werden die Profile ohne Rückfrage neu erstellt. Unter `--yes` braucht `disable-capability` die Option `--type`.
 
 :::note
 Einige Fähigkeiten (z.B. App Groups, iCloud, Associated Domains) erfordern nach dem Aktivieren zusätzliche Konfiguration im [Apple Developer Portal](https://developer.apple.com/account/resources).

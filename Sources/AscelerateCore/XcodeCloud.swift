@@ -1111,9 +1111,8 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, Send
       if let response = downloadTask.response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
         throw XcodeCloud.DownloadError.status(response.statusCode)
       }
-      let manager = FileManager.default
-      if manager.fileExists(atPath: destination.path(percentEncoded: false)) { try manager.removeItem(at: destination) }
-      try manager.moveItem(at: location, to: destination)
+      try MediaDownload.clearFile(at: destination)
+      try FileManager.default.moveItem(at: location, to: destination)
     } catch {
       failure.withLock { $0 = error }
     }

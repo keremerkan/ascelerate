@@ -30,6 +30,8 @@ ascelerate events update <bundle-id> summer-sale --priority NORMAL --badge NONE
 ascelerate events delete <bundle-id> summer-sale
 ```
 
+Un evento puede tener varios calendarios por país o región. Sin `--territories`, las nuevas fechas se aplican a cada uno; con `--territories`, un calendario para los países o regiones indicados los reemplaza a todos, y el comando lista lo que reemplaza.
+
 - **Distintivos:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Indique `--badge NONE` en `update` para quitarlo.
 - **Objetivos:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Prioridad:** `HIGH` o `NORMAL`.

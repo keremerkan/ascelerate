@@ -184,7 +184,7 @@ ascelerate apps media prune <bundle-id> media/
 ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
-Locales without a local folder are skipped entirely — the command only prunes within locales the folder actually manages.
+Locales without a local folder are skipped entirely: the command only prunes within locales the folder manages. A display type's folder counts even when it's empty, so an empty folder keeps its set. With `--dry-run` it lists what it would delete.
 
 ## Remove asset library images
 

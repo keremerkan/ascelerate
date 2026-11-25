@@ -184,7 +184,7 @@ ascelerate apps media prune <bundle-id> media/
 ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
-Locales ohne lokalen Ordner werden vollständig übersprungen — der Befehl bereinigt nur innerhalb der Locales, die der Ordner tatsächlich verwaltet.
+Sprachen ohne lokalen Ordner werden ganz übersprungen: Der Befehl räumt nur in den Sprachen auf, die der Ordner verwaltet. Der Ordner eines Anzeigetyps zählt auch, wenn er leer ist, ein leerer Ordner behält also sein Set. Mit `--dry-run` listet er auf, was er löschen würde.
 
 ## Bilder aus der Asset-Bibliothek entfernen
 

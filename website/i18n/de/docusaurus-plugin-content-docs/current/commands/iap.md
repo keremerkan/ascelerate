@@ -134,6 +134,8 @@ ascelerate iap availability <bundle-id> <product-id> --remove ITA
 ascelerate iap availability <bundle-id> <product-id> --available-in-new-territories true
 ```
 
+`--add` und `--remove` beginnen bei einem Produkt ohne eigene Liste mit den Ländern oder Regionen der App, das Produkt behält sie also.
+
 ## Angebotscodes
 
 Angebotscodes sind einlösbare Codes, die einen einmaligen Rabatt auf einen IAP gewähren. Sie werden in zwei Varianten unter derselben Angebotscode-Ressource verwaltet:

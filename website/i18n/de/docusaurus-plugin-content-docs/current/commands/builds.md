@@ -136,4 +136,6 @@ ascelerate apps build detach <bundle-id>
 
 `build attach-latest` bietet an zu warten, wenn der neueste Build noch verarbeitet wird. Mit `--yes` wird automatisch gewartet.
 
+`build attach` wählt unter `--yes` keinen Build: Der neueste kann noch verarbeitet werden, abgelaufen oder ungültig sein. Verwenden Sie `build attach-latest`, das dies prüft.
+
 Die Build-Suche erfolgt plattformspezifisch: Bei Apps mit Universalkauf können iOS- und macOS-Builds dieselben Build-Nummern verwenden, daher ziehen die attach-Befehle nur Builds heran, die zur Plattform der Zielversion passen.

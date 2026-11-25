@@ -30,6 +30,8 @@ ascelerate events update <bundle-id> summer-sale --priority NORMAL --badge NONE
 ascelerate events delete <bundle-id> summer-sale
 ```
 
+An event can have several territory schedules. Without `--territories`, new dates go to each of them; with `--territories`, one schedule for the territories named replaces them all, and the command lists what it replaces.
+
 - **Badges:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Pass `--badge NONE` to `update` to clear it.
 - **Purposes:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Priority:** `HIGH` or `NORMAL`.

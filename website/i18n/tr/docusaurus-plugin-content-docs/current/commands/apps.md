@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 `--release-type` isteğe bağlıdır -- belirtilmezse önceki sürümün ayarı kullanılır.
 
 :::note Evrensel Satın Alma
-Evrensel satın alma kullanan uygulamalarda (iOS, macOS, tvOS ve/veya visionOS'i kapsayan tek bir App Store kaydı) aynı sürüm numarası her platformda birer kez bulunabilir. `create-version` ve `review submit` varsayılan olarak iOS'i hedefler; başka bir platformu hedeflemek için `--platform macos` (veya `tvos`, `visionos`) verin. Sürüm kapsamındaki diğer tüm komutlar (yerelleştirmeler, medya, build ekleme, review preflight/info/attachments/resolve-issues/cancel-submission, aşamalı yayınlama, manuel yayınlama) da isteğe bağlı bir `--platform` seçeneği kabul eder; seçenek verilmediğinde, bir sürüm (veya etkin bir inceleme gönderimi) birden fazla platformla eşleşiyorsa sizden platform seçmeniz istenir. `--yes` ile bu komutlar seçim istemek yerine yönlendirici bir hatayla durur.
+Evrensel satın alma kullanan uygulamalarda (iOS, macOS, tvOS ve/veya visionOS'i kapsayan tek bir App Store kaydı) aynı sürüm numarası her platformda birer kez bulunabilir. `create-version` varsayılan olarak iOS'i hedefler; başka bir platformu hedeflemek için `--platform macos` (veya `tvos`, `visionos`) verin. Sürüm kapsamındaki diğer tüm komutlar (yerelleştirmeler, medya, build ekleme, review preflight/info/attachments/resolve-issues/cancel-submission, aşamalı yayınlama, manuel yayınlama) da isteğe bağlı bir `--platform` seçeneği kabul eder; seçenek verilmediğinde, bir sürüm (veya etkin bir inceleme gönderimi) birden fazla platformla eşleşiyorsa sizden platform seçmeniz istenir. `--yes` ile bu komutlar seçim istemek yerine yönlendirici bir hatayla durur.
 :::
 
 ## Telif Hakkı
@@ -67,6 +67,8 @@ ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 Gönderim sırasında komut, bekleyen değişiklikleri olan IAP'leri ve abonelikleri otomatik olarak algılar ve bunları uygulama sürümüyle birlikte göndermeyi teklif eder. Bekleyen değişiklikler her ürünün sürüm geçmişinden okunur (Prepare for Submission, Ready for Review veya reddedilmiş durumdaki bir sürüm); böylece yalnızca ekran görüntüsü değişen ürünler de algılanır. `apps review status`, etkin gönderimlerdeki öğeleri ilgili uygulama sürümüne veya ürüne çözümleyerek gösterir. Ayrıca değişiklikleri incelemeyi bekleyen Game Center başarılarını, puan tablolarını, setlerini, etkinliklerini ve meydan okumalarını eklemeyi önerir ve sürümde Game Center kapalıysa uyarır.
+
+Onaydan önce hiçbir şey yazılmaz. Sürüm, App Review'un kabul ettiği bir durumda olmalıdır (gönderime hazırlanıyor veya incelemeden dönmüş); `--platform` verilmezse komut hazırlanan sürümü alır ve birden çok platformda varsa sorar. Sürümü içeren taslak veya platformun açık taslağı kullanılır; diğer öğeleri de App Review'a gideceği için onaydan önce listelenir. Platformun bu sürüm olmadan zaten App Review'da olan bir gönderimi varsa komut durur. Ekli bir build yoksa bir tane seçersiniz; `--yes` ile komut seçmez ve `apps build attach-latest` komutunu önerir.
 
 ### Reddedilen öğeleri çözme
 
@@ -166,6 +168,8 @@ ascelerate apps phased-release <bundle-id> --complete
 ascelerate apps phased-release <bundle-id> --disable
 ```
 
+`--version` verilmezse görüntüleme, `--pause`, `--resume` ve `--complete`, hazırlanan sürüme değil, aşamalı yayını etkin veya duraklatılmış olan yayındaki sürüme uygulanır (birden çok platform aynı anda yayılıyorsa sorulur); `--enable` ve `--disable` hazırlanan sürüme uygulanır.
+
 ## Manuel yayınlama
 
 Bir sürümün yayınlama seçeneği manuel olarak ayarlandığında, onaylanan sürüm siz yayınlayana kadar Pending Developer Release (geliştirici yayınlaması bekleniyor) durumunda bekler:
@@ -194,6 +198,8 @@ ascelerate apps accessibility publish <bundle-id>
 ```
 
 `set` listenin tamamını beyan eder: Dışarıda bıraktığınız özellikler desteklenmiyor olarak beyan edilir (`--supports none` hiçbir özelliğin desteklenmediğini beyan eder). Cihaz aileleri: `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. `--publish` verilmezse beyan taslak olarak kalır. Değiştirilmiş bir beyan yayınlandığında yayındaki beyanın yerini alır; `--all` yerini almış beyanları da listeler. Yalnızca kullanıcıların uygulamanın yaygın görevlerinde güvenebileceği özellikleri beyan edin.
+
+Yayımlanmış bir beyan düzenlenemez: `set`, cihaz ailesinin taslağını günceller veya bir taslak oluşturur; taslak yayımlandığında yayımlanmış beyanın yerini alır.
 
 ## Bölge erişilebilirliği
 

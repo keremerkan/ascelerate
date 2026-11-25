@@ -70,7 +70,7 @@ ascelerate bundle-ids disable-capability
 ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
-Después de activar o desactivar una capacidad, si existen perfiles de suministro para ese Bundle ID, el comando ofrece volver a generarlos (es necesario para que los cambios surtan efecto).
+Tras activar o desactivar una capacidad, el comando ofrece regenerar los perfiles de aprovisionamiento del bundle ID (necesario para que el cambio surta efecto). Cada uno se crea de nuevo con sus propios certificados que aún existen y no han caducado, y sus propios dispositivos activados que encajan; un perfil que se queda sin alguno de ellos se omite antes de borrar nada. `--yes` solo responde al cambio de capacidad: añada `--regenerate-profiles` para regenerarlos sin preguntar. Con `--yes`, `disable-capability` necesita `--type`.
 
 :::note
 Algunas capacidades (p. ej. App Groups, iCloud, Associated Domains) requieren una configuración adicional en el [portal de Apple Developer](https://developer.apple.com/account/resources) después de activarlas.

@@ -30,6 +30,8 @@ ascelerate events update <bundle-id> summer-sale --priority NORMAL --badge NONE
 ascelerate events delete <bundle-id> summer-sale
 ```
 
+Bir etkinliğin birden çok ülke veya bölge takvimi olabilir. `--territories` verilmezse yeni tarihler her birine uygulanır; `--territories` ile, belirtilen ülke veya bölgeler için tek bir takvim hepsinin yerini alır ve komut neyin yerini aldığını listeler.
+
 - **Rozetler:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Rozeti kaldırmak için `update` komutuna `--badge NONE` verin.
 - **Amaçlar:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Öncelik:** `HIGH` veya `NORMAL`.

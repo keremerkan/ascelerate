@@ -187,6 +187,8 @@ ascelerate sub availability <bundle-id> <product-id> --available-in-new-territor
 ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
 
+Kendi listesi olmayan bir üründe `--add` ve `--remove`, uygulamanın ülke veya bölgelerinden başlar; böylece ürün onları korur.
+
 Yıllık abonelikler **12 ay taahhütlü aylık ödeme** olarak da sunulabilir (her ay faturalandırılır; ABD ve Singapur'da sunulmaz). Bu ödeme planının kendi bölge listesi vardır: Görüntülemek ya da düzenlemek için `--plan monthly` ekleyin. `--plan` olmadan komut normal peşin ödemeli planı yönetir.
 
 ## Tanıtım teklifleri

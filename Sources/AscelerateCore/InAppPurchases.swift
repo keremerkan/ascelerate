@@ -205,8 +205,8 @@ public enum InAppPurchases {
       }
     }
     guard let schedule, let base = schedule.relationships?.baseTerritory?.data?.id else { return nil }
-    async let manual = optionalRelated { try await prices(scheduleID: schedule.id, automatic: false, client: client) }
-    async let automatic = optionalRelated { try await prices(scheduleID: schedule.id, automatic: true, client: client) }
+    async let manual = optionalList { try await prices(scheduleID: schedule.id, automatic: false, client: client) }
+    async let automatic = optionalList { try await prices(scheduleID: schedule.id, automatic: true, client: client) }
     guard let (manualPrices, manualCurrencies) = try await manual, !manualPrices.isEmpty else { return nil }
     let (automaticPrices, automaticCurrencies) = try await automatic ?? ([], [:])
     return AppPricing.Schedule(
@@ -246,10 +246,11 @@ public enum InAppPurchases {
         case .territories(let territory): currencies[territory.id] = territory.attributes?.currency
       }
     }
-    let prices = pages.flatMap(\.0).compactMap { price -> AppPricing.Price? in
+    // As an app's: a price without its tier or territory throws rather than drop out.
+    let prices = try pages.flatMap(\.0).map { price -> AppPricing.Price in
       guard let territoryID = price.relationships?.territory?.data?.id,
         let pointID = price.relationships?.inAppPurchasePricePoint?.data?.id, let point = points[pointID]
-      else { return nil }
+      else { throw AppPricing.ScheduleError.incompletePrice(price.id) }
       return AppPricing.Price(
         id: price.id, point: pricePoint(point, territoryID: territoryID), manual: price.attributes?.manual ?? !automatic,
         startDate: price.attributes?.startDate, endDate: price.attributes?.endDate)

@@ -45,6 +45,8 @@ ascelerate xcode-cloud runs artifacts <bundle-id> 42
 ascelerate xcode-cloud runs artifacts <bundle-id> 42 --type LOG_BUNDLE --download ./logs
 ```
 
+`--download` her yapıtı Apple'ın dosya adıyla, klasörde bir dosya olarak (hiçbir zaman yol olarak değil) ve indirme içinde benzersiz olarak kaydeder. Var olan bir dosyanın yerine yazmadan önce sorar ve bir klasörün yerine asla yazmaz. `--json` ile ilerleme stderr'e gider ve kaydedilen dosyalar JSON olarak listelenir.
+
 Her çalıştırma durumunu, derlenen branch, tag veya pull request'i, commit'i ve ne kadar sürdüğünü gösterir; `runs info` buna eylemlerini hata, uyarı ve başarısız test sayılarıyla ekler (Apple bu sayıları göndermez; her eylemin sorunlarından sayılır). App Store Connect'e yüklenen bir arşivde, yüklenen derlemeyi işlenme ve TestFlight durumlarıyla birlikte de gösterir. `issues`, her eylemin hatalarını ve uyarılarını dosya ve satır bilgisiyle listeler; `tests`, test sonuçlarını hedef (cihaz ve işletim sistemi) başına, başarısız her testin hata mesajıyla birlikte listeler. `logs`, her eylemin log paketini okur: post-clone betiğinin, paket çözümlemesinin ve xcodebuild'in logları satır sayılarıyla listelenir veya `--show` ile yazdırılır. `artifacts` logları, arşivleri, result bundle'ları ve ürünleri listeler; `--download` bunları kaydeder (`--type` seçimi daraltır).
 
 ## Build başlatma

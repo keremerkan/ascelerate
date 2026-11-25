@@ -225,6 +225,12 @@ public struct ASCError: Error, Sendable {
     if from(error)?.statusCode == 404 { return true }
     return (error as? ClientError)?.underlyingError is DecodingError
   }
+
+  /// Whether `error` is an HTTP 404 and nothing else: for a list, the only answer that means
+  /// "none" (a list that fails to decode is a real failure, unlike a to-one `{"data": null}`).
+  public static func isNotFound(_ error: Error) -> Bool {
+    from(error)?.statusCode == 404
+  }
 }
 
 /// The error behind one a generated operation threw, or nil when `error` isn't the runtime's

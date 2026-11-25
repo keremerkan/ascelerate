@@ -184,17 +184,37 @@ public enum RetentionMessages {
       imageTemplate: asset?.templateUrl.flatMap { $0.isEmpty ? nil : $0 }, width: asset?.width, height: asset?.height)
   }
 
-  /// Uploads an image to the app's asset library and places it on the version, then removes the
-  /// image it replaces. Check its size first (`imageSlot.imageSpecs`).
+  /// Uploads an image to the app's asset library and places it on the version in place of the
+  /// current one. A version takes one image, so the current placement goes first, but its image is
+  /// deleted (when unused) only once the new one is placed; a refused placement puts it back.
+  /// Check the file's size first (`imageSlot.imageSpecs`).
   public static func setImage(
     _ file: MediaFile, versionID: String, appID: String, replacing current: Image?, client: ASCClient
   ) async throws {
     let libraryID = try await AssetLibrary.libraryID(appID: appID, client: client)
     let imageID = try await AssetLibrary.uploadImage(file, category: imageSlot.category, libraryID: libraryID, client: client)
-    if let current { try await removeImage(current, client: client) }
-    _ = try await AssetLibrary.place(
-      .image(imageID), on: .retentionMessageVersion(versionID), type: imageSlot.placementType, group: imageSlot.group,
-      client: client)
+    if let current { try await AssetLibrary.deletePlacement(id: current.placementID, client: client) }
+    func place(_ id: String) async throws {
+      _ = try await AssetLibrary.place(
+        .image(id), on: .retentionMessageVersion(versionID), type: imageSlot.placementType, group: imageSlot.group,
+        client: client)
+    }
+    do {
+      try await place(imageID)
+    } catch {
+      // Put the old image back, so a refused placement doesn't leave the version without one; if
+      // that fails too, both failures are reported.
+      if let old = current?.imageID {
+        do {
+          try await place(old)
+        } catch let restoreError {
+          throw AssetLibrary.RestoreFailed(
+            placementError: error, restoreError: restoreError, previous: .image(old), previousFileName: current?.fileName)
+        }
+      }
+      throw error
+    }
+    if let old = current?.imageID { _ = try await AssetLibrary.deleteIfUnused([.image(old)], client: client) }
   }
 
   /// Takes a version's image off it, and out of the library when nothing else uses it (a removed

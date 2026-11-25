@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 The `--release-type` is optional — omitting it uses the previous version's setting.
 
 :::note Universal purchase
-For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` and `review submit` default to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release, manual release) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
+For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` defaults to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release, manual release) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
 :::
 
 ## Copyright
@@ -67,6 +67,8 @@ ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 When submitting, the command automatically detects IAPs and subscriptions with pending changes and offers to submit them alongside the app version. Pending changes are read from each product's version history (a version in Prepare for Submission, Ready for Review, or a rejected state), so screenshot-only edits are detected too. `apps review status` resolves the items of active submissions to the app version or product they refer to. It also offers to add the Game Center achievements, leaderboards, sets, activities and challenges whose changes wait for review, and warns when Game Center is off on the version.
+
+Nothing is written before the confirmation. The version must be one App Review takes (Prepare for Submission, or back from review); without `--platform` the command takes the version being prepared and asks when several platforms have one. A draft submission that holds the version, or the platform's open draft, is used, and its other items are listed before you confirm, since they go to App Review too; a submission of the platform already with App Review without this version stops the command. Without an attached build you pick one; under `--yes` it refuses and points to `apps build attach-latest`.
 
 ### Resolve rejected items
 
@@ -166,6 +168,8 @@ ascelerate apps phased-release <bundle-id> --complete
 ascelerate apps phased-release <bundle-id> --disable
 ```
 
+Without `--version`, viewing, `--pause`, `--resume` and `--complete` act on the live version whose phased release is active or paused (asked when several platforms roll out at once), not on the version being prepared; `--enable` and `--disable` act on the version being prepared.
+
 ## Manual release
 
 When a version's release option is set to manual, the approved version sits in Pending Developer Release until you release it:
@@ -194,6 +198,8 @@ ascelerate apps accessibility publish <bundle-id>
 ```
 
 `set` declares the full list: features you leave out are declared as not supported (`--supports none` declares none). Device families: `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. Without `--publish` the declaration stays a draft. Publishing a changed declaration replaces the published one; `--all` also lists replaced declarations. Declare only what users can rely on across the app's common tasks.
+
+A published declaration can't be edited: `set` updates the device family's draft, or creates a draft, which replaces the published declaration once it's published.
 
 ## Territory availability
 

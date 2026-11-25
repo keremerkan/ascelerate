@@ -297,10 +297,8 @@ struct ProfilesCommand: AsyncParsableCommand {
           let serials = certificates.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
           var resolved: [String] = []
           for serial in serials {
-            let response = try await client.certificatesGetCollection(
-              query: .init(filterSerialNumber: [serial], limit: 1)
-            ).ok.body.json
-            guard let cert = response.data.first else {
+            // The serial number exactly: Apple's filter also matches parts of one.
+            guard let cert = try await Certificates.find(serialNumber: serial, client: client) else {
               throw ValidationError("No certificate found with serial number '\(serial)'.")
             }
             resolved.append(cert.id)
@@ -325,7 +323,9 @@ struct ProfilesCommand: AsyncParsableCommand {
           let identifiers = devices.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
           var resolved: [String] = []
           for identifier in identifiers {
-            let device = try await Devices.find(nameOrUDID: identifier, client: client)
+            let device = try await findForWrite(identifier, "device", describe: { "\($0.name) (\($0.udid))" }) { exact in
+              try await Devices.find(nameOrUDID: identifier, exact: exact, client: client)
+            }
             resolved.append(device.id)
           }
           deviceIDs = resolved
@@ -500,34 +500,32 @@ struct ProfilesCommand: AsyncParsableCommand {
       var skipped: [String] = []
       for profile in targets {
         let type = profile.type ?? ""
-        let certs: [Certificates.Certificate]
+        let pool = profile.needsDevices
+          ? (allDevices ? enabledDevices : try await Profiles.devices(profileID: profile.id, client: client)) : []
+        // The rule every reissue shares: enabled devices that fit, certificates that fit and
+        // haven't expired.
+        let contents = Profiles.reissueContents(profileType: type, devices: pool, certificates: explicitCerts ?? allCerts)
+        let certs = contents.certificates
         if let explicitCerts {
-          let wrong = explicitCerts.filter { !Profiles.certificateFits($0.type ?? "", profileType: type) }
+          let taken = Swift.Set(certs.map(\.id))
+          let wrong = explicitCerts.filter { !taken.contains($0.id) }
           if !wrong.isEmpty {
-            unfit.append("\(profile.name.isEmpty ? "—" : profile.name) (\(type)) can't hold \(wrong.map(certLabel).joined(separator: ", "))")
+            unfit.append("\(profile.name.isEmpty ? "—" : profile.name) (\(type)) can't hold \(wrong.map(certLabel).joined(separator: ", ")) (another kind, or expired)")
             continue
           }
-          certs = explicitCerts
         } else {
-          certs = Profiles.certificates(allCerts, fitting: type)
           guard !certs.isEmpty else {
-            skipped.append("\(profile.name.isEmpty ? "—" : profile.name) — no \(Profiles.certificateFamily(forProfileType: type).lowercased()) certificate found")
+            skipped.append("\(profile.name.isEmpty ? "—" : profile.name) — no unexpired \(Profiles.certificateFamily(forProfileType: type).lowercased()) certificate found")
             continue
           }
         }
-        var devices: [Devices.Device]?
-        if profile.needsDevices {
-          let pool = allDevices ? enabledDevices : try await Profiles.devices(profileID: profile.id, client: client)
-          let fitting = pool.filter { ($0.status ?? "ENABLED") == "ENABLED" && Profiles.fits($0, profileType: type) }
-          // A development or ad hoc profile needs a device: without one the create would fail
-          // after the delete.
-          guard !fitting.isEmpty else {
-            skipped.append("\(profile.name.isEmpty ? "—" : profile.name) — no enabled device fits a \(type) profile")
-            continue
-          }
-          devices = fitting
+        // A development or ad hoc profile needs a device: without one the create would fail
+        // after the delete.
+        if let devices = contents.devices, devices.isEmpty {
+          skipped.append("\(profile.name.isEmpty ? "—" : profile.name) — no enabled device fits a \(type) profile")
+          continue
         }
-        plans.append(Plan(profile: profile, certs: certs, devices: devices))
+        plans.append(Plan(profile: profile, certs: certs, devices: contents.devices))
       }
       guard unfit.isEmpty else {
         throw ValidationError(
@@ -613,7 +611,9 @@ struct ProfilesCommand: AsyncParsableCommand {
 
       let profiles: [Profiles.Profile]
       if let name {
-        profiles = [try await Profiles.find(name: name, client: client)]
+        profiles = [try await findForWrite(name, "profile", describe: { $0.name }) { exact in
+          try await Profiles.find(name: name, exact: exact, client: client)
+        }]
       } else {
         profiles = try promptMultiSelection(
           "Provisioning profiles", items: try await allProfiles(client: client),

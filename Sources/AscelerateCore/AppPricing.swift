@@ -34,6 +34,18 @@ public enum AppPricing {
     }
   }
 
+  /// A schedule that came back without everything a later edit needs to send it again.
+  public enum ScheduleError: LocalizedError, Equatable {
+    /// A price came without its tier or territory.
+    case incompletePrice(String)
+
+    public var errorDescription: String? {
+      switch self {
+        case .incompletePrice: "App Store Connect sent a price without its tier or territory, so the schedule can't be changed safely. Try again."
+      }
+    }
+  }
+
   public struct Schedule: Sendable, Hashable {
     public let baseTerritoryID: String
     public let manualPrices: [Price]
@@ -78,8 +90,8 @@ public enum AppPricing {
     guard let schedule, let base = schedule.relationships?.baseTerritory?.data?.id else { return nil }
     // A new app's schedule has a base territory (USA) but no prices: listing them answers 404
     // ("There is no resource of type 'null'", seen 2026-10-21).
-    async let manual = optionalRelated { try await prices(scheduleID: schedule.id, automatic: false, client: client) }
-    async let automatic = optionalRelated { try await prices(scheduleID: schedule.id, automatic: true, client: client) }
+    async let manual = optionalList { try await prices(scheduleID: schedule.id, automatic: false, client: client) }
+    async let automatic = optionalList { try await prices(scheduleID: schedule.id, automatic: true, client: client) }
     guard let (manualPrices, manualCurrencies) = try await manual, !manualPrices.isEmpty else { return nil }
     let (automaticPrices, automaticCurrencies) = try await automatic ?? ([], [:])
     return Schedule(
@@ -120,10 +132,13 @@ public enum AppPricing {
         case .territories(let territory): currencies[territory.id] = territory.attributes?.currency
       }
     }
-    let prices = pages.flatMap(\.0).compactMap { price -> Price? in
+    // A price without its tier or territory can't be sent back; dropped, the next edit would remove
+    // it from the schedule. A page of 200 brings every price's tier (seen 2026-11-26 on apps and
+    // in-app purchases with 174 automatic prices); this check guards it.
+    let prices = try pages.flatMap(\.0).map { price -> Price in
       guard let territoryID = price.relationships?.territory?.data?.id,
         let pointID = price.relationships?.appPricePoint?.data?.id, let point = points[pointID]
-      else { return nil }
+      else { throw ScheduleError.incompletePrice(price.id) }
       return Price(
         id: price.id, point: pricePoint(point, territoryID: territoryID), manual: price.attributes?.manual ?? !automatic,
         startDate: price.attributes?.startDate, endDate: price.attributes?.endDate)
@@ -307,7 +322,27 @@ extension AppPricing.Schedule {
     let kept = automaticPrices.filter {
       $0.applies(on: today) && territoryIDs.contains($0.territoryID) && !manual.contains($0.territoryID)
     }
-    return newPrices + kept.map { AppPricing.NewPrice(pricePointID: $0.point.id) }
+    // A territory's planned prices (a sale, a dated change) stay: the kept price fills the time
+    // around them, now until the first starts, between them, and after the last ends (if it ends).
+    let planned = Dictionary(grouping: manualPrices.filter { ($0.startDate ?? "") > today }, by: \.territoryID)
+    var additions: [AppPricing.NewPrice] = []
+    for price in kept {
+      var from: String?
+      var open = true
+      for later in (planned[price.territoryID] ?? []).sorted(by: { ($0.startDate ?? "") < ($1.startDate ?? "") }) {
+        guard let start = later.startDate else { continue }
+        if from.map({ $0 < start }) ?? true {
+          additions.append(AppPricing.NewPrice(pricePointID: price.point.id, startDate: from, endDate: start))
+        }
+        guard let end = later.endDate else {
+          open = false
+          break
+        }
+        from = max(from ?? end, end)
+      }
+      if open { additions.append(AppPricing.NewPrice(pricePointID: price.point.id, startDate: from)) }
+    }
+    return newPrices + additions
   }
 
   /// A temporary price change (a sale): the territories' tiers from `start` until `end`

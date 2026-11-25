@@ -134,6 +134,8 @@ ascelerate iap availability <bundle-id> <product-id> --remove ITA
 ascelerate iap availability <bundle-id> <product-id> --available-in-new-territories true
 ```
 
+`--add` et `--remove` sur un produit sans liste propre partent des pays ou régions de l'app, que le produit conserve donc.
+
 ## Codes promotionnels
 
 Les codes promotionnels sont des codes échangeables qui débloquent une réduction unique sur un IAP. Ils existent en deux variantes, gérées sous la même ressource de code promotionnel :

@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 `--release-type` es opcional: si se omite, se usa la configuración de la versión anterior.
 
 :::note Compra universal
-En las apps de compra universal (un único registro del App Store que abarca iOS, macOS, tvOS o visionOS), la misma cadena de versión puede existir una vez por plataforma. `create-version` y `review submit` usan iOS de forma predeterminada; indique `--platform macos` (o `tvos`, `visionos`) para trabajar con otra plataforma. Todos los demás comandos que actúan sobre una versión (localizaciones, contenido multimedia, asignación de compilaciones, review preflight/info/attachments/resolve-issues/cancel-submission, publicación por fases, publicación manual) también admiten una opción `--platform`; sin ella, preguntan cada vez que una versión (o un envío a App Review activo) coincide con más de una plataforma, y con `--yes` se niegan a continuar y muestran una indicación en lugar de preguntar.
+En las apps de compra universal (un único registro del App Store que abarca iOS, macOS, tvOS o visionOS), la misma cadena de versión puede existir una vez por plataforma. `create-version` usa iOS de forma predeterminada; indique `--platform macos` (o `tvos`, `visionos`) para trabajar con otra plataforma. Todos los demás comandos que actúan sobre una versión (localizaciones, contenido multimedia, asignación de compilaciones, review preflight/info/attachments/resolve-issues/cancel-submission, publicación por fases, publicación manual) también admiten una opción `--platform`; sin ella, preguntan cada vez que una versión (o un envío a App Review activo) coincide con más de una plataforma, y con `--yes` se niegan a continuar y muestran una indicación en lugar de preguntar.
 :::
 
 ## Copyright
@@ -67,6 +67,8 @@ ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 Al enviar, el comando detecta automáticamente las compras dentro de la app y las suscripciones con cambios pendientes y ofrece enviarlas junto con la versión de la app. Los cambios pendientes se leen del historial de versiones de cada producto (una versión en Prepare for Submission, Ready for Review o en un estado de rechazo), por lo que también se detectan los cambios que solo afectan a capturas de pantalla. `apps review status` relaciona los elementos de los envíos activos con la versión de la app o el producto al que corresponden. También ofrece añadir los logros, tablas de clasificación, grupos de tablas, actividades y desafíos de Game Center cuyos cambios esperan revisión, y avisa si Game Center está desactivado en la versión.
+
+No se escribe nada antes de la confirmación. La versión debe ser una que App Review acepte (en preparación para el envío o de vuelta de la revisión); sin `--platform`, el comando toma la versión en preparación y pregunta si varias plataformas tienen una. Se usa el borrador que contiene la versión, o el borrador abierto de la plataforma, y sus demás elementos se listan antes de confirmar, ya que también van a App Review; un envío de la plataforma que ya está con App Review sin esta versión detiene el comando. Sin una compilación asociada, usted elige una; con `--yes`, el comando se niega y remite a `apps build attach-latest`.
 
 ### Resolver los elementos rechazados
 
@@ -166,6 +168,8 @@ ascelerate apps phased-release <bundle-id> --complete
 ascelerate apps phased-release <bundle-id> --disable
 ```
 
+Sin `--version`, la consulta, `--pause`, `--resume` y `--complete` actúan sobre la versión publicada cuyo lanzamiento por fases está activo o en pausa (con pregunta si varias plataformas se despliegan a la vez), no sobre la versión en preparación; `--enable` y `--disable` actúan sobre la versión en preparación.
+
 ## Publicación manual
 
 Cuando la opción de publicación de una versión es manual, la versión aprobada queda en Pending Developer Release hasta que usted la publique:
@@ -194,6 +198,8 @@ ascelerate apps accessibility publish <bundle-id>
 ```
 
 `set` declara la lista completa: las funciones que no incluya se declaran como no admitidas (`--supports none` no declara ninguna). Familias de dispositivos: `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. Sin `--publish`, la declaración queda como borrador. Publicar una declaración modificada reemplaza a la publicada; `--all` muestra también las declaraciones reemplazadas. Declare solo aquello en lo que los usuarios puedan confiar en las tareas habituales de la app.
+
+Una declaración publicada no se puede editar: `set` actualiza el borrador de la familia de dispositivos o crea uno, que reemplaza la declaración publicada cuando se publica.
 
 ## Disponibilidad por países o regiones
 

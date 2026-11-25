@@ -72,3 +72,5 @@ ascelerate profiles reissue --all --to-certs ABC123,DEF456
 ```
 
 Ohne `--to-certs` erhält jedes Profil alle Zertifikate, die zu seinem Typ passen, nicht nur die bisherigen. `--to-certs` nennt genaue Zertifikate über Seriennummer oder Namen (ein Name muss genau ein Zertifikat bezeichnen), und jedes Profil muss sie aufnehmen können. Entwicklungs- und Ad-hoc-Profile behalten ihre eigenen aktivierten Geräte oder erhalten mit `--all-devices` alle aktivierten Geräte, soweit sie zur Plattform des Profils passen. All das wird geprüft, bevor ein Profil gelöscht wird.
+
+Abgelaufene Zertifikate kommen nie in ein neu ausgestelltes Profil, mit oder ohne `--to-certs`.

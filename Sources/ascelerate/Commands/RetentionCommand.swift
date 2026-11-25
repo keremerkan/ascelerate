@@ -408,6 +408,11 @@ extension SubCommand {
           let media = try MediaFile(readingFrom: file)
           try AssetLibrary.validateSize(of: media, slot: RetentionMessages.imageSlot)
           let client = try ClientFactory.makeClient()
+          try AssetLibrary.validateAlpha(
+            of: media,
+            liveSpecs: try await AssetLibrary.placementSpecs(
+              type: RetentionMessages.imageSlot.placementType.rawValue, group: RetentionMessages.imageSlot.group, client: client
+            ).images)
           let (app, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
           let message = try RetentionMessage.find(arguments.message, in: messages)
           let version = try RetentionMessage.editableVersion(of: message)

@@ -10,6 +10,38 @@ import Foundation
 /// app's ID, placements keep creation order (no ordering request needed), and placement states
 /// include `ACTIVE`, which the spec's enum lacks.
 public enum AssetLibrary {
+  /// Placing a new image or video failed, and putting back the one it replaced failed too: the
+  /// slot is empty, and the previous asset was taken off but is still in the app's asset library.
+  public struct RestoreFailed: LocalizedError {
+    /// Why the new asset couldn't be placed.
+    public let placementError: any Error
+    /// Why the previous one couldn't be put back.
+    public let restoreError: any Error
+    /// The asset taken off, still in the library.
+    public let previous: Asset
+    /// Its file name, when known.
+    public let previousFileName: String?
+
+    public init(placementError: any Error, restoreError: any Error, previous: Asset, previousFileName: String?) {
+      self.placementError = placementError
+      self.restoreError = restoreError
+      self.previous = previous
+      self.previousFileName = previousFileName
+    }
+
+    public var errorDescription: String? {
+      func text(_ error: any Error) -> String {
+        ((ASCError.from(error) as (any Error)?) ?? ascUnderlyingError(error) ?? error).localizedDescription
+      }
+      let (kind, id): (String, String) = switch previous {
+        case .image(let id): ("image", id)
+        case .video(let id): ("video", id)
+      }
+      let name = previousFileName.map { "\($0) (\(id))" } ?? id
+      return "The new file couldn't be placed (\(text(placementError))), and putting the previous \(kind) back failed too (\(text(restoreError))), so the slot is empty. The previous \(kind), \(name), was taken off and is still in the asset library."
+    }
+  }
+
   public typealias PlacementType =
     Operations.AppStoreVersionLocalizationsPlacementsGetToManyRelated.Input.Query.FilterPlacementTypePayloadPayload
 

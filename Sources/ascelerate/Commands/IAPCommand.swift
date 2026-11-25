@@ -60,26 +60,13 @@ struct IAPCommand: AsyncParsableCommand {
     "\(price.point.customerPrice) \(schedule.currencies[price.territoryID] ?? "")".trimmingCharacters(in: .whitespaces)
   }
 
-  /// Lists the manual prices a schedule change drops or cuts short besides the territories the
-  /// summary already names: planned and temporary prices above all, which the summary doesn't show.
+  /// Prints the manual prices a schedule change drops or cuts short (`changedPriceLines`), indented
+  /// under the summary.
   static func printChangedPrices(
     _ prices: [AppPricing.Price], in schedule: AppPricing.Schedule, besides named: Swift.Set<String> = [],
     replacing edited: Swift.Set<String> = []
   ) {
-    let today = AppPricing.today
-    // A territory named in the summary, and the current open-ended price of the one being edited,
-    // are shown already.
-    let listed = prices.filter {
-      !named.contains($0.territoryID) && !(edited.contains($0.territoryID) && $0.applies(on: today) && $0.endDate == nil)
-    }
-    guard !listed.isEmpty else { return }
-    print("  Also changes:")
-    for price in listed.sorted(by: { ($0.territoryID, $0.startDate ?? "") < ($1.territoryID, $1.startDate ?? "") }) {
-      let when = price.applies(on: today)
-        ? (price.endDate.map { "until \($0)" } ?? "now")
-        : "from \(price.startDate ?? "?")\(price.endDate.map { " until \($0)" } ?? "")"
-      print("    \(price.territoryID) \(describe(price, in: schedule)) (\(when))")
-    }
+    for line in changedPriceLines(prices, in: schedule, besides: named, replacing: edited) { print("  \(line)") }
   }
 
   /// Resolves a customer price (e.g. "4.99") to a price point ID in the given territory.
@@ -1555,6 +1542,9 @@ struct IAPCommand: AsyncParsableCommand {
         fetchCurrent: {
           try await InAppPurchases.availability(purchaseID: iap.id, client: client)
             .map { ($0.availableInNewTerritories, $0.territories) }
+        },
+        inherited: {
+          try await AppAvailability.availability(appID: app.id, client: client)?.territories.filter(\.available).map(\.territoryID)
         },
         post: { availableInNew, territories in
           try await InAppPurchases.setAvailability(

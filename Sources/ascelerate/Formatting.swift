@@ -327,6 +327,21 @@ struct JSONOption: ParsableArguments {
   func activate() { if json { jsonMode = true } }
 }
 
+/// Finds what a write acts on by its exact name: `find(true)`. Only interactively, when nothing has
+/// exactly that name, does a sole partial match (`find(false)`) count, after the user confirms it
+/// by name; under --yes a partial match is never taken.
+func findForWrite<T>(
+  _ name: String, _ kind: String, describe: (T) -> String, _ find: (_ exact: Bool) async throws -> T
+) async throws -> T {
+  do {
+    return try await find(true)
+  } catch {
+    guard !autoConfirm, !jsonMode, let partial = try? await find(false) else { throw error }
+    guard confirm("No \(kind) is named exactly '\(name)'. Use \(describe(partial))? [y/N] ") else { throw error }
+    return partial
+  }
+}
+
 /// Prints a value as pretty-printed JSON (sorted keys, ISO 8601 dates).
 func printJSON(_ value: some Encodable) throws {
   let encoder = JSONEncoder()

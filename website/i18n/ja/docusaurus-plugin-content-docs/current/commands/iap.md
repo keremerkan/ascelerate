@@ -134,6 +134,8 @@ ascelerate iap availability <bundle-id> <product-id> --remove ITA
 ascelerate iap availability <bundle-id> <product-id> --available-in-new-territories true
 ```
 
+独自のリストがない製品に `--add` や `--remove` を使うと、アプリの国や地域から始めるため、製品はそれらを保持します。
+
 ## オファーコード
 
 オファーコードは、App内課金で一度限りの割引を利用できる引換コードです。同じオファーコードリソースの下で2種類のバリエーションがあります：

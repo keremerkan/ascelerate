@@ -206,8 +206,20 @@ public enum AppEvents {
     ).ok.body.json.data)
   }
 
-  /// Deletes a language, after its placements (`AssetLibrary.clearPlacements`).
+  /// Deletes a language, after its placements (`AssetLibrary.clearPlacements`). Checked first: the
+  /// event must be a draft or rejected, and the language not its primary one nor its last.
   public static func deleteLocalization(id: String, client: ASCClient) async throws {
+    let localization = try await client.appEventLocalizationsGetInstance(path: .init(id: id), query: .init(include: [.appEvent]))
+      .ok.body.json.data
+    if let eventID = localization.relationships?.appEvent?.data?.id {
+      let event = try await get(id: eventID, client: client)
+      let state = event.state ?? ""
+      guard ["DRAFT", "REJECTED"].contains(state) else { throw LanguageDeleteError.notEditable(removing: .language, owner: .inAppEvent, state: state) }
+      if let primary = event.primaryLocale, primary == localization.attributes?.locale {
+        throw LanguageDeleteError.primaryLanguage(primary)
+      }
+      guard try await localizations(eventID: eventID, client: client).count > 1 else { throw LanguageDeleteError.lastLanguage }
+    }
     try await AssetLibrary.clearPlacements(on: .eventLocalization(id), client: client)
     _ = try await client.appEventLocalizationsDeleteInstance(path: .init(id: id)).noContent
   }

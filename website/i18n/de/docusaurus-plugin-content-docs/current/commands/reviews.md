@@ -38,7 +38,7 @@ Zeigt den vollständigen Rezensionstext und ggf. die Entwicklerantwort. Rezensio
 ascelerate reviews respond <review-id> --body "Danke für Ihr Feedback! Wir haben das im neuesten Update behoben."
 ```
 
-Veröffentlicht eine Entwicklerantwort. Hat die Rezension bereits eine Antwort, wird diese nach einer Bestätigung ersetzt.
+Veröffentlicht eine Entwicklerantwort, die öffentlich ist: Der Befehl zeigt die Bewertung und den Text und fragt zuerst nach (`--yes` überspringt die Frage). Hat die Bewertung schon eine Antwort, wird sie ersetzt.
 
 ## Eine Antwort löschen
 

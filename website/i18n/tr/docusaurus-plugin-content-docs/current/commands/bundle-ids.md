@@ -70,7 +70,7 @@ ascelerate bundle-ids disable-capability
 ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
-Bir yeteneği etkinleştirdikten veya devre dışı bıraktıktan sonra, o bundle ID için provisioning profilleri varsa, komut bunları yeniden oluşturmayı teklif eder (değişikliklerin etkili olması için gereklidir).
+Bir yeteneği etkinleştirdikten veya devre dışı bıraktıktan sonra komut, bundle ID'nin provisioning profillerini yeniden oluşturmayı teklif eder (değişikliğin etkili olması için gereklidir). Her profil, hâlâ var olan ve süresi dolmamış kendi sertifikalarıyla ve uyan, etkin kendi cihazlarıyla yeniden oluşturulur; bunlardan biri kalmayan profil, hiçbir şey silinmeden önce atlanır. `--yes` yalnızca yetenek değişikliğini yanıtlar: Profilleri sormadan yeniden oluşturmak için `--regenerate-profiles` ekleyin. `--yes` ile `disable-capability` için `--type` gerekir.
 
 :::note
 Bazı yetenekler (ör. App Groups, iCloud, Associated Domains) etkinleştirildikten sonra [Apple Developer portalında](https://developer.apple.com/account/resources) ek yapılandırma gerektirir.

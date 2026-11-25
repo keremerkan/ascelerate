@@ -248,8 +248,17 @@ public enum CustomProductPages {
     }
   }
 
-  /// Deletes a language, after its placements (`AssetLibrary.clearPlacements`).
+  /// Deletes a language, after its placements (`AssetLibrary.clearPlacements`). Checked first: its
+  /// page version must be editable and keep another language.
   public static func deleteLocalization(id: String, client: ASCClient) async throws {
+    let localization = try await client.appCustomProductPageLocalizationsGetInstance(
+      path: .init(id: id), query: .init(include: [.appCustomProductPageVersion])
+    ).ok.body.json.data
+    if let versionID = localization.relationships?.appCustomProductPageVersion?.data?.id {
+      let state = try await client.appCustomProductPageVersionsGetInstance(path: .init(id: versionID)).ok.body.json.data.attributes?.state ?? ""
+      guard ["PREPARE_FOR_SUBMISSION", "REJECTED"].contains(state) else { throw LanguageDeleteError.notEditable(removing: .language, owner: .customProductPage, state: state) }
+      guard try await localizations(versionID: versionID, client: client).count > 1 else { throw LanguageDeleteError.lastLanguage }
+    }
     try await AssetLibrary.clearPlacements(on: .productPageLocalization(id), client: client)
     _ = try await client.appCustomProductPageLocalizationsDeleteInstance(path: .init(id: id)).noContent
   }

@@ -1,3 +1,4 @@
+import ArgumentParser
 import ASCKit
 import AscelerateCore
 import Foundation
@@ -23,6 +24,23 @@ extension AssetLibrary {
     }
   }
 
+  /// Throws if the image has an alpha channel and no live spec of its size and type allows one
+  /// (`placementSpecs`, Apple's `appAssetLibraryRefData`): Apple would fail it after the upload,
+  /// with the slot's current image already replaced.
+  static func validateAlpha(of file: MediaFile, liveSpecs: [ImageSpec]) throws {
+    guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: file.path) as CFURL, nil),
+      let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+      let width = properties[kCGImagePropertyPixelWidth] as? Int,
+      let height = properties[kCGImagePropertyPixelHeight] as? Int
+    else { throw MediaUploadError.cannotReadFile(file.path) }
+    guard properties[kCGImagePropertyHasAlpha] as? Bool == true else { return }
+    let fileExtension = (file.fileName as NSString).pathExtension.lowercased()
+    let matching = liveSpecs.filter { $0.accepts(width: width, height: height, fileExtension: fileExtension) }
+    guard !matching.isEmpty, !matching.contains(where: \.alphaAllowed) else { return }
+    throw ValidationError(
+      "\(file.fileName) has transparency (an alpha channel), which this slot doesn't take; save it without alpha.")
+  }
+
   /// Throws if the video's size, length, frame rate, audio or file type is not one the slot
   /// accepts.
   static func validateVideo(_ file: MediaFile, slot: Slot) async throws {
@@ -46,9 +64,10 @@ extension AssetLibrary {
 
   /// Validates, uploads and places one file in `slot` on `owner`: images under the slot's
   /// placement type, videos under its video placement type. The `current` placements (a single
-  /// slot's existing one) are removed once the file is uploaded, so a failed upload leaves the
-  /// slot as it was. Under dry run nothing is reserved, and a placeholder ID lets the placement be
-  /// previewed. Returns the new placement's ID.
+  /// slot's existing one) are taken off once the file is uploaded (the slot takes one), and their
+  /// assets deleted only after the new one is placed: a failed upload leaves the slot as it was,
+  /// and a refused placement puts the old asset back. Under dry run nothing is reserved, and a
+  /// placeholder ID lets the placement be previewed. Returns the new placement's ID.
   static func uploadAndPlace(
     _ file: MediaFile, slot: Slot, on owner: Owner, libraryID: String, replacing current: [String] = [],
     client: ASCClient
@@ -68,10 +87,36 @@ extension AssetLibrary {
       } ?? "DRY-RUN-IMAGE")
       type = slot.placementType
     }
+    // The old placements' assets, kept until the new one is placed.
+    var old: [(asset: Asset, type: PlacementType, fileName: String?)] = []
     for placementID in current {
-      try await removePlacement(id: placementID, client: client)
+      let placed = try await placedAsset(placementID: placementID, client: client)
+      guard try await unlessDryRunStopped({ try await deletePlacement(id: placementID, client: client) }) != nil else { continue }
+      if let asset = placed.asset {
+        let oldType: PlacementType
+        if case .video = asset { oldType = slot.videoPlacementType ?? type } else { oldType = slot.placementType }
+        old.append((asset, oldType, placed.fileName))
+      }
     }
-    return try await place(asset, on: owner, type: type, group: slot.group, client: client)
+    let placementID: String
+    do {
+      placementID = try await place(asset, on: owner, type: type, group: slot.group, client: client)
+    } catch {
+      // Put the old image or video back, so a refused placement doesn't leave the slot empty.
+      // If that fails too, both failures are reported, naming the asset left in the library.
+      for (asset, oldType, fileName) in old {
+        do {
+          _ = try await place(asset, on: owner, type: oldType, group: slot.group, client: client)
+        } catch let restoreError {
+          throw RestoreFailed(placementError: error, restoreError: restoreError, previous: asset, previousFileName: fileName)
+        }
+      }
+      throw error
+    }
+    for (asset, _, _) in old {
+      _ = try await deleteIfUnused(asset, client: client)
+    }
+    return placementID
   }
 
   /// The library assets behind a localization's classic screenshot or preview set: its items are

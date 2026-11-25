@@ -98,6 +98,21 @@ public enum Profiles {
     return "Development"
   }
 
+  /// What a recreated profile of a type takes from the devices and certificates given: the
+  /// enabled devices that fit its platform (nil for a type without devices), and the certificates
+  /// that fit it and haven't expired. A development or ad hoc profile with no device left, or any
+  /// profile with no certificate left, can't be made: check that before deleting the old one.
+  public static func reissueContents(
+    profileType: String, devices: [Devices.Device], certificates: [Certificates.Certificate], now: Date = .now
+  ) -> (devices: [Devices.Device]?, certificates: [Certificates.Certificate]) {
+    let fittingDevices = needsDevices(profileType)
+      ? devices.filter { ($0.status ?? "ENABLED") == "ENABLED" && fits($0, profileType: profileType) } : nil
+    let fittingCertificates = certificates.filter {
+      certificateFits($0.type ?? "", profileType: profileType) && ($0.expirationDate.map { $0 > now } ?? true)
+    }
+    return (fittingDevices, fittingCertificates)
+  }
+
   public static func needsDevices(_ profileType: String) -> Bool {
     profileType.contains("DEVELOPMENT") || profileType.contains("ADHOC")
   }
@@ -182,12 +197,14 @@ public enum Profiles {
   }
 
   /// A profile by exact name (or the only partial match): Apple's name filter can match partially.
-  public static func find(name: String, client: ASCClient) async throws -> Profile {
+  /// With `exact`, only a profile of exactly that name (what a delete should act on); otherwise
+  /// also the only one whose name contains it (Apple's name filter matches parts).
+  public static func find(name: String, exact: Bool = false, client: ASCClient) async throws -> Profile {
     let profiles = try await client.profilesGetCollection(query: .init(filterName: [name], limit: 200)).ok.body.json.data
     if let profile = profiles.first(where: { $0.attributes?.name == name }) {
       return Profile(profile, bundleIdentifier: nil)
     }
-    if profiles.count == 1 {
+    if !exact, profiles.count == 1 {
       return Profile(profiles[0], bundleIdentifier: nil)
     }
     throw LookupError.notFound(name)

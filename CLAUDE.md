@@ -129,16 +129,16 @@ ascelerate apps review preflight <bundle-id> [--version X] [--platform X] [--jso
 ascelerate apps review status <bundle-id> [--version X] [--json]    # Review submission status
 ascelerate apps create-version <bundle-id> <ver> [--platform X]   # Create new version
 ascelerate apps copyright <bundle-id> [--set X] [--version X] [--platform X] [-y]  # View/update version copyright notice
-ascelerate apps build attach <bundle-id> [--version X] [--platform X]             # Interactively select and attach a build
+ascelerate apps build attach <bundle-id> [--version X] [--platform X]             # Interactively select and attach a build (never under -y: use attach-latest)
 ascelerate apps build attach-latest <bundle-id> [--version X] [--platform X]     # Attach the most recent build
 ascelerate apps build detach <bundle-id> [--version X] [--platform X]            # Remove the attached build
-ascelerate apps phased-release <bundle-id> [--version X] [--platform X]          # View/manage phased release
+ascelerate apps phased-release <bundle-id> [--version X] [--platform X]          # View/manage phased release (view/pause/resume/complete: the live version rolling out; enable/disable: the one being prepared)
 ascelerate apps release <bundle-id> [--version X] [--platform X] [-y]            # Release a version in Pending Developer Release
 ascelerate apps app-info age-rating <bundle-id>                            # View age rating
 ascelerate apps app-info age-rating export <bundle-id>                     # Export age rating to JSON
 ascelerate apps app-info age-rating import <bundle-id> [--file X]          # Update age rating from JSON
 ascelerate apps routing-coverage <bundle-id> [--file X]           # View/upload routing coverage
-ascelerate apps review submit <bundle-id> [--version X]            # Submit version for App Review (offers IAPs/subs and Game Center items with pending versions)
+ascelerate apps review submit <bundle-id> [--version X] [--platform X] [-y]  # Submit version for App Review: state checked and the draft's other items listed before any write; under -y no build is picked; offers IAPs/subs (ReviewProducts) and Game Center items with pending versions
 ascelerate apps review resolve-issues <bundle-id> [--platform X]  # Mark rejected items as resolved
 ascelerate apps review cancel-submission <bundle-id> [--platform X]  # Cancel an active review submission
 ascelerate apps review info <bundle-id> [--version X] [--platform X] [--contact-first-name X] [--contact-last-name X] [--contact-phone X] [--contact-email X] [--demo-account-name X] [--demo-account-password X] [--demo-account-required true|false] [--notes X] [-y]  # View/update App Review Information
@@ -308,8 +308,8 @@ ascelerate bundle-ids info [identifier]                           # Bundle ID de
 ascelerate bundle-ids register [--name X] [--identifier X] [--platform X] [-y]  # Register a bundle ID (interactive if omitted)
 ascelerate bundle-ids update [identifier] [--name X] [-y]         # Rename a bundle ID (interactive if omitted)
 ascelerate bundle-ids delete [identifier] [-y]                    # Delete a bundle ID (interactive picker if omitted)
-ascelerate bundle-ids enable-capability [identifier] [--type X] [-y]   # Enable a capability (interactive if omitted)
-ascelerate bundle-ids disable-capability [identifier] [-y]        # Disable a capability (interactive picker)
+ascelerate bundle-ids enable-capability [identifier] [--type X] [--regenerate-profiles] [-y]   # Enable a capability (interactive if omitted)
+ascelerate bundle-ids disable-capability [identifier] [--type X] [--regenerate-profiles] [-y]   # Disable a capability (interactive picker; --type required with -y)
 ascelerate profiles list [--name X] [--type X] [--state X]       # List provisioning profiles
 ascelerate profiles info [name]                                   # Profile details (interactive picker if omitted)
 ascelerate profiles download [name] [--output X]                  # Download profile (interactive picker if omitted)
@@ -572,7 +572,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - Selection lists use `[\(i + 1)]` numbering, `readLine()` input, `Int()` parsing, and range validation.
 - `--yes` / `autoConfirm` is incompatible with interactive mode — commands throw `ValidationError` when required options are missing with `--yes`.
 - `enable-capability` filters the type picker to exclude already-enabled capabilities; `disable-capability` only shows enabled ones.
-- `enable-capability` and `disable-capability` offer to regenerate provisioning profiles after changes (delete + recreate with same settings) via `regenerateProfilesIfNeeded()` helper in BundleIDsCommand.swift.
+- `enable-capability` and `disable-capability` offer to regenerate provisioning profiles after changes via `regenerateProfilesIfNeeded()` in BundleIDsCommand.swift: each profile is deleted and recreated with its own certificates and devices as `Profiles.reissueContents` keeps them (enabled devices that fit, certificates that fit and haven't expired; the same rule as `profiles reissue`), and a profile left without either is skipped before any delete. Under `-y` it regenerates only with `--regenerate-profiles`.
 
 ### JSON output (`--json`)
 - Read commands can offer machine-readable output via the shared `JSONOption` option group (Formatting.swift): add `@OptionGroup var jsonOption: JSONOption`, call `jsonOption.activate()` at the top of `run()`.

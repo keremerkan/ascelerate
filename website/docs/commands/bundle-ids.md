@@ -70,7 +70,7 @@ ascelerate bundle-ids disable-capability
 ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
-After enabling or disabling a capability, if provisioning profiles exist for that bundle ID, the command offers to regenerate them (required for changes to take effect).
+After enabling or disabling a capability, the command offers to regenerate the bundle ID's provisioning profiles (required for the change to take effect). Each is made again with its own certificates that still exist and haven't expired, and its own enabled devices that fit; a profile left without either is skipped before anything is deleted. `--yes` answers the capability change only: add `--regenerate-profiles` to regenerate them without asking. Under `--yes`, `disable-capability` needs `--type`.
 
 :::note
 Some capabilities (e.g. App Groups, iCloud, Associated Domains) require additional configuration in the [Apple Developer portal](https://developer.apple.com/account/resources) after enabling.

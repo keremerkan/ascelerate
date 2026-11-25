@@ -30,6 +30,8 @@ ascelerate events update <bundle-id> summer-sale --priority NORMAL --badge NONE
 ascelerate events delete <bundle-id> summer-sale
 ```
 
+Ein Ereignis kann mehrere Zeitpläne für Länder oder Regionen haben. Ohne `--territories` gehen neue Daten an jeden davon; mit `--territories` ersetzt ein Zeitplan für die genannten Länder oder Regionen alle, und der Befehl listet auf, was er ersetzt.
+
 - **Badges:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Geben Sie `update` ein `--badge NONE` mit, um das Badge zu entfernen.
 - **Zwecke:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Priorität:** `HIGH` oder `NORMAL`.

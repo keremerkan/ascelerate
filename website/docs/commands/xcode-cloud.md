@@ -45,6 +45,8 @@ ascelerate xcode-cloud runs artifacts <bundle-id> 42
 ascelerate xcode-cloud runs artifacts <bundle-id> 42 --type LOG_BUNDLE --download ./logs
 ```
 
+`--download` saves each artifact under Apple's file name, as a file in the folder (never a path) and unique within the download. It asks before replacing an existing file and never replaces a folder. With `--json`, progress goes to stderr and the saved files are listed as JSON.
+
 Each run shows its state, the branch, tag or pull request built, the commit and how long it took; `runs info` adds its actions with their error, warning and test failure counts (Apple sends none, so they're counted from each action's issues). For an archive that uploaded to App Store Connect, it also shows the uploaded build with its processing and TestFlight states. `issues` lists each action's errors and warnings with file and line; `tests` lists test results per destination (device and OS), with the failure message of each failed test. `logs` reads each action's log bundle: the post-clone script's, package resolution's and xcodebuild's logs, listed with their line counts or printed with `--show`. `artifacts` lists logs, archives, result bundles and products; `--download` saves them (`--type` narrows them down).
 
 ## Start a build

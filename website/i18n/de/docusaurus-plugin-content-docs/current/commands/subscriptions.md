@@ -187,6 +187,8 @@ ascelerate sub availability <bundle-id> <product-id> --available-in-new-territor
 ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
 
+`--add` und `--remove` beginnen bei einem Produkt ohne eigene Liste mit den Ländern oder Regionen der App, das Produkt behält sie also.
+
 Jahresabonnements lassen sich auch **monatlich mit 12 Monaten Mindestlaufzeit** anbieten (monatliche Abrechnung; nicht in den USA und Singapur verfügbar). Dieser Abrechnungsplan hat eine eigene Regionsliste: Mit `--plan monthly` zeigen Sie sie an oder bearbeiten sie. Ohne `--plan` gilt der Befehl für den regulären Plan mit Vorauszahlung.
 
 ## Einführungsangebote

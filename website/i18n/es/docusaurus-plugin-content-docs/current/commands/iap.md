@@ -134,6 +134,8 @@ ascelerate iap availability <bundle-id> <product-id> --remove ITA
 ascelerate iap availability <bundle-id> <product-id> --available-in-new-territories true
 ```
 
+`--add` y `--remove` en un producto sin lista propia parten de los países o regiones de la app, así que el producto los conserva.
+
 ## Códigos de oferta
 
 Los códigos de oferta son códigos canjeables que dan un descuento puntual en una compra dentro de la app. Los hay de dos tipos, que se gestionan con el mismo recurso de código de oferta:

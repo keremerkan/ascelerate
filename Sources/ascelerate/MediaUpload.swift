@@ -608,6 +608,8 @@ extension AppsCommand {
         // slot before anything is asked or sent: a file that doesn't fit would otherwise fail only
         // after the run had changed the set.
         var unfit: [String] = []
+        // Each slot's live image specs (alpha allowed or not), read once.
+        var liveImageSpecs: [String: [AssetLibrary.ImageSpec]] = [:]
         for localeMedia in plan.locales {
           for dt in localeMedia.displayTypes {
             guard let slot = AssetLibrary.slots[dt.folderName] else { continue }
@@ -617,6 +619,11 @@ extension AppsCommand {
                   try await AssetLibrary.validateVideo(file, slot: slot)
                 } else {
                   try AssetLibrary.validateSize(of: file, slot: slot)
+                  if liveImageSpecs[dt.folderName] == nil {
+                    liveImageSpecs[dt.folderName] = try await AssetLibrary.placementSpecs(
+                      type: slot.placementType.rawValue, group: slot.group, client: ascClient).images
+                  }
+                  try AssetLibrary.validateAlpha(of: file, liveSpecs: liveImageSpecs[dt.folderName] ?? [])
                 }
               } catch {
                 unfit.append("  \(localeMedia.locale)/\(dt.folderName)/\(file.fileName): \(describeError(error))")
@@ -1630,17 +1637,24 @@ extension AppsCommand {
             "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0.rawValue) } ?? "?") version's platform.")
         }
 
-        // Which display types exist locally, per locale (lowercased for matching)
+        // Which display types exist locally, per locale (lowercased for matching): a display type's
+        // folder counts when it's there, whatever it holds (only previews, or nothing yet), as
+        // upload and verify leave an empty part alone. A locale counts when it has such folders.
         var localScreenshotTypes: [String: Set<String>] = [:]
         var localPreviewTypes: [String: Set<String>] = [:]
-        for localeMedia in plan.locales {
-          let key = localeMedia.locale.lowercased()
-          for dt in localeMedia.displayTypes {
-            if !dt.screenshots.isEmpty {
-              localScreenshotTypes[key, default: []].insert(dt.folderName)
-            }
-            if !dt.previews.isEmpty, let pv = dt.previewType {
-              localPreviewTypes[key, default: []].insert(pv.rawValue)
+        let fm = FileManager.default
+        let root = expandPath(folderPath)
+        for localeName in (try? fm.contentsOfDirectory(atPath: root)) ?? [] where !localeName.hasPrefix(".") {
+          let localePath = (root as NSString).appendingPathComponent(localeName)
+          for folder in (try? fm.contentsOfDirectory(atPath: localePath)) ?? [] where !folder.hasPrefix(".") {
+            var isDirectory: ObjCBool = false
+            guard fm.fileExists(atPath: (localePath as NSString).appendingPathComponent(folder), isDirectory: &isDirectory),
+              isDirectory.boolValue
+            else { continue }
+            let key = localeName.lowercased()
+            localScreenshotTypes[key, default: []].insert(folder)
+            if let preview = AssetLibrary.previewType(of: folder) {
+              localPreviewTypes[key, default: []].insert(preview.rawValue)
             }
           }
         }
@@ -1730,6 +1744,7 @@ extension AppsCommand {
 
         var deleted = 0
         var failed = 0
+        var notSent = 0
         for orphan in orphans {
           do {
             if orphan.isScreenshot {
@@ -1739,6 +1754,9 @@ extension AppsCommand {
             }
             print("  OK   [\(orphan.locale)] \(orphan.typeName) (\(orphan.kind.lowercased()))")
             deleted += 1
+          } catch where ASCDryRunStop.from(error) != nil {
+            print("  DRY  [\(orphan.locale)] \(orphan.typeName) — not sent (dry run)")
+            notSent += 1
           } catch {
             print("  FAIL [\(orphan.locale)] \(orphan.typeName) — \(describeError(error))")
             failed += 1
@@ -1746,6 +1764,10 @@ extension AppsCommand {
         }
 
         print()
+        if notSent > 0 {
+          print("Dry run complete. \(notSent) set\(notSent == 1 ? "" : "s") would be deleted.")
+          return
+        }
         success("Pruned", "\(deleted) set\(deleted == 1 ? "" : "s").")
         if failed > 0 {
           print("\(failed) set\(failed == 1 ? "" : "s") failed to delete.")

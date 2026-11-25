@@ -154,7 +154,7 @@ Required display types: `APP_IPHONE_67` (iPhone) and `APP_IPAD_PRO_3GEN_129` (iP
 
 ```bash
 ascelerate apps review preflight <app>           # Pre-submission checks
-ascelerate apps review submit <app>              # Submit (offers to include IAPs/subs and Game Center items waiting for review)
+ascelerate apps review submit <app>              # Submit (state checked and the draft's other items listed first; offers IAPs/subs and Game Center items waiting for review; -y never picks a build: attach-latest first)
 ascelerate apps review status <app>              # Check status (active submissions list app version + IAP/sub items)
 ascelerate apps review resolve-issues <app>      # After fixing rejection
 ascelerate apps review cancel-submission <app>   # Cancel active review
@@ -340,7 +340,7 @@ Testers are created and deleted in App Store Connect (Users and Access > Sandbox
 ```bash
 ascelerate reviews list <app> [--rating 1-5] [--territory USA] [--sort recent|oldest|critical|best] [--unanswered] [--limit 50]
 ascelerate reviews info <review-id>                       # full text + developer response
-ascelerate reviews respond <review-id> --body "..."       # publish/replace developer response
+ascelerate reviews respond <review-id> --body "..." [-y]  # publish/replace developer response (always shows the text and asks; -y skips)
 ascelerate reviews delete-response <review-id>
 ```
 
@@ -817,7 +817,7 @@ ascelerate certs revoke
 
 # Bundle IDs & capabilities
 ascelerate bundle-ids register --name "My App" --identifier com.example.MyApp --platform IOS
-ascelerate bundle-ids enable-capability com.example.MyApp --type PUSH_NOTIFICATIONS
+ascelerate bundle-ids enable-capability com.example.MyApp --type PUSH_NOTIFICATIONS   # -y alone leaves the profiles; add --regenerate-profiles
 
 # Profiles
 ascelerate profiles create --name "My Profile" --type IOS_APP_STORE --bundle-id com.example.MyApp --certificates all

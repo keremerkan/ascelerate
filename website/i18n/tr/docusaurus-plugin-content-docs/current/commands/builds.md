@@ -136,4 +136,6 @@ ascelerate apps build detach <bundle-id>
 
 `build attach-latest`, en son build hâlâ işleniyorsa beklemeyi teklif eder. `--yes` ile otomatik olarak bekler.
 
+`build attach`, `--yes` ile build seçmez: En yenisi hâlâ işleniyor, süresi dolmuş veya geçersiz olabilir. Bunu denetleyen `build attach-latest` komutunu kullanın.
+
 Build aramaları platforma duyarlıdır: evrensel satın alma kullanan uygulamalarda iOS ve macOS build'leri aynı build numaralarını paylaşabildiğinden, ekleme komutları yalnızca hedef sürümün platformuyla eşleşen build'leri dikkate alır.

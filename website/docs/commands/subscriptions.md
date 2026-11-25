@@ -187,6 +187,8 @@ ascelerate sub availability <bundle-id> <product-id> --available-in-new-territor
 ascelerate sub availability <bundle-id> <product-id> --plan monthly --add DEU,FRA
 ```
 
+`--add` and `--remove` on a product without a list of its own start from the app's territories, so the product keeps them.
+
 Annual subscriptions can also be sold as **Monthly with 12-Month Commitment** (billed monthly; not offered in the United States and Singapore). That billing plan has its own territory list: add `--plan monthly` to view or edit it. Without `--plan`, the command manages the regular upfront plan.
 
 ## Introductory offers

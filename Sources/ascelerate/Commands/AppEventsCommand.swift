@@ -326,20 +326,32 @@ struct AppEventsCommand: AsyncParsableCommand {
       var schedules: [AppEvents.Schedule]?
       if territories != nil || publishStart != nil || eventStart != nil || eventEnd != nil {
         // The PATCH replaces the whole territorySchedules array — merge omitted
-        // fields from the existing schedule instead of clearing them.
-        let existing = appEvent.schedules.first
-        if appEvent.schedules.count > 1 {
-          print(yellow("⚠ This event has multiple territory schedules — the update replaces them with a single schedule."))
-        }
+        // fields from the existing schedules instead of clearing them.
         let dates = try AppEventsCommand.scheduleDates(
           publishStart: publishStart, eventStart: eventStart, eventEnd: eventEnd)
-        schedules = [
+        func merged(_ schedule: AppEvents.Schedule?, territories named: [String]?) -> AppEvents.Schedule {
           AppEvents.Schedule(
-            territories: AppEventsCommand.territoryList(territories) ?? existing?.territories,
-            publishStart: dates.publishStart ?? existing?.publishStart,
-            eventStart: dates.eventStart ?? existing?.eventStart,
-            eventEnd: dates.eventEnd ?? existing?.eventEnd)
-        ]
+            territories: named ?? schedule?.territories,
+            publishStart: dates.publishStart ?? schedule?.publishStart,
+            eventStart: dates.eventStart ?? schedule?.eventStart,
+            eventEnd: dates.eventEnd ?? schedule?.eventEnd)
+        }
+        if let named = AppEventsCommand.territoryList(territories) {
+          // Named territories make one schedule of them, in place of every current one.
+          if appEvent.schedules.count > 1 {
+            print(yellow("⚠ This event has \(appEvent.schedules.count) territory schedules; they're replaced by one for the territories named:"))
+            for schedule in appEvent.schedules {
+              print("    \(schedule.territories?.count ?? 0) territories from \(schedule.publishStart.map { formatDate($0) } ?? "-")")
+            }
+          }
+          schedules = [merged(appEvent.schedules.first, territories: named)]
+        } else {
+          // Without territories, the dates change in every schedule, each keeping its territories.
+          schedules = appEvent.schedules.isEmpty ? [merged(nil, territories: nil)] : appEvent.schedules.map { merged($0, territories: nil) }
+          if appEvent.schedules.count > 1 {
+            print("The new dates go to each of the event's \(appEvent.schedules.count) territory schedules.")
+          }
+        }
       }
 
       let deepLinkValue = try AppEventsCommand.parseDeepLink(deepLink)

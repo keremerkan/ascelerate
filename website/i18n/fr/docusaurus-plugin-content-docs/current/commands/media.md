@@ -184,7 +184,7 @@ ascelerate apps media prune <bundle-id> media/
 ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
-Les locales sans dossier local sont entièrement ignorées -- la commande ne purge qu'au sein des locales réellement gérées par le dossier.
+Les langues sans dossier local sont entièrement ignorées : la commande ne nettoie que les langues que le dossier gère. Le dossier d'un type d'affichage compte même s'il est vide, donc un dossier vide conserve son jeu. Avec `--dry-run`, elle liste ce qu'elle supprimerait.
 
 ## Retirer des images de la bibliothèque de ressources
 

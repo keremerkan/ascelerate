@@ -125,22 +125,26 @@ extension AppsCommand {
 
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let existing = try await AccessibilityDeclarations.list(appID: app.id, client: client)
-          .first { $0.deviceFamily == family.rawValue && $0.state != "REPLACED" }
+        // A draft is edited; a published declaration can only be replaced, by a new draft (seen
+        // 2026-10-20/21), so its values are shown for comparison and a draft is created.
+        let declarations = try await AccessibilityDeclarations.list(appID: app.id, client: client)
+          .filter { $0.deviceFamily == family.rawValue && $0.state != "REPLACED" }
+        let draft = declarations.first { $0.state == "DRAFT" }
+        let existing = draft ?? declarations.first { $0.state == "PUBLISHED" }
 
         print("\(app.attributes?.name ?? bundleID), \(formatState(family.rawValue)):")
         for f in applicable {
           let before = existing?.supports[f.name].map { $0 ? "yes" : "no" } ?? "-"
           print("  \(f.label): \(has(f.name) ? green("yes") : "no")" + (existing == nil ? "" : " (now \(before))"))
         }
-        guard confirm("\(existing == nil ? "Create" : "Update") this declaration\(publish ? " and publish it" : "")? [y/N] ") else {
+        guard confirm("\(draft == nil ? (existing == nil ? "Create" : "Create a draft replacing the published") : "Update the draft") declaration\(publish ? " and publish it" : "")? [y/N] ") else {
           print(yellow("Cancelled."))
           return
         }
 
-        if let existing {
+        if let draft {
           try await AccessibilityDeclarations.update(
-            id: existing.id, deviceFamily: family.rawValue, supported: on, publish: publish, client: client)
+            id: draft.id, deviceFamily: family.rawValue, supported: on, publish: publish, client: client)
           print(green("Updated") + " the \(formatState(family.rawValue)) declaration" + (publish ? " and published it." : "."))
         } else {
           let created = try await AccessibilityDeclarations.create(

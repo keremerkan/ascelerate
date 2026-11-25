@@ -61,15 +61,18 @@ public enum Devices {
 
   /// A device by UDID, else by exact name (or the only partial match): Apple's name filter can
   /// match partially.
-  public static func find(nameOrUDID: String, client: ASCClient) async throws -> Device {
-    if let device = try await client.devicesGetCollection(query: .init(filterUdid: [nameOrUDID], limit: 1)).ok.body.json.data.first {
+  /// With `exact`, only a device of exactly that UDID (any case) or name (what a write should act
+  /// on); otherwise also the first UDID match and the only device whose name contains it.
+  public static func find(nameOrUDID: String, exact: Bool = false, client: ASCClient) async throws -> Device {
+    let byUDID = try await client.devicesGetCollection(query: .init(filterUdid: [nameOrUDID], limit: exact ? 200 : 1)).ok.body.json.data
+    if let device = exact ? byUDID.first(where: { $0.attributes?.udid?.lowercased() == nameOrUDID.lowercased() }) : byUDID.first {
       return Device(device)
     }
     let byName = try await client.devicesGetCollection(query: .init(filterName: [nameOrUDID], limit: 200)).ok.body.json.data
     if let device = byName.first(where: { $0.attributes?.name == nameOrUDID }) {
       return Device(device)
     }
-    if byName.count == 1 {
+    if !exact, byName.count == 1 {
       return Device(byName[0])
     }
     throw LookupError.notFound(nameOrUDID)

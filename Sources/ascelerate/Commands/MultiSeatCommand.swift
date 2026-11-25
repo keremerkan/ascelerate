@@ -392,6 +392,14 @@ extension SubCommand.Pricing {
         let territoryID = targets[index].proposed.territoryID
         targets[index].change = prices.current[territoryID] == nil ? "NEW" : (changes[territoryID] ?? "UNKNOWN")
       }
+      // A priced territory the preview leaves out, or answers with a type it didn't have before, is
+      // neither a raise nor a cut as far as this command knows, so it isn't sent unasked.
+      let known: Swift.Set = ["NEW", "INCREASE_PRESERVABLE", "DECREASE_NOT_PRESERVABLE", "MIXED_NOT_PRESERVABLE", "NO_CHANGE"]
+      let unknown = targets.filter { !known.contains($0.change ?? "") }
+      guard unknown.isEmpty else {
+        throw ValidationError(
+          "Apple's price change preview gave no known result for \(unknown.count) territor\(unknown.count == 1 ? "y" : "ies") (\(unknown.prefix(8).map { "\($0.proposed.territoryID): \($0.change ?? "none")" }.joined(separator: ", "))), so nothing was sent.")
+      }
       let byChange = Dictionary(grouping: targets, by: { $0.change ?? "" })
       let raises = byChange["INCREASE_PRESERVABLE"] ?? []
       let cuts = (byChange["DECREASE_NOT_PRESERVABLE"] ?? []) + (byChange["MIXED_NOT_PRESERVABLE"] ?? [])

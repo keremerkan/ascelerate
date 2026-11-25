@@ -184,7 +184,7 @@ ascelerate apps media prune <bundle-id> media/
 ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
-Los idiomas sin carpeta local se omiten por completo: el comando solo elimina conjuntos dentro de los idiomas que la carpeta gestiona realmente.
+Los idiomas sin carpeta local se omiten por completo: el comando solo limpia dentro de los idiomas que gestiona la carpeta. La carpeta de un tipo de pantalla cuenta aunque esté vacía, así que una carpeta vacía conserva su conjunto. Con `--dry-run` muestra lo que eliminaría.
 
 ## Quitar imágenes de la biblioteca multimedia
 

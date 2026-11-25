@@ -38,7 +38,7 @@ Muestra el texto completo de la reseña y la respuesta del desarrollador (si la 
 ascelerate reviews respond <review-id> --body "Thanks for the feedback! We've fixed this in the latest update."
 ```
 
-Publica una respuesta del desarrollador. Si la reseña ya tiene una respuesta, se sustituye (previa confirmación).
+Publica una respuesta del desarrollador, que es pública: el comando muestra la reseña y el texto y pregunta antes (`--yes` omite la pregunta). Si la reseña ya tiene respuesta, se reemplaza.
 
 ## Eliminar una respuesta
 

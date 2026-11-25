@@ -38,7 +38,7 @@ Değerlendirmenin tam metnini ve varsa geliştirici yanıtını gösterir. Değe
 ascelerate reviews respond <review-id> --body "Geri bildiriminiz için teşekkürler! Bunu en son güncellemede düzelttik."
 ```
 
-Bir geliştirici yanıtı yayımlar. Değerlendirmede zaten bir yanıt varsa, onayınızın ardından mevcut yanıt değiştirilir.
+Herkese açık bir geliştirici yanıtı yayımlar: Komut önce değerlendirmeyi ve metni gösterip sorar (`--yes` soruyu atlar). Değerlendirmenin zaten bir yanıtı varsa yenisiyle değiştirilir.
 
 ## Yanıtı silme
 

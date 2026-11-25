@@ -70,7 +70,7 @@ ascelerate bundle-ids disable-capability
 ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
-ケイパビリティの有効化・無効化後、そのBundle IDにプロビジョニングプロファイルが存在する場合、再生成するか確認します（変更を反映するために必要です）。
+ケイパビリティを有効化・無効化すると、そのBundle IDのプロビジョニングプロファイルを再生成するか確認します（変更を反映するために必要です）。各プロファイルは、まだ存在し期限切れでない自身の証明書と、適合する有効な自身のデバイスで作り直されます。どちらかが残らないプロファイルは、何かを削除する前にスキップされます。`--yes` はケイパビリティの変更にだけ答えます。確認なしで再生成するには `--regenerate-profiles` を加えてください。`--yes` を付けた `disable-capability` には `--type` が必要です。
 
 :::note
 一部のケイパビリティ（App Groups、iCloud、Associated Domainsなど）は、有効化後に [Apple Developer ポータル](https://developer.apple.com/account/resources) で追加の設定が必要です。

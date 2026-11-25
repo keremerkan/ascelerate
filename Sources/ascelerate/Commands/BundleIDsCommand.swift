@@ -254,6 +254,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
       """)
     var type: String?
 
+    @Flag(name: .customLong("regenerate-profiles"), help: "Delete and recreate the App ID's provisioning profiles afterwards without asking (with --yes they're left as they are otherwise).")
+    var regenerateProfiles = false
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
@@ -329,7 +332,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
         print("(e.g. container IDs, domains, or entitlements) before it can be used.")
       }
 
-      try await regenerateProfilesIfNeeded(bundleID: bundleID, client: client)
+      try await regenerateProfilesIfNeeded(bundleID: bundleID, asked: regenerateProfiles, client: client)
     }
 
     /// Capabilities that need extra configuration in the Apple Developer portal after enabling.
@@ -348,6 +351,12 @@ struct BundleIDsCommand: AsyncParsableCommand {
     @Argument(help: "The bundle identifier (e.g. com.example.MyApp).")
     var identifier: String?
 
+    @Option(name: .long, help: "The capability to disable (e.g. GAME_CENTER); required with --yes.")
+    var type: String?
+
+    @Flag(name: .customLong("regenerate-profiles"), help: "Delete and recreate the App ID's provisioning profiles afterwards without asking (with --yes they're left as they are otherwise).")
+    var regenerateProfiles = false
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
@@ -357,6 +366,16 @@ struct BundleIDsCommand: AsyncParsableCommand {
       let enabled = try await fetchCapabilities(bundleID: bundleID, client: client)
       guard !enabled.isEmpty else {
         throw ValidationError("No capabilities enabled on this bundle identifier.")
+      }
+      if let type {
+        let wanted = type.uppercased()
+        guard let capability = enabled.first(where: { $0.type == wanted }) else {
+          throw ValidationError("\(wanted) isn't enabled on this bundle identifier.")
+        }
+        guard bundleID.canRemove(capability.type) else {
+          throw ValidationError("\(formatState(capability.type)) can't be removed from a universal bundle identifier, here or in the developer portal.")
+        }
+        return capability
       }
       // App Store Connect refuses to remove some from a universal bundle ID.
       let caps = enabled.filter { bundleID.canRemove($0.type) }
@@ -389,6 +408,9 @@ struct BundleIDsCommand: AsyncParsableCommand {
         bundleID = try await promptBundleID(client: client)
       }
 
+      if autoConfirm && type == nil {
+        throw ValidationError("--type is required when using --yes.")
+      }
       let capability = try await promptCapability(bundleID: bundleID, client: client)
       let capType = capability.type.isEmpty ? "—" : formatState(capability.type)
       let bidIdentifier = bundleID.identifier
@@ -408,7 +430,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
       print()
       success("Disabled", "\(capType) on '\(bidIdentifier)'.")
 
-      try await regenerateProfilesIfNeeded(bundleID: bundleID, client: client)
+      try await regenerateProfilesIfNeeded(bundleID: bundleID, asked: regenerateProfiles, client: client)
     }
   }
 }
@@ -422,9 +444,13 @@ private func fetchCapabilities(
     .sorted { formatState($0.type).localizedCaseInsensitiveCompare(formatState($1.type)) == .orderedAscending }
 }
 
-/// After a capability change, checks for provisioning profiles referencing this bundle ID
-/// and offers to regenerate them (delete + recreate with the same settings).
-private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: ASCClient) async throws {
+/// After a capability change, the App ID's provisioning profiles have to be made again to carry
+/// it: each is deleted and recreated with the same name, type, its own certificates that still
+/// exist, and its own enabled devices that fit. A profile left without a certificate or (for
+/// development and ad hoc) a device is skipped before anything is deleted. `-y` answers the
+/// capability change only: without `asked` (`--regenerate-profiles`) it lists the profiles and
+/// how to regenerate them.
+private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, asked: Bool, client: ASCClient) async throws {
   let bidIdentifier = bundleID.identifier
 
   // Fetch all profiles that reference this bundle ID
@@ -433,8 +459,6 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: AS
     .sorted { $0.name < $1.name }
 
   guard !matchingProfiles.isEmpty else { return }
-
-  let allCerts = try await Certificates.list(client: client)
 
   print()
   print("Capability changes require provisioning profile regeneration.")
@@ -446,28 +470,60 @@ private func regenerateProfilesIfNeeded(bundleID: BundleIDs.BundleID, client: AS
   }
   print()
 
-  guard confirm("Regenerate \(matchingProfiles.count) profile(s)? This will delete and recreate each profile. [y/N] ") else {
-    print("Skipped profile regeneration.")
+  if autoConfirm && !asked {
+    print("Not regenerated: --yes answers the capability change only. Add --regenerate-profiles, or reissue them with 'ascelerate profiles reissue <name>'.")
     return
+  }
+
+  // Each profile's own certificates that still exist, and its own enabled devices that fit.
+  let existing = Swift.Set(try await Certificates.list(client: client).map(\.id))
+  struct Plan {
+    let profile: Profiles.Profile
+    let certs: [Certificates.Certificate]
+    let devices: [Devices.Device]?
+  }
+  var plans: [Plan] = []
+  var skipped: [String] = []
+  for profile in matchingProfiles {
+    let name = profile.name.isEmpty ? "—" : profile.name
+    let type = profile.type ?? ""
+    let own = try await Profiles.certificates(profileID: profile.id, client: client).filter { existing.contains($0.id) }
+    let ownDevices = profile.needsDevices ? try await Profiles.devices(profileID: profile.id, client: client) : []
+    let contents = Profiles.reissueContents(profileType: type, devices: ownDevices, certificates: own)
+    guard !contents.certificates.isEmpty else {
+      skipped.append("\(name) — none of its certificates exists unexpired any more; reissue it with 'ascelerate profiles reissue'")
+      continue
+    }
+    if let devices = contents.devices, devices.isEmpty {
+      skipped.append("\(name) — no enabled device fits a \(type) profile")
+      continue
+    }
+    plans.append(Plan(profile: profile, certs: contents.certificates, devices: contents.devices))
+  }
+  for line in skipped { print("  SKIP \(line)") }
+  guard !plans.isEmpty else {
+    print()
+    print("Done. 0 regenerated, \(skipped.count) failed.")
+    return
+  }
+
+  if !asked {
+    guard confirm("Regenerate \(plans.count) profile(s)? This will delete and recreate each profile. [y/N] ") else {
+      print("Skipped profile regeneration.")
+      return
+    }
   }
   print()
 
   var succeeded = 0
-  var failed = 0
-
-  for profile in matchingProfiles {
-    let neededFamily = Profiles.certificateFamily(forProfileType: profile.type ?? "")
-    let certs = Profiles.certificates(allCerts, fitting: profile.type ?? "")
-    guard !certs.isEmpty else {
-      print("  SKIP \(profile.name.isEmpty ? "—" : profile.name) — no \(neededFamily.lowercased()) certificate found")
-      failed += 1
-      continue
-    }
-
+  var failed = skipped.count
+  for plan in plans {
     if await reissueProfile(
-      profile,
+      plan.profile,
       bundleIDIdentifier: bidIdentifier,
-      certs: certs,
+      certs: plan.certs,
+      overrideDeviceIDs: plan.devices?.map(\.id),
+      deviceUDIDs: plan.devices?.map(\.udid),
       verb: "regenerated",
       client: client
     ) {

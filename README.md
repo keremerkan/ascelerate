@@ -234,7 +234,9 @@ ascelerate apps review attachment upload <bundle-id> demo.mp4
 ascelerate apps review attachment delete <attachment-id>
 ```
 
-For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` and `review submit` default to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release, release, routing coverage) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
+Nothing is written before the confirmation. The version must be one App Review takes (Prepare for Submission, or back from review); without `--platform` the command takes the version being prepared and asks when several platforms have one. A draft submission that holds the version, or the platform's open draft, is used, and its other items are listed before you confirm, since they go to App Review too; a submission of the platform already with App Review without this version stops the command. Without an attached build you pick one; under `--yes` it refuses and points to `apps build attach-latest`.
+
+For universal-purchase apps (one App Store record spanning iOS, macOS, tvOS, and/or visionOS), the same version string can exist once per platform. `create-version` defaults to iOS — pass `--platform macos` (or `tvos`, `visionos`) to target another platform. All other version-scoped commands (localizations, media, build attach, review preflight/info/attachments/resolve-issues/cancel-submission, phased release, release, routing coverage) accept an optional `--platform` as well; without it they prompt whenever a version (or active review submission) matches more than one platform — and refuse with a hint instead of prompting under `--yes`.
 
 #### Pre-submission preflight checks
 
@@ -299,6 +301,8 @@ ascelerate apps build detach <bundle-id>
 
 Build lookups are platform-aware: on universal-purchase apps, iOS and macOS builds can share build numbers, so the attach commands only consider builds matching the target version's platform.
 
+`build attach` doesn't pick a build under `--yes`: the newest may still be processing, expired or invalid. Use `build attach-latest`, which checks.
+
 ### Phased Release
 
 ```bash
@@ -316,6 +320,8 @@ ascelerate apps phased-release <bundle-id> --complete
 # Remove phased release entirely
 ascelerate apps phased-release <bundle-id> --disable
 ```
+
+Without `--version`, viewing, `--pause`, `--resume` and `--complete` act on the live version whose phased release is active or paused (asked when several platforms roll out at once), not on the version being prepared; `--enable` and `--disable` act on the version being prepared.
 
 ### Manual Release
 
@@ -714,6 +720,8 @@ ascelerate apps accessibility publish <bundle-id>            # publish drafts un
 
 `set` declares the full list: features you leave out are declared as not supported.
 
+A published declaration can't be edited: `set` updates the device family's draft, or creates a draft, which replaces the published declaration once it's published.
+
 ### Territory Availability
 
 ```bash
@@ -911,7 +919,7 @@ ascelerate bundle-ids disable-capability
 ascelerate bundle-ids disable-capability com.example.MyApp
 ```
 
-After enabling or disabling a capability, if provisioning profiles exist for that bundle ID, the command offers to regenerate them (required for changes to take effect).
+After enabling or disabling a capability, the command offers to regenerate the bundle ID's provisioning profiles (required for the change to take effect). Each is made again with its own certificates that still exist and haven't expired, and its own enabled devices that fit; a profile left without either is skipped before anything is deleted. `--yes` answers the capability change only: add `--regenerate-profiles` to regenerate them without asking. Under `--yes`, `disable-capability` needs `--type`.
 
 > **Note:** Some capabilities (e.g. App Groups, iCloud, Associated Domains) require additional configuration in the [Apple Developer portal](https://developer.apple.com/account/resources) after enabling.
 
@@ -1279,7 +1287,7 @@ ascelerate reviews respond <review-id> --body "Thanks for the feedback! ..."
 ascelerate reviews delete-response <review-id>
 ```
 
-Reviews are read-only — you can only manage the developer response. `--sort` accepts `recent`, `oldest`, `critical` (lowest rating first), or `best`. Review IDs come from `reviews list`. With `--json`, `reviews list` includes full review bodies and developer responses, so no per-review `info` calls are needed.
+Reviews are read-only — you can only manage the developer response. `--sort` accepts `recent`, `oldest`, `critical` (lowest rating first), or `best`. Review IDs come from `reviews list`. A response is public, so `respond` shows the review and the text and asks first (`--yes` skips the question). With `--json`, `reviews list` includes full review bodies and developer responses, so no per-review `info` calls are needed.
 
 ### Game Center
 
@@ -1419,6 +1427,8 @@ ascelerate events media delete <bundle-id> summer-sale <media-id>
 ```
 
 Badges: `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Purposes: `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`. Schedule dates accept ISO8601 or `yyyy-MM-dd`. Asset types: `EVENT_CARD`, `EVENT_DETAILS_PAGE`. Localization locales must match the app's configured locales (e.g. `tr`, not `tr-TR`).
+
+An event can have several territory schedules. Without `--territories`, new dates go to each of them; with `--territories`, one schedule for the territories named replaces them all, and the command lists what it replaces.
 
 ### Custom Product Pages
 

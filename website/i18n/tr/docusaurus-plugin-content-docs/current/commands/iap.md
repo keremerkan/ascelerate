@@ -134,6 +134,8 @@ ascelerate iap availability <bundle-id> <product-id> --remove ITA
 ascelerate iap availability <bundle-id> <product-id> --available-in-new-territories true
 ```
 
+Kendi listesi olmayan bir üründe `--add` ve `--remove`, uygulamanın ülke veya bölgelerinden başlar; böylece ürün onları korur.
+
 ## Teklif kodları
 
 Teklif kodları IAP üzerinde tek seferlik indirim sağlayan kodlardır. Aynı teklif kodu kaynağı altında iki türde gelir:

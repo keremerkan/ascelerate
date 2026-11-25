@@ -209,10 +209,15 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
           print("The response already has this text; nothing to send.")
           return
         }
-        guard confirm("This review already has a response. Replace it? [y/N] ") else {
-          cancelled()
-          return
-        }
+      }
+
+      // A response is public: always shown and confirmed (--yes skips the question).
+      print(existing == nil ? "Response to publish:" : "Response to publish, replacing the current one:")
+      for line in body.split(separator: "\n", omittingEmptySubsequences: false) { print("  \(line)") }
+      print()
+      guard confirm(existing == nil ? "Publish this response? [y/N] " : "Replace the response with this one? [y/N] ") else {
+        cancelled()
+        return
       }
 
       let resp = try await CustomerReviews.respond(reviewID: reviewID, body: body, client: client)

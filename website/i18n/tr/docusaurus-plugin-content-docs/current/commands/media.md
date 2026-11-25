@@ -184,7 +184,7 @@ ascelerate apps media prune <bundle-id> media/
 ascelerate apps media prune <bundle-id> media/ --version 2.1.0 --platform ios
 ```
 
-Yerel klasörü olmayan locale'ler tamamen atlanır; komut yalnızca klasörün gerçekten yönettiği locale'ler içinde temizlik yapar.
+Yerel klasörü olmayan diller tamamen atlanır: Komut yalnızca klasörün yönettiği dillerde temizlik yapar. Bir ekran türünün klasörü boş olsa da sayılır, bu yüzden boş bir klasör setini korur. `--dry-run` ile neleri sileceğini listeler.
 
 ## Varlık kitaplığı görsellerini kaldırma
 

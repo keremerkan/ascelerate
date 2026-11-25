@@ -2161,6 +2161,10 @@ struct SubCommand: AsyncParsableCommand {
           planID = availability.id
           return (availability.availableInNewTerritories, availability.territories)
         },
+        // The monthly plan follows nothing: without availability it isn't offered.
+        inherited: isMonthly ? nil : {
+          try await AppAvailability.availability(appID: app.id, client: client)?.territories.filter(\.available).map(\.territoryID)
+        },
         post: { availableInNew, territories in
           try await Subscriptions.setAvailability(
             subscriptionID: sub.id, plan: planType.rawValue, existingID: planID,

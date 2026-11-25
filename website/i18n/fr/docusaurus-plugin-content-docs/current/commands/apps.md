@@ -35,7 +35,7 @@ ascelerate apps create-version <bundle-id> 2.1.0 --platform ios --release-type m
 L'option `--release-type` est facultative -- son omission reprend le paramètre de la version précédente.
 
 :::note Achat universel
-Pour les applications en achat universel (une seule fiche App Store couvrant iOS, macOS, tvOS et/ou visionOS), la même chaîne de version peut exister une fois par plateforme. `create-version` et `review submit` ciblent iOS par défaut -- passez `--platform macos` (ou `tvos`, `visionos`) pour viser une autre plateforme. Toutes les autres commandes liées à une version (localisations, médias, association de build, vérifications préalables, informations et pièces jointes d'examen, `resolve-issues`/`cancel-submission`, déploiement progressif, publication manuelle) acceptent elles aussi une option `--platform` facultative ; sans elle, elles demandent de choisir dès qu'une version (ou une soumission d'examen active) correspond à plusieurs plateformes -- avec `--yes`, elles refusent en affichant une indication au lieu de demander.
+Pour les applications en achat universel (une seule fiche App Store couvrant iOS, macOS, tvOS et/ou visionOS), la même chaîne de version peut exister une fois par plateforme. `create-version` cible iOS par défaut -- passez `--platform macos` (ou `tvos`, `visionos`) pour viser une autre plateforme. Toutes les autres commandes liées à une version (localisations, médias, association de build, vérifications préalables, informations et pièces jointes d'examen, `resolve-issues`/`cancel-submission`, déploiement progressif, publication manuelle) acceptent elles aussi une option `--platform` facultative ; sans elle, elles demandent de choisir dès qu'une version (ou une soumission d'examen active) correspond à plusieurs plateformes -- avec `--yes`, elles refusent en affichant une indication au lieu de demander.
 :::
 
 ## Copyright
@@ -67,6 +67,8 @@ ascelerate apps review submit <bundle-id> --platform macos
 ```
 
 Lors de la soumission, la commande détecte automatiquement les achats intégrés et les abonnements avec des modifications en attente et propose de les soumettre en même temps que la version de l'application. Les modifications en attente sont lues dans l'historique des versions de chaque produit (une version à l'état « Prepare for Submission », « Ready for Review » ou dans un état rejeté), ce qui permet de détecter aussi les modifications limitées aux captures d'écran. `apps review status` associe les éléments des soumissions actives à la version de l'application ou au produit auxquels ils se rapportent. Elle propose aussi d’ajouter les succès, classements, groupes de classements, activités et défis Game Center dont les modifications attendent la vérification, et prévient quand Game Center est désactivé sur la version.
+
+Rien n'est écrit avant la confirmation. La version doit être une version qu'App Review accepte (en préparation pour soumission, ou revenue de l'examen) ; sans `--platform`, la commande prend la version en préparation et demande si plusieurs plateformes en ont une. Le brouillon qui contient la version, ou le brouillon ouvert de la plateforme, est utilisé, et ses autres éléments sont listés avant la confirmation, car ils partent aussi à App Review ; une soumission de la plateforme déjà chez App Review sans cette version arrête la commande. Sans build associé, vous en choisissez un ; avec `--yes`, la commande refuse et renvoie vers `apps build attach-latest`.
 
 ### Résoudre les éléments rejetés
 
@@ -166,6 +168,8 @@ ascelerate apps phased-release <bundle-id> --complete
 ascelerate apps phased-release <bundle-id> --disable
 ```
 
+Sans `--version`, l'affichage, `--pause`, `--resume` et `--complete` agissent sur la version en ligne dont la publication progressive est active ou en pause (avec une question si plusieurs plateformes se déploient en même temps), pas sur la version en préparation ; `--enable` et `--disable` agissent sur la version en préparation.
+
 ## Publication manuelle
 
 Lorsque l'option de publication d'une version est définie sur manuelle, la version approuvée reste en « Pending Developer Release » (en attente de publication par le développeur) jusqu'à ce que vous la publiiez :
@@ -194,6 +198,8 @@ ascelerate apps accessibility publish <bundle-id>
 ```
 
 `set` déclare la liste complète : les fonctionnalités que vous omettez sont déclarées comme non prises en charge (`--supports none` n'en déclare aucune). Familles d'appareils : `iphone`, `ipad`, `mac`, `apple-tv`, `apple-watch`, `vision`. Sans `--publish`, la déclaration reste un brouillon. La publication d'une déclaration modifiée remplace celle qui était publiée ; `--all` liste aussi les déclarations remplacées. Ne déclarez que ce sur quoi les utilisateurs peuvent compter dans les tâches courantes de l'application.
+
+Une déclaration publiée ne peut pas être modifiée : `set` met à jour le brouillon de la famille d'appareils ou en crée un, qui remplace la déclaration publiée une fois publié.
 
 ## Disponibilité territoriale
 

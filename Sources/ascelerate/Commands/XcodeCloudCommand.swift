@@ -971,20 +971,48 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         if let download {
           let folder = URL(filePath: expandPath(download))
           try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-          for e in entries {
-            let name = e.artifact.fileName ?? e.artifact.id
-            print("Downloading \(name)…", terminator: "")
-            fflush(stdout)
-            // On a terminal, the share received so far after the name, redrawn as it grows.
-            let showsProgress = isTerminal
-            try await XcodeCloud.download(artifactID: e.artifact.id, to: folder.appending(path: name), client: client) { bytes, expected in
-              guard showsProgress, expected > 0 else { return }
-              print("\r\u{1B}[KDownloading \(name)… \(bytes * 100 / expected)%", terminator: "")
+          // With --json, progress goes to stderr and stdout gets the downloaded files as JSON.
+          func say(_ text: String, terminator: String = "\n") {
+            if jsonOption.json {
+              FileHandle.standardError.write(Data((text + terminator).utf8))
+            } else {
+              print(text, terminator: terminator)
               fflush(stdout)
             }
-            if showsProgress { print("\r\u{1B}[KDownloading \(name)…", terminator: "") }
-            print(" " + green("done"))
           }
+          struct Saved: Encodable {
+            let action: String?
+            let artifact: XcodeCloud.Artifact
+            let path: String
+          }
+          var saved: [Saved] = []
+          var used: Swift.Set<String> = []
+          for e in entries {
+            // Apple's name, as a file in the folder (never a path), unique within this download.
+            let base = MediaDownload.safeFileName(e.artifact.fileName, fallback: e.artifact.id)
+            var name = base
+            var n = 2
+            while used.contains(name.lowercased()) {
+              let ext = (base as NSString).pathExtension
+              let stem = (base as NSString).deletingPathExtension
+              name = ext.isEmpty ? "\(stem) (\(n))" : "\(stem) (\(n)).\(ext)"
+              n += 1
+            }
+            used.insert(name.lowercased())
+            let target = URL(filePath: expandPath(confirmOutputPath(folder.appending(path: name).path(percentEncoded: false), isDirectory: false)))
+            say("Downloading \(target.lastPathComponent)…", terminator: "")
+            // On a terminal, the share received so far after the name, redrawn as it grows.
+            let showsProgress = isTerminal && !jsonOption.json
+            try await XcodeCloud.download(artifactID: e.artifact.id, to: target, client: client) { bytes, expected in
+              guard showsProgress, expected > 0 else { return }
+              print("\r\u{1B}[KDownloading \(target.lastPathComponent)… \(bytes * 100 / expected)%", terminator: "")
+              fflush(stdout)
+            }
+            if showsProgress { print("\r\u{1B}[KDownloading \(target.lastPathComponent)…", terminator: "") }
+            say(" " + (jsonOption.json ? "done" : green("done")))
+            saved.append(Saved(action: e.action, artifact: e.artifact, path: target.path(percentEncoded: false)))
+          }
+          if jsonOption.json { try printJSON(saved); return }
           print("\(entries.count) artifact\(entries.count == 1 ? "" : "s") in \(folder.path(percentEncoded: false))")
           return
         }

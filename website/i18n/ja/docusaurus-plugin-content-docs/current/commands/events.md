@@ -30,6 +30,8 @@ ascelerate events update <bundle-id> summer-sale --priority NORMAL --badge NONE
 ascelerate events delete <bundle-id> summer-sale
 ```
 
+イベントには国や地域ごとのスケジュールを複数設定できます。`--territories` を指定しない場合、新しい日付はそれぞれのスケジュールに適用されます。`--territories` を指定すると、指定した国や地域のスケジュール1つがすべてを置き換え、置き換える内容が一覧表示されます。
+
 - **バッジ：** `LIVE_EVENT`、`PREMIERE`、`CHALLENGE`、`COMPETITION`、`NEW_SEASON`、`MAJOR_UPDATE`、`SPECIAL_EVENT`。バッジを解除するには `update` に `--badge NONE` を指定します。
 - **目的：** `APPROPRIATE_FOR_ALL_USERS`、`ATTRACT_NEW_USERS`、`KEEP_ACTIVE_USERS_INFORMED`、`BRING_BACK_LAPSED_USERS`。
 - **優先度：** `HIGH` または `NORMAL`。

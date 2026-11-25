@@ -38,7 +38,7 @@ Affiche le texte complet de l'avis et la réponse du développeur, le cas éché
 ascelerate reviews respond <review-id> --body "Merci pour votre retour ! Nous avons corrigé cela dans la dernière mise à jour."
 ```
 
-Publie une réponse du développeur. Si l'avis a déjà une réponse, elle est remplacée après confirmation.
+Publie une réponse du développeur, qui est publique : la commande affiche l'avis et le texte et demande d'abord (`--yes` passe la question). Si l'avis a déjà une réponse, elle est remplacée.
 
 ## Supprimer une réponse
 

@@ -97,6 +97,17 @@ public func optionalRelated<T>(_ fetch: () async throws -> T) async throws -> T?
   }
 }
 
+/// Runs a list fetch, mapping only HTTP 404 (a resource with no list yet) to nil. Unlike
+/// `optionalRelated`, a response that fails to decode throws: read as "none", the next write would
+/// replace everything there.
+public func optionalList<T>(_ fetch: () async throws -> T) async throws -> T? {
+  do {
+    return try await fetch()
+  } catch where ASCError.isNotFound(error) {
+    return nil
+  }
+}
+
 /// The build attached to an App Store version, or nil.
 public func attachedBuild(versionID: String, client: ASCClient) async throws -> Components.Schemas.Build? {
   try await optionalRelated {

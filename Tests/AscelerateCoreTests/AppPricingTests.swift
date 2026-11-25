@@ -94,6 +94,24 @@ import Testing
     ])
   }
 
+  @Test func keepingCurrentLeavesPlannedPricesAlone() {
+    // FRA takes Apple's price today and has a sale planned; DEU a dated change for good.
+    let schedule = AppPricing.Schedule(
+      baseTerritoryID: "USA",
+      manualPrices: [
+        Self.price("USA", "0.99"),
+        Self.price("FRA", "0.49", start: Self.sooner, end: Self.later),
+        Self.price("DEU", "2.99", start: Self.sooner),
+      ],
+      automaticPrices: [Self.price("FRA", "1.09", manual: false), Self.price("DEU", "1.19", manual: false)],
+      currencies: [:])
+    #expect(Self.sent(schedule.keepingCurrent(territoryIDs: ["FRA", "DEU"])) == [
+      "USA-0.99 - -", "FRA-0.49 \(Self.sooner) \(Self.later)", "DEU-2.99 \(Self.sooner) -",
+      // FRA's kept price around the sale, DEU's until its change.
+      "FRA-1.09 - \(Self.sooner)", "FRA-1.09 \(Self.later) -", "DEU-1.19 - \(Self.sooner)",
+    ])
+  }
+
   // MARK: Dated edits (iap pricing)
 
   static let sooner = "2098-06-01"

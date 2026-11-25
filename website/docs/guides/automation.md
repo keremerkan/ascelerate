@@ -36,7 +36,7 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # same, e.g. fo
 
 App Store Connect allows 3,600 API requests per hour for your API key, counted over a rolling hour. When a long command (a large media upload, a library cleanup, a price import) uses them up, ascelerate waits until App Store Connect says requests are allowed again, shows the time it will continue at, and then carries on. Press Ctrl-C to stop instead.
 
-In CI you may prefer to fail rather than wait: set `ASCELERATE_MAX_RATE_LIMIT_WAIT` to the most seconds a run may wait in total (`0` fails at the first rate-limited request).
+In CI you may prefer to fail rather than wait: set `ASCELERATE_MAX_RATE_LIMIT_WAIT` to the most seconds a run may wait in total (`0` fails at the first rate-limited request). The same allowance covers Apple Ads requests.
 
 ```bash
 ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes

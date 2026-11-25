@@ -46,7 +46,7 @@ ascelerate ads reports search-terms --app myapp --days 14
 | `keywords` | Keywords, with Apple's suggested bid |
 | `search-terms` | What people actually searched, the keyword that matched, and whether it came from your keywords or Search Match |
 
-All reports take `--days N` (including today) or `--from`/`--to`, `--app`, `--campaign`, `--all` (include rows without activity), and `--json`. Dates are in the ad account's time zone. For decisions, compare complete days: today's numbers are still coming in.
+All reports take `--days N` (including today) or `--from`/`--to`, `--app`, `--campaign`, `--all` (include rows without activity), and `--json`. Dates are in the ad account's time zone. For decisions, compare complete days: today's numbers are still coming in. `search-terms` doesn't take `--all`: Apple reports only searches with impressions or spend. A breakdown by region adds the country, and one by city adds the region and country, as Apple requires; they're shown, so same-named places in different countries stay apart.
 
 Each row shows spend, impressions, taps, installs, tap-through rate (TTR), average cost per tap (CPT) and per install (CPI), and two conversion rates:
 
@@ -77,6 +77,8 @@ ascelerate ads campaigns create --app myapp --name "MyApp DE" --country DE --dai
 ```
 
 The campaign is created **paused**, together with its ad group: an automated one for Max Conversions, or a manual one with `--default-bid`. `--like` copies an existing campaign's app, countries, and settings. `--enabled` starts it right away.
+
+Amounts (`--daily`, `--bid`, `--default-bid`, `--amount`, `--cpa-goal`) take digits with at most two decimals, such as `1.25`, and are sent exactly as given.
 
 ```bash
 ascelerate ads campaigns target-cpa --app myapp --country US
@@ -147,6 +149,8 @@ ascelerate ads history --app myapp --days 7
 
 Every change to campaigns, ad groups, keywords, and negative keywords in the last six months, including ones made in the Apple Ads website or by Apple, with old and new values. Useful before reading a change in performance.
 
+Times are shown in the ad account's time zone, the one `--days` counts in.
+
 ## Keyword research
 
 ```bash
@@ -156,7 +160,7 @@ ascelerate ads keywords popularity --genre PRODUCTIVITY_UTILITIES --country US -
 ascelerate ads insights impression-share --app myapp --country US --weeks 4
 ```
 
-- `suggest` returns Apple's keyword suggestions for your seed terms, with their popularity and where you already target them.
+- `suggest` returns Apple's keyword suggestions for your seed terms, with their popularity and where you already target them. All of Apple's suggestions are sorted by popularity before `--limit` (1 to 1000) applies.
 - `popularity` shows how popular search terms are in a storefront (1 to 100) and in the app's genre. Terms outside the genre's ranked list are listed separately.
 - `impression-share` shows your share of ad impressions and your rank for the search terms your ads appeared on: a low share on a popular, converting term is room to grow, and a share below 100% on your own brand name means competitors bid on it.
 

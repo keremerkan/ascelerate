@@ -68,17 +68,16 @@ public enum AppInfos {
       query: .init(
         limit: 50,
         include: [
-          .appInfoLocalizations, .primaryCategory, .primarySubcategoryOne, .primarySubcategoryTwo, .secondaryCategory,
+          .primaryCategory, .primarySubcategoryOne, .primarySubcategoryTwo, .secondaryCategory,
           .secondarySubcategoryOne, .secondarySubcategoryTwo,
-        ],
-        limitAppInfoLocalizations: 50)
+        ])
     ).ok.body.json
     let appInfo = try pickActive(from: response.data)
-    let ids = Set(appInfo.relationships?.appInfoLocalizations?.data?.map(\.id) ?? [])
-    let localizations = (response.included ?? []).compactMap { item -> Components.Schemas.AppInfoLocalization? in
-      if case .appInfoLocalizations(let localization) = item, ids.contains(localization.id) { return localization }
-      return nil
-    }
+    // Read from the app info's own list: included ones stop at 50 for the whole response, which
+    // a live and an edited app info of 29 languages each would pass.
+    let localizations = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.appInfosAppInfoLocalizationsGetToManyRelated(path: .init(id: appInfo.id), query: .init(limit: 200)).ok.body.json
+    }.flatMap(\.data)
     return (appInfo, localizations)
   }
 

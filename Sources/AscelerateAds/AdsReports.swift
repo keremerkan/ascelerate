@@ -49,6 +49,8 @@ extension Ads {
 
   /// What people searched for when a campaign's ads showed, with the keyword (or Search Match)
   /// that matched. Always in the ad account's time zone: Apple refuses UTC for search terms.
+  /// Rows without activity can't be asked for (Apple: "For SEARCHTERM dimension, EMPTY_METRICS
+  /// cannot be set", seen 2026-11-26).
   public static func searchTermReportRows(
     campaignID: Int64, start: String, end: String, context: String, client: Client
   ) async throws -> [Components.Schemas.AppsSearchTermReportRow] {

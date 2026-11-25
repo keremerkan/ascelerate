@@ -34,7 +34,7 @@ extension AdsCommand {
     @OptionGroup var range: Ads.DateRangeOptions
     @OptionGroup var scope: Ads.ScopeOptions
 
-    @Option(name: .long, help: "Taps a search term needs before it is judged (default: 10).")
+    @Option(name: .long, help: "Taps a search term needs before it is judged (at least 1, default: 10).")
     var minTaps = 10
 
     @Option(
@@ -69,6 +69,11 @@ extension AdsCommand {
       let rows: [Components.Schemas.AppsSearchTermReportRow]
       let keywords: [Components.Schemas.Keyword]
       let negatives: [Components.Schemas.NegativeKeyword]
+    }
+
+    func validate() throws {
+      // With 0, every term with impressions and no taps would be judged a negative candidate.
+      guard minTaps >= 1 else { throw ValidationError("--min-taps must be at least 1.") }
     }
 
     func run() async throws {

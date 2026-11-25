@@ -42,16 +42,24 @@ extension AdsCommand {
         jsonOption.activate()
         let ads = try Ads.config()
         let (start, end) = try await options.range.resolved(ads)
-        let dimensions = try Ads.unique(by).map { name in
+        var dimensions = try Ads.unique(by).map { name in
           guard let field = Ads.breakdowns[name.lowercased()] else {
             throw ValidationError("Invalid --by '\(name)'. Use: \(Ads.breakdowns.keys.sorted().joined(separator: ", ")).")
           }
           return field
         }
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
-        // Apple requires countryCode next to region (adminArea) and city (locality).
-        let needsCountry = dimensions.contains { $0 == .adminArea || $0 == .locality }
-        let rows = try await Ads.withClient(ads) { client in
+        // Apple requires countryCode next to region (adminArea), and region and countryCode next to
+        // city (locality) (400 otherwise, seen 2026-11-26). They're shown and kept apart too, so
+        // same-named regions and cities of different countries aren't summed.
+        if dimensions.contains(.locality) && !dimensions.contains(.adminArea) {
+          dimensions.insert(.adminArea, at: dimensions.firstIndex(of: .locality)!)
+        }
+        if dimensions.contains(.adminArea) && !dimensions.contains(.countryOrRegion) {
+          dimensions.insert(.countryCode, at: dimensions.firstIndex(of: .adminArea)!)
+        }
+        let needsCountry = dimensions.contains(.adminArea) && !dimensions.contains(.countryCode)
+        let rows = try await Ads.withClient(ads) { [dimensions] client in
           try await Ads.campaignReportRows(
             start: start, end: end, includesEmptyRows: options.all, groupBy: dimensions.isEmpty ? [] : dimensions + (needsCountry ? [.countryCode] : []),
             context: Ads.context(ads), client: client)
@@ -73,11 +81,11 @@ extension AdsCommand {
               appName: meta.promotedObjectId.flatMap { scope.appNames[$0] }, displayStatus: meta.displayStatus,
               breakdown: dimensions.isEmpty ? nil : breakdown, metrics: metrics
             )
-          }).sorted {
-            // Broken down: campaigns by spend, each campaign's rows by spend.
-            dimensions.isEmpty || $0.campaignId == $1.campaignId
-              ? $0.metrics.spendValue > $1.metrics.spendValue
-              : $0.campaignName < $1.campaignName
+          }).sorted { a, b in
+            // Unbroken: campaigns by spend. Broken down: campaigns by name, each one's rows by spend.
+            if !dimensions.isEmpty && a.campaignName != b.campaignName { return a.campaignName < b.campaignName }
+            if !dimensions.isEmpty && a.campaignId != b.campaignId { return a.campaignId < b.campaignId }
+            return a.metrics.spendValue > b.metrics.spendValue
           }
         )
 
@@ -95,7 +103,7 @@ extension AdsCommand {
               // mixed-case values stay as they are.
               dimensions.map { field in
                 row.breakdown?[field.rawValue].map {
-                  $0 == $0.uppercased() && !($0.count == 2 && field == .countryOrRegion) ? formatState($0) : $0
+                  $0 == $0.uppercased() && !($0.count == 2 && (field == .countryOrRegion || field == .countryCode)) ? formatState($0) : $0
                 } ?? "-"
               }
             }
@@ -162,7 +170,7 @@ extension AdsCommand {
               campaignId: campaignID, campaignName: scope.campaignName(campaignID), adGroupId: meta.id ?? 0,
               adGroupName: meta.name ?? "-", displayStatus: meta.displayStatus, metrics: metrics
             )
-          }.sorted { $0.campaignId == $1.campaignId && $0.metrics.spendValue > $1.metrics.spendValue }
+          }.bySpendWithinCampaign(campaign: \.campaignId, spend: \.metrics.spendValue)
         )
 
         if jsonOption.json { try printJSON(report); return }
@@ -202,7 +210,8 @@ extension AdsCommand {
               let json = try await client.appsAdReports(
                 headers: .init(xApContext: Ads.context(ads)),
                 body: .json(Ads.reportRequest(
-                  start: start, end: end, filters: Ads.campaignFilter(campaignID), pagination: pagination
+                  start: start, end: end, includesEmptyRows: options.all, filters: Ads.campaignFilter(campaignID),
+                  pagination: pagination
                 ))
               ).ok.body.json
               return (json.result?.rows ?? [], json.pagination?.totalCount)
@@ -220,7 +229,7 @@ extension AdsCommand {
               adId: meta.id ?? 0, adName: meta.name ?? "-", creativeType: meta.creative?.creativeType?.value1.rawValue,
               displayStatus: meta.displayStatus, metrics: metrics
             )
-          }.sorted { $0.campaignId == $1.campaignId && $0.metrics.spendValue > $1.metrics.spendValue }
+          }.bySpendWithinCampaign(campaign: \.campaignId, spend: \.metrics.spendValue)
         )
 
         if jsonOption.json { try printJSON(report); return }
@@ -278,7 +287,7 @@ extension AdsCommand {
               displayStatus: meta.displayStatus, bid: meta.bid.map(Ads.Amount.init),
               suggestedBid: row.insights?.bidRecommendation?.suggestedBidAmount, metrics: metrics
             )
-          }.sorted { ($0.campaignId == $1.campaignId) && $0.metrics.spendValue > $1.metrics.spendValue }
+          }.bySpendWithinCampaign(campaign: \.campaignId, spend: \.metrics.spendValue)
         )
 
         if jsonOption.json { try printJSON(report); return }
@@ -317,6 +326,10 @@ extension AdsCommand {
 
       func run() async throws {
         jsonOption.activate()
+        // Apple has no rows without activity for search terms ("EMPTY_METRICS cannot be set").
+        if options.all {
+          throw ValidationError("--all doesn't apply to search terms: Apple reports only searches with impressions or spend.")
+        }
         let ads = try Ads.config()
         let (start, end) = try await options.range.resolved(ads)
         let scope = try await Ads.Scope.resolve(ads, app: options.app, campaign: options.campaign)
@@ -338,7 +351,7 @@ extension AdsCommand {
               keywordId: meta.keyword?.id, keyword: meta.keyword?.text, matchType: meta.keyword?.matchType?.rawValue,
               metrics: metrics
             )
-          }.sorted { ($0.campaignId == $1.campaignId) && $0.metrics.spendValue > $1.metrics.spendValue }
+          }.bySpendWithinCampaign(campaign: \.campaignId, spend: \.metrics.spendValue)
         )
 
         if jsonOption.json { try printJSON(report); return }

@@ -46,7 +46,7 @@ ascelerate ads reports search-terms --app myapp --days 14
 | `keywords` | Anahtar kelimeler ve Apple'ın önerdiği teklif |
 | `search-terms` | Kullanıcıların gerçekte ne aradığı, eşleşen anahtar kelime ve eşleşmenin sizin anahtar kelimelerinizden mi yoksa Search Match'ten mi geldiği |
 
-Tüm raporlar `--days N` (bugün dahil) veya `--from`/`--to`, `--app`, `--campaign`, `--all` (etkinliği olmayan satırları da gösterir) ve `--json` seçeneklerini kabul eder. Tarihler reklam hesabının saat dilimindedir. Karar verirken tamamlanmış günleri karşılaştırın: Bugünün rakamları henüz kesinleşmedi.
+Tüm raporlar `--days N` (bugün dahil) veya `--from`/`--to`, `--app`, `--campaign`, `--all` (etkinliği olmayan satırları da gösterir) ve `--json` seçeneklerini kabul eder. Tarihler reklam hesabının saat dilimindedir. Karar verirken tamamlanmış günleri karşılaştırın: Bugünün rakamları henüz kesinleşmedi. `search-terms`, `--all` almaz: Apple yalnızca gösterimi veya harcaması olan aramaları bildirir. Bölgeye göre döküm ülkeyi, şehre göre döküm de Apple'ın istediği gibi bölgeyi ve ülkeyi ekler; bunlar gösterilir, böylece farklı ülkelerdeki aynı adlı yerler ayrı kalır.
 
 Her satır harcamayı, gösterimleri, dokunmaları, yüklemeleri, dokunma oranını (TTR), dokunma başına (CPT) ve yükleme başına (CPI) ortalama maliyeti ve iki dönüşüm oranını gösterir:
 
@@ -77,6 +77,8 @@ ascelerate ads campaigns create --app myapp --name "MyApp DE" --country DE --dai
 ```
 
 Kampanya, reklam grubuyla birlikte **duraklatılmış** olarak oluşturulur: Max Conversions için otomatik bir reklam grubu, `--default-bid` ile ise manuel bir reklam grubu. `--like`, mevcut bir kampanyanın uygulamasını, ülkelerini ve ayarlarını kopyalar. `--enabled` kampanyayı hemen başlatır.
+
+Tutarlar (`--daily`, `--bid`, `--default-bid`, `--amount`, `--cpa-goal`) en fazla iki ondalık basamaklı rakamlar alır (`1.25` gibi) ve verildiği gibi gönderilir.
 
 ```bash
 ascelerate ads campaigns target-cpa --app myapp --country US
@@ -147,6 +149,8 @@ ascelerate ads history --app myapp --days 7
 
 Son altı ayda kampanyalarda, reklam gruplarında, anahtar kelimelerde ve negatif anahtar kelimelerde yapılan tüm değişiklikleri, Apple Ads web sitesinde veya Apple tarafından yapılanlar dahil, eski ve yeni değerleriyle gösterir. Performanstaki bir değişikliği yorumlamadan önce bakmak işe yarar.
 
+Saatler, `--days` seçeneğinin günleri saydığı reklam hesabının saat diliminde gösterilir.
+
 ## Anahtar kelime araştırması
 
 ```bash
@@ -156,7 +160,7 @@ ascelerate ads keywords popularity --genre PRODUCTIVITY_UTILITIES --country US -
 ascelerate ads insights impression-share --app myapp --country US --weeks 4
 ```
 
-- `suggest`, verdiğiniz başlangıç terimleri için Apple'ın anahtar kelime önerilerini, popülerlikleri ve bunları zaten nerede hedeflediğinizle birlikte getirir.
+- `suggest`, verdiğiniz başlangıç terimleri için Apple'ın anahtar kelime önerilerini, popülerlikleri ve bunları zaten nerede hedeflediğinizle birlikte getirir. Apple'ın tüm önerileri, `--limit` (1 ile 1000 arası) uygulanmadan önce popülerliğe göre sıralanır.
 - `popularity`, arama terimlerinin bir ülke mağazasında (1 ile 100 arası) ve uygulamanın türünde (genre) ne kadar popüler olduğunu gösterir. Türün sıralı listesinde yer almayan terimler ayrıca listelenir.
 - `impression-share`, reklamlarınızın göründüğü arama terimlerinde gösterim payınızı ve sıranızı gösterir. Popüler ve dönüşüm sağlayan bir terimde düşük pay büyüme fırsatı demektir; kendi marka adınızda yüzde 100'ün altında kalan bir pay ise rakiplerin bu ada teklif verdiğini gösterir.
 

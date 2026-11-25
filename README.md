@@ -1519,7 +1519,8 @@ Manage Apple Ads (formerly Search Ads) campaigns through the Apple Ads Platform 
 # Apple Ads → Account Settings → API, then asks for clientId/teamId/keyId
 ascelerate ads configure
 
-# Performance (--days N or --from/--to; --app, --campaign; --json)
+# Performance (--days N or --from/--to; --app, --campaign; --json). --by region adds the country, --by city the region and
+# country; search-terms takes no --all; ads history shows times in the ad account's zone; amounts take at most two decimals
 ascelerate ads reports campaigns --days 30
 ascelerate ads reports campaigns --campaign "MyApp US" --by device   # also age, gender, country, region, city
 ascelerate ads reports keywords --campaign "MyApp US"              # with Apple's suggested bid
@@ -1639,7 +1640,7 @@ A command stops at its first blocked write, or reports each blocked request as f
 
 ### API rate limit
 
-App Store Connect allows 3,600 API requests per hour for your key, counted over a rolling hour. When a long command uses them up, ascelerate waits until App Store Connect allows requests again, shows when it will continue, and carries on (Ctrl-C stops it). To fail instead, e.g. in CI, set `ASCELERATE_MAX_RATE_LIMIT_WAIT` to the most seconds a run may wait in total (`0` fails at the first rate-limited request). `ascelerate rate-limit` shows what's left and never waits.
+App Store Connect allows 3,600 API requests per hour for your key, counted over a rolling hour. When a long command uses them up, ascelerate waits until App Store Connect allows requests again, shows when it will continue, and carries on (Ctrl-C stops it). To fail instead, e.g. in CI, set `ASCELERATE_MAX_RATE_LIMIT_WAIT` to the most seconds a run may wait in total (`0` fails at the first rate-limited request); the same allowance covers Apple Ads requests. `ascelerate rate-limit` shows what's left and never waits.
 
 ### Upload chunks
 

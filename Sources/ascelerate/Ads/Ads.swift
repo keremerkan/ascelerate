@@ -50,7 +50,9 @@ extension Ads {
       },
       onRateLimitWait: { wait in
         FileHandle.standardError.write(Data("Apple Ads rate limit reached; waiting \(wait) s.\n".utf8))
-      }
+      },
+      // The same allowance as App Store Connect's (seconds in total for the run; 0 waits none).
+      maxRateLimitWait: ProcessInfo.processInfo.environment["ASCELERATE_MAX_RATE_LIMIT_WAIT"].flatMap(Int.init)
     )
     do {
       return try await withClient(credentials, options: options, body)
@@ -137,13 +139,16 @@ extension Ads {
     }
   }
 
-  /// A positive amount as Apple takes it: a decimal string and the currency.
+  /// A positive amount as Apple takes it: digits with at most two decimals ("1.25", "150"), sent
+  /// as the plain decimal of what was read, so what the confirmation shows is what goes out.
   static func money(_ value: String, currency: String) throws -> Components.Schemas.Money {
     let value = value.trimmingCharacters(in: .whitespaces)
-    guard let amount = Double(value), amount > 0, amount.isFinite else {
-      throw ValidationError("Invalid amount '\(value)'. Use a positive number like 1.25.")
+    guard value.wholeMatch(of: /[0-9]+(\.[0-9]{1,2})?/) != nil,
+      let amount = Decimal(string: value, locale: Locale(identifier: "en_US_POSIX")), amount > 0
+    else {
+      throw ValidationError("Invalid amount '\(value)'. Use a positive number with at most two decimals, like 1.25.")
     }
-    return .init(amount: value, currency: currency)
+    return .init(decimal: amount, currency: currency)
   }
 
   /// Runs `fetch` for each campaign, four at a time (keyword and search term reports take one

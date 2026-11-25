@@ -36,7 +36,7 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # aynı etki, �
 
 App Store Connect, API anahtarınız için saatte 3.600 API isteğine izin verir ve bunları kayan bir saat içinde sayar. Uzun bir komut (büyük bir medya yüklemesi, kitaplık temizliği, fiyat içe aktarma) bu sınırı doldurduğunda ascelerate, App Store Connect yeniden istek kabul edene kadar bekler, ne zaman devam edeceğini gösterir ve ardından kaldığı yerden sürdürür. Bunun yerine durdurmak için Ctrl-C'ye basın.
 
-CI'da beklemek yerine başarısız olmak daha uygun olabilir: `ASCELERATE_MAX_RATE_LIMIT_WAIT` değişkenini bir çalıştırmanın toplamda en fazla bekleyebileceği saniyeye ayarlayın (`0`, sınıra takılan ilk istekte başarısız olur).
+CI'da beklemek yerine başarısız olmak daha uygun olabilir: `ASCELERATE_MAX_RATE_LIMIT_WAIT` değişkenini bir çalıştırmanın toplamda en fazla bekleyebileceği saniyeye ayarlayın (`0`, sınıra takılan ilk istekte başarısız olur). Aynı süre sınırı Apple Ads istekleri için de geçerlidir.
 
 ```bash
 ASCELERATE_MAX_RATE_LIMIT_WAIT=600 ascelerate run-workflow release.txt --yes

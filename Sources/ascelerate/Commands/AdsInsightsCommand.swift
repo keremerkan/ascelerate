@@ -22,10 +22,14 @@ extension AdsCommand.Keywords {
     @Option(name: .customLong("seed"), parsing: .upToNextOption, help: "Search terms to base the suggestions on.")
     var seeds: [String] = []
 
-    @Option(name: .long, help: "Number of suggestions (default: 50).")
+    @Option(name: .long, help: "Number of suggestions, the most popular first (1-1000, default: 50).")
     var limit = 50
 
     @OptionGroup var jsonOption: JSONOption
+
+    func validate() throws {
+      guard (1...1000).contains(limit) else { throw ValidationError("--limit must be between 1 and 1000.") }
+    }
 
     private struct Entry: Encodable {
       let text: String
@@ -48,8 +52,9 @@ extension AdsCommand.Keywords {
         let suggestions = try await client.queryKeywordSuggestions(
           headers: .init(xApContext: Ads.context(ads)),
           body: .json(.init(
-            // Apple's docs suggest sorting by popularity, but the API rejects it ("not queryable").
-            pagination: .init(offset: 0, pageSize: Int32(limit)),
+            // Apple's docs suggest sorting by popularity, but the API rejects it ("not queryable"),
+            // so as many as one page holds are read and sorted here before --limit applies.
+            pagination: .init(offset: 0, pageSize: 1000),
             filters: filters
           ))
         ).ok.body.json.value2.result ?? []
@@ -59,7 +64,7 @@ extension AdsCommand.Keywords {
       let entries = suggestions.compactMap { s -> Entry? in
         guard let text = s.text else { return nil }
         return Entry(text: text, popularity: s.popularity.map(Int.init), targetedIn: targeted[text.lowercased()] ?? [])
-      }.sorted { ($0.popularity ?? -1) > ($1.popularity ?? -1) }
+      }.sorted { ($0.popularity ?? -1) > ($1.popularity ?? -1) }.prefix(limit).map(\.self)
       if jsonOption.json { try printJSON(entries); return }
       print("Keyword suggestions for \(app.name)" + (countries.isEmpty ? "" : " (\(countries.joined(separator: ", ")))"))
       print()
@@ -95,10 +100,14 @@ extension AdsCommand.Keywords {
     @Flag(name: .long, help: "Last full month instead of the last full week (Sunday to Saturday).")
     var monthly = false
 
-    @Option(name: .long, help: "Number of rows (default: 100).")
+    @Option(name: .long, help: "Number of rows (1-1000, default: 100).")
     var limit = 100
 
     @OptionGroup var jsonOption: JSONOption
+
+    func validate() throws {
+      guard (1...1000).contains(limit) else { throw ValidationError("--limit must be between 1 and 1000.") }
+    }
 
     private struct Report: Encodable {
       let start: String
@@ -237,10 +246,14 @@ extension AdsCommand {
       @Flag(name: .long, help: "The first ad position only, instead of all positions.")
       var firstSlot = false
 
-      @Option(name: .long, help: "Number of rows (default: 200).")
+      @Option(name: .long, help: "Number of rows (1-1000, default: 200).")
       var limit = 200
 
       @OptionGroup var jsonOption: JSONOption
+
+      func validate() throws {
+        guard (1...1000).contains(limit) else { throw ValidationError("--limit must be between 1 and 1000.") }
+      }
 
       private struct Row: Encodable {
         let searchTerm: String

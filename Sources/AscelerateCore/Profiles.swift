@@ -183,7 +183,7 @@ public enum Profiles {
     }
     guard withDevices else { return profiles }
     // The included linkages stop at 50: a profile with more is read on its own.
-    let linkages = Dictionary(uniqueKeysWithValues: pages.flatMap(\.data).map { ($0.id, $0.relationships?.devices) })
+    let linkages = Dictionary(pages.flatMap(\.data).map { ($0.id, $0.relationships?.devices) }, uniquingKeysWith: { first, _ in first })
     for index in profiles.indices where profiles[index].needsDevices {
       let linkage = linkages[profiles[index].id] ?? nil
       let ids = linkage?.data?.map(\.id) ?? []

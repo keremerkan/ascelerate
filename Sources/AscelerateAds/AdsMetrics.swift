@@ -136,4 +136,11 @@ extension Components.Schemas.Money {
       amount: amount.formatted(.number.grouping(.never).precision(.fractionLength(0...2)).locale(Locale(identifier: "en_US_POSIX"))),
       currency: currency)
   }
+
+  /// An exact amount as Apple takes it: the plain decimal string of the value ("0.5", "150",
+  /// "1.25"), with no rounding and whatever the user's locale. Labelled: unlabelled beside the
+  /// Double form, an integer literal would be ambiguous.
+  public init(decimal amount: Decimal, currency: String) {
+    self.init(amount: NSDecimalNumber(decimal: amount).description(withLocale: Locale(identifier: "en_US_POSIX")), currency: currency)
+  }
 }

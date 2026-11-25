@@ -84,7 +84,9 @@ extension AdsCommand {
           ).ok.body.json
           let result = page.value2.result ?? []
           rows += result
-          if result.count < 1000 || rows.count >= (page.value1.pagination?.totalCount ?? 0) { break }
+          if Ads.pagingDone(received: result.count, asked: 1000, total: page.value1.pagination?.totalCount.map { Int($0) }, have: rows.count) {
+            break
+          }
         }
 
         // One entry per changed entity; updates get their field-level changes.
@@ -115,10 +117,15 @@ extension AdsCommand {
         print("No changes \(start) – \(end).")
         return
       }
+      // Apple sends eventTime in UTC whatever time zone is asked for (seen 2026-11-26: an event
+      // read 19:23:22Z, as the campaign's own modificationTime, in a Europe/Istanbul account), and
+      // the range counts days in the ad account's zone; the times are shown in that zone too.
+      let zone = try await Ads.accountTimeZone(ads)
       let formatter = DateFormatter()
       formatter.dateFormat = "yyyy-MM-dd HH:mm"
+      formatter.timeZone = zone
       Table.print(
-        headers: ["Time", "By", "Change", "Entity", "Campaign", "Details"],
+        headers: ["Time (\(zone.identifier))", "By", "Change", "Entity", "Campaign", "Details"],
         rows: entries.map { e in
           let by: String = switch e.userType {
           case "CUSTOMER": "UI"

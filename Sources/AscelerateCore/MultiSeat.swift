@@ -129,10 +129,11 @@ extension Subscriptions {
         ).ok.body.json
       }
     }
-    let tierIDsByPrice = Dictionary(uniqueKeysWithValues: pricePages.flatMap(\.data).compactMap { price -> (String, [String])? in
+    // A price can come twice (on two pages); the first is kept rather than trapping.
+    let tierIDsByPrice = Dictionary(pricePages.flatMap(\.data).compactMap { price -> (String, [String])? in
       guard let ids = price.relationships?.additionalPriceTiers?.data?.map(\.id), !ids.isEmpty else { return nil }
       return (price.id, ids)
-    })
+    }, uniquingKeysWith: { first, _ in first })
     guard !tierIDsByPrice.isEmpty else { return [:] }
     let tierPages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {

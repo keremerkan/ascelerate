@@ -14,7 +14,7 @@ extension Ads {
 
   static let breakdownTitles = [
     "ageRange": "Age", "gender": "Gender", "deviceClass": "Device",
-    "countryOrRegion": "Country", "adminArea": "Region", "locality": "City",
+    "countryOrRegion": "Country", "adminArea": "Region", "locality": "City", "countryCode": "Country",
   ]
 
   /// A report row's value for a breakdown dimension.
@@ -28,6 +28,7 @@ extension Ads {
     case .countryOrRegion: meta.countryOrRegion
     case .adminArea: meta.adminArea
     case .locality: meta.locality
+    case .countryCode: meta.countryCode
     default: nil
     }
   }
@@ -183,5 +184,20 @@ extension Ads.Metrics {
       Ads.number(Double(installs)), percent(tapConversionRate), percent(totalConversionRate),
       averageCPT?.formatted ?? "-", averageCPI?.formatted ?? "-",
     ]
+  }
+}
+
+extension Array {
+  /// The rows grouped by campaign, in the order campaigns first appear, each campaign's rows by
+  /// spend, highest first (ties keep their order).
+  func bySpendWithinCampaign(campaign: (Element) -> Int64, spend: (Element) -> Double) -> [Element] {
+    var order: [Int64: Int] = [:]
+    for row in self where order[campaign(row)] == nil { order[campaign(row)] = order.count }
+    return enumerated().sorted { a, b in
+      let (ca, cb) = (order[campaign(a.element)] ?? 0, order[campaign(b.element)] ?? 0)
+      if ca != cb { return ca < cb }
+      let (sa, sb) = (spend(a.element), spend(b.element))
+      return sa != sb ? sa > sb : a.offset < b.offset
+    }.map(\.element)
   }
 }

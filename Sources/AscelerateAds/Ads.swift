@@ -43,17 +43,22 @@ public enum Ads {
     public var server: (url: URL, accessToken: String)?
     /// Headers sent with every request.
     public var headers: [String: String]
+    /// The seconds the process may spend waiting out rate limits (429), in total: a wait that
+    /// would pass it returns the 429 instead (0: the first one). Nil waits as Apple asks.
+    public var maxRateLimitWait: Int?
 
     public init(
       gateWrite: (@Sendable (String, String, Data?) async throws -> Void)? = nil,
       onRateLimitWait: (@Sendable (Int) -> Void)? = nil,
       server: (url: URL, accessToken: String)? = nil,
-      headers: [String: String] = [:]
+      headers: [String: String] = [:],
+      maxRateLimitWait: Int? = nil
     ) {
       self.gateWrite = gateWrite
       self.onRateLimitWait = onRateLimitWait
       self.server = server
       self.headers = headers
+      self.maxRateLimitWait = maxRateLimitWait
     }
   }
 
@@ -181,6 +186,15 @@ public enum Ads {
     [.init(field: "campaignId", _operator: .equals, value: try OpenAPIValueContainer(unvalidatedValue: Int(id)))]
   }
 
+  /// Whether a paged read is done after a page of `received` items (`have` in all): an empty page
+  /// always ends it; with Apple's total, the total decides (a page can hold fewer than asked
+  /// when the server caps its size); without one, a page shorter than asked ends it.
+  public static func pagingDone(received: Int, asked: Int, total: Int?, have: Int) -> Bool {
+    if received == 0 { return true }
+    if let total { return have >= total }
+    return received < asked
+  }
+
   /// Runs a `/query` request page by page and decodes its results. Apple's spec types every
   /// query result as a free-form object, so they're decoded here into the entity's own model.
   public static func query<T: Decodable>(
@@ -193,8 +207,9 @@ public enum Ads {
       let page = try await fetch(.init(pageSize: pageSize, offset: Int32(items.count)))
       let results = page.result ?? []
       items += try decoder.decode([T].self, from: JSONEncoder().encode(results))
-      let total = page.pagination?.totalCount.map(Int.init) ?? 0
-      if results.count < pageSize || items.count >= total { return items }
+      if pagingDone(received: results.count, asked: Int(pageSize), total: page.pagination?.totalCount.map(Int.init), have: items.count) {
+        return items
+      }
     }
   }
 
@@ -250,7 +265,7 @@ public enum Ads {
     while true {
       let page = try await fetch(.init(offset: rows.count, pageSize: pageSize))
       rows += page.rows
-      if page.rows.count < pageSize || rows.count >= (page.count ?? 0) { return rows }
+      if pagingDone(received: page.rows.count, asked: pageSize, total: page.count, have: rows.count) { return rows }
     }
   }
 
@@ -333,6 +348,28 @@ public enum Ads {
     private static let maxAttempts = 4
     private static let retriedNetworkErrors: Set<URLError.Code> = [.timedOut, .networkConnectionLost, .cannotConnectToHost]
 
+    /// A dropped or timed-out connection worth sending a read again for. Inside the middleware
+    /// chain the transport's `URLError` comes wrapped in the runtime's `ClientError`.
+    static func isRetriedNetworkError(_ error: any Error) -> Bool {
+      let urlError = error as? URLError ?? (error as? ClientError)?.underlyingError as? URLError
+      return urlError.map { retriedNetworkErrors.contains($0.code) } ?? false
+    }
+
+    /// The longest a single rate limit wait may be, whatever the total allowance.
+    static let maxSingleWait = 3600
+
+    /// The seconds to wait for a 429's `Retry-After` or `RateLimit-Reset`: seconds up to an hour;
+    /// a larger value is read as the time to wait until (seconds since 1970), if that's within the
+    /// hour. Nil otherwise: the 429 is returned rather than sleeping for years.
+    static func singleWait(_ value: Int, now: Date = .now) -> Int? {
+      if value <= maxSingleWait { return max(value, 0) }
+      let untilThen = value - Int(now.timeIntervalSince1970)
+      return (0...maxSingleWait).contains(untilThen) ? untilThen : nil
+    }
+
+    /// Seconds before a read is sent again after a network error (tests make it 0).
+    var retryDelay: Duration = .seconds(2)
+
     func intercept(
       _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
       next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
@@ -363,10 +400,10 @@ public enum Ads {
         let response: HTTPResponse, responseBody: HTTPBody?
         do {
           (response, responseBody) = try await next(request, requestData.map { HTTPBody($0) }, baseURL)
-        } catch let error as URLError where isRead && attempt < 3 && Self.retriedNetworkErrors.contains(error.code) {
+        } catch where isRead && attempt < 3 && Self.isRetriedNetworkError(error) {
           // Reads are safe to repeat; a write is never sent twice.
           attempt += 1
-          try await Task.sleep(for: .seconds(2))
+          try await Task.sleep(for: retryDelay)
           continue
         }
         let status = response.status.code
@@ -377,19 +414,40 @@ public enum Ads {
           box.value = data
           return (response, HTTPBody(data))
         }
-        if status == 429, attempt < Self.maxAttempts {
-          let wait = [HTTPField.Name("Retry-After"), HTTPField.Name("RateLimit-Reset")]
+        if status == 429, attempt < Self.maxAttempts,
+          let wait = Self.singleWait([HTTPField.Name("Retry-After"), HTTPField.Name("RateLimit-Reset")]
             .compactMap { $0.flatMap { response.headerFields[$0] }.flatMap(Int.init) }.first
-            ?? (1 << attempt)
-          options.onRateLimitWait?(wait)
-          try await Task.sleep(for: .seconds(wait))
-          attempt += 1
-          continue
+            ?? (1 << attempt))
+        {
+          // Within the process's allowance, or the 429 is returned.
+          if await RateLimitBudget.shared.take(wait, cap: options.maxRateLimitWait) {
+            options.onRateLimitWait?(wait)
+            try await Task.sleep(for: .seconds(wait))
+            attempt += 1
+            continue
+          }
         }
         var data = Data()
         if let responseBody { data = try await Data(collecting: responseBody, upTo: 1_000_000) }
         throw AdsError(status: status, data: data)
       }
+    }
+  }
+}
+
+extension Ads {
+  /// The seconds spent waiting out Apple Ads rate limits in this process, against
+  /// `Options.maxRateLimitWait`.
+  actor RateLimitBudget {
+    static let shared = RateLimitBudget()
+    private var waited = 0
+
+    /// Takes `seconds` from the allowance; false when that would pass `cap` (nil: no cap).
+    func take(_ seconds: Int, cap: Int?) -> Bool {
+      guard let cap else { return true }
+      guard waited + seconds <= cap else { return false }
+      waited += seconds
+      return true
     }
   }
 }
@@ -409,6 +467,8 @@ public struct AdsError: LocalizedError, Sendable {
   public let details: [Detail]
   /// The line added to a sign-in failure or a 401.
   public var credentialsHint = "Check your Apple Ads credentials."
+  /// For a sign-in failure (`status` nil), the HTTP status Apple's sign-in server answered with.
+  public var signInStatus: Int?
 
   public init(status: Int?, code: String?, message: String?, details: [Detail]) {
     self.status = status
@@ -442,7 +502,7 @@ public struct AdsError: LocalizedError, Sendable {
     }
     var lines = [
       "Apple Ads API"
-        + (status.map { " returned HTTP \($0)" } ?? " sign-in failed")
+        + (status.map { " returned HTTP \($0)" } ?? " sign-in failed" + (signInStatus.map { " (HTTP \($0))" } ?? ""))
         + (code.map { " (\($0))" } ?? "")
         + (message.map { ": \($0)" } ?? ".")
     ]
@@ -453,6 +513,10 @@ public struct AdsError: LocalizedError, Sendable {
     switch status {
     case nil where message?.contains("Network error") == true:
       lines.append("  Couldn't reach Apple's sign-in server. Check your connection and try again.")
+    case nil where signInStatus == 429:
+      lines.append("  Apple's sign-in server is limiting requests. Try again in a few minutes.")
+    case nil where signInStatus.map { $0 >= 500 } == true:
+      lines.append("  Apple's sign-in server had a problem. Try again later.")
     case nil, 401: lines.append("  " + credentialsHint)
     case 403: lines.append("  The Apple Ads API user's role may not allow this.")
     case let s? where s >= 500: lines.append("  This is a server-side issue. Try again later.")

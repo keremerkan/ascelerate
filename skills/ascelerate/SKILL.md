@@ -511,7 +511,7 @@ ascelerate ads history [--app <app>] [--campaign X] [--days 7] [--json]   # who 
 ascelerate ads opportunities [--app <app>] [--campaign X] [--days 30] [--min-taps 10] [--brand "be gone" ...] [--json]   # search terms to add as exact keywords / give their own bid / exclude (last 30 complete days)
 
 # Keyword research
-ascelerate ads keywords suggest --app <app> --seed "qr code" "barcode" [--country US GB] [--limit 50] [--json]   # popularity 0-100 + where you already target it
+ascelerate ads keywords suggest --app <app> --seed "qr code" "barcode" [--country US GB] [--limit 50] [--json]   # popularity 0-100 + where you already target it; all sorted, then the top --limit (1-1000)
 ascelerate ads keywords popularity --country US (--app <app> | --genre PRODUCTIVITY_UTILITIES) [--term a b | --contains x] [--monthly] [--limit 100] [--json]
 ascelerate ads insights impression-share --app <app> [--country US] [--term a b] [--weeks 1-4] [--first-slot] [--json]
 
@@ -537,7 +537,7 @@ ascelerate ads ads create --campaign X [--ad-group Y] --product-page <name|id|de
 ascelerate ads ads pause|resume --campaign X <ad>                      # resume pauses the ad group's serving ad (one serves per ad group)
 ```
 
-`--campaign` takes a campaign name (case-insensitive) or ID; a wrong name lists the valid ones. Report dates are in the ad account's time zone and `--days N` includes today (partial data) — for decisions, end ranges yesterday (`--to`) or compare complete periods. Keyword and search term reports take one request per campaign (Apple requires it), so an unscoped report over many campaigns takes a few seconds.
+`--campaign` takes a campaign name (case-insensitive) or ID; a wrong name lists the valid ones. Report dates are in the ad account's time zone and `--days N` includes today (partial data) — for decisions, end ranges yesterday (`--to`) or compare complete periods. Keyword and search term reports take one request per campaign (Apple requires it), so an unscoped report over many campaigns takes a few seconds. `ads history` shows times in the ad account's zone too. `--by region` adds the country and `--by city` the region and country (Apple requires them; same-named places stay apart). `search-terms` refuses `--all` (Apple has no empty search term rows). Amounts take at most two decimals and are sent exactly.
 
 **Reading the metrics** (every report row has the same `metrics` object):
 - `spend` (amount + currency), `impressions`, `taps`, `installs` (tap + view-through), `tapInstalls`.
@@ -926,7 +926,7 @@ When the user asks to add a new language/locale to an app, translate **all** of 
 ## Tips
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)
-- Hitting App Store Connect's hourly API limit (3,600/key, rolling): ascelerate waits the `Retry-After` time with a notice on stderr and continues; set `ASCELERATE_MAX_RATE_LIMIT_WAIT=<seconds>` (total per run, `0` = fail at once) for CI. `rate-limit` shows the remaining quota and never waits
+- Hitting App Store Connect's hourly API limit (3,600/key, rolling): ascelerate waits the `Retry-After` time with a notice on stderr and continues; set `ASCELERATE_MAX_RATE_LIMIT_WAIT=<seconds>` (total per run, `0` = fail at once, Apple Ads requests included) for CI. `rate-limit` shows the remaining quota and never waits
 - File uploads (media, `builds upload --api`) send one chunk at a time; on a fast connection with a long round trip, `ASCELERATE_PARALLEL_CHUNKS=<n>` sends n at once
 - Add `--dry-run` (anywhere on the command line, or set `ASCELERATE_DRY_RUN=1`) to try commands or a whole workflow without changing anything: reads run, every write is printed to stderr instead of sent, `builds upload` is skipped, and `run-workflow` continues past blocked steps
 - Add `--json` to read commands for machine-readable output (see JSON output above)

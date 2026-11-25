@@ -191,7 +191,13 @@ extension AdsCommand {
 
           // Copied as JSON: the create types mirror the read types field for field.
           var bidStrategy = try source.bidStrategy.map { try Ads.convert($0.value1, to: Components.Schemas.BidStrategyCreate.self) }
-          if let bid = settings.defaultBid { bidStrategy?.bid = try Ads.money(bid, currency: currency) }
+          if let bid = settings.defaultBid {
+            // A group without a bid strategy (an automated one) has nowhere to put a default bid.
+            guard bidStrategy != nil else {
+              throw ValidationError("'\(source.name ?? "-")' has no bid strategy, so --default-bid has nothing to set; copy a manual ad group instead.")
+            }
+            bidStrategy?.bid = try Ads.money(bid, currency: currency)
+          }
           var cpaGoal = try source.cpaCap.map { try Ads.convert($0.value1, to: Components.Schemas.CPAGoalCreate.self) }
           if let goal = settings.cpaGoal { cpaGoal = .init(value: try Ads.money(goal, currency: currency)) }
           var targeting = try source.targeting.map { try Ads.convert($0.value1, to: Components.Schemas.AdGroupTargetingCreate.self) }

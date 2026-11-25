@@ -46,7 +46,7 @@ ascelerate ads reports search-terms --app myapp --days 14
 | `keywords` | Keywords mit Apples vorgeschlagenem Gebot |
 | `search-terms` | Wonach tatsächlich gesucht wurde, das passende Keyword und ob der Treffer aus Ihren Keywords oder aus Search Match stammt |
 
-Alle Berichte nehmen `--days N` (einschließlich heute) oder `--from`/`--to`, `--app`, `--campaign`, `--all` (auch Zeilen ohne Aktivität) und `--json` an. Datumsangaben gelten in der Zeitzone des Werbekontos. Vergleichen Sie für Entscheidungen vollständige Tage: Die Zahlen von heute kommen noch herein.
+Alle Berichte nehmen `--days N` (einschließlich heute) oder `--from`/`--to`, `--app`, `--campaign`, `--all` (auch Zeilen ohne Aktivität) und `--json` an. Datumsangaben gelten in der Zeitzone des Werbekontos. Vergleichen Sie für Entscheidungen vollständige Tage: Die Zahlen von heute kommen noch herein. `search-terms` nimmt kein `--all`: Apple meldet nur Suchanfragen mit Impressionen oder Ausgaben. Eine Aufschlüsselung nach Region fügt das Land hinzu, eine nach Stadt die Region und das Land, wie Apple es verlangt; sie werden angezeigt, sodass gleichnamige Orte in verschiedenen Ländern getrennt bleiben.
 
 Jede Zeile zeigt Ausgaben, Impressionen, Taps, Installationen, die Tap-Through-Rate (TTR), die durchschnittlichen Kosten pro Tap (CPT) und pro Installation (CPI) sowie zwei Konversionsraten:
 
@@ -77,6 +77,8 @@ ascelerate ads campaigns create --app myapp --name "MyApp DE" --country DE --dai
 ```
 
 Die Kampagne wird **pausiert** erstellt, zusammen mit ihrer Anzeigengruppe: einer automatisierten bei Max Conversions oder einer manuellen mit `--default-bid`. `--like` übernimmt App, Länder und Einstellungen einer bestehenden Kampagne. `--enabled` startet sie sofort.
+
+Beträge (`--daily`, `--bid`, `--default-bid`, `--amount`, `--cpa-goal`) nehmen Ziffern mit höchstens zwei Nachkommastellen, etwa `1.25`, und werden genau so gesendet.
 
 ```bash
 ascelerate ads campaigns target-cpa --app myapp --country US
@@ -147,6 +149,8 @@ ascelerate ads history --app myapp --days 7
 
 Jede Änderung an Kampagnen, Anzeigengruppen, Keywords und ausschließenden Keywords in den letzten sechs Monaten mit alten und neuen Werten, auch solche, die auf der Apple-Ads-Website oder von Apple vorgenommen wurden. Hilfreich, bevor Sie eine Veränderung der Leistung deuten.
 
+Die Zeiten werden in der Zeitzone des Werbekontos angezeigt, in der auch `--days` zählt.
+
 ## Keyword-Recherche
 
 ```bash
@@ -156,7 +160,7 @@ ascelerate ads keywords popularity --genre PRODUCTIVITY_UTILITIES --country US -
 ascelerate ads insights impression-share --app myapp --country US --weeks 4
 ```
 
-- `suggest` liefert Apples Keyword-Vorschläge zu Ihren Ausgangsbegriffen, mit ihrer Beliebtheit und den Stellen, an denen Sie sie bereits verwenden.
+- `suggest` liefert Apples Keyword-Vorschläge zu Ihren Ausgangsbegriffen, mit ihrer Beliebtheit und den Stellen, an denen Sie sie bereits verwenden. Alle Vorschläge von Apple werden nach Beliebtheit sortiert, bevor `--limit` (1 bis 1000) greift.
 - `popularity` zeigt, wie beliebt Suchbegriffe in einer Storefront (1 bis 100) und im Genre der App sind. Begriffe außerhalb der Rangliste des Genres werden gesondert aufgeführt.
 - `impression-share` zeigt Ihren Anteil an den Anzeigenimpressionen und Ihren Rang für die Suchbegriffe, bei denen Ihre Anzeigen erschienen sind: Ein geringer Anteil bei einem beliebten, konvertierenden Begriff bietet Raum für Wachstum, und ein Anteil unter 100 % bei Ihrem eigenen Markennamen bedeutet, dass Wettbewerber darauf bieten.
 

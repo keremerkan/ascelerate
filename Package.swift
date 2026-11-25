@@ -82,5 +82,14 @@ let package = Package(
             name: "AscelerateCoreTests",
             dependencies: ["AscelerateCore"]
         ),
+        .testTarget(
+            name: "AscelerateAdsTests",
+            dependencies: [
+                "AscelerateAds",
+                .product(name: "AppleAdsClient", package: "apple-ads-platform-api-swift"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+            ]
+        ),
     ]
 )

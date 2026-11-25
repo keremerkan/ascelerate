@@ -68,12 +68,25 @@ extension Ads {
       request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
       request.httpBody = Data((form.percentEncodedQuery ?? "").utf8)
 
-      let data: Data
-      let response: URLResponse
-      do {
-        (data, response) = try await URLSession.shared.data(for: request)
-      } catch {
-        throw AdsError(status: nil, code: nil, message: "Network error: \(error.localizedDescription)", details: [])
+      // A dropped connection, Apple's server failing or limiting requests is tried again twice
+      // (signing in again is safe); anything else is answered at once.
+      let retried: Set<URLError.Code> = [.timedOut, .networkConnectionLost, .cannotConnectToHost, .notConnectedToInternet, .dnsLookupFailed]
+      var data = Data()
+      var response: URLResponse = URLResponse()
+      for (attempt, delay) in [2, 5, 0].enumerated() {
+        let last = attempt == 2
+        do {
+          (data, response) = try await URLSession.shared.data(for: request)
+        } catch let error as URLError where !last && retried.contains(error.code) {
+          try await Task.sleep(for: .seconds(delay))
+          continue
+        } catch {
+          throw AdsError(status: nil, code: nil, message: "Network error: \(error.localizedDescription)", details: [])
+        }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard !last, status == 429 || (500...599).contains(status) else { break }
+        let retryAfter = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Retry-After").flatMap(Int.init)
+        try await Task.sleep(for: .seconds(min(retryAfter ?? delay, 60)))
       }
       struct Body: Decodable {
         let access_token: String?
@@ -82,10 +95,13 @@ extension Ads {
         let error_description: String?
       }
       let body = try? JSONDecoder().decode(Body.self, from: data)
-      guard (response as? HTTPURLResponse)?.statusCode == 200, let value = body?.access_token else {
+      let status = (response as? HTTPURLResponse)?.statusCode
+      guard status == 200, let value = body?.access_token else {
         // Apple's OAuth errors, such as invalid_client for a client secret it doesn't accept.
         let message = [body?.error, body?.error_description].compactMap(\.self).joined(separator: ": ")
-        throw AdsError(status: nil, code: nil, message: message.isEmpty ? nil : message, details: [])
+        var error = AdsError(status: nil, code: nil, message: message.isEmpty ? nil : message, details: [])
+        error.signInStatus = status
+        throw error
       }
       return Token(value: value, expires: Date().addingTimeInterval(TimeInterval(body?.expires_in ?? 3600)))
     }

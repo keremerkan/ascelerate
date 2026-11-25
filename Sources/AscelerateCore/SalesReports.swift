@@ -1,6 +1,7 @@
 import ASCKit
 import Compression
 import Foundation
+import zlib
 
 /// Sales and Trends reports (`salesReports`): what was downloaded and bought, per day, week, month
 /// or year, by app, product, country and device. App Store Connect sends each report as a gzipped
@@ -152,8 +153,9 @@ public enum TSV {
   }
 }
 
-/// Gzip files (reports, analytics segments), read in-process: the member's DEFLATE stream after
-/// its header, which Foundation's zlib decompression reads.
+/// Gzip files (reports, analytics segments), read in-process with zlib in its gzip mode: every
+/// member of the stream (RFC 1952 allows several, concatenated), each with its header read and
+/// its CRC-32 and length checked against its trailer.
 public enum Gzip {
   public enum GzipError: LocalizedError {
     case notGzip, truncated
@@ -166,62 +168,79 @@ public enum Gzip {
     }
   }
 
-  public static func decompress(_ data: Data) throws -> Data {
-    try (data.subdata(in: payload(of: data)) as NSData).decompressed(using: .zlib) as Data
+  /// A member whose content doesn't match its trailer (CRC-32 or length), a damaged DEFLATE
+  /// stream, or bytes after a member that aren't another member.
+  public struct Damaged: LocalizedError, Sendable {
+    public var errorDescription: String? { "The compressed data is damaged (its checksum doesn't match, or it has data after its end)." }
   }
 
-  /// Decompresses to a file a megabyte at a time, for data whose decompressed copy is too large to
-  /// hold in memory beside it (an App Analytics report's segment unzips to tens of megabytes).
+  /// The content of every member, in order.
+  public static func decompress(_ data: Data) throws -> Data {
+    var out = Data()
+    _ = try inflateMembers(data) { out.append($0) }
+    return out
+  }
+
+  /// Decompresses to a file a piece at a time, for data whose decompressed copy is too large to
+  /// hold in memory beside it (an App Analytics report's segment unzips to tens of megabytes). On
+  /// a failure the file is removed.
   public static func decompress(_ data: Data, to url: URL) throws {
-    let payload = try payload(of: data)
     guard FileManager.default.createFile(atPath: url.path, contents: nil) else { throw CocoaError(.fileWriteUnknown) }
     let handle = try FileHandle(forWritingTo: url)
-    defer { try? handle.close() }
-    let source = Source(data: data, position: payload.lowerBound, end: payload.upperBound)
-    let filter = try InputFilter(.decompress, using: .zlib) { length in source.next(length) }
-    while let chunk = try filter.readData(ofLength: 1 << 20), !chunk.isEmpty {
-      try handle.write(contentsOf: chunk)
+    do {
+      _ = try inflateMembers(data) { try handle.write(contentsOf: $0) }
+      try handle.close()
+    } catch {
+      try? handle.close()
+      try? FileManager.default.removeItem(at: url)
+      throw error
     }
   }
 
-  /// The compressed data `InputFilter` reads, a piece at a time.
-  private final class Source {
-    let data: Data
-    var position: Data.Index
-    let end: Data.Index
-
-    init(data: Data, position: Data.Index, end: Data.Index) {
-      (self.data, self.position, self.end) = (data, position, end)
-    }
-
-    func next(_ length: Int) -> Data? {
-      guard position < end else { return nil }
-      let next = min(position + length, end)
-      defer { position = next }
-      return data.subdata(in: position..<next)
-    }
+  /// How many members the stream has (each read and checked); for tests and diagnostics.
+  public static func memberCount(_ data: Data) throws -> Int {
+    try inflateMembers(data) { _ in }
   }
 
-  /// Where a gzip member's deflate stream is: after its header (with its optional fields) and
-  /// before its CRC-32 and size (8 bytes).
-  private static func payload(of data: Data) throws -> Range<Data.Index> {
-    let start = data.startIndex
-    func byte(_ offset: Int) throws -> UInt8 {
-      guard start + offset < data.endIndex else { throw GzipError.truncated }
-      return data[start + offset]
+  /// Inflates every member, handing each piece of content to `write`, and returns the count.
+  private static func inflateMembers(_ data: Data, write: (Data) throws -> Void) throws -> Int {
+    guard data.count >= 18, data[data.startIndex] == 0x1F, data[data.startIndex + 1] == 0x8B,
+      data[data.startIndex + 2] == 8
+    else { throw GzipError.notGzip }
+    var stream = z_stream()
+    // 15 + 16: a gzip header and trailer around the DEFLATE stream, checked by zlib.
+    guard inflateInit2_(&stream, 15 + 16, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size)) == Z_OK else {
+      throw GzipError.notGzip
     }
-    guard data.count >= 18, try byte(0) == 0x1F, try byte(1) == 0x8B, try byte(2) == 8 else { throw GzipError.notGzip }
-    let flags = try byte(3)
-    var offset = 10
-    if flags & 0x04 != 0 {  // FEXTRA: a length, then that many bytes
-      offset += 2 + Int(try byte(offset)) + Int(try byte(offset + 1)) << 8
+    defer { inflateEnd(&stream) }
+    return try data.withUnsafeBytes { (raw: UnsafeRawBufferPointer) -> Int in
+      guard let base = raw.bindMemory(to: Bytef.self).baseAddress else { throw GzipError.notGzip }
+      stream.next_in = UnsafeMutablePointer(mutating: base)
+      stream.avail_in = uInt(raw.count)
+      var buffer = [Bytef](repeating: 0, count: 1 << 16)
+      var members = 0
+      while true {
+        var status: Int32 = Z_OK
+        while status != Z_STREAM_END {
+          let produced: Int = buffer.withUnsafeMutableBufferPointer { out in
+            stream.next_out = out.baseAddress
+            stream.avail_out = uInt(out.count)
+            status = inflate(&stream, Z_NO_FLUSH)
+            return out.count - Int(stream.avail_out)
+          }
+          if produced > 0 { try write(Data(buffer[0..<produced])) }
+          switch status {
+            case Z_OK, Z_STREAM_END: continue
+            case Z_BUF_ERROR where stream.avail_in == 0: throw GzipError.truncated
+            default: throw Damaged()
+          }
+        }
+        members += 1
+        guard stream.avail_in > 0 else { return members }
+        // Another member, or nothing: bytes that don't start one are refused.
+        guard stream.avail_in >= 2, let next = stream.next_in, next[0] == 0x1F, next[1] == 0x8B else { throw Damaged() }
+        inflateReset(&stream)
+      }
     }
-    for flag: UInt8 in [0x08, 0x10] where flags & flag != 0 {  // FNAME, FCOMMENT: zero-terminated
-      while try byte(offset) != 0 { offset += 1 }
-      offset += 1
-    }
-    if flags & 0x02 != 0 { offset += 2 }  // FHCRC
-    guard offset < data.count - 8 else { throw GzipError.truncated }
-    return (start + offset)..<(data.endIndex - 8)
   }
 }

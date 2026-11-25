@@ -592,16 +592,43 @@ extension AppsCommand {
         let versionPlatform = appVersion.attributes?.platform.flatMap(Platform.init(rawValue:))
 
         // Drop display types that belong to another platform (mixed exports)
-        let (plan, skippedTypes) = filterPlan(rawPlan, platform: versionPlatform)
+        let (platformPlan, skippedTypes) = filterPlan(rawPlan, platform: versionPlatform)
         for skippedType in skippedTypes {
           let owner = formatState(platformForDisplayType(skippedType).rawValue)
           print(yellow("⚠ Skipping \(skippedType) — \(owner) display type, not applicable to this \(versionPlatform.map { formatState($0.rawValue) } ?? "?") version."))
         }
         if !skippedTypes.isEmpty { print() }
 
-        guard !plan.locales.isEmpty else {
+        guard !platformPlan.locales.isEmpty else {
           throw ValidationError(
             "No media in '\(expandPath(folderPath))' matches this \(versionPlatform.map { formatState($0.rawValue) } ?? "?") version's platform.")
+        }
+
+        // Fetch all localizations for this version
+        let locsResponse = try await ascClient.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
+          path: .init(id: appVersion.id)
+        ).ok.body.json
+        // Keyed lowercased so a local `pt-br/` folder still matches ASC's `pt-BR`.
+        let locByLocale = Dictionary(
+          locsResponse.data.compactMap { loc in
+            loc.attributes?.locale.map { ($0.lowercased(), loc) }
+          },
+          uniquingKeysWith: { first, _ in first }
+        )
+        // A folder for a language the version doesn't have is skipped (a media folder often holds
+        // more languages than a version has): said before anything is asked, left out of the
+        // checks and counts, and named again at the end. A skip isn't a failure.
+        let skippedLocales = platformPlan.locales.map(\.locale).filter { locByLocale[$0.lowercased()] == nil }
+        let keptLocales = platformPlan.locales.filter { locByLocale[$0.locale.lowercased()] != nil }
+        let plan = MediaUploadPlan(
+          locales: keptLocales, warnings: platformPlan.warnings,
+          totalScreenshots: keptLocales.reduce(0) { $0 + $1.displayTypes.reduce(0) { $0 + $1.screenshots.count } },
+          totalPreviews: keptLocales.reduce(0) { $0 + $1.displayTypes.reduce(0) { $0 + $1.previews.count } })
+        let skippedNote = skippedLocales.isEmpty ? nil : "Skipped, not on this version: \(skippedLocales.joined(separator: ", "))"
+        guard !plan.locales.isEmpty else {
+          if let skippedNote { print(skippedNote) }
+          print("Nothing to upload: none of the folder's languages are on version \(versionString).")
+          return
         }
 
         // Every asset library file (iPhone Duo, header, search results) is checked against its
@@ -637,25 +664,6 @@ extension AppsCommand {
               + unfit.prefix(20).joined(separator: "\n") + (unfit.count > 20 ? "\n  … and \(unfit.count - 20) more" : ""))
         }
 
-        // Fetch all localizations for this version
-        let locsResponse = try await ascClient.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: appVersion.id)
-        ).ok.body.json
-        // Keyed lowercased so a local `pt-br/` folder still matches ASC's `pt-BR`.
-        let locByLocale = Dictionary(
-          locsResponse.data.compactMap { loc in
-            loc.attributes?.locale.map { ($0.lowercased(), loc) }
-          },
-          uniquingKeysWith: { first, _ in first }
-        )
-        // A folder for a language the version doesn't have is refused before anything is asked,
-        // as media remove does; it used to be skipped while the confirmation counted its files.
-        let missing = plan.locales.map(\.locale).filter { locByLocale[$0.lowercased()] == nil }
-        if !missing.isEmpty {
-          throw ValidationError(
-            "Version \(versionString) has no \(missing.map(localeName).joined(separator: ", ")). Add the language first ('apps localizations import' with a file that has it creates it) or take its folder out.")
-        }
-
         // Print confirmation summary
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Version: \(versionString)")
@@ -681,6 +689,10 @@ extension AppsCommand {
         }
         print()
 
+        if let skippedNote {
+          print(yellow(skippedNote))
+          print()
+        }
         let localeCount = plan.locales.count
         guard confirm(
           "Upload \(plan.totalScreenshots) screenshot\(plan.totalScreenshots == 1 ? "" : "s") and \(plan.totalPreviews) preview\(plan.totalPreviews == 1 ? "" : "s") for \(localeCount) locale\(localeCount == 1 ? "" : "s")? [y/N] ")
@@ -959,6 +971,7 @@ extension AppsCommand {
           } else {
             print("Done. \(total.succeeded) file\(total.succeeded == 1 ? "" : "s") uploaded successfully.\(unchanged)")
           }
+          if let skippedNote { print(skippedNote) }
         } else {
           var rows: [[String]] = []
           var lastLocale = ""
@@ -972,6 +985,7 @@ extension AppsCommand {
           rows.append([bold("Total"), "", total.summary])
 
           Table.print(headers: ["Locale", "Display Type", "Result"], rows: rows)
+          if let skippedNote { print(skippedNote) }
 
           // A partial upload must not look like success to scripts/workflows.
           throw ExitCode.failure

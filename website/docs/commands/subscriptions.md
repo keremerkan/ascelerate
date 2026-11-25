@@ -115,6 +115,58 @@ A price that isn't one of the target's tiers fails the import, which lists the n
 
 Transient App Store Connect errors (HTTP 429/5xx) during multi-territory writes are retried automatically — first in place with backoff, then in a second sweep at the end of the run. Territories that still fail are listed in the final report and the command exits non-zero; re-running the same command retries just those, since already-updated territories are skipped as unchanged.
 
+### Remove a planned price
+
+A territory takes one planned price at a time. To change a planned price, remove it first:
+
+```bash
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
+```
+
+A price already in effect can't be removed: set a later one instead.
+
+## Multiseat and volume pricing
+
+Organizations can buy an auto-renewable subscription for several people through Apple Business Manager and Apple School Manager, and App Store customers can buy seats and invite others to them (who hosts those invitations is an app setting: [group purchase invitations](apps.md#group-purchase-invitations)). Multiseat purchasing is on by default for every auto-renewable subscription, in all three markets.
+
+```bash
+# View
+ascelerate sub multiseat <bundle-id> <product-id>
+
+# Offer it on the App Store and through Apple Business Manager only
+ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-business
+
+# Single seats only
+ascelerate sub multiseat <bundle-id> <product-id> --enabled false
+```
+
+Turning it off stops new multiseat purchases; existing ones keep renewing at their seat count but can't add seats. Turning on Family Sharing turns multiseat purchasing off.
+
+### Volume pricing
+
+Volume pricing gives larger purchases a lower per-seat price. A price has up to four tiers besides the single seat, each starting at a number of seats (2 or more) and each cheaper per seat than the one before. Each seat costs its own tier's price: with 9.99 for one seat, `2:8.99` and `10:7.99`, twelve seats cost 9.99 + 8 × 8.99 + 3 × 7.99.
+
+```bash
+# The tiers of current and planned prices
+ascelerate sub pricing volume <bundle-id> <product-id>
+ascelerate sub pricing volume <bundle-id> <product-id> --territory USA --json
+
+# Tiers on the current single-seat price in the United States, from March 1
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99 --start-date 2027-03-01
+
+# A new single-seat price with tiers, converted by Apple into every other territory
+ascelerate sub pricing volume-set <bundle-id> <product-id> --price 9.99 --tiers 2:8.99,10:7.99,50:6.99 \
+  --equalize-all-territories --start-date 2027-03-01 --no-preserve-current
+
+# Remove the tiers from a price in effect: a later price for any number of seats
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers none --start-date 2027-03-01
+```
+
+Before anything is saved, Apple compares the new price with the current one at every seat count in each territory, and the summary shows the result. A raise needs `--preserve-current` (existing subscribers keep their price) or `--no-preserve-current` (they move to it after Apple's notice), as `sub pricing set` does. A cut, or a price that's higher for some seat counts and lower for others, moves existing subscribers at their next renewal; with `--yes`, add `--confirm-decrease`. Territories without a change are skipped.
+
+A price and its tiers are saved as one and can't be edited: to change a planned one, remove it with `sub pricing cancel` and set it again. While a subscription has a price with tiers, planned or in effect, App Store Connect's web pages can't change its pricing, including preserved prices; remove the planned price, or replace the one in effect with a price without tiers, to get that back. Volume pricing applies to the upfront billing plan only.
+
 ## Availability
 
 Each subscription has its own territory availability, independent of the app's. By default a subscription inherits its app's territories; once you call `sub availability` with changes, the subscription has an explicit list.

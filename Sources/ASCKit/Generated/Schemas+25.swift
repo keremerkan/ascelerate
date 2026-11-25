@@ -10,6 +10,80 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse`.
+    public struct RetentionMessageVersionResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/data`.
+        public var data: Components.Schemas.RetentionMessageVersion
+        /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/IncludedPayload`.
+        @frozen public enum IncludedPayloadPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/IncludedPayload/AppAssetLibraryPlacement`.
+            case appAssetLibraryPlacements(Components.Schemas.AppAssetLibraryPlacement)
+            /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/IncludedPayload/RetentionMessageLocalization`.
+            case retentionMessageLocalizations(Components.Schemas.RetentionMessageLocalization)
+            /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/IncludedPayload/RetentionMessage`.
+            case retentionMessages(Components.Schemas.RetentionMessage)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "appAssetLibraryPlacements":
+                    self = .appAssetLibraryPlacements(try .init(from: decoder))
+                case "retentionMessageLocalizations":
+                    self = .retentionMessageLocalizations(try .init(from: decoder))
+                case "retentionMessages":
+                    self = .retentionMessages(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Swift.Encoder) throws {
+                switch self {
+                case let .appAssetLibraryPlacements(value):
+                    try value.encode(to: encoder)
+                case let .retentionMessageLocalizations(value):
+                    try value.encode(to: encoder)
+                case let .retentionMessages(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/included`.
+        public typealias IncludedPayload = [Components.Schemas.RetentionMessageVersionResponse.IncludedPayloadPayload]
+        /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/included`.
+        public var included: Components.Schemas.RetentionMessageVersionResponse.IncludedPayload?
+        /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `RetentionMessageVersionResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.RetentionMessageVersion,
+            included: Components.Schemas.RetentionMessageVersionResponse.IncludedPayload? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionsResponse`.
     public struct RetentionMessageVersionsResponse: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/RetentionMessageVersionsResponse/data`.

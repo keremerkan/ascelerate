@@ -58,5 +58,5 @@ The same format is used for both export and import:
 Only fields present in the JSON are updated — omitted fields are left unchanged.
 
 :::note
-Only versions in editable states (`PREPARE_FOR_SUBMISSION` or `WAITING_FOR_REVIEW`) accept localization updates — except `promotionalText`, which can be updated in any state.
+Only versions in editable states (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` or `INVALID_BINARY`) accept localization updates — except `promotionalText`, which can be updated in any state.
 :::

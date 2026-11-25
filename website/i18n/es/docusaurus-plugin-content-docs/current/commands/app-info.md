@@ -56,7 +56,7 @@ ascelerate apps app-info import <bundle-id> --file app-infos.json
 Solo se actualizan los campos presentes; los que se omiten no cambian.
 
 :::note
-Los comandos `app-info update` y `app-info import` requieren que la información de la app esté en un estado editable (`PREPARE_FOR_SUBMISSION` o `WAITING_FOR_REVIEW`).
+Los comandos `app-info update` y `app-info import` requieren que la información de la app esté en un estado editable (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED` o `REJECTED`).
 :::
 
 ## Clasificación por edad

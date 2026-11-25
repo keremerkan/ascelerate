@@ -312,3 +312,15 @@ ascelerate apps streamlined-purchasing <bundle-id>
 # Kapat
 ascelerate apps streamlined-purchasing <bundle-id> --enabled false
 ```
+
+## Grup satın alma davetleri {#group-purchase-invitations}
+
+App Store'da bir aboneliğin birden çok koltuğunu satın alan bir müşteri, bu koltuklara başka kişileri davet eder (bkz. [çok koltuklu abonelikler](subscriptions.md#multiseat-and-volume-pricing)). Bu davetleri varsayılan olarak Apple yönetir. `--host developer` ile davet ve koltuk kabul akışını uygulamanız yürütür. Bu akış Apple platformları dışında da çalışabilir (üyelerin Apple Hesabı olması gerekmez); davet edilen üyelerin yaşını doğrulamak ve gereken ebeveyn onayını almak da uygulamanıza düşer. Ayar, uygulamanın tüm çok koltuklu aboneliklerinde değişiklikten sonra yapılan satın almalara uygulanır ve App Review gerektirmez.
+
+```bash
+# Görüntüle
+ascelerate apps group-purchase-invitations <bundle-id>
+
+# Davetleri uygulamada yönet
+ascelerate apps group-purchase-invitations <bundle-id> --host developer
+```

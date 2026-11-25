@@ -58,5 +58,5 @@ Le même format est utilisé pour l'export et l'import :
 Seuls les champs présents dans le JSON sont mis à jour -- les champs omis restent inchangés.
 
 :::note
-Seules les versions dans un état modifiable (`PREPARE_FOR_SUBMISSION` ou `WAITING_FOR_REVIEW`) acceptent les mises à jour de localisation -- à l'exception de `promotionalText`, qui peut être mis à jour quel que soit l'état.
+Seules les versions dans un état modifiable (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` ou `INVALID_BINARY`) acceptent les mises à jour de localisation -- à l'exception de `promotionalText`, qui peut être mis à jour quel que soit l'état.
 :::

@@ -115,6 +115,58 @@ Un precio que no es uno de los niveles del destino hace fallar la importación, 
 
 Los errores transitorios de App Store Connect (HTTP 429/5xx) durante las escrituras en varios países o regiones se reintentan automáticamente: primero en el momento, con esperas crecientes, y después en una segunda pasada al final de la ejecución. Los países o regiones que siguen fallando aparecen en el informe final y el comando termina con un código distinto de cero. Si vuelve a ejecutar el mismo comando, solo se reintentan esos, ya que los países o regiones ya actualizados se omiten por no tener cambios.
 
+### Eliminar un precio programado {#remove-a-planned-price}
+
+Cada país o región admite un solo precio programado a la vez. Para cambiar un precio programado, elimínelo primero:
+
+```bash
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
+```
+
+Un precio que ya está vigente no se puede eliminar: programe uno posterior en su lugar.
+
+## Varias plazas y precios por volumen {#multiseat-and-volume-pricing}
+
+Las organizaciones pueden comprar una suscripción con renovación automática para varias personas a través de Apple Business Manager y Apple School Manager, y los clientes del App Store pueden comprar plazas e invitar a otras personas (quién gestiona esas invitaciones es un ajuste de la app: [invitaciones de compras en grupo](apps.md#group-purchase-invitations)). La compra de varias plazas está activada de forma predeterminada en todas las suscripciones con renovación automática, en los tres mercados.
+
+```bash
+# Ver
+ascelerate sub multiseat <bundle-id> <product-id>
+
+# Ofrecerla solo en el App Store y a través de Apple Business Manager
+ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-business
+
+# Solo plazas individuales
+ascelerate sub multiseat <bundle-id> <product-id> --enabled false
+```
+
+Al desactivarla se detienen las nuevas compras de varias plazas; las existentes se siguen renovando con su número de plazas, pero no pueden añadir más. Activar En familia desactiva la compra de varias plazas.
+
+### Precios por volumen {#volume-pricing}
+
+Los precios por volumen ofrecen un precio por plaza más bajo en las compras grandes. Un precio admite hasta cuatro tramos por volumen además de la plaza individual, cada uno a partir de un número de plazas (2 o más) y cada uno más barato por plaza que el anterior. Cada plaza cuesta el precio de su propio tramo: con 9,99 por una plaza, `2:8.99` y `10:7.99`, doce plazas cuestan 9,99 + 8 × 8,99 + 3 × 7,99.
+
+```bash
+# Los tramos de los precios vigentes y programados
+ascelerate sub pricing volume <bundle-id> <product-id>
+ascelerate sub pricing volume <bundle-id> <product-id> --territory USA --json
+
+# Tramos sobre el precio actual de una plaza en Estados Unidos, desde el 1 de marzo
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99 --start-date 2027-03-01
+
+# Un nuevo precio por plaza con tramos, que Apple convierte a todos los demás países o regiones
+ascelerate sub pricing volume-set <bundle-id> <product-id> --price 9.99 --tiers 2:8.99,10:7.99,50:6.99 \
+  --equalize-all-territories --start-date 2027-03-01 --no-preserve-current
+
+# Quitar los tramos de un precio vigente: un precio posterior para cualquier número de plazas
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers none --start-date 2027-03-01
+```
+
+Antes de guardar nada, Apple compara en cada país o región el precio nuevo con el actual para cada número de plazas, y el resumen muestra el resultado. Una subida requiere `--preserve-current` (los suscriptores actuales conservan su precio) o `--no-preserve-current` (pasan al nuevo tras el aviso de Apple), como `sub pricing set`. Una bajada, o un precio más alto para algunos números de plazas y más bajo para otros, se aplica a los suscriptores actuales en su próxima renovación; con `--yes`, añada `--confirm-decrease`. Los países o regiones sin cambios se omiten.
+
+Un precio y sus tramos se guardan juntos y no se pueden editar: para cambiar uno programado, elimínelo con `sub pricing cancel` y vuelva a programarlo. Mientras una suscripción tenga un precio con tramos, programado o vigente, las páginas web de App Store Connect no pueden cambiar sus precios, incluidos los precios conservados; para recuperar esa posibilidad, elimine el precio programado o sustituya el vigente por un precio sin tramos. Los precios por volumen solo se aplican al plan de pago por adelantado.
+
 ## Disponibilidad
 
 Cada suscripción tiene su propia disponibilidad por país o región, independiente de la de la app. De forma predeterminada, una suscripción hereda los países o regiones de su app; en cuanto ejecuta `sub availability` con cambios, la suscripción pasa a tener una lista propia.

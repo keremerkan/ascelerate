@@ -46,7 +46,9 @@ public func findVersion(
   // When no specific version requested, prefer editable versions (VersionLocalizations.editableStates)
   if versionString == nil {
     var editable = try await client.appsAppStoreVersionsGetToManyRelated(
-      path: .init(id: appID), query: .init(filterAppVersionState: [.prepareForSubmission, .readyForReview, .waitingForReview])
+      path: .init(id: appID), query: .init(filterAppVersionState: [
+        .prepareForSubmission, .readyForReview, .waitingForReview, .developerRejected, .rejected, .metadataRejected, .invalidBinary,
+      ])
     ).ok.body.json.data
 
     // Filter by platform if specified

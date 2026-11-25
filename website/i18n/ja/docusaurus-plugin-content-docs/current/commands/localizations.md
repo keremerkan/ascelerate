@@ -58,5 +58,5 @@ ascelerate apps localizations import <bundle-id> --file localizations.json
 JSONに含まれるフィールドのみが更新されます。省略されたフィールドは変更されません。
 
 :::note
-編集可能な状態（`PREPARE_FOR_SUBMISSION` または `WAITING_FOR_REVIEW`）のバージョンのみローカライゼーションの更新を受け付けます。ただし `promotionalText` はどの状態でも更新可能です。
+編集可能な状態（`PREPARE_FOR_SUBMISSION`、`READY_FOR_REVIEW`、`WAITING_FOR_REVIEW`、`DEVELOPER_REJECTED`、`REJECTED`、`METADATA_REJECTED` または `INVALID_BINARY`）のバージョンのみローカライゼーションの更新を受け付けます。ただし `promotionalText` はどの状態でも更新可能です。
 :::

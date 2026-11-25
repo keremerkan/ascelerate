@@ -56,7 +56,7 @@ ascelerate apps app-info import <bundle-id> --file app-infos.json
 Yalnızca mevcut alanlar güncellenir -- belirtilmeyen alanlar değiştirilmez.
 
 :::note
-`app-info update` ve `app-info import` komutları, AppInfo'nun düzenlenebilir durumda olmasını gerektirir (`PREPARE_FOR_SUBMISSION` veya `WAITING_FOR_REVIEW`).
+`app-info update` ve `app-info import` komutları, AppInfo'nun düzenlenebilir durumda olmasını gerektirir (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED` veya `REJECTED`).
 :::
 
 ## Yaş derecelendirmesi

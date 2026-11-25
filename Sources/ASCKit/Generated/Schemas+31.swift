@@ -10,6 +10,871 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Components.Schemas {
+    /// - Remark: Generated from `#/components/schemas/UserInvitationResponse`.
+    public struct UserInvitationResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserInvitationResponse/data`.
+        public var data: Components.Schemas.UserInvitation
+        /// - Remark: Generated from `#/components/schemas/UserInvitationResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UserInvitationResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `UserInvitationResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.UserInvitation,
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse`.
+    public struct UserInvitationsResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/data`.
+        public var data: [Components.Schemas.UserInvitation]
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/UserInvitationsResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `UserInvitationsResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.UserInvitation],
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserResponse`.
+    public struct UserResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserResponse/data`.
+        public var data: Components.Schemas.User
+        /// - Remark: Generated from `#/components/schemas/UserResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UserResponse/links`.
+        public var links: Components.Schemas.DocumentLinks
+        /// Creates a new `UserResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        public init(
+            data: Components.Schemas.User,
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.DocumentLinks
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserRole`.
+    public typealias UserRole = Swift.String
+    /// - Remark: Generated from `#/components/schemas/UsersResponse`.
+    public struct UsersResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/data`.
+        public var data: [Components.Schemas.User]
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/included`.
+        public var included: [Components.Schemas.App]?
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/UsersResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `UsersResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.User],
+            included: [Components.Schemas.App]? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest`.
+    public struct UserUpdateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes/allAppsVisible`.
+                public var allAppsVisible: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes/provisioningAllowed`.
+                public var provisioningAllowed: Swift.Bool?
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes/roles`.
+                public var roles: [Components.Schemas.UserRole]?
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - allAppsVisible:
+                ///   - provisioningAllowed:
+                ///   - roles:
+                public init(
+                    allAppsVisible: Swift.Bool? = nil,
+                    provisioningAllowed: Swift.Bool? = nil,
+                    roles: [Components.Schemas.UserRole]? = nil
+                ) {
+                    self.allAppsVisible = allAppsVisible
+                    self.provisioningAllowed = provisioningAllowed
+                    self.roles = roles
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case allAppsVisible
+                    case provisioningAllowed
+                    case roles
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/attributes`.
+            public var attributes: Components.Schemas.UserUpdateRequest.DataPayload.AttributesPayload?
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/id`.
+            public var id: Swift.String
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps`.
+                public struct VisibleAppsPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/DataPayload`.
+                    public struct DataPayloadPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/DataPayload/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/DataPayload/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayloadPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/data`.
+                    public typealias DataPayload = [Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayloadPayload]
+                    /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps/data`.
+                    public var data: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayload?
+                    /// Creates a new `VisibleAppsPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload.DataPayload? = nil) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships/visibleApps`.
+                public var visibleApps: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload?
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - visibleApps:
+                public init(visibleApps: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload.VisibleAppsPayload? = nil) {
+                    self.visibleApps = visibleApps
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case visibleApps
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/relationships`.
+            public var relationships: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload?
+            /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - id:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.UserUpdateRequest.DataPayload.AttributesPayload? = nil,
+                id: Swift.String,
+                relationships: Components.Schemas.UserUpdateRequest.DataPayload.RelationshipsPayload? = nil,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.id = id
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case id
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/UserUpdateRequest/data`.
+        public var data: Components.Schemas.UserUpdateRequest.DataPayload
+        /// Creates a new `UserUpdateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.UserUpdateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/Webhook`.
+    public struct Webhook: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/Webhook/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/Webhook/attributes/enabled`.
+            public var enabled: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/Webhook/attributes/eventTypes`.
+            public var eventTypes: [Components.Schemas.WebhookEventType]?
+            /// - Remark: Generated from `#/components/schemas/Webhook/attributes/name`.
+            public var name: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/Webhook/attributes/url`.
+            public var url: Swift.String?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - enabled:
+            ///   - eventTypes:
+            ///   - name:
+            ///   - url:
+            public init(
+                enabled: Swift.Bool? = nil,
+                eventTypes: [Components.Schemas.WebhookEventType]? = nil,
+                name: Swift.String? = nil,
+                url: Swift.String? = nil
+            ) {
+                self.enabled = enabled
+                self.eventTypes = eventTypes
+                self.name = name
+                self.url = url
+            }
+            public enum CodingKeys: String, CodingKey {
+                case enabled
+                case eventTypes
+                case name
+                case url
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/Webhook/attributes`.
+        public var attributes: Components.Schemas.Webhook.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/Webhook/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/Webhook/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/Webhook/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/Webhook/relationships/app`.
+            public struct AppPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/Webhook/relationships/app/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/Webhook/relationships/app/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/Webhook/relationships/app/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/Webhook/relationships/app/data`.
+                public var data: Components.Schemas.Webhook.RelationshipsPayload.AppPayload.DataPayload?
+                /// Creates a new `AppPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.Webhook.RelationshipsPayload.AppPayload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/Webhook/relationships/app`.
+            public var app: Components.Schemas.Webhook.RelationshipsPayload.AppPayload?
+            /// - Remark: Generated from `#/components/schemas/Webhook/relationships/deliveries`.
+            public struct DeliveriesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/Webhook/relationships/deliveries/links`.
+                public var links: Components.Schemas.RelationshipLinks?
+                /// Creates a new `DeliveriesPayload`.
+                ///
+                /// - Parameters:
+                ///   - links:
+                public init(links: Components.Schemas.RelationshipLinks? = nil) {
+                    self.links = links
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case links
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/Webhook/relationships/deliveries`.
+            public var deliveries: Components.Schemas.Webhook.RelationshipsPayload.DeliveriesPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - app:
+            ///   - deliveries:
+            public init(
+                app: Components.Schemas.Webhook.RelationshipsPayload.AppPayload? = nil,
+                deliveries: Components.Schemas.Webhook.RelationshipsPayload.DeliveriesPayload? = nil
+            ) {
+                self.app = app
+                self.deliveries = deliveries
+            }
+            public enum CodingKeys: String, CodingKey {
+                case app
+                case deliveries
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/Webhook/relationships`.
+        public var relationships: Components.Schemas.Webhook.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/Webhook/type`.
+        public var _type: Swift.String
+        /// Creates a new `Webhook`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.Webhook.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.Webhook.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest`.
+    public struct WebhookCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/attributes`.
+            public struct AttributesPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/attributes/enabled`.
+                public var enabled: Swift.Bool
+                /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/attributes/eventTypes`.
+                public var eventTypes: [Components.Schemas.WebhookEventType]
+                /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/attributes/name`.
+                public var name: Swift.String
+                /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/attributes/secret`.
+                public var secret: Swift.String
+                /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/attributes/url`.
+                public var url: Swift.String
+                /// Creates a new `AttributesPayload`.
+                ///
+                /// - Parameters:
+                ///   - enabled:
+                ///   - eventTypes:
+                ///   - name:
+                ///   - secret:
+                ///   - url:
+                public init(
+                    enabled: Swift.Bool,
+                    eventTypes: [Components.Schemas.WebhookEventType],
+                    name: Swift.String,
+                    secret: Swift.String,
+                    url: Swift.String
+                ) {
+                    self.enabled = enabled
+                    self.eventTypes = eventTypes
+                    self.name = name
+                    self.secret = secret
+                    self.url = url
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case enabled
+                    case eventTypes
+                    case name
+                    case secret
+                    case url
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/attributes`.
+            public var attributes: Components.Schemas.WebhookCreateRequest.DataPayload.AttributesPayload
+            /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships/app`.
+                public struct AppPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships/app/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships/app/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships/app/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships/app/data`.
+                    public var data: Components.Schemas.WebhookCreateRequest.DataPayload.RelationshipsPayload.AppPayload.DataPayload
+                    /// Creates a new `AppPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.WebhookCreateRequest.DataPayload.RelationshipsPayload.AppPayload.DataPayload) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships/app`.
+                public var app: Components.Schemas.WebhookCreateRequest.DataPayload.RelationshipsPayload.AppPayload
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - app:
+                public init(app: Components.Schemas.WebhookCreateRequest.DataPayload.RelationshipsPayload.AppPayload) {
+                    self.app = app
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case app
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.WebhookCreateRequest.DataPayload.RelationshipsPayload
+            /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - attributes:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                attributes: Components.Schemas.WebhookCreateRequest.DataPayload.AttributesPayload,
+                relationships: Components.Schemas.WebhookCreateRequest.DataPayload.RelationshipsPayload,
+                _type: Swift.String
+            ) {
+                self.attributes = attributes
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case attributes
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WebhookCreateRequest/data`.
+        public var data: Components.Schemas.WebhookCreateRequest.DataPayload
+        /// Creates a new `WebhookCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.WebhookCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/WebhookDeliveriesResponse`.
+    public struct WebhookDeliveriesResponse: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/WebhookDeliveriesResponse/data`.
+        public var data: [Components.Schemas.WebhookDelivery]
+        /// - Remark: Generated from `#/components/schemas/WebhookDeliveriesResponse/included`.
+        public var included: [Components.Schemas.WebhookEvent]?
+        /// - Remark: Generated from `#/components/schemas/WebhookDeliveriesResponse/links`.
+        public var links: Components.Schemas.PagedDocumentLinks
+        /// - Remark: Generated from `#/components/schemas/WebhookDeliveriesResponse/meta`.
+        public var meta: Components.Schemas.PagingInformation?
+        /// Creates a new `WebhookDeliveriesResponse`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        ///   - included:
+        ///   - links:
+        ///   - meta:
+        public init(
+            data: [Components.Schemas.WebhookDelivery],
+            included: [Components.Schemas.WebhookEvent]? = nil,
+            links: Components.Schemas.PagedDocumentLinks,
+            meta: Components.Schemas.PagingInformation? = nil
+        ) {
+            self.data = data
+            self.included = included
+            self.links = links
+            self.meta = meta
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+            case included
+            case links
+            case meta
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/WebhookDelivery`.
+    public struct WebhookDelivery: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes`.
+        public struct AttributesPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/createdDate`.
+            public var createdDate: Foundation.Date?
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/deliveryState`.
+            public var deliveryState: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/errorMessage`.
+            public var errorMessage: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/redelivery`.
+            public var redelivery: Swift.Bool?
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/request`.
+            public struct RequestPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/request/url`.
+                public var url: Swift.String?
+                /// Creates a new `RequestPayload`.
+                ///
+                /// - Parameters:
+                ///   - url:
+                public init(url: Swift.String? = nil) {
+                    self.url = url
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case url
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/request`.
+            public var request: Components.Schemas.WebhookDelivery.AttributesPayload.RequestPayload?
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/response`.
+            public struct ResponsePayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/response/body`.
+                public var body: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/response/httpStatusCode`.
+                public var httpStatusCode: Swift.Int?
+                /// Creates a new `ResponsePayload`.
+                ///
+                /// - Parameters:
+                ///   - body:
+                ///   - httpStatusCode:
+                public init(
+                    body: Swift.String? = nil,
+                    httpStatusCode: Swift.Int? = nil
+                ) {
+                    self.body = body
+                    self.httpStatusCode = httpStatusCode
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case body
+                    case httpStatusCode
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/response`.
+            public var response: Components.Schemas.WebhookDelivery.AttributesPayload.ResponsePayload?
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes/sentDate`.
+            public var sentDate: Foundation.Date?
+            /// Creates a new `AttributesPayload`.
+            ///
+            /// - Parameters:
+            ///   - createdDate:
+            ///   - deliveryState:
+            ///   - errorMessage:
+            ///   - redelivery:
+            ///   - request:
+            ///   - response:
+            ///   - sentDate:
+            public init(
+                createdDate: Foundation.Date? = nil,
+                deliveryState: Swift.String? = nil,
+                errorMessage: Swift.String? = nil,
+                redelivery: Swift.Bool? = nil,
+                request: Components.Schemas.WebhookDelivery.AttributesPayload.RequestPayload? = nil,
+                response: Components.Schemas.WebhookDelivery.AttributesPayload.ResponsePayload? = nil,
+                sentDate: Foundation.Date? = nil
+            ) {
+                self.createdDate = createdDate
+                self.deliveryState = deliveryState
+                self.errorMessage = errorMessage
+                self.redelivery = redelivery
+                self.request = request
+                self.response = response
+                self.sentDate = sentDate
+            }
+            public enum CodingKeys: String, CodingKey {
+                case createdDate
+                case deliveryState
+                case errorMessage
+                case redelivery
+                case request
+                case response
+                case sentDate
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WebhookDelivery/attributes`.
+        public var attributes: Components.Schemas.WebhookDelivery.AttributesPayload?
+        /// - Remark: Generated from `#/components/schemas/WebhookDelivery/id`.
+        public var id: Swift.String
+        /// - Remark: Generated from `#/components/schemas/WebhookDelivery/links`.
+        public var links: Components.Schemas.ResourceLinks?
+        /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships`.
+        public struct RelationshipsPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships/event`.
+            public struct EventPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships/event/data`.
+                public struct DataPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships/event/data/id`.
+                    public var id: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships/event/data/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `DataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - id:
+                    ///   - _type:
+                    public init(
+                        id: Swift.String,
+                        _type: Swift.String
+                    ) {
+                        self.id = id
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships/event/data`.
+                public var data: Components.Schemas.WebhookDelivery.RelationshipsPayload.EventPayload.DataPayload?
+                /// Creates a new `EventPayload`.
+                ///
+                /// - Parameters:
+                ///   - data:
+                public init(data: Components.Schemas.WebhookDelivery.RelationshipsPayload.EventPayload.DataPayload? = nil) {
+                    self.data = data
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case data
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships/event`.
+            public var event: Components.Schemas.WebhookDelivery.RelationshipsPayload.EventPayload?
+            /// Creates a new `RelationshipsPayload`.
+            ///
+            /// - Parameters:
+            ///   - event:
+            public init(event: Components.Schemas.WebhookDelivery.RelationshipsPayload.EventPayload? = nil) {
+                self.event = event
+            }
+            public enum CodingKeys: String, CodingKey {
+                case event
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WebhookDelivery/relationships`.
+        public var relationships: Components.Schemas.WebhookDelivery.RelationshipsPayload?
+        /// - Remark: Generated from `#/components/schemas/WebhookDelivery/type`.
+        public var _type: Swift.String
+        /// Creates a new `WebhookDelivery`.
+        ///
+        /// - Parameters:
+        ///   - attributes:
+        ///   - id:
+        ///   - links:
+        ///   - relationships:
+        ///   - _type:
+        public init(
+            attributes: Components.Schemas.WebhookDelivery.AttributesPayload? = nil,
+            id: Swift.String,
+            links: Components.Schemas.ResourceLinks? = nil,
+            relationships: Components.Schemas.WebhookDelivery.RelationshipsPayload? = nil,
+            _type: Swift.String
+        ) {
+            self.attributes = attributes
+            self.id = id
+            self.links = links
+            self.relationships = relationships
+            self._type = _type
+        }
+        public enum CodingKeys: String, CodingKey {
+            case attributes
+            case id
+            case links
+            case relationships
+            case _type = "type"
+        }
+    }
+    /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest`.
+    public struct WebhookDeliveryCreateRequest: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data`.
+        public struct DataPayload: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships`.
+            public struct RelationshipsPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships/template`.
+                public struct TemplatePayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships/template/data`.
+                    public struct DataPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships/template/data/id`.
+                        public var id: Swift.String
+                        /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships/template/data/type`.
+                        public var _type: Swift.String
+                        /// Creates a new `DataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - id:
+                        ///   - _type:
+                        public init(
+                            id: Swift.String,
+                            _type: Swift.String
+                        ) {
+                            self.id = id
+                            self._type = _type
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case id
+                            case _type = "type"
+                        }
+                    }
+                    /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships/template/data`.
+                    public var data: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload.RelationshipsPayload.TemplatePayload.DataPayload
+                    /// Creates a new `TemplatePayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - data:
+                    public init(data: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload.RelationshipsPayload.TemplatePayload.DataPayload) {
+                        self.data = data
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case data
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships/template`.
+                public var template: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload.RelationshipsPayload.TemplatePayload
+                /// Creates a new `RelationshipsPayload`.
+                ///
+                /// - Parameters:
+                ///   - template:
+                public init(template: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload.RelationshipsPayload.TemplatePayload) {
+                    self.template = template
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case template
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/relationships`.
+            public var relationships: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload.RelationshipsPayload
+            /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data/type`.
+            public var _type: Swift.String
+            /// Creates a new `DataPayload`.
+            ///
+            /// - Parameters:
+            ///   - relationships:
+            ///   - _type:
+            public init(
+                relationships: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload.RelationshipsPayload,
+                _type: Swift.String
+            ) {
+                self.relationships = relationships
+                self._type = _type
+            }
+            public enum CodingKeys: String, CodingKey {
+                case relationships
+                case _type = "type"
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/WebhookDeliveryCreateRequest/data`.
+        public var data: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload
+        /// Creates a new `WebhookDeliveryCreateRequest`.
+        ///
+        /// - Parameters:
+        ///   - data:
+        public init(data: Components.Schemas.WebhookDeliveryCreateRequest.DataPayload) {
+            self.data = data
+        }
+        public enum CodingKeys: String, CodingKey {
+            case data
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/WebhookDeliveryResponse`.
     public struct WebhookDeliveryResponse: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/WebhookDeliveryResponse/data`.

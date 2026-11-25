@@ -15,7 +15,7 @@ struct SubCommand: AsyncParsableCommand {
       Groups.self, List.self, Info.self,
       Create.self, Update.self, Delete.self, Submit.self,
       CreateGroup.self, UpdateGroup.self, DeleteGroup.self,
-      Localizations.self, GroupLocalizations.self, Pricing.self, Availability.self,
+      Localizations.self, GroupLocalizations.self, Pricing.self, Availability.self, MultiSeatCommand.self,
       IntroOffer.self, OfferCode.self, PromoOffer.self, WinBackOffer.self, RetentionOffer.self, RetentionMessage.self, SubmitGroup.self,
       Images.self, ReviewScreenshot.self,
     ]
@@ -1496,7 +1496,7 @@ struct SubCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "pricing",
       abstract: "Manage subscription pricing.",
-      subcommands: [Show.self, Tiers.self, Set.self, Export.self, Import.self]
+      subcommands: [Show.self, Tiers.self, Set.self, Export.self, Import.self, Volume.self, VolumeSet.self, Cancel.self]
     )
 
     // MARK: Show
@@ -1549,6 +1549,7 @@ struct SubCommand: AsyncParsableCommand {
             if let cur = t.attributes?.currency {
               territoryCurrencies[t.id] = cur
             }
+          default: break
           }
         }
 

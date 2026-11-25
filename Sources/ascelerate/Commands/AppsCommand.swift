@@ -11,7 +11,7 @@ struct AppsCommand: AsyncParsableCommand {
     groupedSubcommands: [
       CommandGroup(name: "Version", subcommands: [CreateVersion.self, Copyright.self, BuildCommand.self, PhasedRelease.self, Release.self, RoutingCoverage.self]),
       CommandGroup(name: "Info & Content", subcommands: [AppInfoCommand.self, Localizations.self, MediaCommand.self]),
-      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, TagsCommand.self, Availability.self, PricingCommand.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self, StreamlinedPurchasing.self]),
+      CommandGroup(name: "Configuration", subcommands: [AccessibilityCommand.self, TagsCommand.self, Availability.self, PricingCommand.self, Encryption.self, EULACommand.self, SubscriptionGracePeriod.self, StreamlinedPurchasing.self, GroupPurchaseInvitations.self]),
       CommandGroup(name: "Review", subcommands: [ReviewCommand.self]),
     ]
   )
@@ -200,7 +200,7 @@ struct AppsCommand: AsyncParsableCommand {
       if promotionalTextOnly {
         return // promotional text can be updated in any state
       }
-      throw ValidationError("Version is in state '\(state)' — only promotional text can be updated. Other fields require PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW.")
+      throw ValidationError("Version is in state '\(state)' — only promotional text can be updated. The other fields change while a version is being prepared, waits for review, or is back from review (rejected or taken back).")
     }
     
     // MARK: - View
@@ -2777,6 +2777,8 @@ struct AppsCommand: AsyncParsableCommand {
           ("Age Assurance", boolLabel(attrs.isAgeAssurance)),
           ("Social Media", boolLabel(attrs.isSocialMedia)),
           ("Social Media Age Restricted", boolLabel(attrs.isSocialMediaAgeRestricted)),
+          ("Shared Location", boolLabel(attrs.isSharedLocation)),
+          ("Dating and Relationships", boolLabel(attrs.isDatingAndRelationships)),
         ]
       
         // Other
@@ -2897,6 +2899,8 @@ struct AppsCommand: AsyncParsableCommand {
           if let v = fields.isAgeAssurance { print("  Age Assurance: \(v)"); changeCount += 1 }
           if let v = fields.isSocialMedia { print("  Social Media: \(v)"); changeCount += 1 }
           if let v = fields.isSocialMediaAgeRestricted { print("  Social Media Age Restricted: \(v)"); changeCount += 1 }
+          if let v = fields.isSharedLocation { print("  Shared Location: \(v)"); changeCount += 1 }
+          if let v = fields.isDatingAndRelationships { print("  Dating and Relationships: \(v)"); changeCount += 1 }
           if let v = fields.kidsAgeBand { print("  Kids Age Band: \(v)"); changeCount += 1 }
           if let v = fields.ageRatingOverride { print("  Age Rating Override: \(v)"); changeCount += 1 }
 
@@ -2918,6 +2922,7 @@ struct AppsCommand: AsyncParsableCommand {
               fields.alcoholTobaccoOrDrugUseOrReferences, "alcoholTobaccoOrDrugUseOrReferences",
               E.AgeRatingDeclarationUpdateRequestAlcoholTobaccoOrDrugUseOrReferences.self),
             contests: try value(fields.contests, "contests", E.AgeRatingDeclarationUpdateRequestContests.self),
+            datingAndRelationships: fields.isDatingAndRelationships,
             gambling: fields.isGambling,
             gamblingSimulated: try value(fields.gamblingSimulated, "gamblingSimulated", E.AgeRatingDeclarationUpdateRequestGamblingSimulated.self),
             gunsOrOtherWeapons: try value(fields.gunsOrOtherWeapons, "gunsOrOtherWeapons", E.AgeRatingDeclarationUpdateRequestGunsOrOtherWeapons.self),
@@ -2939,6 +2944,7 @@ struct AppsCommand: AsyncParsableCommand {
               E.AgeRatingDeclarationUpdateRequestSexualContentGraphicAndNudity.self),
             sexualContentOrNudity: try value(
               fields.sexualContentOrNudity, "sexualContentOrNudity", E.AgeRatingDeclarationUpdateRequestSexualContentOrNudity.self),
+            sharedLocation: fields.isSharedLocation,
             socialMedia: fields.isSocialMedia,
             socialMediaAgeRestricted: fields.isSocialMediaAgeRestricted,
             unrestrictedWebAccess: fields.isUnrestrictedWebAccess,

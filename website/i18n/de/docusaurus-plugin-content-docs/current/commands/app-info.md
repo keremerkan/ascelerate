@@ -56,7 +56,7 @@ ascelerate apps app-info import <bundle-id> --file app-infos.json
 Nur die vorhandenen Felder werden aktualisiert — fehlende Felder bleiben unverändert.
 
 :::note
-Die Befehle `app-info update` und `app-info import` erfordern, dass die AppInfo in einem bearbeitbaren Zustand ist (`PREPARE_FOR_SUBMISSION` oder `WAITING_FOR_REVIEW`).
+Die Befehle `app-info update` und `app-info import` erfordern, dass die AppInfo in einem bearbeitbaren Zustand ist (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED` oder `REJECTED`).
 :::
 
 ## Altersfreigabe

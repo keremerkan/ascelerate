@@ -651,6 +651,35 @@ extension Components.Schemas {
     }
     /// - Remark: Generated from `#/components/schemas/SubscriptionCustomerEligibility`.
     public typealias SubscriptionCustomerEligibility = Swift.String
+    /// - Remark: Generated from `#/components/schemas/SubscriptionEqualizedPriceTiersForTerritory`.
+    public struct SubscriptionEqualizedPriceTiersForTerritory: Codable, Hashable, Sendable {
+        /// - Remark: Generated from `#/components/schemas/SubscriptionEqualizedPriceTiersForTerritory/additionalPriceTiers`.
+        public var additionalPriceTiers: [Components.Schemas.ProposedSubscriptionPriceTier]?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionEqualizedPriceTiersForTerritory/basePricePointId`.
+        public var basePricePointId: Swift.String?
+        /// - Remark: Generated from `#/components/schemas/SubscriptionEqualizedPriceTiersForTerritory/territoryId`.
+        public var territoryId: Swift.String?
+        /// Creates a new `SubscriptionEqualizedPriceTiersForTerritory`.
+        ///
+        /// - Parameters:
+        ///   - additionalPriceTiers:
+        ///   - basePricePointId:
+        ///   - territoryId:
+        public init(
+            additionalPriceTiers: [Components.Schemas.ProposedSubscriptionPriceTier]? = nil,
+            basePricePointId: Swift.String? = nil,
+            territoryId: Swift.String? = nil
+        ) {
+            self.additionalPriceTiers = additionalPriceTiers
+            self.basePricePointId = basePricePointId
+            self.territoryId = territoryId
+        }
+        public enum CodingKeys: String, CodingKey {
+            case additionalPriceTiers
+            case basePricePointId
+            case territoryId
+        }
+    }
     /// - Remark: Generated from `#/components/schemas/SubscriptionGracePeriod`.
     public struct SubscriptionGracePeriod: Codable, Hashable, Sendable {
         /// - Remark: Generated from `#/components/schemas/SubscriptionGracePeriod/attributes`.

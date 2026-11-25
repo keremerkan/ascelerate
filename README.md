@@ -825,6 +825,15 @@ ascelerate apps streamlined-purchasing <bundle-id>                 # view
 ascelerate apps streamlined-purchasing <bundle-id> --enabled false # turn off
 ```
 
+### Group Purchase Invitations
+
+Who hosts the seat invitations of the app's multiseat App Store purchases: Apple (the default) or the app's own flow, which then verifies invited members' ages and gets any parental consent itself.
+
+```bash
+ascelerate apps group-purchase-invitations <bundle-id>                   # view
+ascelerate apps group-purchase-invitations <bundle-id> --host developer  # the app hosts them
+```
+
 ### Devices
 
 ```bash
@@ -1157,6 +1166,12 @@ ascelerate sub pricing set <bundle-id> <product-id> --price 9.99 --equalize-all-
 # Pricing — copy per-territory prices between subscriptions (same app or another one)
 ascelerate sub pricing export <bundle-id> <product-id> --output prices.json
 ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices.json --preserve-current
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA   # remove a planned price
+
+# Multiseat (organizations and App Store customers buying several seats) and volume pricing
+ascelerate sub multiseat <bundle-id> <product-id> [--enabled true|false] [--markets app-store,apple-business,apple-school]
+ascelerate sub pricing volume <bundle-id> <product-id>
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99 --equalize-all-territories --start-date 2027-03-01 --no-preserve-current
 
 # Per-subscription territory availability (independent of the app's territories)
 ascelerate sub availability <bundle-id> <product-id>

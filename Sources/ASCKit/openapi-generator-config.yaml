@@ -107,6 +107,10 @@ filter:
     - /v1/subscriptionGroupLocalizations/{id}
     - /v1/subscriptionPrices
     - /v1/subscriptionPrices/{id}
+    - /v1/subscriptionPrices/{id}/additionalPriceTiers
+    - /v1/subscriptionPriceTiers
+    - /v1/subscriptionPriceTierEqualizations
+    - /v1/subscriptionPriceChangePreviews
     - /v1/subscriptions/{id}/planAvailabilities
     - /v1/subscriptionPlanAvailabilities
     - /v1/subscriptionPlanAvailabilities/{id}
@@ -720,6 +724,8 @@ nameOverrides:
   "fields[subscriptionOfferCodes]": fieldsSubscriptionOfferCodes
   "fields[subscriptionPlanAvailabilities]": fieldsSubscriptionPlanAvailabilities
   "fields[subscriptionPricePoints]": fieldsSubscriptionPricePoints
+  "fields[subscriptionPriceTierEqualizations]": fieldsSubscriptionPriceTierEqualizations
+  "fields[subscriptionPriceTiers]": fieldsSubscriptionPriceTiers
   "fields[subscriptionPrices]": fieldsSubscriptionPrices
   "fields[subscriptionPromotionalOfferPrices]": fieldsSubscriptionPromotionalOfferPrices
   "fields[subscriptionPromotionalOffers]": fieldsSubscriptionPromotionalOffers
@@ -878,6 +884,7 @@ nameOverrides:
   "limit[achievementsV2]": limitAchievementsV2
   "limit[achievements]": limitAchievements
   "limit[activityReleases]": limitActivityReleases
+  "limit[additionalPriceTiers]": limitAdditionalPriceTiers
   "limit[androidToIosAppMappingDetails]": limitAndroidToIosAppMappingDetails
   "limit[appClipDefaultExperienceLocalizations]": limitAppClipDefaultExperienceLocalizations
   "limit[appClipDefaultExperiences]": limitAppClipDefaultExperiences
@@ -957,6 +964,7 @@ nameOverrides:
   "limit[planAvailabilities]": limitPlanAvailabilities
   "limit[preReleaseVersions]": limitPreReleaseVersions
   "limit[pricePoints]": limitPricePoints
+  "limit[priceTierPricePoints]": limitPriceTierPricePoints
   "limit[prices]": limitPrices
   "limit[primaryRepositories]": limitPrimaryRepositories
   "limit[profiles]": limitProfiles

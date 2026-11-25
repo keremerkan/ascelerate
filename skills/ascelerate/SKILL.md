@@ -260,6 +260,13 @@ ascelerate sub pricing set <app> <product-id> --price 4.99 [--territory USA] [--
   [--confirm-decrease]                           # required on decreases in --yes mode
 ascelerate sub pricing export <app> <product-id> [--output prices.json]
 ascelerate sub pricing import <app> <product-id> [--file prices.json] [--snap]   # copy prices from another product/app; same safety flags as set; --snap as iap
+ascelerate sub pricing cancel <app> <product-id> --territories USA,TUR|all [--start-date YYYY-MM-DD]   # remove planned prices (not started)
+
+# Multiseat: organizations (Apple Business/School Manager) and App Store customers buying several seats
+ascelerate sub multiseat <app> <product-id> [--enabled true|false] [--markets app-store,apple-business,apple-school|none] [--json]   # on, all markets by default
+ascelerate sub pricing volume <app> <product-id> [--territory USA] [--json]   # volume tiers: lower per-seat prices from a seat count on
+ascelerate sub pricing volume-set <app> <product-id> --tiers 2:8.99,10:7.99 [--price 9.99] [--territory USA] [--equalize-all-territories] [--start-date YYYY-MM-DD]
+  [--preserve-current | --no-preserve-current] [--confirm-decrease]   # Apple previews each territory: raise / cut / mixed; --tiers none removes tiers
 
 # Per-subscription territory availability (independent of app's)
 ascelerate sub availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [--available-in-new-territories true] [--plan upfront|monthly]   # monthly = "Monthly with 12-Month Commitment" plan (annual subs; not in USA/SGP); default upfront
@@ -851,7 +858,11 @@ ascelerate apps subscription-grace-period <app> --opt-in true --duration SIXTEEN
 ascelerate apps subscription-grace-period <app> --sandbox-opt-in true --duration THREE_DAYS --renewal-type ALL_RENEWALS   # sandbox only
 # Streamlined purchasing (buying subscriptions outside the app; turning off needs an approved build using StoreKit PurchaseIntent)
 ascelerate apps streamlined-purchasing <app> [--enabled true|false]
+# Who hosts seat invitations for multiseat App Store purchases (apple: default; developer: the app's own flow, which then checks ages and parental consent)
+ascelerate apps group-purchase-invitations <app> [--host apple|developer]
 ```
+
+Volume pricing: up to four tiers besides the single seat, the first from 2 seats or more, each cheaper per seat than the one before; each seat costs its own tier's price. Upfront billing only. A price and its tiers can't be edited: remove a planned one (`sub pricing cancel`) and set it again; replace one in effect with a later price (`--tiers none` for a single price). While a subscription has a price with tiers, planned or in effect, App Store Connect's web pages can't change its pricing, so prefer a dated price and tell the user. A territory takes one planned price at a time.
 
 Grace period durations: `THREE_DAYS`, `SIXTEEN_DAYS`, `TWENTY_EIGHT_DAYS`. Renewal types: `ALL_RENEWALS`, `PAID_TO_PAID_ONLY`. Production needs sandbox on too (`--opt-in true` turns it on, defaulting to 16 days and all renewals); turning both off clears duration and renewal type.
 

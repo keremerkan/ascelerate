@@ -115,6 +115,58 @@ Hedefin fiyat kademelerinden biri olmayan bir fiyat içe aktarmayı durdurur ve 
 
 Çok bölgeli yazma işlemleri sırasında App Store Connect'in geçici hataları (HTTP 429/5xx) otomatik olarak yeniden denenir: önce bekleme süresiyle yerinde, ardından çalıştırmanın sonunda ikinci bir turda. Yine de başarısız olan bölgeler son raporda listelenir ve komut sıfır olmayan bir çıkış koduyla sonlanır; aynı komutu yeniden çalıştırdığınızda güncellenmiş bölgeler değişmemiş sayılarak atlanır ve yalnızca başarısız olanlar yeniden denenir.
 
+### Planlanan bir fiyatı kaldırma {#remove-a-planned-price}
+
+Bir bölgede aynı anda yalnızca bir planlanan fiyat olabilir. Planlanan bir fiyatı değiştirmek için önce onu kaldırın:
+
+```bash
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
+```
+
+Yürürlüğe girmiş bir fiyat kaldırılamaz; bunun yerine daha sonra başlayan bir fiyat belirleyin.
+
+## Çok koltuklu abonelikler ve hacim fiyatlandırması {#multiseat-and-volume-pricing}
+
+Kuruluşlar otomatik yenilenen bir aboneliği Apple Business Manager ve Apple School Manager üzerinden birden çok kişi için satın alabilir. App Store müşterileri de koltuk satın alıp bunlara başkalarını davet edebilir (bu davetleri kimin yöneteceği bir uygulama ayarıdır, bkz. [grup satın alma davetleri](apps.md#group-purchase-invitations)). Çok koltuklu satın alma, otomatik yenilenen her abonelikte varsayılan olarak üç pazarın hepsinde açıktır.
+
+```bash
+# Görüntüle
+ascelerate sub multiseat <bundle-id> <product-id>
+
+# Yalnızca App Store'da ve Apple Business Manager üzerinden sun
+ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-business
+
+# Yalnızca tek koltuk
+ascelerate sub multiseat <bundle-id> <product-id> --enabled false
+```
+
+Kapatıldığında yeni çok koltuklu satın almalar durur; mevcut olanlar koltuk sayılarıyla yenilenmeye devam eder ama koltuk ekleyemez. Aile Paylaşımı'nı açmak çok koltuklu satın almayı kapatır.
+
+### Hacim fiyatlandırması {#volume-pricing}
+
+Hacim fiyatlandırması, büyük satın almalarda koltuk başına daha düşük bir fiyat sunar. Bir fiyatın tek koltuğun yanında en çok dört hacim kademesi olabilir. Her kademe bir koltuk sayısından (en az 2) başlar ve koltuk başına bir öncekinden ucuzdur. Her koltuk kendi kademesinin fiyatından ücretlendirilir. Örneğin tek koltuk 9,99 iken `2:8.99` ve `10:7.99` kademeleriyle on iki koltuk 9,99 + 8 × 8,99 + 3 × 7,99 tutar.
+
+```bash
+# Mevcut ve planlanan fiyatların kademeleri
+ascelerate sub pricing volume <bundle-id> <product-id>
+ascelerate sub pricing volume <bundle-id> <product-id> --territory USA --json
+
+# ABD'deki mevcut tek koltuk fiyatına 1 Mart'tan itibaren kademeler
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99 --start-date 2027-03-01
+
+# Kademeli yeni bir tek koltuk fiyatı; Apple bunu diğer tüm bölgelere dönüştürür
+ascelerate sub pricing volume-set <bundle-id> <product-id> --price 9.99 --tiers 2:8.99,10:7.99,50:6.99 \
+  --equalize-all-territories --start-date 2027-03-01 --no-preserve-current
+
+# Yürürlükteki bir fiyatın kademelerini kaldır: her koltuk sayısı için tek fiyatlı, daha sonra başlayan bir fiyat
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers none --start-date 2027-03-01
+```
+
+Hiçbir şey kaydedilmeden önce Apple her bölgede yeni fiyatı mevcut fiyatla her koltuk sayısında karşılaştırır ve özet bu sonucu gösterir. Bir zam, `sub pricing set` gibi `--preserve-current` (mevcut aboneler kendi fiyatlarında kalır) ya da `--no-preserve-current` (Apple'ın bildiriminden sonra yeni fiyata geçerler) gerektirir. Bir indirim ya da bazı koltuk sayılarında daha yüksek, bazılarında daha düşük bir fiyat, mevcut aboneleri bir sonraki yenilemede yeni fiyata geçirir; `--yes` ile birlikte `--confirm-decrease` de ekleyin. Değişmeyen bölgeler atlanır.
+
+Bir fiyat ve kademeleri tek parça olarak kaydedilir ve düzenlenemez. Planlanan bir fiyatı değiştirmek için `sub pricing cancel` ile kaldırıp yeniden belirleyin. Bir abonelikte kademeli bir fiyat (planlanmış ya da yürürlükte) olduğu sürece App Store Connect'in web sayfaları, korunan fiyatlar dahil, aboneliğin fiyatlandırmasını değiştiremez. Bunu geri kazanmak için planlanan fiyatı kaldırın ya da yürürlükteki fiyatın yerine kademesiz bir fiyat koyun. Hacim fiyatlandırması yalnızca peşin ödemeli plana uygulanır.
+
 ## Bölge erişilebilirliği
 
 Her aboneliğin uygulamadan bağımsız kendi bölge erişilebilirliği vardır. Varsayılan olarak abonelik, uygulamasının bölgelerini devralır; `sub availability` ile değişiklik yaptığınızda aboneliğe özel bir liste oluşur.

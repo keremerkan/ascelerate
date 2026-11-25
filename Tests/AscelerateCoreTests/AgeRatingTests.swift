@@ -4,7 +4,7 @@ import Testing
 /// The age rating questions preflight counts as unanswered.
 @Suite struct AgeRatingTests {
   @Test func unansweredQuestionnaire() {
-    #expect(AgeRatingFields().unanswered == 23)
+    #expect(AgeRatingFields().unanswered == 25)
   }
 
   @Test func answeredQuestionnaire() {
@@ -34,6 +34,7 @@ import Testing
     violenceRealistic: "NONE", violenceRealisticProlongedGraphicOrSadistic: "NONE", medicalOrTreatmentInformation: "NONE",
     isAdvertising: false, isGambling: false, isUnrestrictedWebAccess: false, isUserGeneratedContent: false,
     isMessagingAndChat: false, isLootBox: false, isHealthOrWellnessTopics: false, isParentalControls: false,
-    isAgeAssurance: false, isSocialMedia: false, isSocialMediaAgeRestricted: false, kidsAgeBand: "FIVE_AND_UNDER",
+    isAgeAssurance: false, isSocialMedia: false, isSocialMediaAgeRestricted: false, isSharedLocation: false,
+    isDatingAndRelationships: false, kidsAgeBand: "FIVE_AND_UNDER",
     ageRatingOverride: "NONE")
 }

@@ -115,6 +115,58 @@ Un prix qui ne correspond à aucun palier de la cible fait échouer l’importat
 
 Les erreurs transitoires d'App Store Connect (HTTP 429/5xx) lors des écritures multi-régions sont automatiquement réessayées — d'abord sur place avec temporisation, puis dans une seconde passe en fin d'exécution. Les régions qui échouent malgré tout sont listées dans le rapport final et la commande se termine avec un code d'erreur ; relancer la même commande ne réessaie que celles-ci, les régions déjà mises à jour étant ignorées comme inchangées.
 
+### Retirer un prix planifié {#remove-a-planned-price}
+
+Une région n'a qu'un prix planifié à la fois. Pour modifier un prix planifié, retirez-le d'abord :
+
+```bash
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
+```
+
+Un prix déjà en vigueur ne peut pas être retiré : définissez plutôt un prix ultérieur.
+
+## Plusieurs places et tarifs dégressifs {#multiseat-and-volume-pricing}
+
+Les organisations peuvent acheter un abonnement à renouvellement automatique pour plusieurs personnes via Apple Business Manager et Apple School Manager, et les clients de l'App Store peuvent acheter des places et y inviter d'autres personnes (qui gère ces invitations est un réglage de l'app : [invitations des achats groupés](apps.md#group-purchase-invitations)). L'achat de plusieurs places est activé par défaut pour chaque abonnement à renouvellement automatique, sur les trois marchés.
+
+```bash
+# Afficher
+ascelerate sub multiseat <bundle-id> <product-id>
+
+# Le proposer seulement sur l'App Store et via Apple Business Manager
+ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-business
+
+# Une seule place uniquement
+ascelerate sub multiseat <bundle-id> <product-id> --enabled false
+```
+
+Une fois désactivé, plus aucun nouvel achat de plusieurs places n'est possible ; les achats existants se renouvellent avec leur nombre de places mais ne peuvent pas en ajouter. Activer le Partage familial désactive l'achat de plusieurs places.
+
+### Tarifs dégressifs {#volume-pricing}
+
+Les tarifs dégressifs donnent aux achats plus importants un prix par place plus bas. Un prix a jusqu'à quatre paliers de volume en plus de la place unique, chacun à partir d'un nombre de places (2 ou plus) et chacun moins cher par place que le précédent. Chaque place coûte le prix de son propre palier : avec 9,99 pour une place, `2:8.99` et `10:7.99`, douze places coûtent 9,99 + 8 × 8,99 + 3 × 7,99.
+
+```bash
+# Les paliers des prix en vigueur et planifiés
+ascelerate sub pricing volume <bundle-id> <product-id>
+ascelerate sub pricing volume <bundle-id> <product-id> --territory USA --json
+
+# Des paliers sur le prix actuel d'une place aux États-Unis, à partir du 1er mars
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99 --start-date 2027-03-01
+
+# Un nouveau prix pour une place avec paliers, converti par Apple dans toutes les autres régions
+ascelerate sub pricing volume-set <bundle-id> <product-id> --price 9.99 --tiers 2:8.99,10:7.99,50:6.99 \
+  --equalize-all-territories --start-date 2027-03-01 --no-preserve-current
+
+# Retirer les paliers d'un prix en vigueur : un prix ultérieur pour tout nombre de places
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers none --start-date 2027-03-01
+```
+
+Avant tout enregistrement, Apple compare dans chaque région le nouveau prix à l'actuel pour chaque nombre de places, et le récapitulatif affiche le résultat. Une hausse demande `--preserve-current` (les abonnés existants gardent leur prix) ou `--no-preserve-current` (ils passent au nouveau prix après la notification d'Apple), comme `sub pricing set`. Une baisse, ou un prix plus élevé pour certains nombres de places et plus bas pour d'autres, s'applique aux abonnés existants à leur prochain renouvellement ; avec `--yes`, ajoutez `--confirm-decrease`. Les régions sans changement sont ignorées.
+
+Un prix et ses paliers sont enregistrés ensemble et ne peuvent pas être modifiés : pour changer un prix planifié, retirez-le avec `sub pricing cancel` puis définissez-le à nouveau. Tant qu'un abonnement a un prix avec paliers, planifié ou en vigueur, les pages web d'App Store Connect ne peuvent pas modifier ses prix, prix préservés compris ; retirez le prix planifié, ou remplacez celui en vigueur par un prix sans paliers, pour retrouver cette possibilité. Les tarifs dégressifs ne concernent que le plan payé d'avance.
+
 ## Disponibilité territoriale
 
 Chaque abonnement a sa propre disponibilité territoriale, indépendante de l'application. Par défaut, un abonnement hérite des territoires de son application ; dès que vous appelez `sub availability` avec des modifications, l'abonnement obtient une liste explicite.

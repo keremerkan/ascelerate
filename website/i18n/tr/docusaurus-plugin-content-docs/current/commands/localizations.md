@@ -58,5 +58,5 @@ Hem dışa aktarma hem de içe aktarma için aynı format kullanılır:
 Yalnızca JSON'da bulunan alanlar güncellenir -- belirtilmeyen alanlar değiştirilmez.
 
 :::note
-Yalnızca düzenlenebilir durumdaki sürümler (`PREPARE_FOR_SUBMISSION` veya `WAITING_FOR_REVIEW`) yerelleştirme güncellemelerini kabul eder -- `promotionalText` hariç, bu her durumda güncellenebilir.
+Yalnızca düzenlenebilir durumdaki sürümler (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` veya `INVALID_BINARY`) yerelleştirme güncellemelerini kabul eder -- `promotionalText` hariç, bu her durumda güncellenebilir.
 :::

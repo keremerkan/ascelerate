@@ -312,3 +312,15 @@ ascelerate apps streamlined-purchasing <bundle-id>
 # Turn off
 ascelerate apps streamlined-purchasing <bundle-id> --enabled false
 ```
+
+## Group purchase invitations
+
+A customer who buys several seats of a subscription on the App Store (see [multiseat subscriptions](subscriptions.md#multiseat-and-volume-pricing)) invites other people to them. Apple hosts these invitations by default. With `--host developer`, your app runs its own invitation and seat acceptance flow, which can work outside Apple platforms (members then need no Apple Account), and your app verifies invited members' ages and gets any parental consent itself. The setting applies to every multiseat subscription of the app, for purchases made after the change, and needs no App Review.
+
+```bash
+# View
+ascelerate apps group-purchase-invitations <bundle-id>
+
+# Host invitations in your app
+ascelerate apps group-purchase-invitations <bundle-id> --host developer
+```

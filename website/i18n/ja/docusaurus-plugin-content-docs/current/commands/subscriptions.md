@@ -115,6 +115,58 @@ ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices
 
 複数地域への書き込み中に発生した App Store Connect の一時的なエラー（HTTP 429/5xx）は自動的に再試行されます。まずその場でバックオフ付きで再試行し、実行の最後にもう一度まとめて再試行します。それでも失敗した地域は最終レポートに一覧表示され、コマンドは非ゼロで終了します。同じコマンドを再実行すると、更新済みの地域は変更なしとしてスキップされるため、失敗した地域だけが再試行されます。
 
+### 予定された価格の削除 {#remove-a-planned-price}
+
+1つの地域に予定できる価格は一度に1つだけです。予定された価格を変更するには、まず削除します。
+
+```bash
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
+```
+
+すでに適用中の価格は削除できません。代わりに、より後に始まる価格を設定してください。
+
+## 複数シートと数量割引 {#multiseat-and-volume-pricing}
+
+組織は Apple Business Manager と Apple School Manager を通じて自動更新サブスクリプションを複数人分購入でき、App Store の顧客はシートを購入してほかの人を招待できます（招待を誰が管理するかはアプリの設定です。[グループ購入の招待](apps.md#group-purchase-invitations)を参照）。複数シートの購入は、すべての自動更新サブスクリプションでデフォルトで3つの市場すべてにおいてオンです。
+
+```bash
+# 表示
+ascelerate sub multiseat <bundle-id> <product-id>
+
+# App Store と Apple Business Manager でのみ提供
+ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-business
+
+# 1シートのみ
+ascelerate sub multiseat <bundle-id> <product-id> --enabled false
+```
+
+オフにすると新しい複数シートの購入は停止します。既存の購入はそのシート数で更新を続けますが、シートを追加できません。ファミリー共有をオンにすると、複数シートの購入はオフになります。
+
+### 数量割引 {#volume-pricing}
+
+数量割引では、多く購入するほど1シートあたりの価格が下がります。1つの価格には1シートの価格のほかに最大4つの数量段階を設定でき、それぞれ一定のシート数（2以上）から始まり、1シートあたり直前の段階より安くなります。各シートは自分が属する段階の価格になります。たとえば1シート 9.99、`2:8.99`、`10:7.99` の場合、12シートは 9.99 + 8 × 8.99 + 3 × 7.99 です。
+
+```bash
+# 適用中と予定の価格の段階
+ascelerate sub pricing volume <bundle-id> <product-id>
+ascelerate sub pricing volume <bundle-id> <product-id> --territory USA --json
+
+# 米国の現在の1シート価格に3月1日から段階を追加
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99 --start-date 2027-03-01
+
+# 段階付きの新しい1シート価格。Apple がほかのすべての地域に換算
+ascelerate sub pricing volume-set <bundle-id> <product-id> --price 9.99 --tiers 2:8.99,10:7.99,50:6.99 \
+  --equalize-all-territories --start-date 2027-03-01 --no-preserve-current
+
+# 適用中の価格から段階を外す：シート数に関係なく1つの価格を後日から適用
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers none --start-date 2027-03-01
+```
+
+保存する前に、Apple が各地域で新しい価格と現在の価格をシート数ごとに比較し、その結果が概要に表示されます。値上げには `sub pricing set` と同じく `--preserve-current`（既存の購読者は現在の価格のまま）か `--no-preserve-current`（Apple の通知後に新しい価格へ移行）が必要です。値下げ、または一部のシート数で高く別のシート数で安くなる価格は、既存の購読者には次回の更新から適用されます。`--yes` を使う場合は `--confirm-decrease` も付けてください。変更のない地域はスキップされます。
+
+価格とその段階は1つにまとめて保存され、編集できません。予定された価格を変えるには、`sub pricing cancel` で削除してから設定し直します。サブスクリプションに段階付きの価格（予定または適用中）がある間は、保持中の価格も含め、App Store Connect の Web ページからその価格を変更できません。変更できるようにするには、予定された価格を削除するか、適用中の価格を段階のない価格に置き換えます。数量割引が適用されるのは前払いプランだけです。
+
 ## 地域別の利用可否
 
 各サブスクリプションは、アプリとは独立した独自の地域別利用可否を持ちます。デフォルトではサブスクリプションはアプリの地域を継承しますが、`sub availability` で変更を加えると、サブスクリプションに明示的なリストが作成されます。

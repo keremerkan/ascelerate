@@ -42,7 +42,7 @@ Sources/AscelerateCore/               # App Store Connect logic without terminal
   Builds.swift, BuildUploadRecords.swift, BetaGroups.swift, BetaTesters.swift, TestInformation.swift, ReviewInformation.swift,
   BetaReview.swift, BetaFeedback.swift, RecruitmentCriteria.swift, ReviewAttachments.swift
   InAppPurchases.swift, Subscriptions.swift, IntroductoryOffers.swift, OfferCodes.swift, PromotionalOffers.swift,
-  RetentionMessages.swift, WinBackOffers.swift, PromotedPurchases.swift, SubscriptionSettings.swift, AppPricing.swift, AppAvailability.swift
+  RetentionMessages.swift, WinBackOffers.swift, PromotedPurchases.swift, SubscriptionSettings.swift, MultiSeat.swift, AppPricing.swift, AppAvailability.swift
   GameCenter*.swift                   # Game Center: detail and versions, achievements, leaderboards, sets, activities, challenges, groups, matchmaking
   AppEvents.swift, CustomProductPages.swift, Experiments.swift, Nominations.swift, CustomerReviews.swift, AppTags.swift,
   AccessibilityDeclarations.swift, LicenseAgreements.swift, RoutingCoverage.swift, EncryptionDeclarations.swift
@@ -175,6 +175,7 @@ ascelerate apps tags hide|show <bundle-id> <name-or-id> [-y]      # Hide or show
 ascelerate apps eula <bundle-id> [--file X] [--delete]            # View/manage custom EULA
 ascelerate apps subscription-grace-period <bundle-id> [--opt-in true|false] [--sandbox-opt-in true|false] [--duration X] [--renewal-type X] [-y]  # View/update app-level subscription grace period
 ascelerate apps streamlined-purchasing <bundle-id> [--enabled true|false] [-y]  # View/turn on or off buying subscriptions outside the app
+ascelerate apps group-purchase-invitations <bundle-id> [--host apple|developer] [-y]  # Who hosts seat invitations for multiseat App Store purchases
 ascelerate builds list [--bundle-id <id>] [--version X] [--platform X] [--json]  # List builds
 ascelerate builds archive [--workspace X] [--scheme X] [--output X] [--build-number N|auto] [--xcodebuild-output quiet|full]  # Archive Xcode project (--build-number: CURRENT_PROJECT_VERSION for this archive only, every embedded target; auto: the app target's, or the one after the highest uploaded for the platform when that's taken, `Builds.numberNeeded`; always passed, so extensions match the app)
 ascelerate settings [--xcodebuild-output quiet|full|default]     # The tool's settings (~/.ascelerate/settings.json): xcodebuild output; ASCELERATE_XCODEBUILD_OUTPUT overrides for one run
@@ -241,6 +242,10 @@ ascelerate sub pricing tiers <bundle-id> <product-id> [--territory USA]  # List 
 ascelerate sub pricing set <bundle-id> <product-id> --price 4.99 [--territory USA] [--start-date YYYY-MM-DD] [--preserve-current | --no-preserve-current] [--equalize-all-territories] [--confirm-decrease] [-y]  # Set price for one territory or fan out to all (equalized). Increases require --preserve-current/--no-preserve-current; decreases prompt interactively or require --confirm-decrease in -y mode.
 ascelerate sub pricing export <bundle-id> <product-id> [--output X]  # Export per-territory prices to JSON
 ascelerate sub pricing import <bundle-id> <product-id> [--file X] [--start-date X] [--preserve-current|--no-preserve-current] [--confirm-decrease] [--snap] [-y]  # Apply exported prices (same increase/decrease safety as pricing set; --snap: nearest tier for a price that isn't one)
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories X,Y|all [--start-date X] [-y]  # Remove planned prices
+ascelerate sub pricing volume <bundle-id> <product-id> [--territory X] [--json]  # Volume tiers (per-seat prices from a seat count on) of current and planned prices
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99|none [--price X] [--territory USA] [--equalize-all-territories] [--start-date X] [--preserve-current|--no-preserve-current] [--confirm-decrease] [-y]  # A price with tiers (Apple's equalization and price change preview)
+ascelerate sub multiseat <bundle-id> <product-id> [--enabled true|false] [--markets app-store,apple-business,apple-school|none] [--json] [-y]  # Multiseat purchasing and its markets
 ascelerate sub availability <bundle-id> <product-id> [--add X] [--remove X] [--available-in-new-territories true|false] [--plan upfront|monthly] [-y]  # View/update per-subscription territory availability (per billing plan)
 ascelerate sub intro-offer list <bundle-id> <product-id>          # List intro offers (free trials, intro discounts)
 ascelerate sub intro-offer create <bundle-id> <product-id> --mode FREE_TRIAL|PAY_AS_YOU_GO|PAY_UP_FRONT --duration X --periods N --territories USA,TUR|all [--price 4.99] [--start-date Y] [--end-date Y] [-y]  # Create intro offer (one request; price in the first territory, comparable elsewhere; conflicting territories skipped)
@@ -662,7 +667,7 @@ Only fields present in the JSON get updated — omitted fields are left unchange
 }
 ```
 
-Same convention — only fields present get updated. The `AppInfoLocaleFields` struct in AppsCommand.swift defines the schema. The `app-info update` and `app-info import` commands check that the AppInfo is in an editable state (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW` or `WAITING_FOR_REVIEW`) before proceeding.
+Same convention — only fields present get updated. The `AppInfoLocaleFields` struct in AppsCommand.swift defines the schema. The `app-info update` and `app-info import` commands check that the AppInfo is in an editable state (`AppInfos.editableStates`) before proceeding.
 
 ### Media upload folder structure (used by media upload)
 ```

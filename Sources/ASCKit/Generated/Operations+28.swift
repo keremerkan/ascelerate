@@ -1602,6 +1602,7 @@ extension Operations {
                     case planType = "planType"
                     case territory = "territory"
                     case subscriptionPricePoint = "subscriptionPricePoint"
+                    case additionalPriceTiers = "additionalPriceTiers"
                 }
                 /// - Remark: Generated from `#/paths/v1/retentionMessages/{id}/subscriptions/GET/query/fields[subscriptionPrices]`.
                 public typealias fieldsSubscriptionPricesPayload = [Operations.RetentionMessagesSubscriptionsGetToManyRelated.Input.Query.FieldsSubscriptionPricesPayloadPayload]

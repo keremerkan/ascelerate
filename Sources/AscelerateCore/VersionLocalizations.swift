@@ -32,9 +32,14 @@ public func validURL(_ value: String?) -> String? {
 /// Updating and creating the localizations of an App Store version.
 public enum VersionLocalizations {
   /// The version states in which every field can change: being prepared, in a draft submission
-  /// (Ready for Review) or submitted and not yet in review. In any other state only promotional
-  /// text can be updated.
-  public static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW"]
+  /// (Ready for Review), submitted and not yet in review, or back from review: taken back
+  /// (Developer Rejected; App Store Connect edits it in full, seen 2026-11-25) or rejected by App
+  /// Review (Rejected, Metadata Rejected, Invalid Binary; taken to work the same way, not seen). In
+  /// any other state only promotional text can be updated.
+  public static let editableStates: Set<String> = [
+    "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW",
+    "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY",
+  ]
 
   /// Sends the non-nil fields of `fields` to an existing localization.
   public static func update(

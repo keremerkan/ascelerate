@@ -56,7 +56,7 @@ ascelerate apps app-info import <bundle-id> --file app-infos.json
 JSONに含まれるフィールドのみが更新されます。省略されたフィールドは変更されません。
 
 :::note
-`app-info update` および `app-info import` コマンドは、AppInfoが編集可能な状態（`PREPARE_FOR_SUBMISSION` または `WAITING_FOR_REVIEW`）である必要があります。
+`app-info update` および `app-info import` コマンドは、AppInfoが編集可能な状態（`PREPARE_FOR_SUBMISSION`、`READY_FOR_REVIEW`、`WAITING_FOR_REVIEW`、`DEVELOPER_REJECTED` または `REJECTED`）である必要があります。
 :::
 
 ## 年齢制限

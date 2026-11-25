@@ -6,8 +6,11 @@ import Foundation
 /// and replaced ones. Also the app-level details shown with it (content rights, primary language,
 /// App Store Server Notifications endpoints).
 public enum AppInfos {
-  /// States in which an app info's localizations and categories can change.
-  public static let editableStates: Set<String> = ["PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW"]
+  /// States in which an app info's localizations and categories can change: as a version's
+  /// (`VersionLocalizations.editableStates`; an app info has no Metadata Rejected or Invalid Binary).
+  public static let editableStates: Set<String> = [
+    "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "DEVELOPER_REJECTED", "REJECTED",
+  ]
 
   public enum AppInfoError: LocalizedError {
     case notFound
@@ -324,6 +327,9 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
   public var isAgeAssurance: Bool?
   public var isSocialMedia: Bool?
   public var isSocialMediaAgeRestricted: Bool?
+  /// Apple: these two currently affect only the age rating in Brazil (spec 4.6.1).
+  public var isSharedLocation: Bool?
+  public var isDatingAndRelationships: Bool?
 
   // Other
   public var kidsAgeBand: String?
@@ -355,6 +361,8 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
     isAgeAssurance: Bool? = nil,
     isSocialMedia: Bool? = nil,
     isSocialMediaAgeRestricted: Bool? = nil,
+    isSharedLocation: Bool? = nil,
+    isDatingAndRelationships: Bool? = nil,
     kidsAgeBand: String? = nil,
     ageRatingOverride: String? = nil
   ) {
@@ -382,6 +390,8 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
     self.isAgeAssurance = isAgeAssurance
     self.isSocialMedia = isSocialMedia
     self.isSocialMediaAgeRestricted = isSocialMediaAgeRestricted
+    self.isSharedLocation = isSharedLocation
+    self.isDatingAndRelationships = isDatingAndRelationships
     self.kidsAgeBand = kidsAgeBand
     self.ageRatingOverride = ageRatingOverride
   }
@@ -413,6 +423,8 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
       isAgeAssurance: attributes?.ageAssurance,
       isSocialMedia: attributes?.socialMedia,
       isSocialMediaAgeRestricted: attributes?.socialMediaAgeRestricted,
+      isSharedLocation: attributes?.sharedLocation,
+      isDatingAndRelationships: attributes?.datingAndRelationships,
       kidsAgeBand: attributes?.kidsAgeBand,
       ageRatingOverride: attributes?.ageRatingOverrideV2
     )
@@ -430,7 +442,7 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
     ]
     var flags = [
       isAdvertising, isGambling, isUnrestrictedWebAccess, isUserGeneratedContent, isMessagingAndChat, isLootBox,
-      isHealthOrWellnessTopics, isParentalControls, isAgeAssurance, isSocialMedia,
+      isHealthOrWellnessTopics, isParentalControls, isAgeAssurance, isSocialMedia, isSharedLocation, isDatingAndRelationships,
     ]
     if isSocialMedia == true { flags.append(isSocialMediaAgeRestricted) }
     return levels.count { $0 == nil } + flags.count { $0 == nil }

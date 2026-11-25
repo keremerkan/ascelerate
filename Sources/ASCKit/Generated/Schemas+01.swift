@@ -550,6 +550,8 @@ extension Components.Schemas {
             public var alcoholTobaccoOrDrugUseOrReferences: Swift.String?
             /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/contests`.
             public var contests: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/datingAndRelationships`.
+            public var datingAndRelationships: Swift.Bool?
             /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/developerAgeRatingInfoUrl`.
             public var developerAgeRatingInfoUrl: Swift.String?
             /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/gambling`.
@@ -584,6 +586,8 @@ extension Components.Schemas {
             public var sexualContentGraphicAndNudity: Swift.String?
             /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/sexualContentOrNudity`.
             public var sexualContentOrNudity: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/sharedLocation`.
+            public var sharedLocation: Swift.Bool?
             /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/socialMedia`.
             public var socialMedia: Swift.Bool?
             /// - Remark: Generated from `#/components/schemas/AgeRatingDeclaration/attributes/socialMediaAgeRestricted`.
@@ -607,6 +611,7 @@ extension Components.Schemas {
             ///   - ageRatingOverrideV2:
             ///   - alcoholTobaccoOrDrugUseOrReferences:
             ///   - contests:
+            ///   - datingAndRelationships:
             ///   - developerAgeRatingInfoUrl:
             ///   - gambling:
             ///   - gamblingSimulated:
@@ -624,6 +629,7 @@ extension Components.Schemas {
             ///   - profanityOrCrudeHumor:
             ///   - sexualContentGraphicAndNudity:
             ///   - sexualContentOrNudity:
+            ///   - sharedLocation:
             ///   - socialMedia:
             ///   - socialMediaAgeRestricted:
             ///   - unrestrictedWebAccess:
@@ -638,6 +644,7 @@ extension Components.Schemas {
                 ageRatingOverrideV2: Swift.String? = nil,
                 alcoholTobaccoOrDrugUseOrReferences: Swift.String? = nil,
                 contests: Swift.String? = nil,
+                datingAndRelationships: Swift.Bool? = nil,
                 developerAgeRatingInfoUrl: Swift.String? = nil,
                 gambling: Swift.Bool? = nil,
                 gamblingSimulated: Swift.String? = nil,
@@ -655,6 +662,7 @@ extension Components.Schemas {
                 profanityOrCrudeHumor: Swift.String? = nil,
                 sexualContentGraphicAndNudity: Swift.String? = nil,
                 sexualContentOrNudity: Swift.String? = nil,
+                sharedLocation: Swift.Bool? = nil,
                 socialMedia: Swift.Bool? = nil,
                 socialMediaAgeRestricted: Swift.Bool? = nil,
                 unrestrictedWebAccess: Swift.Bool? = nil,
@@ -669,6 +677,7 @@ extension Components.Schemas {
                 self.ageRatingOverrideV2 = ageRatingOverrideV2
                 self.alcoholTobaccoOrDrugUseOrReferences = alcoholTobaccoOrDrugUseOrReferences
                 self.contests = contests
+                self.datingAndRelationships = datingAndRelationships
                 self.developerAgeRatingInfoUrl = developerAgeRatingInfoUrl
                 self.gambling = gambling
                 self.gamblingSimulated = gamblingSimulated
@@ -686,6 +695,7 @@ extension Components.Schemas {
                 self.profanityOrCrudeHumor = profanityOrCrudeHumor
                 self.sexualContentGraphicAndNudity = sexualContentGraphicAndNudity
                 self.sexualContentOrNudity = sexualContentOrNudity
+                self.sharedLocation = sharedLocation
                 self.socialMedia = socialMedia
                 self.socialMediaAgeRestricted = socialMediaAgeRestricted
                 self.unrestrictedWebAccess = unrestrictedWebAccess
@@ -701,6 +711,7 @@ extension Components.Schemas {
                 case ageRatingOverrideV2
                 case alcoholTobaccoOrDrugUseOrReferences
                 case contests
+                case datingAndRelationships
                 case developerAgeRatingInfoUrl
                 case gambling
                 case gamblingSimulated
@@ -718,6 +729,7 @@ extension Components.Schemas {
                 case profanityOrCrudeHumor
                 case sexualContentGraphicAndNudity
                 case sexualContentOrNudity
+                case sharedLocation
                 case socialMedia
                 case socialMediaAgeRestricted
                 case unrestrictedWebAccess
@@ -802,6 +814,8 @@ extension Components.Schemas {
                 public var alcoholTobaccoOrDrugUseOrReferences: Swift.String?
                 /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/contests`.
                 public var contests: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/datingAndRelationships`.
+                public var datingAndRelationships: Swift.Bool?
                 /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/developerAgeRatingInfoUrl`.
                 public var developerAgeRatingInfoUrl: Swift.String?
                 /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/gambling`.
@@ -836,6 +850,8 @@ extension Components.Schemas {
                 public var sexualContentGraphicAndNudity: Swift.String?
                 /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/sexualContentOrNudity`.
                 public var sexualContentOrNudity: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/sharedLocation`.
+                public var sharedLocation: Swift.Bool?
                 /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/socialMedia`.
                 public var socialMedia: Swift.Bool?
                 /// - Remark: Generated from `#/components/schemas/AgeRatingDeclarationUpdateRequest/data/attributes/socialMediaAgeRestricted`.
@@ -859,6 +875,7 @@ extension Components.Schemas {
                 ///   - ageRatingOverrideV2:
                 ///   - alcoholTobaccoOrDrugUseOrReferences:
                 ///   - contests:
+                ///   - datingAndRelationships:
                 ///   - developerAgeRatingInfoUrl:
                 ///   - gambling:
                 ///   - gamblingSimulated:
@@ -876,6 +893,7 @@ extension Components.Schemas {
                 ///   - profanityOrCrudeHumor:
                 ///   - sexualContentGraphicAndNudity:
                 ///   - sexualContentOrNudity:
+                ///   - sharedLocation:
                 ///   - socialMedia:
                 ///   - socialMediaAgeRestricted:
                 ///   - unrestrictedWebAccess:
@@ -890,6 +908,7 @@ extension Components.Schemas {
                     ageRatingOverrideV2: Swift.String? = nil,
                     alcoholTobaccoOrDrugUseOrReferences: Swift.String? = nil,
                     contests: Swift.String? = nil,
+                    datingAndRelationships: Swift.Bool? = nil,
                     developerAgeRatingInfoUrl: Swift.String? = nil,
                     gambling: Swift.Bool? = nil,
                     gamblingSimulated: Swift.String? = nil,
@@ -907,6 +926,7 @@ extension Components.Schemas {
                     profanityOrCrudeHumor: Swift.String? = nil,
                     sexualContentGraphicAndNudity: Swift.String? = nil,
                     sexualContentOrNudity: Swift.String? = nil,
+                    sharedLocation: Swift.Bool? = nil,
                     socialMedia: Swift.Bool? = nil,
                     socialMediaAgeRestricted: Swift.Bool? = nil,
                     unrestrictedWebAccess: Swift.Bool? = nil,
@@ -921,6 +941,7 @@ extension Components.Schemas {
                     self.ageRatingOverrideV2 = ageRatingOverrideV2
                     self.alcoholTobaccoOrDrugUseOrReferences = alcoholTobaccoOrDrugUseOrReferences
                     self.contests = contests
+                    self.datingAndRelationships = datingAndRelationships
                     self.developerAgeRatingInfoUrl = developerAgeRatingInfoUrl
                     self.gambling = gambling
                     self.gamblingSimulated = gamblingSimulated
@@ -938,6 +959,7 @@ extension Components.Schemas {
                     self.profanityOrCrudeHumor = profanityOrCrudeHumor
                     self.sexualContentGraphicAndNudity = sexualContentGraphicAndNudity
                     self.sexualContentOrNudity = sexualContentOrNudity
+                    self.sharedLocation = sharedLocation
                     self.socialMedia = socialMedia
                     self.socialMediaAgeRestricted = socialMediaAgeRestricted
                     self.unrestrictedWebAccess = unrestrictedWebAccess
@@ -953,6 +975,7 @@ extension Components.Schemas {
                     case ageRatingOverrideV2
                     case alcoholTobaccoOrDrugUseOrReferences
                     case contests
+                    case datingAndRelationships
                     case developerAgeRatingInfoUrl
                     case gambling
                     case gamblingSimulated
@@ -970,6 +993,7 @@ extension Components.Schemas {
                     case profanityOrCrudeHumor
                     case sexualContentGraphicAndNudity
                     case sexualContentOrNudity
+                    case sharedLocation
                     case socialMedia
                     case socialMediaAgeRestricted
                     case unrestrictedWebAccess
@@ -1860,6 +1884,8 @@ extension Components.Schemas {
             public var bundleId: Swift.String?
             /// - Remark: Generated from `#/components/schemas/App/attributes/contentRightsDeclaration`.
             public var contentRightsDeclaration: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/App/attributes/groupPurchaseInvitationMode`.
+            public var groupPurchaseInvitationMode: Swift.String?
             /// - Remark: Generated from `#/components/schemas/App/attributes/isOrEverWasMadeForKids`.
             public var isOrEverWasMadeForKids: Swift.Bool?
             /// - Remark: Generated from `#/components/schemas/App/attributes/name`.
@@ -1884,6 +1910,7 @@ extension Components.Schemas {
             ///   - accessibilityUrl:
             ///   - bundleId:
             ///   - contentRightsDeclaration:
+            ///   - groupPurchaseInvitationMode:
             ///   - isOrEverWasMadeForKids:
             ///   - name:
             ///   - primaryLocale:
@@ -1897,6 +1924,7 @@ extension Components.Schemas {
                 accessibilityUrl: Swift.String? = nil,
                 bundleId: Swift.String? = nil,
                 contentRightsDeclaration: Swift.String? = nil,
+                groupPurchaseInvitationMode: Swift.String? = nil,
                 isOrEverWasMadeForKids: Swift.Bool? = nil,
                 name: Swift.String? = nil,
                 primaryLocale: Swift.String? = nil,
@@ -1910,6 +1938,7 @@ extension Components.Schemas {
                 self.accessibilityUrl = accessibilityUrl
                 self.bundleId = bundleId
                 self.contentRightsDeclaration = contentRightsDeclaration
+                self.groupPurchaseInvitationMode = groupPurchaseInvitationMode
                 self.isOrEverWasMadeForKids = isOrEverWasMadeForKids
                 self.name = name
                 self.primaryLocale = primaryLocale
@@ -1924,6 +1953,7 @@ extension Components.Schemas {
                 case accessibilityUrl
                 case bundleId
                 case contentRightsDeclaration
+                case groupPurchaseInvitationMode
                 case isOrEverWasMadeForKids
                 case name
                 case primaryLocale

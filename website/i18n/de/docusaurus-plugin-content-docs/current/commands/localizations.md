@@ -58,5 +58,5 @@ Das gleiche Format wird sowohl für den Export als auch für den Import verwende
 Nur die im JSON vorhandenen Felder werden aktualisiert — fehlende Felder bleiben unverändert.
 
 :::note
-Nur Versionen in bearbeitbaren Zuständen (`PREPARE_FOR_SUBMISSION` oder `WAITING_FOR_REVIEW`) akzeptieren Lokalisierungsaktualisierungen — mit Ausnahme von `promotionalText`, das in jedem Zustand aktualisiert werden kann.
+Nur Versionen in bearbeitbaren Zuständen (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` oder `INVALID_BINARY`) akzeptieren Lokalisierungsaktualisierungen — mit Ausnahme von `promotionalText`, das in jedem Zustand aktualisiert werden kann.
 :::

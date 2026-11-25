@@ -2950,6 +2950,7 @@ extension Operations {
                     case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
                     case contentRightsDeclaration = "contentRightsDeclaration"
                     case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
                     case accessibilityDeclarations = "accessibilityDeclarations"
                     case appEncryptionDeclarations = "appEncryptionDeclarations"
                     case appStoreIcon = "appStoreIcon"

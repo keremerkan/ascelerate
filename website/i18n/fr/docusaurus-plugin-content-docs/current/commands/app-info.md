@@ -56,7 +56,7 @@ ascelerate apps app-info import <bundle-id> --file app-infos.json
 Seuls les champs présents sont mis à jour -- les champs omis restent inchangés.
 
 :::note
-Les commandes `app-info update` et `app-info import` nécessitent que l'AppInfo soit dans un état modifiable (`PREPARE_FOR_SUBMISSION` ou `WAITING_FOR_REVIEW`).
+Les commandes `app-info update` et `app-info import` nécessitent que l'AppInfo soit dans un état modifiable (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED` ou `REJECTED`).
 :::
 
 ## Classification d'âge

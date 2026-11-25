@@ -98,6 +98,13 @@ public enum ASCDryRun {
 
   private static let counter = Counter()
 
+  /// Operations that POST only to calculate (they save nothing): a dry run and a write gate let
+  /// them through, so a command can show what it would do.
+  public static let calculations: Set<String> = [
+    "subscriptionPriceTierEqualizations_createInstance", "subscriptionPriceChangePreviews_createInstance",
+    "gameCenterMatchmakingRuleSetTests_createInstance",
+  ]
+
   public static var blockedWrites: Int { counter.count }
   /// Also called by the Apple Ads client's own dry-run gate.
   public static func recordBlockedWrite() { counter.increment() }
@@ -108,7 +115,9 @@ struct DryRunMiddleware: ClientMiddleware {
     _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
     next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
-    guard request.method != .get else { return try await next(request, body, baseURL) }
+    guard request.method != .get, !ASCDryRun.calculations.contains(operationID) else {
+      return try await next(request, body, baseURL)
+    }
     let path = request.path ?? "?"
     var report = "[dry-run] \(request.method.rawValue) \(path)"
     if let body {
@@ -134,7 +143,7 @@ struct WriteGateMiddleware: ClientMiddleware {
     _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
     next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
-    if request.method != .get {
+    if request.method != .get, !ASCDryRun.calculations.contains(operationID) {
       try await gate(request.method.rawValue, request.path ?? "?")
     }
     return try await next(request, body, baseURL)

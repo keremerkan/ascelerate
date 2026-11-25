@@ -1017,6 +1017,8 @@ extension Components.Schemas {
                 public var bundleId: Swift.String?
                 /// - Remark: Generated from `#/components/schemas/AppUpdateRequest/data/attributes/contentRightsDeclaration`.
                 public var contentRightsDeclaration: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/AppUpdateRequest/data/attributes/groupPurchaseInvitationMode`.
+                public var groupPurchaseInvitationMode: Swift.String?
                 /// - Remark: Generated from `#/components/schemas/AppUpdateRequest/data/attributes/primaryLocale`.
                 public var primaryLocale: Swift.String?
                 /// - Remark: Generated from `#/components/schemas/AppUpdateRequest/data/attributes/streamlinedPurchasingEnabled`.
@@ -1035,6 +1037,7 @@ extension Components.Schemas {
                 ///   - accessibilityUrl:
                 ///   - bundleId:
                 ///   - contentRightsDeclaration:
+                ///   - groupPurchaseInvitationMode:
                 ///   - primaryLocale:
                 ///   - streamlinedPurchasingEnabled:
                 ///   - subscriptionStatusUrl:
@@ -1045,6 +1048,7 @@ extension Components.Schemas {
                     accessibilityUrl: Swift.String? = nil,
                     bundleId: Swift.String? = nil,
                     contentRightsDeclaration: Swift.String? = nil,
+                    groupPurchaseInvitationMode: Swift.String? = nil,
                     primaryLocale: Swift.String? = nil,
                     streamlinedPurchasingEnabled: Swift.Bool? = nil,
                     subscriptionStatusUrl: Swift.String? = nil,
@@ -1055,6 +1059,7 @@ extension Components.Schemas {
                     self.accessibilityUrl = accessibilityUrl
                     self.bundleId = bundleId
                     self.contentRightsDeclaration = contentRightsDeclaration
+                    self.groupPurchaseInvitationMode = groupPurchaseInvitationMode
                     self.primaryLocale = primaryLocale
                     self.streamlinedPurchasingEnabled = streamlinedPurchasingEnabled
                     self.subscriptionStatusUrl = subscriptionStatusUrl
@@ -1066,6 +1071,7 @@ extension Components.Schemas {
                     case accessibilityUrl
                     case bundleId
                     case contentRightsDeclaration
+                    case groupPurchaseInvitationMode
                     case primaryLocale
                     case streamlinedPurchasingEnabled
                     case subscriptionStatusUrl

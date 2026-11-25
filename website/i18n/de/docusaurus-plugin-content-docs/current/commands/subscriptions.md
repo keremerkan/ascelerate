@@ -115,6 +115,58 @@ Ein Preis, der keine Preisstufe des Ziels ist, lässt den Import fehlschlagen; d
 
 Vorübergehende Fehler von App Store Connect (HTTP 429/5xx) bei Schreibvorgängen über mehrere Regionen werden automatisch wiederholt — zunächst direkt mit Wartezeit, dann in einem zweiten Durchlauf am Ende. Regionen, die weiterhin fehlschlagen, werden im Abschlussbericht aufgelistet und der Befehl endet mit einem Fehlercode; ein erneuter Aufruf desselben Befehls wiederholt nur diese, da bereits aktualisierte Regionen als unverändert übersprungen werden.
 
+### Einen geplanten Preis entfernen {#remove-a-planned-price}
+
+Eine Region hat jeweils nur einen geplanten Preis. Um einen geplanten Preis zu ändern, entfernen Sie ihn zuerst:
+
+```bash
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories USA,TUR
+ascelerate sub pricing cancel <bundle-id> <product-id> --territories all --start-date 2027-03-01
+```
+
+Ein bereits geltender Preis lässt sich nicht entfernen: Legen Sie stattdessen einen späteren fest.
+
+## Mehrere Plätze und Mengenpreise {#multiseat-and-volume-pricing}
+
+Organisationen können ein automatisch verlängertes Abonnement über Apple Business Manager und Apple School Manager für mehrere Personen kaufen, und Kunden im App Store können Plätze kaufen und andere dazu einladen (wer diese Einladungen verwaltet, ist eine Einstellung der App: [Einladungen bei Gruppenkäufen](apps.md#group-purchase-invitations)). Käufe mit mehreren Plätzen sind bei jedem automatisch verlängerten Abonnement standardmäßig in allen drei Märkten aktiviert.
+
+```bash
+# Anzeigen
+ascelerate sub multiseat <bundle-id> <product-id>
+
+# Nur im App Store und über Apple Business Manager anbieten
+ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-business
+
+# Nur einzelne Plätze
+ascelerate sub multiseat <bundle-id> <product-id> --enabled false
+```
+
+Ausgeschaltet sind keine neuen Käufe mit mehreren Plätzen mehr möglich; bestehende verlängern sich mit ihrer Platzzahl, können aber keine Plätze hinzufügen. Wenn Sie die Familienfreigabe einschalten, werden Käufe mit mehreren Plätzen ausgeschaltet.
+
+### Mengenpreise {#volume-pricing}
+
+Mit Mengenpreisen zahlen größere Käufe weniger pro Platz. Ein Preis hat neben dem Einzelplatz bis zu vier Mengenstaffeln, jede ab einer Platzzahl (2 oder mehr) und jede pro Platz günstiger als die vorige. Jeder Platz kostet den Preis seiner eigenen Staffel: Bei 9,99 für einen Platz, `2:8.99` und `10:7.99` kosten zwölf Plätze 9,99 + 8 × 8,99 + 3 × 7,99.
+
+```bash
+# Die Staffeln geltender und geplanter Preise
+ascelerate sub pricing volume <bundle-id> <product-id>
+ascelerate sub pricing volume <bundle-id> <product-id> --territory USA --json
+
+# Staffeln zum aktuellen Einzelplatzpreis in den USA, ab dem 1. März
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers 2:8.99,10:7.99 --start-date 2027-03-01
+
+# Ein neuer Einzelplatzpreis mit Staffeln, von Apple in alle anderen Regionen umgerechnet
+ascelerate sub pricing volume-set <bundle-id> <product-id> --price 9.99 --tiers 2:8.99,10:7.99,50:6.99 \
+  --equalize-all-territories --start-date 2027-03-01 --no-preserve-current
+
+# Die Staffeln eines geltenden Preises entfernen: ein späterer Preis für jede Platzzahl
+ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers none --start-date 2027-03-01
+```
+
+Bevor etwas gespeichert wird, vergleicht Apple in jeder Region den neuen Preis bei jeder Platzzahl mit dem aktuellen, und die Zusammenfassung zeigt das Ergebnis. Eine Erhöhung braucht wie bei `sub pricing set` `--preserve-current` (bestehende Abonnenten behalten ihren Preis) oder `--no-preserve-current` (sie wechseln nach Apples Benachrichtigung). Eine Senkung, oder ein Preis, der bei manchen Platzzahlen höher und bei anderen niedriger ist, gilt für bestehende Abonnenten ab ihrer nächsten Verlängerung; mit `--yes` ergänzen Sie `--confirm-decrease`. Regionen ohne Änderung werden übersprungen.
+
+Ein Preis und seine Staffeln werden zusammen gespeichert und lassen sich nicht bearbeiten: Um einen geplanten zu ändern, entfernen Sie ihn mit `sub pricing cancel` und legen ihn neu fest. Solange ein Abonnement einen Preis mit Staffeln hat, geplant oder geltend, können die Webseiten von App Store Connect seine Preise nicht ändern, beibehaltene Preise eingeschlossen. Entfernen Sie den geplanten Preis oder ersetzen Sie den geltenden durch einen Preis ohne Staffeln, um das wieder zu ermöglichen. Mengenpreise gelten nur für den Plan mit Vorauszahlung.
+
 ## Regionale Verfügbarkeit
 
 Jedes Abonnement hat seine eigene regionale Verfügbarkeit, unabhängig von der App. Standardmäßig erbt ein Abonnement die Regionen der App; sobald Sie `sub availability` mit Änderungen aufrufen, hat das Abonnement eine explizite Liste.

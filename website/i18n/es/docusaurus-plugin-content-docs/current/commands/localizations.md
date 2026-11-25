@@ -58,5 +58,5 @@ Se usa el mismo formato para exportar y para importar:
 Solo se actualizan los campos presentes en el JSON; los campos omitidos no se modifican.
 
 :::note
-Solo las versiones en estados editables (`PREPARE_FOR_SUBMISSION` o `WAITING_FOR_REVIEW`) aceptan cambios en las localizaciones, salvo `promotionalText` (el texto promocional), que puede actualizarse en cualquier estado.
+Solo las versiones en estados editables (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` o `INVALID_BINARY`) aceptan cambios en las localizaciones, salvo `promotionalText` (el texto promocional), que puede actualizarse en cualquier estado.
 :::

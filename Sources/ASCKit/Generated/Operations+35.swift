@@ -10,6 +10,673 @@ public import struct Foundation.Data
 public import struct Foundation.Date
 #endif
 extension Operations {
+    /// - Remark: HTTP `GET /v1/userInvitations`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/get(userInvitations_getCollection)`.
+    public enum UserInvitationsGetCollection {
+        public static let id: Swift.String = "userInvitations_getCollection"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// filter by attribute 'email'
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/filter[email]`.
+                public var filterEmail: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/filterRolesPayload`.
+                @frozen public enum FilterRolesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case admin = "ADMIN"
+                    case finance = "FINANCE"
+                    case accountHolder = "ACCOUNT_HOLDER"
+                    case sales = "SALES"
+                    case marketing = "MARKETING"
+                    case appManager = "APP_MANAGER"
+                    case developer = "DEVELOPER"
+                    case accessToReports = "ACCESS_TO_REPORTS"
+                    case customerSupport = "CUSTOMER_SUPPORT"
+                    case createApps = "CREATE_APPS"
+                    case cloudManagedDeveloperId = "CLOUD_MANAGED_DEVELOPER_ID"
+                    case cloudManagedAppDistribution = "CLOUD_MANAGED_APP_DISTRIBUTION"
+                    case generateIndividualKeys = "GENERATE_INDIVIDUAL_KEYS"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/filter[roles]`.
+                public typealias filterRolesPayload = [Operations.UserInvitationsGetCollection.Input.Query.FilterRolesPayloadPayload]
+                /// filter by attribute 'roles'
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/filter[roles]`.
+                public var filterRoles: Operations.UserInvitationsGetCollection.Input.Query.filterRolesPayload?
+                /// filter by id(s) of related 'visibleApps'
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/filter[visibleApps]`.
+                public var filterVisibleApps: [Swift.String]?
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/SortPayload`.
+                @frozen public enum SortPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case email = "email"
+                    case minusEmail = "-email"
+                    case lastName = "lastName"
+                    case minusLastName = "-lastName"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/sort`.
+                public typealias SortPayload = [Operations.UserInvitationsGetCollection.Input.Query.SortPayloadPayload]
+                /// comma-separated list of sort expressions; resources will be sorted as specified
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/sort`.
+                public var sort: Operations.UserInvitationsGetCollection.Input.Query.SortPayload?
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/fieldsUserInvitationsPayload`.
+                @frozen public enum FieldsUserInvitationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case email = "email"
+                    case firstName = "firstName"
+                    case lastName = "lastName"
+                    case expirationDate = "expirationDate"
+                    case roles = "roles"
+                    case allAppsVisible = "allAppsVisible"
+                    case provisioningAllowed = "provisioningAllowed"
+                    case visibleApps = "visibleApps"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/fields[userInvitations]`.
+                public typealias fieldsUserInvitationsPayload = [Operations.UserInvitationsGetCollection.Input.Query.FieldsUserInvitationsPayloadPayload]
+                /// the fields to include for returned resources of type userInvitations
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/fields[userInvitations]`.
+                public var fieldsUserInvitations: Operations.UserInvitationsGetCollection.Input.Query.fieldsUserInvitationsPayload?
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/fieldsAppsPayload`.
+                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case accessibilityUrl = "accessibilityUrl"
+                    case name = "name"
+                    case bundleId = "bundleId"
+                    case sku = "sku"
+                    case primaryLocale = "primaryLocale"
+                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
+                    case subscriptionStatusUrl = "subscriptionStatusUrl"
+                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
+                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
+                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
+                    case contentRightsDeclaration = "contentRightsDeclaration"
+                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
+                    case accessibilityDeclarations = "accessibilityDeclarations"
+                    case appEncryptionDeclarations = "appEncryptionDeclarations"
+                    case appStoreIcon = "appStoreIcon"
+                    case ciProduct = "ciProduct"
+                    case betaTesters = "betaTesters"
+                    case betaGroups = "betaGroups"
+                    case appStoreVersions = "appStoreVersions"
+                    case appTags = "appTags"
+                    case preReleaseVersions = "preReleaseVersions"
+                    case betaAppLocalizations = "betaAppLocalizations"
+                    case builds = "builds"
+                    case betaLicenseAgreement = "betaLicenseAgreement"
+                    case betaAppReviewDetail = "betaAppReviewDetail"
+                    case appInfos = "appInfos"
+                    case appClips = "appClips"
+                    case appPricePoints = "appPricePoints"
+                    case endUserLicenseAgreement = "endUserLicenseAgreement"
+                    case appPriceSchedule = "appPriceSchedule"
+                    case appAvailabilityV2 = "appAvailabilityV2"
+                    case inAppPurchases = "inAppPurchases"
+                    case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
+                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
+                    case performanceOverviews = "performanceOverviews"
+                    case perfPowerMetrics = "perfPowerMetrics"
+                    case appCustomProductPages = "appCustomProductPages"
+                    case inAppPurchasesV2 = "inAppPurchasesV2"
+                    case promotedPurchases = "promotedPurchases"
+                    case appEvents = "appEvents"
+                    case reviewSubmissions = "reviewSubmissions"
+                    case subscriptionGracePeriod = "subscriptionGracePeriod"
+                    case customerReviews = "customerReviews"
+                    case customerReviewSummarizations = "customerReviewSummarizations"
+                    case gameCenterDetail = "gameCenterDetail"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case alternativeDistributionKey = "alternativeDistributionKey"
+                    case analyticsReportRequests = "analyticsReportRequests"
+                    case marketplaceSearchDetail = "marketplaceSearchDetail"
+                    case buildUploads = "buildUploads"
+                    case backgroundAssets = "backgroundAssets"
+                    case assetLibrary = "assetLibrary"
+                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
+                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
+                    case searchKeywords = "searchKeywords"
+                    case webhooks = "webhooks"
+                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/fields[apps]`.
+                public typealias fieldsAppsPayload = [Operations.UserInvitationsGetCollection.Input.Query.FieldsAppsPayloadPayload]
+                /// the fields to include for returned resources of type apps
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/fields[apps]`.
+                public var fieldsApps: Operations.UserInvitationsGetCollection.Input.Query.fieldsAppsPayload?
+                /// maximum resources per page
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/limit`.
+                public var limit: Swift.Int?
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case visibleApps = "visibleApps"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/include`.
+                public typealias IncludePayload = [Operations.UserInvitationsGetCollection.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/include`.
+                public var include: Operations.UserInvitationsGetCollection.Input.Query.IncludePayload?
+                /// maximum number of related visibleApps returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/query/limit[visibleApps]`.
+                public var limitVisibleApps: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - filterEmail: filter by attribute 'email'
+                ///   - filterRoles: filter by attribute 'roles'
+                ///   - filterVisibleApps: filter by id(s) of related 'visibleApps'
+                ///   - sort: comma-separated list of sort expressions; resources will be sorted as specified
+                ///   - fieldsUserInvitations: the fields to include for returned resources of type userInvitations
+                ///   - fieldsApps: the fields to include for returned resources of type apps
+                ///   - limit: maximum resources per page
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitVisibleApps: maximum number of related visibleApps returned (when they are included)
+                public init(
+                    filterEmail: [Swift.String]? = nil,
+                    filterRoles: Operations.UserInvitationsGetCollection.Input.Query.filterRolesPayload? = nil,
+                    filterVisibleApps: [Swift.String]? = nil,
+                    sort: Operations.UserInvitationsGetCollection.Input.Query.SortPayload? = nil,
+                    fieldsUserInvitations: Operations.UserInvitationsGetCollection.Input.Query.fieldsUserInvitationsPayload? = nil,
+                    fieldsApps: Operations.UserInvitationsGetCollection.Input.Query.fieldsAppsPayload? = nil,
+                    limit: Swift.Int? = nil,
+                    include: Operations.UserInvitationsGetCollection.Input.Query.IncludePayload? = nil,
+                    limitVisibleApps: Swift.Int? = nil
+                ) {
+                    self.filterEmail = filterEmail
+                    self.filterRoles = filterRoles
+                    self.filterVisibleApps = filterVisibleApps
+                    self.sort = sort
+                    self.fieldsUserInvitations = fieldsUserInvitations
+                    self.fieldsApps = fieldsApps
+                    self.limit = limit
+                    self.include = include
+                    self.limitVisibleApps = limitVisibleApps
+                }
+            }
+            public var query: Operations.UserInvitationsGetCollection.Input.Query
+            /// - Remark: Generated from `#/paths/v1/userInvitations/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.UserInvitationsGetCollection.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.UserInvitationsGetCollection.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.UserInvitationsGetCollection.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - query:
+            ///   - headers:
+            public init(
+                query: Operations.UserInvitationsGetCollection.Input.Query = .init(),
+                headers: Operations.UserInvitationsGetCollection.Input.Headers = .init()
+            ) {
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/userInvitations/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/userInvitations/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.UserInvitationsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.UserInvitationsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.UserInvitationsGetCollection.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.UserInvitationsGetCollection.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// List of UserInvitations
+            ///
+            /// - Remark: Generated from `#/paths//v1/userInvitations/get(userInvitations_getCollection)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.UserInvitationsGetCollection.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.UserInvitationsGetCollection.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /v1/userInvitations`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/post(userInvitations_createInstance)`.
+    public enum UserInvitationsCreateInstance {
+        public static let id: Swift.String = "userInvitations_createInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/userInvitations/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.UserInvitationsCreateInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.UserInvitationsCreateInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.UserInvitationsCreateInstance.Input.Headers
+            /// - Remark: Generated from `#/paths/v1/userInvitations/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/userInvitations/POST/requestBody/content/application\/json`.
+                case json(Components.Schemas.UserInvitationCreateRequest)
+            }
+            public var body: Operations.UserInvitationsCreateInstance.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.UserInvitationsCreateInstance.Input.Headers = .init(),
+                body: Operations.UserInvitationsCreateInstance.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Created: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/userInvitations/POST/responses/201/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/userInvitations/POST/responses/201/content/application\/json`.
+                    case json(Components.Schemas.UserInvitationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.UserInvitationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.UserInvitationsCreateInstance.Output.Created.Body
+                /// Creates a new `Created`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.UserInvitationsCreateInstance.Output.Created.Body) {
+                    self.body = body
+                }
+            }
+            /// Single UserInvitation
+            ///
+            /// - Remark: Generated from `#/paths//v1/userInvitations/post(userInvitations_createInstance)/responses/201`.
+            ///
+            /// HTTP response code: `201 created`.
+            case created(Operations.UserInvitationsCreateInstance.Output.Created)
+            /// The associated value of the enum case if `self` is `.created`.
+            ///
+            /// - Throws: An error if `self` is not `.created`.
+            /// - SeeAlso: `.created`.
+            public var created: Operations.UserInvitationsCreateInstance.Output.Created {
+                get throws {
+                    switch self {
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /v1/userInvitations/{id}`.
+    /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/get(userInvitations_getInstance)`.
+    public enum UserInvitationsGetInstance {
+        public static let id: Swift.String = "userInvitations_getInstance"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/path`.
+            public struct Path: Sendable, Hashable {
+                /// the id of the requested resource
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/path/id`.
+                public var id: Swift.String
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - id: the id of the requested resource
+                public init(id: Swift.String) {
+                    self.id = id
+                }
+            }
+            public var path: Operations.UserInvitationsGetInstance.Input.Path
+            /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/fieldsUserInvitationsPayload`.
+                @frozen public enum FieldsUserInvitationsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case email = "email"
+                    case firstName = "firstName"
+                    case lastName = "lastName"
+                    case expirationDate = "expirationDate"
+                    case roles = "roles"
+                    case allAppsVisible = "allAppsVisible"
+                    case provisioningAllowed = "provisioningAllowed"
+                    case visibleApps = "visibleApps"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/fields[userInvitations]`.
+                public typealias fieldsUserInvitationsPayload = [Operations.UserInvitationsGetInstance.Input.Query.FieldsUserInvitationsPayloadPayload]
+                /// the fields to include for returned resources of type userInvitations
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/fields[userInvitations]`.
+                public var fieldsUserInvitations: Operations.UserInvitationsGetInstance.Input.Query.fieldsUserInvitationsPayload?
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/fieldsAppsPayload`.
+                @frozen public enum FieldsAppsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case accessibilityUrl = "accessibilityUrl"
+                    case name = "name"
+                    case bundleId = "bundleId"
+                    case sku = "sku"
+                    case primaryLocale = "primaryLocale"
+                    case isOrEverWasMadeForKids = "isOrEverWasMadeForKids"
+                    case subscriptionStatusUrl = "subscriptionStatusUrl"
+                    case subscriptionStatusUrlVersion = "subscriptionStatusUrlVersion"
+                    case subscriptionStatusUrlForSandbox = "subscriptionStatusUrlForSandbox"
+                    case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
+                    case contentRightsDeclaration = "contentRightsDeclaration"
+                    case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
+                    case accessibilityDeclarations = "accessibilityDeclarations"
+                    case appEncryptionDeclarations = "appEncryptionDeclarations"
+                    case appStoreIcon = "appStoreIcon"
+                    case ciProduct = "ciProduct"
+                    case betaTesters = "betaTesters"
+                    case betaGroups = "betaGroups"
+                    case appStoreVersions = "appStoreVersions"
+                    case appTags = "appTags"
+                    case preReleaseVersions = "preReleaseVersions"
+                    case betaAppLocalizations = "betaAppLocalizations"
+                    case builds = "builds"
+                    case betaLicenseAgreement = "betaLicenseAgreement"
+                    case betaAppReviewDetail = "betaAppReviewDetail"
+                    case appInfos = "appInfos"
+                    case appClips = "appClips"
+                    case appPricePoints = "appPricePoints"
+                    case endUserLicenseAgreement = "endUserLicenseAgreement"
+                    case appPriceSchedule = "appPriceSchedule"
+                    case appAvailabilityV2 = "appAvailabilityV2"
+                    case inAppPurchases = "inAppPurchases"
+                    case subscriptionGroups = "subscriptionGroups"
+                    case retentionMessages = "retentionMessages"
+                    case gameCenterEnabledVersions = "gameCenterEnabledVersions"
+                    case performanceOverviews = "performanceOverviews"
+                    case perfPowerMetrics = "perfPowerMetrics"
+                    case appCustomProductPages = "appCustomProductPages"
+                    case inAppPurchasesV2 = "inAppPurchasesV2"
+                    case promotedPurchases = "promotedPurchases"
+                    case appEvents = "appEvents"
+                    case reviewSubmissions = "reviewSubmissions"
+                    case subscriptionGracePeriod = "subscriptionGracePeriod"
+                    case customerReviews = "customerReviews"
+                    case customerReviewSummarizations = "customerReviewSummarizations"
+                    case gameCenterDetail = "gameCenterDetail"
+                    case appStoreVersionExperimentsV2 = "appStoreVersionExperimentsV2"
+                    case alternativeDistributionKey = "alternativeDistributionKey"
+                    case analyticsReportRequests = "analyticsReportRequests"
+                    case marketplaceSearchDetail = "marketplaceSearchDetail"
+                    case buildUploads = "buildUploads"
+                    case backgroundAssets = "backgroundAssets"
+                    case assetLibrary = "assetLibrary"
+                    case betaFeedbackScreenshotSubmissions = "betaFeedbackScreenshotSubmissions"
+                    case betaFeedbackCrashSubmissions = "betaFeedbackCrashSubmissions"
+                    case searchKeywords = "searchKeywords"
+                    case webhooks = "webhooks"
+                    case androidToIosAppMappingDetails = "androidToIosAppMappingDetails"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/fields[apps]`.
+                public typealias fieldsAppsPayload = [Operations.UserInvitationsGetInstance.Input.Query.FieldsAppsPayloadPayload]
+                /// the fields to include for returned resources of type apps
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/fields[apps]`.
+                public var fieldsApps: Operations.UserInvitationsGetInstance.Input.Query.fieldsAppsPayload?
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/IncludePayload`.
+                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                    case visibleApps = "visibleApps"
+                }
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/include`.
+                public typealias IncludePayload = [Operations.UserInvitationsGetInstance.Input.Query.IncludePayloadPayload]
+                /// comma-separated list of relationships to include
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/include`.
+                public var include: Operations.UserInvitationsGetInstance.Input.Query.IncludePayload?
+                /// maximum number of related visibleApps returned (when they are included)
+                ///
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/query/limit[visibleApps]`.
+                public var limitVisibleApps: Swift.Int?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - fieldsUserInvitations: the fields to include for returned resources of type userInvitations
+                ///   - fieldsApps: the fields to include for returned resources of type apps
+                ///   - include: comma-separated list of relationships to include
+                ///   - limitVisibleApps: maximum number of related visibleApps returned (when they are included)
+                public init(
+                    fieldsUserInvitations: Operations.UserInvitationsGetInstance.Input.Query.fieldsUserInvitationsPayload? = nil,
+                    fieldsApps: Operations.UserInvitationsGetInstance.Input.Query.fieldsAppsPayload? = nil,
+                    include: Operations.UserInvitationsGetInstance.Input.Query.IncludePayload? = nil,
+                    limitVisibleApps: Swift.Int? = nil
+                ) {
+                    self.fieldsUserInvitations = fieldsUserInvitations
+                    self.fieldsApps = fieldsApps
+                    self.include = include
+                    self.limitVisibleApps = limitVisibleApps
+                }
+            }
+            public var query: Operations.UserInvitationsGetInstance.Input.Query
+            /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.UserInvitationsGetInstance.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.UserInvitationsGetInstance.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.UserInvitationsGetInstance.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - query:
+            ///   - headers:
+            public init(
+                path: Operations.UserInvitationsGetInstance.Input.Path,
+                query: Operations.UserInvitationsGetInstance.Input.Query = .init(),
+                headers: Operations.UserInvitationsGetInstance.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.query = query
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/v1/userInvitations/{id}/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.UserInvitationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.UserInvitationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.UserInvitationsGetInstance.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.UserInvitationsGetInstance.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Single UserInvitation
+            ///
+            /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/get(userInvitations_getInstance)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.UserInvitationsGetInstance.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.UserInvitationsGetInstance.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
     /// - Remark: HTTP `DELETE /v1/userInvitations/{id}`.
     /// - Remark: Generated from `#/paths//v1/userInvitations/{id}/delete(userInvitations_deleteInstance)`.
     public enum UserInvitationsDeleteInstance {
@@ -116,6 +783,7 @@ extension Operations {
                     case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
                     case contentRightsDeclaration = "contentRightsDeclaration"
                     case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
                     case accessibilityDeclarations = "accessibilityDeclarations"
                     case appEncryptionDeclarations = "appEncryptionDeclarations"
                     case appStoreIcon = "appStoreIcon"
@@ -378,6 +1046,7 @@ extension Operations {
                     case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
                     case contentRightsDeclaration = "contentRightsDeclaration"
                     case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
                     case accessibilityDeclarations = "accessibilityDeclarations"
                     case appEncryptionDeclarations = "appEncryptionDeclarations"
                     case appStoreIcon = "appStoreIcon"
@@ -644,6 +1313,7 @@ extension Operations {
                     case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
                     case contentRightsDeclaration = "contentRightsDeclaration"
                     case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
                     case accessibilityDeclarations = "accessibilityDeclarations"
                     case appEncryptionDeclarations = "appEncryptionDeclarations"
                     case appStoreIcon = "appStoreIcon"
@@ -1085,6 +1755,7 @@ extension Operations {
                     case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
                     case contentRightsDeclaration = "contentRightsDeclaration"
                     case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
                     case accessibilityDeclarations = "accessibilityDeclarations"
                     case appEncryptionDeclarations = "appEncryptionDeclarations"
                     case appStoreIcon = "appStoreIcon"
@@ -1675,6 +2346,7 @@ extension Operations {
                     case subscriptionStatusUrlVersionForSandbox = "subscriptionStatusUrlVersionForSandbox"
                     case contentRightsDeclaration = "contentRightsDeclaration"
                     case streamlinedPurchasingEnabled = "streamlinedPurchasingEnabled"
+                    case groupPurchaseInvitationMode = "groupPurchaseInvitationMode"
                     case accessibilityDeclarations = "accessibilityDeclarations"
                     case appEncryptionDeclarations = "appEncryptionDeclarations"
                     case appStoreIcon = "appStoreIcon"
@@ -2382,628 +3054,6 @@ extension Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "created",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `GET /v1/winBackOffers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/get(winBackOffers_getInstance)`.
-    public enum WinBackOffersGetInstance {
-        public static let id: Swift.String = "winBackOffers_getInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.WinBackOffersGetInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/fieldsWinBackOffersPayload`.
-                @frozen public enum FieldsWinBackOffersPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case referenceName = "referenceName"
-                    case offerId = "offerId"
-                    case duration = "duration"
-                    case offerMode = "offerMode"
-                    case periodCount = "periodCount"
-                    case customerEligibilityPaidSubscriptionDurationInMonths = "customerEligibilityPaidSubscriptionDurationInMonths"
-                    case customerEligibilityTimeSinceLastSubscribedInMonths = "customerEligibilityTimeSinceLastSubscribedInMonths"
-                    case customerEligibilityWaitBetweenOffersInMonths = "customerEligibilityWaitBetweenOffersInMonths"
-                    case startDate = "startDate"
-                    case endDate = "endDate"
-                    case priority = "priority"
-                    case promotionIntent = "promotionIntent"
-                    case targetSubscriptionPlanType = "targetSubscriptionPlanType"
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/fields[winBackOffers]`.
-                public typealias fieldsWinBackOffersPayload = [Operations.WinBackOffersGetInstance.Input.Query.FieldsWinBackOffersPayloadPayload]
-                /// the fields to include for returned resources of type winBackOffers
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/fields[winBackOffers]`.
-                public var fieldsWinBackOffers: Operations.WinBackOffersGetInstance.Input.Query.fieldsWinBackOffersPayload?
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/fieldsWinBackOfferPricesPayload`.
-                @frozen public enum FieldsWinBackOfferPricesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case territory = "territory"
-                    case subscriptionPricePoint = "subscriptionPricePoint"
-                }
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/fields[winBackOfferPrices]`.
-                public typealias fieldsWinBackOfferPricesPayload = [Operations.WinBackOffersGetInstance.Input.Query.FieldsWinBackOfferPricesPayloadPayload]
-                /// the fields to include for returned resources of type winBackOfferPrices
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/fields[winBackOfferPrices]`.
-                public var fieldsWinBackOfferPrices: Operations.WinBackOffersGetInstance.Input.Query.fieldsWinBackOfferPricesPayload?
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case prices = "prices"
-                }
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/include`.
-                public typealias IncludePayload = [Operations.WinBackOffersGetInstance.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/include`.
-                public var include: Operations.WinBackOffersGetInstance.Input.Query.IncludePayload?
-                /// maximum number of related prices returned (when they are included)
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/query/limit[prices]`.
-                public var limitPrices: Swift.Int?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - fieldsWinBackOffers: the fields to include for returned resources of type winBackOffers
-                ///   - fieldsWinBackOfferPrices: the fields to include for returned resources of type winBackOfferPrices
-                ///   - include: comma-separated list of relationships to include
-                ///   - limitPrices: maximum number of related prices returned (when they are included)
-                public init(
-                    fieldsWinBackOffers: Operations.WinBackOffersGetInstance.Input.Query.fieldsWinBackOffersPayload? = nil,
-                    fieldsWinBackOfferPrices: Operations.WinBackOffersGetInstance.Input.Query.fieldsWinBackOfferPricesPayload? = nil,
-                    include: Operations.WinBackOffersGetInstance.Input.Query.IncludePayload? = nil,
-                    limitPrices: Swift.Int? = nil
-                ) {
-                    self.fieldsWinBackOffers = fieldsWinBackOffers
-                    self.fieldsWinBackOfferPrices = fieldsWinBackOfferPrices
-                    self.include = include
-                    self.limitPrices = limitPrices
-                }
-            }
-            public var query: Operations.WinBackOffersGetInstance.Input.Query
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WinBackOffersGetInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WinBackOffersGetInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.WinBackOffersGetInstance.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.WinBackOffersGetInstance.Input.Path,
-                query: Operations.WinBackOffersGetInstance.Input.Query = .init(),
-                headers: Operations.WinBackOffersGetInstance.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.WinBackOfferResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.WinBackOfferResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.WinBackOffersGetInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.WinBackOffersGetInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single WinBackOffer
-            ///
-            /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/get(winBackOffers_getInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.WinBackOffersGetInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.WinBackOffersGetInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `PATCH /v1/winBackOffers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/patch(winBackOffers_updateInstance)`.
-    public enum WinBackOffersUpdateInstance {
-        public static let id: Swift.String = "winBackOffers_updateInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/PATCH/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/PATCH/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.WinBackOffersUpdateInstance.Input.Path
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/PATCH/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WinBackOffersUpdateInstance.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WinBackOffersUpdateInstance.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.WinBackOffersUpdateInstance.Input.Headers
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/PATCH/requestBody`.
-            @frozen public enum Body: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/PATCH/requestBody/content/application\/json`.
-                case json(Components.Schemas.WinBackOfferUpdateRequest)
-            }
-            public var body: Operations.WinBackOffersUpdateInstance.Input.Body
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - headers:
-            ///   - body:
-            public init(
-                path: Operations.WinBackOffersUpdateInstance.Input.Path,
-                headers: Operations.WinBackOffersUpdateInstance.Input.Headers = .init(),
-                body: Operations.WinBackOffersUpdateInstance.Input.Body
-            ) {
-                self.path = path
-                self.headers = headers
-                self.body = body
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/PATCH/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/PATCH/responses/200/content/application\/json`.
-                    case json(Components.Schemas.WinBackOfferResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.WinBackOfferResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.WinBackOffersUpdateInstance.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.WinBackOffersUpdateInstance.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// Single WinBackOffer
-            ///
-            /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/patch(winBackOffers_updateInstance)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.WinBackOffersUpdateInstance.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.WinBackOffersUpdateInstance.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-        @frozen public enum AcceptableContentType: AcceptableProtocol {
-            case json
-            case other(Swift.String)
-            public init?(rawValue: Swift.String) {
-                switch rawValue.lowercased() {
-                case "application/json":
-                    self = .json
-                default:
-                    self = .other(rawValue)
-                }
-            }
-            public var rawValue: Swift.String {
-                switch self {
-                case let .other(string):
-                    return string
-                case .json:
-                    return "application/json"
-                }
-            }
-            public static var allCases: [Self] {
-                [
-                    .json
-                ]
-            }
-        }
-    }
-    /// - Remark: HTTP `DELETE /v1/winBackOffers/{id}`.
-    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/delete(winBackOffers_deleteInstance)`.
-    public enum WinBackOffersDeleteInstance {
-        public static let id: Swift.String = "winBackOffers_deleteInstance"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/DELETE/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/DELETE/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.WinBackOffersDeleteInstance.Input.Path
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            public init(path: Operations.WinBackOffersDeleteInstance.Input.Path) {
-                self.path = path
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct NoContent: Sendable, Hashable {
-                /// Creates a new `NoContent`.
-                public init() {}
-            }
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/delete(winBackOffers_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            case noContent(Operations.WinBackOffersDeleteInstance.Output.NoContent)
-            /// Success (no content)
-            ///
-            /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/delete(winBackOffers_deleteInstance)/responses/204`.
-            ///
-            /// HTTP response code: `204 noContent`.
-            public static var noContent: Self {
-                .noContent(.init())
-            }
-            /// The associated value of the enum case if `self` is `.noContent`.
-            ///
-            /// - Throws: An error if `self` is not `.noContent`.
-            /// - SeeAlso: `.noContent`.
-            public var noContent: Operations.WinBackOffersDeleteInstance.Output.NoContent {
-                get throws {
-                    switch self {
-                    case let .noContent(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "noContent",
-                            response: self
-                        )
-                    }
-                }
-            }
-            /// Undocumented response.
-            ///
-            /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
-        }
-    }
-    /// - Remark: HTTP `GET /v1/winBackOffers/{id}/prices`.
-    /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/prices/get(winBackOffers_prices_getToManyRelated)`.
-    public enum WinBackOffersPricesGetToManyRelated {
-        public static let id: Swift.String = "winBackOffers_prices_getToManyRelated"
-        public struct Input: Sendable, Hashable {
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/path`.
-            public struct Path: Sendable, Hashable {
-                /// the id of the requested resource
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/path/id`.
-                public var id: Swift.String
-                /// Creates a new `Path`.
-                ///
-                /// - Parameters:
-                ///   - id: the id of the requested resource
-                public init(id: Swift.String) {
-                    self.id = id
-                }
-            }
-            public var path: Operations.WinBackOffersPricesGetToManyRelated.Input.Path
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query`.
-            public struct Query: Sendable, Hashable {
-                /// filter by id(s) of related 'territory'
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/filter[territory]`.
-                public var filterTerritory: [Swift.String]?
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fieldsWinBackOfferPricesPayload`.
-                @frozen public enum FieldsWinBackOfferPricesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case territory = "territory"
-                    case subscriptionPricePoint = "subscriptionPricePoint"
-                }
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fields[winBackOfferPrices]`.
-                public typealias fieldsWinBackOfferPricesPayload = [Operations.WinBackOffersPricesGetToManyRelated.Input.Query.FieldsWinBackOfferPricesPayloadPayload]
-                /// the fields to include for returned resources of type winBackOfferPrices
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fields[winBackOfferPrices]`.
-                public var fieldsWinBackOfferPrices: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.fieldsWinBackOfferPricesPayload?
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fieldsTerritoriesPayload`.
-                @frozen public enum FieldsTerritoriesPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case currency = "currency"
-                }
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fields[territories]`.
-                public typealias fieldsTerritoriesPayload = [Operations.WinBackOffersPricesGetToManyRelated.Input.Query.FieldsTerritoriesPayloadPayload]
-                /// the fields to include for returned resources of type territories
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fields[territories]`.
-                public var fieldsTerritories: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.fieldsTerritoriesPayload?
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fieldsSubscriptionPricePointsPayload`.
-                @frozen public enum FieldsSubscriptionPricePointsPayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case customerPrice = "customerPrice"
-                    case proceeds = "proceeds"
-                    case proceedsYear2 = "proceedsYear2"
-                    case territory = "territory"
-                    case equalizations = "equalizations"
-                    case adjustedEqualizations = "adjustedEqualizations"
-                }
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fields[subscriptionPricePoints]`.
-                public typealias fieldsSubscriptionPricePointsPayload = [Operations.WinBackOffersPricesGetToManyRelated.Input.Query.FieldsSubscriptionPricePointsPayloadPayload]
-                /// the fields to include for returned resources of type subscriptionPricePoints
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/fields[subscriptionPricePoints]`.
-                public var fieldsSubscriptionPricePoints: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.fieldsSubscriptionPricePointsPayload?
-                /// maximum resources per page
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/limit`.
-                public var limit: Swift.Int?
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/IncludePayload`.
-                @frozen public enum IncludePayloadPayload: String, Codable, Hashable, Sendable, CaseIterable {
-                    case territory = "territory"
-                    case subscriptionPricePoint = "subscriptionPricePoint"
-                }
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/include`.
-                public typealias IncludePayload = [Operations.WinBackOffersPricesGetToManyRelated.Input.Query.IncludePayloadPayload]
-                /// comma-separated list of relationships to include
-                ///
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/query/include`.
-                public var include: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.IncludePayload?
-                /// Creates a new `Query`.
-                ///
-                /// - Parameters:
-                ///   - filterTerritory: filter by id(s) of related 'territory'
-                ///   - fieldsWinBackOfferPrices: the fields to include for returned resources of type winBackOfferPrices
-                ///   - fieldsTerritories: the fields to include for returned resources of type territories
-                ///   - fieldsSubscriptionPricePoints: the fields to include for returned resources of type subscriptionPricePoints
-                ///   - limit: maximum resources per page
-                ///   - include: comma-separated list of relationships to include
-                public init(
-                    filterTerritory: [Swift.String]? = nil,
-                    fieldsWinBackOfferPrices: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.fieldsWinBackOfferPricesPayload? = nil,
-                    fieldsTerritories: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.fieldsTerritoriesPayload? = nil,
-                    fieldsSubscriptionPricePoints: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.fieldsSubscriptionPricePointsPayload? = nil,
-                    limit: Swift.Int? = nil,
-                    include: Operations.WinBackOffersPricesGetToManyRelated.Input.Query.IncludePayload? = nil
-                ) {
-                    self.filterTerritory = filterTerritory
-                    self.fieldsWinBackOfferPrices = fieldsWinBackOfferPrices
-                    self.fieldsTerritories = fieldsTerritories
-                    self.fieldsSubscriptionPricePoints = fieldsSubscriptionPricePoints
-                    self.limit = limit
-                    self.include = include
-                }
-            }
-            public var query: Operations.WinBackOffersPricesGetToManyRelated.Input.Query
-            /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/header`.
-            public struct Headers: Sendable, Hashable {
-                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WinBackOffersPricesGetToManyRelated.AcceptableContentType>]
-                /// Creates a new `Headers`.
-                ///
-                /// - Parameters:
-                ///   - accept:
-                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.WinBackOffersPricesGetToManyRelated.AcceptableContentType>] = .defaultValues()) {
-                    self.accept = accept
-                }
-            }
-            public var headers: Operations.WinBackOffersPricesGetToManyRelated.Input.Headers
-            /// Creates a new `Input`.
-            ///
-            /// - Parameters:
-            ///   - path:
-            ///   - query:
-            ///   - headers:
-            public init(
-                path: Operations.WinBackOffersPricesGetToManyRelated.Input.Path,
-                query: Operations.WinBackOffersPricesGetToManyRelated.Input.Query = .init(),
-                headers: Operations.WinBackOffersPricesGetToManyRelated.Input.Headers = .init()
-            ) {
-                self.path = path
-                self.query = query
-                self.headers = headers
-            }
-        }
-        @frozen public enum Output: Sendable, Hashable {
-            public struct Ok: Sendable, Hashable {
-                /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/responses/200/content`.
-                @frozen public enum Body: Sendable, Hashable {
-                    /// - Remark: Generated from `#/paths/v1/winBackOffers/{id}/prices/GET/responses/200/content/application\/json`.
-                    case json(Components.Schemas.WinBackOfferPricesResponse)
-                    /// The associated value of the enum case if `self` is `.json`.
-                    ///
-                    /// - Throws: An error if `self` is not `.json`.
-                    /// - SeeAlso: `.json`.
-                    public var json: Components.Schemas.WinBackOfferPricesResponse {
-                        get throws {
-                            switch self {
-                            case let .json(body):
-                                return body
-                            }
-                        }
-                    }
-                }
-                /// Received HTTP response body
-                public var body: Operations.WinBackOffersPricesGetToManyRelated.Output.Ok.Body
-                /// Creates a new `Ok`.
-                ///
-                /// - Parameters:
-                ///   - body: Received HTTP response body
-                public init(body: Operations.WinBackOffersPricesGetToManyRelated.Output.Ok.Body) {
-                    self.body = body
-                }
-            }
-            /// List of WinBackOfferPrices
-            ///
-            /// - Remark: Generated from `#/paths//v1/winBackOffers/{id}/prices/get(winBackOffers_prices_getToManyRelated)/responses/200`.
-            ///
-            /// HTTP response code: `200 ok`.
-            case ok(Operations.WinBackOffersPricesGetToManyRelated.Output.Ok)
-            /// The associated value of the enum case if `self` is `.ok`.
-            ///
-            /// - Throws: An error if `self` is not `.ok`.
-            /// - SeeAlso: `.ok`.
-            public var ok: Operations.WinBackOffersPricesGetToManyRelated.Output.Ok {
-                get throws {
-                    switch self {
-                    case let .ok(response):
-                        return response
-                    default:
-                        try throwUnexpectedResponseStatus(
-                            expectedStatus: "ok",
                             response: self
                         )
                     }

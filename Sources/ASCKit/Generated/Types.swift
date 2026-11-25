@@ -1580,6 +1580,9 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /v1/subscriptionPlanAvailabilities/{id}/availableTerritories`.
     /// - Remark: Generated from `#/paths//v1/subscriptionPlanAvailabilities/{id}/availableTerritories/get(subscriptionPlanAvailabilities_availableTerritories_getToManyRelated)`.
     func subscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated(_ input: Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Input) async throws -> Operations.SubscriptionPlanAvailabilitiesAvailableTerritoriesGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/subscriptionPriceChangePreviews`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPriceChangePreviews/post(subscriptionPriceChangePreviews_createInstance)`.
+    func subscriptionPriceChangePreviewsCreateInstance(_ input: Operations.SubscriptionPriceChangePreviewsCreateInstance.Input) async throws -> Operations.SubscriptionPriceChangePreviewsCreateInstance.Output
     /// - Remark: HTTP `GET /v1/subscriptionPricePoints/{id}/equalizations`.
     /// - Remark: Generated from `#/paths//v1/subscriptionPricePoints/{id}/equalizations/get(subscriptionPricePoints_equalizations_getToManyRelated)`.
     func subscriptionPricePointsEqualizationsGetToManyRelated(_ input: Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Input) async throws -> Operations.SubscriptionPricePointsEqualizationsGetToManyRelated.Output
@@ -1589,6 +1592,15 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /v1/subscriptionPrices/{id}`.
     /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/delete(subscriptionPrices_deleteInstance)`.
     func subscriptionPricesDeleteInstance(_ input: Operations.SubscriptionPricesDeleteInstance.Input) async throws -> Operations.SubscriptionPricesDeleteInstance.Output
+    /// - Remark: HTTP `GET /v1/subscriptionPrices/{id}/additionalPriceTiers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/additionalPriceTiers/get(subscriptionPrices_additionalPriceTiers_getToManyRelated)`.
+    func subscriptionPricesAdditionalPriceTiersGetToManyRelated(_ input: Operations.SubscriptionPricesAdditionalPriceTiersGetToManyRelated.Input) async throws -> Operations.SubscriptionPricesAdditionalPriceTiersGetToManyRelated.Output
+    /// - Remark: HTTP `POST /v1/subscriptionPriceTierEqualizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPriceTierEqualizations/post(subscriptionPriceTierEqualizations_createInstance)`.
+    func subscriptionPriceTierEqualizationsCreateInstance(_ input: Operations.SubscriptionPriceTierEqualizationsCreateInstance.Input) async throws -> Operations.SubscriptionPriceTierEqualizationsCreateInstance.Output
+    /// - Remark: HTTP `GET /v1/subscriptionPriceTiers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPriceTiers/get(subscriptionPriceTiers_getCollection)`.
+    func subscriptionPriceTiersGetCollection(_ input: Operations.SubscriptionPriceTiersGetCollection.Input) async throws -> Operations.SubscriptionPriceTiersGetCollection.Output
     /// - Remark: HTTP `POST /v1/subscriptionPromotionalOffers`.
     /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/post(subscriptionPromotionalOffers_createInstance)`.
     func subscriptionPromotionalOffersCreateInstance(_ input: Operations.SubscriptionPromotionalOffersCreateInstance.Input) async throws -> Operations.SubscriptionPromotionalOffersCreateInstance.Output
@@ -7981,6 +7993,17 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// - Remark: HTTP `POST /v1/subscriptionPriceChangePreviews`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPriceChangePreviews/post(subscriptionPriceChangePreviews_createInstance)`.
+    public func subscriptionPriceChangePreviewsCreateInstance(
+        headers: Operations.SubscriptionPriceChangePreviewsCreateInstance.Input.Headers = .init(),
+        body: Operations.SubscriptionPriceChangePreviewsCreateInstance.Input.Body
+    ) async throws -> Operations.SubscriptionPriceChangePreviewsCreateInstance.Output {
+        try await subscriptionPriceChangePreviewsCreateInstance(Operations.SubscriptionPriceChangePreviewsCreateInstance.Input(
+            headers: headers,
+            body: body
+        ))
+    }
     /// - Remark: HTTP `GET /v1/subscriptionPricePoints/{id}/equalizations`.
     /// - Remark: Generated from `#/paths//v1/subscriptionPricePoints/{id}/equalizations/get(subscriptionPricePoints_equalizations_getToManyRelated)`.
     public func subscriptionPricePointsEqualizationsGetToManyRelated(
@@ -8009,6 +8032,43 @@ extension APIProtocol {
     /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/delete(subscriptionPrices_deleteInstance)`.
     public func subscriptionPricesDeleteInstance(path: Operations.SubscriptionPricesDeleteInstance.Input.Path) async throws -> Operations.SubscriptionPricesDeleteInstance.Output {
         try await subscriptionPricesDeleteInstance(Operations.SubscriptionPricesDeleteInstance.Input(path: path))
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionPrices/{id}/additionalPriceTiers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPrices/{id}/additionalPriceTiers/get(subscriptionPrices_additionalPriceTiers_getToManyRelated)`.
+    public func subscriptionPricesAdditionalPriceTiersGetToManyRelated(
+        path: Operations.SubscriptionPricesAdditionalPriceTiersGetToManyRelated.Input.Path,
+        query: Operations.SubscriptionPricesAdditionalPriceTiersGetToManyRelated.Input.Query = .init(),
+        headers: Operations.SubscriptionPricesAdditionalPriceTiersGetToManyRelated.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionPricesAdditionalPriceTiersGetToManyRelated.Output {
+        try await subscriptionPricesAdditionalPriceTiersGetToManyRelated(Operations.SubscriptionPricesAdditionalPriceTiersGetToManyRelated.Input(
+            path: path,
+            query: query,
+            headers: headers
+        ))
+    }
+    /// - Remark: HTTP `POST /v1/subscriptionPriceTierEqualizations`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPriceTierEqualizations/post(subscriptionPriceTierEqualizations_createInstance)`.
+    public func subscriptionPriceTierEqualizationsCreateInstance(
+        query: Operations.SubscriptionPriceTierEqualizationsCreateInstance.Input.Query = .init(),
+        headers: Operations.SubscriptionPriceTierEqualizationsCreateInstance.Input.Headers = .init(),
+        body: Operations.SubscriptionPriceTierEqualizationsCreateInstance.Input.Body
+    ) async throws -> Operations.SubscriptionPriceTierEqualizationsCreateInstance.Output {
+        try await subscriptionPriceTierEqualizationsCreateInstance(Operations.SubscriptionPriceTierEqualizationsCreateInstance.Input(
+            query: query,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /v1/subscriptionPriceTiers`.
+    /// - Remark: Generated from `#/paths//v1/subscriptionPriceTiers/get(subscriptionPriceTiers_getCollection)`.
+    public func subscriptionPriceTiersGetCollection(
+        query: Operations.SubscriptionPriceTiersGetCollection.Input.Query,
+        headers: Operations.SubscriptionPriceTiersGetCollection.Input.Headers = .init()
+    ) async throws -> Operations.SubscriptionPriceTiersGetCollection.Output {
+        try await subscriptionPriceTiersGetCollection(Operations.SubscriptionPriceTiersGetCollection.Input(
+            query: query,
+            headers: headers
+        ))
     }
     /// - Remark: HTTP `POST /v1/subscriptionPromotionalOffers`.
     /// - Remark: Generated from `#/paths//v1/subscriptionPromotionalOffers/post(subscriptionPromotionalOffers_createInstance)`.

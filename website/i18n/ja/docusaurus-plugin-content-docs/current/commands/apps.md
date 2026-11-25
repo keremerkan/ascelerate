@@ -312,3 +312,15 @@ ascelerate apps streamlined-purchasing <bundle-id>
 # 無効化
 ascelerate apps streamlined-purchasing <bundle-id> --enabled false
 ```
+
+## グループ購入の招待 {#group-purchase-invitations}
+
+App Store でサブスクリプションの複数シートを購入した顧客は、そのシートにほかの人を招待します（[複数シートのサブスクリプション](subscriptions.md#multiseat-and-volume-pricing)を参照）。この招待はデフォルトで Apple が管理します。`--host developer` を指定すると、招待とシート受け入れのフローをアプリ自身が実行します。このフローは Apple のプラットフォーム外でも動作でき（メンバーに Apple アカウントは不要）、招待されたメンバーの年齢確認と必要な保護者の同意の取得もアプリが行います。この設定はアプリのすべての複数シートのサブスクリプションに、変更後の購入から適用され、App Review は不要です。
+
+```bash
+# 表示
+ascelerate apps group-purchase-invitations <bundle-id>
+
+# 招待をアプリで管理
+ascelerate apps group-purchase-invitations <bundle-id> --host developer
+```

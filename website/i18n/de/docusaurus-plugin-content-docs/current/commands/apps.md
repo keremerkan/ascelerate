@@ -312,3 +312,15 @@ ascelerate apps streamlined-purchasing <bundle-id>
 # Deaktivieren
 ascelerate apps streamlined-purchasing <bundle-id> --enabled false
 ```
+
+## Einladungen bei Gruppenkäufen {#group-purchase-invitations}
+
+Wer im App Store mehrere Plätze eines Abonnements kauft, lädt andere Personen auf diese Plätze ein (siehe [Abonnements mit mehreren Plätzen](subscriptions.md#multiseat-and-volume-pricing)). Standardmäßig verwaltet Apple diese Einladungen. Mit `--host developer` führt Ihre App einen eigenen Einladungs- und Annahmeablauf aus, der auch außerhalb von Apple-Plattformen funktionieren kann (Mitglieder brauchen dann keinen Apple Account). Ihre App prüft dann selbst das Alter eingeladener Mitglieder und holt eine nötige Einwilligung der Eltern ein. Die Einstellung gilt für alle Abonnements der App mit mehreren Plätzen, für Käufe nach der Änderung, und braucht keine App-Prüfung.
+
+```bash
+# Anzeigen
+ascelerate apps group-purchase-invitations <bundle-id>
+
+# Einladungen in der App verwalten
+ascelerate apps group-purchase-invitations <bundle-id> --host developer
+```

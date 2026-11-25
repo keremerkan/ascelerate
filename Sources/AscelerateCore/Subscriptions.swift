@@ -329,6 +329,7 @@ public enum Subscriptions {
       switch included {
         case .subscriptionPricePoints(let point): points[point.id] = point
         case .territories(let territory): currencies[territory.id] = territory.attributes?.currency
+        default: break
       }
     }
     let prices = pages.flatMap(\.data).compactMap { price -> Price? in

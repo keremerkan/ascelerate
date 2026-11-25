@@ -144,7 +144,7 @@ ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-busi
 ascelerate sub multiseat <bundle-id> <product-id> --enabled false
 ```
 
-Une fois désactivé, plus aucun nouvel achat de plusieurs places n'est possible ; les achats existants se renouvellent avec leur nombre de places mais ne peuvent pas en ajouter. Activer le Partage familial désactive l'achat de plusieurs places.
+Une fois désactivé, plus aucun nouvel achat de plusieurs places n'est possible ; les achats existants se renouvellent avec leur nombre de places mais ne peuvent pas en ajouter.
 
 ### Tarifs dégressifs {#volume-pricing}
 

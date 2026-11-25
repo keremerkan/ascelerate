@@ -29,8 +29,9 @@ extension Subscriptions {
 
   /// Whether a subscription can be bought in quantities over one, and where.
   public struct MultiSeat: Codable, Equatable, Sendable {
-    /// `multiSeatStatus` ENABLED, Apple's default for every auto-renewable subscription. Turning on
-    /// Family Sharing turns it off.
+    /// `multiSeatStatus` ENABLED, Apple's default for every auto-renewable subscription. Family
+    /// Sharing doesn't turn it off (a family-shareable subscription read Allowed in App Store
+    /// Connect, 2026-11-25), although Apple's article says it does.
     public var enabled: Bool
     /// `APP_STORE`, `APPLE_BUSINESS`, `APPLE_SCHOOL`: where it's offered while enabled.
     public var markets: [String]

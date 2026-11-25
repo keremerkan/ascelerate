@@ -87,8 +87,8 @@ extension SubCommand {
         On by default for every auto-renewable subscription: organizations buy seats through Apple
         Business Manager or Apple School Manager, and App Store customers invite others to theirs
         (see 'apps group-purchase-invitations'). Turning it off stops new multiseat purchases;
-        existing ones renew at their seat count but can't add seats. Turning on Family Sharing turns
-        it off. Markets: app-store, apple-business, apple-school (comma-separated, or none).
+        existing ones renew at their seat count but can't add seats. Markets: app-store,
+        apple-business, apple-school (comma-separated, or none).
         """
     )
 

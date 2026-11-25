@@ -144,7 +144,7 @@ ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-busi
 ascelerate sub multiseat <bundle-id> <product-id> --enabled false
 ```
 
-Turning it off stops new multiseat purchases; existing ones keep renewing at their seat count but can't add seats. Turning on Family Sharing turns multiseat purchasing off.
+Turning it off stops new multiseat purchases; existing ones keep renewing at their seat count but can't add seats.
 
 ### Volume pricing
 

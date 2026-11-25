@@ -144,7 +144,7 @@ ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-busi
 ascelerate sub multiseat <bundle-id> <product-id> --enabled false
 ```
 
-Al desactivarla se detienen las nuevas compras de varias plazas; las existentes se siguen renovando con su número de plazas, pero no pueden añadir más. Activar En familia desactiva la compra de varias plazas.
+Al desactivarla se detienen las nuevas compras de varias plazas; las existentes se siguen renovando con su número de plazas, pero no pueden añadir más.
 
 ### Precios por volumen {#volume-pricing}
 

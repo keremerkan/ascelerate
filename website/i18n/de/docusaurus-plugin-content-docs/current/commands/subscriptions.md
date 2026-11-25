@@ -144,7 +144,7 @@ ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-busi
 ascelerate sub multiseat <bundle-id> <product-id> --enabled false
 ```
 
-Ausgeschaltet sind keine neuen Käufe mit mehreren Plätzen mehr möglich; bestehende verlängern sich mit ihrer Platzzahl, können aber keine Plätze hinzufügen. Wenn Sie die Familienfreigabe einschalten, werden Käufe mit mehreren Plätzen ausgeschaltet.
+Ausgeschaltet sind keine neuen Käufe mit mehreren Plätzen mehr möglich; bestehende verlängern sich mit ihrer Platzzahl, können aber keine Plätze hinzufügen.
 
 ### Mengenpreise {#volume-pricing}
 

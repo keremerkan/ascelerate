@@ -144,7 +144,7 @@ ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-busi
 ascelerate sub multiseat <bundle-id> <product-id> --enabled false
 ```
 
-Kapatıldığında yeni çok koltuklu satın almalar durur; mevcut olanlar koltuk sayılarıyla yenilenmeye devam eder ama koltuk ekleyemez. Aile Paylaşımı'nı açmak çok koltuklu satın almayı kapatır.
+Kapatıldığında yeni çok koltuklu satın almalar durur; mevcut olanlar koltuk sayılarıyla yenilenmeye devam eder ama koltuk ekleyemez.
 
 ### Hacim fiyatlandırması {#volume-pricing}
 

@@ -144,7 +144,7 @@ ascelerate sub multiseat <bundle-id> <product-id> --markets app-store,apple-busi
 ascelerate sub multiseat <bundle-id> <product-id> --enabled false
 ```
 
-オフにすると新しい複数シートの購入は停止します。既存の購入はそのシート数で更新を続けますが、シートを追加できません。ファミリー共有をオンにすると、複数シートの購入はオフになります。
+オフにすると新しい複数シートの購入は停止します。既存の購入はそのシート数で更新を続けますが、シートを追加できません。
 
 ### 数量割引 {#volume-pricing}
 

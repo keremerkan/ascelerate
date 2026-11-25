@@ -80,7 +80,19 @@ extension LocalizationMedia {
       if isVideo && previewType == nil { throw ValidationError("--preview-type is required for app previews (e.g. APP_IPHONE_67).") }
     }
     let display: ASCEnum.ScreenshotDisplayType? = try slot == nil && isImage ? parseEnum(displayType ?? "", name: "display-type") : nil
-    let preview: ASCEnum.PreviewType? = try slot == nil && isVideo ? parseEnum(previewType ?? "", name: "preview-type") : nil
+    // Both forms: the display type's name (APP_IPHONE_67, as the folders and the docs have it) or
+    // the preview type's own (IPHONE_67).
+    let preview: ASCEnum.PreviewType?
+    if slot == nil && isVideo {
+      let raw = (previewType ?? "").uppercased()
+      if let fromDisplay = AssetLibrary.previewType(of: raw) {
+        preview = fromDisplay
+      } else {
+        preview = try parseEnum(raw, name: "preview-type") as ASCEnum.PreviewType
+      }
+    } else {
+      preview = nil
+    }
 
     let current = if let slot, slot.isSingle, let existing {
       try await AssetLibrary.placements(on: existing, type: slot.placementType, group: slot.group, client: client).map(\.id)

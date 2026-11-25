@@ -38,6 +38,12 @@ public enum Analytics {
     public let size: Int?
   }
 
+  /// A report segment App Store Connect listed without a download address.
+  public struct NoSegmentURL: LocalizedError, Sendable {
+    public let segment: Int
+    public var errorDescription: String? { "Segment \(segment) has no download address from App Store Connect; try again later." }
+  }
+
   public enum AnalyticsError: LocalizedError {
     case download(segment: Int, status: Int)
 
@@ -124,7 +130,8 @@ public enum Analytics {
   public static func downloadZipped(
     _ segment: Segment, number: Int = 1, received: (@Sendable (_ bytes: Int64, _ expected: Int64) -> Void)? = nil
   ) async throws -> Data {
-    guard let url = segment.url else { return Data() }
+    // A segment Apple gave no address for is a failure, not an empty report.
+    guard let url = segment.url else { throw NoSegmentURL(segment: number) }
     guard let received else {
       let (data, response) = try await URLSession.shared.data(from: url)
       try check(response, number: number)

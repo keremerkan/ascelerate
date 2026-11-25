@@ -54,10 +54,17 @@ struct AppEventsCommand: AsyncParsableCommand {
   }
 
   /// Splits a comma-separated territory list into uppercased codes.
-  static func territoryList(_ value: String?) -> [String]? {
-    value.map {
-      $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
-    }
+  /// The territory codes given, nil when none were; `all` stands for every territory.
+  static func territoryList(_ value: String?, client: ASCClient) async throws -> [String]? {
+    guard let value else { return nil }
+    if value.trimmingCharacters(in: .whitespaces).lowercased() == "all" { return try await allTerritories(client: client) }
+    return value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
+  }
+
+  /// Every territory: a schedule needs at least one (409 otherwise), so "all countries or
+  /// regions" is all of them.
+  static func allTerritories(client: ASCClient) async throws -> [String] {
+    try await LicenseAgreements.allTerritoryIDs(client: client)
   }
 
   // MARK: - List
@@ -192,7 +199,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Purchase requirement description.")
     var purchaseRequirement: String?
 
-    @Option(name: .long, help: "Comma-separated territory codes for the schedule (omit for all territories).")
+    @Option(name: .long, help: "Comma-separated territory codes for the schedule, or all (required with schedule dates).")
     var territories: String?
 
     @Option(name: .long, help: "Schedule publish start (ISO8601 or yyyy-MM-dd).")
@@ -223,9 +230,14 @@ struct AppEventsCommand: AsyncParsableCommand {
       if territories != nil || publishStart != nil || eventStart != nil || eventEnd != nil {
         let dates = try AppEventsCommand.scheduleDates(
           publishStart: publishStart, eventStart: eventStart, eventEnd: eventEnd)
+        // Publishing everywhere is a choice to type (Kerem, 2026-11-26): --territories names the
+        // codes or says all; Apple refuses a schedule without territories anyway.
+        guard let codes = try await AppEventsCommand.territoryList(territories, client: client) else {
+          throw ValidationError("A schedule needs --territories: territory codes (USA,TUR) or all.")
+        }
         schedules = [
           AppEvents.Schedule(
-            territories: AppEventsCommand.territoryList(territories), publishStart: dates.publishStart,
+            territories: codes, publishStart: dates.publishStart,
             eventStart: dates.eventStart, eventEnd: dates.eventEnd)
         ]
       }
@@ -286,7 +298,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Purchase requirement description.")
     var purchaseRequirement: String?
 
-    @Option(name: .long, help: "Comma-separated territory codes for the schedule.")
+    @Option(name: .long, help: "Comma-separated territory codes for the schedule, or all (replaces the schedules with one).")
     var territories: String?
 
     @Option(name: .long, help: "Schedule publish start (ISO8601 or yyyy-MM-dd).")
@@ -336,7 +348,7 @@ struct AppEventsCommand: AsyncParsableCommand {
             eventStart: dates.eventStart ?? schedule?.eventStart,
             eventEnd: dates.eventEnd ?? schedule?.eventEnd)
         }
-        if let named = AppEventsCommand.territoryList(territories) {
+        if let named = try await AppEventsCommand.territoryList(territories, client: client) {
           // Named territories make one schedule of them, in place of every current one.
           if appEvent.schedules.count > 1 {
             print(yellow("⚠ This event has \(appEvent.schedules.count) territory schedules; they're replaced by one for the territories named:"))
@@ -347,7 +359,12 @@ struct AppEventsCommand: AsyncParsableCommand {
           schedules = [merged(appEvent.schedules.first, territories: named)]
         } else {
           // Without territories, the dates change in every schedule, each keeping its territories.
-          schedules = appEvent.schedules.isEmpty ? [merged(nil, territories: nil)] : appEvent.schedules.map { merged($0, territories: nil) }
+          // Without territories, each schedule keeps its own; an event without a schedule has none
+          // to keep, so the territories have to be named.
+          guard !appEvent.schedules.isEmpty else {
+            throw ValidationError("The event has no schedule yet; pass --territories (territory codes, or all).")
+          }
+          schedules = appEvent.schedules.map { merged($0, territories: nil) }
           if appEvent.schedules.count > 1 {
             print("The new dates go to each of the event's \(appEvent.schedules.count) territory schedules.")
           }

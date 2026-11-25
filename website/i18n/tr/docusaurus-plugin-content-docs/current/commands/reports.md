@@ -27,7 +27,7 @@ ascelerate reports sales --frequency DAILY --date 2026-06-20 --output sales.tsv
 - `--date`: Günlük/haftalık için `YYYY-MM-DD` (haftalık = haftayı bitiren Pazar günü), aylık için `YYYY-MM`, yıllık için `YYYY`. Varsayılan olarak en son tamamlanmış dönemdir.
 - `--type`: Rapor türü (varsayılan `SALES`); diğerleri arasında `SUBSCRIPTION`, `SUBSCRIBER`, `SUBSCRIPTION_EVENT`, `PRE_ORDER` bulunur.
 - `--sub-type`: `SUMMARY` (varsayılan), `DETAILED`, `SUMMARY_TERRITORY`, `SUMMARY_CHANNEL`, `SUMMARY_INSTALL_TYPE`.
-- `--bundle-id`: Özeti tek bir uygulamayla (veya takma adla) sınırlar.
+- `--bundle-id`: Özeti tek bir uygulamayla (veya takma adla) sınırlar. Uygulamanın uygulama içi satın almaları ve abonelikleri de dahildir (satırları uygulamayı SKU'su ile belirtir).
 - `--vendor-number`: Yapılandırılmış satıcı numarasını geçersiz kılar.
 - `--output` / `--raw`: Ham TSV'yi bir dosyaya kaydeder veya özet yerine yazdırır.
 

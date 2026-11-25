@@ -35,7 +35,7 @@ Ein Ereignis kann mehrere Zeitpläne für Länder oder Regionen haben. Ohne `--t
 - **Badges:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Geben Sie `update` ein `--badge NONE` mit, um das Badge zu entfernen.
 - **Zwecke:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Priorität:** `HIGH` oder `NORMAL`.
-- **Zeitplandaten** (`--publish-start`, `--event-start`, `--event-end`) akzeptieren ISO8601 (`2026-07-01T09:00:00Z`) oder `yyyy-MM-dd` (UTC-Mitternacht). Lassen Sie `--territories` weg, um für alle Regionen zu planen.
+- **Zeitplandaten** (`--publish-start`, `--event-start`, `--event-end`) akzeptieren ISO8601 (`2026-07-01T09:00:00Z`) oder `yyyy-MM-dd` (UTC-Mitternacht). Ein Zeitplan braucht `--territories`: Länder- oder Regionscodes oder `all` für alle; `update` ohne die Option behält die Länder jedes Zeitplans.
 
 ## Lokalisierungen
 

@@ -7,7 +7,7 @@ title: TestFlight
 
 Manage TestFlight beta testing end to end: beta groups, testers, build distribution, What to Test notes, beta review, and tester feedback.
 
-Build-scoped commands default to the latest non-expired build. Pass `--build <number>` to target a specific build, and `--platform` to disambiguate when a universal-purchase app shares build numbers across platforms.
+Build-scoped commands default to the latest non-expired build. Pass `--build <number>` to target a specific build, and `--platform` to disambiguate when a universal-purchase app shares build numbers across platforms. When the latest builds are for several platforms and neither is given, the command asks which (with `--yes`, it refuses: pass `--platform`). `expire --yes` always needs `--build`, since expiring can't be undone.
 
 ## Beta groups
 

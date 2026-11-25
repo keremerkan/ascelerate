@@ -65,10 +65,13 @@ public enum ZipReader {
   /// Each file's path in the archive and its contents, in the archive's order. The whole central
   /// directory is checked first (structure, ZIP64, encryption, methods, sizes, limits, overlaps),
   /// so an archive is refused before anything is unpacked.
-  public static func files(in data: Data, limits: Limits = .none) throws -> [(path: String, data: Data)] {
+  /// `including` picks the files to unpack (by path); the others are checked but not inflated.
+  public static func files(
+    in data: Data, limits: Limits = .none, including: (String) -> Bool = { _ in true }
+  ) throws -> [(path: String, data: Data)] {
     if let limit = limits.archiveSize, data.count > limit { throw ZipError.archiveTooLarge(limit: limit) }
     let bytes = [UInt8](data)
-    return try entries(bytes, limits: limits).map { entry in
+    return try entries(bytes, limits: limits).filter { including($0.name) }.map { entry in
       let compressed = try slice(bytes, entry.dataStart, entry.compressedSize)
       let content = entry.method == 0 ? Data(compressed) : try inflate(compressed, size: entry.size)
       guard crc32(content) == entry.crc else { throw ZipError.notAZip }

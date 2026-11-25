@@ -7,7 +7,7 @@ title: TestFlight
 
 Gérez les tests bêta TestFlight de bout en bout : groupes bêta, testeurs, distribution des builds, notes What to Test, examen bêta et retours des testeurs.
 
-Les commandes portant sur un build utilisent par défaut le build le plus récent non expiré. Passez `--build <numéro>` pour cibler un build précis, et `--platform` pour lever l'ambiguïté lorsqu'une application en achat universel partage le même numéro de build entre plusieurs plateformes.
+Les commandes portant sur un build utilisent par défaut le build le plus récent non expiré. Passez `--build <numéro>` pour cibler un build précis, et `--platform` pour lever l'ambiguïté lorsqu'une application en achat universel partage le même numéro de build entre plusieurs plateformes. Quand les builds les plus récents concernent plusieurs plateformes et qu'aucune des deux options n'est donnée, la commande demande lequel (avec `--yes`, elle refuse : passez `--platform`). `expire --yes` exige toujours `--build`, car l'expiration est irréversible.
 
 ## Groupes bêta
 

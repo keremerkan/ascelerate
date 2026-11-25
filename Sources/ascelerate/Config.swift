@@ -76,9 +76,10 @@ struct APICredentials {
   }
 
   /// Keeps the key's variables for this run, then removes them from the environment, so the tools
-  /// the CLI starts don't inherit them: `builds archive` runs the project's build phases, package
-  /// plugins and test runners, which have no business reading the key's location. Where a tool
-  /// needs the key, the CLI passes it itself (`xcodebuildArguments`). Called first thing in `main`.
+  /// the CLI starts don't inherit them as variables. It doesn't keep the key from xcodebuild's
+  /// children: where xcodebuild needs the key, the CLI passes its path, ID and issuer on
+  /// xcodebuild's command line (`xcodebuildArguments`), which any process on the Mac can read in
+  /// the process list while it runs. Called first thing in `main`.
   static func removeFromEnvironment() {
     _ = environmentValues
     for name in environmentNames { unsetenv(name) }

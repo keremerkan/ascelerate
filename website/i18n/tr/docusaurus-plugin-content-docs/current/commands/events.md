@@ -35,7 +35,7 @@ Bir etkinliğin birden çok ülke veya bölge takvimi olabilir. `--territories` 
 - **Rozetler:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Rozeti kaldırmak için `update` komutuna `--badge NONE` verin.
 - **Amaçlar:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Öncelik:** `HIGH` veya `NORMAL`.
-- **Program tarihleri** (`--publish-start`, `--event-start`, `--event-end`) ISO8601 (`2026-07-01T09:00:00Z`) veya `yyyy-MM-dd` (UTC gece yarısı) biçimini kabul eder. Tüm bölgeler için programlamak istiyorsanız `--territories` seçeneğini atlayın.
+- **Program tarihleri** (`--publish-start`, `--event-start`, `--event-end`) ISO8601 (`2026-07-01T09:00:00Z`) veya `yyyy-MM-dd` (UTC gece yarısı) biçimini kabul eder. Bir takvim için `--territories` gerekir: ülke veya bölge kodları ya da tümü için `all`; `update` bu seçenek olmadan her takvimin ülkelerini korur.
 
 ## Yerelleştirmeler
 

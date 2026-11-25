@@ -35,7 +35,7 @@ ascelerate events delete <bundle-id> summer-sale
 - **バッジ：** `LIVE_EVENT`、`PREMIERE`、`CHALLENGE`、`COMPETITION`、`NEW_SEASON`、`MAJOR_UPDATE`、`SPECIAL_EVENT`。バッジを解除するには `update` に `--badge NONE` を指定します。
 - **目的：** `APPROPRIATE_FOR_ALL_USERS`、`ATTRACT_NEW_USERS`、`KEEP_ACTIVE_USERS_INFORMED`、`BRING_BACK_LAPSED_USERS`。
 - **優先度：** `HIGH` または `NORMAL`。
-- **スケジュールの日付**（`--publish-start`、`--event-start`、`--event-end`）は ISO8601（`2026-07-01T09:00:00Z`）または `yyyy-MM-dd`（UTC の午前0時）を受け付けます。すべての地域を対象にする場合は `--territories` を省略します。
+- **スケジュールの日付**（`--publish-start`、`--event-start`、`--event-end`）は ISO8601（`2026-07-01T09:00:00Z`）または `yyyy-MM-dd`（UTC の午前0時）を受け付けます。スケジュールには `--territories` が必要です。国や地域のコード、またはすべての国や地域を対象にする `all` を指定します。`update` で省略すると、各スケジュールの国や地域はそのまま保持されます。
 
 ## ローカリゼーション
 

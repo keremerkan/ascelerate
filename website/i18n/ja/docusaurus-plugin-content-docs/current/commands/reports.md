@@ -27,7 +27,7 @@ ascelerate reports sales --frequency DAILY --date 2026-06-20 --output sales.tsv
 - `--date` — 日次／週次は `YYYY-MM-DD`（週次は週の最終日である日曜日）、月次は `YYYY-MM`、年次は `YYYY`。デフォルトは直近の完了済み期間です。
 - `--type` — レポートタイプ（デフォルト `SALES`）。その他に `SUBSCRIPTION`、`SUBSCRIBER`、`SUBSCRIPTION_EVENT`、`PRE_ORDER` などがあります。
 - `--sub-type` — `SUMMARY`（デフォルト）、`DETAILED`、`SUMMARY_TERRITORY`、`SUMMARY_CHANNEL`、`SUMMARY_INSTALL_TYPE`。
-- `--bundle-id` — 概要を単一のアプリ（またはエイリアス）に絞り込みます。
+- `--bundle-id` — 概要を単一のアプリ（またはエイリアス）に絞り込みます。 アプリのApp内課金とサブスクリプションも含まれます（それらの行はアプリをSKUで示します）。
 - `--vendor-number` — 設定済みのベンダー番号を上書きします。
 - `--output` / `--raw` — 生のTSVをファイルに保存するか、概要の代わりに出力します。
 

@@ -190,20 +190,24 @@ public enum Builds {
     public let betaReview: [Build]
   }
 
-  /// What the Overview shows of TestFlight, in three requests for every app at once.
+  /// What the Overview shows of TestFlight, for every app at once: three lists, each read in full
+  /// (50 a page: the includes stop at 50). Unexpired builds are at most 90 days old, so the
+  /// valid ones, where missing export compliance shows (it can't be filtered for), stay bounded.
   public static func attention(client: ASCClient) async throws -> Attention {
     func builds(
       processing: Operations.BuildsGetCollection.Input.Query.filterProcessingStatePayload? = nil,
       review: Operations.BuildsGetCollection.Input.Query.filterBetaAppReviewSubmissionBetaReviewStatePayload? = nil
     ) async throws -> [Build] {
-      resolve(try await client.buildsGetCollection(query: .init(
-        filterExpired: ["false"],
-        filterProcessingState: processing,
-        filterBetaAppReviewSubmissionBetaReviewState: review,
-        sort: [.minusUploadedDate],
-        limit: 50,
-        include: [.preReleaseVersion, .buildBetaDetail, .app]
-      )).ok.body.json)
+      try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.buildsGetCollection(query: .init(
+          filterExpired: ["false"],
+          filterProcessingState: processing,
+          filterBetaAppReviewSubmissionBetaReviewState: review,
+          sort: [.minusUploadedDate],
+          limit: 50,
+          include: [.preReleaseVersion, .buildBetaDetail, .app]
+        )).ok.body.json
+      }.flatMap(resolve)
     }
     async let processing = builds(processing: [.processing])
     async let review = builds(review: [.waitingForReview, .inReview, .rejected])
@@ -216,7 +220,8 @@ public enum Builds {
 
   /// A build by number, or the latest one that hasn't expired when `number` is nil (an explicit
   /// number still finds an expired build). A universal-purchase app can share build numbers
-  /// across platforms; `choose` then picks.
+  /// across platforms, and without a number or platform its latest builds can be for several:
+  /// `choose` then picks.
   public static func find(
     appID: String, number: String?, platform: Platform? = nil, client: ASCClient, choose: Choose<Build>
   ) async throws -> Build {
@@ -229,6 +234,18 @@ public enum Builds {
       return try await choose("Multiple builds numbered \(number ?? "?") found", builds) { build in
         let uploaded = build.uploadedDate.map { formatDate($0) } ?? "?"
         return "\(build.label) — uploaded \(uploaded)"
+      }
+    }
+    // The latest of any platform isn't a choice to make silently: when the newest builds span
+    // platforms (a universal-purchase app), `choose` picks among each platform's newest.
+    if number == nil, platform == nil {
+      var newest: [Build] = []
+      for build in builds where !newest.contains(where: { $0.platform == build.platform }) { newest.append(build) }
+      if newest.count > 1 {
+        return try await choose("The latest builds are for \(newest.count) platforms", newest) { build in
+          let uploaded = build.uploadedDate.map { formatDate($0) } ?? "?"
+          return "\(formatState(build.platform ?? "?")): \(build.label) — uploaded \(uploaded)"
+        }
       }
     }
     return latest

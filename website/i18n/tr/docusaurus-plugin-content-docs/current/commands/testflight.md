@@ -7,7 +7,7 @@ title: TestFlight
 
 TestFlight beta testlerini uçtan uca yönetin: beta grupları, test kullanıcıları, build dağıtımı, What to Test notları, beta incelemesi ve test kullanıcısı geri bildirimleri.
 
-Build kapsamındaki komutlar varsayılan olarak süresi dolmamış en son build'i hedefler. Belirli bir build'i hedeflemek için `--build <number>` geçin; evrensel satın alma kullanan bir uygulama aynı build numarasını birden fazla platformda paylaşıyorsa `--platform` ile netleştirin.
+Build kapsamındaki komutlar varsayılan olarak süresi dolmamış en son build'i hedefler. Belirli bir build'i hedeflemek için `--build <number>` geçin; evrensel satın alma kullanan bir uygulama aynı build numarasını birden fazla platformda paylaşıyorsa `--platform` ile netleştirin. En son build'ler birden çok platforma aitse ve ikisi de verilmemişse komut hangisi olduğunu sorar (`--yes` ile reddeder: `--platform` verin). Süre sonlandırma geri alınamadığından `expire --yes` için her zaman `--build` gerekir.
 
 ## Beta grupları
 

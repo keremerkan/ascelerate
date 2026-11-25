@@ -35,7 +35,7 @@ Un événement peut avoir plusieurs calendriers par pays ou région. Sans `--ter
 - **Badges :** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Passez `--badge NONE` à `update` pour le supprimer.
 - **Objectifs :** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Priorité :** `HIGH` ou `NORMAL`.
-- **Dates du calendrier** (`--publish-start`, `--event-start`, `--event-end`) acceptent le format ISO8601 (`2026-07-01T09:00:00Z`) ou `yyyy-MM-dd` (minuit UTC). Omettez `--territories` pour programmer sur tous les territoires.
+- **Dates du calendrier** (`--publish-start`, `--event-start`, `--event-end`) acceptent le format ISO8601 (`2026-07-01T09:00:00Z`) ou `yyyy-MM-dd` (minuit UTC). Un calendrier exige `--territories` : des codes de pays ou de région, ou `all` pour tous ; `update` sans l'option conserve les pays de chaque calendrier.
 
 ## Localisations
 

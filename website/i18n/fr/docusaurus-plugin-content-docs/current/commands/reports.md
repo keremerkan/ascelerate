@@ -27,7 +27,7 @@ ascelerate reports sales --frequency DAILY --date 2026-06-20 --output sales.tsv
 - `--date` — `YYYY-MM-DD` pour quotidien/hebdomadaire (hebdomadaire = le dimanche qui clôt la semaine), `YYYY-MM` pour mensuel, `YYYY` pour annuel. Par défaut, la période complète la plus récente.
 - `--type` — type de rapport (par défaut `SALES`) ; les autres incluent `SUBSCRIPTION`, `SUBSCRIBER`, `SUBSCRIPTION_EVENT`, `PRE_ORDER`.
 - `--sub-type` — `SUMMARY` (par défaut), `DETAILED`, `SUMMARY_TERRITORY`, `SUMMARY_CHANNEL`, `SUMMARY_INSTALL_TYPE`.
-- `--bundle-id` — limite le résumé à une seule application (ou un alias).
+- `--bundle-id` — limite le résumé à une seule application (ou un alias). Les achats intégrés et les abonnements de l'app sont inclus (leurs lignes désignent l'app par son SKU).
 - `--vendor-number` — remplace le numéro de vendeur configuré.
 - `--output` / `--raw` — enregistre le TSV brut dans un fichier, ou l'affiche au lieu d'un résumé.
 

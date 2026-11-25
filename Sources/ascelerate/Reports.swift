@@ -105,10 +105,12 @@ enum Reports {
     return error
   }
 
-  /// Prints a units-by-(title, product type) summary for a Sales report, optionally filtered to one app.
-  static func summarizeSales(_ text: String, appleID: String?) {
-    let (header, rows) = TSV.parse(text)
-    guard !rows.isEmpty else {
+  /// Prints a units-by-(title, product type) summary for a Sales report, optionally for one app:
+  /// its own rows and its in-app purchases' and subscriptions' (`SalesReports.rows`, whose
+  /// `parentSKU` names their app).
+  static func summarizeSales(_ text: String, app: (appleID: String, sku: String?)?) {
+    let (header, lines) = TSV.parse(text)
+    guard !lines.isEmpty else {
       print("Report is empty — no sales in this period.")
       return
     }
@@ -121,9 +123,9 @@ enum Reports {
       return
     }
 
-    var data = rows
-    if let appleID {
-      data = rows.filter { value($0, header, "Apple Identifier") == appleID }
+    var data = SalesReports.rows(tsv: text)
+    if let app {
+      data = data.filter { $0.appleID == app.appleID || (app.sku != nil && $0.parentSKU == app.sku) }
       guard !data.isEmpty else {
         print("No rows for the selected app in this report.")
         return
@@ -135,20 +137,14 @@ enum Reports {
     var order: [Key] = []
     var total = 0
     for row in data {
-      let key = Key(
-        title: value(row, header, "Title") ?? "—",
-        sku: value(row, header, "SKU") ?? "—",
-        type: value(row, header, "Product Type Identifier") ?? "—")
-      let u = Int(value(row, header, "Units") ?? "") ?? 0
+      let key = Key(title: row.title.isEmpty ? "—" : row.title, sku: row.sku.isEmpty ? "—" : row.sku, type: row.productType.isEmpty ? "—" : row.productType)
       if units[key] == nil { order.append(key) }
-      units[key, default: 0] += u
-      total += u
+      units[key, default: 0] += row.units
+      total += row.units
     }
 
-    let begin = data.first.flatMap { value($0, header, "Begin Date") }
-    let end = data.first.flatMap { value($0, header, "End Date") }
-    if let begin, let end {
-      print("Period: \(begin) – \(end)")
+    if let first = data.first, !first.beginDate.isEmpty, !first.endDate.isEmpty {
+      print("Period: \(first.beginDate) – \(first.endDate)")
       print()
     }
 
@@ -157,7 +153,7 @@ enum Reports {
       headers: ["Title", "SKU", "Product Type", "Units"],
       rows: sorted.map { [$0.title, $0.sku, $0.type, "\(units[$0] ?? 0)"] })
     print()
-    print("Total units: \(bold("\(total)"))")
+    print("Total units: \(bold("\(total)"))" + (app == nil ? "" : " (the app, its in-app purchases and subscriptions)"))
     print("Tip: product type identifiers distinguish app downloads from updates/IAPs. Use --raw for full data.")
   }
 

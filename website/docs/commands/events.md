@@ -35,7 +35,7 @@ An event can have several territory schedules. Without `--territories`, new date
 - **Badges:** `LIVE_EVENT`, `PREMIERE`, `CHALLENGE`, `COMPETITION`, `NEW_SEASON`, `MAJOR_UPDATE`, `SPECIAL_EVENT`. Pass `--badge NONE` to `update` to clear it.
 - **Purposes:** `APPROPRIATE_FOR_ALL_USERS`, `ATTRACT_NEW_USERS`, `KEEP_ACTIVE_USERS_INFORMED`, `BRING_BACK_LAPSED_USERS`.
 - **Priority:** `HIGH` or `NORMAL`.
-- **Schedule dates** (`--publish-start`, `--event-start`, `--event-end`) accept ISO8601 (`2026-07-01T09:00:00Z`) or `yyyy-MM-dd` (UTC midnight). Omit `--territories` to schedule for all territories.
+- **Schedule dates** (`--publish-start`, `--event-start`, `--event-end`) accept ISO8601 (`2026-07-01T09:00:00Z`) or `yyyy-MM-dd` (UTC midnight). A schedule needs `--territories`: territory codes, or `all` for every country and region; `update` without it keeps each schedule's territories.
 
 ## Localizations
 

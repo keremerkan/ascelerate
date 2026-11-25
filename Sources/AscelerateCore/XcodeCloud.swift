@@ -930,17 +930,25 @@ public enum XcodeCloud {
   /// line starts with Xcode Cloud's timestamp and a tab.
   public static func logs(actionID: String, client: ASCClient) async throws -> [LogFile] {
     guard let bundle = try await artifacts(actionID: actionID, client: client).first(where: { $0.type == "LOG_BUNDLE" }) else { return [] }
-    let artifact = try await withTransientRetry { try await client.ciArtifactsGetInstance(path: .init(id: bundle.id)).ok.body.json.data }
+    return try await logs(bundleID: bundle.id, client: client)
+  }
+
+  /// The logs in a log bundle artifact (`LOG_BUNDLE`, by its ID). The bundle is downloaded to a
+  /// temporary file and mapped rather than read, only its `.log` and `.txt` files are unpacked, and
+  /// the file is removed afterwards.
+  public static func logs(bundleID: String, client: ASCClient) async throws -> [LogFile] {
+    let artifact = try await withTransientRetry { try await client.ciArtifactsGetInstance(path: .init(id: bundleID)).ok.body.json.data }
     guard let link = artifact.attributes?.downloadUrl, let url = URL(string: link) else { throw DownloadError.noLink }
-    let (data, response) = try await withTransientRetry { try await URLSession.shared.data(from: url) }
+    let (location, response) = try await withTransientRetry { try await URLSession.shared.download(from: url) }
+    defer { try? FileManager.default.removeItem(at: location) }
     if let response = response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
       throw DownloadError.status(response.statusCode)
     }
+    let data = try Data(contentsOf: location, options: .alwaysMapped)
     let order = ["ci_post_clone", "resolve_package_dependencies", "ci_pre_xcodebuild", "ci_post_xcodebuild"]
     let rank = { (name: String) in order.firstIndex { name.hasPrefix($0) } ?? (name.hasPrefix("xcodebuild") ? order.count + 1 : order.count) }
     // Apple's own download, so generous limits: they only keep a damaged bundle from filling memory.
-    return try ZipReader.files(in: data, limits: .init(totalSize: 1 << 30))
-      .filter { $0.path.hasSuffix(".log") || $0.path.hasSuffix(".txt") }
+    return try ZipReader.files(in: data, limits: .init(totalSize: 1 << 30)) { $0.hasSuffix(".log") || $0.hasSuffix(".txt") }
       .map { file -> (export: String, file: String, log: LogFile) in
         let name = (file.path as NSString).lastPathComponent
         let export = exportName(file.path)

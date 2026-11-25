@@ -7,7 +7,7 @@ title: TestFlight
 
 Verwalten Sie TestFlight-Betatests von Anfang bis Ende: Beta-Gruppen, Tester, Build-Verteilung, What-to-Test-Notizen, Beta-Review und Tester-Feedback.
 
-Build-bezogene Befehle verwenden standardmäßig den neuesten, nicht abgelaufenen Build. Mit `--build <number>` wählen Sie einen bestimmten Build aus; wenn eine App mit Universalkauf dieselbe Build-Nummer auf mehreren Plattformen verwendet, sorgt `--platform` für Eindeutigkeit.
+Build-bezogene Befehle verwenden standardmäßig den neuesten, nicht abgelaufenen Build. Mit `--build <number>` wählen Sie einen bestimmten Build aus; wenn eine App mit Universalkauf dieselbe Build-Nummer auf mehreren Plattformen verwendet, sorgt `--platform` für Eindeutigkeit. Stammen die neuesten Builds von mehreren Plattformen und ist keine der beiden Optionen angegeben, fragt der Befehl nach (mit `--yes` lehnt er ab: Geben Sie `--platform` an). `expire --yes` braucht immer `--build`, da sich das Ablaufenlassen nicht rückgängig machen lässt.
 
 ## Beta-Gruppen
 

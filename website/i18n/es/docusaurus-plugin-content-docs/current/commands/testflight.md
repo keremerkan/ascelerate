@@ -7,7 +7,7 @@ title: TestFlight
 
 Gestione de principio a fin las pruebas beta en TestFlight: grupos de prueba, probadores, distribución de compilaciones, notas de Qué probar, revisión beta y comentarios de los probadores.
 
-Los comandos que actúan sobre una compilación usan de forma predeterminada la última compilación no caducada. Indique `--build <number>` para elegir una compilación concreta y `--platform` para deshacer la ambigüedad cuando una app de compra universal comparte números de compilación entre plataformas.
+Los comandos que actúan sobre una compilación usan de forma predeterminada la última compilación no caducada. Indique `--build <number>` para elegir una compilación concreta y `--platform` para deshacer la ambigüedad cuando una app de compra universal comparte números de compilación entre plataformas. Cuando las compilaciones más recientes son de varias plataformas y no se indica ninguna de las dos opciones, el comando pregunta cuál (con `--yes`, se niega: indique `--platform`). `expire --yes` siempre necesita `--build`, porque la caducidad no se puede deshacer.
 
 ## Grupos de prueba
 

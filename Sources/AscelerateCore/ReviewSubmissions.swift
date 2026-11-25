@@ -46,8 +46,11 @@ public enum ReviewSubmissions {
 
   /// The app's submissions, newest first, with their items resolved (App Store Connect keeps the
   /// last ten completed ones from the past 180 days, plus any in progress). One request for the
-  /// list, then one per submission for its items and one per app version item for its build.
-  public static func list(appID: String, client: ASCClient) async throws -> [Submission] {
+  /// list, then one per submission for its items, and one per app version item for its build:
+  /// for every submission by default; with `completedBuilds: false`, only for submissions not yet
+  /// complete (a completed submission's version item then has `build` nil), which saves a request
+  /// per completed version.
+  public static func list(appID: String, completedBuilds: Bool = true, client: ASCClient) async throws -> [Submission] {
     let response = try await client.appsReviewSubmissionsGetToManyRelated(
       path: .init(id: appID),
       query: .init(limit: 50, include: [.submittedByActor, .lastUpdatedByActor])
@@ -63,14 +66,16 @@ public enum ReviewSubmissions {
         submittedDate: submission.attributes?.submittedDate,
         submittedBy: submission.relationships?.submittedByActor?.data.flatMap { actorsByID[$0.id] },
         lastUpdatedBy: submission.relationships?.lastUpdatedByActor?.data.flatMap { actorsByID[$0.id] },
-        items: try await items(submissionID: submission.id, client: client))
+        items: try await items(
+          submissionID: submission.id, builds: completedBuilds || submission.attributes?.state != "COMPLETE", client: client))
     }
     return submissions.sorted { ($0.submittedDate ?? .distantFuture) > ($1.submittedDate ?? .distantFuture) }
   }
 
   /// A submission's items, resolved to what they are. Product names cost one request per product
   /// item, an app version's build one per version, a custom product page's name one per page.
-  public static func items(submissionID: String, client: ASCClient) async throws -> [Item] {
+  /// `builds: false` leaves app version items' `build` nil, saving a request per version.
+  public static func items(submissionID: String, builds: Bool = true, client: ASCClient) async throws -> [Item] {
     let response = try await client.reviewSubmissionsItemsGetToManyRelated(
       path: .init(id: submissionID),
       // An item's relationship is only filled in when its kind is included (naming it in
@@ -113,7 +118,7 @@ public enum ReviewSubmissions {
       let state = item.attributes?.state
       if let id = relationships?.appStoreVersion?.data?.id {
         let version = versionsByID[id]
-        let build = try await attachedBuild(versionID: id, client: client)
+        let build = builds ? try await attachedBuild(versionID: id, client: client) : nil
         return Item(
           id: item.id, state: state, kind: "appStoreVersion", name: version?.attributes?.versionString,
           platform: version?.attributes?.platform,

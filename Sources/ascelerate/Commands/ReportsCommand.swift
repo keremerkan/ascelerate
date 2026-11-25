@@ -65,9 +65,12 @@ extension ReportsCommand {
 
       let client = try ClientFactory.makeClient()
 
-      var appleID: String?
+      // The app by its Apple ID, and its in-app purchases and subscriptions by the app's SKU
+      // (their rows carry their own Apple ID and name the app in Parent Identifier).
+      var app: (appleID: String, sku: String?)?
       if let bundleID {
-        appleID = try await findApp(bundleID: bundleID, client: client).id
+        let found = try await findApp(bundleID: bundleID, client: client)
+        app = (found.id, found.attributes?.sku)
       }
 
       // Progress on stderr: stdout holds the report itself (--raw > file).
@@ -86,7 +89,7 @@ extension ReportsCommand {
 
       if try Reports.emitRaw(text, output: output, raw: raw) { return }
       print()
-      Reports.summarizeSales(text, appleID: appleID)
+      Reports.summarizeSales(text, app: app)
     }
   }
 }

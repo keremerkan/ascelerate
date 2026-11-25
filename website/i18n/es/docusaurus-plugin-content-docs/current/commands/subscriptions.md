@@ -18,7 +18,7 @@ Los tres comandos aceptan `--json` para obtener una salida legible por máquinas
 ## Crear, actualizar y eliminar suscripciones
 
 ```bash
-ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH --group-id <group-id>
+ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH
 ascelerate sub update <bundle-id> <product-id> --name "Monthly Plan"
 ascelerate sub delete <bundle-id> <product-id>
 ```

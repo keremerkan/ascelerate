@@ -547,7 +547,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 
 ### Version management
 - **No `version:` on `CommandConfiguration`** — intentionally omitted. ArgumentParser leaks a root `--version` flag into every subcommand's completion function, which conflicts with subcommands that define their own `--version` option (e.g. `builds list --version`, `apps review status --version`).
-- Version is stored as `static let appVersion` in `ASC.swift`.
+- Version is stored as `static let appVersion` in `Sources/ascelerate/Ascelerate.swift`.
 - `ascelerate version` subcommand prints just the version number. `--version` and `-v` are intercepted in `main()` before ArgumentParser and produce the same output.
 - `install-completions` stamps `# ascelerate vX.Y.Z` into completion scripts (after `#compdef` line for zsh) and `install-skill` stamps `<!-- ascelerate vX.Y.Z -->` into each installed skill file (across all targeted agents), right after its frontmatter (`InstallSkillCommand.stamped`): a stamp on the first line hid the frontmatter, and Claude Code showed the stamp as the skill's description (up to 0.34.0). The update-check (`skillVersionDetail()`) scans every installed agent path and only flags **stamped** skills (npx-installed ones are unstamped and skipped, so they don't false-positive). `install-skill` targets agents that are detected (`~/.claude` or `~/.grok` for the shared Claude Code/Grok Build entry, `~/.cursor`, `~/.windsurf`) or already have the skill; `--all` forces all four entries (incl. Copilot, which has no detectable dir). Grok Build reads the Claude Code skill path natively, so both share one entry/target file.
 - `checkForUpdates()` (non-interactive, API commands; skipped under `--json`, `--json-events` and `-y`, whose output a program reads) and `checkForUpdatesInteractively()` (bare invocation) detect outdated completions and/or skill, offering a single Y/n prompt or NOTE line. The version compare uses `isVersionOlder()` (numeric, component-wise) and only flags a stamp that is **strictly older** than the running binary — so an older `ascelerate` earlier in PATH never offers to *downgrade* completions/skill that a newer build installed.
@@ -583,7 +583,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - Currently on: `apps list/info/versions`, `apps review preflight/status`, `builds list`, `reviews list/info` (list includes full review bodies + developer responses, saving per-review `info` calls), `testflight builds/status`, `rate-limit`, `iap list/info`, `sub groups/list/info`, `iap pricing show`, `sub pricing show`. Fan out to other read commands using the same pattern; `--json` is not for write commands.
 - `apps review preflight --json` emits `{versionID, version, platform, state, passed, checks: [{group?, name, passed, detail}]}` — `group` is nil for top-level checks, a locale code for per-locale checks, or the `inAppPurchases`/`subscriptions` sentinels; the text table (group headers, indentation) is rendered FROM this model, and the exit code stays non-zero on failures in both modes (CI gate). Progress messages ("Checking build...") are suppressed under `--json`. A product in `DEVELOPER_REMOVED_FROM_SALE` is a deliberate choice: its check is `passed: true` plus `skipped: true` (omitted otherwise), shown as a yellow – and counted as skipped in the result line; neither its state nor its prices are evaluated.
 - `pricing show --json` is the rich per-territory view (price + currency + start date/preserved for subs) and deliberately does NOT mirror the `pricing export` JSON — export/import keep their own import-compatible format.
-- Shared entry structs: `CustomerReviewsCommand.ReviewEntry` (list element + info object), `SubCommand.SubEntry` (sub groups nests it, sub list flattens it with a `group` ref). `ResolvedBuild` (TestFlightCommand) carries raw `platform`/`version` and derives the display `train`/`label` from them.
+- Shared entry structs: `CustomerReviewsCommand.ReviewEntry` (list element + info object), `SubCommand.SubEntry` (sub groups nests it, sub list flattens it with a `group` ref). `findBuild` (TestFlightCommand) returns the core's `Builds.Build`.
 
 ### Output formatting
 - **ANSI colors** — `red()`, `green()`, `yellow()` (orange 208), `bold()` in Formatting.swift. Auto-disabled when stdout is not a terminal (`isatty` check). `stderrRed()` uses a separate `isStderrTerminal` check for error messages.
@@ -597,7 +597,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - **ANSI-aware Table** — `Table.print` uses `visibleLength()` (strips ANSI codes via regex) and `padToVisible()` for correct column alignment when cells contain colored text. All-empty rows (`["", ""]`) render as blank lines for visual grouping.
 
 ### Error handling
-- `ASCClient.main()` overrides the default entry point to catch and format errors centrally.
+- `Ascelerate.main()` overrides the default entry point to catch and format errors centrally.
 - `ASCError`: rate limit (429, with the hourly limit and remaining requests), HTTP status codes (401/403/5xx) and Apple's error entries.
 - `URLError` (unwrapped from the runtime's `ClientError` by `ascUnderlyingError`): connectivity issues (no internet, DNS, timeout, connection lost, TLS). Other wrapped failures print their underlying error, never the `ClientError` dump.
 - `ASCDryRunStop`: a write blocked by `ASCELERATE_DRY_RUN=1`.
@@ -610,7 +610,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 - Without `--yes`: prompts once to confirm the workflow, then individual commands still prompt normally
 - With `--yes`: sets `autoConfirm = true` globally, all prompts are skipped
 - `autoConfirm` is restored after each step — a single step with `-y` (or a nested `run-workflow --yes`) must not auto-accept prompts in later steps of a non-`--yes` workflow
-- Commands are dispatched via `ASCClient.parseAsRoot(args)` — any registered subcommand works
+- Commands are dispatched via `Ascelerate.parseAsRoot(args)` — any registered subcommand works
 - Nested workflows supported (`run-workflow` can call another workflow file) with circular reference detection via `activeWorkflows` path stack
 - `builds upload` records the uploaded build number **per platform** (`recordUploadedBuild`/`lastUploadedBuild(for:)` in Formatting.swift) — subsequent `await-processing` (via its `--platform`) and `build attach-latest` (via the target version's platform) target the just-uploaded build for the RIGHT platform, avoiding both API propagation races and cross-platform build-number mixups when one workflow uploads iOS and macOS. A platform-specific miss never falls back to another platform's number; only a platform-less lookup uses the most recent upload.
 
@@ -653,7 +653,7 @@ When adding a new subcommand, place it in the appropriate `CommandGroup` or crea
 }
 ```
 
-Only fields present in the JSON get updated — omitted fields are left unchanged. The `LocaleFields` struct in AppsCommand.swift defines the schema.
+Only fields present in the JSON get updated — omitted fields are left unchanged. The core's `LocaleFields` (AscelerateCore/VersionLocalizations.swift) defines the schema.
 
 ### App info localization JSON format (used by app-info export/import)
 ```json
@@ -667,7 +667,7 @@ Only fields present in the JSON get updated — omitted fields are left unchange
 }
 ```
 
-Same convention — only fields present get updated. The `AppInfoLocaleFields` struct in AppsCommand.swift defines the schema. The `app-info update` and `app-info import` commands check that the AppInfo is in an editable state (`AppInfos.editableStates`) before proceeding.
+Same convention — only fields present get updated. The core's `AppInfoLocaleFields` (AscelerateCore/LocalizationFile.swift) defines the schema. The `app-info update` and `app-info import` commands check that the AppInfo is in an editable state (`AppInfos.editableStates`) before proceeding.
 
 ### Media upload folder structure (used by media upload)
 ```

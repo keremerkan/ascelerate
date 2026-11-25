@@ -18,7 +18,7 @@ ascelerate sub info <bundle-id> <product-id>
 ## Abonelik oluşturma, güncelleme ve silme
 
 ```bash
-ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH --group-id <group-id>
+ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH
 ascelerate sub update <bundle-id> <product-id> --name "Monthly Plan"
 ascelerate sub delete <bundle-id> <product-id>
 ```
@@ -175,7 +175,10 @@ Bir fiyat ve kademeleri tek parça olarak kaydedilir ve düzenlenemez. Planlanan
 Her aboneliğin uygulamadan bağımsız kendi bölge erişilebilirliği vardır. Varsayılan olarak abonelik, uygulamasının bölgelerini devralır; `sub availability` ile değişiklik yaptığınızda aboneliğe özel bir liste oluşur.
 
 ```bash
+# Aboneliğin mevcut bölgelerini görüntüle
 ascelerate sub availability <bundle-id> <product-id>
+
+# Bölge listesini düzenle (her düzenleme listenin tamamını değiştirir)
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true

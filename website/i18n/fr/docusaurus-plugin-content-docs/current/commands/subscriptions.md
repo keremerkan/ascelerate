@@ -18,7 +18,7 @@ Les trois commandes acceptent `--json` pour une sortie lisible par machine ([con
 ## Créer, mettre à jour et supprimer des abonnements
 
 ```bash
-ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH --group-id <group-id>
+ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH
 ascelerate sub update <bundle-id> <product-id> --name "Monthly Plan"
 ascelerate sub delete <bundle-id> <product-id>
 ```
@@ -175,7 +175,10 @@ Un prix et ses paliers sont enregistrés ensemble et ne peuvent pas être modifi
 Chaque abonnement a sa propre disponibilité territoriale, indépendante de l'application. Par défaut, un abonnement hérite des territoires de son application ; dès que vous appelez `sub availability` avec des modifications, l'abonnement obtient une liste explicite.
 
 ```bash
+# Afficher les régions actuelles de l'abonnement
 ascelerate sub availability <bundle-id> <product-id>
+
+# Modifier la liste des régions (chaque modification remplace la liste entière)
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true

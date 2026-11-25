@@ -71,6 +71,17 @@ ascelerate install-completions
 
 Dies erkennt Ihre Shell und konfiguriert alles automatisch. Starten Sie Ihre Shell neu oder öffnen Sie einen neuen Tab, um die Vervollständigung zu aktivieren.
 
+## KI-Coding-Skill (optional)
+
+Wenn Sie einen KI-Coding-Agenten wie Claude Code, Cursor, Windsurf oder GitHub Copilot verwenden, können Sie eine Skill-Datei installieren, die ihm alle Befehle und Workflows von ascelerate vermittelt:
+
+```bash
+ascelerate install-skill    # erkannte Agenten (Claude Code/Cursor/Windsurf; +Copilot mit --all)
+npx ascelerate-skill        # jeder KI-Coding-Agent (ohne CLI)
+```
+
+Details finden Sie im Leitfaden [KI-Coding-Skill](../guides/ai-skill.md).
+
 ## Version prüfen
 
 ```bash

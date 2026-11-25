@@ -71,6 +71,17 @@ ascelerate install-completions
 
 Cette commande détecte votre shell et configure tout automatiquement. Redémarrez votre shell ou ouvrez un nouvel onglet pour activer la complétion.
 
+## Skill pour agent IA (facultatif)
+
+Si vous utilisez un agent de programmation IA comme Claude Code, Cursor, Windsurf ou GitHub Copilot, vous pouvez installer un fichier de skill qui lui donne une connaissance complète des commandes et workflows d'ascelerate :
+
+```bash
+ascelerate install-skill    # agents détectés (Claude Code/Cursor/Windsurf ; +Copilot avec --all)
+npx ascelerate-skill        # tout agent de programmation IA (sans la CLI)
+```
+
+Voir le guide [Skill pour agent IA](../guides/ai-skill.md) pour plus de détails.
+
 ## Vérifier votre version
 
 ```bash

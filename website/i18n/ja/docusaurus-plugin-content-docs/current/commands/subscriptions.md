@@ -18,7 +18,7 @@ ascelerate sub info <bundle-id> <product-id>
 ## サブスクリプションの作成、更新、削除
 
 ```bash
-ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH --group-id <group-id>
+ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH
 ascelerate sub update <bundle-id> <product-id> --name "Monthly Plan"
 ascelerate sub delete <bundle-id> <product-id>
 ```
@@ -175,7 +175,10 @@ ascelerate sub pricing volume-set <bundle-id> <product-id> --tiers none --start-
 各サブスクリプションは、アプリとは独立した独自の地域別利用可否を持ちます。デフォルトではサブスクリプションはアプリの地域を継承しますが、`sub availability` で変更を加えると、サブスクリプションに明示的なリストが作成されます。
 
 ```bash
+# サブスクリプションの現在の地域を表示
 ascelerate sub availability <bundle-id> <product-id>
+
+# 地域リストを編集（編集のたびにリスト全体が置き換わります）
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true

@@ -71,6 +71,17 @@ ascelerate install-completions
 
 Bu, shell'inizi otomatik olarak algılar ve her şeyi yapılandırır. Etkinleştirmek için shell'inizi yeniden başlatın veya yeni bir sekme açın.
 
+## Yapay zeka kodlama skill'i (isteğe bağlı)
+
+Claude Code, Cursor, Windsurf ya da GitHub Copilot gibi bir yapay zeka kodlama aracı kullanıyorsanız, ona tüm ascelerate komutlarını ve iş akışlarını öğreten bir skill dosyası kurabilirsiniz:
+
+```bash
+ascelerate install-skill    # algılanan araçlar (Claude Code/Cursor/Windsurf; --all ile Copilot da)
+npx ascelerate-skill        # her yapay zeka kodlama aracı (CLI gerekmez)
+```
+
+Ayrıntılar için [Yapay Zeka Kodlama Skill'i](../guides/ai-skill.md) rehberine bakın.
+
 ## Sürüm kontrolü
 
 ```bash

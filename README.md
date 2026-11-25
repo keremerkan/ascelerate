@@ -1132,7 +1132,7 @@ ascelerate sub list <bundle-id>
 ascelerate sub info <bundle-id> <product-id>
 
 # Create, update, and delete subscriptions
-ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH --group-id <group-id>
+ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH
 ascelerate sub update <bundle-id> <product-id> --name "Monthly Plan"
 ascelerate sub delete <bundle-id> <product-id>
 

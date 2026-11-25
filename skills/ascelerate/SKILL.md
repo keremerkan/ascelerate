@@ -233,7 +233,7 @@ Pricing notes:
 ascelerate sub list <app>
 ascelerate sub groups <app>
 ascelerate sub info <app> <product-id>                         # warns if no prices set
-ascelerate sub create <app> --name "Monthly" --product-id <id> --period ONE_MONTH --group-id <gid>
+ascelerate sub create <app> --name "Monthly" --product-id <id> --period ONE_MONTH
 ascelerate sub update <app> <product-id> --name "New Name"
 ascelerate sub delete <app> <product-id>
 ascelerate sub submit <app> <product-id>                       # needs a pending version (any edit since last approval)

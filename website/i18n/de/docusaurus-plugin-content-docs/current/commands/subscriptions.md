@@ -18,7 +18,7 @@ Alle drei akzeptieren `--json` für maschinenlesbare Ausgabe ([Konventionen](../
 ## Abonnements erstellen, aktualisieren und löschen
 
 ```bash
-ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH --group-id <group-id>
+ascelerate sub create <bundle-id> --name "Monthly" --product-id <product-id> --period ONE_MONTH
 ascelerate sub update <bundle-id> <product-id> --name "Monthly Plan"
 ascelerate sub delete <bundle-id> <product-id>
 ```
@@ -175,7 +175,10 @@ Ein Preis und seine Staffeln werden zusammen gespeichert und lassen sich nicht b
 Jedes Abonnement hat seine eigene regionale Verfügbarkeit, unabhängig von der App. Standardmäßig erbt ein Abonnement die Regionen der App; sobald Sie `sub availability` mit Änderungen aufrufen, hat das Abonnement eine explizite Liste.
 
 ```bash
+# Aktuelle Regionen des Abonnements anzeigen
 ascelerate sub availability <bundle-id> <product-id>
+
+# Regionsliste bearbeiten (jede Änderung ersetzt die ganze Liste)
 ascelerate sub availability <bundle-id> <product-id> --add CHN,RUS
 ascelerate sub availability <bundle-id> <product-id> --remove ITA
 ascelerate sub availability <bundle-id> <product-id> --available-in-new-territories true

@@ -145,7 +145,7 @@ enum BuildUploader {
   static func delete(_ uploads: [BuildUploadRecords.Upload], client: ASCClient) async throws -> Int {
     var deleted = 0
     for upload in uploads {
-      let done = try await unlessDryRunStopped {
+      let done: Void? = try await unlessDryRunStopped {
         try await BuildUploadRecords.delete(id: upload.id, client: client)
       }
       if done != nil { deleted += 1 }

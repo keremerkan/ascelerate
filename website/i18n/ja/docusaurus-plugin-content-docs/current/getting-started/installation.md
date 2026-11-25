@@ -71,6 +71,17 @@ ascelerate install-completions
 
 シェルを自動検出してすべてを設定します。シェルを再起動するか、新しいタブを開くと有効になります。
 
+## AIコーディングスキル（任意）
+
+Claude Code、Cursor、Windsurf、GitHub Copilot などの AI コーディングエージェントを使っている場合は、ascelerate のすべてのコマンドとワークフローを理解させるスキルファイルをインストールできます。
+
+```bash
+ascelerate install-skill    # 検出されたエージェント（Claude Code/Cursor/Windsurf、--all で Copilot も）
+npx ascelerate-skill        # あらゆる AI コーディングエージェント（CLI 不要）
+```
+
+詳しくは [AIコーディングスキル](../guides/ai-skill.md) ガイドを参照してください。
+
 ## バージョン確認
 
 ```bash

@@ -4,394 +4,394 @@ import ImageIO
 import UniformTypeIdentifiers
 
 struct ScreenshotFramer: Sendable {
-    let config: ScreenshotConfig
+  let config: ScreenshotConfig
 
-    /// Frame all screenshots for all languages. Used by `screenshot frame` subcommand.
-    func frameAll() throws {
-        let bezels = loadBezels()
-        guard !bezels.isEmpty else { throw ScreenshotError.framingFailed("No device bezel could be loaded; nothing was framed.") }
+  /// Frame all screenshots for all languages. Used by `screenshot frame` subcommand.
+  func frameAll() throws {
+    let bezels = loadBezels()
+    guard !bezels.isEmpty else { throw ScreenshotError.framingFailed("No device bezel could be loaded; nothing was framed.") }
 
-        var failures = 0
-        for language in config.languages {
-            failures += frameLanguage(language, bezels: bezels)
-        }
-
-        printFramingSummary()
-        if failures > 0 { throw ScreenshotError.framingFailed("\(failures) screenshot(s) couldn't be framed.") }
+    var failures = 0
+    for language in config.languages {
+      failures += frameLanguage(language, bezels: bezels)
     }
 
-    struct Bezel {
-        let image: CGImage
-        /// Size of the transparent screen area (the whole image if none is found).
-        let screen: CGSize
+    printFramingSummary()
+    if failures > 0 { throw ScreenshotError.framingFailed("\(failures) screenshot(s) couldn't be framed.") }
+  }
+
+  struct Bezel {
+    let image: CGImage
+    /// Size of the transparent screen area (the whole image if none is found).
+    let screen: CGSize
+  }
+
+  /// Frame screenshots for a single language. Used by the runner after each language completes.
+  /// Returns how many couldn't be framed.
+  @discardableResult
+  func frameLanguage(_ language: String, bezels: [(device: ScreenshotConfig.Device, images: [Bezel])]) -> Int {
+    let outputDir = URL(fileURLWithPath: config.outputDirectory)
+    let framedDir = resolvedFramedDir()
+    let langDir = outputDir.appendingPathComponent(language)
+    let framedLangDir = framedDir.appendingPathComponent(language)
+
+    guard FileManager.default.fileExists(atPath: langDir.path) else { return 0 }
+    var failures = 0
+    try? FileManager.default.createDirectory(at: framedLangDir, withIntermediateDirectories: true)
+
+    for (device, deviceBezels) in bezels {
+      let prefix = device.simulator + "-"
+      guard let files = try? FileManager.default.contentsOfDirectory(
+        at: langDir, includingPropertiesForKeys: nil
+      ) else { continue }
+
+      let screenshots = files.filter {
+        $0.lastPathComponent.hasPrefix(prefix) && $0.pathExtension.lowercased() == "png"
+      }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+
+      guard !screenshots.isEmpty else { continue }
+      // This device's earlier framed files go first, so the folder (and "Framed N") hold
+      // only this run's.
+      if let old = try? FileManager.default.contentsOfDirectory(at: framedLangDir, includingPropertiesForKeys: nil) {
+        for file in old where file.lastPathComponent.hasPrefix(prefix) && file.pathExtension.lowercased() == "png" {
+          try? FileManager.default.removeItem(at: file)
+        }
+      }
+
+      var deviceFramed = 0
+      for file in screenshots {
+        autoreleasepool {
+          let outputURL = framedLangDir.appendingPathComponent(file.lastPathComponent)
+          do {
+            guard let screenshotImage = Self.loadImage(from: file) else {
+              throw ScreenshotError.framingFailed("Failed to load: \(file.lastPathComponent)")
+            }
+            let bezel = Self.bestBezel(for: screenshotImage, among: deviceBezels)
+            guard let result = Self.composite(screenshot: screenshotImage, bezel: bezel) else {
+              throw ScreenshotError.framingFailed("Compositing failed: \(file.lastPathComponent)")
+            }
+            try Self.writePNG(result, to: outputURL)
+            deviceFramed += 1
+          } catch {
+            EventOutput.log("  [\(device.simulator)] " + red("\(error)"))
+            failures += 1
+          }
+        }
+      }
+
+      if deviceFramed > 0 {
+        EventOutput.log("  [\(device.simulator)] Framed \(deviceFramed) screenshot(s) → \(language)/")
+      }
+    }
+    return failures
+  }
+
+  /// Load bezels for all devices with framing enabled. Prints errors for missing/invalid bezels.
+  func loadBezels() -> [(device: ScreenshotConfig.Device, images: [Bezel])] {
+    let devices = config.devices.filter { $0.frameDevice == true }
+    guard !devices.isEmpty else { return [] }
+
+    var loaded: [(device: ScreenshotConfig.Device, images: [Bezel])] = []
+    for device in devices {
+      guard !device.deviceBezels.isEmpty else {
+        EventOutput.log("  [\(device.simulator)] " + red("No deviceBezel path configured, skipping"))
+        continue
+      }
+      var images: [Bezel] = []
+      for bezelPath in device.deviceBezels {
+        let resolved = URL(fileURLWithPath: bezelPath).path
+        guard FileManager.default.fileExists(atPath: resolved) else {
+          EventOutput.log("  [\(device.simulator)] " + red("Bezel not found: \(bezelPath)"))
+          continue
+        }
+        guard let image = Self.loadImage(from: URL(fileURLWithPath: resolved)) else {
+          EventOutput.log("  [\(device.simulator)] " + red("Failed to load bezel: \(bezelPath)"))
+          continue
+        }
+        let area = Self.findScreenArea(in: image)
+        if area == nil {
+          // No transparent screen found (not 32 bits per pixel, or an opaque centre):
+          // screenshots go centred on the bezel.
+          EventOutput.log("  [\(device.simulator)] " + yellow("Warning:") + " no transparent screen area in \((bezelPath as NSString).lastPathComponent); screenshots are centred on it.")
+        }
+        let screen = area?.size ?? CGSize(width: image.width, height: image.height)
+        images.append(Bezel(image: image, screen: screen))
+      }
+      if !images.isEmpty {
+        loaded.append((device, images))
+      }
     }
 
-    /// Frame screenshots for a single language. Used by the runner after each language completes.
-    /// Returns how many couldn't be framed.
-    @discardableResult
-    func frameLanguage(_ language: String, bezels: [(device: ScreenshotConfig.Device, images: [Bezel])]) -> Int {
-        let outputDir = URL(fileURLWithPath: config.outputDirectory)
-        let framedDir = resolvedFramedDir()
-        let langDir = outputDir.appendingPathComponent(language)
-        let framedLangDir = framedDir.appendingPathComponent(language)
-
-        guard FileManager.default.fileExists(atPath: langDir.path) else { return 0 }
-        var failures = 0
-        try? FileManager.default.createDirectory(at: framedLangDir, withIntermediateDirectories: true)
-
-        for (device, deviceBezels) in bezels {
-            let prefix = device.simulator + "-"
-            guard let files = try? FileManager.default.contentsOfDirectory(
-                at: langDir, includingPropertiesForKeys: nil
-            ) else { continue }
-
-            let screenshots = files.filter {
-                $0.lastPathComponent.hasPrefix(prefix) && $0.pathExtension.lowercased() == "png"
-            }.sorted { $0.lastPathComponent < $1.lastPathComponent }
-
-            guard !screenshots.isEmpty else { continue }
-            // This device's earlier framed files go first, so the folder (and "Framed N") hold
-            // only this run's.
-            if let old = try? FileManager.default.contentsOfDirectory(at: framedLangDir, includingPropertiesForKeys: nil) {
-                for file in old where file.lastPathComponent.hasPrefix(prefix) && file.pathExtension.lowercased() == "png" {
-                    try? FileManager.default.removeItem(at: file)
-                }
-            }
-
-            var deviceFramed = 0
-            for file in screenshots {
-                autoreleasepool {
-                    let outputURL = framedLangDir.appendingPathComponent(file.lastPathComponent)
-                    do {
-                        guard let screenshotImage = Self.loadImage(from: file) else {
-                            throw ScreenshotError.framingFailed("Failed to load: \(file.lastPathComponent)")
-                        }
-                        let bezel = Self.bestBezel(for: screenshotImage, among: deviceBezels)
-                        guard let result = Self.composite(screenshot: screenshotImage, bezel: bezel) else {
-                            throw ScreenshotError.framingFailed("Compositing failed: \(file.lastPathComponent)")
-                        }
-                        try Self.writePNG(result, to: outputURL)
-                        deviceFramed += 1
-                    } catch {
-                        EventOutput.log("  [\(device.simulator)] " + red("\(error)"))
-                        failures += 1
-                    }
-                }
-            }
-
-            if deviceFramed > 0 {
-                EventOutput.log("  [\(device.simulator)] Framed \(deviceFramed) screenshot(s) → \(language)/")
-            }
-        }
-        return failures
+    if loaded.isEmpty {
+      EventOutput.log("  No bezels loaded, skipping framing.")
     }
 
-    /// Load bezels for all devices with framing enabled. Prints errors for missing/invalid bezels.
-    func loadBezels() -> [(device: ScreenshotConfig.Device, images: [Bezel])] {
-        let devices = config.devices.filter { $0.frameDevice == true }
-        guard !devices.isEmpty else { return [] }
+    return loaded
+  }
 
-        var loaded: [(device: ScreenshotConfig.Device, images: [Bezel])] = []
-        for device in devices {
-            guard !device.deviceBezels.isEmpty else {
-                EventOutput.log("  [\(device.simulator)] " + red("No deviceBezel path configured, skipping"))
-                continue
-            }
-            var images: [Bezel] = []
-            for bezelPath in device.deviceBezels {
-                let resolved = URL(fileURLWithPath: bezelPath).path
-                guard FileManager.default.fileExists(atPath: resolved) else {
-                    EventOutput.log("  [\(device.simulator)] " + red("Bezel not found: \(bezelPath)"))
-                    continue
-                }
-                guard let image = Self.loadImage(from: URL(fileURLWithPath: resolved)) else {
-                    EventOutput.log("  [\(device.simulator)] " + red("Failed to load bezel: \(bezelPath)"))
-                    continue
-                }
-                let area = Self.findScreenArea(in: image)
-                if area == nil {
-                    // No transparent screen found (not 32 bits per pixel, or an opaque centre):
-                    // screenshots go centred on the bezel.
-                    EventOutput.log("  [\(device.simulator)] " + yellow("Warning:") + " no transparent screen area in \((bezelPath as NSString).lastPathComponent); screenshots are centred on it.")
-                }
-                let screen = area?.size ?? CGSize(width: image.width, height: image.height)
-                images.append(Bezel(image: image, screen: screen))
-            }
-            if !images.isEmpty {
-                loaded.append((device, images))
-            }
-        }
+  func printFramingSummary() {
+    let framedPath = config.framedOutputDirectory ?? config.outputDirectory + "/framed"
+    let framedDir = resolvedFramedDir()
 
-        if loaded.isEmpty {
-            EventOutput.log("  No bezels loaded, skipping framing.")
-        }
-
-        return loaded
+    // Count framed files across all languages
+    var total = 0
+    for language in config.languages {
+      let langDir = framedDir.appendingPathComponent(language)
+      if let files = try? FileManager.default.contentsOfDirectory(at: langDir, includingPropertiesForKeys: nil) {
+        total += files.filter { $0.pathExtension.lowercased() == "png" }.count
+      }
     }
 
-    func printFramingSummary() {
-        let framedPath = config.framedOutputDirectory ?? config.outputDirectory + "/framed"
-        let framedDir = resolvedFramedDir()
+    if total > 0 {
+      EventOutput.log("\n" + green("Framed") + " \(total) screenshot(s) → \(framedPath)")
+    }
+  }
 
-        // Count framed files across all languages
-        var total = 0
-        for language in config.languages {
-            let langDir = framedDir.appendingPathComponent(language)
-            if let files = try? FileManager.default.contentsOfDirectory(at: langDir, includingPropertiesForKeys: nil) {
-                total += files.filter { $0.pathExtension.lowercased() == "png" }.count
-            }
-        }
+  private func resolvedFramedDir() -> URL {
+    if let custom = config.framedOutputDirectory {
+      return URL(fileURLWithPath: custom)
+    }
+    return URL(fileURLWithPath: config.outputDirectory).appendingPathComponent("framed")
+  }
 
-        if total > 0 {
-            EventOutput.log("\n" + green("Framed") + " \(total) screenshot(s) → \(framedPath)")
-        }
+  // MARK: - Image Loading
+
+  static func loadImage(from url: URL) -> CGImage? {
+    guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(source, 0, nil)
+  }
+
+  // MARK: - Compositing
+
+  /// The bezel whose screen area is closest to the screenshot's size, e.g. an iPhone Duo's
+  /// folded frame for cover-display shots and its unfolded frame for inner-display shots.
+  /// `composite` turns a portrait bezel for a landscape shot (but not the reverse), so a portrait
+  /// bezel is compared rotated there, losing ties to a native landscape bezel.
+  static func bestBezel(for screenshot: CGImage, among bezels: [Bezel]) -> CGImage {
+    let width = Double(screenshot.width), height = Double(screenshot.height)
+    let shotIsLandscape = width > height
+    func mismatch(_ bezel: Bezel) -> Double {
+      let bezelIsLandscape = bezel.screen.width > bezel.screen.height
+      if bezelIsLandscape && !shotIsLandscape { return .infinity }
+      let rotated = shotIsLandscape && !bezelIsLandscape
+      let (screenWidth, screenHeight) = rotated
+        ? (bezel.screen.height, bezel.screen.width)
+        : (bezel.screen.width, bezel.screen.height)
+      return abs(screenWidth - width) / width + abs(screenHeight - height) / height + (rotated ? 0.001 : 0)
+    }
+    return bezels.min { mismatch($0) < mismatch($1) }!.image
+  }
+
+  static func composite(screenshot: CGImage, bezel bezelInput: CGImage) -> CGImage? {
+    // Landscape screenshots get a landscape frame: rotate the portrait
+    // bezel 90° CCW (Dynamic Island to the LEFT, matching landscapeLeft
+    // captures) instead of anamorphically squeezing the shot into a
+    // portrait cutout. Screen-area detection runs on the rotated pixels.
+    var bezel = bezelInput
+    if screenshot.width > screenshot.height, bezel.height > bezel.width,
+       let rotated = rotated90CCW(bezel) {
+      bezel = rotated
+    }
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+
+    guard let context = CGContext(
+      data: nil,
+      width: bezel.width,
+      height: bezel.height,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: colorSpace,
+      bitmapInfo: bitmapInfo.rawValue
+    ) else { return nil }
+
+    let bezelRect = CGRect(x: 0, y: 0, width: bezel.width, height: bezel.height)
+
+    // Find the screen area within the bezel
+    let screenRect = findScreenArea(in: bezel) ?? CGRect(
+      x: (bezel.width - screenshot.width) / 2,
+      y: (bezel.height - screenshot.height) / 2,
+      width: screenshot.width,
+      height: screenshot.height
+    )
+
+    // Clip screenshot to bezel shape (handles rounded corners) using save/restore
+    // instead of a separate context to reduce peak memory
+    if let matte = createMatte(from: bezel) {
+      context.saveGState()
+      context.clip(to: bezelRect, mask: matte)
+      context.draw(screenshot, in: screenRect)
+      context.restoreGState()
+    } else {
+      context.draw(screenshot, in: screenRect)
     }
 
-    private func resolvedFramedDir() -> URL {
-        if let custom = config.framedOutputDirectory {
-            return URL(fileURLWithPath: custom)
-        }
-        return URL(fileURLWithPath: config.outputDirectory).appendingPathComponent("framed")
+    // Draw the device bezel frame on top
+    context.draw(bezel, in: bezelRect)
+
+    return context.makeImage()
+  }
+
+  /// The bezel rotated 90° counterclockwise (portrait art, landscape use).
+  static func rotated90CCW(_ image: CGImage) -> CGImage? {
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+    guard let context = CGContext(
+      data: nil,
+      width: image.height,
+      height: image.width,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: colorSpace,
+      bitmapInfo: bitmapInfo.rawValue
+    ) else { return nil }
+    context.translateBy(x: CGFloat(image.height), y: 0)
+    context.rotate(by: .pi / 2)
+    context.draw(image, in: CGRect(x: 0, y: 0,
+                                   width: image.width, height: image.height))
+    return context.makeImage()
+  }
+
+  // MARK: - Screen Area Detection
+
+  /// Finds the transparent screen area within a device bezel by scanning outward from center.
+  /// Returns a CGRect in lower-left-origin coordinates for use with CGContext.
+  static func findScreenArea(in bezel: CGImage) -> CGRect? {
+    guard bezel.bitsPerPixel == 32,
+          let data = bezel.dataProvider?.data,
+          let pointer = CFDataGetBytePtr(data) else { return nil }
+
+    let w = bezel.width
+    let h = bezel.height
+    let bpr = bezel.bytesPerRow
+    let cx = w / 2
+    let cy = h / 2
+
+    func isOpaque(_ x: Int, _ y: Int) -> Bool {
+      pointer[y * bpr + x * 4 + 3] == 255
     }
 
-    // MARK: - Image Loading
-
-    static func loadImage(from url: URL) -> CGImage? {
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-        return CGImageSourceCreateImageAtIndex(source, 0, nil)
+    func scanY(x: Int, from y0: Int, toward target: Int) -> Int? {
+      let step = target > y0 ? 1 : -1
+      var y = y0
+      while y != target + step {
+        if isOpaque(x, y) { return y }
+        y += step
+      }
+      return nil
     }
 
-    // MARK: - Compositing
-
-    /// The bezel whose screen area is closest to the screenshot's size, e.g. an iPhone Duo's
-    /// folded frame for cover-display shots and its unfolded frame for inner-display shots.
-    /// `composite` turns a portrait bezel for a landscape shot (but not the reverse), so a portrait
-    /// bezel is compared rotated there, losing ties to a native landscape bezel.
-    static func bestBezel(for screenshot: CGImage, among bezels: [Bezel]) -> CGImage {
-        let width = Double(screenshot.width), height = Double(screenshot.height)
-        let shotIsLandscape = width > height
-        func mismatch(_ bezel: Bezel) -> Double {
-            let bezelIsLandscape = bezel.screen.width > bezel.screen.height
-            if bezelIsLandscape && !shotIsLandscape { return .infinity }
-            let rotated = shotIsLandscape && !bezelIsLandscape
-            let (screenWidth, screenHeight) = rotated
-                ? (bezel.screen.height, bezel.screen.width)
-                : (bezel.screen.width, bezel.screen.height)
-            return abs(screenWidth - width) / width + abs(screenHeight - height) / height + (rotated ? 0.001 : 0)
-        }
-        return bezels.min { mismatch($0) < mismatch($1) }!.image
+    func scanX(y: Int, from x0: Int, toward target: Int) -> Int? {
+      let step = target > x0 ? 1 : -1
+      var x = x0
+      while x != target + step {
+        if isOpaque(x, y) { return x }
+        x += step
+      }
+      return nil
     }
 
-    static func composite(screenshot: CGImage, bezel bezelInput: CGImage) -> CGImage? {
-        // Landscape screenshots get a landscape frame: rotate the portrait
-        // bezel 90° CCW (Dynamic Island to the LEFT, matching landscapeLeft
-        // captures) instead of anamorphically squeezing the shot into a
-        // portrait cutout. Screen-area detection runs on the rotated pixels.
-        var bezel = bezelInput
-        if screenshot.width > screenshot.height, bezel.height > bezel.width,
-           let rotated = rotated90CCW(bezel) {
-            bezel = rotated
-        }
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+    // Find initial bezel edges from center
+    guard let topEdge = scanY(x: cx, from: cy, toward: 0),
+          let bottomEdge = scanY(x: cx, from: cy, toward: h - 1),
+          let leftEdge = scanX(y: cy, from: cx, toward: 0),
+          let rightEdge = scanX(y: cy, from: cx, toward: w - 1)
+    else { return nil }
 
-        guard let context = CGContext(
-            data: nil,
-            width: bezel.width,
-            height: bezel.height,
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo.rawValue
-        ) else { return nil }
+    // Screen area is just inside the bezel edges
+    var screenTop = topEdge + 1
+    var screenBottom = bottomEdge - 1
+    var screenLeft = leftEdge + 1
+    var screenRight = rightEdge - 1
+    // An opaque centre (a screen filled in, an image without real alpha) gives no screen.
+    guard screenLeft <= screenRight, screenTop <= screenBottom else { return nil }
 
-        let bezelRect = CGRect(x: 0, y: 0, width: bezel.width, height: bezel.height)
-
-        // Find the screen area within the bezel
-        let screenRect = findScreenArea(in: bezel) ?? CGRect(
-            x: (bezel.width - screenshot.width) / 2,
-            y: (bezel.height - screenshot.height) / 2,
-            width: screenshot.width,
-            height: screenshot.height
-        )
-
-        // Clip screenshot to bezel shape (handles rounded corners) using save/restore
-        // instead of a separate context to reduce peak memory
-        if let matte = createMatte(from: bezel) {
-            context.saveGState()
-            context.clip(to: bezelRect, mask: matte)
-            context.draw(screenshot, in: screenRect)
-            context.restoreGState()
-        } else {
-            context.draw(screenshot, in: screenRect)
-        }
-
-        // Draw the device bezel frame on top
-        context.draw(bezel, in: bezelRect)
-
-        return context.makeImage()
+    // Refine Y bounds by scanning across the X range
+    for x in screenLeft...screenRight {
+      if let edge = scanY(x: x, from: cy, toward: 0) {
+        screenTop = min(screenTop, edge + 1)
+      }
+      if let edge = scanY(x: x, from: cy, toward: h - 1) {
+        screenBottom = max(screenBottom, edge - 1)
+      }
     }
 
-    /// The bezel rotated 90° counterclockwise (portrait art, landscape use).
-    static func rotated90CCW(_ image: CGImage) -> CGImage? {
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-        guard let context = CGContext(
-            data: nil,
-            width: image.height,
-            height: image.width,
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo.rawValue
-        ) else { return nil }
-        context.translateBy(x: CGFloat(image.height), y: 0)
-        context.rotate(by: .pi / 2)
-        context.draw(image, in: CGRect(x: 0, y: 0,
-                                       width: image.width, height: image.height))
-        return context.makeImage()
+    // Refine X bounds by scanning across the Y range
+    guard screenTop <= screenBottom else { return nil }
+    for y in screenTop...screenBottom {
+      if let edge = scanX(y: y, from: cx, toward: 0) {
+        screenLeft = min(screenLeft, edge + 1)
+      }
+      if let edge = scanX(y: y, from: cx, toward: w - 1) {
+        screenRight = max(screenRight, edge - 1)
+      }
     }
 
-    // MARK: - Screen Area Detection
+    let screenWidth = screenRight - screenLeft + 1
+    let screenHeight = screenBottom - screenTop + 1
+    let flippedY = h - screenTop - screenHeight
 
-    /// Finds the transparent screen area within a device bezel by scanning outward from center.
-    /// Returns a CGRect in lower-left-origin coordinates for use with CGContext.
-    static func findScreenArea(in bezel: CGImage) -> CGRect? {
-        guard bezel.bitsPerPixel == 32,
-              let data = bezel.dataProvider?.data,
-              let pointer = CFDataGetBytePtr(data) else { return nil }
+    return CGRect(x: screenLeft, y: flippedY, width: screenWidth, height: screenHeight)
+  }
 
-        let w = bezel.width
-        let h = bezel.height
-        let bpr = bezel.bytesPerRow
-        let cx = w / 2
-        let cy = h / 2
+  // MARK: - Matte
 
-        func isOpaque(_ x: Int, _ y: Int) -> Bool {
-            pointer[y * bpr + x * 4 + 3] == 255
+  /// Creates a grayscale mask: white between leftmost/rightmost opaque pixels per scanline,
+  /// black elsewhere. Used to clip the screenshot to the bezel's screen shape.
+  private static func createMatte(from bezel: CGImage) -> CGImage? {
+    guard bezel.bitsPerPixel == 32,
+          let data = bezel.dataProvider?.data,
+          let pointer = CFDataGetBytePtr(data) else { return nil }
+
+    let w = bezel.width
+    let h = bezel.height
+    let bpr = bezel.bytesPerRow
+
+    guard let context = CGContext(
+      data: nil,
+      width: w,
+      height: h,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceGray(),
+      bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue).rawValue
+    ) else { return nil }
+
+    context.setFillColor(gray: 0, alpha: 1)
+    context.fill(CGRect(x: 0, y: 0, width: w, height: h))
+
+    context.setFillColor(gray: 1, alpha: 1)
+    for y in 0..<h {
+      var lineMinX: Int?
+      var lineMaxX: Int?
+
+      for x in 0..<w {
+        if pointer[y * bpr + x * 4 + 3] == 255 {
+          if lineMinX == nil { lineMinX = x }
+          lineMaxX = x
         }
+      }
 
-        func scanY(x: Int, from y0: Int, toward target: Int) -> Int? {
-            let step = target > y0 ? 1 : -1
-            var y = y0
-            while y != target + step {
-                if isOpaque(x, y) { return y }
-                y += step
-            }
-            return nil
-        }
-
-        func scanX(y: Int, from x0: Int, toward target: Int) -> Int? {
-            let step = target > x0 ? 1 : -1
-            var x = x0
-            while x != target + step {
-                if isOpaque(x, y) { return x }
-                x += step
-            }
-            return nil
-        }
-
-        // Find initial bezel edges from center
-        guard let topEdge = scanY(x: cx, from: cy, toward: 0),
-              let bottomEdge = scanY(x: cx, from: cy, toward: h - 1),
-              let leftEdge = scanX(y: cy, from: cx, toward: 0),
-              let rightEdge = scanX(y: cy, from: cx, toward: w - 1)
-        else { return nil }
-
-        // Screen area is just inside the bezel edges
-        var screenTop = topEdge + 1
-        var screenBottom = bottomEdge - 1
-        var screenLeft = leftEdge + 1
-        var screenRight = rightEdge - 1
-        // An opaque centre (a screen filled in, an image without real alpha) gives no screen.
-        guard screenLeft <= screenRight, screenTop <= screenBottom else { return nil }
-
-        // Refine Y bounds by scanning across the X range
-        for x in screenLeft...screenRight {
-            if let edge = scanY(x: x, from: cy, toward: 0) {
-                screenTop = min(screenTop, edge + 1)
-            }
-            if let edge = scanY(x: x, from: cy, toward: h - 1) {
-                screenBottom = max(screenBottom, edge - 1)
-            }
-        }
-
-        // Refine X bounds by scanning across the Y range
-        guard screenTop <= screenBottom else { return nil }
-        for y in screenTop...screenBottom {
-            if let edge = scanX(y: y, from: cx, toward: 0) {
-                screenLeft = min(screenLeft, edge + 1)
-            }
-            if let edge = scanX(y: y, from: cx, toward: w - 1) {
-                screenRight = max(screenRight, edge - 1)
-            }
-        }
-
-        let screenWidth = screenRight - screenLeft + 1
-        let screenHeight = screenBottom - screenTop + 1
-        let flippedY = h - screenTop - screenHeight
-
-        return CGRect(x: screenLeft, y: flippedY, width: screenWidth, height: screenHeight)
+      if let minX = lineMinX, let maxX = lineMaxX {
+        let drawY = h - 1 - y
+        context.fill(CGRect(x: minX, y: drawY, width: maxX - minX + 1, height: 1))
+      }
     }
 
-    // MARK: - Matte
+    return context.makeImage()
+  }
 
-    /// Creates a grayscale mask: white between leftmost/rightmost opaque pixels per scanline,
-    /// black elsewhere. Used to clip the screenshot to the bezel's screen shape.
-    private static func createMatte(from bezel: CGImage) -> CGImage? {
-        guard bezel.bitsPerPixel == 32,
-              let data = bezel.dataProvider?.data,
-              let pointer = CFDataGetBytePtr(data) else { return nil }
+  // MARK: - PNG Writing
 
-        let w = bezel.width
-        let h = bezel.height
-        let bpr = bezel.bytesPerRow
-
-        guard let context = CGContext(
-            data: nil,
-            width: w,
-            height: h,
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: CGColorSpaceCreateDeviceGray(),
-            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue).rawValue
-        ) else { return nil }
-
-        context.setFillColor(gray: 0, alpha: 1)
-        context.fill(CGRect(x: 0, y: 0, width: w, height: h))
-
-        context.setFillColor(gray: 1, alpha: 1)
-        for y in 0..<h {
-            var lineMinX: Int?
-            var lineMaxX: Int?
-
-            for x in 0..<w {
-                if pointer[y * bpr + x * 4 + 3] == 255 {
-                    if lineMinX == nil { lineMinX = x }
-                    lineMaxX = x
-                }
-            }
-
-            if let minX = lineMinX, let maxX = lineMaxX {
-                let drawY = h - 1 - y
-                context.fill(CGRect(x: minX, y: drawY, width: maxX - minX + 1, height: 1))
-            }
-        }
-
-        return context.makeImage()
+  static func writePNG(_ image: CGImage, to url: URL) throws {
+    guard let destination = CGImageDestinationCreateWithURL(
+      url as CFURL, UTType.png.identifier as CFString, 1, nil
+    ) else {
+      throw ScreenshotError.framingFailed("Failed to create image destination: \(url.path)")
     }
-
-    // MARK: - PNG Writing
-
-    static func writePNG(_ image: CGImage, to url: URL) throws {
-        guard let destination = CGImageDestinationCreateWithURL(
-            url as CFURL, UTType.png.identifier as CFString, 1, nil
-        ) else {
-            throw ScreenshotError.framingFailed("Failed to create image destination: \(url.path)")
-        }
-        CGImageDestinationAddImage(destination, image, nil)
-        guard CGImageDestinationFinalize(destination) else {
-            throw ScreenshotError.framingFailed("Failed to write: \(url.path)")
-        }
+    CGImageDestinationAddImage(destination, image, nil)
+    guard CGImageDestinationFinalize(destination) else {
+      throw ScreenshotError.framingFailed("Failed to write: \(url.path)")
     }
+  }
 }

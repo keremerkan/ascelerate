@@ -2,810 +2,810 @@ import ArgumentParser
 import Foundation
 
 struct ScreenshotCommand: AsyncParsableCommand {
+  static let configuration = CommandConfiguration(
+    commandName: "screenshot",
+    abstract: "Capture App Store screenshots from simulators.",
+    subcommands: [Run.self, Init.self, CreateHelper.self, Frame.self, Doctor.self, SetupPrompt.self],
+    defaultSubcommand: Run.self
+  )
+
+  static let configPath = "ascelerate/screenshot.yml"
+  static let defaultHelperPath = "ascelerate/ScreenshotHelper.swift"
+
+  struct Run: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "screenshot",
-        abstract: "Capture App Store screenshots from simulators.",
-        subcommands: [Run.self, Init.self, CreateHelper.self, Frame.self, Doctor.self, SetupPrompt.self],
-        defaultSubcommand: Run.self
+      abstract: "Capture screenshots for all configured devices and languages."
     )
 
-    static let configPath = "ascelerate/screenshot.yml"
-    static let defaultHelperPath = "ascelerate/ScreenshotHelper.swift"
+    @Option(
+      name: [.customLong("languages"), .customShort("l")],
+      help: ArgumentHelp(
+        "Override configured languages. Comma-separated, or repeat the flag.",
+        discussion: "Must be a subset of the languages in screenshot.yml. Example: --languages en-US,tr-TR"
+      )
+    )
+    var languages: [String] = []
 
-    struct Run: AsyncParsableCommand {
-        static let configuration = CommandConfiguration(
-            abstract: "Capture screenshots for all configured devices and languages."
-        )
+    @Flag(
+      name: .customLong("json-events"),
+      help: "Report progress as JSON events on stdout, one per line (start, build, language, device, finished), for other tools. The readable progress goes to stderr."
+    )
+    var jsonEvents = false
 
-        @Option(
-            name: [.customLong("languages"), .customShort("l")],
-            help: ArgumentHelp(
-                "Override configured languages. Comma-separated, or repeat the flag.",
-                discussion: "Must be a subset of the languages in screenshot.yml. Example: --languages en-US,tr-TR"
-            )
-        )
-        var languages: [String] = []
+    func run() async throws {
+      let configPath = ScreenshotCommand.configPath
 
-        @Flag(
-            name: .customLong("json-events"),
-            help: "Report progress as JSON events on stdout, one per line (start, build, language, device, finished), for other tools. The readable progress goes to stderr."
-        )
-        var jsonEvents = false
+      guard FileManager.default.fileExists(atPath: configPath) else {
+        throw ScreenshotError.configNotFound(configPath)
+      }
 
-        func run() async throws {
-            let configPath = ScreenshotCommand.configPath
+      var screenshotConfig = try ScreenshotConfig.load(from: configPath)
 
-            guard FileManager.default.fileExists(atPath: configPath) else {
-                throw ScreenshotError.configNotFound(configPath)
-            }
+      if !languages.isEmpty {
+        let requested = languages
+          .flatMap { $0.split(separator: ",") }
+          .map { $0.trimmingCharacters(in: .whitespaces) }
+          .filter { !$0.isEmpty }
 
-            var screenshotConfig = try ScreenshotConfig.load(from: configPath)
-
-            if !languages.isEmpty {
-                let requested = languages
-                    .flatMap { $0.split(separator: ",") }
-                    .map { $0.trimmingCharacters(in: .whitespaces) }
-                    .filter { !$0.isEmpty }
-
-                guard !requested.isEmpty else {
-                    throw ValidationError("--languages must contain at least one non-empty code.")
-                }
-
-                let available = Set(screenshotConfig.languages)
-                let unknown = requested.filter { !available.contains($0) }
-                guard unknown.isEmpty else {
-                    throw ValidationError(
-                        "Language(s) not in \(configPath): \(unknown.joined(separator: ", ")). "
-                        + "Available: \(screenshotConfig.languages.joined(separator: ", "))."
-                    )
-                }
-
-                screenshotConfig.languages = requested
-            }
-
-            let runner = ScreenshotRunner(config: screenshotConfig)
-            try await EventOutput.stream(jsonEvents) {
-                EventOutput.log("ascelerate screenshot")
-                EventOutput.log("  Scheme: \(screenshotConfig.scheme)")
-                EventOutput.log("  Devices: \(screenshotConfig.devices.map(\.simulator).joined(separator: ", "))")
-                EventOutput.log("  Languages: \(screenshotConfig.languages.joined(separator: ", "))")
-                EventOutput.log("  Output: \(screenshotConfig.outputDirectory)")
-                try await runner.run()
-            }
+        guard !requested.isEmpty else {
+          throw ValidationError("--languages must contain at least one non-empty code.")
         }
+
+        let available = Set(screenshotConfig.languages)
+        let unknown = requested.filter { !available.contains($0) }
+        guard unknown.isEmpty else {
+          throw ValidationError(
+            "Language(s) not in \(configPath): \(unknown.joined(separator: ", ")). "
+            + "Available: \(screenshotConfig.languages.joined(separator: ", "))."
+          )
+        }
+
+        screenshotConfig.languages = requested
+      }
+
+      let runner = ScreenshotRunner(config: screenshotConfig)
+      try await EventOutput.stream(jsonEvents) {
+        EventOutput.log("ascelerate screenshot")
+        EventOutput.log("  Scheme: \(screenshotConfig.scheme)")
+        EventOutput.log("  Devices: \(screenshotConfig.devices.map(\.simulator).joined(separator: ", "))")
+        EventOutput.log("  Languages: \(screenshotConfig.languages.joined(separator: ", "))")
+        EventOutput.log("  Output: \(screenshotConfig.outputDirectory)")
+        try await runner.run()
+      }
+    }
+  }
+
+  struct Init: ParsableCommand {
+    static let configuration = CommandConfiguration(
+      abstract: "Initialize screenshot configuration and helper."
+    )
+
+    @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
+    var yes = false
+
+    func run() throws {
+      if yes { autoConfirm = true }
+      let fm = FileManager.default
+      let cwd = fm.currentDirectoryPath
+      let dir = "ascelerate"
+      let configPath = ScreenshotCommand.configPath
+      let helperPath = ScreenshotCommand.defaultHelperPath
+
+      print("This will create files in \(cwd)/\(dir)/")
+      guard confirm("Continue? [y/N] ") else {
+        print("Cancelled.")
+        return
+      }
+
+      // Create ascelerate/ directory
+      if !fm.fileExists(atPath: dir) {
+        try fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
+      }
+
+      // Create screenshot.yml
+      if fm.fileExists(atPath: configPath) {
+        print("Config already exists at \(configPath)")
+      } else {
+        try ScreenshotConfig.exampleYAML.write(toFile: configPath, atomically: true, encoding: .utf8)
+        success("Created", "\(configPath)")
+      }
+
+      // Create ScreenshotHelper.swift
+      if fm.fileExists(atPath: helperPath) {
+        print("Helper already exists at \(helperPath)")
+      } else {
+        try CreateHelper.helperSource.write(toFile: helperPath, atomically: true, encoding: .utf8)
+        success("Created", "\(helperPath)")
+      }
+
+      print()
+      print("Next steps:")
+      print("  1. Edit \(configPath) to match your project")
+      print("  2. Add \(helperPath) to your UITest target")
+      print("  3. Run: ascelerate screenshot")
+    }
+  }
+
+  struct Frame: ParsableCommand {
+    static let configuration = CommandConfiguration(
+      abstract: "Frame captured screenshots with device bezels."
+    )
+
+    func run() throws {
+      let configPath = ScreenshotCommand.configPath
+      guard FileManager.default.fileExists(atPath: configPath) else {
+        throw ScreenshotError.configNotFound(configPath)
+      }
+
+      let config = try ScreenshotConfig.load(from: configPath)
+      let devices = config.devices.filter { $0.frameDevice == true }
+      guard !devices.isEmpty else {
+        print("No devices have frameDevice enabled in \(configPath)")
+        return
+      }
+
+      let framer = ScreenshotFramer(config: config)
+      try framer.frameAll()
+    }
+  }
+
+  struct Doctor: ParsableCommand {
+    static let configuration = CommandConfiguration(
+      abstract: "Check screenshot configuration for problems."
+    )
+
+    @OptionGroup var jsonOption: JSONOption
+
+    /// A check's outcome; `status` is `pass`, `warn` or `fail`.
+    private struct Check: Encodable {
+      let name: String
+      let status: String
+      let detail: String
     }
 
-    struct Init: ParsableCommand {
-        static let configuration = CommandConfiguration(
-            abstract: "Initialize screenshot configuration and helper."
-        )
-
-        @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
-        var yes = false
-
-        func run() throws {
-            if yes { autoConfirm = true }
-            let fm = FileManager.default
-            let cwd = fm.currentDirectoryPath
-            let dir = "ascelerate"
-            let configPath = ScreenshotCommand.configPath
-            let helperPath = ScreenshotCommand.defaultHelperPath
-
-            print("This will create files in \(cwd)/\(dir)/")
-            guard confirm("Continue? [y/N] ") else {
-                print("Cancelled.")
-                return
-            }
-
-            // Create ascelerate/ directory
-            if !fm.fileExists(atPath: dir) {
-                try fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
-            }
-
-            // Create screenshot.yml
-            if fm.fileExists(atPath: configPath) {
-                print("Config already exists at \(configPath)")
-            } else {
-                try ScreenshotConfig.exampleYAML.write(toFile: configPath, atomically: true, encoding: .utf8)
-                success("Created", "\(configPath)")
-            }
-
-            // Create ScreenshotHelper.swift
-            if fm.fileExists(atPath: helperPath) {
-                print("Helper already exists at \(helperPath)")
-            } else {
-                try CreateHelper.helperSource.write(toFile: helperPath, atomically: true, encoding: .utf8)
-                success("Created", "\(helperPath)")
-            }
-
-            print()
-            print("Next steps:")
-            print("  1. Edit \(configPath) to match your project")
-            print("  2. Add \(helperPath) to your UITest target")
-            print("  3. Run: ascelerate screenshot")
-        }
+    /// What the configuration asks for, once it parses.
+    private struct ConfigSummary: Encodable {
+      let scheme: String
+      let devices: [String]
+      let languages: [String]
+      let outputDirectory: String
     }
 
-    struct Frame: ParsableCommand {
-        static let configuration = CommandConfiguration(
-            abstract: "Frame captured screenshots with device bezels."
-        )
-
-        func run() throws {
-            let configPath = ScreenshotCommand.configPath
-            guard FileManager.default.fileExists(atPath: configPath) else {
-                throw ScreenshotError.configNotFound(configPath)
-            }
-
-            let config = try ScreenshotConfig.load(from: configPath)
-            let devices = config.devices.filter { $0.frameDevice == true }
-            guard !devices.isEmpty else {
-                print("No devices have frameDevice enabled in \(configPath)")
-                return
-            }
-
-            let framer = ScreenshotFramer(config: config)
-            try framer.frameAll()
-        }
+    private struct Report: Encodable {
+      let config: ConfigSummary?
+      let checks: [Check]
     }
 
-    struct Doctor: ParsableCommand {
-        static let configuration = CommandConfiguration(
-            abstract: "Check screenshot configuration for problems."
-        )
+    func run() throws {
+      jsonOption.activate()
+      let configPath = ScreenshotCommand.configPath
+      let fm = FileManager.default
 
-        @OptionGroup var jsonOption: JSONOption
+      if !jsonOption.json {
+        print("ascelerate screenshot doctor\n")
+      }
 
-        /// A check's outcome; `status` is `pass`, `warn` or `fail`.
-        private struct Check: Encodable {
-            let name: String
-            let status: String
-            let detail: String
+      var checks: [Check] = []
+
+      func pass(_ name: String, _ detail: String = "") {
+        checks.append(Check(name: name, status: "pass", detail: detail))
+      }
+
+      func fail(_ name: String, _ detail: String) {
+        checks.append(Check(name: name, status: "fail", detail: detail))
+      }
+
+      func warn(_ name: String, _ detail: String) {
+        checks.append(Check(name: name, status: "warn", detail: detail))
+      }
+
+      // 1. Config file
+      guard fm.fileExists(atPath: configPath) else {
+        if fm.fileExists(atPath: URL(fileURLWithPath: configPath).lastPathComponent) {
+          fail("Config", "Not found at \(configPath). It looks like you're inside the ascelerate/ folder. Run the command from the project root (cd ..).")
+        } else {
+          fail("Config", "Not found at \(configPath). Run 'ascelerate screenshot init'.")
+        }
+        try report(Report(config: nil, checks: checks))
+        return
+      }
+      pass("Config", configPath)
+
+      // 2. Parse config
+      let config: ScreenshotConfig
+      do {
+        config = try ScreenshotConfig.load(from: configPath)
+      } catch {
+        fail("Config", "Failed to parse: \(error)")
+        try report(Report(config: nil, checks: checks))
+        return
+      }
+      pass("Config parsing", "Valid YAML")
+
+      // 3. Project or workspace
+      if config.workspace != nil && config.project != nil {
+        warn("Project", "Both 'workspace' and 'project' are set; the workspace is used.")
+      }
+      if let workspace = config.workspace {
+        if fm.fileExists(atPath: workspace) {
+          pass("Workspace", workspace)
+        } else {
+          fail("Workspace", "Not found: \(workspace)")
+        }
+      } else if let project = config.project {
+        if fm.fileExists(atPath: project) {
+          pass("Project", project)
+        } else {
+          fail("Project", "Not found: \(project)")
+        }
+      } else {
+        fail("Project", "No 'project' or 'workspace' specified in config")
+      }
+
+      // 4. xcodebuild
+      if let version = try? ScreenshotShell.run("/usr/bin/xcodebuild", arguments: ["-version"]) {
+        let firstLine = version.components(separatedBy: .newlines).first ?? version
+        pass("xcodebuild", firstLine)
+      } else {
+        fail("xcodebuild", "Not found or not working. Install Xcode Command Line Tools.")
+      }
+
+      // 5. xcrun simctl
+      if (try? ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "help"])) != nil {
+        pass("simctl", "Available")
+      } else {
+        fail("simctl", "xcrun simctl not working")
+      }
+
+      // 6. Simulators
+      let simulatorManager = SimulatorManager()
+      for device in config.devices {
+        do {
+          let sim = try simulatorManager.findDevice(name: device.simulator, runtime: device.runtime, udid: device.udid)
+          let runtimes = try simulatorManager.candidates(name: device.simulator)
+          if runtimes.count > 1 && device.runtime == nil && device.udid == nil {
+            // Several runtimes have the name: the run takes the newest, which can change
+            // when a runtime is installed.
+            let chosen = runtimes.first { $0.device.udid == sim.udid }?.runtime ?? "?"
+            warn("Simulator", "'\(device.simulator)' is on \(runtimes.count) runtimes; the run uses \(SimulatorManager.runtimeLabel(chosen)) (\(sim.udid)). Pin one with 'runtime:' or 'udid:'.")
+          } else {
+            pass("Simulator", "\(device.simulator) (\(sim.udid))")
+          }
+        } catch {
+          fail("Simulator", "'\(device.simulator)' not found. Check available devices with 'xcrun simctl list devices available'.")
+        }
+      }
+
+      // 7. Helper file
+      let helperPath = config.helperPath ?? ScreenshotCommand.defaultHelperPath
+      if let version = CreateHelper.installedVersion(at: helperPath) {
+        if !version.isEmpty {
+          let current = CreateHelper.helperVersion
+          if version == current {
+            pass("Helper", "\(helperPath) (v\(version))")
+          } else {
+            warn("Helper", "\(helperPath) is v\(version), latest is v\(current). Run 'ascelerate screenshot create-helper'.")
+          }
+        } else {
+          warn("Helper", "\(helperPath) has no version marker")
+        }
+      } else {
+        warn("Helper", "Not found at \(helperPath). Run 'ascelerate screenshot create-helper'.")
+      }
+
+      // 8. Languages
+      if config.languages.isEmpty {
+        fail("Languages", "No languages configured")
+      } else {
+        pass("Languages", config.languages.joined(separator: ", "))
+      }
+
+      // 9. Output directory
+      let outputDir = config.outputDirectory
+      let outputURL = URL(fileURLWithPath: outputDir)
+      if fm.fileExists(atPath: outputURL.path) {
+        if fm.isWritableFile(atPath: outputURL.path) {
+          pass("Output directory", outputDir)
+        } else {
+          fail("Output directory", "\(outputDir) is not writable")
+        }
+      } else {
+        // Will be created at runtime
+        pass("Output directory", "\(outputDir) (will be created)")
+      }
+
+      // 10. Device bezels
+      let framingDevices = config.devices.filter { $0.frameDevice == true }
+      if !framingDevices.isEmpty {
+        for device in framingDevices {
+          if device.deviceBezels.isEmpty {
+            fail("Bezel", "\(device.simulator) has frameDevice enabled but no deviceBezel path")
+          }
+          for bezelPath in device.deviceBezels {
+            let resolved = URL(fileURLWithPath: bezelPath).path
+            if fm.fileExists(atPath: resolved) {
+              pass("Bezel", "\(device.simulator) → \(bezelPath)")
+            } else {
+              fail("Bezel", "\(device.simulator) → file not found: \(bezelPath)")
+            }
+          }
         }
 
-        /// What the configuration asks for, once it parses.
-        private struct ConfigSummary: Encodable {
-            let scheme: String
-            let devices: [String]
-            let languages: [String]
-            let outputDirectory: String
+        // 11. Framed output directory
+        if let framedDir = config.framedOutputDirectory {
+          let framedURL = URL(fileURLWithPath: framedDir)
+          if fm.fileExists(atPath: framedURL.path) {
+            if fm.isWritableFile(atPath: framedURL.path) {
+              pass("Framed output", framedDir)
+            } else {
+              fail("Framed output", "\(framedDir) is not writable")
+            }
+          } else {
+            pass("Framed output", "\(framedDir) (will be created)")
+          }
+        } else {
+          pass("Framed output", "\(outputDir)/framed (default)")
         }
+      }
 
-        private struct Report: Encodable {
-            let config: ConfigSummary?
-            let checks: [Check]
-        }
-
-        func run() throws {
-            jsonOption.activate()
-            let configPath = ScreenshotCommand.configPath
-            let fm = FileManager.default
-
-            if !jsonOption.json {
-                print("ascelerate screenshot doctor\n")
-            }
-
-            var checks: [Check] = []
-
-            func pass(_ name: String, _ detail: String = "") {
-                checks.append(Check(name: name, status: "pass", detail: detail))
-            }
-
-            func fail(_ name: String, _ detail: String) {
-                checks.append(Check(name: name, status: "fail", detail: detail))
-            }
-
-            func warn(_ name: String, _ detail: String) {
-                checks.append(Check(name: name, status: "warn", detail: detail))
-            }
-
-            // 1. Config file
-            guard fm.fileExists(atPath: configPath) else {
-                if fm.fileExists(atPath: URL(fileURLWithPath: configPath).lastPathComponent) {
-                    fail("Config", "Not found at \(configPath). It looks like you're inside the ascelerate/ folder. Run the command from the project root (cd ..).")
-                } else {
-                    fail("Config", "Not found at \(configPath). Run 'ascelerate screenshot init'.")
-                }
-                try report(Report(config: nil, checks: checks))
-                return
-            }
-            pass("Config", configPath)
-
-            // 2. Parse config
-            let config: ScreenshotConfig
-            do {
-                config = try ScreenshotConfig.load(from: configPath)
-            } catch {
-                fail("Config", "Failed to parse: \(error)")
-                try report(Report(config: nil, checks: checks))
-                return
-            }
-            pass("Config parsing", "Valid YAML")
-
-            // 3. Project or workspace
-            if config.workspace != nil && config.project != nil {
-                warn("Project", "Both 'workspace' and 'project' are set; the workspace is used.")
-            }
-            if let workspace = config.workspace {
-                if fm.fileExists(atPath: workspace) {
-                    pass("Workspace", workspace)
-                } else {
-                    fail("Workspace", "Not found: \(workspace)")
-                }
-            } else if let project = config.project {
-                if fm.fileExists(atPath: project) {
-                    pass("Project", project)
-                } else {
-                    fail("Project", "Not found: \(project)")
-                }
-            } else {
-                fail("Project", "No 'project' or 'workspace' specified in config")
-            }
-
-            // 4. xcodebuild
-            if let version = try? ScreenshotShell.run("/usr/bin/xcodebuild", arguments: ["-version"]) {
-                let firstLine = version.components(separatedBy: .newlines).first ?? version
-                pass("xcodebuild", firstLine)
-            } else {
-                fail("xcodebuild", "Not found or not working. Install Xcode Command Line Tools.")
-            }
-
-            // 5. xcrun simctl
-            if (try? ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "help"])) != nil {
-                pass("simctl", "Available")
-            } else {
-                fail("simctl", "xcrun simctl not working")
-            }
-
-            // 6. Simulators
-            let simulatorManager = SimulatorManager()
-            for device in config.devices {
-                do {
-                    let sim = try simulatorManager.findDevice(name: device.simulator, runtime: device.runtime, udid: device.udid)
-                    let runtimes = try simulatorManager.candidates(name: device.simulator)
-                    if runtimes.count > 1 && device.runtime == nil && device.udid == nil {
-                        // Several runtimes have the name: the run takes the newest, which can change
-                        // when a runtime is installed.
-                        let chosen = runtimes.first { $0.device.udid == sim.udid }?.runtime ?? "?"
-                        warn("Simulator", "'\(device.simulator)' is on \(runtimes.count) runtimes; the run uses \(SimulatorManager.runtimeLabel(chosen)) (\(sim.udid)). Pin one with 'runtime:' or 'udid:'.")
-                    } else {
-                        pass("Simulator", "\(device.simulator) (\(sim.udid))")
-                    }
-                } catch {
-                    fail("Simulator", "'\(device.simulator)' not found. Check available devices with 'xcrun simctl list devices available'.")
-                }
-            }
-
-            // 7. Helper file
-            let helperPath = config.helperPath ?? ScreenshotCommand.defaultHelperPath
-            if let version = CreateHelper.installedVersion(at: helperPath) {
-                if !version.isEmpty {
-                    let current = CreateHelper.helperVersion
-                    if version == current {
-                        pass("Helper", "\(helperPath) (v\(version))")
-                    } else {
-                        warn("Helper", "\(helperPath) is v\(version), latest is v\(current). Run 'ascelerate screenshot create-helper'.")
-                    }
-                } else {
-                    warn("Helper", "\(helperPath) has no version marker")
-                }
-            } else {
-                warn("Helper", "Not found at \(helperPath). Run 'ascelerate screenshot create-helper'.")
-            }
-
-            // 8. Languages
-            if config.languages.isEmpty {
-                fail("Languages", "No languages configured")
-            } else {
-                pass("Languages", config.languages.joined(separator: ", "))
-            }
-
-            // 9. Output directory
-            let outputDir = config.outputDirectory
-            let outputURL = URL(fileURLWithPath: outputDir)
-            if fm.fileExists(atPath: outputURL.path) {
-                if fm.isWritableFile(atPath: outputURL.path) {
-                    pass("Output directory", outputDir)
-                } else {
-                    fail("Output directory", "\(outputDir) is not writable")
-                }
-            } else {
-                // Will be created at runtime
-                pass("Output directory", "\(outputDir) (will be created)")
-            }
-
-            // 10. Device bezels
-            let framingDevices = config.devices.filter { $0.frameDevice == true }
-            if !framingDevices.isEmpty {
-                for device in framingDevices {
-                    if device.deviceBezels.isEmpty {
-                        fail("Bezel", "\(device.simulator) has frameDevice enabled but no deviceBezel path")
-                    }
-                    for bezelPath in device.deviceBezels {
-                        let resolved = URL(fileURLWithPath: bezelPath).path
-                        if fm.fileExists(atPath: resolved) {
-                            pass("Bezel", "\(device.simulator) → \(bezelPath)")
-                        } else {
-                            fail("Bezel", "\(device.simulator) → file not found: \(bezelPath)")
-                        }
-                    }
-                }
-
-                // 11. Framed output directory
-                if let framedDir = config.framedOutputDirectory {
-                    let framedURL = URL(fileURLWithPath: framedDir)
-                    if fm.fileExists(atPath: framedURL.path) {
-                        if fm.isWritableFile(atPath: framedURL.path) {
-                            pass("Framed output", framedDir)
-                        } else {
-                            fail("Framed output", "\(framedDir) is not writable")
-                        }
-                    } else {
-                        pass("Framed output", "\(framedDir) (will be created)")
-                    }
-                } else {
-                    pass("Framed output", "\(outputDir)/framed (default)")
-                }
-            }
-
-            try report(Report(
-                config: ConfigSummary(
-                    scheme: config.scheme, devices: config.devices.map(\.simulator), languages: config.languages,
-                    outputDirectory: config.outputDirectory),
-                checks: checks))
-        }
-
-        /// Prints the report, then exits 1 when a check failed (warnings don't), text and JSON alike.
-        private func report(_ report: Report) throws {
-            if jsonOption.json {
-                try printJSON(report)
-                if report.checks.contains(where: { $0.status == "fail" }) { throw ExitCode.failure }
-                return
-            }
-            let checks = report.checks
-            let nameWidth = max(checks.map { $0.name.count }.max() ?? 0, 6)
-
-            for check in checks {
-                let paddedName = check.name.padding(toLength: nameWidth, withPad: " ", startingAt: 0)
-                let mark = switch check.status {
-                    case "pass": green("✓")
-                    case "warn": yellow("!")
-                    default: red("✗")
-                }
-                print("  \(mark) \(bold(paddedName))  \(check.detail)")
-            }
-
-            let failures = checks.filter { $0.status == "fail" }.count
-            let warnings = checks.filter { $0.status == "warn" }.count
-
-            print()
-            if failures == 0 && warnings == 0 {
-                success("All checks passed.")
-            } else {
-                var parts: [String] = []
-                if failures > 0 { parts.append(red("\(failures) error(s)")) }
-                if warnings > 0 { parts.append(yellow("\(warnings) warning(s)")) }
-                print(parts.joined(separator: ", "))
-            }
-            if failures > 0 { throw ExitCode.failure }
-        }
+      try report(Report(
+        config: ConfigSummary(
+          scheme: config.scheme, devices: config.devices.map(\.simulator), languages: config.languages,
+          outputDirectory: config.outputDirectory),
+        checks: checks))
     }
 
-    struct SetupPrompt: ParsableCommand {
-        static let configuration = CommandConfiguration(
-            commandName: "setup-prompt",
-            abstract: "Print instructions for an AI coding agent to set up screenshot capture in this project.",
-            discussion: """
-                Run it in the project root and give the output to a coding agent (Claude Code, Codex, Cursor, \
-                Xcode's coding assistant…). It starts with what the project already has, so running it again \
-                after a partial setup shows what's left. --design prints the prompt for a web app that turns the \
-                captured screenshots into App Store images instead.
-                """
-        )
+    /// Prints the report, then exits 1 when a check failed (warnings don't), text and JSON alike.
+    private func report(_ report: Report) throws {
+      if jsonOption.json {
+        try printJSON(report)
+        if report.checks.contains(where: { $0.status == "fail" }) { throw ExitCode.failure }
+        return
+      }
+      let checks = report.checks
+      let nameWidth = max(checks.map { $0.name.count }.max() ?? 0, 6)
 
-        @Flag(name: .long, help: "Print the prompt for a screenshot design generator instead.")
-        var design = false
-
-        @Flag(name: .long, help: "Copy the prompt to the clipboard instead of printing it.")
-        var copy = false
-
-        func run() throws {
-            let survey = ScreenshotProjectSurvey.survey()
-            let root = FileManager.default.currentDirectoryPath
-            let prompt = design
-                ? ScreenshotSetupPrompt.design(survey, root: root) : ScreenshotSetupPrompt.capture(survey, root: root)
-            guard copy else {
-                print(prompt, terminator: "")
-                return
-            }
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/pbcopy")
-            let pipe = Pipe()
-            process.standardInput = pipe
-            try process.run()
-            try pipe.fileHandleForWriting.write(contentsOf: Data(prompt.utf8))
-            try pipe.fileHandleForWriting.close()
-            process.waitUntilExit()
-            guard process.terminationStatus == 0 else {
-                throw ValidationError("pbcopy failed (exit \(process.terminationStatus)); nothing was copied. Run without --copy to print the prompt.")
-            }
-            success("Copied", "the prompt to the clipboard. Paste it into your coding agent.")
+      for check in checks {
+        let paddedName = check.name.padding(toLength: nameWidth, withPad: " ", startingAt: 0)
+        let mark = switch check.status {
+          case "pass": green("✓")
+          case "warn": yellow("!")
+          default: red("✗")
         }
+        print("  \(mark) \(bold(paddedName))  \(check.detail)")
+      }
+
+      let failures = checks.filter { $0.status == "fail" }.count
+      let warnings = checks.filter { $0.status == "warn" }.count
+
+      print()
+      if failures == 0 && warnings == 0 {
+        success("All checks passed.")
+      } else {
+        var parts: [String] = []
+        if failures > 0 { parts.append(red("\(failures) error(s)")) }
+        if warnings > 0 { parts.append(yellow("\(warnings) warning(s)")) }
+        print(parts.joined(separator: ", "))
+      }
+      if failures > 0 { throw ExitCode.failure }
     }
+  }
 
-    struct CreateHelper: ParsableCommand {
-        static let configuration = CommandConfiguration(
-            commandName: "create-helper",
-            abstract: "Generate ScreenshotHelper.swift to add to your UITest target."
-        )
-
-        @Option(name: .shortAndLong, help: "Output file path.")
-        var output: String?
-
-        @Flag(name: .shortAndLong, help: "Overwrite an existing file without asking.")
-        var yes = false
-
-        func run() throws {
-            if yes { autoConfirm = true }
-            let filename: String
-            if let output {
-                filename = output
-            } else if yes {
-                filename = ScreenshotCommand.defaultHelperPath
-            } else {
-                let defaultPath = ScreenshotCommand.defaultHelperPath
-                let input = readAnswer("Enter filename [\(defaultPath)]: ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                filename = input.isEmpty ? defaultPath : input
-            }
-
-            let outputPath = expandPath(filename)
-
-            if FileManager.default.fileExists(atPath: outputPath) {
-                guard confirm("File already exists at \(filename). Overwrite? [y/N] ") else {
-                    print("Cancelled.")
-                    return
-                }
-            }
-
-            // Ensure parent directory exists
-            let parentDir = (outputPath as NSString).deletingLastPathComponent
-            try FileManager.default.createDirectory(atPath: parentDir, withIntermediateDirectories: true)
-
-            try Self.helperSource.write(toFile: outputPath, atomically: true, encoding: .utf8)
-            success("Created", "\(filename)")
-            print("Add this file to your UITest target.")
-        }
-
-        static let helperVersion = "1.4"
-
-        /// The version marker of the helper at `path`: nil when there's no file, empty when it has
-        /// no marker.
-        static func installedVersion(at path: String) -> String? {
-            guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
-            guard let match = content.firstMatch(of: /ScreenshotHelperVersion \[(.+?)\]/) else { return "" }
-            return String(match.1)
-        }
-
-        static let helperSource = """
-        //
-        //  ScreenshotHelper.swift
-        //  Add this file to your UITest target.
-        //
-        //  Generated by ascelerate screenshot
-        //  ScreenshotHelperVersion [\(helperVersion)]
-        //
-
-        import Foundation
-        import XCTest
-
-        // MARK: - Public API
-
-        /// Call this in your test's setUp() before launching the app.
-        /// Set `waitForAnimations: false` if you disable animations via config.
-        @MainActor
-        func setupScreenshots(_ app: XCUIApplication, waitForAnimations: Bool = true) {
-            Screenshot.setup(app, waitForAnimations: waitForAnimations)
-        }
-
-        /// Copy this function to your AppDelegate or SceneDelegate and call it on launch
-        /// to disable animations when running in screenshot mode.
-        /// Pair with `disableAnimations: true` in screenshot.yml.
-        @MainActor
-        func disableAnimationsIfNeeded() {
-            if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
-                UIView.setAnimationsEnabled(false)
-            }
-        }
-
-        /// Call this to capture a screenshot with the given name.
-        @MainActor
-        func screenshot(_ name: String) {
-            Screenshot.capture(name)
-        }
-
-        /// iPhone Duo simulator (Xcode 27.1+) only: folds or unfolds the device, then waits
-        /// for the system to settle on the matching display. Every boot starts closed.
-        /// Does nothing on devices without a hinge.
-        @MainActor
-        func setHinge(_ state: Screenshot.Hinge) {
-            Screenshot.setHinge(state)
-        }
-
-        // MARK: - Implementation
-
-        @MainActor
-        enum Screenshot {
-            static var app: XCUIApplication?
-            static var waitForAnimations = true
-            static var cacheDirectory: URL?
-            static var deviceName: String = ""
-
-            static var screenshotsDirectory: URL? {
-                cacheDirectory?.appendingPathComponent("screenshots", isDirectory: true)
-            }
-
-            static func setup(_ app: XCUIApplication, waitForAnimations: Bool = true) {
-                Self.app = app
-                Self.waitForAnimations = waitForAnimations
-
-                do {
-                    let cacheDir = try getCacheDirectory()
-                    Self.cacheDirectory = cacheDir
-                    readDeviceName()
-                    setLanguage(app)
-                    setLocale(app)
-                    setLaunchArguments(app)
-                } catch {
-                    NSLog("ScreenshotHelper setup error: \\(error.localizedDescription)")
-                }
-            }
-
-            static func capture(_ name: String) {
-                guard let app else {
-                    NSLog("ScreenshotHelper: Call setupScreenshots() before screenshot()")
-                    return
-                }
-
-                NSLog("screenshot: \\(name)")
-
-                if waitForAnimations {
-                    sleep(1)
-                }
-
-                // Capture the key WINDOW, not the app or XCUIScreen:
-                // - XCUIScreen silently falls back to the simulator's current
-                //   framebuffer if the app already died (home-screen PNG saved
-                //   as a passing screenshot);
-                // - app.screenshot() composites a BROKEN buffer on rotated
-                //   simulators (portrait frame, landscape content pasted
-                //   un-rotated and cropped — unrecoverable);
-                // - windows.firstMatch.screenshot() is still an RPC into the
-                //   app (dead app -> loud failure) and returns the complete
-                //   rotated content, merely orientation-tagged.
-                let screenshotImage = app.windows.firstMatch.screenshot()
-
-                #if os(iOS) && !targetEnvironment(macCatalyst)
-                let image = normalizedOrientation(image: screenshotImage.image)
-                #else
-                let image = screenshotImage.image
-                #endif
-
-                guard let screenshotsDir = screenshotsDirectory else {
-                    NSLog("ScreenshotHelper: Screenshots directory not set. Call setupScreenshots() first.")
-                    return
-                }
-
-                do {
-                    let filename = deviceName.isEmpty ? "\\(name).png" : "\\(deviceName)-\\(name).png"
-                    let path = screenshotsDir.appendingPathComponent(filename)
-                    try image.pngData()?.write(to: path, options: .atomic)
-                } catch {
-                    NSLog("ScreenshotHelper: Failed to write screenshot '\\(name)': \\(error.localizedDescription)")
-                }
-            }
-
-            enum Hinge {
-                case open, closed
-            }
-
-            /// There is no XCTest or simctl API for the hinge. DeviceHub's hinge slider sends a
-            /// vendor-defined HID event (usage page 0xFF61, usage 0x5B) into the simulator; any
-            /// process in it, this test runner included, can register a virtual HID service of
-            /// the same shape and dispatch the same event. 180° is fully open, 0° fully closed.
-            static func setHinge(_ state: Hinge) {
-                // Only the iPhone Duo has a hinge; elsewhere this does nothing (no service, no wait).
-                guard ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4" else { return }
-                typealias CreateEvent = @convention(c) (CFAllocator?, UInt64, UInt32, UInt32, UInt32, UnsafePointer<UInt8>, CFIndex, UInt32) -> Unmanaged<CFTypeRef>?
-                typealias ServiceID = @convention(c) (AnyObject, Selector) -> UInt64
-                typealias Dispatch = @convention(c) (AnyObject, Selector, AnyObject) -> Bool
-
-                dlopen("/System/Library/PrivateFrameworks/HID.framework/HID", RTLD_NOW)
-                guard let iokit = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_NOW),
-                      let symbol = dlsym(iokit, "IOHIDEventCreateVendorDefinedEvent"),
-                      let serviceClass = NSClassFromString("HIDVirtualEventService") as? NSObject.Type else {
-                    XCTFail("ScreenshotHelper: The hinge HID API is not available in this simulator runtime")
-                    return
-                }
-
-                let delegate = HingeServiceDelegate()
-                let service = serviceClass.init()
-                service.perform(NSSelectorFromString("setDelegate:"), with: delegate)
-                service.perform(NSSelectorFromString("setDispatchQueue:"), with: DispatchQueue(label: "ScreenshotHelper.hinge"))
-                service.perform(NSSelectorFromString("activate"))
-                defer { service.perform(NSSelectorFromString("cancel")) }
-
-                let serviceIDSelector = NSSelectorFromString("serviceID")
-                guard unsafeBitCast(service.method(for: serviceIDSelector), to: ServiceID.self)(service, serviceIDSelector) != 0 else {
-                    XCTFail("ScreenshotHelper: The hinge HID service did not activate")
-                    return
-                }
-                usleep(300_000) // let the event system pick up the service
-
-                let payload = hingePayload(degrees: state == .open ? 180 : 0)
-                let createEvent = unsafeBitCast(symbol, to: CreateEvent.self)
-                guard let event = payload.withUnsafeBytes({
-                    createEvent(nil, mach_absolute_time(), 0xFF61, 0x5B, 0, $0.bindMemory(to: UInt8.self).baseAddress!, payload.count, 0)
-                })?.takeRetainedValue() else {
-                    XCTFail("ScreenshotHelper: Could not create the hinge event")
-                    return
-                }
-                let dispatchSelector = NSSelectorFromString("dispatchEvent:")
-                guard unsafeBitCast(service.method(for: dispatchSelector), to: Dispatch.self)(service, dispatchSelector, event) else {
-                    XCTFail("ScreenshotHelper: The hinge event was not delivered")
-                    return
-                }
-
-                // SpringBoard settles the fold in about 1.5 s, then moves the app to the other display.
-                sleep(2)
-            }
-
-            /// The event payload: `d3 00 00 00`, then items of [u24 aux][u8 type], the top bit of type
-            /// marking a container's last entry: 0x01 dictionary (aux = entries), 0x08 key
-            /// (NUL-terminated, aux = length incl. NUL), 0x09 string (aux = length), 0x04 double
-            /// (aux = 0x3f, 8 bytes LE). Every item is padded to 4 bytes.
-            private static func hingePayload(degrees: Double) -> Data {
-                var data = Data([0xD3, 0, 0, 0])
-                func header(_ aux: Int, _ type: UInt8) {
-                    data += [UInt8(aux & 0xFF), UInt8(aux >> 8 & 0xFF), UInt8(aux >> 16 & 0xFF), type]
-                }
-                func pad() { data += [UInt8](repeating: 0, count: (4 - data.count % 4) % 4) }
-                func key(_ key: String) { let bytes = Array(key.utf8) + [0]; header(bytes.count, 0x08); data += bytes; pad() }
-                func string(_ string: String) { let bytes = Array(string.utf8); header(bytes.count, 0x09); data += bytes; pad() }
-                header(4, 0x81)
-                key("provider"); string("com.apple.Virtualization.VirtualMachines")
-                key("source"); string("hinge-slider-control")
-                key("type"); string("range")
-                key("value"); header(0x3F, 0x84)
-                withUnsafeBytes(of: degrees.bitPattern.littleEndian) { data += $0 }
-                return data
-            }
-
-            // MARK: - Private
-
-            private static func readDeviceName() {
-                guard let cacheDirectory else { return }
-                let path = cacheDirectory.appendingPathComponent("device_name.txt")
-                guard let name = try? String(contentsOf: path, encoding: .utf8)
-                    .trimmingCharacters(in: .whitespacesAndNewlines),
-                      !name.isEmpty else { return }
-                deviceName = name
-            }
-
-            private static func getCacheDirectory() throws -> URL {
-                guard let simulatorHome = ProcessInfo().environment["SIMULATOR_HOST_HOME"] else {
-                    throw ScreenshotHelperError.noSimulatorHome
-                }
-                guard let udid = ProcessInfo().environment["SIMULATOR_UDID"] else {
-                    throw ScreenshotHelperError.noSimulatorUDID
-                }
-                return URL(fileURLWithPath: simulatorHome)
-                    .appendingPathComponent("Library/Caches/tools.ascelerate")
-                    .appendingPathComponent(udid)
-            }
-
-            private static func setLanguage(_ app: XCUIApplication) {
-                guard let cacheDirectory else { return }
-                let path = cacheDirectory.appendingPathComponent("language.txt")
-                guard let language = try? String(contentsOf: path, encoding: .utf8)
-                    .trimmingCharacters(in: .whitespacesAndNewlines),
-                      !language.isEmpty else { return }
-                app.launchArguments += ["-AppleLanguages", "(\\(language))"]
-            }
-
-            private static func setLocale(_ app: XCUIApplication) {
-                guard let cacheDirectory else { return }
-                let path = cacheDirectory.appendingPathComponent("locale.txt")
-                guard let locale = try? String(contentsOf: path, encoding: .utf8)
-                    .trimmingCharacters(in: .whitespacesAndNewlines),
-                      !locale.isEmpty else { return }
-                app.launchArguments += ["-AppleLocale", "\\"\\(locale)\\""]
-            }
-
-            private static func setLaunchArguments(_ app: XCUIApplication) {
-                guard let cacheDirectory else { return }
-                let path = cacheDirectory.appendingPathComponent("screenshot-launch_arguments.txt")
-                app.launchArguments += ["-ASC_SCREENSHOT", "YES", "-ui_testing"]
-
-                guard let args = try? String(contentsOf: path, encoding: .utf8),
-                      !args.isEmpty else { return }
-
-                // Split respecting quoted strings
-                let regex = try! NSRegularExpression(pattern: #"(".+?"|\\S+)"#)
-                // An NSString's length (UTF-16), not the character count: an emoji would cut the tail.
-                let matches = regex.matches(in: args, range: NSRange(location: 0, length: (args as NSString).length))
-                let parts = matches.map { (args as NSString).substring(with: $0.range) }
-                app.launchArguments += parts
-            }
-
-            #if os(iOS) && !targetEnvironment(macCatalyst)
-            /// PNG has no orientation metadata, so pngData() silently drops a
-            /// non-.up orientation tag — landscape captures arrive tagged
-            /// (landscape logical size over a portrait bitmap) and must be
-            /// BAKED by re-rendering. If a capture ever arrives as a raw
-            /// un-tagged portrait bitmap under a rotated device, wrap it in
-            /// the matching orientation first, then bake.
-            private static func normalizedOrientation(image: UIImage) -> UIImage {
-                var source = image
-                if source.imageOrientation == .up,
-                   XCUIDevice.shared.orientation.isLandscape,
-                   source.size.width < source.size.height,
-                   let cg = source.cgImage {
-                    source = UIImage(
-                        cgImage: cg, scale: source.scale,
-                        orientation: XCUIDevice.shared.orientation == .landscapeLeft
-                            ? .left : .right)
-                }
-                guard source.imageOrientation != .up else { return source }
-                let format = UIGraphicsImageRendererFormat()
-                format.scale = source.scale
-                let renderer = UIGraphicsImageRenderer(size: source.size, format: format)
-                return renderer.image { _ in
-                    source.draw(in: CGRect(origin: .zero, size: source.size))
-                }
-            }
-            #endif
-        }
-
-        /// Delegate of the virtual hinge HID service. The HID framework calls it on its own queue,
-        /// hence nonisolated (test targets may default to MainActor isolation).
-        final class HingeServiceDelegate: NSObject {
-            @objc(propertyForKey:forService:)
-            nonisolated func property(forKey key: String, service: Any) -> Any? {
-                let properties: [String: Any] = [
-                    "PrimaryUsagePage": 0xFF61, "PrimaryUsage": 0x5B,
-                    "DeviceUsagePairs": [["DeviceUsagePage": 0xFF61, "DeviceUsage": 0x5B]],
-                    "Transport": "CoreDevice", "Product": "ScreenshotHelper hinge",
-                    "VendorID": 0, "ProductID": 0, "VersionNumber": 0, "ReportInterval": 8000,
-                ]
-                return properties[key]
-            }
-
-            @objc(setProperty:forKey:forService:)
-            nonisolated func setProperty(_ value: Any?, forKey key: String, service: Any) -> Bool { true }
-
-            @objc(copyEventMatching:forService:)
-            nonisolated func copyEvent(matching: [AnyHashable: Any]?, service: Any) -> Any? { nil }
-
-            @objc(setOutputEvent:forService:)
-            nonisolated func setOutputEvent(_ event: Any, service: Any) -> Bool { true }
-
-            @objc(notification:withProperty:forService:)
-            nonisolated func notification(_ type: UInt32, property: [AnyHashable: Any]?, service: Any) {}
-        }
-
-        enum ScreenshotHelperError: Error, CustomDebugStringConvertible {
-            case noSimulatorHome
-            case noSimulatorUDID
-
-            var debugDescription: String {
-                switch self {
-                case .noSimulatorHome:
-                    "Could not find SIMULATOR_HOST_HOME. Are you running on a simulator?"
-                case .noSimulatorUDID:
-                    "Could not find SIMULATOR_UDID. Are you running on a simulator?"
-                }
-            }
-        }
+  struct SetupPrompt: ParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "setup-prompt",
+      abstract: "Print instructions for an AI coding agent to set up screenshot capture in this project.",
+      discussion: """
+        Run it in the project root and give the output to a coding agent (Claude Code, Codex, Cursor, \
+        Xcode's coding assistant…). It starts with what the project already has, so running it again \
+        after a partial setup shows what's left. --design prints the prompt for a web app that turns the \
+        captured screenshots into App Store images instead.
         """
+    )
+
+    @Flag(name: .long, help: "Print the prompt for a screenshot design generator instead.")
+    var design = false
+
+    @Flag(name: .long, help: "Copy the prompt to the clipboard instead of printing it.")
+    var copy = false
+
+    func run() throws {
+      let survey = ScreenshotProjectSurvey.survey()
+      let root = FileManager.default.currentDirectoryPath
+      let prompt = design
+        ? ScreenshotSetupPrompt.design(survey, root: root) : ScreenshotSetupPrompt.capture(survey, root: root)
+      guard copy else {
+        print(prompt, terminator: "")
+        return
+      }
+      let process = Process()
+      process.executableURL = URL(fileURLWithPath: "/usr/bin/pbcopy")
+      let pipe = Pipe()
+      process.standardInput = pipe
+      try process.run()
+      try pipe.fileHandleForWriting.write(contentsOf: Data(prompt.utf8))
+      try pipe.fileHandleForWriting.close()
+      process.waitUntilExit()
+      guard process.terminationStatus == 0 else {
+        throw ValidationError("pbcopy failed (exit \(process.terminationStatus)); nothing was copied. Run without --copy to print the prompt.")
+      }
+      success("Copied", "the prompt to the clipboard. Paste it into your coding agent.")
     }
+  }
+
+  struct CreateHelper: ParsableCommand {
+    static let configuration = CommandConfiguration(
+      commandName: "create-helper",
+      abstract: "Generate ScreenshotHelper.swift to add to your UITest target."
+    )
+
+    @Option(name: .shortAndLong, help: "Output file path.")
+    var output: String?
+
+    @Flag(name: .shortAndLong, help: "Overwrite an existing file without asking.")
+    var yes = false
+
+    func run() throws {
+      if yes { autoConfirm = true }
+      let filename: String
+      if let output {
+        filename = output
+      } else if yes {
+        filename = ScreenshotCommand.defaultHelperPath
+      } else {
+        let defaultPath = ScreenshotCommand.defaultHelperPath
+        let input = readAnswer("Enter filename [\(defaultPath)]: ", optional: true)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        filename = input.isEmpty ? defaultPath : input
+      }
+
+      let outputPath = expandPath(filename)
+
+      if FileManager.default.fileExists(atPath: outputPath) {
+        guard confirm("File already exists at \(filename). Overwrite? [y/N] ") else {
+          print("Cancelled.")
+          return
+        }
+      }
+
+      // Ensure parent directory exists
+      let parentDir = (outputPath as NSString).deletingLastPathComponent
+      try FileManager.default.createDirectory(atPath: parentDir, withIntermediateDirectories: true)
+
+      try Self.helperSource.write(toFile: outputPath, atomically: true, encoding: .utf8)
+      success("Created", "\(filename)")
+      print("Add this file to your UITest target.")
+    }
+
+    static let helperVersion = "1.4"
+
+    /// The version marker of the helper at `path`: nil when there's no file, empty when it has
+    /// no marker.
+    static func installedVersion(at path: String) -> String? {
+      guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
+      guard let match = content.firstMatch(of: /ScreenshotHelperVersion \[(.+?)\]/) else { return "" }
+      return String(match.1)
+    }
+
+    static let helperSource = """
+    //
+    //  ScreenshotHelper.swift
+    //  Add this file to your UITest target.
+    //
+    //  Generated by ascelerate screenshot
+    //  ScreenshotHelperVersion [\(helperVersion)]
+    //
+
+    import Foundation
+    import XCTest
+
+    // MARK: - Public API
+
+    /// Call this in your test's setUp() before launching the app.
+    /// Set `waitForAnimations: false` if you disable animations via config.
+    @MainActor
+    func setupScreenshots(_ app: XCUIApplication, waitForAnimations: Bool = true) {
+      Screenshot.setup(app, waitForAnimations: waitForAnimations)
+    }
+
+    /// Copy this function to your AppDelegate or SceneDelegate and call it on launch
+    /// to disable animations when running in screenshot mode.
+    /// Pair with `disableAnimations: true` in screenshot.yml.
+    @MainActor
+    func disableAnimationsIfNeeded() {
+      if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
+        UIView.setAnimationsEnabled(false)
+      }
+    }
+
+    /// Call this to capture a screenshot with the given name.
+    @MainActor
+    func screenshot(_ name: String) {
+      Screenshot.capture(name)
+    }
+
+    /// iPhone Duo simulator (Xcode 27.1+) only: folds or unfolds the device, then waits
+    /// for the system to settle on the matching display. Every boot starts closed.
+    /// Does nothing on devices without a hinge.
+    @MainActor
+    func setHinge(_ state: Screenshot.Hinge) {
+      Screenshot.setHinge(state)
+    }
+
+    // MARK: - Implementation
+
+    @MainActor
+    enum Screenshot {
+      static var app: XCUIApplication?
+      static var waitForAnimations = true
+      static var cacheDirectory: URL?
+      static var deviceName: String = ""
+
+      static var screenshotsDirectory: URL? {
+        cacheDirectory?.appendingPathComponent("screenshots", isDirectory: true)
+      }
+
+      static func setup(_ app: XCUIApplication, waitForAnimations: Bool = true) {
+        Self.app = app
+        Self.waitForAnimations = waitForAnimations
+
+        do {
+          let cacheDir = try getCacheDirectory()
+          Self.cacheDirectory = cacheDir
+          readDeviceName()
+          setLanguage(app)
+          setLocale(app)
+          setLaunchArguments(app)
+        } catch {
+          NSLog("ScreenshotHelper setup error: \\(error.localizedDescription)")
+        }
+      }
+
+      static func capture(_ name: String) {
+        guard let app else {
+          NSLog("ScreenshotHelper: Call setupScreenshots() before screenshot()")
+          return
+        }
+
+        NSLog("screenshot: \\(name)")
+
+        if waitForAnimations {
+          sleep(1)
+        }
+
+        // Capture the key WINDOW, not the app or XCUIScreen:
+        // - XCUIScreen silently falls back to the simulator's current
+        //   framebuffer if the app already died (home-screen PNG saved
+        //   as a passing screenshot);
+        // - app.screenshot() composites a BROKEN buffer on rotated
+        //   simulators (portrait frame, landscape content pasted
+        //   un-rotated and cropped — unrecoverable);
+        // - windows.firstMatch.screenshot() is still an RPC into the
+        //   app (dead app -> loud failure) and returns the complete
+        //   rotated content, merely orientation-tagged.
+        let screenshotImage = app.windows.firstMatch.screenshot()
+
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        let image = normalizedOrientation(image: screenshotImage.image)
+        #else
+        let image = screenshotImage.image
+        #endif
+
+        guard let screenshotsDir = screenshotsDirectory else {
+          NSLog("ScreenshotHelper: Screenshots directory not set. Call setupScreenshots() first.")
+          return
+        }
+
+        do {
+          let filename = deviceName.isEmpty ? "\\(name).png" : "\\(deviceName)-\\(name).png"
+          let path = screenshotsDir.appendingPathComponent(filename)
+          try image.pngData()?.write(to: path, options: .atomic)
+        } catch {
+          NSLog("ScreenshotHelper: Failed to write screenshot '\\(name)': \\(error.localizedDescription)")
+        }
+      }
+
+      enum Hinge {
+        case open, closed
+      }
+
+      /// There is no XCTest or simctl API for the hinge. DeviceHub's hinge slider sends a
+      /// vendor-defined HID event (usage page 0xFF61, usage 0x5B) into the simulator; any
+      /// process in it, this test runner included, can register a virtual HID service of
+      /// the same shape and dispatch the same event. 180° is fully open, 0° fully closed.
+      static func setHinge(_ state: Hinge) {
+        // Only the iPhone Duo has a hinge; elsewhere this does nothing (no service, no wait).
+        guard ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4" else { return }
+        typealias CreateEvent = @convention(c) (CFAllocator?, UInt64, UInt32, UInt32, UInt32, UnsafePointer<UInt8>, CFIndex, UInt32) -> Unmanaged<CFTypeRef>?
+        typealias ServiceID = @convention(c) (AnyObject, Selector) -> UInt64
+        typealias Dispatch = @convention(c) (AnyObject, Selector, AnyObject) -> Bool
+
+        dlopen("/System/Library/PrivateFrameworks/HID.framework/HID", RTLD_NOW)
+        guard let iokit = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_NOW),
+              let symbol = dlsym(iokit, "IOHIDEventCreateVendorDefinedEvent"),
+              let serviceClass = NSClassFromString("HIDVirtualEventService") as? NSObject.Type else {
+          XCTFail("ScreenshotHelper: The hinge HID API is not available in this simulator runtime")
+          return
+        }
+
+        let delegate = HingeServiceDelegate()
+        let service = serviceClass.init()
+        service.perform(NSSelectorFromString("setDelegate:"), with: delegate)
+        service.perform(NSSelectorFromString("setDispatchQueue:"), with: DispatchQueue(label: "ScreenshotHelper.hinge"))
+        service.perform(NSSelectorFromString("activate"))
+        defer { service.perform(NSSelectorFromString("cancel")) }
+
+        let serviceIDSelector = NSSelectorFromString("serviceID")
+        guard unsafeBitCast(service.method(for: serviceIDSelector), to: ServiceID.self)(service, serviceIDSelector) != 0 else {
+          XCTFail("ScreenshotHelper: The hinge HID service did not activate")
+          return
+        }
+        usleep(300_000) // let the event system pick up the service
+
+        let payload = hingePayload(degrees: state == .open ? 180 : 0)
+        let createEvent = unsafeBitCast(symbol, to: CreateEvent.self)
+        guard let event = payload.withUnsafeBytes({
+          createEvent(nil, mach_absolute_time(), 0xFF61, 0x5B, 0, $0.bindMemory(to: UInt8.self).baseAddress!, payload.count, 0)
+        })?.takeRetainedValue() else {
+          XCTFail("ScreenshotHelper: Could not create the hinge event")
+          return
+        }
+        let dispatchSelector = NSSelectorFromString("dispatchEvent:")
+        guard unsafeBitCast(service.method(for: dispatchSelector), to: Dispatch.self)(service, dispatchSelector, event) else {
+          XCTFail("ScreenshotHelper: The hinge event was not delivered")
+          return
+        }
+
+        // SpringBoard settles the fold in about 1.5 s, then moves the app to the other display.
+        sleep(2)
+      }
+
+      /// The event payload: `d3 00 00 00`, then items of [u24 aux][u8 type], the top bit of type
+      /// marking a container's last entry: 0x01 dictionary (aux = entries), 0x08 key
+      /// (NUL-terminated, aux = length incl. NUL), 0x09 string (aux = length), 0x04 double
+      /// (aux = 0x3f, 8 bytes LE). Every item is padded to 4 bytes.
+      private static func hingePayload(degrees: Double) -> Data {
+        var data = Data([0xD3, 0, 0, 0])
+        func header(_ aux: Int, _ type: UInt8) {
+          data += [UInt8(aux & 0xFF), UInt8(aux >> 8 & 0xFF), UInt8(aux >> 16 & 0xFF), type]
+        }
+        func pad() { data += [UInt8](repeating: 0, count: (4 - data.count % 4) % 4) }
+        func key(_ key: String) { let bytes = Array(key.utf8) + [0]; header(bytes.count, 0x08); data += bytes; pad() }
+        func string(_ string: String) { let bytes = Array(string.utf8); header(bytes.count, 0x09); data += bytes; pad() }
+        header(4, 0x81)
+        key("provider"); string("com.apple.Virtualization.VirtualMachines")
+        key("source"); string("hinge-slider-control")
+        key("type"); string("range")
+        key("value"); header(0x3F, 0x84)
+        withUnsafeBytes(of: degrees.bitPattern.littleEndian) { data += $0 }
+        return data
+      }
+
+      // MARK: - Private
+
+      private static func readDeviceName() {
+        guard let cacheDirectory else { return }
+        let path = cacheDirectory.appendingPathComponent("device_name.txt")
+        guard let name = try? String(contentsOf: path, encoding: .utf8)
+          .trimmingCharacters(in: .whitespacesAndNewlines),
+            !name.isEmpty else { return }
+        deviceName = name
+      }
+
+      private static func getCacheDirectory() throws -> URL {
+        guard let simulatorHome = ProcessInfo().environment["SIMULATOR_HOST_HOME"] else {
+          throw ScreenshotHelperError.noSimulatorHome
+        }
+        guard let udid = ProcessInfo().environment["SIMULATOR_UDID"] else {
+          throw ScreenshotHelperError.noSimulatorUDID
+        }
+        return URL(fileURLWithPath: simulatorHome)
+          .appendingPathComponent("Library/Caches/tools.ascelerate")
+          .appendingPathComponent(udid)
+      }
+
+      private static func setLanguage(_ app: XCUIApplication) {
+        guard let cacheDirectory else { return }
+        let path = cacheDirectory.appendingPathComponent("language.txt")
+        guard let language = try? String(contentsOf: path, encoding: .utf8)
+          .trimmingCharacters(in: .whitespacesAndNewlines),
+            !language.isEmpty else { return }
+        app.launchArguments += ["-AppleLanguages", "(\\(language))"]
+      }
+
+      private static func setLocale(_ app: XCUIApplication) {
+        guard let cacheDirectory else { return }
+        let path = cacheDirectory.appendingPathComponent("locale.txt")
+        guard let locale = try? String(contentsOf: path, encoding: .utf8)
+          .trimmingCharacters(in: .whitespacesAndNewlines),
+            !locale.isEmpty else { return }
+        app.launchArguments += ["-AppleLocale", "\\"\\(locale)\\""]
+      }
+
+      private static func setLaunchArguments(_ app: XCUIApplication) {
+        guard let cacheDirectory else { return }
+        let path = cacheDirectory.appendingPathComponent("screenshot-launch_arguments.txt")
+        app.launchArguments += ["-ASC_SCREENSHOT", "YES", "-ui_testing"]
+
+        guard let args = try? String(contentsOf: path, encoding: .utf8),
+              !args.isEmpty else { return }
+
+        // Split respecting quoted strings
+        let regex = try! NSRegularExpression(pattern: #"(".+?"|\\S+)"#)
+        // An NSString's length (UTF-16), not the character count: an emoji would cut the tail.
+        let matches = regex.matches(in: args, range: NSRange(location: 0, length: (args as NSString).length))
+        let parts = matches.map { (args as NSString).substring(with: $0.range) }
+        app.launchArguments += parts
+      }
+
+      #if os(iOS) && !targetEnvironment(macCatalyst)
+      /// PNG has no orientation metadata, so pngData() silently drops a
+      /// non-.up orientation tag — landscape captures arrive tagged
+      /// (landscape logical size over a portrait bitmap) and must be
+      /// BAKED by re-rendering. If a capture ever arrives as a raw
+      /// un-tagged portrait bitmap under a rotated device, wrap it in
+      /// the matching orientation first, then bake.
+      private static func normalizedOrientation(image: UIImage) -> UIImage {
+        var source = image
+        if source.imageOrientation == .up,
+           XCUIDevice.shared.orientation.isLandscape,
+           source.size.width < source.size.height,
+           let cg = source.cgImage {
+          source = UIImage(
+            cgImage: cg, scale: source.scale,
+            orientation: XCUIDevice.shared.orientation == .landscapeLeft
+              ? .left : .right)
+        }
+        guard source.imageOrientation != .up else { return source }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = source.scale
+        let renderer = UIGraphicsImageRenderer(size: source.size, format: format)
+        return renderer.image { _ in
+          source.draw(in: CGRect(origin: .zero, size: source.size))
+        }
+      }
+      #endif
+    }
+
+    /// Delegate of the virtual hinge HID service. The HID framework calls it on its own queue,
+    /// hence nonisolated (test targets may default to MainActor isolation).
+    final class HingeServiceDelegate: NSObject {
+      @objc(propertyForKey:forService:)
+      nonisolated func property(forKey key: String, service: Any) -> Any? {
+        let properties: [String: Any] = [
+          "PrimaryUsagePage": 0xFF61, "PrimaryUsage": 0x5B,
+          "DeviceUsagePairs": [["DeviceUsagePage": 0xFF61, "DeviceUsage": 0x5B]],
+          "Transport": "CoreDevice", "Product": "ScreenshotHelper hinge",
+          "VendorID": 0, "ProductID": 0, "VersionNumber": 0, "ReportInterval": 8000,
+        ]
+        return properties[key]
+      }
+
+      @objc(setProperty:forKey:forService:)
+      nonisolated func setProperty(_ value: Any?, forKey key: String, service: Any) -> Bool { true }
+
+      @objc(copyEventMatching:forService:)
+      nonisolated func copyEvent(matching: [AnyHashable: Any]?, service: Any) -> Any? { nil }
+
+      @objc(setOutputEvent:forService:)
+      nonisolated func setOutputEvent(_ event: Any, service: Any) -> Bool { true }
+
+      @objc(notification:withProperty:forService:)
+      nonisolated func notification(_ type: UInt32, property: [AnyHashable: Any]?, service: Any) {}
+    }
+
+    enum ScreenshotHelperError: Error, CustomDebugStringConvertible {
+      case noSimulatorHome
+      case noSimulatorUDID
+
+      var debugDescription: String {
+        switch self {
+        case .noSimulatorHome:
+          "Could not find SIMULATOR_HOST_HOME. Are you running on a simulator?"
+        case .noSimulatorUDID:
+          "Could not find SIMULATOR_UDID. Are you running on a simulator?"
+        }
+      }
+    }
+    """
+  }
 }

@@ -45,11 +45,11 @@ extension Ads {
           let pretty = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]) {
           report += "\n" + String(decoding: pretty, as: UTF8.self)
         }
-        FileHandle.standardError.write(Data((report + "\n").utf8))
+        try? FileHandle.standardError.write(contentsOf: Data((report + "\n").utf8))
         throw adsDryRunStop(method: method, path: path)
       },
       onRateLimitWait: { wait in
-        FileHandle.standardError.write(Data("Apple Ads rate limit reached; waiting \(wait) s.\n".utf8))
+        try? FileHandle.standardError.write(contentsOf: Data("Apple Ads rate limit reached; waiting \(wait) s.\n".utf8))
       },
       // The same allowance as App Store Connect's (seconds in total for the run; 0 waits none).
       maxRateLimitWait: ProcessInfo.processInfo.environment["ASCELERATE_MAX_RATE_LIMIT_WAIT"].flatMap(Int.init)

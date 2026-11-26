@@ -360,7 +360,7 @@ extension Ads {
       if let ad { try await setAdStatus(ad, .enabled, ads, client: client) }
     } catch {
       if !paused.isEmpty {
-        FileHandle.standardError.write(Data(
+        try? FileHandle.standardError.write(contentsOf: Data(
           "Paused in \(group): \(paused.joined(separator: ", ")), but the new ad wasn't enabled, so nothing serves there; resume one with 'ascelerate ads ads resume'.\n".utf8))
       }
       throw error

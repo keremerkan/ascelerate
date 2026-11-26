@@ -20,7 +20,7 @@ struct Config: Codable {
     }
 
     let data = try Data(contentsOf: configFile)
-    let config = try JSONDecoder().decode(Config.self, from: data)
+    let config = try decodeFile(Config.self, from: data, path: configFile.path)
     config.tightenKeys()
     return config
   }

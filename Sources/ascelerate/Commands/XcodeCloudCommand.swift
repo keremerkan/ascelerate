@@ -985,7 +985,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
           // With --json, progress goes to stderr and stdout gets the downloaded files as JSON.
           func say(_ text: String, terminator: String = "\n") {
             if jsonOption.json {
-              FileHandle.standardError.write(Data((text + terminator).utf8))
+              try? FileHandle.standardError.write(contentsOf: Data((text + terminator).utf8))
             } else {
               print(text, terminator: terminator)
               fflush(stdout)

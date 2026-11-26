@@ -59,6 +59,6 @@ final class RateLimitNotice: @unchecked Sendable {
   }
 
   private func write(_ text: String) {
-    FileHandle.standardError.write(Data(text.utf8))
+    try? FileHandle.standardError.write(contentsOf: Data(text.utf8))
   }
 }

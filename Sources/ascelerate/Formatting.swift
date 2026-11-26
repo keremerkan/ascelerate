@@ -55,7 +55,7 @@ func success(_ label: String, _ detail: String = "") {
 nonisolated(unsafe) private var activeProcesses: [Process] = []
 
 /// The dispatch source for SIGINT handling. Stored globally to keep it alive.
-nonisolated(unsafe) private var signalSource: (any DispatchSourceSignal)?
+nonisolated(unsafe) private var signalSource: [any DispatchSourceSignal]?
 
 /// Serializes access to `activeProcesses`, `interruptCleanup` and `signalSource`. Required because
 /// the screenshot runner spawns simctl/xcodebuild processes concurrently across
@@ -164,7 +164,8 @@ func runReportingErrors(_ process: Process, tool: String, errors kind: ToolError
       while true {
         let data = reader.availableData
         if data.isEmpty { break }
-        target.write(data)
+        // A reader that went away (EPIPE) mustn't abort the run: the throwing write, ignored.
+        try? target.write(contentsOf: data)
         pending.append(data)
         var start = pending.startIndex
         while let newline = pending[start...].firstIndex(of: 0x0A) {
@@ -208,37 +209,44 @@ private func setupSignalHandler() {
     return
   }
 
-  signal(SIGINT, { _ in })
-  let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .global())
-  source.setEventHandler {
-    // Snapshot the running processes under lock, then signal them outside the lock
-    // so a concurrent track/untrack can't deadlock with the kill syscall.
-    processLock.lock()
-    let snapshot = activeProcesses.filter { $0.isRunning }
-    let folders = interruptCleanup
-    processLock.unlock()
-    for process in snapshot {
-      let pid = process.processIdentifier
-      // Xcode's build service starts each compile in a process group of its own, so the group
-      // signal below doesn't reach them, and they kept compiling for a minute after the build
-      // stopped (seen 2026-10-23): list them before it stops.
-      let descendants = descendantProcesses(of: pid)
-      // SIGTERM instead of SIGINT: xcodebuild ignores SIGINT during package resolution.
-      // killpg to reach the entire process group (Foundation uses POSIX_SPAWN_SETPGROUP).
-      if killpg(pid, SIGTERM) != 0 {
-        kill(pid, SIGTERM)
+  // SIGTERM and SIGHUP too (a program following --json-events or a CI job
+  // stops the tool with SIGTERM), so the children are stopped and the folders cleaned up for
+  // each; the exit code is 128 plus the signal, as a shell reports it.
+  var sources: [DispatchSourceSignal] = []
+  for number in [SIGINT, SIGTERM, SIGHUP] {
+    signal(number, { _ in })
+    let source = DispatchSource.makeSignalSource(signal: number, queue: .global())
+    source.setEventHandler {
+      // Snapshot the running processes under lock, then signal them outside the lock
+      // so a concurrent track/untrack can't deadlock with the kill syscall.
+      processLock.lock()
+      let snapshot = activeProcesses.filter { $0.isRunning }
+      let folders = interruptCleanup
+      processLock.unlock()
+      for process in snapshot {
+        let pid = process.processIdentifier
+        // Xcode's build service starts each compile in a process group of its own, so the group
+        // signal below doesn't reach them, and they kept compiling for a minute after the build
+        // stopped (seen 2026-10-23): list them before it stops.
+        let descendants = descendantProcesses(of: pid)
+        // SIGTERM instead of SIGINT: xcodebuild ignores SIGINT during package resolution.
+        // killpg to reach the entire process group (Foundation uses POSIX_SPAWN_SETPGROUP).
+        if killpg(pid, SIGTERM) != 0 {
+          kill(pid, SIGTERM)
+        }
+        for descendant in descendants {
+          kill(descendant, SIGTERM)
+        }
       }
-      for descendant in descendants {
-        kill(descendant, SIGTERM)
+      for folder in folders {
+        try? FileManager.default.removeItem(atPath: folder)
       }
+      _exit(128 + number)
     }
-    for folder in folders {
-      try? FileManager.default.removeItem(atPath: folder)
-    }
-    _exit(130)
+    source.resume()
+    sources.append(source)
   }
-  source.resume()
-  signalSource = source
+  signalSource = sources
   processLock.unlock()
 }
 
@@ -854,7 +862,7 @@ func checkForUpdates() {
   }
   if !notes.isEmpty {
     // stderr: API commands may be running under --json, and stdout must stay parseable.
-    FileHandle.standardError.write(Data(("NOTE: " + notes.joined(separator: "\n      ") + "\n\n").utf8))
+    try? FileHandle.standardError.write(contentsOf: Data(("NOTE: " + notes.joined(separator: "\n      ") + "\n\n").utf8))
   }
 }
 
@@ -1255,7 +1263,7 @@ func matchPricePoints<P: ResolvablePricePoint>(
 func loadProductPricesFile(_ file: String?) throws -> ProductPricesFile {
   let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
   let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-  var parsed = try JSONDecoder().decode(ProductPricesFile.self, from: data)
+  var parsed = try decodeFile(ProductPricesFile.self, from: data, path: filePath)
   parsed.baseTerritory = parsed.baseTerritory?.uppercased()
   parsed.prices = Dictionary(
     parsed.prices.map { ($0.key.uppercased(), $0.value) }, uniquingKeysWith: { first, _ in first })
@@ -1421,4 +1429,14 @@ enum Table {
 /// A `--limit` is 1 or more: 0 and negatives used to go to Apple (or crash a local cut).
 func checkLimit(_ limit: Int, option: String = "--limit") throws {
   guard limit >= 1 else { throw ValidationError("\(option) must be 1 or more.") }
+}
+
+/// A file's JSON as `type`; a file that doesn't fit says so, naming the file and where it went
+/// wrong (it used to read as an unexpected response from App Store Connect).
+func decodeFile<T: Decodable>(_ type: T.Type, from data: Data, path: String) throws -> T {
+  do {
+    return try JSONDecoder().decode(type, from: data)
+  } catch let error as DecodingError {
+    throw ValidationError("Can't read \((path as NSString).lastPathComponent): \(describeDecodingError(error))")
+  }
 }

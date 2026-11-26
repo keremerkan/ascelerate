@@ -593,7 +593,7 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
       do {
         imageID = try await target.upload(path)
       } catch {
-        if let removed { FileHandle.standardError.write(Data((removed + "\n").utf8)) }
+        if let removed { try? FileHandle.standardError.write(contentsOf: Data((removed + "\n").utf8)) }
         throw error
       }
       // Apple checks the file in a few seconds; wait for its verdict, up to half a minute.

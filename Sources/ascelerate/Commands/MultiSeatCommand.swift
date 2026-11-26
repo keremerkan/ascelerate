@@ -535,7 +535,7 @@ extension SubCommand.Pricing {
           removed.append(price.territoryID)
         } catch {
           failed.append(price.territoryID)
-          FileHandle.standardError.write(Data("\(price.territoryID): \(describeError(error))\n".utf8))
+          try? FileHandle.standardError.write(contentsOf: Data("\(price.territoryID): \(describeError(error))\n".utf8))
         }
       }
       if !removed.isEmpty {

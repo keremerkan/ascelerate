@@ -1252,7 +1252,7 @@ struct AppsCommand: AsyncParsableCommand {
           MediaFile(path: expandedPath, fileName: fileName, fileSize: fileSize), versionID: appVersion.id, client: client)
       } catch {
         if let removed {
-          FileHandle.standardError.write(Data("The previous routing coverage (\(removed)) was removed; upload it again to put it back.\n".utf8))
+          try? FileHandle.standardError.write(contentsOf: Data("The previous routing coverage (\(removed)) was removed; upload it again to put it back.\n".utf8))
         }
         throw error
       }
@@ -3574,7 +3574,7 @@ struct AppsCommand: AsyncParsableCommand {
 }
 
 
-private func describeDecodingError(_ error: DecodingError) -> String {
+func describeDecodingError(_ error: DecodingError) -> String {
   switch error {
     case .typeMismatch(let type, let context):
       return "Type mismatch for \(type) at \(context.codingPath.map(\.stringValue).joined(separator: ".")): \(context.debugDescription)"

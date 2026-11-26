@@ -870,7 +870,7 @@ struct IAPCommand: AsyncParsableCommand {
 
         let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
         let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try JSONDecoder().decode([String: ProductLocaleFields].self, from: data)
+        let localeUpdates = try decodeFile([String: ProductLocaleFields].self, from: data, path: filePath)
 
         guard !localeUpdates.isEmpty else {
           throw ValidationError("JSON file contains no locale data.")

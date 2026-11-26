@@ -1414,7 +1414,7 @@ struct TestFlightCommand: AsyncParsableCommand {
 
         let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
         let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try JSONDecoder().decode([String: WhatsNewFields].self, from: data)
+        let localeUpdates = try decodeFile([String: WhatsNewFields].self, from: data, path: filePath)
         let updates = localeUpdates
           .compactMap { locale, fields in fields.whatsNew.map { (locale: locale, text: $0) } }
           .sorted { $0.locale < $1.locale }
@@ -1712,7 +1712,7 @@ struct TestFlightCommand: AsyncParsableCommand {
 
         let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
         let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try JSONDecoder().decode([String: BetaAppLocaleFields].self, from: data)
+        let localeUpdates = try decodeFile([String: BetaAppLocaleFields].self, from: data, path: filePath)
 
         guard !localeUpdates.isEmpty else {
           throw ValidationError("JSON file contains no locale data.")

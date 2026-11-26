@@ -129,6 +129,27 @@ final class FakeServer: @unchecked Sendable {
     #expect(notices.all.filter { $0 == nil }.count == 1)
   }
 
+  @Test func anAnswerDuringAnotherRequestsWaitDoesntEndIt() async {
+    // A got a 429 and sleeps; B, sent before it, answers 200: the wait goes on.
+    let gate = RateLimitGate()
+    let decision = await gate.wait(until: Date().addingTimeInterval(30), cap: nil)
+    #expect(decision.wait)
+    #expect(await gate.finish() == false)
+    #expect(await gate.pendingResume != nil)
+  }
+
+  @Test func capZeroReturnsTheFirst429AndZeroWaitsAtLeastASecond() async throws {
+    let gate = RateLimitGate()
+    #expect(await gate.wait(until: Date(), cap: 0).wait == false)
+    let server = FakeServer(limited: 1, retryAfter: "0")
+    let started = Date()
+    let (response, _) = try await RateLimitWaitMiddleware(
+      policy: ASCRateLimitWait(maxTotalWait: nil) { _ in }, gate: RateLimitGate()
+    ).intercept(request, body: nil, baseURL: URL(string: "https://api.example.com")!, operationID: "test") { _, _, _ in server.respond() }
+    #expect(response.status == .ok)
+    #expect(Date().timeIntervalSince(started) >= 1)
+  }
+
   @Test func longerWaitThanMaxWaitIsReturned() async throws {
     // A spent hourly quota asks for most of an hour: returned at once rather than waited out.
     let notices = Notices()

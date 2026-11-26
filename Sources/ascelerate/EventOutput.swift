@@ -52,7 +52,7 @@ enum EventOutput {
   /// A line of the readable progress.
   static func log(_ text: String = "") {
     if emitsEvents {
-      FileHandle.standardError.write(Data((text + "\n").utf8))
+      try? FileHandle.standardError.write(contentsOf: Data((text + "\n").utf8))
     } else {
       print(text)
     }
@@ -70,7 +70,7 @@ enum EventOutput {
     encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
     guard let data = try? encoder.encode(event), let line = String(data: data, encoding: .utf8) else { return }
     if let eventDescriptor {
-      FileHandle(fileDescriptor: eventDescriptor, closeOnDealloc: false).write(Data((line + "\n").utf8))
+      try? FileHandle(fileDescriptor: eventDescriptor, closeOnDealloc: false).write(contentsOf: Data((line + "\n").utf8))
     } else {
       print(line)
     }

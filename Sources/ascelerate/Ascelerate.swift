@@ -74,7 +74,7 @@ struct Ascelerate: AsyncParsableCommand {
         return
       }
       if let formatted = formatError(error) {
-        FileHandle.standardError.write(Data((formatted + "\n").utf8))
+        try? FileHandle.standardError.write(contentsOf: Data((formatted + "\n").utf8))
         exit(withError: ExitCode.failure)
       }
       exit(withError: error)
@@ -122,8 +122,12 @@ struct Ascelerate: AsyncParsableCommand {
     if let urlError = underlying as? URLError {
       return formatURLError(urlError)
     }
-    if underlying is DecodingError {
+    // Apple's answer that didn't decode came through the runtime; a local file's is the file's.
+    if wrapped is DecodingError {
       return "\(stderrRed("Error:")) Unexpected response from App Store Connect API: \(underlying)"
+    }
+    if let decoding = error as? DecodingError {
+      return "\(stderrRed("Error:")) A file couldn't be read: \(describeDecodingError(decoding))"
     }
     // Any other failure the runtime wrapped: report the cause, not the wrapper's request dump.
     if let wrapped {

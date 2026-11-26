@@ -74,7 +74,7 @@ extension ReportsCommand {
       }
 
       // Progress on stderr: stdout holds the report itself (--raw > file).
-      FileHandle.standardError.write(Data(("Fetching \(formatState(freq)) \(reportType.rawValue) report for \(reportDate)…" + "\n").utf8))
+      try? FileHandle.standardError.write(contentsOf: Data(("Fetching \(formatState(freq)) \(reportType.rawValue) report for \(reportDate)…" + "\n").utf8))
 
       let text: String
       do {
@@ -134,7 +134,7 @@ extension ReportsCommand {
       let client = try ClientFactory.makeClient()
 
       // Progress on stderr: stdout holds the report itself (--raw > file).
-      FileHandle.standardError.write(Data(("Fetching \(reportType.rawValue) report for \(date), region \(region.uppercased())…" + "\n").utf8))
+      try? FileHandle.standardError.write(contentsOf: Data(("Fetching \(reportType.rawValue) report for \(date), region \(region.uppercased())…" + "\n").utf8))
 
       let text: String
       do {

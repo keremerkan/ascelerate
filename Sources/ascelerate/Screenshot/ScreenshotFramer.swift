@@ -108,7 +108,13 @@ struct ScreenshotFramer: Sendable {
                     EventOutput.log("  [\(device.simulator)] " + red("Failed to load bezel: \(bezelPath)"))
                     continue
                 }
-                let screen = Self.findScreenArea(in: image)?.size ?? CGSize(width: image.width, height: image.height)
+                let area = Self.findScreenArea(in: image)
+                if area == nil {
+                    // No transparent screen found (not 32 bits per pixel, or an opaque centre):
+                    // screenshots go centred on the bezel.
+                    EventOutput.log("  [\(device.simulator)] " + yellow("Warning:") + " no transparent screen area in \((bezelPath as NSString).lastPathComponent); screenshots are centred on it.")
+                }
+                let screen = area?.size ?? CGSize(width: image.width, height: image.height)
                 images.append(Bezel(image: image, screen: screen))
             }
             if !images.isEmpty {
@@ -297,6 +303,8 @@ struct ScreenshotFramer: Sendable {
         var screenBottom = bottomEdge - 1
         var screenLeft = leftEdge + 1
         var screenRight = rightEdge - 1
+        // An opaque centre (a screen filled in, an image without real alpha) gives no screen.
+        guard screenLeft <= screenRight, screenTop <= screenBottom else { return nil }
 
         // Refine Y bounds by scanning across the X range
         for x in screenLeft...screenRight {
@@ -309,6 +317,7 @@ struct ScreenshotFramer: Sendable {
         }
 
         // Refine X bounds by scanning across the Y range
+        guard screenTop <= screenBottom else { return nil }
         for y in screenTop...screenBottom {
             if let edge = scanX(y: y, from: cx, toward: 0) {
                 screenLeft = min(screenLeft, edge + 1)

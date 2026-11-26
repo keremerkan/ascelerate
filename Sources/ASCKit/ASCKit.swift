@@ -129,7 +129,7 @@ struct DryRunMiddleware: ClientMiddleware {
         report += "\n" + String(decoding: data, as: UTF8.self)
       }
     }
-    FileHandle.standardError.write(Data((report + "\n").utf8))
+    try? FileHandle.standardError.write(contentsOf: Data((report + "\n").utf8))
     ASCDryRun.recordBlockedWrite()
     throw ASCDryRunStop(method: request.method.rawValue, path: path)
   }
@@ -348,7 +348,8 @@ actor RateLimitGate {
   func wait(until deadline: Date, cap: TimeInterval?) -> (wait: Bool, announce: Bool) {
     let start = pendingResume ?? Date()
     let added = max(0, deadline.timeIntervalSince(start))
-    if let cap, totalWaited + added > cap { return (false, false) }
+    // A cap of 0 returns the first 429, whatever it asks for.
+    if let cap, cap <= 0 || totalWaited + added > cap { return (false, false) }
     totalWaited += added
     let announce = !isWaiting || deadline.timeIntervalSince(resumeAt ?? .distantPast) >= 60
     if deadline > (resumeAt ?? .distantPast) { resumeAt = deadline }
@@ -356,9 +357,10 @@ actor RateLimitGate {
     return (true, announce)
   }
 
-  /// Called after a request went through; true once per wait, to announce the end.
+  /// Called after a request went through; true once per wait, to announce the end. A request
+  /// answered while another one still sleeps through a wait (sent before the 429) doesn't end it.
   func finish() -> Bool {
-    guard isWaiting else { return false }
+    guard isWaiting, pendingResume == nil else { return false }
     isWaiting = false
     resumeAt = nil
     return true
@@ -373,7 +375,9 @@ struct RateLimitWaitMiddleware: ClientMiddleware {
     _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String,
     next: @Sendable (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
+    var attempts = 0
     while true {
+      attempts += 1
       // Don't spend a request while another one already knows the quota is gone.
       if let resume = await gate.pendingResume {
         try await Task.sleep(for: .seconds(resume.timeIntervalSinceNow))
@@ -383,7 +387,9 @@ struct RateLimitWaitMiddleware: ClientMiddleware {
         if await gate.finish() { policy.onWait(nil) }
         return (response, responseBody)
       }
-      let seconds = response.headerFields[.retryAfter].flatMap(TimeInterval.init) ?? 60
+      // At least a second (a `Retry-After: 0` resent at once, for ever), and ten tries at most.
+      let seconds = max(1, response.headerFields[.retryAfter].flatMap(TimeInterval.init) ?? 60)
+      if attempts >= 10 { return (response, responseBody) }
       if let maxWait = policy.maxWait, seconds > maxWait { return (response, responseBody) }
       let decision = await gate.wait(until: Date().addingTimeInterval(seconds), cap: policy.maxTotalWait)
       guard decision.wait else { return (response, responseBody) }
@@ -540,6 +546,12 @@ struct PacingMiddleware: ClientMiddleware {
 
 // MARK: - Pagination
 
+/// A `links.next` App Store Connect sent that can't be followed: it doesn't parse, or it came back.
+public struct BadPageLink: LocalizedError, Sendable {
+  public let link: String
+  public var errorDescription: String? { "App Store Connect sent a next-page link that can't be followed: \(link)" }
+}
+
 /// Apple's list endpoints page through `links.next`, a full URL the spec models as no parameter
 /// at all. `allPages` replays the same generated operation with the request path swapped for
 /// that URL, which works for every list operation without per-endpoint cursor plumbing.
@@ -551,7 +563,10 @@ public enum ASCPaging {
     next: (Page) -> String?, _ fetch: () async throws -> Page
   ) async throws -> [Page] {
     var pages = [try await fetch()]
+    var seen: Set<String> = []
     while let link = next(pages[pages.count - 1]) {
+      // A link that comes back would page for ever.
+      guard seen.insert(link).inserted else { throw BadPageLink(link: link) }
       pages.append(try await page(link, fetch))
     }
     return pages
@@ -620,7 +635,9 @@ public enum ASCPaging {
   /// Fetches the page a `links.next` URL points to by replaying `fetch` (the first page when
   /// `link` is nil), for callers that load pages on demand.
   public static func page<Page: Sendable>(_ link: String?, _ fetch: () async throws -> Page) async throws -> Page {
-    guard let link, let url = URL(string: link) else { return try await fetch() }
+    guard let link else { return try await fetch() }
+    // A link that doesn't parse used to fetch the first page again (for ever, in a loop).
+    guard let url = URL(string: link) else { throw BadPageLink(link: link) }
     return try await $nextPageURL.withValue(url) { try await fetch() }
   }
 }

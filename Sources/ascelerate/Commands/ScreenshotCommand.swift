@@ -423,9 +423,12 @@ struct ScreenshotCommand: AsyncParsableCommand {
             let pipe = Pipe()
             process.standardInput = pipe
             try process.run()
-            pipe.fileHandleForWriting.write(Data(prompt.utf8))
+            try pipe.fileHandleForWriting.write(contentsOf: Data(prompt.utf8))
             try pipe.fileHandleForWriting.close()
             process.waitUntilExit()
+            guard process.terminationStatus == 0 else {
+                throw ValidationError("pbcopy failed (exit \(process.terminationStatus)); nothing was copied. Run without --copy to print the prompt.")
+            }
             success("Copied", "the prompt to the clipboard. Paste it into your coding agent.")
         }
     }

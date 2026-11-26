@@ -185,18 +185,30 @@ public enum ReviewSubmissions {
     return kinds.first(where: \.1)?.0 ?? "unknown"
   }
 
-  /// Sends a draft submission (`READY_FOR_REVIEW`) to App Review.
-  public static func submit(id: String, client: ASCClient) async throws {
-    _ = try await client.reviewSubmissionsUpdateInstance(
+  /// Sends a draft submission (`READY_FOR_REVIEW`) to App Review. Returns the state it answers with.
+  @discardableResult
+  public static func submit(id: String, client: ASCClient) async throws -> String? {
+    try await client.reviewSubmissionsUpdateInstance(
       path: .init(id: id), body: .json(.init(data: .init(attributes: .init(submitted: true), id: id, _type: "reviewSubmissions")))
-    ).ok
+    ).ok.body.json.data.attributes?.state
   }
 
   /// Takes a submission back from App Review (waiting or in review); it goes through `CANCELING`.
-  public static func cancel(id: String, client: ASCClient) async throws {
-    _ = try await client.reviewSubmissionsUpdateInstance(
+  /// Returns the state it answers with.
+  @discardableResult
+  public static func cancel(id: String, client: ASCClient) async throws -> String? {
+    try await client.reviewSubmissionsUpdateInstance(
       path: .init(id: id), body: .json(.init(data: .init(attributes: .init(canceled: true), id: id, _type: "reviewSubmissions")))
-    ).ok
+    ).ok.body.json.data.attributes?.state
+  }
+
+  /// A new, empty draft submission for the app on `platform`. Returns its ID.
+  public static func create(appID: String, platform: String, client: ASCClient) async throws -> String {
+    try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
+      attributes: .init(platform: platform),
+      relationships: .init(app: .init(data: .init(id: appID, _type: "apps"))),
+      _type: "reviewSubmissions"
+    )))).created.body.json.data.id
   }
 
   /// Takes an item out of a draft submission. A draft's item is deleted: `PATCH removed: true`
@@ -254,13 +266,7 @@ public enum ReviewSubmissions {
     }
     let foundBeforeCreating = found
     if found == nil {
-      found = try await unlessDryRunStopped {
-        try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
-          attributes: .init(platform: platform),
-          relationships: .init(app: .init(data: .init(id: appID, _type: "apps"))),
-          _type: "reviewSubmissions"
-        )))).created.body.json.data.id
-      } ?? "DRY-RUN-SUBMISSION"
+      found = try await unlessDryRunStopped { try await create(appID: appID, platform: platform, client: client) } ?? "DRY-RUN-SUBMISSION"
     }
     let draftID = found ?? ""
     // A draft found (not made here) may hold the version already: one left by an earlier try whose
@@ -272,8 +278,14 @@ public enum ReviewSubmissions {
       ).ok.body.json.data
       if items.contains(where: { $0.relationships?.appStoreVersion?.data?.id == versionID }) { return draftID }
     }
+    _ = try await unlessDryRunStopped { try await addItem(item, to: draftID, client: client) }
+    return draftID
+  }
+
+  /// Puts one item in a submission (the POST alone: no lookup, and a dry run's stop is thrown).
+  public static func addItem(_ item: DraftItem, to submissionID: String, client: ASCClient) async throws {
     var relationships = Components.Schemas.ReviewSubmissionItemCreateRequest.DataPayload.RelationshipsPayload(
-      reviewSubmission: .init(data: .init(id: draftID, _type: "reviewSubmissions")))
+      reviewSubmission: .init(data: .init(id: submissionID, _type: "reviewSubmissions")))
     switch item {
       case .appStoreVersion(let id):
         relationships.appStoreVersion = .init(data: .init(id: id, _type: "appStoreVersions"))
@@ -306,11 +318,8 @@ public enum ReviewSubmissions {
       case .retentionMessageVersion(let id):
         relationships.retentionMessageVersion = .init(data: .init(id: id, _type: "retentionMessageVersions"))
     }
-    _ = try await unlessDryRunStopped {
-      try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
-        relationships: relationships, _type: "reviewSubmissionItems")))).created
-    }
-    return draftID
+    _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
+      relationships: relationships, _type: "reviewSubmissionItems")))).created
   }
 
   /// Marks a rejected item's issues as resolved, after fixing them (and replying to App Review in

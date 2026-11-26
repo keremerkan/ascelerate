@@ -118,7 +118,7 @@ The import also replaces planned prices (they're listed before you confirm). Wit
 
 The file stores customer prices keyed by territory code. On import, each price is matched against the *target* product's own tiers by customer price, so the same file works across products and apps. Import replaces the schedule wholesale: territories not listed in the file revert to auto-equalize, and if the current schedule already matches the file the command is a no-op. Transient App Store Connect errors (HTTP 429/5xx) are retried automatically.
 
-A price that isn't one of the target's tiers fails the import, which lists the nearest tiers; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm.
+Every price that isn't one of the target's tiers is listed at once, with its nearest tiers, and nothing is sent; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm. Prices must be plain numbers, such as `4.99` (or `4,99` with a decimal comma); anything else (`1,300`, `1e2`, `-1`) is refused when the file is read, with every such price named, before any request.
 
 ## Availability
 

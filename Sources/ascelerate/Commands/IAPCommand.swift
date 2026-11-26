@@ -3,10 +3,6 @@ import ASCKit
 import AscelerateCore
 import Foundation
 
-extension Components.Schemas.InAppPurchasePricePoint: ResolvablePricePoint {
-  var resolverCustomerPrice: String? { attributes?.customerPrice }
-}
-
 struct IAPCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "iap",
@@ -73,59 +69,11 @@ struct IAPCommand: AsyncParsableCommand {
   /// Throws with nearest tiers if no exact match.
   static func resolvePricePoint(
     iapID: String, territoryID: String, customerPrice: String, client: ASCClient
-  ) async throws -> (point: Components.Schemas.InAppPurchasePricePoint, currency: String?) {
+  ) async throws -> (point: AppPricing.PricePoint, currency: String?) {
     let target = try parseCustomerPrice(customerPrice)
-
-    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.inAppPurchasesV2PricePointsGetToManyRelated(
-        path: .init(id: iapID), query: .init(filterTerritory: [territoryID], limit: 200, include: [.territory])
-      ).ok.body.json
-    }
-    let tiers = pages.flatMap(\.data)
-    let currency = pages.lazy.flatMap { $0.included ?? [] }.compactMap { $0.attributes?.currency }.first
-
-    let point = try findPricePoint(
-      in: tiers, target: target, priceLabel: customerPrice, territoryID: territoryID,
-      currency: currency)
+    let (tiers, currency) = try await InAppPurchases.pricePointsWithCurrency(purchaseID: iapID, territoryID: territoryID, client: client)
+    let point = try findPricePoint(in: tiers, target: target, priceLabel: customerPrice, territoryID: territoryID, currency: currency)
     return (point, currency)
-  }
-
-  /// Batch-resolves (territory, customer price) pairs to this IAP's price points,
-  /// fetching several territories' tier lists per request instead of one request per
-  /// territory. Prints one progress dot per chunk.
-  static func resolvePricePointsBatched(
-    iapID: String, prices: [(territoryID: String, price: String)],
-    client: ASCClient
-  ) async throws -> [(territoryID: String, point: Components.Schemas.InAppPurchasePricePoint, currency: String?)] {
-    var results: [(territoryID: String, point: Components.Schemas.InAppPurchasePricePoint, currency: String?)] = []
-    for chunk in prices.chunked(into: 10) {
-      var tiersByTerritory: [String: [Components.Schemas.InAppPurchasePricePoint]] = [:]
-      var currencyByTerritory: [String: String] = [:]
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.inAppPurchasesV2PricePointsGetToManyRelated(
-          path: .init(id: iapID),
-          query: .init(
-            filterTerritory: chunk.map(\.territoryID),
-            fieldsInAppPurchasePricePoints: [.customerPrice, .territory],
-            limit: 8000, include: [.territory])
-        ).ok.body.json
-      }
-      for page in pages {
-        for point in page.data {
-          guard let t = point.relationships?.territory?.data?.id else { continue }
-          tiersByTerritory[t, default: []].append(point)
-        }
-        for t in page.included ?? [] {
-          if let cur = t.attributes?.currency { currencyByTerritory[t.id] = cur }
-        }
-      }
-      results.append(contentsOf: try matchPricePoints(
-        prices: chunk, tiersByTerritory: tiersByTerritory,
-        currencyByTerritory: currencyByTerritory))
-      print(".", terminator: "")
-      fflush(stdout)
-    }
-    return results
   }
 
   /// Looks up the customer price string for a given price point ID in a given territory.
@@ -1011,24 +959,8 @@ struct IAPCommand: AsyncParsableCommand {
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         let territoryID = territory.uppercased()
-        var tiers: [PriceTier] = []
-        var currency: String?
-        let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.inAppPurchasesV2PricePointsGetToManyRelated(
-            path: .init(id: iap.id), query: .init(filterTerritory: [territoryID], limit: 200, include: [.territory])
-          ).ok.body.json
-        }
-        for page in pages {
-          tiers.append(
-            contentsOf: page.data.map {
-              PriceTier(
-                id: $0.id, customerPrice: $0.attributes?.customerPrice,
-                proceeds: $0.attributes?.proceeds)
-            })
-          for t in page.included ?? [] where currency == nil {
-            currency = t.attributes?.currency
-          }
-        }
+        let (points, currency) = try await InAppPurchases.pricePointsWithCurrency(purchaseID: iap.id, territoryID: territoryID, client: client)
+        let tiers = points.map { PriceTier(id: $0.id, customerPrice: $0.customerPrice, proceeds: $0.proceeds) }
 
         printPriceTiers(tiers, currency: currency, territoryID: territoryID)
       }
@@ -1135,7 +1067,7 @@ struct IAPCommand: AsyncParsableCommand {
         print("Set base price:")
         print("  Product ID:     \(productID)")
         print("  Base Territory: \(newBase)")
-        print("  Customer Price: \(basePoint.attributes?.customerPrice ?? "—") \(baseCurrency)")
+        print("  Customer Price: \(basePoint.customerPrice) \(baseCurrency)")
         print("  Start Date:     \(day ?? "now")")
         if let existingBase = schedule?.baseTerritoryID, existingBase != newBase {
           print("  Old base:       \(existingBase) (will revert to auto-equalize)")
@@ -1224,7 +1156,7 @@ struct IAPCommand: AsyncParsableCommand {
         print("\(isUpdate ? "Update" : "Add") manual price:")
         print("  Product ID:     \(productID)")
         print("  Territory:      \(territoryID)")
-        print("  Customer Price: \(newPoint.attributes?.customerPrice ?? "—") \(currency)")
+        print("  Customer Price: \(newPoint.customerPrice) \(currency)")
         print("  Start Date:     \(day ?? "now")")
         print("  Base Territory: \(schedule.baseTerritoryID) (preserved)")
         IAPCommand.printChangedPrices(schedule.pricesChanged(by: prices), in: schedule, replacing: [territoryID])
@@ -1354,7 +1286,7 @@ struct IAPCommand: AsyncParsableCommand {
         }
 
         try exportProductPrices(
-          ProductPricesFile(baseTerritory: schedule.baseTerritoryID, prices: prices),
+          PriceFile(baseTerritory: schedule.baseTerritoryID, prices: prices),
           productID: productID, output: output)
       }
     }
@@ -1401,7 +1333,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let priceFile = try loadProductPricesFile(file)
+        let priceFile = try loadPriceFile(file)
         let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, automatic: false, client: client)
         let base = (priceFile.baseTerritory ?? schedule?.baseTerritoryID ?? "USA").uppercased()
         guard priceFile.prices[base] != nil else {
@@ -1413,16 +1345,15 @@ struct IAPCommand: AsyncParsableCommand {
             : "A new base territory applies now; leave out --start-date.")
         }
 
-        // Resolve every listed price against this product's own tiers.
-        let sortedPrices = priceFile.prices.sorted { $0.key < $1.key }
-          .map { (territoryID: $0.key, price: $0.value) }
-        print("Resolving price points for \(sortedPrices.count) territor\(sortedPrices.count == 1 ? "y" : "ies")", terminator: "")
-        fflush(stdout)
-        let resolved = try await PriceSnapping.resolving(snap) {
-          let resolved = try await IAPCommand.resolvePricePointsBatched(iapID: iap.id, prices: sortedPrices, client: client)
-          print(" done.")
-          return resolved
-        }
+        // Every listed price against this product's own tiers (`PriceFile.resolve`), anchored on the
+        // base: the file's, else the product's current one, else the USA, as before.
+        let iapID = iap.id
+        let points = try await resolvePriceFile(
+          PriceFile(baseTerritory: base, prices: priceFile.prices), snap: snap, batchSize: 9,
+          tiers: { try await InAppPurchases.pricePoints(purchaseID: iapID, territoryIDs: $0, client: client) },
+          equalizations: { try await InAppPurchases.equalizations(of: $0, client: client).points })
+        let currencies = try await AppPricing.currencies(client: client)
+        let resolved = points.sorted { $0.key < $1.key }.map { (territoryID: $0.key, point: $0.value, currency: currencies[$0.key]) }
         guard let baseEntry = resolved.first(where: { $0.territoryID == base }) else {
           throw ValidationError("The file has no price for the base territory \(base).")
         }
@@ -1449,10 +1380,10 @@ struct IAPCommand: AsyncParsableCommand {
         print()
         print("Import price schedule:")
         print("  Product ID:     \(productID)")
-        print("  Base Territory: \(base) at \(baseEntry.point.attributes?.customerPrice ?? "?") \(baseEntry.currency ?? "")")
+        print("  Base Territory: \(base) at \(baseEntry.point.customerPrice) \(baseEntry.currency ?? "")")
         if overrides.count <= 10 {
           for entry in overrides {
-            print("  Override:       \(entry.territoryID) at \(entry.point.attributes?.customerPrice ?? "?") \(entry.currency ?? "")")
+            print("  Override:       \(entry.territoryID) at \(entry.point.customerPrice) \(entry.currency ?? "")")
           }
         } else if !overrides.isEmpty {
           print("  Overrides:      \(overrides.count) territories")
@@ -1703,18 +1634,18 @@ struct IAPCommand: AsyncParsableCommand {
         // Build (territory, pricePointID) tuples
         var priceEntries: [(territory: String, pricePointID: String)] = []
         if equalizeAllTerritories {
-          var equalized = try await ASCPaging.allPages(next: { $0.links.next }) {
+          let equalized = try await ASCPaging.allPages(next: { $0.links.next }) {
             try await client.inAppPurchasePricePointsEqualizationsGetToManyRelated(
               path: .init(id: resolved.point.id),
               query: .init(filterInAppPurchaseV2: [iap.id], limit: 200, include: [.territory])
             ).ok.body.json
           }.flatMap(\.data)
-          if !equalized.contains(where: { $0.relationships?.territory?.data?.id == territoryID }) {
-            equalized.insert(resolved.point, at: 0)
-          }
           for point in equalized {
             guard let t = point.relationships?.territory?.data?.id else { continue }
             priceEntries.append((t, point.id))
+          }
+          if !priceEntries.contains(where: { $0.territory == territoryID }) {
+            priceEntries.insert((territoryID, resolved.point.id), at: 0)
           }
         } else {
           priceEntries.append((territoryID, resolved.point.id))
@@ -1726,7 +1657,7 @@ struct IAPCommand: AsyncParsableCommand {
         print("  IAP:           \(productID)")
         print("  Name:          \(name)")
         print("  Eligibilities: \(eligibilities.map { $0.rawValue }.joined(separator: ", "))")
-        print("  Source Tier:   \(resolved.point.attributes?.customerPrice ?? "?") \(resolved.currency ?? "") (\(territoryID))")
+        print("  Source Tier:   \(resolved.point.customerPrice) \(resolved.currency ?? "") (\(territoryID))")
         print("  Territories:   \(priceEntries.count)\(equalizeAllTerritories ? " (equalized)" : " (single)")")
         print()
 

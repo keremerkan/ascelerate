@@ -416,15 +416,12 @@ struct AppsCommand: AsyncParsableCommand {
 
         // Parse JSON
         let data = try Data(contentsOf: URL(fileURLWithPath: expandedPath))
+        // The core's reader and wording (Kerem, 2026-11-26), shared with the app.
         let localeUpdates: [String: LocaleFields]
         do {
-          localeUpdates = try JSONDecoder().decode([String: LocaleFields].self, from: data)
-        } catch let error as DecodingError {
-          throw ValidationError("Invalid JSON: \(describeDecodingError(error))")
-        }
-        
-        if localeUpdates.isEmpty {
-          throw ValidationError("JSON file contains no locale entries.")
+          localeUpdates = try LocalizationFile.decode(data, as: LocaleFields.self)
+        } catch let error as LocalizationFile.FileError {
+          throw ValidationError(error.localizedDescription)
         }
         for (locale, fields) in localeUpdates { try Localizations.checkURLs(fields, locale: locale) }
         
@@ -1783,12 +1780,7 @@ struct AppsCommand: AsyncParsableCommand {
               try await addVersion(appVersion, versionString: versionString, to: id, client: client)
             }
           default:
-            let submission = try await client.reviewSubmissionsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(platform: platformValue.rawValue),
-              relationships: .init(app: .init(data: .init(id: app.id, _type: "apps"))),
-              _type: "reviewSubmissions"
-            )))).created.body.json
-            submissionID = submission.data.id
+            submissionID = try await ReviewSubmissions.create(appID: app.id, platform: platformValue.rawValue, client: client)
             print("Created review submission (\(submissionID))")
             try await addVersion(appVersion, versionString: versionString, to: submissionID, client: client)
         }
@@ -1797,12 +1789,7 @@ struct AppsCommand: AsyncParsableCommand {
         try await addPendingGameCenterItems(
           app: app, versionID: appVersion.id, submissionID: submissionID, platform: platformValue.rawValue, client: client)
 
-        let result = try await client.reviewSubmissionsUpdateInstance(
-          path: .init(id: submissionID),
-          body: .json(.init(data: .init(
-            attributes: .init(submitted: true), id: submissionID, _type: "reviewSubmissions")))
-        ).ok.body.json
-        let state = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
+        let state = try await ReviewSubmissions.submit(id: submissionID, client: client).map { formatState($0) } ?? "unknown"
         print()
         success("Submitted for review.")
         print("  State: \(state)")
@@ -1850,13 +1837,7 @@ struct AppsCommand: AsyncParsableCommand {
       private func addVersion(
         _ appVersion: Components.Schemas.AppStoreVersion, versionString: String, to submissionID: String, client: ASCClient
       ) async throws {
-        _ = try await client.reviewSubmissionItemsCreateInstance(body: .json(.init(data: .init(
-          relationships: .init(
-            appStoreVersion: .init(data: .init(id: appVersion.id, _type: "appStoreVersions")),
-            reviewSubmission: .init(data: .init(id: submissionID, _type: "reviewSubmissions"))
-          ),
-          _type: "reviewSubmissionItems"
-        )))).created
+        try await ReviewSubmissions.addItem(.appStoreVersion(appVersion.id), to: submissionID, client: client)
         print("Added version \(versionString) to submission")
       }
 
@@ -2009,11 +1990,7 @@ struct AppsCommand: AsyncParsableCommand {
         }
         
         for item in rejectedItems {
-          _ = try await client.reviewSubmissionItemsUpdateInstance(
-            path: .init(id: item.id),
-            body: .json(.init(data: .init(
-              attributes: .init(resolved: true), id: item.id, _type: "reviewSubmissionItems")))
-          ).ok
+          try await ReviewSubmissions.resolveItem(id: item.id, client: client)
         }
         
         print()
@@ -2079,13 +2056,7 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
         
-        let result = try await client.reviewSubmissionsUpdateInstance(
-          path: .init(id: submission.id),
-          body: .json(.init(data: .init(
-            attributes: .init(canceled: true), id: submission.id, _type: "reviewSubmissions")))
-        ).ok.body.json
-        
-        let newState = result.data.attributes?.state.map { formatState($0) } ?? "unknown"
+        let newState = try await ReviewSubmissions.cancel(id: submission.id, client: client).map { formatState($0) } ?? "unknown"
         print()
         success("Submission cancelled.")
         print("  State: \(newState)")
@@ -2585,15 +2556,12 @@ struct AppsCommand: AsyncParsableCommand {
 
         // Parse JSON
         let data = try Data(contentsOf: URL(fileURLWithPath: expandedPath))
+        // The core's reader and wording (Kerem, 2026-11-26), shared with the app.
         let localeUpdates: [String: AppInfoLocaleFields]
         do {
-          localeUpdates = try JSONDecoder().decode([String: AppInfoLocaleFields].self, from: data)
-        } catch let error as DecodingError {
-          throw ValidationError("Invalid JSON: \(describeDecodingError(error))")
-        }
-        
-        if localeUpdates.isEmpty {
-          throw ValidationError("JSON file contains no locale entries.")
+          localeUpdates = try LocalizationFile.decode(data, as: AppInfoLocaleFields.self)
+        } catch let error as LocalizationFile.FileError {
+          throw ValidationError(error.localizedDescription)
         }
         if let tooLong = FieldsOverLimit(localeUpdates.mapValues(\.overLimit)) { throw tooLong }
 
@@ -2796,39 +2764,9 @@ struct AppsCommand: AsyncParsableCommand {
           return v ? "Yes" : "No"
         }
       
-        // Intensity-based ratings
-        let intensityRows: [(String, String)] = [
-          ("Alcohol, Tobacco, or Drug Use", intensityLabel(attrs.alcoholTobaccoOrDrugUseOrReferences)),
-          ("Contests", intensityLabel(attrs.contests)),
-          ("Gambling (simulated)", intensityLabel(attrs.gamblingSimulated)),
-          ("Guns or Other Weapons", intensityLabel(attrs.gunsOrOtherWeapons)),
-          ("Horror or Fear Themes", intensityLabel(attrs.horrorOrFearThemes)),
-          ("Mature or Suggestive Themes", intensityLabel(attrs.matureOrSuggestiveThemes)),
-          ("Profanity or Crude Humor", intensityLabel(attrs.profanityOrCrudeHumor)),
-          ("Sexual Content or Nudity", intensityLabel(attrs.sexualContentOrNudity)),
-          ("Sexual Content (graphic)", intensityLabel(attrs.sexualContentGraphicAndNudity)),
-          ("Violence (cartoon/fantasy)", intensityLabel(attrs.violenceCartoonOrFantasy)),
-          ("Violence (realistic)", intensityLabel(attrs.violenceRealistic)),
-          ("Violence (graphic/sadistic)", intensityLabel(attrs.violenceRealisticProlongedGraphicOrSadistic)),
-          ("Medical Information", intensityLabel(attrs.medicalOrTreatmentInformation)),
-        ]
-      
-        // Boolean ratings
-        let boolRows: [(String, String)] = [
-          ("Advertising", boolLabel(attrs.isAdvertising)),
-          ("Gambling", boolLabel(attrs.isGambling)),
-          ("Unrestricted Web Access", boolLabel(attrs.isUnrestrictedWebAccess)),
-          ("User-Generated Content", boolLabel(attrs.isUserGeneratedContent)),
-          ("Messaging and Chat", boolLabel(attrs.isMessagingAndChat)),
-          ("Loot Box", boolLabel(attrs.isLootBox)),
-          ("Health/Wellness Topics", boolLabel(attrs.isHealthOrWellnessTopics)),
-          ("Parental Controls", boolLabel(attrs.isParentalControls)),
-          ("Age Assurance", boolLabel(attrs.isAgeAssurance)),
-          ("Social Media", boolLabel(attrs.isSocialMedia)),
-          ("Social Media Age Restricted", boolLabel(attrs.isSocialMediaAgeRestricted)),
-          ("Shared Location", boolLabel(attrs.isSharedLocation)),
-          ("Dating and Relationships", boolLabel(attrs.isDatingAndRelationships)),
-        ]
+        // Intensity-based and yes-or-no ratings, from the core's one list of the questions.
+        let intensityRows: [(String, String)] = AgeRatingFields.intensityQuestions.map { ($0.label, intensityLabel(attrs[keyPath: $0.key])) }
+        let boolRows: [(String, String)] = AgeRatingFields.yesNoQuestions.map { ($0.label, boolLabel(attrs[keyPath: $0.key])) }
       
         // Other
         let kidsAgeBand = attrs.kidsAgeBand?
@@ -2937,32 +2875,12 @@ struct AppsCommand: AsyncParsableCommand {
           print()
           print("Age rating updates:")
           var changeCount = 0
-          if let v = fields.alcoholTobaccoOrDrugUseOrReferences { print("  Alcohol, Tobacco, or Drug Use: \(v)"); changeCount += 1 }
-          if let v = fields.contests { print("  Contests: \(v)"); changeCount += 1 }
-          if let v = fields.gamblingSimulated { print("  Gambling (simulated): \(v)"); changeCount += 1 }
-          if let v = fields.gunsOrOtherWeapons { print("  Guns or Other Weapons: \(v)"); changeCount += 1 }
-          if let v = fields.horrorOrFearThemes { print("  Horror or Fear Themes: \(v)"); changeCount += 1 }
-          if let v = fields.matureOrSuggestiveThemes { print("  Mature or Suggestive Themes: \(v)"); changeCount += 1 }
-          if let v = fields.profanityOrCrudeHumor { print("  Profanity or Crude Humor: \(v)"); changeCount += 1 }
-          if let v = fields.sexualContentOrNudity { print("  Sexual Content or Nudity: \(v)"); changeCount += 1 }
-          if let v = fields.sexualContentGraphicAndNudity { print("  Sexual Content (graphic): \(v)"); changeCount += 1 }
-          if let v = fields.violenceCartoonOrFantasy { print("  Violence (cartoon/fantasy): \(v)"); changeCount += 1 }
-          if let v = fields.violenceRealistic { print("  Violence (realistic): \(v)"); changeCount += 1 }
-          if let v = fields.violenceRealisticProlongedGraphicOrSadistic { print("  Violence (graphic/sadistic): \(v)"); changeCount += 1 }
-          if let v = fields.medicalOrTreatmentInformation { print("  Medical Information: \(v)"); changeCount += 1 }
-          if let v = fields.isAdvertising { print("  Advertising: \(v)"); changeCount += 1 }
-          if let v = fields.isGambling { print("  Gambling: \(v)"); changeCount += 1 }
-          if let v = fields.isUnrestrictedWebAccess { print("  Unrestricted Web Access: \(v)"); changeCount += 1 }
-          if let v = fields.isUserGeneratedContent { print("  User-Generated Content: \(v)"); changeCount += 1 }
-          if let v = fields.isMessagingAndChat { print("  Messaging and Chat: \(v)"); changeCount += 1 }
-          if let v = fields.isLootBox { print("  Loot Box: \(v)"); changeCount += 1 }
-          if let v = fields.isHealthOrWellnessTopics { print("  Health/Wellness Topics: \(v)"); changeCount += 1 }
-          if let v = fields.isParentalControls { print("  Parental Controls: \(v)"); changeCount += 1 }
-          if let v = fields.isAgeAssurance { print("  Age Assurance: \(v)"); changeCount += 1 }
-          if let v = fields.isSocialMedia { print("  Social Media: \(v)"); changeCount += 1 }
-          if let v = fields.isSocialMediaAgeRestricted { print("  Social Media Age Restricted: \(v)"); changeCount += 1 }
-          if let v = fields.isSharedLocation { print("  Shared Location: \(v)"); changeCount += 1 }
-          if let v = fields.isDatingAndRelationships { print("  Dating and Relationships: \(v)"); changeCount += 1 }
+          for question in AgeRatingFields.intensityQuestions {
+            if let v = fields[keyPath: question.key] { print("  \(question.label): \(v)"); changeCount += 1 }
+          }
+          for question in AgeRatingFields.yesNoQuestions {
+            if let v = fields[keyPath: question.key] { print("  \(question.label): \(v)"); changeCount += 1 }
+          }
           if let v = fields.kidsAgeBand { print("  Kids Age Band: \(v)"); changeCount += 1 }
           if let v = fields.ageRatingOverride { print("  Age Rating Override: \(v)"); changeCount += 1 }
           if let v = fields.koreaAgeRatingOverride { print("  Korea Age Rating Override: \(v)"); changeCount += 1 }

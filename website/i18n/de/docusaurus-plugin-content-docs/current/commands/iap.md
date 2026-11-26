@@ -118,7 +118,7 @@ Der Import ersetzt auch geplante Preise (sie werden vor der Bestätigung aufgeli
 
 Die Datei enthält Kundenpreise, indiziert nach Regionscode. Beim Import wird jeder Preis anhand des Kundenpreises den Preisstufen des *Zielprodukts* zugeordnet — dieselbe Datei funktioniert daher produkt- und app-übergreifend. Der Import ersetzt den Preisplan vollständig: Regionen, die nicht in der Datei aufgeführt sind, kehren zur automatischen Anpassung zurück; entspricht der aktuelle Preisplan bereits der Datei, ändert der Befehl nichts. Vorübergehende Fehler von App Store Connect (HTTP 429/5xx) werden automatisch wiederholt.
 
-Ein Preis, der keine Preisstufe des Ziels ist, lässt den Import fehlschlagen; die Meldung nennt die nächstgelegenen Preisstufen. Mit `--snap` erhält jeder solche Preis stattdessen die nächstgelegene Preisstufe (bei gleichem Abstand die günstigere), und die angepassten Preise werden vor der Bestätigung aufgelistet.
+Alle Preise, die keine Preisstufe des Ziels sind, werden auf einmal mit ihren nächstgelegenen Stufen aufgeführt, und nichts wird gesendet; mit `--snap` erhält jeder solche Preis stattdessen die nächstgelegene Stufe (bei zwei gleich nahen die günstigere), und die angepassten Preise werden vor der Bestätigung aufgeführt. Preise müssen einfache Zahlen sein, etwa `4.99` (oder `4,99` mit Dezimalkomma); alles andere (`1,300`, `1e2`, `-1`) wird beim Lesen der Datei abgelehnt, mit allen solchen Preisen benannt, bevor eine Anfrage gesendet wird.
 
 ## Regionale Verfügbarkeit
 

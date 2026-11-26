@@ -44,12 +44,12 @@ public func findVersion(
     return "\(p) — \(ver) (\(state))"
   }
 
-  // When no specific version requested, prefer editable versions (VersionLocalizations.editableStates)
+  // When no specific version requested, prefer editable versions (the one list of them:
+  // VersionLocalizations.editableStates).
   if versionString == nil {
+    typealias State = Operations.AppsAppStoreVersionsGetToManyRelated.Input.Query.FilterAppVersionStatePayloadPayload
     var editable = try await client.appsAppStoreVersionsGetToManyRelated(
-      path: .init(id: appID), query: .init(filterAppVersionState: [
-        .prepareForSubmission, .readyForReview, .waitingForReview, .developerRejected, .rejected, .metadataRejected, .invalidBinary,
-      ])
+      path: .init(id: appID), query: .init(filterAppVersionState: VersionLocalizations.editableStates.sorted().compactMap(State.init(rawValue:)))
     ).ok.body.json.data
 
     // Filter by platform if specified

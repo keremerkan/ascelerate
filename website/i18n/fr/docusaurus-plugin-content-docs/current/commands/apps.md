@@ -244,7 +244,7 @@ ascelerate apps pricing import <other-bundle-id> --file prices.json
 
 Apple calcule les prix des autres territoires à partir du prix de base et peut les ajuster selon les taxes et les taux de change ; un prix fixé manuellement reste tel quel. Pour plusieurs territoires, `sale` prend le prix dans la devise du territoire de base et applique ailleurs les prix comparables d'Apple ; ensuite, le prix précédent s'applique de nouveau dans chaque territoire. `import` remplace l'ensemble du calendrier de prix.
 
-Un prix qui ne correspond à aucun palier de la cible fait échouer l’importation, qui indique les paliers les plus proches ; avec `--snap`, chacun de ces prix prend plutôt le palier le plus proche (le moins cher à distance égale), et les prix ajustés sont listés avant la confirmation.
+Tous les prix qui ne sont pas un palier de la cible sont listés en une fois, avec leurs paliers les plus proches, et rien n'est envoyé ; avec `--snap`, chacun de ces prix prend à la place le palier le plus proche (le moins cher si deux sont aussi proches), et les prix ajustés sont listés avant la confirmation. Les prix doivent être des nombres simples, comme `4.99` (ou `4,99` avec une virgule décimale) ; tout le reste (`1,300`, `1e2`, `-1`) est refusé à la lecture du fichier, chacun de ces prix étant nommé, avant toute requête.
 
 ## Déclarations de chiffrement
 

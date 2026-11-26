@@ -447,17 +447,37 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
   /// a submission: every content intensity and yes-or-no question, whether a social media app is
   /// restricted by age only when it's one. The Kids category and the override are optional.
   public var unanswered: Int {
-    let levels = [
-      alcoholTobaccoOrDrugUseOrReferences, contests, gamblingSimulated, gunsOrOtherWeapons, horrorOrFearThemes,
-      matureOrSuggestiveThemes, profanityOrCrudeHumor, sexualContentOrNudity, sexualContentGraphicAndNudity,
-      violenceCartoonOrFantasy, violenceRealistic, violenceRealisticProlongedGraphicOrSadistic,
-      medicalOrTreatmentInformation,
-    ]
-    var flags = [
-      isAdvertising, isGambling, isUnrestrictedWebAccess, isUserGeneratedContent, isMessagingAndChat, isLootBox,
-      isHealthOrWellnessTopics, isParentalControls, isAgeAssurance, isSocialMedia, isSharedLocation, isDatingAndRelationships,
-    ]
-    if isSocialMedia == true { flags.append(isSocialMediaAgeRestricted) }
+    let levels = Self.intensityQuestions.map { self[keyPath: $0.key] }
+    let flags = Self.yesNoQuestions
+      .filter { $0.key != \.isSocialMediaAgeRestricted || isSocialMedia == true }
+      .map { self[keyPath: $0.key] }
     return levels.count { $0 == nil } + flags.count { $0 == nil }
+  }
+
+  /// The questionnaire's intensity questions (NONE, INFREQUENT_OR_MILD, …), as the view lists them:
+  /// the one list of them for the commands and `unanswered`.
+  public static var intensityQuestions: [(label: String, key: KeyPath<AgeRatingFields, String?>)] {
+    [
+      ("Alcohol, Tobacco, or Drug Use", \.alcoholTobaccoOrDrugUseOrReferences), ("Contests", \.contests),
+      ("Gambling (simulated)", \.gamblingSimulated), ("Guns or Other Weapons", \.gunsOrOtherWeapons),
+      ("Horror or Fear Themes", \.horrorOrFearThemes), ("Mature or Suggestive Themes", \.matureOrSuggestiveThemes),
+      ("Profanity or Crude Humor", \.profanityOrCrudeHumor), ("Sexual Content or Nudity", \.sexualContentOrNudity),
+      ("Sexual Content (graphic)", \.sexualContentGraphicAndNudity), ("Violence (cartoon/fantasy)", \.violenceCartoonOrFantasy),
+      ("Violence (realistic)", \.violenceRealistic), ("Violence (graphic/sadistic)", \.violenceRealisticProlongedGraphicOrSadistic),
+      ("Medical Information", \.medicalOrTreatmentInformation),
+    ]
+  }
+
+  /// The yes-or-no questions, in the same order. "Social Media Age Restricted" is asked only of a
+  /// social media app.
+  public static var yesNoQuestions: [(label: String, key: KeyPath<AgeRatingFields, Bool?>)] {
+    [
+      ("Advertising", \.isAdvertising), ("Gambling", \.isGambling), ("Unrestricted Web Access", \.isUnrestrictedWebAccess),
+      ("User-Generated Content", \.isUserGeneratedContent), ("Messaging and Chat", \.isMessagingAndChat), ("Loot Box", \.isLootBox),
+      ("Health/Wellness Topics", \.isHealthOrWellnessTopics), ("Parental Controls", \.isParentalControls),
+      ("Age Assurance", \.isAgeAssurance), ("Social Media", \.isSocialMedia),
+      ("Social Media Age Restricted", \.isSocialMediaAgeRestricted), ("Shared Location", \.isSharedLocation),
+      ("Dating and Relationships", \.isDatingAndRelationships),
+    ]
   }
 }

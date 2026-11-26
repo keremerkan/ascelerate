@@ -3,10 +3,6 @@ import ASCKit
 import AscelerateCore
 import Foundation
 
-extension Components.Schemas.SubscriptionPricePoint: ResolvablePricePoint {
-  var resolverCustomerPrice: String? { attributes?.customerPrice }
-}
-
 struct SubCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "sub",
@@ -62,16 +58,17 @@ struct SubCommand: AsyncParsableCommand {
     }
   }
 
+  /// `Subscriptions.find` with the group in the CLI's shape.
   static func findSubscription(
     productID: String, appID: String, client: ASCClient
   ) async throws -> (subscription: Subscriptions.Subscription, group: GroupInfo) {
-    let groups = try await fetchGroups(appID: appID, client: client)
-    for group in groups {
-      if let match = group.subscriptions.first(where: { $0.productID == productID }) {
-        return (match, group)
-      }
+    do {
+      let (subscription, group) = try await Subscriptions.find(productID: productID, appID: appID, client: client)
+      return (subscription, GroupInfo(id: group.id, name: group.referenceName.isEmpty ? "—" : group.referenceName, subscriptions: group.subscriptions))
+    } catch let error as Subscriptions.LookupError {
+      // A ValidationError, as before: the usage line follows it.
+      throw ValidationError(error.localizedDescription)
     }
-    throw ValidationError("No subscription found with product ID '\(productID)'.")
   }
 
   static func subscriptionHasPrices(subscriptionID: String, client: ASCClient) async throws -> Bool {
@@ -267,70 +264,20 @@ struct SubCommand: AsyncParsableCommand {
   /// with nearest tiers when no exact match.
   static func resolveSubPricePoint(
     subID: String, territoryID: String, customerPrice: String, client: ASCClient
-  ) async throws -> (point: Components.Schemas.SubscriptionPricePoint, currency: String?) {
+  ) async throws -> (point: AppPricing.PricePoint, currency: String?) {
     let target = try parseCustomerPrice(customerPrice)
-    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.subscriptionsPricePointsGetToManyRelated(
-        path: .init(id: subID), query: .init(filterTerritory: [territoryID], filterPlanType: ["UPFRONT"], limit: 200, include: [.territory])
-      ).ok.body.json
-    }
-    let tiers = pages.flatMap(\.data)
-    let currency = pages.lazy.flatMap { $0.included ?? [] }.compactMap { $0.attributes?.currency }.first
-    let point = try findPricePoint(
-      in: tiers, target: target, priceLabel: customerPrice, territoryID: territoryID,
-      currency: currency)
+    let (tiers, currency) = try await Subscriptions.pricePointsWithCurrency(subscriptionID: subID, territoryID: territoryID, client: client)
+    let point = try findPricePoint(in: tiers, target: target, priceLabel: customerPrice, territoryID: territoryID, currency: currency)
     return (point, currency)
-  }
-
-  /// Batch-resolves (territory, customer price) pairs to this subscription's price
-  /// points, fetching several territories' tier lists per request instead of one
-  /// request per territory. Prints one progress dot per chunk.
-  static func resolveSubPricePointsBatched(
-    subID: String, prices: [(territoryID: String, price: String)],
-    client: ASCClient
-  ) async throws -> [(territoryID: String, point: Components.Schemas.SubscriptionPricePoint, currency: String?)] {
-    var results: [(territoryID: String, point: Components.Schemas.SubscriptionPricePoint, currency: String?)] = []
-    for chunk in prices.chunked(into: 10) {
-      var tiersByTerritory: [String: [Components.Schemas.SubscriptionPricePoint]] = [:]
-      var currencyByTerritory: [String: String] = [:]
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-        try await client.subscriptionsPricePointsGetToManyRelated(
-          path: .init(id: subID),
-          query: .init(
-            filterTerritory: chunk.map(\.territoryID), filterPlanType: ["UPFRONT"],
-            fieldsSubscriptionPricePoints: [.customerPrice, .territory],
-            limit: 8000, include: [.territory])
-        ).ok.body.json
-      }
-      for page in pages {
-        for point in page.data {
-          guard let t = point.relationships?.territory?.data?.id else { continue }
-          tiersByTerritory[t, default: []].append(point)
-        }
-        for t in page.included ?? [] {
-          if let cur = t.attributes?.currency { currencyByTerritory[t.id] = cur }
-        }
-      }
-      results.append(contentsOf: try matchPricePoints(
-        prices: chunk, tiersByTerritory: tiersByTerritory,
-        currencyByTerritory: currencyByTerritory))
-      print(".", terminator: "")
-      fflush(stdout)
-    }
-    return results
   }
 
   /// Fetches the equalized price points of a source point across all territories,
   /// making sure the source territory itself is included even if equalizations omit it.
   static func fetchEqualizedPoints(
-    sourcePoint: Components.Schemas.SubscriptionPricePoint, sourceTerritory: String, client: ASCClient
-  ) async throws -> [Components.Schemas.SubscriptionPricePoint] {
-    var equalized = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.subscriptionPricePointsEqualizationsGetToManyRelated(
-        path: .init(id: sourcePoint.id), query: .init(filterPlanType: ["UPFRONT"], limit: 200, include: [.territory])
-      ).ok.body.json
-    }.flatMap(\.data)
-    if !equalized.contains(where: { $0.relationships?.territory?.data?.id == sourceTerritory }) {
+    sourcePoint: AppPricing.PricePoint, sourceTerritory: String, client: ASCClient
+  ) async throws -> [AppPricing.PricePoint] {
+    var equalized = try await Subscriptions.equalizations(of: sourcePoint.id, client: client).points
+    if !equalized.contains(where: { $0.territoryID == sourceTerritory }) {
       equalized.insert(sourcePoint, at: 0)
     }
     return equalized
@@ -498,8 +445,8 @@ struct SubCommand: AsyncParsableCommand {
     func post(_ target: PriceChangeTarget) async throws {
       // Only a raise can keep existing subscribers on their price.
       let sent: Void? = try await unlessDryRunStopped {
-        try await postSubscriptionPrice(
-          subID: subID, territoryID: target.territoryID, pricePointID: target.pricePointID,
+        try await Subscriptions.setPrice(
+          subscriptionID: subID, territoryID: target.territoryID, pricePointID: target.pricePointID,
           startDate: startDate, preserveCurrent: target.direction == .increase ? preserveCurrent : nil, client: client)
       }
       if sent == nil { notSent += 1 }
@@ -550,25 +497,6 @@ struct SubCommand: AsyncParsableCommand {
     }
   }
 
-  /// POSTs one SubscriptionPrice record for a territory, retrying transient API errors.
-  static func postSubscriptionPrice(
-    subID: String, territoryID: String, pricePointID: String,
-    startDate: String?, preserveCurrent: Bool?, client: ASCClient
-  ) async throws {
-    let request = Components.Schemas.SubscriptionPriceCreateRequest(data: .init(
-      attributes: .init(preserveCurrentPrice: preserveCurrent, startDate: startDate),
-      relationships: .init(
-        subscription: .init(data: .init(id: subID, _type: "subscriptions")),
-        subscriptionPricePoint: .init(data: .init(id: pricePointID, _type: "subscriptionPricePoints")),
-        territory: .init(data: .init(id: territoryID, _type: "territories"))
-      ),
-      _type: "subscriptionPrices"
-    ))
-    _ = try await withTransientRetry {
-      try await client.subscriptionPricesCreateInstance(body: .json(request)).created
-    }
-  }
-
   /// Resolved offer-pricing tuples for promo offers, offer codes, and win-back offers
   /// — they all need the same shape: a (territory, pricePointID) list, optionally
   /// equalized across all territories from a single source price.
@@ -597,7 +525,7 @@ struct SubCommand: AsyncParsableCommand {
     if !equalize {
       return ResolvedOfferPrices(
         entries: [(sourceTerritory, sourcePoint.id)],
-        sourceCustomerPrice: sourcePoint.attributes?.customerPrice ?? customerPrice,
+        sourceCustomerPrice: sourcePoint.customerPrice,
         sourceCurrency: sourceCurrency,
         isEqualized: false
       )
@@ -607,12 +535,11 @@ struct SubCommand: AsyncParsableCommand {
       sourcePoint: sourcePoint, sourceTerritory: sourceTerritory, client: client)
     var entries: [(territoryID: String, pricePointID: String)] = []
     for point in equalized {
-      guard let t = point.relationships?.territory?.data?.id else { continue }
-      entries.append((t, point.id))
+      entries.append((point.territoryID, point.id))
     }
     return ResolvedOfferPrices(
       entries: entries,
-      sourceCustomerPrice: sourcePoint.attributes?.customerPrice ?? customerPrice,
+      sourceCustomerPrice: sourcePoint.customerPrice,
       sourceCurrency: sourceCurrency,
       isEqualized: true
     )
@@ -1695,24 +1622,8 @@ struct SubCommand: AsyncParsableCommand {
           productID: productID, appID: app.id, client: client)
 
         let territoryID = territory.uppercased()
-        var tiers: [PriceTier] = []
-        var currency: String?
-        let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-          try await client.subscriptionsPricePointsGetToManyRelated(
-            path: .init(id: sub.id), query: .init(filterTerritory: [territoryID], filterPlanType: ["UPFRONT"], limit: 200, include: [.territory])
-          ).ok.body.json
-        }
-        for page in pages {
-          tiers.append(
-            contentsOf: page.data.map {
-              PriceTier(
-                id: $0.id, customerPrice: $0.attributes?.customerPrice,
-                proceeds: $0.attributes?.proceeds)
-            })
-          for t in page.included ?? [] where currency == nil {
-            currency = t.attributes?.currency
-          }
-        }
+        let (points, currency) = try await Subscriptions.pricePointsWithCurrency(subscriptionID: sub.id, territoryID: territoryID, client: client)
+        let tiers = points.map { PriceTier(id: $0.id, customerPrice: $0.customerPrice, proceeds: $0.proceeds) }
 
         printPriceTiers(tiers, currency: currency, territoryID: territoryID)
       }
@@ -1782,22 +1693,22 @@ struct SubCommand: AsyncParsableCommand {
       }
 
       private func runSingleTerritory(
-        sub: Subscriptions.Subscription, territoryID: String, point: Components.Schemas.SubscriptionPricePoint,
+        sub: Subscriptions.Subscription, territoryID: String, point: AppPricing.PricePoint,
         currency: String?, client: ASCClient
       ) async throws {
         // The territory's price today (a preserved one included) and its planned one, if any.
         let prices = try await Subscriptions.prices(subscriptionID: sub.id, client: client)
         let currentPriceStr = SubCommand.currentByTerritory(prices)[territoryID]
         let planned = try SubCommand.sortPlanned(
-          [(territoryID, point.id, point.attributes?.customerPrice)], prices: prices, startDate: startDate,
+          [(territoryID, point.id, point.customerPrice)], prices: prices, startDate: startDate,
           bundleID: bundleID, productID: productID)
         if planned.alreadyPlanned > 0 {
           print()
-          print("\(territoryID) already has \(point.attributes?.customerPrice ?? "?") \(currency ?? "") planned from \(startDate ?? "?"). Nothing to do.")
+          print("\(territoryID) already has \(point.customerPrice) \(currency ?? "") planned from \(startDate ?? "?"). Nothing to do.")
           return
         }
         let direction = try await SubCommand.previewedPriceChanges(
-          [(territoryID, point.id, point.attributes?.customerPrice)],
+          [(territoryID, point.id, point.customerPrice)],
           currentByTerritory: currentPriceStr.map { [territoryID: $0] } ?? [:],
           subID: sub.id, startDate: startDate, client: client
         ).first?.direction ?? .new
@@ -1806,7 +1717,7 @@ struct SubCommand: AsyncParsableCommand {
         switch direction {
         case .unchanged:
           print()
-          print("Already at \(point.attributes?.customerPrice ?? "?") \(currency ?? "") in \(territoryID). Nothing to do.")
+          print("Already at \(point.customerPrice) \(currency ?? "") in \(territoryID). Nothing to do.")
           if let next = prices.planned.first(where: { $0.territoryID == territoryID }) {
             print("Its planned price stays: \(next.customerPrice) \(currency ?? "") from \(next.startDate ?? "?") ('sub pricing cancel' removes it).")
           }
@@ -1814,7 +1725,7 @@ struct SubCommand: AsyncParsableCommand {
         case .increase:
           if preserveCurrent == nil {
             var guidance = SubCommand.priceIncreaseGuidance(
-              from: currentPriceStr, to: point.attributes?.customerPrice,
+              from: currentPriceStr, to: point.customerPrice,
               currency: currency, territoryID: territoryID)
             if tiered {
               guidance += "\n(The current price has volume tiers and this one has none, so subscribers with several seats pay more.)"
@@ -1824,7 +1735,7 @@ struct SubCommand: AsyncParsableCommand {
         case .decrease:
           if autoConfirm && !confirmDecrease {
             throw ValidationError(SubCommand.priceDecreaseGuidance(
-              from: currentPriceStr, to: point.attributes?.customerPrice,
+              from: currentPriceStr, to: point.customerPrice,
               currency: currency, territoryID: territoryID))
           }
         case .mixed:
@@ -1843,7 +1754,7 @@ struct SubCommand: AsyncParsableCommand {
         if let cp = currentPriceStr {
           print("  Current Price:    \(cp) \(currency ?? "")")
         }
-        print("  New Price:        \(point.attributes?.customerPrice ?? "—") \(currency ?? "") (\(direction.label))")
+        print("  New Price:        \(point.customerPrice) \(currency ?? "") (\(direction.label))")
         if let startDate {
           print("  Start Date:       \(startDate)")
         } else {
@@ -1871,8 +1782,8 @@ struct SubCommand: AsyncParsableCommand {
           return
         }
 
-        try await SubCommand.postSubscriptionPrice(
-          subID: sub.id, territoryID: territoryID, pricePointID: point.id,
+        try await Subscriptions.setPrice(
+          subscriptionID: sub.id, territoryID: territoryID, pricePointID: point.id,
           startDate: startDate, preserveCurrent: direction == .increase ? preserveCurrent : nil, client: client)
 
         print()
@@ -1881,7 +1792,7 @@ struct SubCommand: AsyncParsableCommand {
 
       private func runEqualizeAllTerritories(
         sub: Subscriptions.Subscription, sourceTerritory: String,
-        sourcePoint: Components.Schemas.SubscriptionPricePoint, sourceCurrency: String?, client: ASCClient
+        sourcePoint: AppPricing.PricePoint, sourceCurrency: String?, client: ASCClient
       ) async throws {
         // Fetch the equivalent price points for every territory by walking the
         // source point's equalizations. Each entry has its own territory + tier.
@@ -1893,8 +1804,8 @@ struct SubCommand: AsyncParsableCommand {
 
         let allEntries = equalized.compactMap {
           point -> (territoryID: String, pricePointID: String, newPrice: String?)? in
-          guard let territoryID = point.relationships?.territory?.data?.id else { return nil }
-          return (territoryID, point.id, point.attributes?.customerPrice)
+          let territoryID = point.territoryID
+          return (territoryID, point.id, point.customerPrice)
         }
         let planned = try SubCommand.sortPlanned(
           allEntries, prices: prices, startDate: startDate, bundleID: bundleID, productID: productID)
@@ -1909,7 +1820,7 @@ struct SubCommand: AsyncParsableCommand {
           headerLines: [
             "Equalize across all territories:",
             "  Product ID:        \(productID)",
-            "  Source Territory:  \(sourceTerritory) at \(sourcePoint.attributes?.customerPrice ?? "?") \(sourceCurrency ?? "")",
+            "  Source Territory:  \(sourceTerritory) at \(sourcePoint.customerPrice) \(sourceCurrency ?? "")",
           ],
           extraLines: SubCommand.alreadyPlannedLines(planned.alreadyPlanned)
             + SubCommand.droppedPlannedLines(planned.dropped, posted: targets, prices: prices),
@@ -1959,7 +1870,7 @@ struct SubCommand: AsyncParsableCommand {
         }
 
         try exportProductPrices(
-          ProductPricesFile(baseTerritory: nil, prices: prices),
+          PriceFile(baseTerritory: nil, prices: prices),
           productID: productID, output: output)
       }
     }
@@ -2013,13 +1924,17 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
-        let priceFile = try loadProductPricesFile(file)
-        let sortedPrices = priceFile.prices.sorted { $0.key < $1.key }
-
-        let anchor = sortedPrices.first { $0.key == "USA" } ?? sortedPrices[0]
-        let entries = try await PriceSnapping.resolving(snap) {
-          try await resolve(sortedPrices, anchor: anchor, subID: sub.id, client: client)
-        }
+        let priceFile = try loadPriceFile(file)
+        // Every listed price against this subscription's tiers (`PriceFile.resolve`): the USA (else
+        // the first territory) anchors Apple's comparable prices, as before (a subscription file
+        // names no base).
+        let subID = sub.id
+        let points = try await resolvePriceFile(
+          PriceFile(prices: priceFile.prices), snap: snap, batchSize: 9,
+          tiers: { try await Subscriptions.pricePoints(subscriptionID: subID, territoryIDs: $0, client: client) },
+          equalizations: { try await Subscriptions.equalizations(of: $0, client: client).points })
+        let entries = points.sorted { $0.key < $1.key }
+          .map { (territoryID: $0.key, pricePointID: $0.value.id, newPrice: Optional($0.value.customerPrice)) }
 
         let prices = try await Subscriptions.prices(subscriptionID: sub.id, client: client)
         let planned = try SubCommand.sortPlanned(
@@ -2045,51 +1960,6 @@ struct SubCommand: AsyncParsableCommand {
           tieredTerritories: tiered,
           client: client
         )
-      }
-
-      /// Each listed price's tier. Fetching every territory's tier list would be one paged call per
-      /// territory, so one anchor territory resolves first and its equalizations follow: any
-      /// territory whose file price matches the equalized tier resolves for free; only the others
-      /// (territories priced by hand) read their own tiers.
-      private func resolve(
-        _ sortedPrices: [(key: String, value: String)], anchor: (key: String, value: String), subID: String, client: ASCClient
-      ) async throws -> [(territoryID: String, pricePointID: String, newPrice: String?)] {
-        let anchorResolved = try await SubCommand.resolveSubPricePoint(
-          subID: subID, territoryID: anchor.key, customerPrice: anchor.value, client: client)
-        let equalized = try await SubCommand.fetchEqualizedPoints(
-          sourcePoint: anchorResolved.point, sourceTerritory: anchor.key, client: client)
-        var candidateByTerritory: [String: Components.Schemas.SubscriptionPricePoint] = [:]
-        for point in equalized {
-          if let t = point.relationships?.territory?.data?.id {
-            candidateByTerritory[t] = point
-          }
-        }
-
-        var entries: [(territoryID: String, pricePointID: String, newPrice: String?)] = []
-        var unmatched: [(territoryID: String, price: String)] = []
-        for (territoryID, priceStr) in sortedPrices {
-          let target = try parseCustomerPrice(priceStr)
-          if let candidate = candidateByTerritory[territoryID],
-             let candidatePrice = candidate.attributes?.customerPrice.flatMap({ Double($0) }),
-             abs(candidatePrice - target) < 0.001 {
-            entries.append((territoryID, candidate.id, candidate.attributes?.customerPrice))
-          } else {
-            unmatched.append((territoryID, priceStr))
-          }
-        }
-        if !unmatched.isEmpty {
-          print("Resolving price points for \(unmatched.count) territor\(unmatched.count == 1 ? "y" : "ies")", terminator: "")
-          fflush(stdout)
-          let resolved = try await SubCommand.resolveSubPricePointsBatched(
-            subID: subID, prices: unmatched, client: client)
-          entries.append(contentsOf: resolved.map {
-            ($0.territoryID, $0.point.id, $0.point.attributes?.customerPrice)
-          })
-          entries.sort { $0.territoryID < $1.territoryID }
-          print(" done.")
-        }
-
-        return entries
       }
     }
   }

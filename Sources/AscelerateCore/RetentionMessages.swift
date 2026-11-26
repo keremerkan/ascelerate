@@ -88,7 +88,11 @@ public enum RetentionMessages {
 
   /// A message by its name (case-insensitive) or ID.
   public static func find(_ nameOrID: String, appID: String, client: ASCClient) async throws -> Message {
-    let messages = try await list(appID: appID, client: client)
+    try find(nameOrID, in: try await list(appID: appID, client: client))
+  }
+
+  /// A message by ID or name (case-insensitive) among `messages`.
+  public static func find(_ nameOrID: String, in messages: [Message]) throws -> Message {
     guard let message = messages.first(where: { $0.id == nameOrID || $0.name.caseInsensitiveCompare(nameOrID) == .orderedSame })
     else { throw RetentionError.noMessage(nameOrID, known: messages.map(\.name)) }
     return message

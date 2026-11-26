@@ -194,6 +194,18 @@ func removeOnInterrupt(_ path: String) {
   interruptCleanup.append(path)
 }
 
+/// Whether the tool was started with SIGINT ignored, read once at start (`recordInheritedSignals`)
+/// before any handler replaces the inherited disposition.
+nonisolated(unsafe) private(set) var sigintInheritedIgnored = false
+
+func recordInheritedSignals() {
+  var current = sigaction()
+  if sigaction(SIGINT, nil, &current) == 0 {
+    // Compared as addresses: C function pointers aren't Equatable (SIG_IGN is 1).
+    sigintInheritedIgnored = unsafeBitCast(current.__sigaction_u.__sa_handler, to: Int.self) == unsafeBitCast(SIG_IGN, to: Int.self)
+  }
+}
+
 /// Installs a SIGINT handler using DispatchSource (kqueue-based).
 /// Unlike sigaction, this persists even when Swift's async runtime overrides
 /// the process-level signal disposition — kqueue monitors signals independently.
@@ -213,7 +225,9 @@ private func setupSignalHandler() {
   // stops the tool with SIGTERM), so the children are stopped and the folders cleaned up for
   // each; the exit code is 128 plus the signal, as a shell reports it.
   var sources: [DispatchSourceSignal] = []
-  for number in [SIGINT, SIGTERM, SIGHUP] {
+  // SIGINT inherited as ignored (a script's `ascelerate … &`) stays ignored for the whole run,
+  // children included (Kerem, 2026-11-26); SIGTERM and SIGHUP still stop it.
+  for number in sigintInheritedIgnored ? [SIGTERM, SIGHUP] : [SIGINT, SIGTERM, SIGHUP] {
     signal(number, { _ in })
     let source = DispatchSource.makeSignalSource(signal: number, queue: .global())
     source.setEventHandler {
@@ -1213,19 +1227,10 @@ private func printLocalizationResponse(_ record: LocalizationRecord) {
 
 // MARK: - Shared Price Export/Import
 
-/// JSON schema for IAP/subscription price export files: customer prices keyed by territory
-/// code. `baseTerritory` is the auto-equalize anchor for IAP schedules; subscription exports
-/// omit it (every subscription territory is priced explicitly).
-struct ProductPricesFile: Codable {
-  var baseTerritory: String?
-  var prices: [String: String]
-}
-
-/// Writes a product's prices to a JSON file keyed by territory.
-func exportProductPrices(_ file: ProductPricesFile, productID: String, output: String?) throws {
-  let encoder = JSONEncoder()
-  encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-  let data = try encoder.encode(file)
+/// Writes a product's prices to a JSON file keyed by territory (`PriceFile`: the base territory
+/// is the auto-equalize anchor of app and in-app purchase schedules; subscription exports omit it).
+func exportProductPrices(_ file: PriceFile, productID: String, output: String?) throws {
+  let data = try file.encoded()
 
   let outputPath = expandPath(
     try confirmOutputPath(output ?? "\(productID)-prices.json", isDirectory: false))
@@ -1241,36 +1246,60 @@ extension Array {
   }
 }
 
-/// Matches each (territory, customer price) pair against that territory's tier list.
-/// Used by the batched price-import resolvers; `currencyByTerritory` feeds display
-/// and error text.
-func matchPricePoints<P: ResolvablePricePoint>(
-  prices: [(territoryID: String, price: String)],
-  tiersByTerritory: [String: [P]],
-  currencyByTerritory: [String: String]
-) throws -> [(territoryID: String, point: P, currency: String?)] {
-  try prices.map { entry in
-    let point = try findPricePoint(
-      in: tiersByTerritory[entry.territoryID] ?? [],
-      target: try parseCustomerPrice(entry.price),
-      priceLabel: entry.price, territoryID: entry.territoryID,
-      currency: currencyByTerritory[entry.territoryID])
-    return (entry.territoryID, point, currencyByTerritory[entry.territoryID])
+/// A price file (the pricing exports' format), read by the core's rule (`PriceFile.decode`):
+/// territory codes in uppercase, "4,99" read as 4.99, and a price that isn't a plain number
+/// ("1,300", "1e2", "-1", "nan", "4.99x") refused with every other one like it, before any request
+/// (Kerem, 2026-11-26).
+func loadPriceFile(_ file: String?) throws -> PriceFile {
+  let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
+  let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
+  do {
+    return try PriceFile.decode(data)
+  } catch let error as PriceFile.FileError {
+    throw ValidationError("Can't use \((filePath as NSString).lastPathComponent): \(error.localizedDescription)")
   }
 }
 
-/// Loads and validates a price export file. Territory keys are normalized to uppercase.
-func loadProductPricesFile(_ file: String?) throws -> ProductPricesFile {
-  let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
-  let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-  var parsed = try decodeFile(ProductPricesFile.self, from: data, path: filePath)
-  parsed.baseTerritory = parsed.baseTerritory?.uppercased()
-  parsed.prices = Dictionary(
-    parsed.prices.map { ($0.key.uppercased(), $0.value) }, uniquingKeysWith: { first, _ in first })
-  guard !parsed.prices.isEmpty else {
-    throw ValidationError("JSON file contains no territory prices.")
+/// Every price of `file` matched to a tier with `PriceFile.resolve` (the file's base territory
+/// anchors Apple's comparable prices; set it to choose the anchor), showing "N of M territories".
+/// A price that isn't a tier: all of them are listed and nothing is returned, or with `snap` each
+/// takes its nearest tier (the cheaper of two as close) and the snaps are listed.
+func resolvePriceFile(
+  _ file: PriceFile, snap: Bool, batchSize: Int,
+  tiers: @escaping @Sendable ([String]) async throws -> [String: [AppPricing.PricePoint]],
+  equalizations: @escaping @Sendable (String) async throws -> [AppPricing.PricePoint]
+) async throws -> [String: AppPricing.PricePoint] {
+  let total = file.prices.count
+  let label = "Resolving price points"
+  if !isTerminal { print("\(label) for \(total) territor\(total == 1 ? "y" : "ies")…") }
+  let resolution = try await file.resolve(batchSize: batchSize, tiers: tiers, equalizations: equalizations) { done, total in
+    guard isTerminal else { return }
+    print("\r\(label): \(done) of \(total) territor\(total == 1 ? "y" : "ies")", terminator: "")
+    fflush(stdout)
   }
-  return parsed
+  if isTerminal { print() }
+  var points = resolution.points
+  guard !resolution.mismatches.isEmpty else { return points }
+  if snap {
+    var snaps: [PriceSnapping.Snap] = []
+    for mismatch in resolution.mismatches {
+      guard let tier = mismatch.nearestTier else {
+        throw ValidationError("No price tiers available for territory \(mismatch.territoryID).")
+      }
+      points[mismatch.territoryID] = tier
+      snaps.append(.init(territoryID: mismatch.territoryID, price: mismatch.price, tier: tier.customerPrice))
+    }
+    PriceSnapping.report(snaps)
+    return points
+  }
+  var message = "\(resolution.mismatches.count) price\(resolution.mismatches.count == 1 ? " isn't a tier" : "s aren't tiers") of this product, so nothing was sent:\n"
+  for mismatch in resolution.mismatches {
+    message += mismatch.nearest.isEmpty
+      ? "  \(mismatch.territoryID) \(mismatch.price): no price tiers in this territory\n"
+      : "  \(mismatch.territoryID) \(mismatch.price): nearest tiers \(mismatch.nearest.joined(separator: ", "))\n"
+  }
+  message += "Pass --snap to use the nearest tier (the cheaper of two as close)."
+  throw ValidationError(message)
 }
 
 /// A price point reduced to the fields the shared tier renderer needs. Decouples the renderer
@@ -1306,25 +1335,18 @@ func parseCustomerPrice(_ price: String) throws -> Double {
   return value
 }
 
-/// A price point exposing just the fields the shared resolver needs, so it works across both
-/// IAP and subscription price-point types (conformances live in their command files).
-protocol ResolvablePricePoint {
-  var id: String { get }
-  var resolverCustomerPrice: String? { get }
-}
-
 /// Finds the price point whose customer price matches `target` (within 0.001) in `territoryID`.
 /// Throws ValidationError for an empty tier list, or no match — listing the five nearest tiers
-/// by price distance. `priceLabel` is the original price string, used only in error text. Under
-/// `PriceSnapping` (a price import's `--snap`), a price that isn't a tier takes the nearest one.
-func findPricePoint<P: ResolvablePricePoint>(
-  in tiers: [P], target: Double, priceLabel: String, territoryID: String, currency: String?
-) throws -> P {
+/// by price distance. `priceLabel` is the original price string, used only in error text. For a
+/// single price given on the command line; the imports match with `PriceFile.resolve`.
+func findPricePoint(
+  in tiers: [AppPricing.PricePoint], target: Double, priceLabel: String, territoryID: String, currency: String?
+) throws -> AppPricing.PricePoint {
   guard !tiers.isEmpty else {
     throw ValidationError("No price tiers available for territory \(territoryID).")
   }
   if let exact = tiers.first(where: {
-    guard let v = $0.resolverCustomerPrice.flatMap({ Double($0) }) else { return false }
+    guard let v = Double($0.customerPrice) else { return false }
     return abs(v - target) < 0.001
   }) {
     return exact
@@ -1333,19 +1355,15 @@ func findPricePoint<P: ResolvablePricePoint>(
   // 2.99 − 2.49 differ), as AscelerateCore's PriceFile does.
   let wanted = Decimal(string: priceLabel.trimmingCharacters(in: .whitespaces)) ?? Decimal(target)
   let nearest = tiers
-    .compactMap { p -> (P, Decimal, Decimal)? in
-      guard let v = p.resolverCustomerPrice.flatMap({ Decimal(string: $0) }) else { return nil }
+    .compactMap { p -> (AppPricing.PricePoint, Decimal, Decimal)? in
+      guard let v = Decimal(string: p.customerPrice) else { return nil }
       return (p, abs(v - wanted), v)
     }
     .sorted { $0.1 != $1.1 ? $0.1 < $1.1 : $0.2 < $1.2 }
     .prefix(5)
     .map(\.0)
-  if let collector = PriceSnapping.collector, let tier = nearest.first {
-    collector.add(.init(territoryID: territoryID, price: priceLabel, tier: tier.resolverCustomerPrice ?? ""))
-    return tier
-  }
   var msg = "No tier with customer price \(priceLabel) \(currency ?? "") in territory \(territoryID).\n"
-  msg += "Nearest tiers: " + nearest.compactMap { $0.resolverCustomerPrice }.joined(separator: ", ")
+  msg += "Nearest tiers: " + nearest.map(\.customerPrice).joined(separator: ", ")
   throw ValidationError(msg)
 }
 
@@ -1359,26 +1377,7 @@ enum PriceSnapping {
     let tier: String
   }
 
-  final class Collector: Sendable {
-    private let snaps = Mutex<[Snap]>([])
-
-    func add(_ snap: Snap) { snaps.withLock { $0.append(snap) } }
-    var all: [Snap] { snaps.withLock { $0 }.sorted { $0.territoryID < $1.territoryID } }
-  }
-
-  /// Set while an import with `--snap` matches its prices.
-  @TaskLocal static var collector: Collector?
-
-  /// Runs `body` with snapping on when `snap` is set, then lists what snapped.
-  static func resolving<T>(_ snap: Bool, _ body: () async throws -> T) async throws -> T {
-    guard snap else { return try await body() }
-    let collector = Collector()
-    let result = try await $collector.withValue(collector) { try await body() }
-    report(collector.all)
-    return result
-  }
-
-  private static func report(_ snaps: [Snap]) {
+  static func report(_ snaps: [Snap]) {
     guard !snaps.isEmpty else { return }
     print(yellow("Snapped to the nearest tier (\(snaps.count) territor\(snaps.count == 1 ? "y" : "ies")):"))
     for snap in snaps {

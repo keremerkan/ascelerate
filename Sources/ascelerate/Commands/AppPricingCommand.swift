@@ -3,10 +3,6 @@ import ASCKit
 import AscelerateCore
 import Foundation
 
-extension AppPricing.PricePoint: ResolvablePricePoint {
-  var resolverCustomerPrice: String? { customerPrice }
-}
-
 /// Lines listing the manual prices a schedule change drops or cuts short, besides the territories
 /// a summary already names and the current open-ended price of the ones being edited: planned and
 /// temporary prices above all, which the summary doesn't show. Empty when there are none.
@@ -526,7 +522,7 @@ extension AppsCommand {
           schedule.manualPrices.filter { $0.applies(on: today) }.map { ($0.territoryID, $0.point.customerPrice) },
           uniquingKeysWith: { first, _ in first })
         try exportProductPrices(
-          ProductPricesFile(baseTerritory: schedule.baseTerritoryID, prices: prices),
+          PriceFile(baseTerritory: schedule.baseTerritoryID, prices: prices),
           productID: app.attributes?.bundleId ?? bundleID, output: output)
       }
     }
@@ -558,15 +554,24 @@ extension AppsCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
-        let priceFile = try loadProductPricesFile(file)
+        let priceFile = try loadPriceFile(file)
         let (app, schedule) = try await PricingCommand.load(bundleID, client: client)
         let base = priceFile.baseTerritory ?? schedule?.baseTerritoryID ?? "USA"
-        guard let basePrice = priceFile.prices[base] else {
+        guard priceFile.prices[base] != nil else {
           throw ValidationError("The file has no price for the base territory \(base).")
         }
-        let (basePoint, points) = try await PriceSnapping.resolving(snap) {
-          try await resolve(priceFile, base: base, basePrice: basePrice, appID: app.id, client: client)
-        }
+        // Every listed price against the app's tiers (`PriceFile.resolve`), anchored on the base.
+        let appID = app.id
+        let resolved = try await resolvePriceFile(
+          PriceFile(baseTerritory: base, prices: priceFile.prices), snap: snap, batchSize: 1,
+          tiers: { territories in
+            var tiers: [String: [AppPricing.PricePoint]] = [:]
+            for territory in territories { tiers[territory] = try await AppPricing.pricePoints(appID: appID, territoryID: territory, client: client) }
+            return tiers
+          },
+          equalizations: { try await AppPricing.equalizations(of: $0, client: client).points })
+        guard let basePoint = resolved[base] else { throw ValidationError("The file has no price for the base territory \(base).") }
+        let points = resolved.mapValues(\.id)
         let dropped = Swift.Set(schedule?.manualPrices.filter(\.isCurrentOrLater).map(\.territoryID) ?? [])
           .subtracting(points.keys)
         var summary = [
@@ -578,34 +583,6 @@ extension AppsCommand {
           appID: app.id, appName: app.attributes?.name ?? bundleID, base: base,
           prices: points.sorted { $0.key < $1.key }.map { AppPricing.NewPrice(pricePointID: $0.value) },
           summary: summary, client: client)
-      }
-
-      /// The base tier and each listed territory's tier ID.
-      private func resolve(
-        _ priceFile: ProductPricesFile, base: String, basePrice: String, appID: String, client: ASCClient
-      ) async throws -> (AppPricing.PricePoint, [String: String]) {
-        let basePoint = try await PricingCommand.resolve(price: basePrice, territoryID: base, appID: appID, client: client)
-        // Territories whose price is Apple's comparable price for the base tier resolve from one
-        // request; the rest read their own tier lists (four requests each).
-        let equalized = try await AppPricing.equalizations(of: basePoint.id, client: client).points
-        var points = [base: basePoint.id]
-        var others: [(territoryID: String, price: String)] = []
-        for (territoryID, price) in priceFile.prices where territoryID != base {
-          if let match = equalized.first(where: { $0.territoryID == territoryID }),
-             let value = Double(match.customerPrice), abs(value - (try parseCustomerPrice(price))) < 0.001 {
-            points[territoryID] = match.id
-          } else {
-            others.append((territoryID, price))
-          }
-        }
-        if !others.isEmpty {
-          print("Reading the tiers of \(others.count) territor\(others.count == 1 ? "y" : "ies")…")
-          let resolved = try await boundedConcurrentMap(others, maxConcurrent: 4) { entry in
-            (entry.territoryID, try await PricingCommand.resolve(price: entry.price, territoryID: entry.territoryID, appID: appID, client: client).id)
-          }
-          for (territoryID, pointID) in resolved { points[territoryID] = pointID }
-        }
-        return (basePoint, points)
       }
     }
   }

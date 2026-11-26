@@ -118,7 +118,7 @@ La importación también sustituye los precios programados (se muestran antes de
 
 El archivo guarda los precios para el cliente con el código de cada país o región como clave. Al importar, cada precio se busca por su precio para el cliente entre los niveles de precio del producto *de destino*, de modo que el mismo archivo sirve para distintos productos y apps. La importación sustituye la programación por completo: los países o regiones que no figuran en el archivo vuelven a la equiparación automática, y si la programación actual ya coincide con el archivo, el comando no hace nada. Los errores transitorios de App Store Connect (HTTP 429/5xx) se reintentan automáticamente.
 
-Un precio que no es uno de los niveles del destino hace fallar la importación, que muestra los niveles más cercanos; con `--snap`, cada uno de esos precios toma en su lugar el nivel más cercano (el más barato si dos están a la misma distancia), y los precios ajustados se muestran antes de confirmar.
+Todos los precios que no son un nivel del destino se muestran a la vez, con sus niveles más cercanos, y no se envía nada; con `--snap`, cada uno de esos precios toma en su lugar el nivel más cercano (el más barato si dos están igual de cerca), y los precios ajustados se muestran antes de confirmar. Los precios deben ser números simples, como `4.99` (o `4,99` con coma decimal); cualquier otra cosa (`1,300`, `1e2`, `-1`) se rechaza al leer el archivo, con todos esos precios indicados, antes de enviar ninguna solicitud.
 
 ## Disponibilidad
 

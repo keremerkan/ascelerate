@@ -127,6 +127,32 @@ public enum SalesReports {
     return day.formatted(Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day().dateSeparator(.dash))
   }
 
+  /// The most recent completed period of a frequency in Pacific Time, as Apple names it: DAILY
+  /// yesterday (yyyy-MM-dd), WEEKLY the latest Sunday before today (a week is keyed by the Sunday
+  /// that ends it), MONTHLY last month (yyyy-MM), YEARLY last year (yyyy).
+  public static func defaultDate(frequency: String, from now: Date = .now) -> String {
+    let calendar = reportCalendar
+    let formatter = DateFormatter()
+    formatter.calendar = calendar
+    formatter.timeZone = calendar.timeZone
+    // Latin digits whatever the Mac's language: Apple refuses a date in other digits.
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    switch frequency {
+      case "WEEKLY":
+        formatter.dateFormat = "yyyy-MM-dd"
+        let daysSinceSunday = (calendar.component(.weekday, from: now) - 1 + 7) % 7  // weekday 1 = Sunday
+        return formatter.string(from: calendar.date(byAdding: .day, value: -(daysSinceSunday == 0 ? 7 : daysSinceSunday), to: now) ?? now)
+      case "MONTHLY":
+        formatter.dateFormat = "yyyy-MM"
+        return formatter.string(from: calendar.date(byAdding: .month, value: -1, to: now) ?? now)
+      case "YEARLY":
+        formatter.dateFormat = "yyyy"
+        return formatter.string(from: calendar.date(byAdding: .year, value: -1, to: now) ?? now)
+      default:
+        return reportDay(daysAgo: 1, from: now)
+    }
+  }
+
   /// The Gregorian calendar in Pacific Time, which report periods follow.
   public static var reportCalendar: Calendar {
     var calendar = Calendar(identifier: .gregorian)

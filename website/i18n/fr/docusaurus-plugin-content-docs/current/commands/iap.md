@@ -118,7 +118,7 @@ L'import remplace aussi les prix planifiés (ils sont listés avant la confirmat
 
 Le fichier contient les prix client indexés par code de région. À l'import, chaque prix est mis en correspondance avec les paliers tarifaires du produit *cible* d'après le prix client ; le même fichier fonctionne donc d'un produit ou d'une app à l'autre. L'import remplace intégralement le calendrier : les régions absentes du fichier reviennent à l'alignement automatique, et si le calendrier actuel correspond déjà au fichier, la commande ne fait rien. Les erreurs transitoires d'App Store Connect (HTTP 429/5xx) sont automatiquement réessayées.
 
-Un prix qui ne correspond à aucun palier de la cible fait échouer l’importation, qui indique les paliers les plus proches ; avec `--snap`, chacun de ces prix prend plutôt le palier le plus proche (le moins cher à distance égale), et les prix ajustés sont listés avant la confirmation.
+Tous les prix qui ne sont pas un palier de la cible sont listés en une fois, avec leurs paliers les plus proches, et rien n'est envoyé ; avec `--snap`, chacun de ces prix prend à la place le palier le plus proche (le moins cher si deux sont aussi proches), et les prix ajustés sont listés avant la confirmation. Les prix doivent être des nombres simples, comme `4.99` (ou `4,99` avec une virgule décimale) ; tout le reste (`1,300`, `1e2`, `-1`) est refusé à la lecture du fichier, chacun de ces prix étant nommé, avant toute requête.
 
 ## Disponibilité territoriale
 

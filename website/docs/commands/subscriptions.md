@@ -114,7 +114,7 @@ ascelerate sub pricing import <other-bundle-id> <other-product-id> --file prices
 
 The file stores customer prices keyed by territory code (preserved/grandfathered and future-scheduled prices are excluded from the export). On import, each price is matched against the *target* subscription's own tiers by customer price, so the same file works across products and apps. Import only touches territories listed in the file, skips ones already at the listed price, and enforces the same increase/decrease safety rules as `set` — including `--preserve-current`/`--no-preserve-current` and `--confirm-decrease`.
 
-A price that isn't one of the target's tiers fails the import, which lists the nearest tiers; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm.
+Every price that isn't one of the target's tiers is listed at once, with its nearest tiers, and nothing is sent; with `--snap`, each such price takes the nearest tier instead (the cheaper when two are as close), and the snapped prices are listed before you confirm. Prices must be plain numbers, such as `4.99` (or `4,99` with a decimal comma); anything else (`1,300`, `1e2`, `-1`) is refused when the file is read, with every such price named, before any request.
 
 Transient App Store Connect errors (HTTP 429/5xx) during multi-territory writes are retried automatically — first in place with backoff, then in a second sweep at the end of the run. Territories that still fail are listed in the final report and the command exits non-zero; re-running the same command retries just those, since already-updated territories are skipped as unchanged.
 

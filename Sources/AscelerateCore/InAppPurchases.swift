@@ -265,6 +265,22 @@ public enum InAppPurchases {
       proceeds: point.attributes?.proceeds ?? "")
   }
 
+  /// A territory's price tiers for the purchase, cheapest first, with the territory's currency.
+  public static func pricePointsWithCurrency(
+    purchaseID: String, territoryID: String, client: ASCClient
+  ) async throws -> (points: [AppPricing.PricePoint], currency: String?) {
+    let pages = try await withTransientRetry {
+      try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.inAppPurchasesV2PricePointsGetToManyRelated(
+          path: .init(id: purchaseID), query: .init(filterTerritory: [territoryID], limit: 200, include: [.territory])
+        ).ok.body.json
+      }
+    }
+    let points = pages.flatMap(\.data).map { pricePoint($0, territoryID: territoryID) }
+      .sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) }
+    return (points, pages.lazy.flatMap { $0.included ?? [] }.compactMap { $0.attributes?.currency }.first)
+  }
+
   /// A territory's price tiers for the purchase, cheapest first.
   public static func pricePoints(purchaseID: String, territoryID: String, client: ASCClient) async throws -> [AppPricing.PricePoint] {
     try await withTransientRetry {

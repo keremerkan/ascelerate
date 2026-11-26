@@ -244,7 +244,7 @@ ascelerate apps pricing import <other-bundle-id> --file prices.json
 
 Apple calcula los precios de los demás países o regiones a partir del precio base y puede ajustarlos cuando cambian los impuestos o los tipos de cambio; un precio fijado manualmente se mantiene tal cual. Para varios países o regiones, `sale` toma el precio en la moneda del país o región base y asigna a los demás los precios equivalentes de Apple; al terminar, vuelve a aplicarse el precio anterior de cada país o región. `import` reemplaza la programación completa.
 
-Un precio que no es uno de los niveles del destino hace fallar la importación, que muestra los niveles más cercanos; con `--snap`, cada uno de esos precios toma en su lugar el nivel más cercano (el más barato si dos están a la misma distancia), y los precios ajustados se muestran antes de confirmar.
+Todos los precios que no son un nivel del destino se muestran a la vez, con sus niveles más cercanos, y no se envía nada; con `--snap`, cada uno de esos precios toma en su lugar el nivel más cercano (el más barato si dos están igual de cerca), y los precios ajustados se muestran antes de confirmar. Los precios deben ser números simples, como `4.99` (o `4,99` con coma decimal); cualquier otra cosa (`1,300`, `1e2`, `-1`) se rechaza al leer el archivo, con todos esos precios indicados, antes de enviar ninguna solicitud.
 
 ## Declaraciones de cifrado
 

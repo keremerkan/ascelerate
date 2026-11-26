@@ -60,7 +60,7 @@ extension ReportsCommand {
       let freq: Query.FilterFrequencyPayloadPayload = try parseEnum(frequency, name: "frequency")
       let reportType: Query.FilterReportTypePayloadPayload = try parseEnum(type, name: "type")
       let subTypeEnum: Query.FilterReportSubTypePayloadPayload = try parseEnum(subType, name: "sub-type")
-      let reportDate = date ?? Reports.defaultSalesDate(frequency: freq.rawValue)
+      let reportDate = date ?? SalesReports.defaultDate(frequency: freq.rawValue)
 
       let client = try ClientFactory.makeClient()
 

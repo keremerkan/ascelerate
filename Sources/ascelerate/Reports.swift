@@ -65,38 +65,6 @@ enum Reports {
 
   // MARK: - Sales
 
-  /// Default report date for the most recent completed period, in Apple's reporting time zone.
-  /// DAILY → yesterday, WEEKLY → most recent Sunday, MONTHLY → last month, YEARLY → last year.
-  static func defaultSalesDate(frequency: String) -> String {
-    var cal = Calendar(identifier: .gregorian)
-    cal.timeZone = TimeZone(identifier: "America/Los_Angeles") ?? cal.timeZone
-    let formatter = DateFormatter()
-    formatter.calendar = cal
-    formatter.timeZone = cal.timeZone
-    // Latin digits whatever the Mac's language: Apple refuses a date in other digits.
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    let now = Date()
-
-    switch frequency {
-    case "WEEKLY":
-      formatter.dateFormat = "yyyy-MM-dd"
-      // Apple weekly reports are keyed by the Sunday that ends the week.
-      let weekday = cal.component(.weekday, from: now)  // 1 = Sunday
-      let daysSinceSunday = (weekday - 1 + 7) % 7
-      let lastSunday = cal.date(byAdding: .day, value: -(daysSinceSunday == 0 ? 7 : daysSinceSunday), to: now)!
-      return formatter.string(from: lastSunday)
-    case "MONTHLY":
-      formatter.dateFormat = "yyyy-MM"
-      return formatter.string(from: cal.date(byAdding: .month, value: -1, to: now)!)
-    case "YEARLY":
-      formatter.dateFormat = "yyyy"
-      return formatter.string(from: cal.date(byAdding: .year, value: -1, to: now)!)
-    default:  // DAILY
-      formatter.dateFormat = "yyyy-MM-dd"
-      return formatter.string(from: cal.date(byAdding: .day, value: -1, to: now)!)
-    }
-  }
-
   /// Turns a 404 from a report download into a friendlier hint (the body isn't parsed on downloads).
   static func notFoundHint(_ error: Error, date: String) -> Error {
     if ASCError.from(error)?.statusCode == 404 {

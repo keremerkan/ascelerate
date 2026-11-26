@@ -34,6 +34,7 @@ struct Ascelerate: AsyncParsableCommand {
   }
 
   static func main() async {
+    recordInheritedSignals()
     APICredentials.removeFromEnvironment()
     // Asset uploads send one chunk at a time unless ASCELERATE_PARALLEL_CHUNKS asks for more, and
     // each shows its progress on a terminal.

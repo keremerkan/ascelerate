@@ -48,10 +48,7 @@ extension SubCommand {
     }
 
     static func find(_ nameOrID: String, in messages: [RetentionMessages.Message]) throws -> RetentionMessages.Message {
-      guard
-        let message = messages.first(where: { $0.id == nameOrID || $0.name.caseInsensitiveCompare(nameOrID) == .orderedSame })
-      else { throw RetentionError.noMessage(nameOrID, known: messages.map(\.name)) }
-      return message
+      try RetentionMessages.find(nameOrID, in: messages)
     }
 
     /// The version that takes changes; an error naming the latest one's state otherwise.

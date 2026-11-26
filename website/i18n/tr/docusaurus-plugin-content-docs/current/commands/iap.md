@@ -118,7 +118,7 @@ ascelerate iap pricing import <other-bundle-id> <other-product-id> --file prices
 
 Dosya, bölge koduna göre anahtarlanmış müşteri fiyatlarını içerir. İçe aktarma sırasında her fiyat, müşteri fiyatı üzerinden *hedef* ürünün kendi fiyat kademeleriyle eşleştirilir; bu sayede aynı dosya farklı ürünlerde ve uygulamalarda kullanılabilir. İçe aktarma, fiyat çizelgesini bütünüyle değiştirir: dosyada yer almayan bölgeler otomatik eşitlemeye geri döner; mevcut çizelge dosyayla zaten eşleşiyorsa komut hiçbir değişiklik yapmaz. App Store Connect'in geçici hataları (HTTP 429/5xx) otomatik olarak yeniden denenir.
 
-Hedefin fiyat kademelerinden biri olmayan bir fiyat içe aktarmayı durdurur ve en yakın kademeleri listeler. `--snap` ile bu fiyatların her biri bunun yerine en yakın kademeyi alır (iki kademe eşit uzaklıktaysa daha ucuz olanı); düzeltilen fiyatlar onaydan önce listelenir.
+Hedefin fiyat kademelerinden biri olmayan fiyatların hepsi, en yakın kademeleriyle birlikte bir kerede listelenir ve hiçbir şey gönderilmez. `--snap` ile bu fiyatların her biri bunun yerine en yakın kademeyi alır (iki kademe eşit uzaklıktaysa daha ucuz olanı); düzeltilen fiyatlar onaydan önce listelenir. Fiyatlar `4.99` gibi (veya ondalık virgülle `4,99`) düz sayılar olmalıdır; başka bir şey (`1,300`, `1e2`, `-1`), dosya okunurken, bu tür fiyatların hepsi belirtilerek ve hiçbir istek gönderilmeden reddedilir.
 
 ## Bölge erişilebilirliği
 

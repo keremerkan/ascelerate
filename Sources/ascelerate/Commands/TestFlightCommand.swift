@@ -18,20 +18,34 @@ struct TestFlightCommand: AsyncParsableCommand {
   // MARK: - Shared helpers
 
   /// Resolves a beta group by name (case-insensitive), or prompts with a picker when omitted.
-  static func findBetaGroup(name: String?, appID: String, client: ASCClient) async throws -> Components.Schemas.BetaGroup {
-    let groups = try fetchAll(
+  /// Beta groups by a comma list of names, from one read of the app's groups.
+  static func findBetaGroups(_ names: String, appID: String, client: ASCClient) async throws -> [Components.Schemas.BetaGroup] {
+    let groups = try await betaGroups(appID: appID, client: client)
+    return try names.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.map { name in
+      try betaGroup(named: name, in: groups)
+    }
+  }
+
+  private static func betaGroups(appID: String, client: ASCClient) async throws -> [Components.Schemas.BetaGroup] {
+    try fetchAll(
       await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.betaGroupsGetCollection(query: .init(filterApp: [appID], sort: [.name], limit: 200)).ok.body.json
       },
       data: \.data,
       emptyMessage: "No beta groups found for this app.")
-    if let name {
-      if let match = groups.first(where: { $0.attributes?.name?.lowercased() == name.lowercased() }) {
-        return match
-      }
-      let available = groups.compactMap { $0.attributes?.name }.joined(separator: ", ")
-      throw ValidationError("No beta group named '\(name)'. Available: \(available)")
+  }
+
+  private static func betaGroup(named name: String, in groups: [Components.Schemas.BetaGroup]) throws -> Components.Schemas.BetaGroup {
+    if let match = groups.first(where: { $0.attributes?.name?.lowercased() == name.lowercased() }) {
+      return match
     }
+    let available = groups.compactMap { $0.attributes?.name }.joined(separator: ", ")
+    throw ValidationError("No beta group named '\(name)'. Available: \(available)")
+  }
+
+  static func findBetaGroup(name: String?, appID: String, client: ASCClient) async throws -> Components.Schemas.BetaGroup {
+    let groups = try await betaGroups(appID: appID, client: client)
+    if let name { return try betaGroup(named: name, in: groups) }
     return try promptSelection(
       "Select a beta group", items: groups, display: describeGroup,
       nonInteractiveHint: "Pass the group name to disambiguate.")
@@ -745,11 +759,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
-        var groups: [Components.Schemas.BetaGroup] = []
-        for name in group.split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) {
-          groups.append(
-            try await TestFlightCommand.findBetaGroup(name: name, appID: app.id, client: client))
-        }
+        let groups = try await TestFlightCommand.findBetaGroups(group, appID: app.id, client: client)
         let groupNames = groups.compactMap { $0.attributes?.name }.joined(separator: ", ")
 
         print("Add beta tester:")
@@ -891,11 +901,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
-        var groups: [Components.Schemas.BetaGroup] = []
-        for name in group.split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) {
-          groups.append(
-            try await TestFlightCommand.findBetaGroup(name: name, appID: app.id, client: client))
-        }
+        let groups = try await TestFlightCommand.findBetaGroups(group, appID: app.id, client: client)
         let groupNames = groups.compactMap { $0.attributes?.name }.joined(separator: ", ")
 
         let filePath = try resolveFile(file, extension: "csv", prompt: "Select a CSV file")

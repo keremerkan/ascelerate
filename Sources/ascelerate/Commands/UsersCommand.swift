@@ -80,7 +80,7 @@ struct UsersCommand: AsyncParsableCommand {
 
     func run() async throws {
       jsonOption.activate()
-      let user = try Users.find(user, in: try await Users.list(client: ClientFactory.makeClient()))
+      let user = try await Users.find(user, client: ClientFactory.makeClient())
       if jsonOption.json { try printJSON(user); return }
       print(bold(user.name.isEmpty ? (user.username ?? user.id) : user.name))
       Table.print(headers: ["", ""], rows: [
@@ -124,7 +124,7 @@ struct UsersCommand: AsyncParsableCommand {
       }
       guard !(allApps && apps != nil) else { throw ValidationError("Give --apps or --all-apps, not both.") }
       let client = try ClientFactory.makeClient()
-      let current = try Users.find(user, in: try await Users.list(client: client))
+      let current = try await Users.find(user, client: client)
       let newRoles = try roles.map(UsersCommand.roles)
       var appIDs: [String]?
       if let apps { appIDs = try await UsersCommand.appIDs(apps, client: client) }
@@ -168,7 +168,7 @@ struct UsersCommand: AsyncParsableCommand {
     func run() async throws {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
-      let current = try Users.find(user, in: try await Users.list(client: client))
+      let current = try await Users.find(user, client: client)
       print("Remove \(current.username ?? current.id) (\(UsersCommand.rolesText(current.roles))) from the team?")
       print("They lose access to App Store Connect for this team at once.")
       guard confirm("Remove? [y/N] ") else {

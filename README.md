@@ -962,8 +962,9 @@ ascelerate profiles reissue --all --to-certs ABC123,DEF456  # Use specific certi
 ### Builds
 
 ```bash
-# List all builds (shows app version, platform, and build number)
+# List builds, newest first (shows app version, platform, and build number; 50 unless --limit, 0 for all)
 ascelerate builds list
+ascelerate builds list --limit 200
 ascelerate builds list --bundle-id <bundle-id>
 ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
 ascelerate builds list --bundle-id <bundle-id> --platform macos

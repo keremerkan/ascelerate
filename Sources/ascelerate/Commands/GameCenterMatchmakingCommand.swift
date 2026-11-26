@@ -17,6 +17,13 @@ extension GameCenterCommand {
       defaultSubcommand: RuleSets.self
     )
 
+    /// One rule set by name or ID, with its rules, teams and queues: the list without them, then
+    /// the one found (a request per set and three more each before).
+    static func ruleSet(_ reference: String, client: ASCClient) async throws -> GameCenter.RuleSet {
+      let found = try findRuleSet(reference, in: try await GameCenter.ruleSets(details: false, client: client))
+      return try await GameCenter.ruleSet(id: found.id, client: client)
+    }
+
     static func findRuleSet(_ reference: String, in sets: [GameCenter.RuleSet]) throws -> GameCenter.RuleSet {
       guard let found = try Reference.find(reference, in: sets, kind: "rule set", id: \.id, name: \.referenceName, label: { "\($0.referenceName ?? "-") (\($0.id))" }) else {
         throw ValidationError("No rule set '\(reference)'. Rule sets: \(sets.compactMap(\.referenceName).joined(separator: ", ")).")
@@ -61,10 +68,10 @@ extension GameCenterCommand {
         func run() async throws {
           jsonOption.activate()
           let client = try ClientFactory.makeClient()
-          async let sets = GameCenter.ruleSets(client: client)
-          async let queues = GameCenter.queues(client: client)
-          let (all, queueList) = try await (sets, queues)
+          let all = try await GameCenter.ruleSets(client: client)
           if jsonOption.json { try printJSON(all); return }
+          // The queues' names, for the table only.
+          let queueList = try await GameCenter.queues(client: client)
           guard !all.isEmpty else {
             print("No rule sets.")
             return
@@ -92,7 +99,7 @@ extension GameCenterCommand {
         func run() async throws {
           jsonOption.activate()
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           if jsonOption.json { try printJSON(set); return }
           print(bold(set.referenceName ?? set.id))
           Table.print(headers: ["", ""], rows: [
@@ -171,7 +178,7 @@ extension GameCenterCommand {
           if yes { autoConfirm = true }
           guard min != nil || max != nil else { throw ValidationError("Give --min or --max.") }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           let new = Matchmaking.players(min ?? set.minPlayers, max ?? set.maxPlayers)
           try await Matchmaking.write(
             "Players of '\(set.referenceName ?? set.id)': \(Matchmaking.players(set.minPlayers, set.maxPlayers)) → \(new). Save?",
@@ -194,7 +201,7 @@ extension GameCenterCommand {
         func run() async throws {
           if yes { autoConfirm = true }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           try await Matchmaking.write("Delete rule set '\(set.referenceName ?? set.id)'?", done: green("Deleted") + " '\(set.referenceName ?? set.id)'.") {
             try await GameCenter.deleteRuleSet(id: set.id, client: client)
           }
@@ -246,7 +253,7 @@ extension GameCenterCommand {
           let raw = type.uppercased()
           guard GameCenter.ruleTypes.contains(raw) else { throw ValidationError("--type is compatible, distance, match or team.") }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           print("\(formatState(raw)) rule '\(name)': \(expression)")
           try await Matchmaking.write("Add it to '\(set.referenceName ?? set.id)'?", done: green("Added") + " rule '\(name)'.") {
             _ = try await GameCenter.createRule(
@@ -280,7 +287,7 @@ extension GameCenterCommand {
           if yes { autoConfirm = true }
           guard expression != nil || description != nil || weight != nil else { throw ValidationError("Give --expression, --description or --weight.") }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           let found = try Rules.find(rule, in: set)
           if let expression { print("Expression: \(found.expression ?? "-") → \(expression)") }
           if let description { print("Description: \(found.description ?? "-") → \(description)") }
@@ -306,7 +313,7 @@ extension GameCenterCommand {
         func run() async throws {
           if yes { autoConfirm = true }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           let found = try Rules.find(rule, in: set)
           try await Matchmaking.write("Delete rule '\(found.referenceName ?? found.id)'?", done: green("Deleted") + " rule '\(found.referenceName ?? found.id)'.") {
             try await GameCenter.deleteRule(id: found.id, client: client)
@@ -350,7 +357,7 @@ extension GameCenterCommand {
         func run() async throws {
           if yes { autoConfirm = true }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           try await Matchmaking.write("Add team '\(name)' (\(min)–\(max) players) to '\(set.referenceName ?? set.id)'?", done: green("Added") + " team '\(name)'.") {
             _ = try await GameCenter.createTeam(ruleSetID: set.id, referenceName: name, minPlayers: min, maxPlayers: max, client: client)
           }
@@ -379,7 +386,7 @@ extension GameCenterCommand {
           if yes { autoConfirm = true }
           guard min != nil || max != nil else { throw ValidationError("Give --min or --max.") }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           let found = try Teams.find(team, in: set)
           let new = Matchmaking.players(min ?? found.minPlayers, max ?? found.maxPlayers)
           try await Matchmaking.write(
@@ -406,7 +413,7 @@ extension GameCenterCommand {
         func run() async throws {
           if yes { autoConfirm = true }
           let client = try ClientFactory.makeClient()
-          let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+          let set = try await Matchmaking.ruleSet(ruleSet, client: client)
           let found = try Teams.find(team, in: set)
           try await Matchmaking.write("Delete team '\(found.referenceName ?? found.id)'?", done: green("Deleted") + " team '\(found.referenceName ?? found.id)'.") {
             try await GameCenter.deleteTeam(id: found.id, client: client)
@@ -431,10 +438,10 @@ extension GameCenterCommand {
         func run() async throws {
           jsonOption.activate()
           let client = try ClientFactory.makeClient()
-          async let queues = GameCenter.queues(client: client)
-          async let sets = GameCenter.ruleSets(client: client)
-          let (all, setList) = try await (queues, sets)
+          let all = try await GameCenter.queues(client: client)
           if jsonOption.json { try printJSON(all); return }
+          // Only the rule sets' names, for the table.
+          let setList = try await GameCenter.ruleSets(details: false, client: client)
           guard !all.isEmpty else {
             print("No queues.")
             return
@@ -472,7 +479,7 @@ extension GameCenterCommand {
         func run() async throws {
           if yes { autoConfirm = true }
           let client = try ClientFactory.makeClient()
-          let sets = try await GameCenter.ruleSets(client: client)
+          let sets = try await GameCenter.ruleSets(details: false, client: client)
           let set = try Matchmaking.findRuleSet(ruleSet, in: sets)
           let experiment = try experimentRuleSet.map { try Matchmaking.findRuleSet($0, in: sets) }
           let apps = classicApps?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } ?? []
@@ -511,7 +518,7 @@ extension GameCenterCommand {
           }
           let client = try ClientFactory.makeClient()
           async let queueList = GameCenter.queues(client: client)
-          async let setList = GameCenter.ruleSets(client: client)
+          async let setList = GameCenter.ruleSets(details: false, client: client)
           let (queues, sets) = try await (queueList, setList)
           let found = try Matchmaking.findQueue(queue, in: queues)
           let names = Dictionary(sets.map { ($0.id, $0.referenceName ?? $0.id) }, uniquingKeysWith: { a, _ in a })
@@ -584,7 +591,7 @@ extension GameCenterCommand {
         }
         guard !requests.isEmpty else { throw ValidationError("The request file has no requests.") }
         let client = try ClientFactory.makeClient()
-        let set = try Matchmaking.findRuleSet(ruleSet, in: try await GameCenter.ruleSets(client: client))
+        let set = try await Matchmaking.ruleSet(ruleSet, client: client)
         let matches = try await GameCenter.test(ruleSetID: set.id, requests: requests, client: client)
         if jsonOption.json { try printJSON(matches); return }
         let matched = Set(matches.flatMap { $0.requests.compactMap(\.requestName) })

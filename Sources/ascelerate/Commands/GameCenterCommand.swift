@@ -112,9 +112,10 @@ struct GameCenterCommand: AsyncParsableCommand {
       }
       async let achievements = GameCenter.achievements(owner: detail.owner, client: client)
       async let leaderboards = GameCenter.leaderboards(owner: detail.owner, client: client)
-      async let sets = GameCenter.leaderboardSets(owner: detail.owner, client: client)
-      async let pendingItems = GameCenter.pendingItems(owner: detail.owner, client: client)
-      let (a, l, s, pending) = try await (achievements, leaderboards, sets, pendingItems)
+      async let sets = GameCenter.leaderboardSets(owner: detail.owner, members: false, client: client)
+      let (a, l, s) = try await (achievements, leaderboards, sets)
+      // The three lists just read aren't read again for what waits for review.
+      let pending = try await GameCenter.pendingItems(owner: detail.owner, achievements: a, leaderboards: l, sets: s, client: client)
       if jsonOption.json {
         try printJSON(Result(
           enabled: true, detail: detail, achievements: a.count, leaderboards: l.count, leaderboardSets: s.count, toSubmit: pending.count))
@@ -235,7 +236,7 @@ struct GameCenterDelete<Item: GameCenterItem>: AsyncParsableCommand {
     if yes { autoConfirm = true }
     let client = try ClientFactory.makeClient()
     let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+    let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
     guard confirm("Delete the \(Item.noun) '\(item.displayName)'? [y/N] ") else {
       print(yellow("Cancelled."))
       return
@@ -266,7 +267,7 @@ struct GameCenterReorder<Item: GameCenterOrderedItem>: AsyncParsableCommand {
     if yes { autoConfirm = true }
     let client = try ClientFactory.makeClient()
     let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-    let items = try await Item.list(owner: detail.owner, client: client)
+    let items = try await Item.listForLookup(owner: detail.owner, client: client)
     let first = try GameCenterCommand.ids(order, in: items)
     let ordered = first + items.map(\.id).filter { !first.contains($0) }
     guard ordered != items.map(\.id) else {
@@ -320,7 +321,7 @@ struct GameCenterSubmit<Item: GameCenterItem>: AsyncParsableCommand {
     if yes { autoConfirm = true }
     let client = try ClientFactory.makeClient()
     let (appID, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+    let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
     guard let version = item.latestVersion, version.state == "PREPARE_FOR_SUBMISSION" || version.state == "REJECTED"
       || version.state == "DEVELOPER_REJECTED"
     else {
@@ -360,7 +361,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
       guard let version = item.latestVersion else {
         print("No version.")
         return
@@ -393,7 +394,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
     func run() async throws {
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
       var localizations: [Item.Localization] = []
       if let version = item.latestVersion { localizations = try await Item.localizations(versionID: version.id, client: client) }
       guard !localizations.isEmpty else { throw ValidationError("'\(item.displayName)' has no languages to export.") }
@@ -425,7 +426,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
       let updates = try LocalizationFile.decode(try Data(contentsOf: URL(fileURLWithPath: path)), as: Item.Localization.Fields.self)
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
       guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return }
       let existing = version.id.hasPrefix("DRY-RUN") ? [] : try await Item.localizations(versionID: version.id, client: client)
       let byLocale = Dictionary(existing.map { ($0.locale.lowercased(), $0) }, uniquingKeysWith: { a, _ in a })
@@ -471,7 +472,7 @@ struct GameCenterLocalizations<Item: GameCenterItem>: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-      let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+      let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
       guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return }
       let existing = version.id.hasPrefix("DRY-RUN") ? [] : try await Item.localizations(versionID: version.id, client: client)
       guard let localization = existing.first(where: { $0.locale.lowercased() == locale.lowercased() }) else {
@@ -531,7 +532,7 @@ struct GameCenterImage<Item: GameCenterItem>: AsyncParsableCommand {
     let defaultKind = Item.self as? any GameCenterDefaultImageItem.Type
     if isDefault, defaultKind == nil { throw ValidationError("\(GameCenterCommand.article(Item.noun).prefix(1).uppercased() + GameCenterCommand.article(Item.noun).dropFirst()) has no default image; give --locale.") }
     let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-    let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+    let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
     guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return nil }
     if version.id.hasPrefix("DRY-RUN") {
       throw ValidationError("Dry run: the new version wasn't made, so there's nothing to add an image to yet.")
@@ -654,7 +655,7 @@ func saveGameCenterLocale<Item: GameCenterItem>(
   if yes { autoConfirm = true }
   let client = try ClientFactory.makeClient()
   let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-  let item = try GameCenterCommand.find(arguments.item, in: try await Item.list(owner: detail.owner, client: client))
+  let item = try GameCenterCommand.find(arguments.item, in: try await Item.listForLookup(owner: detail.owner, client: client))
   guard let version = try await GameCenterCommand.editableVersion(of: item, client: client) else { return }
   let existing = version.id.hasPrefix("DRY-RUN")
     ? nil : try await Item.localizations(versionID: version.id, client: client).first { $0.locale.lowercased() == locale.lowercased() }
@@ -1302,10 +1303,10 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
-        async let sets = GameCenter.leaderboardSets(owner: detail.owner, client: client)
-        async let leaderboards = GameCenter.leaderboards(owner: detail.owner, client: client)
-        let (all, boards) = try await (sets, leaderboards)
+        let all = try await GameCenter.leaderboardSets(owner: detail.owner, client: client)
         if jsonOption.json { try printJSON(all); return }
+        // The leaderboards' names, for the table only.
+        let boards = all.isEmpty ? [] : try await GameCenter.leaderboards(owner: detail.owner, client: client)
         guard !all.isEmpty else {
           print("No leaderboard sets.")
           return
@@ -1377,10 +1378,11 @@ extension GameCenterCommand {
         guard name != nil || leaderboards != nil else { throw ValidationError("Give --name or --leaderboards.") }
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        async let sets = GameCenter.leaderboardSets(owner: detail.owner, client: client)
+        // The sets without their leaderboards, then the chosen one's.
+        async let sets = GameCenter.leaderboardSets(owner: detail.owner, members: false, client: client)
         async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
         let (all, boards) = try await (sets, leaderboardList)
-        let set = try GameCenterCommand.find(arguments.item, in: all)
+        let set = try await GameCenter.leaderboardSet(id: GameCenterCommand.find(arguments.item, in: all).id, client: client)
         let ids = try leaderboards.map { try GameCenterCommand.ids($0, in: boards) }
         let names = Dictionary(boards.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
         var lines: [String] = []

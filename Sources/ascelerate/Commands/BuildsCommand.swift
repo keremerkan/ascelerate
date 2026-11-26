@@ -24,7 +24,14 @@ struct BuildsCommand: AsyncParsableCommand {
 
     @OptionGroup var platformOption: PlatformOption
 
+    @Option(name: .long, help: "Maximum number of builds, newest first (default 50; 0 for every build).")
+    var limit: Int = 50
+
     @OptionGroup var jsonOption: JSONOption
+
+    func validate() throws {
+      guard limit >= 0 else { throw ValidationError("--limit must be 0 (every build) or more.") }
+    }
 
     private struct Entry: Encodable {
       let id: String
@@ -46,14 +53,23 @@ struct BuildsCommand: AsyncParsableCommand {
       }
 
       let platform = try platformOption.parsed()
-      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+      // Newest first, 50 a page (the included versions stop at 50), until `limit` builds (Kerem,
+      // 2026-11-26: every build of the team was paged before).
+      let fetch = {
         try await client.buildsGetCollection(query: .init(
           filterPreReleaseVersionVersion: version.map { [$0] },
           filterPreReleaseVersionPlatform: platformFilter(platform),
           filterApp: filterApp,
           sort: [.minusUploadedDate],
+          limit: limit == 0 ? 50 : min(limit, 50),
           include: [.preReleaseVersion]
         )).ok.body.json
+      }
+      var pages = [try await fetch()]
+      var seen: Swift.Set<String> = []
+      while limit == 0 || pages.reduce(0, { $0 + $1.data.count }) < limit, let link = pages[pages.count - 1].links.next {
+        guard seen.insert(link).inserted else { throw BadPageLink(link: link) }
+        pages.append(try await ASCPaging.page(link, fetch))
       }
 
       var entries: [Entry] = []
@@ -79,6 +95,7 @@ struct BuildsCommand: AsyncParsableCommand {
           ))
         }
       }
+      if limit > 0 { entries = Array(entries.prefix(limit)) }
 
       if jsonOption.json {
         try printJSON(entries)
@@ -222,6 +239,12 @@ struct BuildsCommand: AsyncParsableCommand {
 
     @Option(name: .long, help: "Timeout in minutes (default: 30).")
     var timeout: Int = 30
+
+    func validate() throws {
+      // 0 polled without a pause for the whole timeout.
+      guard interval >= 1 else { throw ValidationError("--interval must be at least 1 second.") }
+      guard timeout >= 1 else { throw ValidationError("--timeout must be at least 1 minute.") }
+    }
 
     func run() async throws {
       let client = try ClientFactory.makeClient()
@@ -1160,6 +1183,14 @@ private func installerCertificateName() -> String {
 
 /// A provisioning profile's contents, from its CMS envelope (`security cms -D`).
 private func decodeProfile(_ path: String) -> [String: Any]? {
+  // The profile's plist sits unencrypted inside its CMS envelope: read it in process (a process
+  // per installed profile on every export before), with `security cms -D` when it can't be found.
+  if let data = FileManager.default.contents(atPath: path),
+    let start = data.range(of: Data("<?xml".utf8)), let end = data.range(of: Data("</plist>".utf8), in: start.lowerBound..<data.endIndex),
+    let plist = try? PropertyListSerialization.propertyList(from: data[start.lowerBound..<end.upperBound], format: nil) as? [String: Any]
+  {
+    return plist
+  }
   let decode = Process()
   decode.executableURL = URL(fileURLWithPath: "/usr/bin/security")
   decode.arguments = ["cms", "-D", "-i", path]

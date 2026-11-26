@@ -742,7 +742,7 @@ ascelerate builds upload MyApp.ipa --api --json-events   # Progress as JSON Line
 ascelerate builds uploads <app> [--json]       # recent uploads (any method) with state and Apple's errors/warnings: check here when an upload never became a build
 ascelerate builds uploads <app> --delete-stale # remove upload records that will never complete
 ascelerate builds await-processing <app>             # Wait for processing
-ascelerate builds list --bundle-id <app>
+ascelerate builds list --bundle-id <app>            # newest 50; --limit N, --limit 0 for all
 ```
 
 ### TestFlight

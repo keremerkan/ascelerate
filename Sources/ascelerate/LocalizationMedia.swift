@@ -21,13 +21,17 @@ extension LocalizationMedia {
   /// Every screenshot, preview and library placement of the localization.
   static func items(on owner: Owner, client: ASCClient) async throws -> [Item] {
     var items: [Item] = []
-    for set in try await classicScreenshotSets(on: owner, client: client) {
-      for s in try await LocalizationMedia.screenshots(setID: set.id, client: client) {
+    // Each kind's sets come with their media in one request; the API's mirrors of library slots
+    // (iPhone Duo) are left out, their placements listed below.
+    for (set, screenshots) in try await screenshotSetsWithScreenshots(on: owner, client: client)
+    where AssetLibrary.slots[set.attributes?.screenshotDisplayType ?? ""] == nil {
+      for s in screenshots {
         items.append(Item(id: s.id, kind: "screenshot", type: set.attributes?.screenshotDisplayType, state: s.attributes?.assetDeliveryState?.state))
       }
     }
-    for set in try await classicPreviewSets(on: owner, client: client) {
-      for p in try await LocalizationMedia.previews(setID: set.id, client: client) {
+    for (set, previews) in try await previewSetsWithPreviews(on: owner, client: client)
+    where AssetLibrary.slots["APP_\(set.attributes?.previewType ?? "")"] == nil {
+      for p in previews {
         items.append(Item(id: p.id, kind: "preview", type: set.attributes?.previewType, state: p.attributes?.assetDeliveryState?.state))
       }
     }
@@ -142,34 +146,30 @@ extension LocalizationMedia {
 
   /// Deletes a screenshot, preview or library placement found on one of `owners`.
   static func delete(mediaID: String, among owners: [Owner], client: ASCClient) async throws {
+    // Each owner's media in three requests (`items`), instead of one per set.
     for owner in owners {
-      for set in try await classicScreenshotSets(on: owner, client: client) {
-        let shots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
-        if shots.contains(where: { $0.id == mediaID }) {
+      guard let match = try await items(on: owner, client: client).first(where: { $0.id == mediaID }) else { continue }
+      switch match.kind {
+        case "screenshot":
           guard confirm("Delete this screenshot? [y/N] ") else { return cancelled() }
           try await ClassicMedia.deleteScreenshot(mediaID, client: client)
           print()
           return success("Deleted", "screenshot \(mediaID).")
-        }
-      }
-      for set in try await classicPreviewSets(on: owner, client: client) {
-        let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
-        if previews.contains(where: { $0.id == mediaID }) {
+        case "preview":
           guard confirm("Delete this preview? [y/N] ") else { return cancelled() }
           try await ClassicMedia.deletePreview(mediaID, client: client)
           print()
           return success("Deleted", "preview \(mediaID).")
-        }
-      }
-      // An asset library placement: removing it also deletes its image or video from the
-      // library when nothing else uses it.
-      if let match = try await AssetLibrary.slotPlacements(on: owner, client: client).first(where: { $0.placement.id == mediaID }) {
-        guard confirm("Remove this \(match.kind) placement? [y/N] ") else { return cancelled() }
-        guard let deleted = try await unlessDryRunStopped({ try await AssetLibrary.removePlacement(id: mediaID, client: client) }) else {
-          return print("Dry run: the \(match.kind) placement \(mediaID) wasn't removed.")
-        }
-        print()
-        return success("Removed", "\(match.kind) placement \(mediaID)\(deleted ? " and its unused library file" : "").")
+        default:
+          // An asset library placement: removing it also deletes its image or video from the
+          // library when nothing else uses it.
+          let slot = match.type ?? match.kind
+          guard confirm("Remove this \(slot) placement? [y/N] ") else { return cancelled() }
+          guard let deleted = try await unlessDryRunStopped({ try await AssetLibrary.removePlacement(id: mediaID, client: client) }) else {
+            return print("Dry run: the \(slot) placement \(mediaID) wasn't removed.")
+          }
+          print()
+          return success("Removed", "\(slot) placement \(mediaID)\(deleted ? " and its unused library file" : "").")
       }
     }
     throw ValidationError("Media '\(mediaID)' not found.")

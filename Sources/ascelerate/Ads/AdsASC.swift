@@ -18,8 +18,14 @@ func appStoreAppNames() async throws -> [String: String] {
 
 /// The App Store app ID of a bundle ID or alias (nil for nil), for filtering campaigns by app.
 func appStoreAppID(bundleID: String?) async throws -> String? {
+  try await appStoreAppIDAndName(bundleID: bundleID)?.id
+}
+
+/// The same with the app's name.
+func appStoreAppIDAndName(bundleID: String?) async throws -> (id: String, name: String)? {
   guard let bundleID else { return nil }
-  return try await findApp(bundleID: bundleID, client: ClientFactory.makeClient()).id
+  let app = try await findApp(bundleID: bundleID, client: ClientFactory.makeClient())
+  return (app.id, app.attributes?.name ?? app.id)
 }
 
 /// A write the Apple Ads dry-run gate stopped, as ASCKit's `ASCDryRunStop`, so `--dry-run`

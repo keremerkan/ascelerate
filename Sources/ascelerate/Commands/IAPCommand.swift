@@ -938,7 +938,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, automatic: false, client: client) else {
           if jsonOption.json {
             try printJSON(Schedule(baseTerritory: nil, prices: []))
             return
@@ -1077,7 +1077,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client)
+        let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, automatic: false, client: client)
         let newBase = (baseTerritory ?? schedule?.baseTerritoryID ?? "USA").uppercased()
         if day != nil, schedule.map({ $0.baseTerritoryID != newBase }) ?? true {
           throw ValidationError(schedule == nil
@@ -1204,7 +1204,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, automatic: false, client: client) else {
           throw ValidationError("No price schedule exists yet. Use 'iap pricing set' to create one first.")
         }
 
@@ -1278,7 +1278,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, automatic: false, client: client) else {
           throw ValidationError("No price schedule exists yet. Use 'iap pricing set' to create one first.")
         }
 
@@ -1340,7 +1340,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client) else {
+        guard let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, automatic: false, client: client) else {
           throw ValidationError("No price schedule exists for '\(productID)' — nothing to export.")
         }
         let today = AppPricing.today
@@ -1402,7 +1402,7 @@ struct IAPCommand: AsyncParsableCommand {
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
         let priceFile = try loadProductPricesFile(file)
-        let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, client: client)
+        let schedule = try await InAppPurchases.schedule(purchaseID: iap.id, automatic: false, client: client)
         let base = (priceFile.baseTerritory ?? schedule?.baseTerritoryID ?? "USA").uppercased()
         guard priceFile.prices[base] != nil else {
           throw ValidationError("The file has no price for the base territory \(base).")

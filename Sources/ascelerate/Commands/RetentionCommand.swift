@@ -33,10 +33,13 @@ extension SubCommand {
     )
 
     /// Every message with its subscriptions' product IDs, for listing and naming.
-    static func context(bundleID: String, client: ASCClient) async throws
+    /// `products`: false skips the subscription groups (the product IDs are then empty), for a
+    /// command that names no product.
+    static func context(bundleID: String, products withProducts: Bool = true, client: ASCClient) async throws
       -> (app: Components.Schemas.App, messages: [RetentionMessages.Message], products: [String: String])
     {
       let app = try await findApp(bundleID: bundleID, client: client)
+      guard withProducts else { return (app, try await RetentionMessages.list(appID: app.id, client: client), [:]) }
       async let messages = RetentionMessages.list(appID: app.id, client: client)
       async let groups = SubCommand.fetchGroups(appID: app.id, client: client)
       let products = Dictionary(
@@ -275,7 +278,7 @@ extension SubCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
-        let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
+        let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, products: false, client: client)
         let message = try RetentionMessage.find(arguments.message, in: messages)
         if let current = message.current, current.isEditable {
           throw ValidationError("'\(message.name)' already has a version that can change (\(formatState(current.state))).")
@@ -302,7 +305,7 @@ extension SubCommand {
 
         func run() async throws {
           let client = try ClientFactory.makeClient()
-          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
+          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, products: false, client: client)
           let message = try RetentionMessage.find(arguments.message, in: messages)
           guard let version = message.current else { return print("'\(message.name)' has no version.") }
           let languages = try await RetentionMessages.localizations(versionID: version.id, client: client)
@@ -335,7 +338,7 @@ extension SubCommand {
           if yes { autoConfirm = true }
           try RetentionMessage.checkFields(header: header, body: body)
           let client = try ClientFactory.makeClient()
-          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
+          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, products: false, client: client)
           let message = try RetentionMessage.find(arguments.message, in: messages)
           let version = try RetentionMessage.editableVersion(of: message)
           let existing = try await RetentionMessages.localizations(versionID: version.id, client: client)
@@ -369,7 +372,7 @@ extension SubCommand {
         func run() async throws {
           if yes { autoConfirm = true }
           let client = try ClientFactory.makeClient()
-          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
+          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, products: false, client: client)
           let message = try RetentionMessage.find(arguments.message, in: messages)
           let version = try RetentionMessage.editableVersion(of: message)
           guard
@@ -413,7 +416,7 @@ extension SubCommand {
             liveSpecs: try await AssetLibrary.placementSpecs(
               type: RetentionMessages.imageSlot.placementType.rawValue, group: RetentionMessages.imageSlot.group, client: client
             ).images)
-          let (app, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
+          let (app, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, products: false, client: client)
           let message = try RetentionMessage.find(arguments.message, in: messages)
           let version = try RetentionMessage.editableVersion(of: message)
           let current = try await RetentionMessages.image(versionID: version.id, client: client)
@@ -438,7 +441,7 @@ extension SubCommand {
         func run() async throws {
           if yes { autoConfirm = true }
           let client = try ClientFactory.makeClient()
-          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
+          let (_, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, products: false, client: client)
           let message = try RetentionMessage.find(arguments.message, in: messages)
           let version = try RetentionMessage.editableVersion(of: message)
           guard let image = try await RetentionMessages.image(versionID: version.id, client: client) else {
@@ -475,7 +478,7 @@ extension SubCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
-        let (app, messages, _) = try await RetentionMessage.context(bundleID: bundleID, client: client)
+        let (app, messages, _) = try await RetentionMessage.context(bundleID: bundleID, products: false, client: client)
         let (sub, _) = try await SubCommand.findSubscription(productID: productID, appID: app.id, client: client)
         let chosen = message.lowercased() == "none" ? nil : try RetentionMessage.find(message, in: messages)
         var offerIDs: [String]?
@@ -515,7 +518,7 @@ extension SubCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
-        let (app, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, client: client)
+        let (app, messages, _) = try await RetentionMessage.context(bundleID: arguments.bundleID, products: false, client: client)
         let message = try RetentionMessage.find(arguments.message, in: messages)
         let version = try RetentionMessage.editableVersion(of: message)
         let platform = (try platform.map(parsePlatform) ?? .ios).rawValue

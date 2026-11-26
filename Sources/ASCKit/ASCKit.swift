@@ -549,6 +549,7 @@ struct PacingMiddleware: ClientMiddleware {
 /// A `links.next` App Store Connect sent that can't be followed: it doesn't parse, or it came back.
 public struct BadPageLink: LocalizedError, Sendable {
   public let link: String
+  public init(link: String) { self.link = link }
   public var errorDescription: String? { "App Store Connect sent a next-page link that can't be followed: \(link)" }
 }
 

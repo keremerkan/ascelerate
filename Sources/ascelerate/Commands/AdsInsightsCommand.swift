@@ -382,10 +382,12 @@ extension AdsCommand {
       money.map(Ads.Amount.init).flatMap { $0.value == 0 ? nil : $0 }
     }
 
-    /// The open (AVAILABLE) recommendations of the scope's apps, for its campaigns.
-    static func open(_ ads: AdsConfig, scope: Ads.Scope, client: Client) async throws -> [Entry] {
+    /// The open (AVAILABLE) recommendations of the scope's apps, for its campaigns. With `until`,
+    /// the apps after the one where the last of those IDs turned up aren't asked.
+    static func open(_ ads: AdsConfig, scope: Ads.Scope, until wanted: Set<String>? = nil, client: Client) async throws -> [Entry] {
       var entries: [Entry] = []
       for appID in Set(scope.campaigns.compactMap(\.promotedObjectId)).sorted() {
+        if let wanted, wanted.isSubset(of: Set(entries.filter { scope.contains($0.campaignId) }.map(\.id))) { break }
         let body = Components.Schemas.RecommendationQueryRequest(
           pagination: .init(offset: 0, pageSize: 1000),
           filters: Ads.recommendationFilters(app: appID) + [.init(field: "state", _operator: .equals, value: ["AVAILABLE"])]
@@ -476,9 +478,10 @@ extension AdsCommand {
 
     private static func act(ids: [String], verb: String, done: String, apply: Bool) async throws {
       let ads = try Ads.config()
-      let scope = try await Ads.Scope.resolve(ads, app: nil, campaign: nil)
+      // Neither app names (the labels name campaigns) nor the apps after the last ID found.
+      let scope = try await Ads.Scope.resolve(ads, app: nil, campaign: nil, names: false)
       try await Ads.withClient(ads) { client in
-        let open = try await Recommendations.open(ads, scope: scope, client: client)
+        let open = try await Recommendations.open(ads, scope: scope, until: Set(ids), client: client)
         let targets = try Ads.unique(ids).map { id in
           guard let entry = open.first(where: { $0.id == id }) else {
             throw ValidationError("No open recommendation \(id). See 'ascelerate ads recommendations'.")

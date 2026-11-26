@@ -12,9 +12,10 @@ ascelerate builds list
 ascelerate builds list --bundle-id <bundle-id>
 ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
 ascelerate builds list --bundle-id <bundle-id> --platform macos
+ascelerate builds list --limit 200
 ```
 
-Çıktı, her build'in uygulama sürümünü, platformunu, build numarasını, işlenme durumunu ve yükleme tarihini gösterir. Makine tarafından okunabilir çıktı için `--json` ekleyin ([kurallar](../guides/automation.md#json-output)).
+Çıktı, her build'in uygulama sürümünü, platformunu, build numarasını, işlenme durumunu ve yükleme tarihini gösterir. Makine tarafından okunabilir çıktı için `--json` ekleyin ([kurallar](../guides/automation.md#json-output)). En yeni 50 build listelenir; `--limit N` N tanesini, `--limit 0` hepsini listeler.
 
 ## Arşivleme
 

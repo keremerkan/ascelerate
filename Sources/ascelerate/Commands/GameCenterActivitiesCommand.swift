@@ -152,10 +152,7 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        async let activityList = GameCenter.activities(owner: detail.owner, client: client)
-        async let achievementList = GameCenter.achievements(owner: detail.owner, client: client)
-        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
-        let a = try GameCenterCommand.find(arguments.item, in: try await activityList)
+        let a = try GameCenterCommand.find(arguments.item, in: try await GameCenter.activities(owner: detail.owner, client: client))
         var localizations: [GameCenter.ActivityLocalization] = []
         var defaultImage: GameCenter.Image?
         if let version = a.latestVersion {
@@ -163,6 +160,9 @@ extension GameCenterCommand {
           defaultImage = try await Item.defaultImage(versionID: version.id, client: client)
         }
         if jsonOption.json { try printJSON(Result(activity: a, localizations: localizations, defaultImage: defaultImage)); return }
+        // The names, for the table only (JSON gives IDs).
+        async let achievementList = GameCenter.achievements(owner: detail.owner, client: client)
+        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
         let achievements = Dictionary(try await achievementList.map { ($0.id, $0.displayName) }, uniquingKeysWith: { x, _ in x })
         let leaderboards = Dictionary(try await leaderboardList.map { ($0.id, $0.displayName) }, uniquingKeysWith: { x, _ in x })
         print(bold(a.referenceName ?? a.id))
@@ -414,9 +414,7 @@ extension GameCenterCommand {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: arguments.app, client: client)
-        async let challengeList = GameCenter.challenges(owner: detail.owner, client: client)
-        async let leaderboardList = GameCenter.leaderboards(owner: detail.owner, client: client)
-        let c = try GameCenterCommand.find(arguments.item, in: try await challengeList)
+        let c = try GameCenterCommand.find(arguments.item, in: try await GameCenter.challenges(owner: detail.owner, client: client))
         var localizations: [GameCenter.ChallengeLocalization] = []
         var defaultImage: GameCenter.Image?
         if let version = c.latestVersion {
@@ -424,7 +422,8 @@ extension GameCenterCommand {
           defaultImage = try await Item.defaultImage(versionID: version.id, client: client)
         }
         if jsonOption.json { try printJSON(Result(challenge: c, localizations: localizations, defaultImage: defaultImage)); return }
-        let leaderboard = try await leaderboardList.first { $0.id == c.leaderboardID }
+        // The name, for the table only.
+        let leaderboard = try await GameCenter.leaderboards(owner: detail.owner, client: client).first { $0.id == c.leaderboardID }
         print(bold(c.referenceName ?? c.id))
         Table.print(headers: ["", ""], rows: [
           ["ID", c.vendorIdentifier ?? "-"],

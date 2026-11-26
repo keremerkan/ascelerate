@@ -105,12 +105,22 @@ extension GameCenter {
 
   /// The team's rule sets with their rules, teams and queues (each read on its own: an include
   /// caps them at 50).
-  public static func ruleSets(client: ASCClient) async throws -> [RuleSet] {
+  /// `details`: false leaves each set's rules, teams and queues empty (three requests per set fewer),
+  /// for finding one by name.
+  public static func ruleSets(details: Bool = true, client: ASCClient) async throws -> [RuleSet] {
     let sets = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.gameCenterMatchmakingRuleSetsGetCollection(query: .init(limit: 200)).ok.body.json
       }
     }.flatMap(\.data)
+    guard details else {
+      return sets.map { set in
+        let a = set.attributes
+        return RuleSet(
+          id: set.id, referenceName: a?.referenceName, ruleLanguageVersion: a?.ruleLanguageVersion, minPlayers: a?.minPlayers,
+          maxPlayers: a?.maxPlayers, rules: [], teams: [], queueIDs: [])
+      }
+    }
     return try await boundedConcurrentMap(sets) { try await ruleSet($0, client: client) }
   }
 

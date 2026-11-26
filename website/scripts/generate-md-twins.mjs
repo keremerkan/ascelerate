@@ -6,6 +6,7 @@
 import { cpSync, statSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeHomepageTwins } from './homepage-twins.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const build = join(root, 'build');
@@ -31,3 +32,4 @@ for (const { src, out } of targets) {
   total += countMd(src);
 }
 console.log(`[md-twins] ${total} markdown twins copied into build/`);
+console.log(`[md-twins] ${writeHomepageTwins(root, build)} translated homepage twins written`);

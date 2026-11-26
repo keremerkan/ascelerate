@@ -42,7 +42,7 @@ Docs are at https://ascelerate.dev/docs/getting-started/installation — every d
 - [Workflows](https://ascelerate.dev/docs/guides/workflows.md)
 - [AI skill](https://ascelerate.dev/docs/guides/ai-skill.md)
 
-Documentation is available in English, German, French, Japanese, and Turkish (e.g. `https://ascelerate.dev/de/docs/...`).
+Documentation is available in English, German, Spanish, French, Japanese, and Turkish (e.g. `https://ascelerate.dev/de/docs/...`).
 
 ---
 

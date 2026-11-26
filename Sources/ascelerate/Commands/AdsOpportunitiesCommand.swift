@@ -94,8 +94,9 @@ extension AdsCommand {
           }
           let keywords = try await Ads.keywords(campaignID: campaignID, ads, client: client)
           let groups = try await Ads.adGroups(campaignID: campaignID, ads, client: client)
+          // One query at a time: perCampaign runs four campaigns at once.
           let negatives = try await Ads.negativeKeywords(
-            campaignID: campaignID, adGroupIDs: groups.compactMap(\.id), ads, client: client
+            campaignID: campaignID, adGroupIDs: groups.compactMap(\.id), ads, maxConcurrent: 1, client: client
           )
           return [CampaignData(campaignID: campaignID, rows: rows, keywords: keywords, negatives: negatives)]
         }

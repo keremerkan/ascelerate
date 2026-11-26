@@ -46,19 +46,26 @@ public enum Ads {
     /// The seconds the process may spend waiting out rate limits (429), in total: a wait that
     /// would pass it returns the 429 instead (0: the first one). Nil waits as Apple asks.
     public var maxRateLimitWait: Int?
+    /// The longest one wait may be (as ASCKit's `ASCRateLimitWait.maxWait`): a 429 asking for more
+    /// is returned at once with Apple's reason, a shorter one is waited out. Nil: up to an hour.
+    /// Unlike the total, it never runs out, so a long-lived caller can wait out bursts and still
+    /// refuse to sit out a spent quota.
+    public var maxSingleRateLimitWait: Int?
 
     public init(
       gateWrite: (@Sendable (String, String, Data?) async throws -> Void)? = nil,
       onRateLimitWait: (@Sendable (Int) -> Void)? = nil,
       server: (url: URL, accessToken: String)? = nil,
       headers: [String: String] = [:],
-      maxRateLimitWait: Int? = nil
+      maxRateLimitWait: Int? = nil,
+      maxSingleRateLimitWait: Int? = nil
     ) {
       self.gateWrite = gateWrite
       self.onRateLimitWait = onRateLimitWait
       self.server = server
       self.headers = headers
       self.maxRateLimitWait = maxRateLimitWait
+      self.maxSingleRateLimitWait = maxSingleRateLimitWait
     }
   }
 
@@ -144,14 +151,15 @@ public enum Ads {
 
   /// The campaign's negative keywords, campaign-level and ad group-level (deleted ones left out).
   /// The query needs an `adGroupId` condition: IS_NULL for the campaign's own, EQUALS per ad group.
+  /// `maxConcurrent`: 1 inside a loop over campaigns that already runs several at once.
   public static func negativeKeywords(
-    campaignID: Int64, adGroupIDs: [Int64], context: String, client: Client
+    campaignID: Int64, adGroupIDs: [Int64], context: String, maxConcurrent: Int = 4, client: Client
   ) async throws -> [Components.Schemas.NegativeKeyword] {
     var conditions: [Components.Schemas.QueryFilter] = [.init(field: "adGroupId", _operator: .isNull)]
     conditions += try adGroupIDs.map { try filter("adGroupId", equals: $0) }
     let campaign = try filter("campaignId", equals: campaignID)
-    // Four queries at a time, the campaign's own first and then the ad groups' in their order.
-    return try await boundedConcurrentMap(conditions, maxConcurrent: 4) { condition in
+    // Four queries at a time (or `maxConcurrent`), the campaign's own first and then the ad groups' in their order.
+    return try await boundedConcurrentMap(conditions, maxConcurrent: maxConcurrent) { condition in
       try await query(Components.Schemas.NegativeKeyword.self) { pagination in
         try await client.postNegativeKeywordsQuery(
           headers: .init(xApContext: context),
@@ -360,11 +368,13 @@ public enum Ads {
 
     /// The seconds to wait for a 429's `Retry-After` or `RateLimit-Reset`: seconds up to an hour;
     /// a larger value is read as the time to wait until (seconds since 1970), if that's within the
-    /// hour. Nil otherwise: the 429 is returned rather than sleeping for years.
-    static func singleWait(_ value: Int, now: Date = .now) -> Int? {
-      if value <= maxSingleWait { return max(value, 0) }
+    /// hour. Nil otherwise: the 429 is returned rather than sleeping for years. `limit` lowers the
+    /// hour (`Options.maxSingleRateLimitWait`).
+    static func singleWait(_ value: Int, now: Date = .now, limit: Int? = nil) -> Int? {
+      let ceiling = min(maxSingleWait, max(limit ?? maxSingleWait, 0))
+      if value <= maxSingleWait { return value <= ceiling ? max(value, 0) : nil }
       let untilThen = value - Int(now.timeIntervalSince1970)
-      return (0...maxSingleWait).contains(untilThen) ? untilThen : nil
+      return (0...ceiling).contains(untilThen) ? untilThen : nil
     }
 
     /// Seconds before a read is sent again after a network error (tests make it 0).
@@ -417,7 +427,7 @@ public enum Ads {
         if status == 429, attempt < Self.maxAttempts,
           let wait = Self.singleWait([HTTPField.Name("Retry-After"), HTTPField.Name("RateLimit-Reset")]
             .compactMap { $0.flatMap { response.headerFields[$0] }.flatMap(Int.init) }.first
-            ?? (1 << attempt))
+            ?? (1 << attempt), limit: options.maxSingleRateLimitWait)
         {
           // Within the process's allowance, or the 429 is returned.
           if await RateLimitBudget.shared.take(wait, cap: options.maxRateLimitWait) {

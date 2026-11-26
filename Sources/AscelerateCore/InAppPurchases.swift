@@ -195,7 +195,8 @@ public enum InAppPurchases {
 
   /// The purchase's price schedule, in `AppPricing`'s types (an in-app purchase's schedule has the
   /// same shape as an app's); nil when it has no price yet.
-  public static func schedule(purchaseID: String, client: ASCClient) async throws -> AppPricing.Schedule? {
+  /// `automatic`: false leaves Apple's automatic prices out, as `AppPricing.schedule`.
+  public static func schedule(purchaseID: String, automatic readAutomatic: Bool = true, client: ASCClient) async throws -> AppPricing.Schedule? {
     let schedule = try await optionalRelated {
       try await withTransientRetry {
         try await client.inAppPurchasesV2IapPriceScheduleGetToOneRelated(
@@ -206,7 +207,7 @@ public enum InAppPurchases {
     }
     guard let schedule, let base = schedule.relationships?.baseTerritory?.data?.id else { return nil }
     async let manual = optionalList { try await prices(scheduleID: schedule.id, automatic: false, client: client) }
-    async let automatic = optionalList { try await prices(scheduleID: schedule.id, automatic: true, client: client) }
+    async let automatic = readAutomatic ? optionalList { try await prices(scheduleID: schedule.id, automatic: true, client: client) } : nil
     guard let (manualPrices, manualCurrencies) = try await manual, !manualPrices.isEmpty else { return nil }
     let (automaticPrices, automaticCurrencies) = try await automatic ?? ([], [:])
     return AppPricing.Schedule(

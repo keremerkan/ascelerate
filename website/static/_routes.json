@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/assets/*",
+    "/img/*",
+    "/.well-known/*",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/de/assets/*",
+    "/de/img/*",
+    "/de/sitemap.xml",
+    "/de/robots.txt",
+    "/es/assets/*",
+    "/es/img/*",
+    "/es/sitemap.xml",
+    "/es/robots.txt",
+    "/fr/assets/*",
+    "/fr/img/*",
+    "/fr/sitemap.xml",
+    "/fr/robots.txt",
+    "/ja/assets/*",
+    "/ja/img/*",
+    "/ja/sitemap.xml",
+    "/ja/robots.txt",
+    "/tr/assets/*",
+    "/tr/img/*",
+    "/tr/sitemap.xml",
+    "/tr/robots.txt"
+  ]
+}

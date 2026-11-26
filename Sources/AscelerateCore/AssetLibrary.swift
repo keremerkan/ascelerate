@@ -622,11 +622,29 @@ public enum AssetLibrary {
     try await ownerPlacements(on: owner, type: type, group: group, of: asset, client: client).data
   }
 
+  public typealias PlacedMedia = (
+    placement: Components.Schemas.AppAssetLibraryPlacement, image: Components.Schemas.AppAssetLibraryImage?,
+    video: Components.Schemas.AppAssetLibraryVideo?
+  )
+
+  /// Every placement on `owner` with its image or video, in display order within each group: one
+  /// listing to group locally instead of one request per type and group. A placement whose asset
+  /// didn't come with it (if the included resources are capped) has neither; `placementsWithMedia`
+  /// reads its group again.
+  public static func allPlacementsWithMedia(on owner: Owner, client: ASCClient) async throws -> [PlacedMedia] {
+    withMedia(try await ownerPlacements(on: owner, media: .full, client: client))
+  }
+
   /// An owner's placements with their images or videos, in their order.
   public static func placementsWithMedia(
     on owner: Owner, type: PlacementType, group: String, client: ASCClient
-  ) async throws -> [(placement: Components.Schemas.AppAssetLibraryPlacement, image: Components.Schemas.AppAssetLibraryImage?, video: Components.Schemas.AppAssetLibraryVideo?)] {
-    let result = try await ownerPlacements(on: owner, type: type, group: group, media: .full, client: client)
+  ) async throws -> [PlacedMedia] {
+    withMedia(try await ownerPlacements(on: owner, type: type, group: group, media: .full, client: client))
+  }
+
+  private static func withMedia(
+    _ result: (data: [Components.Schemas.AppAssetLibraryPlacement], included: [Components.Schemas.AppAssetLibraryPlacementsResponse.IncludedPayloadPayload])
+  ) -> [PlacedMedia] {
     var images: [String: Components.Schemas.AppAssetLibraryImage] = [:]
     var videos: [String: Components.Schemas.AppAssetLibraryVideo] = [:]
     for included in result.included {
@@ -767,12 +785,15 @@ public enum AssetLibrary {
   /// results) on `owner`, with the folder name it belongs to.
   public static func slotPlacements(on owner: Owner, client: ASCClient) async throws
     -> [(kind: String, placement: Components.Schemas.AppAssetLibraryPlacement)] {
+    // One listing of every placement, grouped here (one request per slot and type before).
+    let all = try await ownerPlacements(on: owner, client: client).data
     var result: [(String, Components.Schemas.AppAssetLibraryPlacement)] = []
     for (name, slot) in slots.sorted(by: { $0.key < $1.key }) {
       var types = [slot.placementType]
       if let videoType = slot.videoPlacementType, videoType != slot.placementType { types.append(videoType) }
       for type in types {
-        result += try await placements(on: owner, type: type, group: slot.group, client: client).map { (name, $0) }
+        result += all.filter { $0.attributes?.placementType == type.rawValue && $0.attributes?.placementGroup == slot.group }
+          .map { (name, $0) }
       }
     }
     return result

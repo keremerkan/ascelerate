@@ -87,6 +87,29 @@ import Testing
     #expect(Ads.Middleware.singleWait(99_999, now: now) == nil)
   }
 
+  @Test func aPerWaitMaximumReturnsLongerWaitsAndWaitsOutShorterOnes() async throws {
+    let now = Date(timeIntervalSince1970: 1_800_000_000)
+    #expect(Ads.Middleware.singleWait(30, now: now, limit: 60) == 30)
+    #expect(Ads.Middleware.singleWait(90, now: now, limit: 60) == nil)
+    #expect(Ads.Middleware.singleWait(1_800_000_120, now: now, limit: 60) == nil)
+    #expect(Ads.Middleware.singleWait(1_800_000_040, now: now, limit: 60) == 40)
+    // Above it: the 429 at once.
+    var long = HTTPResponse(status: .tooManyRequests)
+    long.headerFields[HTTPField.Name("Retry-After")!] = "5"
+    let refused = MiddlewareTests.Script([.success(long), .success(HTTPResponse(status: .ok))])
+    await #expect(throws: AdsError.self) {
+      try await MiddlewareTests().run(.get, "/api/v1/acls", script: refused, options: .init(maxSingleRateLimitWait: 2))
+    }
+    #expect(refused.sent == 1)
+    // Below it: waited out and sent again, as many times as Apple asks (no total is used up).
+    var short = HTTPResponse(status: .tooManyRequests)
+    short.headerFields[HTTPField.Name("Retry-After")!] = "0"
+    let waited = MiddlewareTests.Script([.success(short), .success(short), .success(HTTPResponse(status: .ok))])
+    let response = try await MiddlewareTests().run(.get, "/api/v1/acls", script: waited, options: .init(maxSingleRateLimitWait: 2))
+    #expect(response.status == .ok)
+    #expect(waited.sent == 3)
+  }
+
   @Test func aFarResetReturnsThe429() async throws {
     var limited = HTTPResponse(status: .tooManyRequests)
     limited.headerFields[HTTPField.Name("RateLimit-Reset")!] = "99999999"

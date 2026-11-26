@@ -75,9 +75,10 @@ extension Ads {
   }
 
   static func negativeKeywords(
-    campaignID: Int64, adGroupIDs: [Int64], _ ads: AdsConfig, client: Client
+    campaignID: Int64, adGroupIDs: [Int64], _ ads: AdsConfig, maxConcurrent: Int = 4, client: Client
   ) async throws -> [Components.Schemas.NegativeKeyword] {
-    try await negativeKeywords(campaignID: campaignID, adGroupIDs: adGroupIDs, context: context(ads), client: client)
+    try await negativeKeywords(
+      campaignID: campaignID, adGroupIDs: adGroupIDs, context: context(ads), maxConcurrent: maxConcurrent, client: client)
   }
 
   /// The campaign named `ref` (case-insensitive) or with that ID; the error lists the names.
@@ -167,8 +168,11 @@ extension Ads {
     /// Whether `--app` or `--campaign` narrowed the campaigns.
     let isNarrowed: Bool
 
-    static func resolve(_ ads: AdsConfig, app: String?, campaign: String?) async throws -> Scope {
-      let appID = try await appStoreAppID(bundleID: app)
+    /// `names`: false skips App Store Connect's app names (paging every app) for a command that
+    /// shows none; the campaigns are then in name order.
+    static func resolve(_ ads: AdsConfig, app: String?, campaign: String?, names: Bool = true) async throws -> Scope {
+      let found = try await appStoreAppIDAndName(bundleID: app)
+      let appID = found?.id
       var campaigns = try await withClient(ads) { try await Ads.campaigns(ads, client: $0) }
       if let appID {
         campaigns = campaigns.filter { $0.promotedObjectId == appID }
@@ -177,7 +181,8 @@ extension Ads {
       if let campaign {
         campaigns = [try Ads.find(campaign: campaign, in: campaigns)]
       }
-      let appNames = try await appStoreAppNames()
+      // With --app every campaign is that app's: its name is known, no need to page every app.
+      let appNames: [String: String] = if !names { [:] } else if let found { [found.id: found.name] } else { try await appStoreAppNames() }
       let key = { (c: Components.Schemas.Campaign) in (c.promotedObjectId.flatMap { appNames[$0] } ?? "", c.name ?? "") }
       return Scope(
         campaigns: campaigns.sorted { key($0) < key($1) },

@@ -47,10 +47,11 @@ extension AppsCommand {
 
     // MARK: Shared
 
-    /// The app with its price schedule (nil when it has none yet).
-    static func load(_ bundleID: String, client: ASCClient) async throws -> (app: Components.Schemas.App, schedule: AppPricing.Schedule?) {
+    /// The app with its price schedule (nil when it has none yet); Apple's automatic prices only
+    /// with `automatic` (show and keep use them).
+    static func load(_ bundleID: String, automatic: Bool = false, client: ASCClient) async throws -> (app: Components.Schemas.App, schedule: AppPricing.Schedule?) {
       let app = try await findApp(bundleID: bundleID, client: client)
-      return (app, try await AppPricing.schedule(appID: app.id, client: client))
+      return (app, try await AppPricing.schedule(appID: app.id, automatic: automatic, client: client))
     }
 
     static func requireSchedule(_ schedule: AppPricing.Schedule?) throws -> AppPricing.Schedule {
@@ -143,7 +144,7 @@ extension AppsCommand {
       func run() async throws {
         jsonOption.activate()
         let client = try ClientFactory.makeClient()
-        let (_, schedule) = try await PricingCommand.load(bundleID, client: client)
+        let (_, schedule) = try await PricingCommand.load(bundleID, automatic: true, client: client)
         guard let schedule else {
           if jsonOption.json { try printJSON(Result(baseTerritory: nil, prices: [])); return }
           print("The app has no price yet. Set one with 'ascelerate apps pricing set'.")
@@ -346,7 +347,7 @@ extension AppsCommand {
       func run() async throws {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
-        let (app, loaded) = try await PricingCommand.load(bundleID, client: client)
+        let (app, loaded) = try await PricingCommand.load(bundleID, automatic: true, client: client)
         let schedule = try PricingCommand.requireSchedule(loaded)
         let chosen = try await PricingCommand.territories(territories, client: client)
         let today = AppPricing.today

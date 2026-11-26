@@ -12,9 +12,10 @@ ascelerate builds list
 ascelerate builds list --bundle-id <bundle-id>
 ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
 ascelerate builds list --bundle-id <bundle-id> --platform macos
+ascelerate builds list --limit 200
 ```
 
-The output shows each build's app version, platform, build number, processing state, and upload date. Add `--json` for machine-readable output ([conventions](../guides/automation.md#json-output)).
+The output shows each build's app version, platform, build number, processing state, and upload date. Add `--json` for machine-readable output ([conventions](../guides/automation.md#json-output)). The newest 50 builds are listed; `--limit N` lists N, and `--limit 0` every build.
 
 ## Archive
 

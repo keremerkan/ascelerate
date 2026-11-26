@@ -22,7 +22,8 @@ extension GameCenter {
     public let image: Image?
   }
 
-  public static func leaderboardSets(owner: Owner, client: ASCClient) async throws -> [LeaderboardSet] {
+  /// `members`: false leaves each set's `leaderboardIDs` empty (a request per set fewer).
+  public static func leaderboardSets(owner: Owner, members: Bool = true, client: ASCClient) async throws -> [LeaderboardSet] {
     let pages = try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         switch owner {
@@ -42,7 +43,7 @@ extension GameCenter {
     // A set's leaderboards are read on their own: an include caps them at 50.
     let found = versions
     return try await boundedConcurrentMap(pages.flatMap(\.data)) { set in
-      try await leaderboardSet(set, versions: found, client: client)
+      try await leaderboardSet(set, versions: found, members: members, client: client)
     }
   }
 
@@ -59,9 +60,10 @@ extension GameCenter {
   }
 
   private static func leaderboardSet(
-    _ set: Components.Schemas.GameCenterLeaderboardSetV2, versions: [String: Version], client: ASCClient
+    _ set: Components.Schemas.GameCenterLeaderboardSetV2, versions: [String: Version], members readMembers: Bool = true,
+    client: ASCClient
   ) async throws -> LeaderboardSet {
-    let members = try await withTransientRetry {
+    let members = !readMembers ? [] : try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.gameCenterLeaderboardSetsV2GameCenterLeaderboardsGetToManyRelationship(
           path: .init(id: set.id), query: .init(limit: 200)).ok.body.json

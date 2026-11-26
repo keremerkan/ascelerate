@@ -61,15 +61,28 @@ public enum Users {
 
   /// The team's people, by email, with the apps of those who don't see all apps.
   public static func list(client: ASCClient) async throws -> [User] {
-    let users = try await withTransientRetry {
+    try await boundedConcurrentMap(try await records(client: client)) { user in
+      try await self.user(user, client: client)
+    }
+    .sorted { ($0.username ?? "").localizedStandardCompare($1.username ?? "") == .orderedAscending }
+  }
+
+  /// One person by email (case-insensitive) or ID, with their apps: only that person's apps are
+  /// read (`list` reads everyone's).
+  public static func find(_ reference: String, client: ASCClient) async throws -> User {
+    let all = try await records(client: client)
+    guard let user = all.first(where: { $0.id == reference || $0.attributes?.username?.lowercased() == reference.lowercased() }) else {
+      throw LookupError.notFound(reference)
+    }
+    return try await self.user(user, client: client)
+  }
+
+  private static func records(client: ASCClient) async throws -> [Components.Schemas.User] {
+    try await withTransientRetry {
       try await ASCPaging.allPages(next: { $0.links.next }) {
         try await client.usersGetCollection(query: .init(limit: 200)).ok.body.json
       }
     }.flatMap(\.data)
-    return try await boundedConcurrentMap(users) { user in
-      try await self.user(user, client: client)
-    }
-    .sorted { ($0.username ?? "").localizedStandardCompare($1.username ?? "") == .orderedAscending }
   }
 
   private static func user(_ user: Components.Schemas.User, client: ASCClient) async throws -> User {

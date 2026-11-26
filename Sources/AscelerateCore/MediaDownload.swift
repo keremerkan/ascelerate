@@ -75,14 +75,11 @@ public enum MediaDownload {
   ) async throws -> [MediaSet] {
     func wanted(_ folder: String) -> Bool { folders?.contains(folder) ?? true }
     var sets: [MediaSet] = []
-    let screenshotSets = try await client.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
-      path: .init(id: localizationID), query: .init(limit: 50)
-    ).ok.body.json.data
-    for set in screenshotSets {
+    // The sets with their screenshots in one request.
+    for (set, screenshots) in try await LocalizationMedia.screenshotSetsWithScreenshots(localizationID: localizationID, client: client) {
       // Library folders (iPhone Duo) come from their placements below; the classic API mirrors
       // Duo screenshots only once they're active.
       guard let displayType = set.attributes?.screenshotDisplayType, AssetLibrary.slots[displayType] == nil, wanted(displayType) else { continue }
-      let screenshots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
       guard !screenshots.isEmpty else { continue }
       let files = screenshots.enumerated().map { i, screenshot in
         // Server-supplied name: path separators go before it makes a local path.
@@ -95,11 +92,18 @@ public enum MediaDownload {
       sets.append(MediaSet(locale: locale, folder: displayType, kind: .screenshots, files: files, skippedVideos: 0))
     }
 
-    // Library images, from their placements (one request per slot). Library videos have no
-    // download URL (videoAsset stays empty, seen live).
+    // Library images, from one listing of the placements with their media (a slot is read again
+    // only if one came without its asset). Library videos have no download URL (videoAsset stays
+    // empty, seen live).
+    let owner = AssetLibrary.Owner.versionLocalization(localizationID)
+    let everyPlacement = try await AssetLibrary.allPlacementsWithMedia(on: owner, client: client)
     for (kind, slot) in AssetLibrary.slots.sorted(by: { $0.key < $1.key }) where wanted(kind) {
-      let placements = try await AssetLibrary.placementsWithMedia(
-        on: .versionLocalization(localizationID), type: slot.placementType, group: slot.group, client: client)
+      var placements = everyPlacement.filter {
+        $0.placement.attributes?.placementType == slot.placementType.rawValue && $0.placement.attributes?.placementGroup == slot.group
+      }
+      if placements.contains(where: { $0.image == nil && $0.video == nil }) {
+        placements = try await AssetLibrary.placementsWithMedia(on: owner, type: slot.placementType, group: slot.group, client: client)
+      }
       let images = placements.compactMap(\.image)
       let skipped = slot.isSingle ? placements.count - images.count : 0
       // Names that are unique and already sort into display order are kept, so the folder

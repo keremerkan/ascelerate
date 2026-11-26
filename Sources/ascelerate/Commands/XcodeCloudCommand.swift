@@ -23,7 +23,8 @@ struct XcodeCloudCommand: AsyncParsableCommand {
 
   /// A product by its ID, name (case-insensitive) or app's bundle ID (aliases resolved).
   static func findProduct(_ ref: String, client: ASCClient) async throws -> XcodeCloud.Product {
-    let products = try await XcodeCloud.products(client: client)
+    // Without repositories (a request per product): only 'products' shows them.
+    let products = try await XcodeCloud.products(includingRepositories: false, client: client)
     let bundleID = try resolveAlias(ref)
     // ID, then the app's bundle ID (an alias resolved), then the name; a name of several refused.
     if let match = try Reference.find(
@@ -41,8 +42,11 @@ struct XcodeCloudCommand: AsyncParsableCommand {
     )
   }
 
-  static func findWorkflow(_ ref: String, product: XcodeCloud.Product, client: ASCClient) async throws -> XcodeCloud.Workflow {
-    let workflows = try await XcodeCloud.workflows(productID: product.id, client: client)
+  /// `workflows`: the product's list when the caller read it already.
+  static func findWorkflow(
+    _ ref: String, product: XcodeCloud.Product, workflows known: [XcodeCloud.Workflow]? = nil, client: ASCClient
+  ) async throws -> XcodeCloud.Workflow {
+    let workflows = if let known { known } else { try await XcodeCloud.workflows(productID: product.id, client: client) }
     if let match = try Reference.find(ref, in: workflows, kind: "workflow", id: \.id, name: \.name, label: { "\($0.name ?? "-") (\($0.id))" }) {
       return match
     }
@@ -520,7 +524,7 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         }
         let source: XcodeCloud.Workflow
         if let like {
-          source = try await XcodeCloudCommand.findWorkflow(like, product: product, client: client)
+          source = try await XcodeCloudCommand.findWorkflow(like, product: product, workflows: workflows, client: client)
         } else if workflows.count == 1 {
           source = workflows[0]
         } else {

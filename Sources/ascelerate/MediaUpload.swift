@@ -363,21 +363,23 @@ func syncClassicSet(
 /// Uploads images and videos through the asset library and places them in `slot`, in file
 /// order (placements keep their creation order). Images go to the slot's placement type, videos
 /// to its video placement type. A single slot's current placements are removed once the new
-/// file is uploaded, so a failed upload leaves the slot as it was. Returns the counts and the IDs
-/// of the placements created.
+/// file is uploaded, so a failed upload leaves the slot as it was. Returns the counts and, per
+/// file, the placement created (nil: it failed).
 func placeAssetLibraryMedia(
   _ files: [MediaFile], slot: AssetLibrary.Slot, localizationID: String, libraryID: String,
   replacing current: [String] = [], counter: inout UploadCounter, client: ASCClient
-) async -> (tally: UploadTally, placementIDs: [String]) {
+) async -> (tally: UploadTally, placementIDs: [String?]) {
   var tally = UploadTally()
-  var placementIDs: [String] = []
+  var placementIDs: [String?] = []
   for (i, file) in files.enumerated() {
     let isVideo = videoExtensions.contains((file.fileName as NSString).pathExtension.lowercased())
     counter.printLine(isVideo ? slot.videoLabel : slot.fileLabel, i, of: files.count, file.fileName)
+    var placed: String?
     await tally.record {
-      placementIDs.append(try await AssetLibrary.uploadAndPlace(
-        file, slot: slot, on: .versionLocalization(localizationID), libraryID: libraryID, replacing: current, client: client))
+      placed = try await AssetLibrary.uploadAndPlace(
+        file, slot: slot, on: .versionLocalization(localizationID), libraryID: libraryID, replacing: current, client: client)
     }
+    placementIDs.append(placed)
   }
   return (tally, placementIDs)
 }
@@ -387,11 +389,13 @@ func placeAssetLibraryMedia(
 /// there are the `current` placements removed and the new ones placed, in file order. A file that
 /// doesn't upload leaves the set as it was (the files uploaded so far are deleted again, as
 /// unused). `placingFailed` says a placement failed after the old ones were removed: the set is
-/// then incomplete and worth placing again.
+/// then incomplete and worth placing again; `placementIDs` has one entry per file (nil: not
+/// placed) and `assets` the files' uploaded assets, for placing the failed ones again.
 func replaceAssetLibrarySet(
-  _ files: [MediaFile], slot: AssetLibrary.Slot, type: AssetLibrary.PlacementType, current: [String], noun: String,
+  _ files: [MediaFile], slot: AssetLibrary.Slot, type: AssetLibrary.PlacementType,
+  current: [(id: String, asset: AssetLibrary.Asset?)], noun: String,
   localizationID: String, libraryID: String, counter: inout UploadCounter, client: ASCClient
-) async -> (tally: UploadTally, placementIDs: [String], placingFailed: Bool) {
+) async -> (tally: UploadTally, placementIDs: [String?], assets: [AssetLibrary.Asset], placingFailed: Bool) {
   var tally = UploadTally()
   var uploaded: [AssetLibrary.Asset] = []
   var uploadFailed = false
@@ -436,13 +440,14 @@ func replaceAssetLibrarySet(
     let cleanup = await discardUploads()
     print("    Kept the current \(current.count) \(noun)\(current.count == 1 ? "" : "s"): not every file uploaded\(cleanup).")
     tally.failed = files.count
-    return (tally, [], false)
+    return (tally, [], [], false)
   }
   var removedAssets = 0
   var removed = 0
   do {
-    for id in current {
-      if try await AssetLibrary.removePlacement(id: id, client: client) { removedAssets += 1 }
+    for (id, asset) in current {
+      // An asset that didn't come with the listing is read again.
+      if try await AssetLibrary.removePlacement(id: id, asset: asset.map { .some($0) }, client: client) { removedAssets += 1 }
       removed += 1
     }
   } catch {
@@ -451,24 +456,26 @@ func replaceAssetLibrarySet(
     let cleanup = await discardUploads()
     print("    Failed to remove the current \(noun)s (\(removed) of \(current.count) removed): \(describeError(error))\(cleanup). Run the upload with --replace again.")
     tally.failed = files.count
-    return (tally, [], false)
+    return (tally, [], [], false)
   }
   printDeleted(current.count, noun, libraryAssets: removedAssets)
-  var placementIDs: [String] = []
+  var placementIDs: [String?] = []
   for asset in uploaded {
     do {
       placementIDs.append(try await AssetLibrary.place(
         asset, on: .versionLocalization(localizationID), type: type, group: slot.group, client: client))
       tally.succeeded += 1
     } catch where ASCDryRunStop.from(error) != nil {
+      placementIDs.append(nil)
       tally.notSent += 1
     } catch {
       print("    Failed to place a \(noun): \(describeError(error))")
+      placementIDs.append(nil)
       tally.failed += 1
     }
   }
   if tally.succeeded > 0 { print("    Placed \(tally.succeeded) \(noun)\(tally.succeeded == 1 ? "" : "s") in file order.") }
-  return (tally, placementIDs, tally.failed > 0)
+  return (tally, placementIDs, uploaded, tally.failed > 0)
 }
 
 /// A library image or video as `media library` lists it.
@@ -708,15 +715,21 @@ extension AppsCommand {
           let displayType: String
           var tally: UploadTally
         }
-        // iPhone Duo sets that ended with failed files, to place again in order after the run.
+        // iPhone Duo sets that ended with failed files: after the run, only those files go again
+        // (an asset already in the library is placed again, not uploaded), then the set is put in
+        // file order.
         struct DuoRedo {
           let resultIndex: Int
           let locale: String
           let files: [MediaFile]
           let localizationID: String
           let slot: AssetLibrary.Slot
-          let placementIDs: [String]
-          var failedBefore: Int { files.count - placementIDs.count }
+          let type: AssetLibrary.PlacementType
+          /// Per file: this run's placement, nil where it failed.
+          let placementIDs: [String?]
+          /// Per file, when known: its asset in the library (a replace uploads every file first).
+          let assets: [AssetLibrary.Asset]
+          var failedBefore: Int { placementIDs.filter { $0 == nil }.count }
         }
 
         var results: [UploadResult] = []
@@ -803,18 +816,20 @@ extension AppsCommand {
                   for set in sets where !set.files.isEmpty {
                     guard let type = set.type else { continue }
                     if replace {
-                      let current = try await AssetLibrary.placements(
-                        localizationID: localization.id, type: type, group: slot.group, client: ascClient)
+                      let current = try await AssetLibrary.placementsWithMedia(
+                        on: .versionLocalization(localization.id), type: type, group: slot.group, client: ascClient)
                       if !current.isEmpty {
                         // The old ones go only once every new file is in the library.
                         let replaced = await replaceAssetLibrarySet(
-                          set.files, slot: slot, type: type, current: current.map(\.id), noun: set.noun,
+                          set.files, slot: slot, type: type,
+                          current: current.map { ($0.placement.id, AssetLibrary.asset(of: $0)) }, noun: set.noun,
                           localizationID: localization.id, libraryID: assetLibraryID!, counter: &counter, client: ascClient)
                         tally.add(replaced.tally)
                         if replaced.placingFailed && !ClientFactory.isDryRun {
                           duoRedos.append(DuoRedo(
                             resultIndex: results.count, locale: localeMedia.locale, files: set.files,
-                            localizationID: localization.id, slot: slot, placementIDs: replaced.placementIDs))
+                            localizationID: localization.id, slot: slot, type: type, placementIDs: replaced.placementIDs,
+                            assets: replaced.assets))
                         }
                         continue
                       }
@@ -826,7 +841,8 @@ extension AppsCommand {
                     if placed.tally.failed > 0 && !ClientFactory.isDryRun {
                       duoRedos.append(DuoRedo(
                         resultIndex: results.count, locale: localeMedia.locale, files: set.files,
-                        localizationID: localization.id, slot: slot, placementIDs: placed.placementIDs))
+                        localizationID: localization.id, slot: slot, type: type, placementIDs: placed.placementIDs,
+                        assets: []))
                     }
                   }
                 }
@@ -939,32 +955,56 @@ extension AppsCommand {
         }
 
         // A Duo file that failed even after retries leaves a gap, and placements keep their
-        // creation order, so the rest of the set sits out of order. Place such sets again once:
-        // remove this run's placements (earlier ones stay) and place every file in order.
+        // creation order, so the rest of the set sits out of order. Such files go once more: an
+        // asset that uploaded is placed again, the others uploaded again; then the set is put in
+        // file order with one ordering request (the type's placements from before this run stay
+        // ahead of this run's).
         if !duoRedos.isEmpty {
           print()
-          print("Placing \(duoRedos.count) iPhone Duo set\(duoRedos.count == 1 ? "" : "s") with failed files again, in file order.")
-          var redoCounter = UploadCounter(total: duoRedos.reduce(0) { $0 + $1.files.count })
+          print("Trying the failed files of \(duoRedos.count) iPhone Duo set\(duoRedos.count == 1 ? "" : "s") again, then putting each in file order.")
+          var redoCounter = UploadCounter(total: duoRedos.reduce(0) { $0 + $1.failedBefore })
           for redo in duoRedos {
             print()
             print("[\(localeName(redo.locale))]")
             print("  \(results[redo.resultIndex].displayType):")
-            do {
-              for id in redo.placementIDs {
-                try await AssetLibrary.removePlacement(id: id, client: ascClient)
+            var ids = redo.placementIDs
+            var fixed = 0
+            let failedIndexes = ids.indices.filter { ids[$0] == nil }
+            for (n, index) in failedIndexes.enumerated() {
+              let file = redo.files[index]
+              let isVideo = videoExtensions.contains((file.fileName as NSString).pathExtension.lowercased())
+              redoCounter.printLine(isVideo ? redo.slot.videoLabel : redo.slot.fileLabel, n, of: failedIndexes.count, file.fileName)
+              do {
+                if index < redo.assets.count {
+                  ids[index] = try await AssetLibrary.place(
+                    redo.assets[index], on: .versionLocalization(redo.localizationID), type: redo.type, group: redo.slot.group,
+                    client: ascClient)
+                } else {
+                  ids[index] = try await AssetLibrary.uploadAndPlace(
+                    file, slot: redo.slot, on: .versionLocalization(redo.localizationID), libraryID: assetLibraryID!, client: ascClient)
+                }
+                print("Done.")
+                fixed += 1
+              } catch {
+                print("Failed: \(describeError(error))")
               }
-            } catch {
-              print("    Failed to remove this run's placements: \(describeError(error))")
-              continue
             }
-            printDeleted(redo.placementIDs.count, "screenshot")
-            let redone = await placeAssetLibraryMedia(
-              redo.files, slot: redo.slot, localizationID: redo.localizationID,
-              libraryID: assetLibraryID!, counter: &redoCounter, client: ascClient
-            ).tally
-            // Swap this set's counts in the result (a Duo result can hold screenshots and previews).
-            results[redo.resultIndex].tally.succeeded += redone.succeeded - (redo.files.count - redo.failedBefore)
-            results[redo.resultIndex].tally.failed += redone.failed - redo.failedBefore
+            results[redo.resultIndex].tally.succeeded += fixed
+            results[redo.resultIndex].tally.failed -= fixed
+            // File order: the type's placements from before this run first, as they are, then this run's.
+            do {
+              let mine = ids.compactMap { $0 }
+              let earlier = try await AssetLibrary.placements(
+                localizationID: redo.localizationID, type: redo.type, group: redo.slot.group, client: ascClient
+              ).map(\.id).filter { !mine.contains($0) }
+              try await AssetLibrary.reorder(
+                placementIDs: earlier + mine, group: redo.slot.group, on: .versionLocalization(redo.localizationID),
+                client: ascClient)
+              print("    Put in file order.")
+            } catch {
+              print("    Couldn't put the set in file order: \(describeError(error)). Run 'apps media verify' with the folder to reorder it.")
+              results[redo.resultIndex].tally.failed += 1
+            }
           }
         }
 
@@ -1390,12 +1430,12 @@ extension AppsCommand {
         print("Version: \(appVersion.attributes?.versionString ?? "unknown")")
         print()
 
-        var targets: [(locale: String, placementIDs: [String])] = []
+        // Listed with their images or videos, so removing one doesn't read it again.
+        var targets: [(locale: String, placementIDs: [String], assets: [AssetLibrary.Asset?])] = []
         for loc in localizations where wanted?.contains(loc.locale.lowercased()) ?? true {
-          let ids = try await AssetLibrary.placements(
-            localizationID: loc.id, type: placementType, group: slot.group, client: client
-          ).map(\.id)
-          if !ids.isEmpty { targets.append((loc.locale, ids)) }
+          let placed = try await AssetLibrary.placementsWithMedia(
+            on: .versionLocalization(loc.id), type: placementType, group: slot.group, client: client)
+          if !placed.isEmpty { targets.append((loc.locale, placed.map(\.placement.id), placed.map(AssetLibrary.asset(of:)))) }
         }
         guard !targets.isEmpty else {
           print("No \(what)s on this version\(wanted == nil ? "" : " for those locales").")
@@ -1420,8 +1460,9 @@ extension AppsCommand {
           fflush(stdout)
           var localeRemoved = 0
           do {
-            for placementID in target.placementIDs {
-              if try await AssetLibrary.removePlacement(id: placementID, client: client) { deletedImages += 1 }
+            for (placementID, asset) in zip(target.placementIDs, target.assets) {
+              // A placement listed without its asset (capped includes) has it read again.
+              if try await AssetLibrary.removePlacement(id: placementID, asset: asset.map { .some($0) }, client: client) { deletedImages += 1 }
               localeRemoved += 1
             }
             print(ClientFactory.isDryRun ? "Not sent (dry run)." : "Removed \(localeRemoved).")
@@ -1851,9 +1892,7 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
     path: .init(id: versionID), query: .init(limit: 200)
   ).ok.body.json
 
-  var items: [MediaItemStatus] = []
-
-  func item(locale: String, displayTypeName: String, position: Int, fileName: String?, state: String?,
+  @Sendable func item(locale: String, displayTypeName: String, position: Int, fileName: String?, state: String?,
             isScreenshot: Bool, setID: String, mediaID: String, allIDs: [String]) -> MediaItemStatus {
     MediaItemStatus(
       locale: locale,
@@ -1869,8 +1908,14 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
     )
   }
 
-  for loc in locsResponse.data {
-    guard let locale = loc.attributes?.locale else { continue }
+  // Languages four at a time, in their order. Per language: one listing of every placement, one
+  // of the screenshot sets and one of the preview sets with their media included; the library
+  // folders' placements are read with their files only where the listing has some.
+  let perLocale = try await boundedConcurrentMap(locsResponse.data, maxConcurrent: 4) { loc -> [MediaItemStatus] in
+    guard let locale = loc.attributes?.locale else { return [] }
+    var items: [MediaItemStatus] = []
+    let everyPlacement = try await AssetLibrary.allPlacementsWithMedia(on: .versionLocalization(loc.id), client: client)
+    let allPlacements = everyPlacement.map(\.placement)
 
     // Asset library placements. A finished placement reads ACTIVE (INACTIVE on old versions,
     // and the spec lists PARENT_* states); a video still processing reads PENDING (seen live,
@@ -1882,9 +1927,12 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
         + (slot.videoPlacementType.map { $0 == slot.placementType ? [] : [(name, $0, slot.group, false)] } ?? [])
     }
     for (displayTypeName, type, group, isScreenshot) in placementSets {
-      // The placements come with their images or videos, for their file names.
-      let placed = try await AssetLibrary.placementsWithMedia(
-        on: .versionLocalization(loc.id), type: type, group: group, client: client)
+      // The placements come with their images or videos, for their file names; the group is read
+      // again only when one came without its asset.
+      var placed = everyPlacement.filter { $0.placement.attributes?.placementType == type.rawValue && $0.placement.attributes?.placementGroup == group }
+      if placed.contains(where: { $0.image == nil && $0.video == nil }) {
+        placed = try await AssetLibrary.placementsWithMedia(on: .versionLocalization(loc.id), type: type, group: group, client: client)
+      }
       let placements = placed.map(\.placement)
       let fileNames = placed.map { $0.image?.attributes?.common.fileName ?? $0.video?.attributes?.common.fileName }
       for (i, placement) in placements.enumerated() {
@@ -1899,24 +1947,21 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
     }
 
     // Screenshot sets
-    let setsResponse = try await client.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
-      path: .init(id: loc.id), query: .init(limit: 50)
-    ).ok.body.json
-
-    for set in setsResponse.data {
+    for (set, screenshots) in try await LocalizationMedia.screenshotSetsWithScreenshots(localizationID: loc.id, client: client) {
       // Placement groups are listed from their placements above; once those are active, the
       // classic API lists the same screenshots in a set of its own (seen live 2026-10-07).
       guard let displayType = set.attributes?.screenshotDisplayType,
         AssetLibrary.slots[displayType] == nil
       else { continue }
-      let screenshots = try await LocalizationMedia.screenshots(setID: set.id, client: client)
       let allIDs = screenshots.map(\.id)
       // A classic screenshot is also an asset library placement, which can stay PENDING after
       // the screenshot reads COMPLETE (seen live 2026-10-09: 17 hours, and App Review refused
       // the version with ASSET_IN_POST_PROCESSING). The placements follow the set's order.
       var placementStates: [String?] = []
       if let group = AssetLibrary.displayTypeGroups[displayType] {
-        let placements = try await AssetLibrary.placements(localizationID: loc.id, type: .appScreenshot, group: group, client: client)
+        let placements = allPlacements.filter {
+          $0.attributes?.placementType == AssetLibrary.PlacementType.appScreenshot.rawValue && $0.attributes?.placementGroup == group
+        }
         if placements.count == screenshots.count { placementStates = placements.map { $0.attributes?.state } }
       }
       for (i, screenshot) in screenshots.enumerated() {
@@ -1936,14 +1981,9 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
     }
 
     // Preview sets
-    let previewSetsResponse = try await client.appStoreVersionLocalizationsAppPreviewSetsGetToManyRelated(
-      path: .init(id: loc.id), query: .init(limit: 50)
-    ).ok.body.json
-
-    for set in previewSetsResponse.data {
+    for (set, previews) in try await LocalizationMedia.previewSetsWithPreviews(localizationID: loc.id, client: client) {
       // Library folders' previews (iPhone Duo) are listed from their placements above.
       guard let pvType = set.attributes?.previewType, AssetLibrary.slots["APP_\(pvType)"] == nil else { continue }
-      let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
       let allIDs = previews.map(\.id)
       for (i, preview) in previews.enumerated() {
         items.append(item(
@@ -1952,9 +1992,10 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
           isScreenshot: false, setID: set.id, mediaID: preview.id, allIDs: allIDs))
       }
     }
+    return items
   }
 
-  return items
+  return perLocale.flatMap { $0 }
 }
 
 /// Prints media status grouped by locale and display type.

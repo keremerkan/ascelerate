@@ -78,7 +78,9 @@ public enum AppPricing {
   }
 
   /// The app's price schedule; nil when it has no price yet (App Store Connect's Add Pricing).
-  public static func schedule(appID: String, client: ASCClient) async throws -> Schedule? {
+  /// `automatic`: false leaves Apple's automatic prices out (a listing of about 175 fewer), for
+  /// a caller that uses only the base and the manual prices.
+  public static func schedule(appID: String, automatic readAutomatic: Bool = true, client: ASCClient) async throws -> Schedule? {
     let schedule = try await optionalRelated {
       try await withTransientRetry {
         try await client.appsAppPriceScheduleGetToOneRelated(
@@ -91,7 +93,7 @@ public enum AppPricing {
     // A new app's schedule has a base territory (USA) but no prices: listing them answers 404
     // ("There is no resource of type 'null'", seen 2026-10-21).
     async let manual = optionalList { try await prices(scheduleID: schedule.id, automatic: false, client: client) }
-    async let automatic = optionalList { try await prices(scheduleID: schedule.id, automatic: true, client: client) }
+    async let automatic = readAutomatic ? optionalList { try await prices(scheduleID: schedule.id, automatic: true, client: client) } : nil
     guard let (manualPrices, manualCurrencies) = try await manual, !manualPrices.isEmpty else { return nil }
     let (automaticPrices, automaticCurrencies) = try await automatic ?? ([], [:])
     return Schedule(

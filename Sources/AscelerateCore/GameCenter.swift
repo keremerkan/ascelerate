@@ -133,6 +133,9 @@ public protocol GameCenterItem: Codable, Sendable {
   var versions: [GameCenter.Version] { get }
 
   static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self]
+  /// The items for finding one by name or ID: `list`, or less where the kind reads more per item
+  /// (a set's leaderboards).
+  static func listForLookup(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self]
   static func delete(id: String, client: ASCClient) async throws
   static func createVersion(itemID: String, client: ASCClient) async throws -> GameCenter.Version
   static func localizations(versionID: String, client: ASCClient) async throws -> [Localization]
@@ -280,7 +283,17 @@ extension GameCenter.LeaderboardLocalization: GameCenterLocalization {
   }
 }
 
+extension GameCenterItem {
+  public static func listForLookup(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
+    try await list(owner: owner, client: client)
+  }
+}
+
 extension GameCenter.LeaderboardSet: GameCenterOrderedItem {
+  /// Without each set's leaderboards (a request per set).
+  public static func listForLookup(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
+    try await GameCenter.leaderboardSets(owner: owner, members: false, client: client)
+  }
   public static let noun = "leaderboard set"
   public static func list(owner: GameCenter.Owner, client: ASCClient) async throws -> [Self] {
     try await GameCenter.leaderboardSets(owner: owner, client: client)
@@ -324,17 +337,22 @@ extension GameCenter {
     public let reviewItem: ReviewSubmissions.DraftItem
   }
 
-  /// Every kind's items with a version to submit, achievements first.
-  public static func pendingItems(owner: Owner, client: ASCClient) async throws -> [PendingItem] {
-    func pending<Item: GameCenterItem>(_ type: Item.Type) async throws -> [PendingItem] {
-      try await Item.list(owner: owner, client: client).compactMap { item in
+  /// Every kind's items with a version to submit, achievements first. The achievements,
+  /// leaderboards and sets the caller read already aren't read again.
+  public static func pendingItems(
+    owner: Owner, achievements knownAchievements: [Achievement]? = nil, leaderboards knownLeaderboards: [Leaderboard]? = nil,
+    sets knownSets: [LeaderboardSet]? = nil, client: ASCClient
+  ) async throws -> [PendingItem] {
+    @Sendable func pending<Item: GameCenterItem>(_ type: Item.Type, known: [Item]? = nil) async throws -> [PendingItem] {
+      let items = if let known { known } else { try await Item.list(owner: owner, client: client) }
+      return items.compactMap { item in
         guard let version = item.latestVersion, version.isEditable else { return nil }
         return PendingItem(noun: Item.noun, name: item.displayName, version: version, reviewItem: Item.reviewItem(versionID: version.id))
       }
     }
-    async let achievements = pending(Achievement.self)
-    async let leaderboards = pending(Leaderboard.self)
-    async let sets = pending(LeaderboardSet.self)
+    async let achievements = pending(Achievement.self, known: knownAchievements)
+    async let leaderboards = pending(Leaderboard.self, known: knownLeaderboards)
+    async let sets = pending(LeaderboardSet.self, known: knownSets)
     async let activities = pending(Activity.self)
     async let challenges = pending(Challenge.self)
     return try await achievements + leaderboards + sets + activities + challenges

@@ -12,9 +12,10 @@ ascelerate builds list
 ascelerate builds list --bundle-id <bundle-id>
 ascelerate builds list --bundle-id <bundle-id> --version 2.1.0
 ascelerate builds list --bundle-id <bundle-id> --platform macos
+ascelerate builds list --limit 200
 ```
 
-出力には、各ビルドのアプリバージョン、プラットフォーム、ビルド番号、処理状態、アップロード日が表示されます。機械可読な出力には `--json` を追加してください（[規約](../guides/automation.md#json-output)）。
+出力には、各ビルドのアプリバージョン、プラットフォーム、ビルド番号、処理状態、アップロード日が表示されます。機械可読な出力には `--json` を追加してください（[規約](../guides/automation.md#json-output)）。 新しい順に 50 件のビルドが表示されます。`--limit N` で N 件、`--limit 0` ですべてを表示します。
 
 ## アーカイブ
 

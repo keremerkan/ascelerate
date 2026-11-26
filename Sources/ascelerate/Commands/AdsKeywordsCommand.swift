@@ -339,8 +339,9 @@ extension AdsCommand {
           try await Ads.perCampaign(scope) { campaignID in
             let groups = try await Ads.adGroups(campaignID: campaignID, ads, client: client)
             let names = Dictionary(groups.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a })
+            // One query at a time: perCampaign runs four campaigns at once.
             return try await Ads.negativeKeywords(
-              campaignID: campaignID, adGroupIDs: groups.compactMap(\.id), ads, client: client
+              campaignID: campaignID, adGroupIDs: groups.compactMap(\.id), ads, maxConcurrent: 1, client: client
             ).map { ($0, $0.adGroupId.flatMap { names[$0] ?? nil }) }
           }
         }.map { negative, adGroupName in

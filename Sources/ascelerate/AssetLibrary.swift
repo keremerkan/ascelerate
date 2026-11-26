@@ -128,15 +128,22 @@ extension AssetLibrary {
   ) async throws -> [Asset] {
     guard let group = displayTypeGroups[displayType] else { return [] }
     return try await placementsWithMedia(on: .versionLocalization(localizationID), type: type, group: group, client: client)
-      .compactMap { placed in placed.image.map { .image($0.id) } ?? placed.video.map { .video($0.id) } }
+      .compactMap(asset(of:))
+  }
+
+  /// The image or video of a placement listed with its media.
+  static func asset(of placed: PlacedMedia) -> Asset? {
+    placed.image.map { .image($0.id) } ?? placed.video.map { .video($0.id) }
   }
 
   /// Removes a placement, then deletes its library asset when nothing uses it any more: a removed
   /// placement leaves its asset in the library otherwise (seen live). Returns whether the asset
   /// was deleted. Under dry run the delete is shown and not sent, and the asset is kept.
+  /// `asset`: the placement's image or video when the caller listed it with its media (nil: read
+  /// here, one request more).
   @discardableResult
-  static func removePlacement(id: String, client: ASCClient) async throws -> Bool {
-    let asset = try await placedAsset(placementID: id, client: client).asset
+  static func removePlacement(id: String, asset known: Asset?? = nil, client: ASCClient) async throws -> Bool {
+    let asset = if let known { known } else { try await placedAsset(placementID: id, client: client).asset }
     guard try await unlessDryRunStopped({ try await deletePlacement(id: id, client: client) }) != nil,
       let asset
     else { return false }

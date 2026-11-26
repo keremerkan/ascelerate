@@ -176,3 +176,13 @@ ascelerate testflight feedback screenshots delete <submission-id>
 ```
 
 `list` komutu `--build` ve `--platform` filtrelerini kabul eder. `info` cihazla ilgili tüm bağlamı gösterir: model, işletim sistemi sürümü, dil, bağlantı türü, pil düzeyi, boş disk alanı ve test kullanıcısının yorumu. `log` çökme günlüğünü yazdırır veya `--output` ile dosyaya kaydeder. `download` bir gönderimin ekran görüntülerini ve yorumunu tek bir zip arşivinde toplar; gönderim kimliğini vermezseniz uygulamanın gönderimleri sayfalı bir listede sunulur ve içinden seçim yapabilirsiniz. Ekran görüntüsü bağlantılarının süresi birkaç gün içinde dolar; bu nedenle saklamak istediğiniz geri bildirimleri indirin.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `testflight groups create|update` `--feedback`: test kullanıcısı geri bildirimi açık veya kapalı (true ya da false; yeni grupta varsayılan olarak açık)
+- `testflight testers add` `--last-name`: test kullanıcısının soyadı
+- `testflight what-to-test copy` `--from`: kopyalanacak build (varsayılan: test notları olan en yeni önceki build)
+- `testflight app-info update` `--description`, `--marketing-url`, `--privacy-policy-url`: test kullanıcılarına gösterilen beta açıklaması, pazarlama URL'si ve gizlilik politikası URL'si
+- `testflight review-info` `--contact-first-name`, `--contact-last-name`, `--contact-phone`, `--contact-email`, `--demo-account-password`, `--notes`: beta incelemesinin iletişim kişisi, demo hesabının parolası ve inceleme ekibine notlar

@@ -176,3 +176,13 @@ ascelerate testflight feedback screenshots delete <submission-id>
 ```
 
 `list` accepts `--build` and `--platform` filters. `info` shows the full device context — model, OS version, locale, connection type, battery, free disk space, and the tester's comment. `log` prints the crash log or saves it with `--output`. `download` packs a submission's screenshots and comment into a zip archive; omit the submission ID to pick from a paged list of the app's submissions. Screenshot URLs expire after a few days, so download feedback you want to keep.
+
+## More options
+
+Options the examples above don't show:
+
+- `testflight groups create|update` `--feedback`: tester feedback on or off (true or false; on by default for a new group)
+- `testflight testers add` `--last-name`: the tester's last name
+- `testflight what-to-test copy` `--from`: the build to copy from (default: the newest earlier build with test notes)
+- `testflight app-info update` `--description`, `--marketing-url`, `--privacy-policy-url`: the beta description shown to testers, the marketing URL and the privacy policy URL
+- `testflight review-info` `--contact-first-name`, `--contact-last-name`, `--contact-phone`, `--contact-email`, `--demo-account-password`, `--notes`: the beta review contact, the demo account's password and notes for the reviewers

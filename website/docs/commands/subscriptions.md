@@ -285,7 +285,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
   --territory USA --equalize-all-territories
 
-ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # turning one off is for good
 
 # Generate one-time-use codes (async)
 ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -325,7 +325,7 @@ ascelerate sub images delete <bundle-id> <product-id> <image-id>
 
 ## App Review screenshot
 
-Each subscription can have at most one App Review screenshot. Uploading replaces any existing one.
+Each subscription can have at most one App Review screenshot. Apple refuses a second one, so `upload` stops when the product has one: delete it first with `review-screenshot delete`.
 
 ```bash
 ascelerate sub review-screenshot view <bundle-id> <product-id>
@@ -355,3 +355,16 @@ ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
 - **On the App Store:** `--priority high` puts it before other offers; `--promote` lets the App Store promote it with assets Apple generates.
 - **Prices:** as for retention offers, `--price` is in the first of `--territories` and the others get Apple's comparable price; a free trial takes none. A pay-as-you-go offer lasts the subscription's own period (`ONE_YEAR` for an annual one).
 - **Changes:** the eligibility, dates, priority and promotion can change; for anything else, delete the offer and create it again.
+
+## More options
+
+Options the examples above don't show:
+
+- `sub create` `--group`, `--group-level`, `--review-note`, `--family-sharable`: the group (name or ID; asked when there are several), the level in it (1 is the highest), the note for App Review and Family Sharing (it can't be turned off again once on)
+- `sub update` `--group-level`, `--review-note`, `--family-sharable`: the same, changed (Family Sharing can only be turned on)
+- `sub update-group|delete-group|submit-group|group-localizations` `--group`: the group by name or ID: needed under --yes when the app has several
+- `sub localizations import|group-localizations import` `--verbose`: show Apple's answers
+- `sub availability` `--verbose`: show countries and regions by name
+- `sub offer-code create` `--auto-renew`, `--no-auto-renew`: whether the subscription renews after the offer (Apple's default when left out)
+- `sub offer-code gen-codes` `--environment`: PRODUCTION (default) or SANDBOX
+- `sub retention-message submit` `--platform`: the submission's platform (default ios)

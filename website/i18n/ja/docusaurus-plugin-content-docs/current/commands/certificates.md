@@ -50,3 +50,9 @@ ascelerate certs revoke
 # シリアル番号で指定
 ascelerate certs revoke ABC123DEF456
 ```
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `certs list` `--display-name`：この表示名の証明書のみ

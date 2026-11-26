@@ -74,3 +74,9 @@ ascelerate profiles reissue --all --to-certs ABC123,DEF456
 `--to-certs` verilmezse her profil, yalnızca sahip olduklarını değil, türüne uyan tüm sertifikaları alır. `--to-certs` sertifikaları seri numarası veya adıyla belirtir (bir ad tek bir sertifikaya karşılık gelmelidir) ve her profil bunları alabilmelidir. Geliştirme ve ad hoc profilleri, profilin platformuna uyduğu ölçüde kendi etkin cihazlarını korur veya `--all-devices` ile tüm etkin cihazları alır. Bunların hepsi herhangi bir profil silinmeden önce denetlenir.
 
 Süresi dolmuş sertifikalar, `--to-certs` olsun olmasın, yeniden oluşturulan bir profile asla girmez.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `profiles create` `--devices`: cihaz adları veya UDID'ler, virgülle ayrılmış, ya da all (geliştirme ve ad hoc profiller)

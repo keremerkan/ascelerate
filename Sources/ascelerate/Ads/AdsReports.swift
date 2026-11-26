@@ -130,7 +130,7 @@ extension Ads {
     @Option(name: .long, help: "Start date (YYYY-MM-DD).")
     var from: String?
 
-    @Option(name: .long, help: "End date (YYYY-MM-DD, default: today).")
+    @Option(name: .long, help: "End date (YYYY-MM-DD; default: today, yesterday for opportunities).")
     var to: String?
 
     /// `defaultDays` and `endingYesterday` apply only without --from/--to (yesterday: complete days

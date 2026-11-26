@@ -996,7 +996,7 @@ struct SubCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Review note for App Review.")
     var reviewNote: String?
 
-    @Flag(name: .long, help: "Enable Family Sharing.")
+    @Flag(name: .long, help: "Turn Family Sharing on (it can't be turned off again).")
     var familySharable: Bool = false
 
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1085,7 +1085,7 @@ struct SubCommand: AsyncParsableCommand {
     @Option(name: .long, help: "New review note.")
     var reviewNote: String?
 
-    @Option(name: .long, help: "Enable or disable Family Sharing (true/false).")
+    @Option(name: .long, help: "Turn Family Sharing on with true (it can't be turned off again once on).")
     var familySharable: String?
 
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -1122,6 +1122,7 @@ struct SubCommand: AsyncParsableCommand {
       if let v = familyVal { changes.append("Family Shareable: \(v ? "Yes" : "No")") }
       print("Updates for '\(sub.name)':")
       for c in changes { print("  \(c)") }
+      if familyVal == true && sub.familySharable != true { print(yellow("⚠ Family Sharing can't be turned off again.")) }
       print()
 
       guard confirm("Apply updates? [y/N] ") else {
@@ -2533,7 +2534,7 @@ struct SubCommand: AsyncParsableCommand {
       @Argument(help: "The offer code ID.")
       var offerCodeID: String
 
-      @Option(name: .long, help: "Set active state (true or false).")
+      @Option(name: .long, help: "true or false. An offer code turned off can't be turned on again.")
       var active: String
 
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
@@ -3132,7 +3133,7 @@ struct SubCommand: AsyncParsableCommand {
 
     struct Upload: AsyncParsableCommand {
       static let configuration = CommandConfiguration(
-        abstract: "Upload an App Review screenshot. Replaces any existing one."
+        abstract: "Upload the App Review screenshot (one per product: delete the current one first)."
       )
 
       @Argument(help: "The bundle identifier of the app.",
@@ -3156,6 +3157,11 @@ struct SubCommand: AsyncParsableCommand {
         let (sub, _) = try await SubCommand.findSubscription(
           productID: productID, appID: app.id, client: client)
 
+        // Apple keeps one and refuses another (409 "Screenshot already exists", seen 2026-11-26):
+        // said before anything is uploaded (Kerem: refuse, don't replace).
+        if let current = try await Subscriptions.reviewScreenshot(subscriptionID: sub.id, client: client) {
+          throw ValidationError("\(productID) has a review screenshot already (id \(current.id)); delete it first with 'ascelerate sub review-screenshot delete'.")
+        }
         try await runProductAssetUpload(
           file: file,
           summary: { media in

@@ -62,3 +62,9 @@ JSONに含まれるフィールドのみが更新されます。省略された�
 :::note
 編集可能な状態（`PREPARE_FOR_SUBMISSION`、`READY_FOR_REVIEW`、`WAITING_FOR_REVIEW`、`DEVELOPER_REJECTED`、`REJECTED`、`METADATA_REJECTED` または `INVALID_BINARY`）のバージョンのみローカライゼーションの更新を受け付けます。ただし `promotionalText` はどの状態でも更新可能です。
 :::
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `apps localizations update` `--keywords`, `--promotional-text`, `--marketing-url`, `--support-url`：その言語のキーワード（カンマ区切り）、プロモーションテキスト、マーケティング URL、サポート URL

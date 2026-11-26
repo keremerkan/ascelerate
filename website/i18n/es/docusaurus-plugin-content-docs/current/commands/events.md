@@ -69,3 +69,11 @@ ascelerate events media delete <bundle-id> summer-sale <media-id>
 ```
 
 Los tipos de recurso son `EVENT_CARD` y `EVENT_DETAILS_PAGE`. El tipo de archivo determina si se sube como captura de pantalla o como clip de vídeo; `--preview-frame` fija el código de tiempo del fotograma de vista previa de un vídeo.
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `events create` `--primary-locale`, `--deep-link`, `--purchase-requirement`: el idioma principal (App Review lo necesita), el enlace que abre la tarjeta y el requisito de compra
+- `events update` `--primary-locale`, `--deep-link`, `--purchase-requirement`: los mismos tres, para cambiarlos
+- `events localizations export|import` `--output`, `--verbose`: export: el archivo que se escribe; import: mostrar las respuestas de Apple

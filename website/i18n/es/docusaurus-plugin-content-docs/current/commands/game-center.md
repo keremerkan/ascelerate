@@ -162,3 +162,9 @@ Las reglas se escriben en el lenguaje de reglas de Apple, basado en JMESPath (qu
 ```
 
 Una solicitud también puede indicar `latitude`, `longitude`, `playerCount`, `minPlayers` y `maxPlayers`. Un conjunto de reglas que usa una cola no se puede eliminar; cambie o elimine antes la cola.
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `game-center matchmaking rule-sets create` `--language-version`: la versión del lenguaje de reglas (por defecto, 1)

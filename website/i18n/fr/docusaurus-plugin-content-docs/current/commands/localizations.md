@@ -62,3 +62,9 @@ Seuls les champs présents dans le JSON sont mis à jour -- les champs omis rest
 :::note
 Seules les versions dans un état modifiable (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` ou `INVALID_BINARY`) acceptent les mises à jour de localisation -- à l'exception de `promotionalText`, qui peut être mis à jour quel que soit l'état.
 :::
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `apps localizations update` `--keywords`, `--promotional-text`, `--marketing-url`, `--support-url` : les mots-clés (séparés par des virgules), le texte promotionnel et les URL marketing et d'assistance de la langue

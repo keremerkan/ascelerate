@@ -157,7 +157,7 @@ ascelerate iap offer-code create <bundle-id> <product-id> \
   --price 0.99 --territory USA --equalize-all-territories
 
 # Etkinleştir veya devre dışı bırak
-ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # kapatmak kalıcıdır
 
 # Tek kullanımlık kod yığını oluştur (kodlar asenkron olarak üretilir)
 ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -187,10 +187,19 @@ Yüklemeler Apple'ın 3 adımlı akışını kullanır: `fileSize` + `fileName` 
 
 ## App Review ekran görüntüsü
 
-Her IAP en fazla bir App Review ekran görüntüsüne sahip olabilir (Apple'ın inceleme ekibine gösterilir). Yükleme mevcut olanı değiştirir.
+Her IAP en fazla bir App Review ekran görüntüsüne sahip olabilir (Apple'ın inceleme ekibine gösterilir). Apple ikincisini reddettiği için ürünün zaten bir ekran görüntüsü varsa `upload` durur: Önce `review-screenshot delete` ile silin.
 
 ```bash
 ascelerate iap review-screenshot view <bundle-id> <product-id>
 ascelerate iap review-screenshot upload <bundle-id> <product-id> ./review.png
 ascelerate iap review-screenshot delete <bundle-id> <product-id>
 ```
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `iap create|update` `--review-note`, `--family-sharable`: App Review notu ve Aile Paylaşımı (bir kez açıldıktan sonra kapatılamaz)
+- `iap localizations import` `--verbose`: Apple'ın yanıtlarını gösterme
+- `iap availability` `--verbose`: ülke ve bölgeleri adlarıyla gösterme
+- `iap offer-code gen-codes` `--environment`: PRODUCTION (varsayılan) veya SANDBOX

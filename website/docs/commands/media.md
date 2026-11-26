@@ -209,6 +209,6 @@ ascelerate apps media library <bundle-id> --delete-unused
 ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
 ```
 
-`--only` narrows the list to images that fit the given kinds, judged by asset category and pixel size: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`, a screenshot display type such as `APP_IPHONE_67` (sizes come from App Store Connect), or `UNFINISHED_UPLOADS` for uploads whose file never arrived. That way the library can be cleaned one device type at a time. Images less than an hour old are always kept, since an upload running at the same time may be about to place them, and a run that reaches App Store Connect's hourly API limit stops and tells you to run it again later.
+`--only` narrows the list to images that fit the given kinds, judged by the asset library spec each image was uploaded for: `PRODUCT_PAGE_HEADER`, `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`, a screenshot display type such as `APP_IPHONE_67` (the specs come from App Store Connect), or `UNFINISHED_UPLOADS` for uploads whose file never arrived. That way the library can be cleaned one device type at a time. Images less than an hour old are always kept, since an upload running at the same time may be about to place them, and a run that reaches App Store Connect's hourly API limit stops and tells you to run it again later.
 
 Images and videos that went through App Review are never deleted, whether placed or not, and each one is checked again right before it is deleted.

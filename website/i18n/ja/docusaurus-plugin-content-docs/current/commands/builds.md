@@ -140,3 +140,10 @@ ascelerate apps build detach <bundle-id>
 `build attach` は `--yes` ではビルドを選択しません。最新のビルドが処理中、期限切れ、または無効な場合があるためです。これを確認する `build attach-latest` を使ってください。
 
 ビルドの検索はプラットフォームを考慮して行われます。ユニバーサル購入のアプリではiOSとmacOSのビルドが同じビルド番号を持つことがあるため、添付コマンドは対象バージョンのプラットフォームに該当するビルドのみを対象とします。
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `builds archive` `--workspace`, `--project`, `--configuration`：ワークスペースまたはプロジェクト（省略するとフォルダ内から検出）とビルド構成（デフォルトは Release）
+- `builds await-processing` `--interval`, `--timeout`：確認の間隔（秒、デフォルト 30、最小 1）と打ち切るまでの時間（分、デフォルト 30、最小 1）

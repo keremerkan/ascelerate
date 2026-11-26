@@ -285,7 +285,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
   --territory USA --equalize-all-territories
 
-ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # kapatmak kalıcıdır
 
 # Tek kullanımlık kod yığını oluştur (asenkron)
 ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -325,7 +325,7 @@ ascelerate sub images delete <bundle-id> <product-id> <image-id>
 
 ## App Review ekran görüntüsü
 
-Her abonelik en fazla bir App Review ekran görüntüsüne sahip olabilir. Yükleme mevcut olanı değiştirir.
+Her abonelik en fazla bir App Review ekran görüntüsüne sahip olabilir. Apple ikincisini reddettiği için ürünün zaten bir ekran görüntüsü varsa `upload` durur: Önce `review-screenshot delete` ile silin.
 
 ```bash
 ascelerate sub review-screenshot view <bundle-id> <product-id>
@@ -355,3 +355,16 @@ ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
 - **App Store'da:** `--priority high` teklifi diğer tekliflerin önüne koyar; `--promote`, App Store'un teklifi Apple'ın oluşturduğu görsellerle tanıtmasını sağlar.
 - **Fiyatlar:** Elde tutma tekliflerinde olduğu gibi `--price`, `--territories` listesindeki ilk ülke veya bölgenin fiyatıdır; diğerlerine Apple'ın karşılık gelen fiyatı uygulanır. Ücretsiz deneme fiyat almaz. Kullandıkça öde (`PAY_AS_YOU_GO`) teklifinin süresi, aboneliğin kendi dönemidir (yıllık bir abonelikte `ONE_YEAR`).
 - **Değişiklikler:** Uygunluk koşulları, tarihler, öncelik ve tanıtım değiştirilebilir; diğer her şey için teklifi silip yeniden oluşturun.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `sub create` `--group`, `--group-level`, `--review-note`, `--family-sharable`: grup (ad veya kimlik; birden fazlaysa sorulur), gruptaki düzey (1 en yükseği), App Review notu ve Aile Paylaşımı (bir kez açıldıktan sonra kapatılamaz)
+- `sub update` `--group-level`, `--review-note`, `--family-sharable`: aynısı, değiştirilmek üzere (Aile Paylaşımı yalnızca açılabilir)
+- `sub update-group|delete-group|submit-group|group-localizations` `--group`: ad veya kimlikle grup: uygulamanın birden fazla grubu varsa --yes ile gereklidir
+- `sub localizations import|group-localizations import` `--verbose`: Apple'ın yanıtlarını gösterme
+- `sub availability` `--verbose`: ülke ve bölgeleri adlarıyla gösterme
+- `sub offer-code create` `--auto-renew`, `--no-auto-renew`: teklif bittikten sonra aboneliğin yenilenip yenilenmeyeceği (verilmezse Apple'ın varsayılanı)
+- `sub offer-code gen-codes` `--environment`: PRODUCTION (varsayılan) veya SANDBOX
+- `sub retention-message submit` `--platform`: gönderimin platformu (varsayılan ios)

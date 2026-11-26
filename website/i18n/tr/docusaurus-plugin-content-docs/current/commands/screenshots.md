@@ -110,8 +110,8 @@ waitAfterBoot: 0
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
-# stopAfterFirstError: false             # Stop all devices on first failure
-# reinstallApp: false                    # Delete and reinstall app before tests
+# stopAfterFirstError: false             # İlk hatadan sonra dur (çalışan dil önce tamamlanır)
+# reinstallApp: com.example.MyApp       # Testlerden önce bu uygulamayı (bundle ID) kaldır
 # disableAssetDownloads: false           # mobileassetd'yi devre dışı bırak (Siri/klavye/ML varlık indirmesi yok; cihaz üstü ML varlıklarını da engeller)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
@@ -141,13 +141,14 @@ if ProcessInfo.processInfo.arguments.contains("-ASC_SCREENSHOT") {
 }
 ```
 
-Helper ayrıca `disableAnimationsIfNeeded()` fonksiyonunu da sunar; yapılandırmada `disableAnimations` etkinleştirildiğinde animasyonları devre dışı bırakır:
+`disableAnimationsIfNeeded()`, yapılandırmada `disableAnimations` etkin olduğunda animasyonları kapatır. UI testinde değil, uygulamada çalışır: Helper dosyası onu uygulamanın koduna kopyalamak için içerir; seçenek etkinken testler uygulamayı `-ASC_DISABLE_ANIMATIONS` ile başlatır. Açılışta bir kez çağırın:
 
 ```swift
-override func setUp() {
-    setupScreenshots(app)
-    disableAnimationsIfNeeded()
-    app.launch()
+// Uygulamada (örneğin App'in init'inde veya uygulama temsilcisinin açılışında):
+func disableAnimationsIfNeeded() {
+    if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
+        UIView.setAnimationsEnabled(false)
+    }
 }
 ```
 
@@ -262,8 +263,8 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `configuration` | Derleme yapılandırması (örn. Debug, Release) |
 | `testplan` | Xcode test planı adı |
 | `numberOfRetries` | Başarısız diller için tekrar deneme sayısı. Her deneme simülatörü sıfırlar, yeniden yerelleştirir, yeniden başlatır ve testleri tekrar çalıştırır. Yalnızca başarısız cihazları tekrar dener. Tekrar denenen sonuçlar özet tablosunda işaretlenir. |
-| `stopAfterFirstError` | İlk hatadan sonra tüm cihazları durdur (başarısız bir simülatör hazırlığı da sayılır); hiç denenmeyen diller çalıştırılmadı olarak görünür |
-| `reinstallApp` | Testlerden önce uygulamayı silip yeniden yükle |
+| `stopAfterFirstError` | İlk hatadan sonra dur: Çalışan dil tüm cihazlarda tamamlanır, sonraki diller denenmez (başarısız bir simülatör hazırlığı da sayılır); hiç denenmeyen diller çalıştırılmadı olarak görünür |
+| `reinstallApp` | Testlerden önce kaldırılacak uygulamanın bundle ID'si (temiz bir kurulum) |
 | `disableAssetDownloads` | Simülatörün `mobileassetd` servisini devre dışı bırakır; böylece yeni silinmiş simülatörlere gigabaytlarca Siri, klavye ve ML varlığı indirilmez. Bazı uygulamaların ihtiyaç duyduğu cihaz üstü ML varlıklarını da (örn. metin tanıma) engeller; ekran görüntüleriniz bunlara bağlıysa kapalı bırakın. Silme işlemi ayarı sıfırladığından her hazırlıkta yeniden uygulanır. |
 | `xcargs` | `xcodebuild`'e aktarılan ek argümanlar (tırnak içindeki bağımsız değişkenler bir arada kalır) |
 | `frameDevice` | Bu cihaz için çerçevelemeyi etkinleştir (cihaz başına) |
@@ -273,3 +274,10 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 
 Bilinmeyen anahtarlar hem çalıştırmada hem `doctor` tarafından reddedilir ve en yakın bilinen anahtar önerilir (`numberOfRetrys`: `numberOfRetries` mı demek istediniz?). İki kez listelenen bir cihaz veya `outputDirectory` ile aynı olan bir `framedOutputDirectory` da reddedilir. Yollar `~` ile başlayabilir.
 | `framedOutputDirectory` | Çerçevelenmiş ekran görüntüleri için çıktı dizini (varsayılan: `{outputDirectory}/framed`) |
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `screenshot run` `--languages`: yapılandırılan dillerden yalnızca bunlar (virgülle ayrılmış veya seçenek yinelenerek)
+- `screenshot create-helper` `--output`: helper dosyasının yazılacağı yer

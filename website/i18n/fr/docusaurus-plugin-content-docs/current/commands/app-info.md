@@ -96,3 +96,9 @@ ascelerate apps routing-coverage <bundle-id>
 # Téléverser un fichier .geojson
 ascelerate apps routing-coverage <bundle-id> --file coverage.geojson
 ```
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `apps app-info update` `--privacy-policy-url`, `--privacy-choices-url` : les URL de la politique de confidentialité et des choix de confidentialité de la langue

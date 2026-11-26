@@ -157,7 +157,7 @@ ascelerate iap offer-code create <bundle-id> <product-id> \
   --price 0.99 --territory USA --equalize-all-territories
 
 # アクティブ化または無効化
-ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # 一度オフにすると元に戻せません
 
 # ワンタイムユースコードのバッチを生成（コードは非同期で生成されます）
 ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -187,10 +187,19 @@ ascelerate iap images delete <bundle-id> <product-id> <image-id>
 
 ## App Reviewスクリーンショット
 
-各App内課金は最大1つのApp Reviewスクリーンショット（Appleの審査担当者に表示）を持つことができます。アップロードすると既存のスクリーンショットが置き換えられます。
+各App内課金は最大1つのApp Reviewスクリーンショット（Appleの審査担当者に表示）を持つことができます。Apple は 2 つ目を拒否するため、商品にすでにある場合 `upload` は停止します。先に `review-screenshot delete` で削除してください。
 
 ```bash
 ascelerate iap review-screenshot view <bundle-id> <product-id>
 ascelerate iap review-screenshot upload <bundle-id> <product-id> ./review.png
 ascelerate iap review-screenshot delete <bundle-id> <product-id>
 ```
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `iap create|update` `--review-note`, `--family-sharable`：App Review へのメモとファミリー共有（一度オンにするとオフにできません）
+- `iap localizations import` `--verbose`：Apple の応答を表示
+- `iap availability` `--verbose`：国と地域を名前で表示
+- `iap offer-code gen-codes` `--environment`：PRODUCTION（デフォルト）または SANDBOX

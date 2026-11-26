@@ -180,3 +180,10 @@ Un anuncio envía los toques de un grupo de anuncios a una página de producto. 
 ## Uso con un agente de IA
 
 La [skill de ascelerate](../guides/ai-skill.md) enseña a los agentes de programación con IA a leer estos informes y cuándo sugerir cambios, de modo que puede pedir a un agente que revise sus campañas de todas sus apps, encuentre palabras clave que añadir o excluir, o explique un cambio en el rendimiento. Todos los comandos aceptan `--json`, y se indica a los agentes que le muestren los cambios propuestos y usen `--dry-run` antes de enviar nada.
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `ads keywords popularity` `--monthly`: el último mes completo en lugar de la última semana completa
+- `ads insights impression-share` `--first-slot`: solo la primera posición del anuncio

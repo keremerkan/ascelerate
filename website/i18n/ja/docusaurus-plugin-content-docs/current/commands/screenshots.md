@@ -110,8 +110,8 @@ waitAfterBoot: 0
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
-# stopAfterFirstError: false             # Stop all devices on first failure
-# reinstallApp: false                    # Delete and reinstall app before tests
+# stopAfterFirstError: false             # 最初の失敗で停止（実行中の言語は最後まで実行）
+# reinstallApp: com.example.MyApp       # テスト前にこのアプリ（バンドル ID）をアンインストール
 # disableAssetDownloads: false           # mobileassetd を無効化（Siri/キーボード/ML アセットをダウンロードしない。オンデバイス ML アセットもブロック）
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
@@ -141,13 +141,14 @@ if ProcessInfo.processInfo.arguments.contains("-ASC_SCREENSHOT") {
 }
 ```
 
-ヘルパーは `disableAnimationsIfNeeded()` 関数も提供しており、設定で `disableAnimations` が有効な場合にアニメーションを無効化できます：
+`disableAnimationsIfNeeded()` は、設定で `disableAnimations` が有効なときにアニメーションをオフにします。UI テストではなくアプリ内で実行します。helper ファイルにはアプリのコードへコピーするために含まれており、このオプションが有効なとき、テストは `-ASC_DISABLE_ANIMATIONS` を付けてアプリを起動します。起動時に一度呼び出してください：
 
 ```swift
-override func setUp() {
-    setupScreenshots(app)
-    disableAnimationsIfNeeded()
-    app.launch()
+// アプリ内で（たとえば App の init やアプリデリゲートの起動時に）：
+func disableAnimationsIfNeeded() {
+    if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
+        UIView.setAnimationsEnabled(false)
+    }
 }
 ```
 
@@ -262,8 +263,8 @@ screenshots/framed/
 | `configuration` | ビルド構成（例: Debug、Release） |
 | `testplan` | Xcodeテストプラン名 |
 | `numberOfRetries` | 失敗した言語の再試行回数 — シミュレーターをリセットし、再ローカライズ、再起動してテストを再実行します。失敗したデバイスのみ再試行されます。再試行された結果はサマリーテーブルに表示されます。 |
-| `stopAfterFirstError` | 最初のエラー後にすべてのデバイスを停止 （シミュレータの準備の失敗も含みます）。試行されなかった言語は未実行として表示されます |
-| `reinstallApp` | テスト前にアプリを削除して再インストール |
+| `stopAfterFirstError` | 最初の失敗で停止：実行中の言語はすべてのデバイスで最後まで実行され、以降の言語は試されません（シミュレーターの準備の失敗も含みます）。試されなかった言語は未実行として表示されます |
+| `reinstallApp` | テスト実行前にアンインストールするアプリのバンドル ID（新規インストールになります） |
 | `disableAssetDownloads` | シミュレーターの `mobileassetd` を無効化し、消去直後のシミュレーターに数 GB の Siri・キーボード・ML アセットがダウンロードされるのを止めます。一部のアプリが必要とするオンデバイス ML アセット（テキスト認識など）もブロックされるため、スクリーンショットがそれらに依存する場合はオフのままにしてください。消去でリセットされるため、準備のたびに適用されます。 |
 | `xcargs` | `xcodebuild` に渡す追加の引数 （引用符で囲んだ引数はまとめて扱われます） |
 | `frameDevice` | このデバイスのベゼルフレーミングを有効化（デバイスごと） |
@@ -273,3 +274,10 @@ screenshots/framed/
 
 不明なキーは、実行時にも `doctor` でも拒否され、最も近い既知のキーが提案されます（`numberOfRetrys`：`numberOfRetries` のことですか？）。同じデバイスを2回指定した場合や、`framedOutputDirectory` が `outputDirectory` と同じ場合も拒否されます。パスは `~` で始めることができます。
 | `framedOutputDirectory` | フレーミングされたスクリーンショットの出力ディレクトリ（デフォルト：`{outputDirectory}/framed`） |
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `screenshot run` `--languages`：設定した言語のうちこれらだけ（カンマ区切り、またはオプションを繰り返す）
+- `screenshot create-helper` `--output`：helper ファイルの書き出し先

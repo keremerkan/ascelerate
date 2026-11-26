@@ -69,3 +69,9 @@ Hourly limit: 3600 requests (rolling window)
 Used:         57
 Remaining:    3543 (98%)
 ```
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `configure` `--stdin`: sormak yerine anahtarı standart girişten JSON olarak okuma ({"keyId", "issuerId", "privateKey"}); satıcı numarası ve Apple Ads ayarları korunur

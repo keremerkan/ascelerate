@@ -157,7 +157,7 @@ ascelerate iap offer-code create <bundle-id> <product-id> \
   --price 0.99 --territory USA --equalize-all-territories
 
 # Activate or deactivate
-ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # turning one off is for good
 
 # Generate a batch of one-time-use codes (codes are generated asynchronously)
 ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -187,10 +187,19 @@ Uploads use Apple's 3-step flow: reserve with `fileSize` + `fileName`, PUT file 
 
 ## App Review screenshot
 
-Each IAP can have at most one App Review screenshot (shown to Apple's reviewers). Uploading replaces any existing one.
+Each IAP can have at most one App Review screenshot (shown to Apple's reviewers). Apple refuses a second one, so `upload` stops when the product has one: delete it first with `review-screenshot delete`.
 
 ```bash
 ascelerate iap review-screenshot view <bundle-id> <product-id>
 ascelerate iap review-screenshot upload <bundle-id> <product-id> ./review.png
 ascelerate iap review-screenshot delete <bundle-id> <product-id>
 ```
+
+## More options
+
+Options the examples above don't show:
+
+- `iap create|update` `--review-note`, `--family-sharable`: the note for App Review, and Family Sharing (it can't be turned off again once on)
+- `iap localizations import` `--verbose`: show Apple's answers
+- `iap availability` `--verbose`: show countries and regions by name
+- `iap offer-code gen-codes` `--environment`: PRODUCTION (default) or SANDBOX

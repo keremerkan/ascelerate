@@ -1180,7 +1180,8 @@ extension AppsCommand {
 
         // Print status and get counts
         let (total, stuck) = printMediaStatus(items)
-        let plan = try folder.map { try scanMediaFolder(at: $0) }
+        // A zip or tar is unpacked first, as for upload and prune (the help promised it).
+        let plan = try folder.map { try scanMediaFolder(at: resolveFolder($0, prompt: "Select media folder")) }
 
         // Placements keep their creation order and can't be retried one by one, so check them
         // against the folder: a set holding the folder's files in another order is put in file
@@ -1228,7 +1229,7 @@ extension AppsCommand {
         // Exit 0 only when everything is complete, so a script can gate on it.
         guard stuck > pendingPlacements else { throw ExitCode.failure }
 
-        // Without --folder, just show status
+        // Without a media folder, just show status
         guard let plan else {
           print("Pass the media folder (ascelerate apps media verify <bundle-id> <folder>) to retry stuck uploads.")
           throw ExitCode.failure
@@ -1505,8 +1506,8 @@ extension AppsCommand {
           listed and, after confirmation, deleted. Images that were ever reviewed are
           never deleted.
 
-          --only narrows the list to images that fit the given kinds, judged by asset
-          category and pixel size: PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS,
+          --only narrows the list to images that fit the given kinds, judged by the asset
+          library spec each was uploaded for: PRODUCT_PAGE_HEADER, APP_STORE_SEARCH_RESULTS,
           APP_IPHONE_DUO, screenshot display types such as APP_IPHONE_67 and
           APP_IPAD_PRO_3GEN_129 (sizes from App Store Connect's asset library specs), or
           UNFINISHED_UPLOADS for images whose file never arrived. Images less than an

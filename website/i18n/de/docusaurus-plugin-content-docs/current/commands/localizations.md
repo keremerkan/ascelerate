@@ -62,3 +62,9 @@ Nur die im JSON vorhandenen Felder werden aktualisiert — fehlende Felder bleib
 :::note
 Nur Versionen in bearbeitbaren Zuständen (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` oder `INVALID_BINARY`) akzeptieren Lokalisierungsaktualisierungen — mit Ausnahme von `promotionalText`, das in jedem Zustand aktualisiert werden kann.
 :::
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `apps localizations update` `--keywords`, `--promotional-text`, `--marketing-url`, `--support-url`: die Schlüsselwörter (durch Kommas getrennt), der Werbetext sowie Marketing- und Support-URL der Sprache

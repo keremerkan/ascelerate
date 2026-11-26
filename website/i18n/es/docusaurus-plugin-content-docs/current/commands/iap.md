@@ -157,7 +157,7 @@ ascelerate iap offer-code create <bundle-id> <product-id> \
   --price 0.99 --territory USA --equalize-all-territories
 
 # Activar o desactivar
-ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # desactivarlo es definitivo
 
 # Generar un lote de códigos de un solo uso (se generan de forma asíncrona)
 ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -187,10 +187,19 @@ Las subidas siguen el proceso de Apple en tres pasos: reserva con `fileSize` y `
 
 ## Captura de pantalla para App Review
 
-Cada compra dentro de la app puede tener como máximo una captura de pantalla para App Review (la que ven los revisores de Apple). Al subir una nueva, se sustituye la existente.
+Cada compra dentro de la app puede tener como máximo una captura de pantalla para App Review (la que ven los revisores de Apple). Apple rechaza una segunda, así que `upload` se detiene si el producto ya tiene una: elimínela primero con `review-screenshot delete`.
 
 ```bash
 ascelerate iap review-screenshot view <bundle-id> <product-id>
 ascelerate iap review-screenshot upload <bundle-id> <product-id> ./review.png
 ascelerate iap review-screenshot delete <bundle-id> <product-id>
 ```
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `iap create|update` `--review-note`, `--family-sharable`: la nota para App Review y En familia (una vez activado, no se puede desactivar)
+- `iap localizations import` `--verbose`: mostrar las respuestas de Apple
+- `iap availability` `--verbose`: mostrar los países y regiones por su nombre
+- `iap offer-code gen-codes` `--environment`: PRODUCTION (por defecto) o SANDBOX

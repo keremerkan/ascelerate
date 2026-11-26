@@ -68,3 +68,9 @@ ascelerate experiments delete <bundle-id> "Screenshot order"
 ```
 
 Cambie una sola cosa en cada variante (por ejemplo, la primera captura de pantalla o el icono) para que el resultado le indique qué cambio marcó la diferencia.
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `experiments media upload` `--preview-frame`: el fotograma de portada de una vista previa, hh:mm:ss:frame (00:00:03:00)

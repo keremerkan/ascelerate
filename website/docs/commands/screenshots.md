@@ -110,8 +110,8 @@ waitAfterBoot: 0
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
-# stopAfterFirstError: false             # Stop all devices on first failure
-# reinstallApp: false                    # Delete and reinstall app before tests
+# stopAfterFirstError: false             # Stop after the first failure (the language in progress finishes first)
+# reinstallApp: com.example.MyApp       # Uninstall this app (bundle ID) before tests
 # disableAssetDownloads: false           # Disable mobileassetd (no Siri/keyboard/ML asset downloads; also blocks on-device ML assets)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
@@ -141,13 +141,14 @@ if ProcessInfo.processInfo.arguments.contains("-ASC_SCREENSHOT") {
 }
 ```
 
-The helper also provides `disableAnimationsIfNeeded()` to turn off animations when `disableAnimations` is enabled in the config:
+`disableAnimationsIfNeeded()` turns off animations when `disableAnimations` is enabled in the config. It runs in the app, not the UI test: the helper file carries it for copying into the app's code, and the tests launch the app with `-ASC_DISABLE_ANIMATIONS` when the option is on. Call it once at launch:
 
 ```swift
-override func setUp() {
-    setupScreenshots(app)
-    disableAnimationsIfNeeded()
-    app.launch()
+// In the app (for example in the App's init or the app delegate's launch):
+func disableAnimationsIfNeeded() {
+    if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
+        UIView.setAnimationsEnabled(false)
+    }
 }
 ```
 
@@ -262,8 +263,8 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `configuration` | Build configuration (e.g. Debug, Release) |
 | `testplan` | Xcode test plan name |
 | `numberOfRetries` | Number of times to retry failed languages — erases the simulator, re-localizes, reboots, and reruns tests. Only retries failed devices. Retried results are marked in the summary table. |
-| `stopAfterFirstError` | Stop all devices after the first failure (a failed simulator preparation counts too); languages never tried show as not run |
-| `reinstallApp` | Delete and reinstall the app before running tests |
+| `stopAfterFirstError` | Stop after the first failure: the language in progress finishes on every device, the later languages aren't tried (a failed simulator preparation counts too); languages never tried show as not run |
+| `reinstallApp` | The bundle ID of the app to uninstall before running the tests (a fresh install) |
 | `disableAssetDownloads` | Disable the simulator's `mobileassetd` so it stops downloading gigabytes of Siri, keyboard, and ML assets into freshly erased simulators. Also blocks on-device ML assets some apps need (e.g. text recognition), so leave it off if your screenshots depend on those. Applied on every prep, since an erase resets it. |
 | `xcargs` | Extra arguments passed to `xcodebuild` (quoted arguments are kept together) |
 | `frameDevice` | Enable device bezel framing for this device (per-device) |
@@ -273,3 +274,10 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 
 Unknown keys are refused, by the run and by `doctor`, with the nearest known key suggested (`numberOfRetrys`: did you mean `numberOfRetries`?). A device listed twice, or `framedOutputDirectory` equal to `outputDirectory`, is refused too. Paths may start with `~`.
 | `framedOutputDirectory` | Output directory for framed screenshots (default: `{outputDirectory}/framed`) |
+
+## More options
+
+Options the examples above don't show:
+
+- `screenshot run` `--languages`: only these of the configured languages (comma-separated, or the option repeated)
+- `screenshot create-helper` `--output`: where to write the helper file

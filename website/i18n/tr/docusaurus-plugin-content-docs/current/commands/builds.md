@@ -140,3 +140,10 @@ ascelerate apps build detach <bundle-id>
 `build attach`, `--yes` ile build seçmez: En yenisi hâlâ işleniyor, süresi dolmuş veya geçersiz olabilir. Bunu denetleyen `build attach-latest` komutunu kullanın.
 
 Build aramaları platforma duyarlıdır: evrensel satın alma kullanan uygulamalarda iOS ve macOS build'leri aynı build numaralarını paylaşabildiğinden, ekleme komutları yalnızca hedef sürümün platformuyla eşleşen build'leri dikkate alır.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `builds archive` `--workspace`, `--project`, `--configuration`: workspace veya proje (verilmezse klasörde aranır) ve derleme yapılandırması (varsayılan: Release)
+- `builds await-processing` `--interval`, `--timeout`: kontroller arasındaki saniye (varsayılan 30, en az 1) ve vazgeçmeden önceki dakika (varsayılan 30, en az 1)

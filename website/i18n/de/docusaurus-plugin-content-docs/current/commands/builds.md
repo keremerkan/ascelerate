@@ -140,3 +140,10 @@ ascelerate apps build detach <bundle-id>
 `build attach` wählt unter `--yes` keinen Build: Der neueste kann noch verarbeitet werden, abgelaufen oder ungültig sein. Verwenden Sie `build attach-latest`, das dies prüft.
 
 Die Build-Suche erfolgt plattformspezifisch: Bei Apps mit Universalkauf können iOS- und macOS-Builds dieselben Build-Nummern verwenden, daher ziehen die attach-Befehle nur Builds heran, die zur Plattform der Zielversion passen.
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `builds archive` `--workspace`, `--project`, `--configuration`: Workspace oder Projekt (ohne Angabe im Ordner gesucht) und die Build-Konfiguration (Standard: Release)
+- `builds await-processing` `--interval`, `--timeout`: Sekunden zwischen den Abfragen (Standard 30, mindestens 1) und Minuten bis zum Aufgeben (Standard 30, mindestens 1)

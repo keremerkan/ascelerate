@@ -50,3 +50,9 @@ ascelerate certs revoke
 # Seri numarası ile
 ascelerate certs revoke ABC123DEF456
 ```
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `certs list` `--display-name`: yalnızca bu görünen ada sahip sertifikalar

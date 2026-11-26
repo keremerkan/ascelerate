@@ -68,3 +68,9 @@ ascelerate experiments delete <bundle-id> "Screenshot order"
 ```
 
 Ändern Sie pro Variante nur eine Sache (zum Beispiel den ersten Screenshot oder das Symbol), damit das Ergebnis zeigt, welche Änderung den Unterschied ausgemacht hat.
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `experiments media upload` `--preview-frame`: das Vorschaubild einer App-Vorschau, hh:mm:ss:frame (00:00:03:00)

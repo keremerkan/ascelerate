@@ -28,7 +28,7 @@ Appleシリコン搭載のMacにはビルド済みのバイナリがインスト
 curl -fsSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
-最新リリースをダウンロードし、ascelerate の Developer ID で署名されていることを確認してから `/usr/local/bin` にインストールします（必要ならフォルダも作成します）。その際パスワードを求められます。Apple Siliconのみ対応です。以降の更新は `sudo ascelerate update` で行えます。
+最新リリースをダウンロードし、ascelerate の Developer ID で署名されていることを確認してから `/usr/local/bin` にインストールします（必要ならフォルダも作成します）。その際パスワードを求められます。Apple Siliconのみ対応です。以降の更新は `sudo ascelerate update` で行えます。 `ascelerate update --check` は、新しいリリースがあるかどうかだけを表示します。
 
 ## 手動ダウンロード
 

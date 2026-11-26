@@ -62,3 +62,9 @@ Yalnızca JSON'da bulunan alanlar güncellenir -- belirtilmeyen alanlar değişt
 :::note
 Yalnızca düzenlenebilir durumdaki sürümler (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` veya `INVALID_BINARY`) yerelleştirme güncellemelerini kabul eder -- `promotionalText` hariç, bu her durumda güncellenebilir.
 :::
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `apps localizations update` `--keywords`, `--promotional-text`, `--marketing-url`, `--support-url`: dilin anahtar kelimeleri (virgülle ayrılmış), tanıtım metni, pazarlama ve destek URL'leri

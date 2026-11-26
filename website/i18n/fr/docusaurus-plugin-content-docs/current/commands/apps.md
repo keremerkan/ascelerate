@@ -332,3 +332,12 @@ ascelerate apps group-purchase-invitations <bundle-id>
 # Gérer les invitations dans l'app
 ascelerate apps group-purchase-invitations <bundle-id> --host developer
 ```
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `apps create-version` `--copyright` : la mention de copyright de la nouvelle version
+- `apps pricing set` `--base-territory`, `--drop-manual` : le territoire de base (par défaut, l'actuel ou USA) ; rendre à Apple les prix fixés à la main dans les autres territoires
+- `apps encryption` `--no-proprietary-crypto`, `--no-third-party-crypto`, `--available-on-french-store`, `--no-available-on-french-store` : avec --create : les réponses de la déclaration sur la cryptographie propriétaire et tierce et sur la boutique française
+- `apps review info` `--contact-first-name`, `--contact-last-name`, `--contact-phone` : le contact App Review (envoyé avec l'e-mail)

@@ -140,3 +140,10 @@ ascelerate apps build detach <bundle-id>
 `build attach` ne choisit pas de build avec `--yes` : le plus récent peut être encore en traitement, expiré ou invalide. Utilisez `build attach-latest`, qui le vérifie.
 
 La recherche de builds tient compte de la plateforme : sur les applications en achat universel, les builds iOS et macOS peuvent partager les mêmes numéros de build ; les commandes d'association ne retiennent donc que les builds correspondant à la plateforme de la version ciblée.
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `builds archive` `--workspace`, `--project`, `--configuration` : le workspace ou le projet (cherché dans le dossier s'il est omis) et la configuration de build (Release par défaut)
+- `builds await-processing` `--interval`, `--timeout` : secondes entre deux vérifications (30 par défaut, au moins 1) et minutes avant d'abandonner (30 par défaut, au moins 1)

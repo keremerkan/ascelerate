@@ -180,3 +180,10 @@ Eine Anzeige leitet die Taps einer Anzeigengruppe an eine Produktseite weiter. A
 ## Zusammen mit einem KI-Agenten
 
 Der [ascelerate-Skill](../guides/ai-skill.md) bringt KI-Coding-Agenten bei, diese Berichte zu lesen und wann sie Änderungen vorschlagen sollten. So können Sie einen Agenten bitten, Ihre Kampagnen über alle Apps hinweg zu prüfen, Keywords zum Hinzufügen oder Ausschließen zu finden oder eine Veränderung der Leistung zu erklären. Jeder Befehl nimmt `--json` an, und Agenten werden angewiesen, Ihnen die geplanten Änderungen zu zeigen und `--dry-run` zu verwenden, bevor etwas gesendet wird.
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `ads keywords popularity` `--monthly`: der letzte volle Monat statt der letzten vollen Woche
+- `ads insights impression-share` `--first-slot`: nur die erste Anzeigenposition

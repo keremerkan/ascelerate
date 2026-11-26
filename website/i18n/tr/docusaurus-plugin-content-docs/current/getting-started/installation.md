@@ -28,7 +28,7 @@ ascelerate'i daha önce `keremerkan/tap` tap'inden kurduysanız `brew update` on
 curl -fsSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
-En son sürümü indirir, ascelerate'in Developer ID'siyle imzalandığını doğrular ve `/usr/local/bin` dizinine kurar (gerekirse dizini oluşturur); bunun için parolanız sorulur. Yalnızca Apple Silicon. Daha sonra `sudo ascelerate update` ile güncelleyebilirsiniz.
+En son sürümü indirir, ascelerate'in Developer ID'siyle imzalandığını doğrular ve `/usr/local/bin` dizinine kurar (gerekirse dizini oluşturur); bunun için parolanız sorulur. Yalnızca Apple Silicon. Daha sonra `sudo ascelerate update` ile güncelleyebilirsiniz. `ascelerate update --check` yalnızca daha yeni bir sürüm olup olmadığını söyler.
 
 ## Manuel indirme
 

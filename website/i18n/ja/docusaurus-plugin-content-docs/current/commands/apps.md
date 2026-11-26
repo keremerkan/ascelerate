@@ -332,3 +332,12 @@ ascelerate apps group-purchase-invitations <bundle-id>
 # 招待をアプリで管理
 ascelerate apps group-purchase-invitations <bundle-id> --host developer
 ```
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `apps create-version` `--copyright`：新しいバージョンの著作権表示
+- `apps pricing set` `--base-territory`, `--drop-manual`：基準となる地域（デフォルトは現在の地域、または USA）／ほかの地域で手動設定した価格を Apple の自動設定に戻す
+- `apps encryption` `--no-proprietary-crypto`, `--no-third-party-crypto`, `--available-on-french-store`, `--no-available-on-french-store`：--create と組み合わせて、独自・サードパーティの暗号化とフランスのストアについての申告の回答
+- `apps review info` `--contact-first-name`, `--contact-last-name`, `--contact-phone`：App Review の連絡先（メールアドレスと一緒に送信）

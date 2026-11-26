@@ -285,7 +285,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
   --territory USA --equalize-all-territories
 
-ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # desactivarlo es definitivo
 
 # Generar códigos de un solo uso (asíncrono)
 ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -325,7 +325,7 @@ ascelerate sub images delete <bundle-id> <product-id> <image-id>
 
 ## Captura de pantalla para App Review
 
-Cada suscripción puede tener como máximo una captura de pantalla para App Review. Al subir una nueva, se sustituye la existente.
+Cada suscripción puede tener como máximo una captura de pantalla para App Review. Apple rechaza una segunda, así que `upload` se detiene si el producto ya tiene una: elimínela primero con `review-screenshot delete`.
 
 ```bash
 ascelerate sub review-screenshot view <bundle-id> <product-id>
@@ -355,3 +355,16 @@ ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
 - **En el App Store:** `--priority high` la coloca antes que otras ofertas; `--promote` permite que el App Store la promocione con recursos que genera Apple.
 - **Precios:** como en las ofertas de retención, `--price` corresponde al primer país o región de `--territories` y los demás reciben el precio equivalente de Apple; una prueba gratuita no lleva precio. Una oferta `PAY_AS_YOU_GO` dura el periodo de la propia suscripción (`ONE_YEAR` en una anual).
 - **Cambios:** se pueden cambiar los requisitos, las fechas, la prioridad y la promoción; para lo demás, elimine la oferta y vuelva a crearla.
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `sub create` `--group`, `--group-level`, `--review-note`, `--family-sharable`: el grupo (nombre o ID; se pregunta si hay varios), el nivel dentro de él (1 es el más alto), la nota para App Review y En familia (una vez activado, no se puede desactivar)
+- `sub update` `--group-level`, `--review-note`, `--family-sharable`: lo mismo, para cambiarlo (En familia solo se puede activar)
+- `sub update-group|delete-group|submit-group|group-localizations` `--group`: el grupo por nombre o ID: necesario con --yes cuando la app tiene varios
+- `sub localizations import|group-localizations import` `--verbose`: mostrar las respuestas de Apple
+- `sub availability` `--verbose`: mostrar los países y regiones por su nombre
+- `sub offer-code create` `--auto-renew`, `--no-auto-renew`: si la suscripción se renueva tras la oferta (por defecto, lo que decida Apple)
+- `sub offer-code gen-codes` `--environment`: PRODUCTION (por defecto) o SANDBOX
+- `sub retention-message submit` `--platform`: la plataforma del envío (por defecto, ios)

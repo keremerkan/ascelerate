@@ -162,3 +162,9 @@ ascelerate game-center matchmaking test Ranked --file requests.json
 ```
 
 リクエストには `latitude`、`longitude`、`playerCount`、`minPlayers`、`maxPlayers` も指定できます。キューが使っているルールセットは削除できないため、先にキューを変更するか削除してください。
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `game-center matchmaking rule-sets create` `--language-version`：ルール言語のバージョン（デフォルトは 1）

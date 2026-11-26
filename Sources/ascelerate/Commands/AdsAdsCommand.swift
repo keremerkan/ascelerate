@@ -127,8 +127,8 @@ extension AdsCommand {
       static let configuration = CommandConfiguration(
         abstract: "Create an ad that sends an ad group's taps to a product page (Apple reviews it before it serves).",
         discussion: """
-          Only one ad per ad group can serve. With --enabled the ad group's serving ad is paused first; \\
-          otherwise the new ad is created paused. To show a custom product page for some searches only, \\
+          Only one ad per ad group can serve. With --enabled the ad group's serving ad is paused first; \
+          otherwise the new ad is created paused. To show a custom product page for some searches only, \
           put their keywords in an ad group of their own ('ads adgroups create', 'ads keywords add').
           """
       )

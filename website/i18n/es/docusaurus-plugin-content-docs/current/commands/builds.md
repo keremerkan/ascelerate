@@ -140,3 +140,10 @@ Si la compilación más reciente aún se está procesando, `build attach-latest`
 `build attach` no elige una compilación con `--yes`: la más reciente puede estar aún en proceso, caducada o no válida. Use `build attach-latest`, que lo comprueba.
 
 La búsqueda de compilaciones tiene en cuenta la plataforma: en las apps de compra universal, las compilaciones de iOS y macOS pueden compartir número de compilación, así que los comandos de asociación solo consideran las compilaciones de la misma plataforma que la versión de destino.
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `builds archive` `--workspace`, `--project`, `--configuration`: el workspace o el proyecto (se busca en la carpeta si se omite) y la configuración de compilación (por defecto, Release)
+- `builds await-processing` `--interval`, `--timeout`: segundos entre comprobaciones (por defecto 30, al menos 1) y minutos antes de desistir (por defecto 30, al menos 1)

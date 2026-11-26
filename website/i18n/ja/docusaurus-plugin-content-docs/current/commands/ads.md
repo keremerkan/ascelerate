@@ -180,3 +180,10 @@ ascelerate ads ads pause "Scanner Page ad" --campaign "MyApp US"
 ## AI エージェントとの併用
 
 [ascelerate スキル](../guides/ai-skill.md)は、これらのレポートの読み方と変更を提案すべきタイミングを AI コーディングエージェントに教えます。そのため、複数のアプリにまたがるキャンペーンのレビュー、追加または除外すべきキーワードの発見、パフォーマンスの変化の説明などをエージェントに依頼できます。すべてのコマンドが `--json` に対応しており、エージェントには、提案する変更を提示し、何かを送信する前に `--dry-run` を使用するよう指示されています。
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `ads keywords popularity` `--monthly`：直近の 1 週間ではなく直近の 1 か月
+- `ads insights impression-share` `--first-slot`：最初の広告枠のみ

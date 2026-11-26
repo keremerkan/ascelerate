@@ -69,3 +69,9 @@ Hourly limit: 3600 requests (rolling window)
 Used:         57
 Remaining:    3543 (98%)
 ```
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `configure` `--stdin`：質問する代わりに標準入力から JSON でキーを読み込む（{"keyId", "issuerId", "privateKey"}）。ベンダー番号と Apple Ads の設定はそのまま残ります

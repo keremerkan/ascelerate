@@ -180,3 +180,10 @@ Une annonce envoie les taps d'un groupe d'annonces vers une page produit. Les gr
 ## Avec un agent IA
 
 Le [skill ascelerate](../guides/ai-skill.md) apprend aux agents de codage IA à lire ces rapports et à savoir quand proposer des modifications. Vous pouvez ainsi demander à un agent de passer en revue vos campagnes sur toutes vos applications, de trouver des mots-clés à ajouter ou à exclure, ou d'expliquer une variation des performances. Chaque commande accepte `--json`, et les agents ont pour consigne de vous montrer les modifications proposées et d'utiliser `--dry-run` avant d'envoyer quoi que ce soit.
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `ads keywords popularity` `--monthly` : le dernier mois complet au lieu de la dernière semaine complète
+- `ads insights impression-share` `--first-slot` : seulement la première position d'annonce

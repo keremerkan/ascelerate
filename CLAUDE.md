@@ -68,8 +68,9 @@ Sources/ascelerate/
   Ads/                                # Ads.swift (config, dry-run gate, lookups, prompts, Scope), AdsReports.swift (tables), AdsASC.swift (the only Ads file importing ASCKit)
   Commands/                           # One file per command group (AppsCommand, BuildsCommand, TestFlightCommand, IAPCommand, SubCommand, Ads*Command, GameCenter*Command, …)
   Screenshot/                         # The screenshot module (see "Screenshot Module")
-Tests/ASCKitTests/                    # Middlewares against a fake server (rate limit wait, paging, error decoding)
+Tests/ASCKitTests/                    # Middlewares against a fake server (rate limit wait, paging, error decoding, the dry-run and write gates)
 Tests/AscelerateCoreTests/            # Core logic (pricing, price files, project files, set sync, zip reader, …)
+Tests/AscelerateCLITests/             # The executable's own pure parts (@testable import ascelerate): screenshot config keys, bezel framing
 skills/
   ascelerate/SKILL.md                 # AI coding skill (single source of truth)
   package.json                        # npm package for npx installer
@@ -219,7 +220,7 @@ ascelerate iap images list <bundle-id> <product-id>               # List uploade
 ascelerate iap images upload <bundle-id> <product-id> <file> [-y] # Upload image (3-step reserve/PUT/commit)
 ascelerate iap images delete <bundle-id> <product-id> <image-id> [-y]  # Delete an image
 ascelerate iap review-screenshot view <bundle-id> <product-id>    # Show current App Review screenshot
-ascelerate iap review-screenshot upload <bundle-id> <product-id> <file> [-y]  # Upload (replaces existing)
+ascelerate iap review-screenshot upload <bundle-id> <product-id> <file> [-y]  # Upload (one per product: refused while one exists; Apple 409s a second)
 ascelerate iap review-screenshot delete <bundle-id> <product-id> [-y]  # Delete
 ascelerate sub groups <bundle-id> [--json]                        # List subscription groups with subscriptions
 ascelerate sub list <bundle-id> [--json]                          # Flat list of all subscriptions
@@ -280,7 +281,7 @@ ascelerate sub images list <bundle-id> <product-id>               # List uploade
 ascelerate sub images upload <bundle-id> <product-id> <file> [-y] # Upload image (3-step reserve/PUT/commit)
 ascelerate sub images delete <bundle-id> <product-id> <image-id> [-y]  # Delete an image
 ascelerate sub review-screenshot view <bundle-id> <product-id>    # Show current App Review screenshot
-ascelerate sub review-screenshot upload <bundle-id> <product-id> <file> [-y]  # Upload (replaces existing)
+ascelerate sub review-screenshot upload <bundle-id> <product-id> <file> [-y]  # Upload (one per product: refused while one exists; Apple 409s a second)
 ascelerate sub review-screenshot delete <bundle-id> <product-id> [-y]  # Delete
 ascelerate sandbox-testers [--json]                               # Sandbox testers: Apple Account, storefront, renewal rate, interrupted purchases, Apple Pay
 ascelerate sandbox-testers update <email-or-id> [--territory X] [--interrupt-purchases true|false] [--renewal-rate 1h|30m|15m|5m|3m] [-y]  # Lists the changes, asks
@@ -466,6 +467,8 @@ ascelerate install-skill [--all] [--uninstall]                    # Install/upda
 ascelerate screenshot [--languages en-US,tr-TR]                   # Capture screenshots (optional language subset override)
 ascelerate screenshot init                                        # Create ascelerate/screenshot.yml + ScreenshotHelper.swift
 ascelerate screenshot create-helper [-o file]                     # Generate UITest helper file
+ascelerate screenshot frame                                       # Frame captured screenshots with the configured device bezels (deviceBezel/frameDevice)
+ascelerate install-completions                                    # Install or update the zsh/bash completion scripts
 ascelerate ads configure [--new-key]                              # Apple Ads API credentials: creates the key pair, prints the public key, picks the ad account (a new key waits in ads-private-key.new.pem until it signs in)
 ascelerate ads accounts                                           # Ad accounts and roles of the API user
 ascelerate ads campaigns list [--app X] [--json]                  # Campaigns with status, countries, daily budget, bidding
@@ -710,13 +713,14 @@ Sources/ascelerate/
     ScreenshotRunner.swift       # Orchestrator: build → boot simulators → run tests → collect
     ScreenshotTestRunner.swift   # xcodebuild wrapper: build-for-testing + test-without-building
     ScreenshotCollector.swift    # Moves PNGs from per-device cache to output dir
-    SimulatorManager.swift       # xcrun simctl: boot, shutdown, erase, localize, status bar, dark mode
-    ScreenshotShell.swift        # Process wrapper: run (capture), stream (passthrough), runToLog (to file)
+    SimulatorManager.swift       # xcrun simctl: boot, shutdown, erase, localize, status bar (set, never cleared), dark mode
+    ScreenshotShell.swift        # Process wrapper: run (stdout captured, stderr apart and into the error), stream (passthrough), runToLog (to file)
+    ScreenshotFramer.swift       # screenshot frame: bezel screen detection (findScreenArea), bestBezel per shot, compositing
     ScreenshotEvent.swift        # The --json-events event shapes (EventOutput.swift, shared with builds archive/upload, prints them)
     ScreenshotSetupPrompt.swift  # setup-prompt: project survey (projects, schemes from scheme files, UI test targets, knownRegions, simulators, config, helper) + the agent prompts
     ScreenshotError.swift        # Error types
   Commands/
-    ScreenshotCommand.swift      # Subcommands: run, init, create-helper + embedded ScreenshotHelper.swift
+    ScreenshotCommand.swift      # Subcommands: run, init, create-helper, frame, doctor, setup-prompt + embedded ScreenshotHelper.swift
 ```
 
 ### Config (`ascelerate/screenshot.yml`)
@@ -772,6 +776,7 @@ overrideStatusBar: true
 ascelerate screenshot [-l en-US,tr-TR] [--json-events]  # Capture screenshots (optionally a subset of configured languages; events: JSON Lines on stdout, log on stderr)
 ascelerate screenshot init [-y]               # Create ascelerate/screenshot.yml + ScreenshotHelper.swift
 ascelerate screenshot create-helper [-o file] [-y]  # Generate ScreenshotHelper.swift (default: ascelerate/)
+ascelerate screenshot frame                   # Frame the captured screenshots with the configured bezels
 ascelerate screenshot doctor [--json]         # Check the configuration and environment
 ascelerate screenshot setup-prompt [--design] [--copy]  # Print a coding agent's setup instructions for this project (or a design generator's)
 ```

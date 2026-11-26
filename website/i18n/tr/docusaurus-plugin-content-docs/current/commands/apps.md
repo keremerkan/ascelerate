@@ -332,3 +332,12 @@ ascelerate apps group-purchase-invitations <bundle-id>
 # Davetleri uygulamada yönet
 ascelerate apps group-purchase-invitations <bundle-id> --host developer
 ```
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `apps create-version` `--copyright`: yeni sürümün telif hakkı bildirimi
+- `apps pricing set` `--base-territory`, `--drop-manual`: temel bölge (varsayılan: mevcut olan veya USA); diğer bölgelerde elle belirlenen fiyatları Apple'a geri bırakma
+- `apps encryption` `--no-proprietary-crypto`, `--no-third-party-crypto`, `--available-on-french-store`, `--no-available-on-french-store`: --create ile: beyannamenin özel ve üçüncü taraf şifreleme ile Fransa mağazası hakkındaki yanıtları
+- `apps review info` `--contact-first-name`, `--contact-last-name`, `--contact-phone`: App Review iletişim kişisi (e-postayla birlikte gönderilir)

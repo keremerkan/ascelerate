@@ -64,3 +64,9 @@ ascelerate product-pages media delete <bundle-id> "Summer 2026" <media-id>
 El tipo de archivo determina si se sube como captura de pantalla o como vista previa de la app. Los tipos de pantalla y de vista previa usan los identificadores de dispositivo habituales del App Store (p. ej. `APP_IPHONE_67`, `APP_IPAD_PRO_3GEN_129`).
 
 `--display-type` también admite los espacios de la biblioteca multimedia `PRODUCT_PAGE_HEADER` y `APP_STORE_SEARCH_RESULTS` (una imagen o un vídeo que sustituye al actual) y `APP_IPHONE_DUO` (una captura de pantalla o una vista previa de la app, que se añade después de las existentes); en [Capturas y vistas previas](media.md#header-and-search-results) encontrará sus tamaños. `media list` los muestra y `media delete` los elimina por su ID.
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `product-pages localizations export|import` `--output`, `--verbose`: export: el archivo que se escribe; import: mostrar las respuestas de Apple

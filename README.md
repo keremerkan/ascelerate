@@ -511,7 +511,7 @@ App Store Connect requires **`APP_IPHONE_67`** screenshots for iPhone apps and *
 
 > **Note:** Watch and iMessage display types support screenshots only -- video files in those folders are skipped with a warning. With `--replace`, each matching set ends up holding exactly the folder's files: screenshots and previews already uploaded stay as they are (recognized by their checksum, whatever their file name), the set's other items are deleted, only new or changed files are uploaded, and the set is put in the folder's order. A rerun with nothing changed uploads nothing, and renaming files to move them only reorders the set. iPhone Duo, header and search results images go through the asset library and are replaced whole.
 >
-> App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ (a set holding the folder's files in another order is put in file order after you confirm, without uploading again); `media download` doesn't include them yet, and `media prune` never deletes them.
+> App Store Connect has no screenshot set for iPhone Duo: files in an `APP_IPHONE_DUO` folder go to the app's asset library and are placed on the version localization in file order. Accepted sizes are 2853×2007 / 2007×2853 (inner display, unfolded) and 2034×1398 / 1398×2034 (cover display); other sizes are rejected before upload. A file that still fails after retries makes `media upload` place that locale's iPhone Duo screenshots again at the end of the run, in file order. `media verify` lists them with file names and states and, given the folder, flags locales whose iPhone Duo files or order differ (a set holding the folder's files in another order is put in file order after you confirm, without uploading again); `media download` saves them under their own file names (library videos have no download URL), and `media prune` never deletes them.
 >
 > `PRODUCT_PAGE_HEADER` and `APP_STORE_SEARCH_RESULTS` folders also go through the asset library, one image per locale each that isn't tied to a device class (the version shows it on iPhone, iPad and iPhone Duo alike), on every platform's versions: the product page header takes a PNG at 3840×1646 or 5244×2950, and the search results image a 3:2 JPG/PNG from 1920×1280 to 3840×2560 or a 5244×2950 PNG. Each slot also takes a video instead (header: 3840×1646; search results: 3:2 in the same size range; 5–30 s at 30 or 60 fps). Uploading replaces the locale's current image or video (the old one is removed after the new one is uploaded). An `APP_IPHONE_DUO` folder can hold app previews too (1920×886 or 886×1920, 15–30 s at 23–30 fps, with audio). Custom product pages take all three through `product-pages media upload --display-type PRODUCT_PAGE_HEADER` (or `APP_STORE_SEARCH_RESULTS`, `APP_IPHONE_DUO`). `media download` saves the library images; App Store Connect gives no download link for library videos.
 >
@@ -643,6 +643,7 @@ languages:
 outputDirectory: ./screenshots
 # framedOutputDirectory: ./screenshots/framed
 clearPreviousScreenshots: true
+eraseSimulator: false
 localizeSimulator: true
 overrideStatusBar: true
 # darkMode: false
@@ -652,7 +653,7 @@ overrideStatusBar: true
 # testplan: MyTestPlan
 # numberOfRetries: 0                    # Retry failed languages (erase + reboot simulator)
 # stopAfterFirstError: false
-# reinstallApp: false
+# reinstallApp: com.example.MyApp     # Uninstall this app (bundle ID) before the tests: a fresh install
 # disableAssetDownloads: false          # Disable mobileassetd (no Siri/keyboard/ML asset downloads; also blocks on-device ML assets)
 # xcargs: -maximum-parallel-testing-workers 2
 ```
@@ -1110,7 +1111,7 @@ ascelerate iap availability <bundle-id> <product-id> --add CHN,RUS --remove ITA 
 # Offer codes (campaigns + redeem codes)
 ascelerate iap offer-code list <bundle-id> <product-id>
 ascelerate iap offer-code create <bundle-id> <product-id> --name "Launch Promo" --eligibility NON_SPENDER,ACTIVE_SPENDER --price 0.99 --territory USA --equalize-all-territories
-ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # turning one off is for good
 ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> --count 100 --expires 2026-12-31
 ascelerate iap offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> --code PROMO2026 --count 1000 --expires 2026-12-31
 ascelerate iap offer-code view-codes <one-time-use-batch-id> --output codes.txt
@@ -1220,7 +1221,7 @@ ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
 # Offer codes (redeemable codes — one-time-use batches and custom codes)
 ascelerate sub offer-code list <bundle-id> <product-id>
 ascelerate sub offer-code create <bundle-id> <product-id> --name "Launch Free Month" --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --territory USA --equalize-all-territories
-ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # turning one off is for good
 ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> --count 500 --expires 2026-12-31
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> --code SUBPROMO --count 1000 --expires 2026-12-31
 ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt

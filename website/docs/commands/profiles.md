@@ -74,3 +74,9 @@ ascelerate profiles reissue --all --to-certs ABC123,DEF456
 Without `--to-certs`, each profile gets every certificate that fits its type, not only the ones it had. `--to-certs` names exact certificates by serial number or name (a name must be one certificate), and every profile must be able to hold them. Development and ad hoc profiles keep their own enabled devices, or get every enabled device with `--all-devices`, as far as each fits the profile's platform. All of this is checked before any profile is deleted.
 
 Expired certificates never go into a reissued profile, with or without `--to-certs`.
+
+## More options
+
+Options the examples above don't show:
+
+- `profiles create` `--devices`: device names or UDIDs, comma-separated, or all (development and ad hoc profiles)

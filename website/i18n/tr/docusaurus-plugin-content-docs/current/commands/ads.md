@@ -180,3 +180,10 @@ Bir reklam, bir reklam grubunun dokunmalarını bir ürün sayfasına yönlendir
 ## Yapay zeka ajanıyla kullanım
 
 [ascelerate skill'i](../guides/ai-skill.md), yapay zeka kodlama ajanlarına bu raporları nasıl okuyacaklarını ve ne zaman değişiklik önereceklerini öğretir. Böylece bir ajandan kampanyalarınızı tüm uygulamalarınızda gözden geçirmesini, eklenecek veya hariç tutulacak anahtar kelimeleri bulmasını ya da performanstaki bir değişikliği açıklamasını isteyebilirsiniz. Her komut `--json` kabul eder; ajanlardan da bir şey gönderilmeden önce önerilen değişiklikleri size göstermeleri ve `--dry-run` kullanmaları istenir.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `ads keywords popularity` `--monthly`: son tam hafta yerine son tam ay
+- `ads insights impression-share` `--first-slot`: yalnızca ilk reklam konumu

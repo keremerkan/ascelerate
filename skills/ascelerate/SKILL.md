@@ -131,7 +131,7 @@ ascelerate apps media remove <app> PRODUCT_PAGE_HEADER [--locale en-US,tr]   # R
 ascelerate apps media library <app> [--only APP_IPHONE_DUO,PRODUCT_PAGE_HEADER,APP_STORE_SEARCH_RESULTS] [--delete-unused]  # Count library images, list (and delete) unused never-reviewed ones; --only also takes screenshot display types (APP_IPHONE_67, ...) and UNFINISHED_UPLOADS; images <1 h old are kept
 ```
 
-iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media verify` lists them (file name + state) and, given the folder, flags locales whose Duo files or order differ: a set holding the folder's files in another order is reordered after a confirmation (one request, nothing re-uploaded), other differences need `media upload --replace`; a file that still fails after retries makes `media upload` re-place that locale's Duo set at the end of the run. `media download` skips them; `media prune` never deletes them. Product page header and search results images work the same way: `PRODUCT_PAGE_HEADER/` (PNG 3840×1646 or 5244×2950) and `APP_STORE_SEARCH_RESULTS/` (3:2 JPG/PNG from 1920×1280 to 3840×2560, or PNG 5244×2950), one image per locale shown on every device (not per display type), any platform; an upload replaces the current image. Each slot takes a video instead too (header 3840×1646, search 3:2; 5–30 s at 30/60 fps), and `APP_IPHONE_DUO/` takes app previews (1920×886 or 886×1920, 15–30 s, 23–30 fps, with audio). Custom product pages: `product-pages media upload --display-type PRODUCT_PAGE_HEADER|APP_STORE_SEARCH_RESULTS|APP_IPHONE_DUO`. `media download [--locale X]` saves library images; library videos have no download URL. Removing a placement (`media remove`, `--replace`, replacing a header/search image) also deletes its library image when no placement anywhere uses it and it was never reviewed; versions share images and old versions keep theirs, so never delete library images by other means. Classic set `--replace` cleans up the same way (it reads the set's library images before clearing it and keeps any still placed elsewhere, e.g. on the live version). Leftovers from earlier runs: `media library --delete-unused`.
+iPhone Duo screenshots go in an `APP_IPHONE_DUO` folder: uploaded to the app's asset library and placed on the version localization (no screenshot set exists for them). Accepted sizes: 2853×2007 / 2007×2853 (unfolded) or 2034×1398 / 1398×2034 (cover). `media verify` lists them (file name + state) and, given the folder, flags locales whose Duo files or order differ: a set holding the folder's files in another order is reordered after a confirmation (one request, nothing re-uploaded), other differences need `media upload --replace`; a file that still fails after retries makes `media upload` re-place that locale's Duo set at the end of the run. `media download` saves them under their own file names; `media prune` never deletes them. Product page header and search results images work the same way: `PRODUCT_PAGE_HEADER/` (PNG 3840×1646 or 5244×2950) and `APP_STORE_SEARCH_RESULTS/` (3:2 JPG/PNG from 1920×1280 to 3840×2560, or PNG 5244×2950), one image per locale shown on every device (not per display type), any platform; an upload replaces the current image. Each slot takes a video instead too (header 3840×1646, search 3:2; 5–30 s at 30/60 fps), and `APP_IPHONE_DUO/` takes app previews (1920×886 or 886×1920, 15–30 s, 23–30 fps, with audio). Custom product pages: `product-pages media upload --display-type PRODUCT_PAGE_HEADER|APP_STORE_SEARCH_RESULTS|APP_IPHONE_DUO`. `media download [--locale X]` saves library images; library videos have no download URL. Removing a placement (`media remove`, `--replace`, replacing a header/search image) also deletes its library image when no placement anywhere uses it and it was never reviewed; versions share images and old versions keep theirs, so never delete library images by other means. Classic set `--replace` cleans up the same way (it reads the set's library images before clearing it and keeps any still placed elsewhere, e.g. on the live version). Leftovers from earlier runs: `media library --delete-unused`.
 
 #### Folder structure
 
@@ -209,7 +209,7 @@ ascelerate iap availability <app> <product-id> [--add CHN,RUS] [--remove ITA] [-
 ascelerate iap offer-code list <app> <product-id>
 ascelerate iap offer-code info <app> <product-id> <offer-code-id>
 ascelerate iap offer-code create <app> <product-id> --name X --eligibility NON_SPENDER,ACTIVE_SPENDER --price 0.99 [--territory USA] [--equalize-all-territories]
-ascelerate iap offer-code toggle <app> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code toggle <app> <product-id> <offer-code-id> --active false   # turning one off is for good
 ascelerate iap offer-code gen-codes <app> <product-id> <offer-code-id> --count 100 --expires 2026-12-31
 ascelerate iap offer-code add-custom-codes <app> <product-id> <offer-code-id> --code PROMO2026 --count 1000 --expires 2026-12-31
 ascelerate iap offer-code view-codes <one-time-use-batch-id> [--output codes.txt]   # async; may need retry
@@ -304,7 +304,7 @@ ascelerate sub win-back-offer update <app> <product-id> <offer-id> [--since-mont
 # Offer codes (one-time-use batches + custom codes)
 ascelerate sub offer-code list/info <app> <product-id> [<offer-code-id>]
 ascelerate sub offer-code create <app> <product-id> --name X --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --territory USA --equalize-all-territories
-ascelerate sub offer-code toggle <app> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code toggle <app> <product-id> <offer-code-id> --active false   # turning one off is for good
 ascelerate sub offer-code gen-codes <app> <product-id> <offer-code-id> --count 500 --expires 2026-12-31
 ascelerate sub offer-code add-custom-codes <app> <product-id> <offer-code-id> --code SUBPROMO --count 1000 --expires 2026-12-31
 ascelerate sub offer-code view-codes <one-time-use-batch-id> [--output codes.txt]
@@ -680,6 +680,7 @@ devices:
 languages: [en-US, de-DE]
 outputDirectory: ./screenshots
 clearPreviousScreenshots: true
+eraseSimulator: false
 localizeSimulator: true
 overrideStatusBar: true
 # helperPath: AppUITests/ScreenshotHelper.swift
@@ -693,7 +694,7 @@ overrideStatusBar: true
 # testplan: MyTestPlan
 # numberOfRetries: 1
 # stopAfterFirstError: false
-# reinstallApp: false
+# reinstallApp: com.example.MyApp     # Uninstall this app (bundle ID) before the tests: a fresh install
 # disableAssetDownloads: false   # disable mobileassetd: no Siri/keyboard/ML asset downloads into erased simulators (also blocks on-device ML assets some apps need)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 # framedOutputDirectory: ./screenshots/framed

@@ -176,3 +176,13 @@ ascelerate testflight feedback screenshots delete <submission-id>
 ```
 
 `list` は `--build` と `--platform` のフィルターを受け付けます。`info` は、モデル、OS バージョン、ロケール、接続の種類、バッテリー残量、空きディスク容量、テスターのコメントなど、デバイスの詳細な状況を表示します。`log` はクラッシュログを表示し、`--output` を指定するとファイルに保存します。`download` は送信されたスクリーンショットとコメントを1つの zip アーカイブにまとめます。送信 ID を省略すると、アプリの送信一覧がページ単位で表示され、その中から選択できます。スクリーンショットの URL は数日で期限切れになるため、保存しておきたいフィードバックは早めにダウンロードしてください。
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `testflight groups create|update` `--feedback`：テスターのフィードバックのオン／オフ（true または false、新しいグループではデフォルトでオン）
+- `testflight testers add` `--last-name`：テスターの姓
+- `testflight what-to-test copy` `--from`：コピー元のビルド（デフォルトは、テストメモのある直前の最新ビルド）
+- `testflight app-info update` `--description`, `--marketing-url`, `--privacy-policy-url`：テスターに表示されるベータの説明、マーケティング URL、プライバシーポリシーの URL
+- `testflight review-info` `--contact-first-name`, `--contact-last-name`, `--contact-phone`, `--contact-email`, `--demo-account-password`, `--notes`：ベータ審査の連絡先、デモアカウントのパスワード、審査担当者へのメモ

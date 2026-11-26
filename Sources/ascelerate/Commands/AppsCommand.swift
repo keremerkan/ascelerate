@@ -251,7 +251,7 @@ struct AppsCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
       
-      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
       var version: String?
 
       @OptionGroup var platformOption: PlatformOption
@@ -569,7 +569,7 @@ struct AppsCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
       
-      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
       var version: String?
 
       @OptionGroup var platformOption: PlatformOption
@@ -750,7 +750,7 @@ struct AppsCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
       
-      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
       var version: String?
 
       @OptionGroup var platformOption: PlatformOption
@@ -790,7 +790,7 @@ struct AppsCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
       
-      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
       var version: String?
 
       @OptionGroup var platformOption: PlatformOption
@@ -895,7 +895,7 @@ struct AppsCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
       
-      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
       var version: String?
 
       @OptionGroup var platformOption: PlatformOption
@@ -949,7 +949,7 @@ struct AppsCommand: AsyncParsableCommand {
               completion: appAliasCompletion)
     var bundleID: String
     
-    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
     var version: String?
 
     @OptionGroup var platformOption: PlatformOption
@@ -1179,7 +1179,7 @@ struct AppsCommand: AsyncParsableCommand {
               completion: appAliasCompletion)
     var bundleID: String
     
-    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+    @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
     var version: String?
 
     @OptionGroup var platformOption: PlatformOption
@@ -1292,7 +1292,7 @@ struct AppsCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
 
-      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the latest version.")
+      @Option(name: .long, help: "Version string (e.g. 2.1.0). Defaults to the version that can be edited (asked when several platforms have one), else the latest.")
       var version: String?
 
       @OptionGroup var platformOption: PlatformOption
@@ -3210,7 +3210,8 @@ struct AppsCommand: AsyncParsableCommand {
         let existing = try await EncryptionDeclarations.document(declarationID: target.id, client: client)
         print("App: \(appName)")
         print("Declaration: \(target.id) (\(target.state.map { formatState($0) } ?? "—"), created \(target.createdDate.map(formatDate) ?? "—"))")
-        if let existing { print("It has a document already: \(existing.fileName ?? existing.id). The new one replaces it.") }
+        // Whether Apple replaces it, keeps both or refuses the second hasn't been seen: said as such.
+        if let existing { print("It has a document already: \(existing.fileName ?? existing.id). Uploading another adds the new one; whether App Store Connect then replaces the old one or refuses this one hasn't been checked.") }
         print("File: \((path as NSString).lastPathComponent)")
         guard confirm("Upload? [y/N] ") else {
           cancelled()

@@ -140,3 +140,10 @@ ascelerate apps build detach <bundle-id>
 `build attach` doesn't pick a build under `--yes`: the newest may still be processing, expired or invalid. Use `build attach-latest`, which checks.
 
 Build lookups are platform-aware: on universal-purchase apps, iOS and macOS builds can share build numbers, so the attach commands only consider builds matching the target version's platform.
+
+## More options
+
+Options the examples above don't show:
+
+- `builds archive` `--workspace`, `--project`, `--configuration`: the workspace or project (found in the folder when left out) and the build configuration (default Release)
+- `builds await-processing` `--interval`, `--timeout`: seconds between checks (default 30, at least 1) and minutes before giving up (default 30, at least 1)

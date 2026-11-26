@@ -50,3 +50,9 @@ ascelerate certs revoke
 # Nach Seriennummer
 ascelerate certs revoke ABC123DEF456
 ```
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `certs list` `--display-name`: nur Zertifikate mit diesem Anzeigenamen

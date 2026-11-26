@@ -157,7 +157,7 @@ ascelerate iap offer-code create <bundle-id> <product-id> \
   --price 0.99 --territory USA --equalize-all-territories
 
 # Aktivieren oder deaktivieren
-ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate iap offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # Ausschalten ist endgültig
 
 # Batch von Einmalnutzungscodes generieren (Codes werden asynchron erstellt)
 ascelerate iap offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -187,10 +187,19 @@ Uploads verwenden Apples 3-Schritt-Flow: mit `fileSize` + `fileName` reservieren
 
 ## App-Review-Screenshot
 
-Jeder IAP kann höchstens einen App-Review-Screenshot haben (für Apples Prüfer sichtbar). Ein Upload ersetzt einen vorhandenen.
+Jeder IAP kann höchstens einen App-Review-Screenshot haben (für Apples Prüfer sichtbar). Apple lehnt einen zweiten ab, daher bricht `upload` ab, wenn das Produkt schon einen hat: Löschen Sie ihn zuerst mit `review-screenshot delete`.
 
 ```bash
 ascelerate iap review-screenshot view <bundle-id> <product-id>
 ascelerate iap review-screenshot upload <bundle-id> <product-id> ./review.png
 ascelerate iap review-screenshot delete <bundle-id> <product-id>
 ```
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `iap create|update` `--review-note`, `--family-sharable`: der Hinweis für App Review und die Familienfreigabe (einmal eingeschaltet, lässt sie sich nicht wieder ausschalten)
+- `iap localizations import` `--verbose`: Apples Antworten anzeigen
+- `iap availability` `--verbose`: Länder und Regionen mit Namen anzeigen
+- `iap offer-code gen-codes` `--environment`: PRODUCTION (Standard) oder SANDBOX

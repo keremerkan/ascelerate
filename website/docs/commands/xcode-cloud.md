@@ -70,3 +70,10 @@ ascelerate xcode-cloud xcode-versions
 `xcode-versions` lists the Xcode versions Xcode Cloud offers, with the macOS versions each runs on.
 
 All list and info commands take `--json`.
+
+## More options
+
+Options the examples above don't show:
+
+- `xcode-cloud workflows create|update` `--description`, `--restrict-editing`, `--macos`: the description ('' clears it), whether only Admins and App Managers may change the workflow (true or false), and the macOS version
+- `xcode-cloud workflows create` `--disabled`: create the workflow turned off

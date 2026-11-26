@@ -28,7 +28,7 @@ If you installed ascelerate from the `keremerkan/tap` tap before, `brew update` 
 curl -fsSL https://raw.githubusercontent.com/keremerkan/ascelerate/main/install.sh | bash
 ```
 
-Downloads the latest release, checks that it's signed with ascelerate's Developer ID, and installs it to `/usr/local/bin` (creating the folder if needed), which asks for your password. Apple Silicon only. Update it later with `sudo ascelerate update`.
+Downloads the latest release, checks that it's signed with ascelerate's Developer ID, and installs it to `/usr/local/bin` (creating the folder if needed), which asks for your password. Apple Silicon only. Update it later with `sudo ascelerate update`. `ascelerate update --check` only says whether a newer release exists.
 
 ## Download manually
 

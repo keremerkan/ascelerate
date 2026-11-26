@@ -285,7 +285,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
   --territory USA --equalize-all-territories
 
-ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
+ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active false   # 一度オフにすると元に戻せません
 
 # ワンタイムユースコードを生成（非同期）
 ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> \
@@ -325,7 +325,7 @@ ascelerate sub images delete <bundle-id> <product-id> <image-id>
 
 ## App Reviewスクリーンショット
 
-各サブスクリプションは最大1つのApp Reviewスクリーンショットを持つことができます。アップロードすると既存のスクリーンショットが置き換えられます。
+各サブスクリプションは最大1つのApp Reviewスクリーンショットを持つことができます。Apple は 2 つ目を拒否するため、商品にすでにある場合 `upload` は停止します。先に `review-screenshot delete` で削除してください。
 
 ```bash
 ascelerate sub review-screenshot view <bundle-id> <product-id>
@@ -355,3 +355,16 @@ ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
 - **App Store での表示：** `--priority high` は他のオファーより先に表示します。`--promote` を指定すると、App Store が Apple の生成するアセットでオファーを宣伝します。
 - **価格：** リテンションオファーと同様に、`--price` は `--territories` の最初の国または地域の価格で、その他にはAppleの同等の価格が適用されます。無料トライアルには価格がありません。`PAY_AS_YOU_GO` のオファーの期間は、サブスクリプション自体の期間です（年間サブスクリプションでは `ONE_YEAR`）。
 - **変更：** 対象条件、日付、優先度、宣伝は変更できます。それ以外を変えるには、オファーを削除して作り直してください。
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `sub create` `--group`, `--group-level`, `--review-note`, `--family-sharable`：グループ（名前または ID、複数ある場合は確認）、その中のレベル（1 が最上位）、App Review へのメモ、ファミリー共有（一度オンにするとオフにできません）
+- `sub update` `--group-level`, `--review-note`, `--family-sharable`：同じ項目の変更（ファミリー共有はオンにすることしかできません）
+- `sub update-group|delete-group|submit-group|group-localizations` `--group`：グループの名前または ID。アプリに複数ある場合、--yes では必須
+- `sub localizations import|group-localizations import` `--verbose`：Apple の応答を表示
+- `sub availability` `--verbose`：国と地域を名前で表示
+- `sub offer-code create` `--auto-renew`, `--no-auto-renew`：オファー終了後にサブスクリプションを自動更新するか（省略すると Apple のデフォルト）
+- `sub offer-code gen-codes` `--environment`：PRODUCTION（デフォルト）または SANDBOX
+- `sub retention-message submit` `--platform`：提出のプラットフォーム（デフォルトは ios）

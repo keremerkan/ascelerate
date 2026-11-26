@@ -69,3 +69,11 @@ ascelerate events media delete <bundle-id> summer-sale <media-id>
 ```
 
 Les types d'asset sont `EVENT_CARD` et `EVENT_DETAILS_PAGE`. Le type de fichier détermine s'il est téléversé comme capture d'écran ou comme clip vidéo ; `--preview-frame` définit le timecode de l'image d'aperçu d'une vidéo.
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `events create` `--primary-locale`, `--deep-link`, `--purchase-requirement` : la langue principale (App Review en demande une), le lien qu'ouvre la carte et la condition d'achat
+- `events update` `--primary-locale`, `--deep-link`, `--purchase-requirement` : les trois mêmes, à modifier
+- `events localizations export|import` `--output`, `--verbose` : export : le fichier à écrire ; import : afficher les réponses d'Apple

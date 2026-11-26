@@ -162,3 +162,9 @@ Les règles s’écrivent dans le langage de règles d’Apple, basé sur JMESPa
 ```
 
 Une demande peut aussi indiquer `latitude`, `longitude`, `playerCount`, `minPlayers` et `maxPlayers`. Un ensemble de règles utilisé par une file d’attente ne peut pas être supprimé ; modifiez ou supprimez d’abord la file.
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `game-center matchmaking rule-sets create` `--language-version` : la version du langage de règles (1 par défaut)

@@ -162,3 +162,9 @@ Rules are written in Apple's rule language, based on JMESPath (which has no arit
 ```
 
 A request can also give `latitude`, `longitude`, `playerCount`, `minPlayers` and `maxPlayers`. A rule set that a queue uses can't be deleted; change or delete the queue first.
+
+## More options
+
+Options the examples above don't show:
+
+- `game-center matchmaking rule-sets create` `--language-version`: the rule language version (default 1)

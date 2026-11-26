@@ -96,3 +96,9 @@ ascelerate apps routing-coverage <bundle-id>
 # Bir .geojson dosyası yükleyin
 ascelerate apps routing-coverage <bundle-id> --file coverage.geojson
 ```
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `apps app-info update` `--privacy-policy-url`, `--privacy-choices-url`: dilin gizlilik politikası ve gizlilik seçenekleri URL'leri

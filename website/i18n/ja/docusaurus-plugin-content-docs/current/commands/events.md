@@ -69,3 +69,11 @@ ascelerate events media delete <bundle-id> summer-sale <media-id>
 ```
 
 アセットタイプは `EVENT_CARD` と `EVENT_DETAILS_PAGE` です。ファイルの種類によって、スクリーンショットとしてアップロードされるかビデオクリップとしてアップロードされるかが決まります。`--preview-frame` はビデオのプレビューフレームのタイムコードを設定します。
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `events create` `--primary-locale`, `--deep-link`, `--purchase-requirement`：メイン言語（App Review で必須）、カードが開くリンク、購入の要件
+- `events update` `--primary-locale`, `--deep-link`, `--purchase-requirement`：同じ 3 つの項目の変更
+- `events localizations export|import` `--output`, `--verbose`：export：書き出すファイル／import：Apple の応答を表示

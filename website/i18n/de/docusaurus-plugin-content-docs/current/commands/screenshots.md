@@ -110,8 +110,8 @@ waitAfterBoot: 0
 # configuration: Debug                    # Build configuration
 # testplan: MyTestPlan                    # Xcode test plan name
 # numberOfRetries: 0                     # Retry failed languages (erase + reboot simulator)
-# stopAfterFirstError: false             # Stop all devices on first failure
-# reinstallApp: false                    # Delete and reinstall app before tests
+# stopAfterFirstError: false             # Nach dem ersten Fehler anhalten (die laufende Sprache wird erst beendet)
+# reinstallApp: com.example.MyApp       # Diese App (Bundle-ID) vor den Tests deinstallieren
 # disableAssetDownloads: false           # mobileassetd deaktivieren (keine Siri-/Tastatur-/ML-Asset-Downloads; blockiert auch On-Device-ML-Assets)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
@@ -141,13 +141,14 @@ if ProcessInfo.processInfo.arguments.contains("-ASC_SCREENSHOT") {
 }
 ```
 
-Der Helper bietet auch `disableAnimationsIfNeeded()`, um Animationen zu deaktivieren, wenn `disableAnimations` in der Konfiguration aktiviert ist:
+`disableAnimationsIfNeeded()` schaltet Animationen ab, wenn `disableAnimations` in der Konfiguration aktiviert ist. Die Funktion läuft in der App, nicht im UI-Test: Die Helper-Datei enthält sie zum Kopieren in den Code der App, und die Tests starten die App mit `-ASC_DISABLE_ANIMATIONS`, wenn die Option aktiv ist. Rufen Sie sie einmal beim Start auf:
 
 ```swift
-override func setUp() {
-    setupScreenshots(app)
-    disableAnimationsIfNeeded()
-    app.launch()
+// In der App (etwa im init der App oder beim Start im App-Delegate):
+func disableAnimationsIfNeeded() {
+    if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
+        UIView.setAnimationsEnabled(false)
+    }
 }
 ```
 
@@ -262,8 +263,8 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 | `configuration` | Build-Konfiguration (z.B. Debug, Release) |
 | `testplan` | Name des Xcode-Testplans |
 | `numberOfRetries` | Anzahl der Wiederholungsversuche bei fehlgeschlagenen Sprachen — setzt den Simulator zurück, lokalisiert neu, startet neu und führt Tests erneut aus. Nur fehlgeschlagene Geräte werden wiederholt. Wiederholte Ergebnisse werden in der Übersichtstabelle markiert. |
-| `stopAfterFirstError` | Alle Geräte nach dem ersten Fehler stoppen (auch eine fehlgeschlagene Simulator-Vorbereitung zählt); nie versuchte Sprachen erscheinen als nicht ausgeführt |
-| `reinstallApp` | App vor den Tests löschen und neu installieren |
+| `stopAfterFirstError` | Nach dem ersten Fehler anhalten: Die laufende Sprache wird auf allen Geräten beendet, spätere Sprachen werden nicht versucht (eine fehlgeschlagene Simulator-Vorbereitung zählt auch); nie versuchte Sprachen erscheinen als nicht ausgeführt |
+| `reinstallApp` | Bundle-ID der App, die vor den Tests deinstalliert wird (eine frische Installation) |
 | `disableAssetDownloads` | Deaktiviert `mobileassetd` im Simulator, damit er keine Gigabytes an Siri-, Tastatur- und ML-Assets in frisch gelöschte Simulatoren lädt. Blockiert auch On-Device-ML-Assets, die manche Apps brauchen (z. B. Texterkennung); lassen Sie es daher ausgeschaltet, wenn Ihre Screenshots davon abhängen. Wird bei jeder Vorbereitung erneut angewendet, da ein Löschen die Einstellung zurücksetzt. |
 | `xcargs` | Zusätzliche Argumente für `xcodebuild` (Argumente in Anführungszeichen bleiben zusammen) |
 | `frameDevice` | Geräterahmen für dieses Gerät aktivieren (pro Gerät) |
@@ -273,3 +274,10 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 
 Unbekannte Schlüssel werden vom Lauf und von `doctor` abgelehnt, mit dem nächstliegenden bekannten Schlüssel als Vorschlag (`numberOfRetrys`: Meinten Sie `numberOfRetries`?). Ein doppelt aufgeführtes Gerät oder ein `framedOutputDirectory`, das `outputDirectory` entspricht, wird ebenfalls abgelehnt. Pfade dürfen mit `~` beginnen.
 | `framedOutputDirectory` | Ausgabeverzeichnis für gerahmte Screenshots (Standard: `{outputDirectory}/framed`) |
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `screenshot run` `--languages`: nur diese der konfigurierten Sprachen (durch Kommas getrennt oder die Option wiederholt)
+- `screenshot create-helper` `--output`: wohin die Helper-Datei geschrieben wird

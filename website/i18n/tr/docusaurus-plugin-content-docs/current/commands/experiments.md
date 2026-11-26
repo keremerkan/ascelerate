@@ -68,3 +68,9 @@ ascelerate experiments delete <bundle-id> "Screenshot order"
 ```
 
 Her varyasyonda tek bir şeyi değiştirin (örneğin ilk ekran görüntüsünü veya simgeyi); böylece sonuç, farkı hangi değişikliğin yarattığını gösterir.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `experiments media upload` `--preview-frame`: bir uygulama önizlemesinin kapak karesi, hh:mm:ss:frame (00:00:03:00)

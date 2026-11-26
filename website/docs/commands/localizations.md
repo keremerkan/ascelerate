@@ -62,3 +62,9 @@ Only fields present in the JSON are updated — omitted fields are left unchange
 :::note
 Only versions in editable states (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` or `INVALID_BINARY`) accept localization updates — except `promotionalText`, which can be updated in any state.
 :::
+
+## More options
+
+Options the examples above don't show:
+
+- `apps localizations update` `--keywords`, `--promotional-text`, `--marketing-url`, `--support-url`: the language's keywords (comma-separated), promotional text, marketing and support URLs

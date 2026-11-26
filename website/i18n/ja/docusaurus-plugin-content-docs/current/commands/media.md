@@ -209,6 +209,6 @@ ascelerate apps media library <bundle-id> --delete-unused
 ascelerate apps media library <bundle-id> --only APP_IPHONE_DUO --delete-unused
 ```
 
-`--only` を付けると、指定した種類に合う画像だけを、アセットカテゴリとピクセルサイズで判定して一覧に含めます。種類は `PRODUCT_PAGE_HEADER`、`APP_STORE_SEARCH_RESULTS`、`APP_IPHONE_DUO`、`APP_IPHONE_67` などのスクリーンショット表示タイプ（サイズは App Store Connect から取得）、またはファイルが届かなかったアップロードを表す `UNFINISHED_UPLOADS` です。これにより、デバイスタイプごとにライブラリを整理できます。作成から1時間未満の画像は、同時に実行中のアップロードが配置しようとしている可能性があるため常に残します。App Store Connect の1時間あたりの API 上限に達した場合は処理を止め、後で再実行するよう案内します。
+`--only` を付けると、指定した種類に合う画像だけを、各画像がアップロードされたアセットライブラリの仕様で判定して一覧に含めます。種類は `PRODUCT_PAGE_HEADER`、`APP_STORE_SEARCH_RESULTS`、`APP_IPHONE_DUO`、`APP_IPHONE_67` などのスクリーンショット表示タイプ（サイズは App Store Connect から取得）、またはファイルが届かなかったアップロードを表す `UNFINISHED_UPLOADS` です。これにより、デバイスタイプごとにライブラリを整理できます。作成から1時間未満の画像は、同時に実行中のアップロードが配置しようとしている可能性があるため常に残します。App Store Connect の1時間あたりの API 上限に達した場合は処理を止め、後で再実行するよう案内します。
 
 App Review を経た画像は、配置の有無にかかわらず削除されません。また、各画像は削除の直前にもう一度確認されます。

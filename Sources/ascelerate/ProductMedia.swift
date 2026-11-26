@@ -174,6 +174,8 @@ func runOfferCodeToggle(
   let client = try ClientFactory.makeClient()
   try await validate(client)
 
+  // Turning one off is for good: Apple refuses to turn it on again (409, seen 2026-10-25).
+  if !activeBool { print(yellow("⚠ An offer code turned off can't be turned on again.")) }
   guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
     cancelled()
     return

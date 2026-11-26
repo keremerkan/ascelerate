@@ -162,3 +162,9 @@ Regeln werden in Apples Regelsprache geschrieben, die auf JMESPath beruht (das k
 ```
 
 Eine Anfrage kann außerdem `latitude`, `longitude`, `playerCount`, `minPlayers` und `maxPlayers` angeben. Ein Regelsatz, den eine Warteschlange verwendet, kann nicht gelöscht werden; ändern oder löschen Sie zuerst die Warteschlange.
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `game-center matchmaking rule-sets create` `--language-version`: die Version der Regelsprache (Standard 1)

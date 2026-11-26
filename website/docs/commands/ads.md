@@ -180,3 +180,10 @@ An ad sends an ad group's taps to a product page. Ad groups without an ad of you
 ## Using it with an AI agent
 
 The [ascelerate skill](../guides/ai-skill.md) teaches AI coding agents how to read these reports and when to suggest changes, so you can ask an agent to review your campaigns across apps, find keywords to add or exclude, or explain a change in performance. Every command takes `--json`, and agents are told to show you the proposed changes and use `--dry-run` before anything is sent.
+
+## More options
+
+Options the examples above don't show:
+
+- `ads keywords popularity` `--monthly`: the last full month instead of the last full week
+- `ads insights impression-share` `--first-slot`: the first ad position only

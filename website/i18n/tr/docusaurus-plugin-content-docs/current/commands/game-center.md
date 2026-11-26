@@ -162,3 +162,9 @@ Kurallar, Apple'ın JMESPath tabanlı kural dilinde yazılır (JMESPath'te aritm
 ```
 
 Bir istek ayrıca `latitude`, `longitude`, `playerCount`, `minPlayers` ve `maxPlayers` verebilir. Bir kuyruğun kullandığı kural seti silinemez; önce kuyruğu değiştirin veya silin.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `game-center matchmaking rule-sets create` `--language-version`: kural dilinin sürümü (varsayılan 1)

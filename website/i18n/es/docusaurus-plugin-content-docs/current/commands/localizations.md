@@ -62,3 +62,9 @@ Solo se actualizan los campos presentes en el JSON; los campos omitidos no se mo
 :::note
 Solo las versiones en estados editables (`PREPARE_FOR_SUBMISSION`, `READY_FOR_REVIEW`, `WAITING_FOR_REVIEW`, `DEVELOPER_REJECTED`, `REJECTED`, `METADATA_REJECTED` o `INVALID_BINARY`) aceptan cambios en las localizaciones, salvo `promotionalText` (el texto promocional), que puede actualizarse en cualquier estado.
 :::
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `apps localizations update` `--keywords`, `--promotional-text`, `--marketing-url`, `--support-url`: las palabras clave (separadas por comas), el texto promocional y las URL de marketing y de soporte del idioma

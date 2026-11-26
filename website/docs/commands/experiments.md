@@ -68,3 +68,9 @@ ascelerate experiments delete <bundle-id> "Screenshot order"
 ```
 
 Change one thing per treatment (for example the first screenshot, or the icon) so the result tells you which change made the difference.
+
+## More options
+
+Options the examples above don't show:
+
+- `experiments media upload` `--preview-frame`: an app preview's poster frame, hh:mm:ss:frame (00:00:03:00)

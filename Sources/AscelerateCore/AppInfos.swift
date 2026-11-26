@@ -23,7 +23,8 @@ public enum AppInfos {
           return "No app info found."
         case .notEditable(let state):
           let stateName = state.map { formatState($0) } ?? "unknown"
-          return "App info is in state '\(stateName)' — updates are only allowed in PREPARE_FOR_SUBMISSION or WAITING_FOR_REVIEW."
+          let allowed = AppInfos.editableStates.sorted().map { formatState($0) }.joined(separator: ", ")
+          return "App info is in state '\(stateName)'; updates are only allowed in \(allowed)."
       }
     }
   }

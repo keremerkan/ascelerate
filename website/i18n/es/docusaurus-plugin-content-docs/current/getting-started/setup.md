@@ -69,3 +69,9 @@ Hourly limit: 3600 requests (rolling window)
 Used:         57
 Remaining:    3543 (98%)
 ```
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `configure` `--stdin`: leer la clave como JSON de la entrada estándar ({"keyId", "issuerId", "privateKey"}) en lugar de preguntar; el número de proveedor y los ajustes de Apple Ads se conservan

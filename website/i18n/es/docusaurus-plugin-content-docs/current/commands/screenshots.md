@@ -110,8 +110,8 @@ waitAfterBoot: 0
 # configuration: Debug                    # Configuración de compilación
 # testplan: MyTestPlan                    # Nombre del plan de pruebas de Xcode
 # numberOfRetries: 0                     # Reintenta los idiomas fallidos (borra y reinicia el simulador)
-# stopAfterFirstError: false             # Detiene todos los dispositivos al primer fallo
-# reinstallApp: false                    # Elimina y reinstala la app antes de las pruebas
+# stopAfterFirstError: false             # Detenerse tras el primer fallo (antes termina el idioma en curso)
+# reinstallApp: com.example.MyApp       # Desinstala esta app (bundle ID) antes de las pruebas
 # disableAssetDownloads: false           # Desactiva mobileassetd (sin descargas de recursos de Siri, teclado y ML; también bloquea los recursos de ML en el dispositivo)
 # xcargs: SWIFT_ACTIVE_COMPILATION_CONDITIONS=SCREENSHOTS
 ```
@@ -141,13 +141,14 @@ if ProcessInfo.processInfo.arguments.contains("-ASC_SCREENSHOT") {
 }
 ```
 
-El helper también ofrece `disableAnimationsIfNeeded()` para desactivar las animaciones cuando `disableAnimations` está activado en la configuración:
+`disableAnimationsIfNeeded()` desactiva las animaciones cuando `disableAnimations` está activado en la configuración. Se ejecuta en la app, no en la prueba de UI: el archivo del helper la incluye para copiarla al código de la app, y las pruebas abren la app con `-ASC_DISABLE_ANIMATIONS` cuando la opción está activa. Llámela una vez al iniciar:
 
 ```swift
-override func setUp() {
-    setupScreenshots(app)
-    disableAnimationsIfNeeded()
-    app.launch()
+// En la app (por ejemplo en el init de la App o al iniciar en el delegado de la app):
+func disableAnimationsIfNeeded() {
+    if ProcessInfo.processInfo.arguments.contains("-ASC_DISABLE_ANIMATIONS") {
+        UIView.setAnimationsEnabled(false)
+    }
 }
 ```
 
@@ -262,8 +263,8 @@ Solo se enmarcan los dispositivos con `frameDevice: true`. El enmarcado se ejecu
 | `configuration` | Configuración de compilación (por ejemplo, Debug o Release) |
 | `testplan` | Nombre del plan de pruebas de Xcode |
 | `numberOfRetries` | Número de reintentos de los idiomas fallidos: borra el simulador, lo vuelve a localizar, lo reinicia y repite las pruebas. Solo reintenta los dispositivos que fallaron. Los resultados reintentados se marcan en la tabla de resumen. |
-| `stopAfterFirstError` | Detiene todos los dispositivos tras el primer fallo (también cuenta una preparación fallida del simulador); los idiomas que no se llegaron a probar aparecen como no ejecutados |
-| `reinstallApp` | Elimina y reinstala la app antes de ejecutar las pruebas |
+| `stopAfterFirstError` | Detenerse tras el primer fallo: el idioma en curso termina en todos los dispositivos y los idiomas siguientes no se intentan (una preparación de simulador fallida también cuenta); los idiomas que no se intentaron aparecen como no ejecutados |
+| `reinstallApp` | El bundle ID de la app que se desinstala antes de las pruebas (una instalación limpia) |
 | `disableAssetDownloads` | Desactiva `mobileassetd` en el simulador para que deje de descargar gigabytes de recursos de Siri, del teclado y de ML en los simuladores recién borrados. También bloquea los recursos de ML en el dispositivo que algunas apps necesitan (por ejemplo, el reconocimiento de texto), así que déjelo desactivado si sus capturas dependen de ellos. Se aplica en cada preparación, ya que un borrado lo restablece. |
 | `xcargs` | Argumentos adicionales que se pasan a `xcodebuild` (los argumentos entre comillas se mantienen juntos) |
 | `frameDevice` | Activa el enmarcado con marco de dispositivo para este dispositivo (por dispositivo) |
@@ -273,3 +274,10 @@ Solo se enmarcan los dispositivos con `frameDevice: true`. El enmarcado se ejecu
 
 Las claves desconocidas se rechazan, en la ejecución y en `doctor`, con la clave conocida más cercana como sugerencia (`numberOfRetrys`: ¿quería decir `numberOfRetries`?). También se rechaza un dispositivo repetido o un `framedOutputDirectory` igual a `outputDirectory`. Las rutas pueden empezar por `~`.
 | `framedOutputDirectory` | Directorio de salida de las capturas enmarcadas (predeterminado: `{outputDirectory}/framed`) |
+
+## Más opciones
+
+Opciones que los ejemplos anteriores no muestran:
+
+- `screenshot run` `--languages`: solo estos de los idiomas configurados (separados por comas, o repitiendo la opción)
+- `screenshot create-helper` `--output`: dónde se escribe el archivo del helper

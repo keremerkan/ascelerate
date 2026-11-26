@@ -69,3 +69,11 @@ ascelerate events media delete <bundle-id> summer-sale <media-id>
 ```
 
 Varlık türleri `EVENT_CARD` ve `EVENT_DETAILS_PAGE`'dir. Dosya türü, içeriğin ekran görüntüsü mü yoksa video klip olarak mı yükleneceğini belirler; `--preview-frame` bir videonun önizleme karesi zaman kodunu ayarlar.
+
+## Diğer seçenekler
+
+Yukarıdaki örneklerde görünmeyen seçenekler:
+
+- `events create` `--primary-locale`, `--deep-link`, `--purchase-requirement`: ana dil (App Review bunu ister), kartın açtığı bağlantı ve satın alma koşulu
+- `events update` `--primary-locale`, `--deep-link`, `--purchase-requirement`: aynı üç alan, değiştirilmek üzere
+- `events localizations export|import` `--output`, `--verbose`: export: yazılacak dosya; import: Apple'ın yanıtlarını gösterme

@@ -68,3 +68,9 @@ ascelerate experiments delete <bundle-id> "Screenshot order"
 ```
 
 Ne modifiez qu'un seul élément par traitement (par exemple la première capture d'écran, ou l'icône) : le résultat vous dira alors quelle modification a fait la différence.
+
+## Autres options
+
+Options que les exemples ci-dessus ne montrent pas :
+
+- `experiments media upload` `--preview-frame` : l'image de couverture d'un aperçu, hh:mm:ss:frame (00:00:03:00)

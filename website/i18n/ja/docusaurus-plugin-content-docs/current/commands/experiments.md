@@ -68,3 +68,9 @@ ascelerate experiments delete <bundle-id> "Screenshot order"
 ```
 
 どの変更が違いを生んだのかが結果からわかるように、変更はトリートメントごとに1つ（たとえば最初のスクリーンショットだけ、またはアイコンだけ）にしてください。
+
+## その他のオプション
+
+上の例に出てこないオプション：
+
+- `experiments media upload` `--preview-frame`：App プレビューのポスターフレーム。hh:mm:ss:frame 形式（00:00:03:00）

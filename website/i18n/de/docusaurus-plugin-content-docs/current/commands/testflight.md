@@ -176,3 +176,13 @@ ascelerate testflight feedback screenshots delete <submission-id>
 ```
 
 `list` akzeptiert die Filter `--build` und `--platform`. `info` zeigt den vollständigen Gerätekontext — Modell, Betriebssystemversion, Sprache, Verbindungstyp, Akkustand, freien Speicherplatz und den Kommentar des Testers. `log` gibt das Absturzprotokoll aus oder speichert es mit `--output`. `download` verpackt die Screenshots und den Kommentar einer Einreichung in ein Zip-Archiv; ohne Einreichungs-ID wählen Sie aus einer seitenweisen Liste der Einreichungen der App. Screenshot-URLs laufen nach wenigen Tagen ab — laden Sie Feedback, das Sie behalten möchten, rechtzeitig herunter.
+
+## Weitere Optionen
+
+Optionen, die die Beispiele oben nicht zeigen:
+
+- `testflight groups create|update` `--feedback`: Tester-Feedback an oder aus (true oder false; bei einer neuen Gruppe standardmäßig an)
+- `testflight testers add` `--last-name`: der Nachname des Testers
+- `testflight what-to-test copy` `--from`: der Build, aus dem kopiert wird (Standard: der neueste frühere Build mit Testhinweisen)
+- `testflight app-info update` `--description`, `--marketing-url`, `--privacy-policy-url`: die Beta-Beschreibung für Tester, die Marketing-URL und die URL der Datenschutzrichtlinie
+- `testflight review-info` `--contact-first-name`, `--contact-last-name`, `--contact-phone`, `--contact-email`, `--demo-account-password`, `--notes`: der Kontakt für die Beta-Prüfung, das Passwort des Demo-Kontos und Hinweise für die Prüfer

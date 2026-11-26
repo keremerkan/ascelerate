@@ -39,3 +39,46 @@ public enum FieldLimits {
   /// An asset library image's or video's name.
   public static let assetName = 255
 }
+
+extension FieldLimits {
+  /// "field: N characters (at most M)" for each value over its limit, in the files' field names.
+  static func overLimit(_ values: [(name: String, value: String?, limit: Int)]) -> [String] {
+    values.compactMap { entry in
+      guard let value = entry.value, value.count > entry.limit else { return nil }
+      return "\(entry.name): \(value.count) characters (at most \(entry.limit))"
+    }
+  }
+}
+
+extension LocaleFields {
+  /// The fields longer than App Store Connect takes, checked before anything is sent.
+  public var overLimit: [String] {
+    FieldLimits.overLimit([
+      ("description", description, FieldLimits.description), ("whatsNew", whatsNew, FieldLimits.whatsNew),
+      ("keywords", keywords, FieldLimits.keywords), ("promotionalText", promotionalText, FieldLimits.promotionalText),
+    ])
+  }
+}
+
+extension AppInfoLocaleFields {
+  /// The fields longer than App Store Connect takes, checked before anything is sent.
+  public var overLimit: [String] {
+    FieldLimits.overLimit([("name", name, FieldLimits.appName), ("subtitle", subtitle, FieldLimits.subtitle)])
+  }
+}
+
+/// Languages of a localization file with fields over their limits: nothing is sent.
+public struct FieldsOverLimit: LocalizedError, Sendable {
+  public let problems: [String: [String]]
+  /// Nil when every language fits.
+  public init?(_ problems: [String: [String]]) {
+    let found = problems.filter { !$0.value.isEmpty }
+    guard !found.isEmpty else { return nil }
+    self.problems = found
+  }
+  public var errorDescription: String? {
+    "Too long for App Store Connect, nothing was sent:\n" + problems.sorted { $0.key < $1.key }
+      .map { "  \($0.key): " + $0.value.joined(separator: ", ") }.joined(separator: "\n")
+  }
+}
+

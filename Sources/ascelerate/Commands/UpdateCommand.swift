@@ -10,9 +10,9 @@ struct UpdateCommand: AsyncParsableCommand {
     commandName: "update",
     abstract: "Update ascelerate to the latest release from GitHub.",
     discussion: """
-      For a copy installed from a GitHub release (Apple silicon). The download is checked against \
-      the SHA-256 digest GitHub publishes and must be signed with ascelerate's Developer ID before it \
-      replaces this binary. A copy installed with Homebrew updates with 'brew upgrade ascelerate'. \
+      For a copy installed from a GitHub release (Apple silicon only). The download must match the \
+      SHA-256 digest GitHub publishes (a release without one isn't installed), be ascelerate signed \
+      with its Developer ID and report the release's version before it replaces this binary. A copy installed with Homebrew updates with 'brew upgrade ascelerate'. \
       Updating a copy in /usr/local/bin needs 'sudo ascelerate update'.
       """
   )
@@ -25,12 +25,16 @@ struct UpdateCommand: AsyncParsableCommand {
 
   static let repository = "keremerkan/ascelerate"
   static let assetName = "ascelerate-macos-arm64.tar.gz"
-  /// The code requirement a release binary meets: Developer ID Application, team GH4CGS3B5H.
-  static let requirement = #"anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = "GH4CGS3B5H""#
+  /// The code requirement a release binary meets: ascelerate itself (not another program of the
+  /// team), Developer ID Application, team GH4CGS3B5H.
+  static let requirement = #"identifier "ascelerate" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = "GH4CGS3B5H""#
 
   enum UpdateError: LocalizedError {
     case homebrew
     case noAsset(String)
+    case noDigest(String)
+    case notAppleSilicon
+    case wrongVersion(expected: String, found: String)
     case digestMismatch
     case unsigned(String)
     case notWritable(String)
@@ -42,6 +46,12 @@ struct UpdateCommand: AsyncParsableCommand {
           "This copy was installed with Homebrew. Update it with 'brew upgrade ascelerate'."
         case .noAsset(let tag):
           "Release \(tag) has no \(UpdateCommand.assetName)."
+        case .noDigest(let tag):
+          "GitHub published no SHA-256 digest for \(UpdateCommand.assetName) of \(tag), so the download can't be checked. Nothing was changed; update with the install script instead."
+        case .notAppleSilicon:
+          "Releases are built for Apple silicon only; this Mac isn't one. Build ascelerate from source to update it."
+        case .wrongVersion(let expected, let found):
+          "The downloaded binary reports version \(found), not \(expected), so it wasn't installed."
         case .digestMismatch:
           "The download doesn't match the SHA-256 digest GitHub published for it. Nothing was changed."
         case .unsigned(let detail):
@@ -71,6 +81,15 @@ struct UpdateCommand: AsyncParsableCommand {
     if binary.path.contains("/Cellar/") || binary.path.hasPrefix("/opt/homebrew/") {
       throw UpdateError.homebrew
     }
+    // The release is arm64 only: on an Intel Mac it would replace a source build with a binary
+    // that can't run (Kerem, 2026-11-26).
+    var machine = utsname()
+    uname(&machine)
+    let architecture = withUnsafeBytes(of: &machine.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+    var translated: Int32 = 0
+    var size = MemoryLayout<Int32>.size
+    let rosetta = sysctlbyname("sysctl.proc_translated", &translated, &size, nil, 0) == 0 && translated == 1
+    guard architecture == "arm64" || rosetta else { throw UpdateError.notAppleSilicon }
 
     let release = try await Self.latestRelease()
     let latest = release.tagName.hasPrefix("v") ? String(release.tagName.dropFirst()) : release.tagName
@@ -85,6 +104,8 @@ struct UpdateCommand: AsyncParsableCommand {
     guard let asset = release.assets.first(where: { $0.name == Self.assetName }) else {
       throw UpdateError.noAsset(release.tagName)
     }
+    // No digest, no update (Kerem, 2026-11-26): it used to go on unchecked.
+    guard let digest = asset.digest, digest.hasPrefix("sha256:") else { throw UpdateError.noDigest(release.tagName) }
     let folder = binary.deletingLastPathComponent()
     guard FileManager.default.isWritableFile(atPath: folder.path) else {
       throw UpdateError.notWritable(folder.path)
@@ -104,24 +125,33 @@ struct UpdateCommand: AsyncParsableCommand {
     let (download, _) = try await URLSession.shared.download(from: asset.browserDownloadUrl)
     let archive = work.appendingPathComponent(asset.name)
     try FileManager.default.moveItem(at: download, to: archive)
-    if let digest = asset.digest, digest.hasPrefix("sha256:") {
-      let actual = SHA256.hash(data: try Data(contentsOf: archive)).map { String(format: "%02x", $0) }.joined()
-      guard actual == digest.dropFirst("sha256:".count).lowercased() else { throw UpdateError.digestMismatch }
-    }
+    let actual = SHA256.hash(data: try Data(contentsOf: archive)).map { String(format: "%02x", $0) }.joined()
+    guard actual == digest.dropFirst("sha256:".count).lowercased() else { throw UpdateError.digestMismatch }
 
     let unpacked = work.appendingPathComponent("ascelerate")
     let tar = Self.runTool("/usr/bin/tar", ["-xzf", archive.path, "-C", work.path])
     guard tar.status == 0, FileManager.default.fileExists(atPath: unpacked.path) else {
       throw UpdateError.extraction(tar.output)
     }
-    let verify = Self.runTool("/usr/bin/codesign", ["--verify", "--strict", "-R=\(Self.requirement)", unpacked.path])
-    guard verify.status == 0 else { throw UpdateError.unsigned(verify.output) }
-
     // Next to the binary, then renamed over it: the swap is atomic, and a failure leaves the old one.
+    // The staged copy is what's checked (signature, then the version it reports), so nothing can
+    // change between the check and the swap but in the destination folder itself.
     let staged = folder.appendingPathComponent(".ascelerate-update")
     try? FileManager.default.removeItem(at: staged)
     try FileManager.default.copyItem(at: unpacked, to: staged)
     try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: staged.path)
+    do {
+      let verify = Self.runTool("/usr/bin/codesign", ["--verify", "--strict", "-R=\(Self.requirement)", staged.path])
+      guard verify.status == 0 else { throw UpdateError.unsigned(verify.output) }
+      // An older release passes the signature check too: the binary must be the one asked for.
+      let reported = Self.runTool(staged.path, ["--version"])
+      guard reported.status == 0, reported.output == latest else {
+        throw UpdateError.wrongVersion(expected: latest, found: reported.output.isEmpty ? "nothing" : reported.output)
+      }
+    } catch {
+      try? FileManager.default.removeItem(at: staged)
+      throw error
+    }
     guard rename(staged.path, binary.path) == 0 else {
       let reason = String(cString: strerror(errno))
       try? FileManager.default.removeItem(at: staged)

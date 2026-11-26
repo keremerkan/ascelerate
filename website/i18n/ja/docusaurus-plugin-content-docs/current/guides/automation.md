@@ -30,7 +30,8 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # 同じ効果�
 - `media upload` は停止された書き込みを完了したものとして処理を続けるため、すべてのファイルの書き込みを確認できます。最後に、アップロードされるはずのファイル数を表示します。
 - `run-workflow` では、書き込みが停止されたステップでワークフローは止まらないため、1回の実行ですべてのステップの書き込みを確認できます。ただし、前のステップで作成されるはずだったもの（新しいバージョンやアップロードされたビルドなど）に依存するステップは失敗することがあります。
 - ワークフローファイルで1つのステップに `--dry-run` を付けた場合は、そのステップにのみ適用されます。
-- `builds upload` はアップロードをスキップします。`builds archive` と `builds validate` は App Store Connect 上で何も変更しないため、通常どおり実行されます。
+- `ASCELERATE_DRY_RUN` は、`1`、`true`、`yes`、`on`（大文字・小文字を問いません）でドライラン、`0`、`false`、`no`、`off` または空の値で通常の実行になります。それ以外の値では、コマンドは何も送信せずに停止します。
+- `builds upload` はアップロードをスキップします。`builds archive` と `builds validate` は App Store Connect 上で何も変更しないため、通常どおり実行されます。 ドライランでは、どちらも `-allowProvisioningUpdates` なしで実行されるため、Xcode は Mac にすでにあるプロファイルだけを使い、新しいプロファイルや変更されたプロファイルが必要な署名は失敗します。
 
 ## API レート制限 {#rate-limit}
 

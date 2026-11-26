@@ -849,15 +849,20 @@ extension AppsCommand {
                     let assets = ClientFactory.isDryRun ? [] : try await AssetLibrary.classicSetAssets(
                       localizationID: localization.id, displayType: displayType.rawValue, type: .appScreenshot, client: ascClient)
                     let current = try await LocalizationMedia.screenshots(setID: screenshotSetID, client: ascClient)
-                    let deleted = try await syncClassicSet(
-                      dt.screenshots, kind: "Screenshot", noun: "screenshot", current: current.map(ClassicMedia.SetSync.item),
-                      upload: { try await ClassicMedia.uploadScreenshot($0, setID: screenshotSetID, client: ascClient) },
-                      delete: { try await ClassicMedia.deleteScreenshot($0, client: ascClient) },
-                      reorder: { try await ClassicMedia.reorderScreenshots(setID: screenshotSetID, ids: $0, client: ascClient) },
-                      counter: &counter, tally: &tally)
-                    if deleted > 0 {
-                      printDeletedLibraryAssets(try await AssetLibrary.deleteIfUnused(assets, client: ascClient), "screenshot")
+                    let deleted: Int
+                    do {
+                      deleted = try await syncClassicSet(
+                        dt.screenshots, kind: "Screenshot", noun: "screenshot", current: current.map(ClassicMedia.SetSync.item),
+                        upload: { try await ClassicMedia.uploadScreenshot($0, setID: screenshotSetID, client: ascClient) },
+                        delete: { try await ClassicMedia.deleteScreenshot($0, client: ascClient) },
+                        reorder: { try await ClassicMedia.reorderScreenshots(setID: screenshotSetID, ids: $0, client: ascClient) },
+                        counter: &counter, tally: &tally)
+                    } catch {
+                      // Items removed before the failure leave their images: cleaned up all the same.
+                      await cleanUpLibrary(assets, "screenshot", client: ascClient)
+                      throw error
                     }
+                    if deleted > 0 { await cleanUpLibrary(assets, "screenshot", client: ascClient) }
                   }
                 } else {
                   screenshotSetID = try await unlessDryRunStopped {
@@ -889,15 +894,20 @@ extension AppsCommand {
                     let assets = ClientFactory.isDryRun ? [] : try await AssetLibrary.classicSetAssets(
                       localizationID: localization.id, displayType: dt.folderName, type: .appPreview, client: ascClient)
                     let current = try await LocalizationMedia.previews(setID: previewSetID, client: ascClient)
-                    let deleted = try await syncClassicSet(
-                      dt.previews, kind: "Preview  ", noun: "preview", current: current.map(ClassicMedia.SetSync.item),
-                      upload: { try await ClassicMedia.uploadPreview($0, setID: previewSetID, client: ascClient) },
-                      delete: { try await ClassicMedia.deletePreview($0, client: ascClient) },
-                      reorder: { try await ClassicMedia.reorderPreviews(setID: previewSetID, ids: $0, client: ascClient) },
-                      counter: &counter, tally: &tally)
-                    if deleted > 0 {
-                      printDeletedLibraryAssets(try await AssetLibrary.deleteIfUnused(assets, client: ascClient), "preview")
+                    let deleted: Int
+                    do {
+                      deleted = try await syncClassicSet(
+                        dt.previews, kind: "Preview  ", noun: "preview", current: current.map(ClassicMedia.SetSync.item),
+                        upload: { try await ClassicMedia.uploadPreview($0, setID: previewSetID, client: ascClient) },
+                        delete: { try await ClassicMedia.deletePreview($0, client: ascClient) },
+                        reorder: { try await ClassicMedia.reorderPreviews(setID: previewSetID, ids: $0, client: ascClient) },
+                        counter: &counter, tally: &tally)
+                    } catch {
+                      // Items removed before the failure leave their images: cleaned up all the same.
+                      await cleanUpLibrary(assets, "preview", client: ascClient)
+                      throw error
                     }
+                    if deleted > 0 { await cleanUpLibrary(assets, "preview", client: ascClient) }
                   }
                 } else {
                   previewSetID = try await unlessDryRunStopped {
@@ -1218,6 +1228,7 @@ extension AppsCommand {
 
         var successCount = 0
         var failureCount = 0
+        var notSent = 0
 
         // Track each set's current ID order across retries — when a set has more
         // than one stuck item, later reorders must reference the replacement IDs
@@ -1273,10 +1284,18 @@ extension AppsCommand {
 
             print("Done.")
             successCount += 1
+          } catch where ASCDryRunStop.from(error) != nil {
+            print("not sent (dry run)")
+            notSent += 1
           } catch {
             print("Failed: \(describeError(error))")
             failureCount += 1
           }
+        }
+        if notSent > 0 && failureCount == 0 {
+          print()
+          print("Dry run complete. \(notSent) stuck item\(notSent == 1 ? "" : "s") would be retried; no writes were sent.")
+          return
         }
 
         // Re-verify
@@ -2053,4 +2072,15 @@ private func buildLocalFileIndex(from plan: MediaUploadPlan) -> [String: String]
   }
 
   return index
+}
+
+/// Deletes the library assets of the items a sync removed, when nothing else uses them. A failure
+/// here leaves the set as uploaded (it isn't counted as the set failing) and says how to clean up.
+func cleanUpLibrary(_ assets: [AssetLibrary.Asset], _ noun: String, client: ASCClient) async {
+  guard !assets.isEmpty else { return }
+  do {
+    printDeletedLibraryAssets(try await AssetLibrary.deleteIfUnused(assets, client: client), noun)
+  } catch {
+    print("    " + yellow("Note:") + " the unused library \(noun == "preview" ? "videos" : "images") weren't cleaned up (\(describeError(error))); 'ascelerate apps media library --delete-unused' removes them later.")
+  }
 }

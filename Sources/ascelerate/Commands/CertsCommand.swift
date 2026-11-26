@@ -278,8 +278,17 @@ struct CertsCommand: AsyncParsableCommand {
         guard !isDirectory.boolValue else { throw ValidationError("\(path) is a folder; give a file name with --output.") }
         try fm.removeItem(atPath: path)
       }
-      guard fm.createFile(atPath: path, contents: data, attributes: [.posixPermissions: 0o600]) else {
-        throw ValidationError("Couldn't write \(path).")
+      // Created 0600 by open itself (createFile writes the data before setting the mode); O_EXCL
+      // refuses a file that appeared since, a link included.
+      let fd = open(path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
+      guard fd >= 0 else { throw ValidationError("Couldn't write \(path): \(String(cString: strerror(errno))).") }
+      let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+      do {
+        try handle.write(contentsOf: data)
+        try handle.close()
+      } catch {
+        try? fm.removeItem(atPath: path)
+        throw ValidationError("Couldn't write \(path): \(describeError(error)).")
       }
     }
 

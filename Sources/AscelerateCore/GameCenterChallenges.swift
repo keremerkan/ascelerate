@@ -72,11 +72,26 @@ extension GameCenter {
     do {
       try await updateChallenge(id: id, leaderboardID: leaderboardID, client: client)
     } catch {
-      // A challenge without its leaderboard is no use; take it back out.
-      _ = try? await client.gameCenterChallengesDeleteInstance(path: .init(id: id))
+      // A challenge without its leaderboard is no use; take it back out. When that fails too, the
+      // error says a challenge without a leaderboard is left behind.
+      do {
+        _ = try await client.gameCenterChallengesDeleteInstance(path: .init(id: id)).noContent
+      } catch let cleanup {
+        throw ChallengeLeftBehind(challengeID: id, linkError: error, deleteError: cleanup)
+      }
       throw error
     }
     return id
+  }
+
+  /// A challenge created without its leaderboard (the link failed) that couldn't be deleted again.
+  public struct ChallengeLeftBehind: LocalizedError {
+    public let challengeID: String
+    public let linkError: any Error
+    public let deleteError: any Error
+    public var errorDescription: String? {
+      "The challenge was created but its leaderboard couldn't be linked (\(linkError.localizedDescription)), and deleting it again failed too (\(deleteError.localizedDescription)): challenge \(challengeID) is left without a leaderboard. Link one with 'game-center challenges update --leaderboard', or delete it."
+    }
   }
 
   /// Changes a challenge; nil leaves a value as it is.

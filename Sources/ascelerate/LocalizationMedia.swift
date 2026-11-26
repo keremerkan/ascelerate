@@ -61,7 +61,7 @@ extension LocalizationMedia {
   static func upload(
     file: String, displayType: String?, previewType: String?, previewFrame: String?,
     appID: String, context: [(String, String)], client: ASCClient,
-    owner existing: Owner?, createOwner: () async throws -> Owner = { throw ValidationError("No localization to upload to.") }
+    owner existing: Owner?, createOwner: () async throws -> Owner? = { throw ValidationError("No localization to upload to.") }
   ) async throws {
     let media = try MediaFile(readingFrom: file)
     let ext = (media.fileName as NSString).pathExtension.lowercased()
@@ -112,7 +112,9 @@ extension LocalizationMedia {
     }
     var owner = existing
     if owner == nil { owner = try await createOwner() }
-    guard let owner else { return }
+    // Nil under dry run: the language wasn't created, so there's nothing to upload into (a
+    // placeholder ID would go into real reads and end in a 404).
+    guard let owner else { return print("Dry run: the language would be created first; the upload goes into it.") }
 
     if let slot {
       let libraryID = try await AssetLibrary.libraryID(appID: appID, client: client)
@@ -163,7 +165,9 @@ extension LocalizationMedia {
       // library when nothing else uses it.
       if let match = try await AssetLibrary.slotPlacements(on: owner, client: client).first(where: { $0.placement.id == mediaID }) {
         guard confirm("Remove this \(match.kind) placement? [y/N] ") else { return cancelled() }
-        let deleted = try await AssetLibrary.removePlacement(id: mediaID, client: client)
+        guard let deleted = try await unlessDryRunStopped({ try await AssetLibrary.removePlacement(id: mediaID, client: client) }) else {
+          return print("Dry run: the \(match.kind) placement \(mediaID) wasn't removed.")
+        }
         print()
         return success("Removed", "\(match.kind) placement \(mediaID)\(deleted ? " and its unused library file" : "").")
       }

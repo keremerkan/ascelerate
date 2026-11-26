@@ -7,8 +7,10 @@ const https = require("https");
 const readline = require("readline");
 
 const home = os.homedir();
-const skillURL =
-  "https://raw.githubusercontent.com/keremerkan/ascelerate/main/skills/ascelerate/SKILL.md";
+// The skill of this package's release (versioned with ascelerate), else main.
+const version = require("../package.json").version;
+const skillURL = (ref) =>
+  `https://raw.githubusercontent.com/keremerkan/ascelerate/${ref}/skills/ascelerate/SKILL.md`;
 
 const agents = [
   {
@@ -133,8 +135,15 @@ async function main() {
   }
 
   // Fetch latest skill from GitHub
-  console.log("Fetching latest skill from GitHub...");
-  const content = await fetch(skillURL);
+  console.log(`Fetching the skill for ${version} from GitHub...`);
+  let content;
+  try {
+    content = await fetch(skillURL(`v${version}`));
+  } catch (err) {
+    if (!/HTTP 404/.test(err.message)) throw err;
+    console.log(`No skill at release v${version}; installing the one on main.`);
+    content = await fetch(skillURL("main"));
+  }
 
   fs.mkdirSync(agent.dir, { recursive: true });
   fs.writeFileSync(target, content, "utf8");

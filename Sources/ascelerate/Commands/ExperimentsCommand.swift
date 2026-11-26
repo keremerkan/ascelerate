@@ -588,7 +588,7 @@ struct ExperimentsCommand: AsyncParsableCommand {
             let created = try await unlessDryRunStopped {
               try await Experiments.createLocalization(treatmentID: t.id, locale: locale, client: client).id
             }
-            return .treatmentLocalization(created ?? "DRY-RUN-LOCALIZATION")
+            return created.map { .treatmentLocalization($0) }
           })
       }
     }

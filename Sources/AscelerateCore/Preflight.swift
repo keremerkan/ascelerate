@@ -18,6 +18,26 @@ public enum Preflight {
     "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY",
   ]
 
+  /// How an in-app purchase's or subscription's state counts in preflight (Kerem, 2026-11-26).
+  public enum ProductState: Equatable, Sendable {
+    /// Taken off sale (by the developer or by Apple): a deliberate state, not a problem; neither
+    /// the state nor the prices are checked.
+    case skipped
+    /// Ready, approved (Pending Binary Approval included: approved, waiting only for the build) or
+    /// with App Review: it passes when it has prices.
+    case submittable
+    /// Anything else (missing metadata, rejected, …) fails.
+    case notSubmittable
+  }
+
+  public static func productState(_ state: String?) -> ProductState {
+    switch state {
+      case "DEVELOPER_REMOVED_FROM_SALE", "REMOVED_FROM_SALE": .skipped
+      case "READY_TO_SUBMIT", "APPROVED", "PENDING_BINARY_APPROVAL", "WAITING_FOR_REVIEW", "IN_REVIEW": .submittable
+      default: .notSubmittable
+    }
+  }
+
   /// A text field checked per language, named as the localization files name it.
   public enum Field: String, Sendable, Hashable {
     case name, subtitle, privacyPolicyURL, description, whatsNew, keywords, supportURL

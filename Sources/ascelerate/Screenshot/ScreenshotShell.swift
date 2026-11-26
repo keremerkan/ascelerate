@@ -9,7 +9,13 @@ enum ScreenshotShell {
 
         let pipe = Pipe()
         process.standardOutput = pipe
-        process.standardError = pipe
+        // stderr apart from stdout: one warning line in front of simctl's JSON made every
+        // simulator "not found". It goes to a file (no second pipe to drain while reading this one)
+        // and into the error when the command fails.
+        let errorFile = FileManager.default.temporaryDirectory.appendingPathComponent("ascelerate-stderr-\(UUID().uuidString)")
+        FileManager.default.createFile(atPath: errorFile.path, contents: nil)
+        defer { try? FileManager.default.removeItem(at: errorFile) }
+        process.standardError = try FileHandle(forWritingTo: errorFile)
 
         try process.run()
         // Reads the pipe before waiting (`simctl list devices -j` alone exceeds its buffer).
@@ -18,7 +24,8 @@ enum ScreenshotShell {
         let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         guard process.terminationStatus == 0 else {
-            throw ScreenshotShellError.nonZeroExit(process.terminationStatus, output)
+            let errors = (try? String(contentsOf: errorFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            throw ScreenshotShellError.nonZeroExit(process.terminationStatus, [errors, output].filter { !$0.isEmpty }.joined(separator: "\n"))
         }
 
         return output

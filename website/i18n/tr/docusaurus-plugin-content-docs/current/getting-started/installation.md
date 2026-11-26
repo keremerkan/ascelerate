@@ -41,7 +41,7 @@ sudo mkdir -p /usr/local/bin
 sudo mv ascelerate /usr/local/bin/
 ```
 
-Binary, ascelerate'in Developer ID'siyle (AKE Software GmbH) imzalanmış ve Apple tarafından notarize edilmiştir; bu nedenle macOS onu uyarı göstermeden çalıştırır. İmzayı `codesign -dv /usr/local/bin/ascelerate` gösterir; sonraki sürümleri `sudo ascelerate update` kurar.
+Binary, ascelerate'in Developer ID'siyle (AKE Software GmbH) imzalanmış ve Apple tarafından notarize edilmiştir; bu nedenle macOS onu uyarı göstermeden çalıştırır. İmzayı `codesign -dv /usr/local/bin/ascelerate` gösterir; sonraki sürümleri `sudo ascelerate update` kurar. `update`, binary'yi değiştirmeden önce GitHub'ın indirme için yayımladığı SHA-256 özetini şart koşar ve yeni binary'nin bu Developer ID ile imzalanmış ascelerate olduğunu ve yayımlanan sürümün numarasını bildirdiğini doğrular; Intel Mac'te güncellemeyi reddeder.
 
 :::note
 Önceden derlenmiş binary'ler yalnızca Apple Silicon (arm64) için sağlanır. Intel Mac kullanıcıları kaynaktan derlemelidir.

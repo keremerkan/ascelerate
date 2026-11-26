@@ -41,7 +41,7 @@ sudo mkdir -p /usr/local/bin
 sudo mv ascelerate /usr/local/bin/
 ```
 
-バイナリは ascelerate の Developer ID（AKE Software GmbH）で署名され、Apple の公証を受けているため、macOS は警告なしで実行します。署名は `codesign -dv /usr/local/bin/ascelerate` で確認できます。以降のリリースは `sudo ascelerate update` でインストールできます。
+バイナリは ascelerate の Developer ID（AKE Software GmbH）で署名され、Apple の公証を受けているため、macOS は警告なしで実行します。署名は `codesign -dv /usr/local/bin/ascelerate` で確認できます。以降のリリースは `sudo ascelerate update` でインストールできます。 `update` はバイナリを置き換える前に、GitHub がダウンロードに対して公開している SHA-256 ダイジェストを必須とし、新しいバイナリがその Developer ID で署名された ascelerate であり、リリースのバージョンを報告することを確認します。Intel Mac では更新を拒否します。
 
 :::note
 ビルド済みバイナリはApple Silicon（arm64）のみ提供しています。Intel Macをお使いの方はソースからビルドしてください。

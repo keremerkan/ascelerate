@@ -30,7 +30,8 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # dasselbe, etw
 - `media upload` behandelt angehaltene Schreibanfragen als erledigt und macht weiter, sodass die Schreibanfragen jeder Datei angezeigt werden; am Ende nennt es, wie viele Dateien hochgeladen würden.
 - In `run-workflow` beendet ein Schritt, dessen Schreibanfragen angehalten wurden, den Workflow nicht, sodass ein einziger Durchlauf die Schreibanfragen aller Schritte zeigt. Ein Schritt, der auf etwas angewiesen ist, das ein früherer Schritt erstellt hätte (etwa eine neue Version oder einen hochgeladenen Build), kann trotzdem fehlschlagen.
 - In einer Workflow-Datei gilt `--dry-run` bei einem einzelnen Schritt nur für diesen Schritt.
-- `builds upload` überspringt den Upload. `builds archive` und `builds validate` laufen weiterhin, da sie in App Store Connect nichts ändern.
+- `ASCELERATE_DRY_RUN` akzeptiert `1`, `true`, `yes` oder `on` (Groß- und Kleinschreibung egal) für einen Probelauf und `0`, `false`, `no`, `off` oder einen leeren Wert für einen echten Lauf. Bei jedem anderen Wert bricht der Befehl ab, bevor er etwas sendet.
+- `builds upload` überspringt den Upload. `builds archive` und `builds validate` laufen weiterhin, da sie in App Store Connect nichts ändern. Im Probelauf laufen beide ohne `-allowProvisioningUpdates`: Xcode verwendet nur die Profile, die bereits auf dem Mac sind, und eine Signierung, die ein neues oder geändertes Profil braucht, schlägt fehl.
 
 ## API-Ratenlimit {#rate-limit}
 

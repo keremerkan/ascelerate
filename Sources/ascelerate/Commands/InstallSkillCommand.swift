@@ -69,10 +69,17 @@ struct InstallSkillCommand: AsyncParsableCommand {
         print("No ascelerate skill is installed.")
         return
       }
+      var failed = false
       for agent in installed {
-        try? fm.removeItem(at: Self.skillFileURL(agent))
-        success("Removed", "\(agent.name) skill.")
+        do {
+          try fm.removeItem(at: Self.skillFileURL(agent))
+          success("Removed", "\(agent.name) skill.")
+        } catch {
+          print("\(red("Failed")) to remove the \(agent.name) skill: \(describeError(error))")
+          failed = true
+        }
       }
+      if failed { throw ExitCode.failure }
       return
     }
 
@@ -84,12 +91,16 @@ struct InstallSkillCommand: AsyncParsableCommand {
       return
     }
 
-    print("Fetching latest skill from GitHub...")
-    let url = URL(
-      string:
-        "https://raw.githubusercontent.com/keremerkan/ascelerate/main/skills/ascelerate/SKILL.md")!
-    let (data, response) = try await URLSession.shared.data(from: url)
-    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+    // The skill of this release (its tag), so the stamp and the text agree; main only when the tag
+    // has none (a build between releases), said so (Kerem, 2026-11-26: it was always main).
+    print("Fetching the skill for \(Ascelerate.appVersion) from GitHub...")
+    let data: Data
+    if let tagged = try await Self.fetchSkill(ref: "v\(Ascelerate.appVersion)") {
+      data = tagged
+    } else if let latest = try await Self.fetchSkill(ref: "main") {
+      print(yellow("Note:") + " no skill at release v\(Ascelerate.appVersion); installed the one on main, which may describe commands this build doesn't have.")
+      data = latest
+    } else {
       throw ValidationError("Failed to fetch skill file from GitHub.")
     }
     guard let content = String(data: data, encoding: .utf8) else {
@@ -117,5 +128,15 @@ struct InstallSkillCommand: AsyncParsableCommand {
         "Not installed for: \(skipped.map(\.name).joined(separator: ", ")) — pass --all to include them."
       )
     }
+  }
+
+  /// SKILL.md at a tag or branch; nil when GitHub has none there (404).
+  static func fetchSkill(ref: String) async throws -> Data? {
+    let url = URL(string: "https://raw.githubusercontent.com/keremerkan/ascelerate/\(ref)/skills/ascelerate/SKILL.md")!
+    let (data, response) = try await URLSession.shared.data(from: url)
+    guard let http = response as? HTTPURLResponse else { return nil }
+    if http.statusCode == 404 { return nil }
+    guard http.statusCode == 200 else { throw ValidationError("GitHub answered HTTP \(http.statusCode) for the skill file.") }
+    return data
   }
 }

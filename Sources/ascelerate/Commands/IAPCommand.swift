@@ -1479,8 +1479,11 @@ struct IAPCommand: AsyncParsableCommand {
         do {
           try await InAppPurchases.setSchedule(purchaseID: iap.id, baseTerritoryID: base, manualPrices: prices, client: client)
         } catch {
-          print()
-          print(red("The schedule POST failed") + " — no changes were applied. Re-run the same command to retry.")
+          // A dry run's stopped write isn't a failure (its own message says what wasn't sent).
+          if ASCDryRunStop.from(error) == nil {
+            print()
+            print(red("The schedule POST failed") + " — no changes were applied. Re-run the same command to retry.")
+          }
           throw error
         }
 

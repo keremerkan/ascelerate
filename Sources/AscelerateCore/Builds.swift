@@ -295,23 +295,34 @@ public enum Builds {
     isolation: isolated (any Actor)? = #isolation, report: (_ locale: String, _ created: Bool) -> Void = { _, _ in }
   ) async throws {
     let existing = try await testNotes(buildID: buildID, client: client)
-    let byLocale = Dictionary(existing.map { ($0.locale, $0) }, uniquingKeysWith: { first, _ in first })
-    for (locale, text) in updates {
-      if let notes = byLocale[locale] {
-        _ = try await client.betaBuildLocalizationsUpdateInstance(
-          path: .init(id: notes.id),
-          body: .json(.init(data: .init(attributes: .init(whatsNew: text), id: notes.id, _type: "betaBuildLocalizations")))
-        ).ok
-        report(locale, false)
+    _ = try await setTestNotes(updates, existing: existing, buildID: buildID, client: client, report: report)
+  }
+
+  /// `setTestNotes` with the languages already read (`testNotes(buildID:)`), so nothing is read
+  /// again. Returns the languages as App Store Connect saved them, in the order of `updates`.
+  public static func setTestNotes(
+    _ updates: [(locale: String, text: String)], existing: [TestNotes], buildID: String, client: ASCClient,
+    isolation: isolated (any Actor)? = #isolation, report: (_ locale: String, _ created: Bool) -> Void = { _, _ in }
+  ) async throws -> [TestNotes] {
+    var saved: [TestNotes] = []
+    for (locale, text, existingID) in saveTargets(updates.map { ($0.locale, $0.text) }, existing: existing.map { ($0.locale, $0.id) }) {
+      let record: Components.Schemas.BetaBuildLocalization
+      if let existingID {
+        record = try await client.betaBuildLocalizationsUpdateInstance(
+          path: .init(id: existingID),
+          body: .json(.init(data: .init(attributes: .init(whatsNew: text), id: existingID, _type: "betaBuildLocalizations")))
+        ).ok.body.json.data
       } else {
-        _ = try await client.betaBuildLocalizationsCreateInstance(body: .json(.init(data: .init(
+        record = try await client.betaBuildLocalizationsCreateInstance(body: .json(.init(data: .init(
           attributes: .init(locale: locale, whatsNew: text),
           relationships: .init(build: .init(data: .init(id: buildID, _type: "builds"))),
           _type: "betaBuildLocalizations"
-        )))).created
-        report(locale, true)
+        )))).created.body.json.data
       }
+      saved.append(TestNotes(id: record.id, locale: record.attributes?.locale ?? locale, text: record.attributes?.whatsNew))
+      report(locale, existingID == nil)
     }
+    return saved
   }
 
   /// The newest build uploaded before `target` on its platform whose What to Test has text in some

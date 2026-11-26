@@ -146,7 +146,7 @@ Not checked: App Privacy. Its answers must be published in App Store Connect: ht
 
 La confidentialité de l’application n’est pas vérifiée : l’API d’App Store Connect n’a pas d’endpoints pour cela. App Store Connect refuse une soumission tant que les réponses sur la confidentialité de l’application ne sont pas publiées ; la sortie texte se termine donc par un lien vers cette page.
 
-Les achats intégrés et les abonnements sont vérifiés pour leurs prix et un état compatible avec une soumission. Un produit que vous avez retiré de la vente (Developer Removed from Sale) est indiqué comme ignoré (–) et ne fait pas échouer la vérification ; la ligne de résultat le compte à part.
+Les achats intégrés et les abonnements sont vérifiés pour leurs prix et un état compatible avec une soumission. Un produit retiré de la vente (Developer Removed from Sale, ou Removed from Sale par Apple) est indiqué comme ignoré (–) et ne fait pas échouer la vérification ; la ligne de résultat le compte à part. Un produit en Pending Binary Approval passe : il est approuvé et n'attend que le build.
 
 Les nouveautés ne sont vérifiées que pour les mises à jour, c'est-à-dire lorsqu'une version de la même plateforme a déjà été publiée. Une publication sur une autre plateforme ne compte pas : la première version Mac d'une app iOS n'en a pas besoin.
 

@@ -350,8 +350,7 @@ struct BuildsCommand: AsyncParsableCommand {
         "-scheme", schemeName,
         "-configuration", configuration ?? "Release",
         "-destination", destination,
-        "-allowProvisioningUpdates",
-      ] + quietFlag + (try APICredentials.fromEnvironment()?.xcodebuildArguments ?? [])
+      ] + (try provisioningArguments()) + quietFlag
       if let buildNumber {
         EventOutput.log("Build number: \(buildNumber)")
         args.append("CURRENT_PROJECT_VERSION=\(buildNumber)")
@@ -1103,8 +1102,7 @@ private func resolveUploadable(_ path: String) throws -> (String, String?, Archi
     "-archivePath", path,
     "-exportPath", exportDir,
     "-exportOptionsPlist", plistPath,
-    "-allowProvisioningUpdates",
-  ] + ((try? APICredentials.fromEnvironment())??.xcodebuildArguments ?? [])
+  ] + (try provisioningArguments())
   // Capture stdout (it carries the *.xcdistributionlogs path) and surface it only on failure.
   let stdoutPipe = Pipe()
   process.standardOutput = stdoutPipe
@@ -1314,4 +1312,20 @@ private final class UploadProgressEvents: UploadProgressObserver, @unchecked Sen
   }
 
   func finish() {}
+}
+
+/// `-allowProvisioningUpdates` and the key from the environment, which let xcodebuild create or
+/// change profiles on Apple's side. Left out under --dry-run (Kerem, 2026-11-26): the archive or
+/// export then uses the profiles already there, and one that needs a change fails.
+func provisioningArguments() throws -> [String] {
+  if ClientFactory.isDryRun {
+    struct Once { nonisolated(unsafe) static var said = false }
+    if !Once.said {
+      Once.said = true
+      EventOutput.log("Dry run: xcodebuild runs without -allowProvisioningUpdates, so no profile changes on Apple's side; signing that needs one fails.")
+    }
+    return []
+  }
+  // A partial set of the key's variables is an error here too, as for the client.
+  return ["-allowProvisioningUpdates"] + (try APICredentials.fromEnvironment()?.xcodebuildArguments ?? [])
 }

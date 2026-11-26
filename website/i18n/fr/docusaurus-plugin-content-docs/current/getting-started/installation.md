@@ -41,7 +41,7 @@ sudo mkdir -p /usr/local/bin
 sudo mv ascelerate /usr/local/bin/
 ```
 
-Le binaire est signé avec le Developer ID d'ascelerate (AKE Software GmbH) et notarisé par Apple : macOS l'exécute donc sans avertissement. `codesign -dv /usr/local/bin/ascelerate` affiche la signature ; `sudo ascelerate update` installe les versions suivantes.
+Le binaire est signé avec le Developer ID d'ascelerate (AKE Software GmbH) et notarisé par Apple : macOS l'exécute donc sans avertissement. `codesign -dv /usr/local/bin/ascelerate` affiche la signature ; `sudo ascelerate update` installe les versions suivantes. Avant de remplacer le binaire, `update` exige le digest SHA-256 que GitHub publie pour le téléchargement, et vérifie que le nouveau binaire est bien ascelerate, signé avec ce Developer ID, et qu'il indique la version de la release ; sur un Mac Intel, il refuse la mise à jour.
 
 :::note
 Les binaires pré-compilés sont fournis uniquement pour Apple Silicon (arm64). Les utilisateurs de Mac Intel doivent compiler depuis les sources.

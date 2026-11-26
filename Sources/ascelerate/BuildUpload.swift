@@ -96,7 +96,13 @@ enum BuildUploader {
       _type: "buildUploadFiles"
     )))).created.body.json.data
 
-    try await uploadChunks(filePath: path, operations: (file.attributes?.uploadOperations ?? []).map(DeliveryOperation.init))
+    // No operations means nothing to send the file to: committing would only wait for nothing
+    // (as the core's uploadAsset refuses with noUploadOperations).
+    let operations = file.attributes?.uploadOperations ?? []
+    guard !operations.isEmpty else {
+      throw ValidationError("App Store Connect reserved the upload without telling where to send the file; nothing was uploaded. Try again.")
+    }
+    try await uploadChunks(filePath: path, operations: operations.map(DeliveryOperation.init))
     let checksum = try md5Hex(filePath: path)
     _ = try await withTransientRetry {
       try await client.buildUploadFilesUpdateInstance(

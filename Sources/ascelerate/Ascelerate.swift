@@ -52,6 +52,13 @@ struct Ascelerate: AsyncParsableCommand {
     // printed instead of in blocks.
     setvbuf(stdout, nil, _IOLBF, 0)
 
+    // An ASCELERATE_DRY_RUN that's neither on nor off stops everything, before any request.
+    do {
+      try ClientFactory.checkDryRunEnvironment()
+    } catch {
+      Ascelerate.exit(withError: error)
+    }
+
     // Catch --version before ArgumentParser rejects it as unknown flag
     let args = extractDryRunFlag(Array(CommandLine.arguments.dropFirst()))
     if args == ["--version"] || args == ["-v"] {

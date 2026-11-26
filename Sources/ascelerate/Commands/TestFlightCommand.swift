@@ -814,9 +814,15 @@ struct TestFlightCommand: AsyncParsableCommand {
             cancelled()
             return
           }
-          try await BetaTesters.removeFromApp(testerID: tester.id, appID: app.id, client: client)
+          let done = try await BetaTesters.removeFromApp(testerID: tester.id, appID: app.id, client: client)
           print()
-          success("Removed", "tester '\(email)' from the app.")
+          if done {
+            success("Removed", "tester '\(email)' from the app.")
+          } else {
+            // 202: App Store Connect took the request to carry out later (a public link tester's
+            // never is; those go only by deleting the tester from the team).
+            print("App Store Connect accepted the removal of '\(email)' to carry out later; check 'testflight testers list' in a while. A tester who joined through a public link is only removed by deleting them from the team (App Store Connect's All Testers).")
+          }
         }
       }
     }
@@ -1196,8 +1202,13 @@ struct TestFlightCommand: AsyncParsableCommand {
 
     /// Applies What to Test text per locale, patching existing localizations and creating missing
     /// ones, and says which.
-    static func apply(updates: [(locale: String, text: String)], buildID: String, client: ASCClient) async throws {
-      try await AscelerateCore.Builds.setTestNotes(updates, buildID: buildID, client: client) { locale, created in
+    /// `existing`: the build's languages when the command read them already (nil: read here).
+    static func apply(
+      updates: [(locale: String, text: String)], existing: [AscelerateCore.Builds.TestNotes]? = nil,
+      buildID: String, client: ASCClient
+    ) async throws {
+      let existing = if let existing { existing } else { try await AscelerateCore.Builds.testNotes(buildID: buildID, client: client) }
+      _ = try await AscelerateCore.Builds.setTestNotes(updates, existing: existing, buildID: buildID, client: client) { locale, created in
         print("  [\(localeName(locale))] " + (created ? green("Created.") : "Updated."))
       }
     }
@@ -1262,11 +1273,13 @@ struct TestFlightCommand: AsyncParsableCommand {
         let resolved = try await buildOptions.resolve(appID: app.id, client: client)
 
         var targets: [String]
+        var existing: [AscelerateCore.Builds.TestNotes]?
         if let locale {
           targets = [locale]
         } else {
-          let existing = try await AscelerateCore.Builds.testNotes(buildID: resolved.id, client: client)
-          targets = existing.map(\.locale)
+          let read = try await AscelerateCore.Builds.testNotes(buildID: resolved.id, client: client)
+          existing = read
+          targets = read.map(\.locale)
           guard !targets.isEmpty else {
             throw ValidationError(
               "This build has no localizations yet. Pass --locale to create one.")
@@ -1284,7 +1297,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         print()
 
         try await WhatToTest.apply(
-          updates: targets.map { ($0, text) }, buildID: resolved.id, client: client)
+          updates: targets.map { ($0, text) }, existing: existing, buildID: resolved.id, client: client)
         print()
         success("Updated", "test notes for build \(resolved.label).")
       }
@@ -1654,7 +1667,7 @@ struct TestFlightCommand: AsyncParsableCommand {
         let fields = BetaAppLocaleFields(
           description: description, feedbackEmail: feedbackEmail, marketingURL: marketingURL,
           privacyPolicyURL: privacyPolicyURL)
-        try await TestInformation.save([(targetLocale, fields)], appID: app.id, client: client)
+        _ = try await TestInformation.save([(targetLocale, fields)], existing: locs, appID: app.id, client: client)
 
         print()
         success("Updated", "beta app information for \(localeName(targetLocale)).")

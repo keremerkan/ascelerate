@@ -109,7 +109,7 @@ It auto-detects Claude Code, Grok Build (which reads the Claude Code skill path 
 npx ascelerate-skill
 ```
 
-This presents an interactive menu to select your agent and installs the skill to the appropriate directory. The skill file is fetched from GitHub, so it's always up to date. Use `npx ascelerate-skill --uninstall` to remove it.
+This presents an interactive menu to select your agent and installs the skill to the appropriate directory. Both installers fetch the skill file from GitHub at the release matching their version (`install-skill`: the binary's, `npx`: the package's), so it describes the commands that release has; when that release has none, they take the one on `main` and say so. Use `npx ascelerate-skill --uninstall` to remove it.
 
 ## Setup
 
@@ -1640,7 +1640,7 @@ ascelerate run-workflow release.txt --yes --dry-run
 ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # same, e.g. for a whole CI job
 ```
 
-A command stops at its first blocked write, or reports each blocked request as failed where it works through items one by one. In `run-workflow`, a step whose writes were blocked doesn't stop the workflow, so a single run shows every step's writes (in a workflow file, `--dry-run` on a single step applies only to that step); a step that relies on something an earlier step would have created (a new version, an uploaded build) can still fail. `builds upload` skips the upload; `builds archive` and `builds validate` still run, since they don't change anything on App Store Connect.
+A command stops at its first blocked write, or reports each blocked request as failed where it works through items one by one. In `run-workflow`, a step whose writes were blocked doesn't stop the workflow, so a single run shows every step's writes (in a workflow file, `--dry-run` on a single step applies only to that step); a step that relies on something an earlier step would have created (a new version, an uploaded build) can still fail. `builds upload` skips the upload; `builds archive` and `builds validate` still run, since they don't change anything on App Store Connect, but without `-allowProvisioningUpdates`: Xcode uses only the profiles already on the Mac, and signing that needs a new or changed profile fails. `ASCELERATE_DRY_RUN` takes `1`, `true`, `yes` or `on` (in any case) for a dry run and `0`, `false`, `no`, `off` or an empty value for a live one; any other value stops the command before it sends anything.
 
 ### API rate limit
 

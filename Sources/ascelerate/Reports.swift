@@ -14,11 +14,13 @@ enum Reports {
 
   /// Resolves the vendor number from the `--vendor-number` flag, falling back to config.
   /// Throws a guiding error when neither is set.
-  static func resolveVendorNumber(_ flag: String?, config: Config) throws -> String {
+  /// `--vendor-number`, else the saved one; the config is read only when the flag is missing (a
+  /// run with the key in the environment may have no config file).
+  static func resolveVendorNumber(_ flag: String?, config: () throws -> Config) throws -> String {
     if let flag, !flag.trimmingCharacters(in: .whitespaces).isEmpty {
       return flag.trimmingCharacters(in: .whitespaces)
     }
-    if let v = config.vendorNumber, !v.isEmpty { return v }
+    if let v = try config().vendorNumber, !v.isEmpty { return v }
     throw ValidationError(
       """
       No vendor number set. Pass --vendor-number, or save one with 'ascelerate configure'.

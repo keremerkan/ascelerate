@@ -146,7 +146,7 @@ Not checked: App Privacy. Its answers must be published in App Store Connect: ht
 
 アプリのプライバシーは確認しません。App Store Connect APIにはそのためのエンドポイントがないためです。アプリのプライバシーの回答が公開されるまでApp Store Connectは提出を受け付けないため、テキスト出力の最後にそのページへのリンクを表示します。
 
-App 内課金とサブスクリプションは、価格と、提出に含められる状態かどうかを確認します。販売を停止した商品（Developer Removed from Sale）はスキップ（–）として表示され、チェックの失敗にはなりません。結果行では別に数えられます。
+App 内課金とサブスクリプションは、価格と、提出に含められる状態かどうかを確認します。販売が停止された商品（Developer Removed from Sale、または Apple による Removed from Sale）はスキップ（–）として表示され、チェックの失敗にはなりません。結果行では別に数えられます。Pending Binary Approval の商品は合格になります。承認済みで、ビルドを待っているだけだからです。
 
 新機能は、同じプラットフォームのバージョンがすでにリリースされているアップデートの場合にのみ確認されます。別のプラットフォームでのリリースは数えないため、iOSアプリの最初のMacバージョンには不要です。
 

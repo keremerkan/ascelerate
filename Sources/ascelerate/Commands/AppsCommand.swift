@@ -435,6 +435,8 @@ struct AppsCommand: AsyncParsableCommand {
         
         let effectiveUpdates = try resolveEffectiveUpdates(
           version: version, localeUpdates: localeUpdates)
+        // Lengths are checked before the summary and the confirmation: nothing goes out then.
+        if let tooLong = FieldsOverLimit(effectiveUpdates.mapValues(\.overLimit)) { throw tooLong }
 
         let versionString = version.attributes?.versionString ?? "unknown"
         let versionState = version.attributes?.appVersionState.map { formatState($0) } ?? "unknown"
@@ -512,24 +514,38 @@ struct AppsCommand: AsyncParsableCommand {
         existing locByLocale: [String: Components.Schemas.AppStoreVersionLocalization],
         client: ASCClient
       ) async throws {
+        var done = 0
         for (locale, fields) in updates.sorted(by: { $0.key < $1.key }) {
-          guard let localization = locByLocale[locale] else {
-            guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
-              print("  [\(localeName(locale))] Skipped.")
-              continue
-            }
-            let created = try await VersionLocalizations.create(
-              versionID: versionID, locale: locale, fields: fields, client: client)
-            print("  [\(localeName(locale))] \(green("Created."))")
-            if verbose { printLocaleResponse(created.attributes) }
-            continue
+          do {
+            try await sendLocale(locale, fields, versionID: versionID, existing: locByLocale[locale], client: client)
+            done += 1
+          } catch where ASCDryRunStop.from(error) == nil {
+            // The language that failed is named, and what was sent before it.
+            throw ValidationError("[\(localeName(locale))] \(describeError(error)) (\(done) language\(done == 1 ? "" : "s") updated before it; the rest weren't sent).")
           }
-
-          let updated = try await VersionLocalizations.update(
-            localizationID: localization.id, fields: fields, client: client)
-          print("  [\(localeName(locale))] Updated.")
-          if verbose { printLocaleResponse(updated.attributes) }
         }
+      }
+
+      private func sendLocale(
+        _ locale: String, _ fields: LocaleFields, versionID: String,
+        existing localization: Components.Schemas.AppStoreVersionLocalization?, client: ASCClient
+      ) async throws {
+        guard let localization else {
+          guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
+            print("  [\(localeName(locale))] Skipped.")
+            return
+          }
+          let created = try await VersionLocalizations.create(
+            versionID: versionID, locale: locale, fields: fields, client: client)
+          print("  [\(localeName(locale))] \(green("Created."))")
+          if verbose { printLocaleResponse(created.attributes) }
+          return
+        }
+
+        let updated = try await VersionLocalizations.update(
+          localizationID: localization.id, fields: fields, client: client)
+        print("  [\(localeName(locale))] Updated.")
+        if verbose { printLocaleResponse(updated.attributes) }
       }
 
       /// Prints the verbose API response for a single localization (shared by create and update).
@@ -1458,18 +1474,15 @@ struct AppsCommand: AsyncParsableCommand {
         return Check(group: check.item.locale, name: name, passed: check.passed, detail: detail)
       }
 
-      /// IAP/subscription states that can ride along a submission.
-      private static let submittableProductStates: Set<String> = ["READY_TO_SUBMIT", "APPROVED", "WAITING_FOR_REVIEW", "IN_REVIEW"]
-
-      /// A product the developer took off sale is a deliberate choice, not a problem: it's
-      /// listed as skipped (neither its state nor its prices are checked).
+      /// A product taken off sale is listed as skipped (neither its state nor its prices are
+      /// checked); see `Preflight.productState`.
       private static func productCheck(group: String, name: String, state: String?, hasPrices: Bool, missingPrices: String) -> Check {
         let stateStr = state.map { formatState($0) } ?? "unknown"
-        if state == "DEVELOPER_REMOVED_FROM_SALE" {
+        let verdict = AscelerateCore.Preflight.productState(state)
+        if verdict == .skipped {
           return Check(group: group, name: name, passed: true, detail: "\(stateStr) (skipped)", skipped: true)
         }
-        let submittable = state.map(submittableProductStates.contains) ?? false
-        return Check(group: group, name: name, passed: hasPrices && submittable, detail: hasPrices ? stateStr : missingPrices)
+        return Check(group: group, name: name, passed: hasPrices && verdict == .submittable, detail: hasPrices ? stateStr : missingPrices)
       }
 
       /// Checks each in-app purchase's price schedule and state.
@@ -1809,12 +1822,11 @@ struct AppsCommand: AsyncParsableCommand {
         var reusable: (id: String, state: String, others: [ReviewSubmissions.Item])?
         for submission in active {
           let state = submission.attributes?.state ?? ""
-          // The version relationship only carries its ID when included.
-          let holds = try await client.reviewSubmissionsItemsGetToManyRelated(
-            path: .init(id: submission.id), query: .init(fieldsAppStoreVersions: [.versionString], include: [.appStoreVersion])
-          ).ok.body.json.data.contains { $0.relationships?.appStoreVersion?.data?.id == appVersion.id }
-          let items = try await ReviewSubmissions.items(submissionID: submission.id, client: client)
-          let others = items.filter { !($0.kind == "appStoreVersion" && $0.name == appVersion.attributes?.versionString) }
+          // Matched by the version's ID (a version string can repeat across platforms).
+          // No builds read: the plan names none.
+          let items = try await ReviewSubmissions.items(submissionID: submission.id, builds: false, client: client)
+          let holds = items.contains { $0.appStoreVersionID == appVersion.id }
+          let others = items.filter { $0.appStoreVersionID != appVersion.id }
           switch state {
             case "WAITING_FOR_REVIEW", "IN_REVIEW":
               if holds { return .submitted(state: state) }
@@ -2583,7 +2595,8 @@ struct AppsCommand: AsyncParsableCommand {
         if localeUpdates.isEmpty {
           throw ValidationError("JSON file contains no locale entries.")
         }
-        
+        if let tooLong = FieldsOverLimit(localeUpdates.mapValues(\.overLimit)) { throw tooLong }
+
         // Show summary and confirm
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
@@ -2623,30 +2636,51 @@ struct AppsCommand: AsyncParsableCommand {
           uniquingKeysWith: { first, _ in first }
         )
         
-        // Send updates
-        for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
-          guard let localization = locByLocale[locale] else {
-            guard let name = fields.name else {
-              print("  [\(localeName(locale))] Skipped — locale not found in current localizations for the app and \"name\" is required to create it.")
+        // Send updates; a failure names its language and how many went before it.
+        let ordered = localeUpdates.sorted(by: { $0.key < $1.key })
+        var current = 0
+        do {
+          for (index, (locale, fields)) in ordered.enumerated() {
+            current = index
+            guard let localization = locByLocale[locale] else {
+              guard let name = fields.name else {
+                print("  [\(localeName(locale))] Skipped — locale not found in current localizations for the app and \"name\" is required to create it.")
+                continue
+              }
+
+              guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
+                print("  [\(localeName(locale))] Skipped.")
+                continue
+              }
+
+              let response = try await client.appInfoLocalizationsCreateInstance(body: .json(.init(data: .init(
+                attributes: .init(
+                  locale: locale, name: name, privacyChoicesUrl: fields.privacyChoicesURL,
+                  privacyPolicyUrl: fields.privacyPolicyURL, subtitle: fields.subtitle),
+                relationships: .init(appInfo: .init(data: .init(id: appInfo.id, _type: "appInfos"))),
+                _type: "appInfoLocalizations"
+              )))).created.body.json
+              print("  [\(localeName(locale))] \(green("Created."))")
+
+              if verbose {
+                let attrs = response.data.attributes
+                print("    Response:")
+                print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
+                if let v = attrs?.name { print("      Name:               \(v)") }
+                if let v = attrs?.subtitle { print("      Subtitle:           \(v)") }
+                if let v = attrs?.privacyPolicyUrl { print("      Privacy Policy URL: \(v)") }
+                if let v = attrs?.privacyChoicesUrl { print("      Privacy Choices URL: \(v)") }
+              }
               continue
             }
 
-            guard confirm("  [\(localeName(locale))] Locale not found in current localizations for the app. Create it? [y/N] ") else {
-              print("  [\(localeName(locale))] Skipped.")
-              continue
-            }
-
-            let response = try await client.appInfoLocalizationsCreateInstance(body: .json(.init(data: .init(
-              attributes: .init(
-                locale: locale, name: name, privacyChoicesUrl: fields.privacyChoicesURL,
-                privacyPolicyUrl: fields.privacyPolicyURL, subtitle: fields.subtitle),
-              relationships: .init(appInfo: .init(data: .init(id: appInfo.id, _type: "appInfos"))),
-              _type: "appInfoLocalizations"
-            )))).created.body.json
-            print("  [\(localeName(locale))] \(green("Created."))")
+            let updated = try await AppInfos.updateLocalization(
+              id: localization.id, name: fields.name, subtitle: fields.subtitle, privacyPolicyURL: fields.privacyPolicyURL,
+              privacyChoicesURL: fields.privacyChoicesURL, client: client)
+            print("  [\(localeName(locale))] Updated.")
 
             if verbose {
-              let attrs = response.data.attributes
+              let attrs = updated.attributes
               print("    Response:")
               print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
               if let v = attrs?.name { print("      Name:               \(v)") }
@@ -2654,25 +2688,11 @@ struct AppsCommand: AsyncParsableCommand {
               if let v = attrs?.privacyPolicyUrl { print("      Privacy Policy URL: \(v)") }
               if let v = attrs?.privacyChoicesUrl { print("      Privacy Choices URL: \(v)") }
             }
-            continue
           }
-
-          let updated = try await AppInfos.updateLocalization(
-            id: localization.id, name: fields.name, subtitle: fields.subtitle, privacyPolicyURL: fields.privacyPolicyURL,
-            privacyChoicesURL: fields.privacyChoicesURL, client: client)
-          print("  [\(localeName(locale))] Updated.")
-
-          if verbose {
-            let attrs = updated.attributes
-            print("    Response:")
-            print("      Locale:             \(attrs?.locale.map { localeName($0) } ?? "—")")
-            if let v = attrs?.name { print("      Name:               \(v)") }
-            if let v = attrs?.subtitle { print("      Subtitle:           \(v)") }
-            if let v = attrs?.privacyPolicyUrl { print("      Privacy Policy URL: \(v)") }
-            if let v = attrs?.privacyChoicesUrl { print("      Privacy Choices URL: \(v)") }
-          }
+        } catch where ASCDryRunStop.from(error) == nil {
+          throw ValidationError("[\(localeName(ordered[current].key))] \(describeError(error)) (\(current) language\(current == 1 ? "" : "s") sent before it; the rest weren't sent).")
         }
-        
+
         print()
         print("Done.")
       }

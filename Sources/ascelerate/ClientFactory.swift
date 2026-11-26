@@ -1,9 +1,30 @@
+import ArgumentParser
 import ASCKit
 import Foundation
 
 enum ClientFactory {
-  /// `--dry-run` or `ASCELERATE_DRY_RUN=1`: reads go out, every write is printed instead of sent.
-  static var isDryRun: Bool { dryRunFlag || ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] == "1" }
+  /// `--dry-run` or `ASCELERATE_DRY_RUN` set to 1, true, yes or on: reads go out, every write is
+  /// printed instead of sent.
+  static var isDryRun: Bool { dryRunFlag || dryRunFromEnvironment == true }
+
+  /// `ASCELERATE_DRY_RUN` read once: true for 1/true/yes/on, false for 0/false/no/off or empty or
+  /// unset, nil for anything else (refused by `checkDryRunEnvironment`, Kerem 2026-11-26: `true`
+  /// used to run live with no warning).
+  static let dryRunFromEnvironment: Bool? = {
+    guard let raw = ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] else { return false }
+    switch raw.trimmingCharacters(in: .whitespaces).lowercased() {
+      case "1", "true", "yes", "on": return true
+      case "", "0", "false", "no", "off": return false
+      default: return nil
+    }
+  }()
+
+  /// Refuses an `ASCELERATE_DRY_RUN` value that is neither on nor off, before anything runs.
+  static func checkDryRunEnvironment() throws {
+    guard dryRunFromEnvironment == nil else { return }
+    let raw = ProcessInfo.processInfo.environment["ASCELERATE_DRY_RUN"] ?? ""
+    throw ValidationError("ASCELERATE_DRY_RUN='\(raw)' is neither on (1, true, yes, on) nor off (0, false, no, off); nothing was run.")
+  }
 
   /// An App Store Connect client (ASCKit, generated from Apple's spec). It waits out the hourly
   /// API limit (see `rateLimitWait`) unless `waitsForRateLimit` is false.

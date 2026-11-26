@@ -26,7 +26,7 @@ ascelerate install-skill --uninstall
 npx ascelerate-skill
 ```
 
-Bu, ajanınızı seçmeniz için interaktif bir menü sunar ve skill'i uygun dizine kurar. Skill dosyası GitHub'dan alınır, bu yüzden her zaman günceldir.
+Bu, ajanınızı seçmeniz için interaktif bir menü sunar ve skill'i uygun dizine kurar. Her iki kurucu da skill dosyasını GitHub'dan kendi sürümlerine karşılık gelen release'ten alır (`install-skill` binary'nin, `npx` paketin sürümünü kullanır); böylece dosya o release'teki komutları anlatır. Release'te dosya yoksa `main` dalındakini alır ve bunu belirtir.
 
 Kaldırmak için:
 

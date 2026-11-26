@@ -30,7 +30,8 @@ ASCELERATE_DRY_RUN=1 ascelerate run-workflow release.txt --yes   # aynı etki, �
 - `media upload`, durdurulan yazma isteklerini tamamlanmış sayıp devam eder; böylece her dosyanın yazma isteklerini görebilirsiniz. Sonunda kaç dosyanın yükleneceğini bildirir.
 - `run-workflow` içinde, yazma istekleri durdurulan bir adım workflow'u sonlandırmaz; böylece tek bir çalıştırmada tüm adımların yazma isteklerini görebilirsiniz. Önceki bir adımın oluşturacağı bir şeye (yeni bir sürüm veya yüklenmiş bir build gibi) dayanan bir adım yine de başarısız olabilir.
 - Bir workflow dosyasında tek bir adıma eklenen `--dry-run` yalnızca o adım için geçerlidir.
-- `builds upload` yüklemeyi atlar. `builds archive` ve `builds validate`, App Store Connect'te hiçbir şeyi değiştirmedikleri için çalışmaya devam eder.
+- `ASCELERATE_DRY_RUN`, deneme çalıştırması için `1`, `true`, `yes` veya `on` (büyük ya da küçük harfle), gerçek çalıştırma için `0`, `false`, `no`, `off` veya boş değer alır. Başka bir değerde komut hiçbir şey göndermeden durur.
+- `builds upload` yüklemeyi atlar. `builds archive` ve `builds validate`, App Store Connect'te hiçbir şeyi değiştirmedikleri için çalışmaya devam eder. Deneme çalıştırmasında ikisi de `-allowProvisioningUpdates` olmadan çalışır: Xcode yalnızca Mac'te zaten bulunan profilleri kullanır; yeni veya değişmiş bir profil gerektiren imzalama başarısız olur.
 
 ## API istek sınırı {#rate-limit}
 

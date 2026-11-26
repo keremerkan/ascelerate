@@ -29,6 +29,8 @@ public enum ReviewSubmissions {
     public let platform: String?
     /// An app version's build: version and build number ("2026.17 (20137)").
     public let build: String?
+    /// An app version item's version ID (its appStoreVersion relationship); nil for other kinds.
+    public var appStoreVersionID: String? = nil
   }
 
   public struct Submission: Codable, Hashable, Identifiable, Sendable {
@@ -129,7 +131,8 @@ public enum ReviewSubmissions {
           platform: version?.attributes?.platform,
           build: build.flatMap { build in
             build.attributes?.version.map { "\(version?.attributes?.versionString ?? "") (\($0))" }
-          })
+          },
+          appStoreVersionID: id)
       }
       if let id = relationships?.appEvent?.data?.id {
         return Item(id: item.id, state: state, kind: "appEvent", name: eventNames[id], platform: nil, build: nil)

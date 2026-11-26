@@ -55,8 +55,7 @@ extension ReportsCommand {
     var raw: Bool = false
 
     func run() async throws {
-      let config = try Config.load()
-      let vendor = try Reports.resolveVendorNumber(vendorNumber, config: config)
+      let vendor = try Reports.resolveVendorNumber(vendorNumber, config: Config.load)
       typealias Query = Operations.SalesReportsGetCollection.Input.Query
       let freq: Query.FilterFrequencyPayloadPayload = try parseEnum(frequency, name: "frequency")
       let reportType: Query.FilterReportTypePayloadPayload = try parseEnum(type, name: "type")
@@ -126,8 +125,7 @@ extension ReportsCommand {
     var raw: Bool = false
 
     func run() async throws {
-      let config = try Config.load()
-      let vendor = try Reports.resolveVendorNumber(vendorNumber, config: config)
+      let vendor = try Reports.resolveVendorNumber(vendorNumber, config: Config.load)
       let reportType: Operations.FinanceReportsGetCollection.Input.Query.FilterReportTypePayloadPayload =
         try parseEnum(type, name: "type")
 

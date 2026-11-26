@@ -146,7 +146,7 @@ Not checked: App Privacy. Its answers must be published in App Store Connect: ht
 
 App Privacy isn't checked: the App Store Connect API has no endpoints for it. App Store Connect refuses a submission until the app's App Privacy answers are published, so the text output ends with a link to that page.
 
-In-app purchases and subscriptions are checked for prices and a state that can go with a submission. A product you removed from sale (Developer Removed from Sale) is listed as skipped (–) and doesn't fail the check; the result line counts it separately.
+In-app purchases and subscriptions are checked for prices and a state that can go with a submission. A product taken off sale (Developer Removed from Sale, or Removed from Sale by Apple) is listed as skipped (–) and doesn't fail the check; the result line counts it separately. A product in Pending Binary Approval passes: it's approved and only waits for the build.
 
 What's New is checked only for updates: once a version of the same platform has been released. A release on another platform doesn't count, so the first Mac version of an iOS app needs none.
 

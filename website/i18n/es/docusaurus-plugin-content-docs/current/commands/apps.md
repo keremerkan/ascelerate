@@ -146,7 +146,7 @@ Not checked: App Privacy. Its answers must be published in App Store Connect: ht
 
 La privacidad de la app no se comprueba: la API de App Store Connect no tiene endpoints para ello. App Store Connect rechaza un envío mientras las respuestas de privacidad de la app no estén publicadas, así que la salida de texto termina con un enlace a esa página.
 
-En las compras dentro de la app y las suscripciones se comprueba que tengan precios y un estado compatible con un envío. Un producto que haya retirado de la venta (Developer Removed from Sale) aparece como omitido (–) y no hace fallar la comprobación; la línea del resultado lo cuenta aparte.
+En las compras dentro de la app y las suscripciones se comprueba que tengan precios y un estado compatible con un envío. Un producto retirado de la venta (Developer Removed from Sale, o Removed from Sale por Apple) aparece como omitido (–) y no hace fallar la comprobación; la línea del resultado lo cuenta aparte. Un producto en Pending Binary Approval pasa: está aprobado y solo espera la build.
 
 Las novedades (What's New) solo se comprueban en las actualizaciones, es decir, cuando ya se publicó una versión de la misma plataforma. Una publicación en otra plataforma no cuenta: la primera versión para Mac de una app de iOS no las necesita.
 

@@ -218,9 +218,14 @@ struct InstallCompletionsCommand: ParsableCommand {
         done
         if (( ${#pats} )); then
             pats+=( '*(-/):directories' )
-            zstyle ':completion:*' file-patterns "${pats[@]}"
+            # ascelerate's own context, and whatever was set there is put back: a global style
+            # used to be set and then deleted, losing the user's own.
+            local ctx=':completion:*:*:ascelerate:*' had=0
+            local -a saved
+            zstyle -a "$ctx" file-patterns saved && had=1
+            zstyle "$ctx" file-patterns "${pats[@]}"
             _files "${rest[@]}"
-            zstyle -d ':completion:*' file-patterns
+            if (( had )); then zstyle "$ctx" file-patterns "${saved[@]}"; else zstyle -d "$ctx" file-patterns; fi
         else
             _files "${rest[@]}"
         fi
@@ -228,17 +233,10 @@ struct InstallCompletionsCommand: ParsableCommand {
 
     """
 
-    // Insert wrapper after the #compdef line (and any version stamp)
+    // Insert wrapper after the #compdef line (the version stamp is added after this).
     var result = script
     if let range = result.range(of: "#compdef ascelerate\n") {
-      var insertPoint = range.upperBound
-      // Skip past version stamp line if present
-      if result[insertPoint...].hasPrefix("# ascelerate v") {
-        if let eol = result[insertPoint...].firstIndex(of: "\n") {
-          insertPoint = result.index(after: eol)
-        }
-      }
-      result.insert(contentsOf: "\n\(wrapper)", at: insertPoint)
+      result.insert(contentsOf: "\n\(wrapper)", at: range.upperBound)
     }
 
     // Replace _files with _ascelerate_files wherever -g is used

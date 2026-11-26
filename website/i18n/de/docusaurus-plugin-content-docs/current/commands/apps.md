@@ -146,7 +146,7 @@ Not checked: App Privacy. Its answers must be published in App Store Connect: ht
 
 App-Datenschutz wird nicht geprüft: Die App Store Connect API hat dafür keine Endpunkte. App Store Connect lehnt eine Einreichung ab, solange die Antworten zum App-Datenschutz nicht veröffentlicht sind; die Textausgabe endet deshalb mit einem Link zu dieser Seite.
 
-In-App-Käufe und Abonnements werden auf Preise und einen Status geprüft, der mit einer Einreichung mitgehen kann. Ein Produkt, das Sie aus dem Verkauf genommen haben (Developer Removed from Sale), wird als übersprungen (–) aufgeführt und lässt die Prüfung nicht fehlschlagen; die Ergebniszeile zählt es gesondert.
+In-App-Käufe und Abonnements werden auf Preise und einen Status geprüft, der mit einer Einreichung mitgehen kann. Ein aus dem Verkauf genommenes Produkt (Developer Removed from Sale oder von Apple Removed from Sale) wird als übersprungen (–) aufgeführt und lässt die Prüfung nicht fehlschlagen; die Ergebniszeile zählt es gesondert. Ein Produkt in Pending Binary Approval besteht die Prüfung: Es ist genehmigt und wartet nur auf den Build.
 
 Die Neuigkeiten werden nur bei Updates geprüft, also wenn bereits eine Version derselben Plattform veröffentlicht wurde. Eine Veröffentlichung auf einer anderen Plattform zählt nicht: Die erste Mac-Version einer iOS-App braucht keine.
 

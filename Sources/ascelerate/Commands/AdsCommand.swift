@@ -290,6 +290,17 @@ struct AdsCommand: AsyncParsableCommand {
             return
           }
 
+          // What the ad group copies is read and checked before the campaign exists, so a failure
+          // here leaves nothing half made.
+          var sourceGroup: Components.Schemas.AdGroup?
+          if !maxConversions, let sourceID = source?.id {
+            sourceGroup = try await Ads.adGroups(campaignID: sourceID, ads, client: client).first
+          }
+          let deviceTargeting = try sourceGroup?.targeting?.value1.deviceClass.map {
+            Components.Schemas.AdGroupTargetingCreate(deviceClass: .init(value1: try Ads.convert($0.value1, to: Components.Schemas.TargetingDataCreate.self)))
+          }
+          let groupBid = maxConversions ? nil : try Ads.money(defaultBid ?? "", currency: currency)
+
           // Under dry run the campaign request is shown and a placeholder ID lets the ad group request show too.
           let created = try await unlessDryRunStopped {
             try await client.postCampaigns(
@@ -303,6 +314,10 @@ struct AdsCommand: AsyncParsableCommand {
               ))
             ).ok.body.json.result
           }
+          // A campaign answered without its ID gets no ad group (one for campaign 0 used to be sent).
+          if created != nil, created??.id == nil {
+            throw ValidationError("Apple created the campaign '\(name)' but sent no ID for it, so its ad group wasn't created; find it in 'ascelerate ads campaigns list' and add one with 'ascelerate ads adgroups create'.")
+          }
           let campaignID = created??.id ?? 0
           if created != nil { print(green("Created") + " campaign '\(name)' (ID \(campaignID)).") }
 
@@ -310,18 +325,13 @@ struct AdsCommand: AsyncParsableCommand {
           if maxConversions {
             group = Ads.automatedAdGroup(campaignID: campaignID)
           } else {
-            var sourceGroup: Components.Schemas.AdGroup?
-            if let sourceID = source?.id { sourceGroup = try await Ads.adGroups(campaignID: sourceID, ads, client: client).first }
-            let deviceTargeting = try sourceGroup?.targeting?.value1.deviceClass.map {
-              Components.Schemas.AdGroupTargetingCreate(deviceClass: .init(value1: try Ads.convert($0.value1, to: Components.Schemas.TargetingDataCreate.self)))
-            }
             group = .init(
               name: "\(name) Ad Group", campaignId: campaignID, startTime: Date(), pricingModel: .init(value1: .cpt),
               automatedKeywordsOptIn: searchMatch.map { $0.lowercased() == "on" } ?? sourceGroup?.automatedKeywordsOptIn ?? true,
               status: .init(value1: .enabled),
               bidStrategy: .init(value1: .init(
                 bidStrategyType: .init(value1: .manualCpt), bidStrategyGoal: .init(value1: .tap),
-                bid: try Ads.money(defaultBid ?? "", currency: currency)
+                bid: groupBid
               )),
               targeting: deviceTargeting.map { .init(value1: $0) }
             )

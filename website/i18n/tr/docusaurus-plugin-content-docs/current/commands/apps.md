@@ -146,7 +146,7 @@ Not checked: App Privacy. Its answers must be published in App Store Connect: ht
 
 Uygulama gizliliği denetlenmez: App Store Connect API'sinde bunun için uç nokta yoktur. App Store Connect, uygulama gizliliği yanıtları yayımlanana kadar gönderimi reddeder; bu yüzden metin çıktısı o sayfanın bağlantısıyla biter.
 
-Uygulama içi satın almalar ve abonelikler, fiyat ve gönderimle birlikte gidebilecek bir durum açısından denetlenir. Satıştan kaldırdığınız bir ürün (Developer Removed from Sale) atlandı (–) olarak listelenir ve kontrolün başarısız olmasına yol açmaz; sonuç satırı onu ayrıca sayar.
+Uygulama içi satın almalar ve abonelikler, fiyat ve gönderimle birlikte gidebilecek bir durum açısından denetlenir. Satıştan kaldırılmış bir ürün (Developer Removed from Sale veya Apple'ın kaldırdığı Removed from Sale) atlandı (–) olarak listelenir ve kontrolün başarısız olmasına yol açmaz; sonuç satırı onu ayrıca sayar. Pending Binary Approval durumundaki bir ürün kontrolden geçer: onaylanmıştır ve yalnızca build'i bekler.
 
 Yenilikler yalnızca güncellemelerde, yani aynı platformda daha önce bir sürüm yayınlandıysa denetlenir. Başka bir platformdaki yayın sayılmaz; bir iOS uygulamasının ilk Mac sürümü için yenilikler gerekmez.
 

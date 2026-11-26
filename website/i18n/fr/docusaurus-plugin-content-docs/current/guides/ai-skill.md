@@ -26,7 +26,7 @@ ascelerate install-skill --uninstall
 npx ascelerate-skill
 ```
 
-Cela présente un menu interactif pour sélectionner votre agent et installe le skill dans le répertoire approprié. Le fichier de skill est récupéré depuis GitHub, il est donc toujours à jour.
+Cela présente un menu interactif pour sélectionner votre agent et installe le skill dans le répertoire approprié. Les deux installateurs récupèrent le fichier de skill sur GitHub dans la release correspondant à leur version (`install-skill` : celle du binaire, `npx` : celle du paquet), il décrit donc les commandes de cette release ; si elle n'en a pas, ils prennent celui de `main` et le signalent.
 
 Pour désinstaller :
 

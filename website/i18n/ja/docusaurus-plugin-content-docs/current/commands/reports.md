@@ -62,7 +62,7 @@ ascelerate reports analytics <bundle-id> --report-name "App Store Discovery and 
 - `--category` — `APP_STORE_ENGAGEMENT`（デフォルト）、`APP_USAGE`、`COMMERCE`、`FRAMEWORK_USAGE`、`PERFORMANCE`。
 - `--granularity` — `DAILY`（デフォルト）、`WEEKLY`、`MONTHLY`。
 - `--report-name` — カテゴリに複数のレポートが含まれる場合に、特定のレポートを選択します。
-- `--processing-date` — ダウンロードするインスタンス（`YYYY-MM-DD`）。デフォルトは最新。
+- `--processing-date` — ダウンロードするインスタンス（`YYYY-MM-DD`）。デフォルトは最新。 ダウンロードごとに、レポート名、粒度、処理日を名前にした出力フォルダ内のサブフォルダに保存されるため、ダウンロード同士が上書きし合うことはありません。
 - `--ongoing` — 1回限りのスナップショットではなく、継続的なレポートリクエストを使用します。
 - `--output` — ダウンロードしたセグメントファイルのディレクトリ（デフォルト `./<app>-analytics`）。
 

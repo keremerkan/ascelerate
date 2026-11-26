@@ -215,8 +215,10 @@ extension SubCommand {
         if offerMode != .freeTrial, price == nil { throw ValidationError("--price is required for \(offerMode.rawValue).") }
         let since = try WinBackOffer.parseSince(sinceMonths)
         try SubCommand.checkOfferEligibility(paidMonths: paidMonths, waitMonths: waitMonths)
+        // Tomorrow in the Mac's time zone (Kerem, 2026-11-26), as the pricing commands count days;
+        // `.iso8601` alone formats in UTC.
         let tomorrow = (Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now)
-          .formatted(.iso8601.year().month().day().dateSeparator(.dash))
+          .formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day().dateSeparator(.dash))
         let start = try startDate.map { try WinBackOffer.parseDate($0, name: "start-date") } ?? tomorrow
         let end = try endDate.map { try WinBackOffer.parseDate($0, name: "end-date") }
 

@@ -223,6 +223,9 @@ struct ScreenshotCommand: AsyncParsableCommand {
             pass("Config parsing", "Valid YAML")
 
             // 3. Project or workspace
+            if config.workspace != nil && config.project != nil {
+                warn("Project", "Both 'workspace' and 'project' are set; the workspace is used.")
+            }
             if let workspace = config.workspace {
                 if fm.fileExists(atPath: workspace) {
                     pass("Workspace", workspace)
@@ -258,8 +261,16 @@ struct ScreenshotCommand: AsyncParsableCommand {
             let simulatorManager = SimulatorManager()
             for device in config.devices {
                 do {
-                    let sim = try simulatorManager.findDevice(name: device.simulator)
-                    pass("Simulator", "\(device.simulator) (\(sim.udid))")
+                    let sim = try simulatorManager.findDevice(name: device.simulator, runtime: device.runtime, udid: device.udid)
+                    let runtimes = try simulatorManager.candidates(name: device.simulator)
+                    if runtimes.count > 1 && device.runtime == nil && device.udid == nil {
+                        // Several runtimes have the name: the run takes the newest, which can change
+                        // when a runtime is installed.
+                        let chosen = runtimes.first { $0.device.udid == sim.udid }?.runtime ?? "?"
+                        warn("Simulator", "'\(device.simulator)' is on \(runtimes.count) runtimes; the run uses \(SimulatorManager.runtimeLabel(chosen)) (\(sim.udid)). Pin one with 'runtime:' or 'udid:'.")
+                    } else {
+                        pass("Simulator", "\(device.simulator) (\(sim.udid))")
+                    }
                 } catch {
                     fail("Simulator", "'\(device.simulator)' not found. Check available devices with 'xcrun simctl list devices available'.")
                 }
@@ -462,7 +473,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             print("Add this file to your UITest target.")
         }
 
-        static let helperVersion = "1.3"
+        static let helperVersion = "1.4"
 
         /// The version marker of the helper at `path`: nil when there's no file, empty when it has
         /// no marker.
@@ -599,6 +610,8 @@ struct ScreenshotCommand: AsyncParsableCommand {
             /// process in it, this test runner included, can register a virtual HID service of
             /// the same shape and dispatch the same event. 180° is fully open, 0° fully closed.
             static func setHinge(_ state: Hinge) {
+                // Only the iPhone Duo has a hinge; elsewhere this does nothing (no service, no wait).
+                guard ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] == "iPhone19,4" else { return }
                 typealias CreateEvent = @convention(c) (CFAllocator?, UInt64, UInt32, UInt32, UInt32, UnsafePointer<UInt8>, CFIndex, UInt32) -> Unmanaged<CFTypeRef>?
                 typealias ServiceID = @convention(c) (AnyObject, Selector) -> UInt64
                 typealias Dispatch = @convention(c) (AnyObject, Selector, AnyObject) -> Bool
@@ -715,7 +728,8 @@ struct ScreenshotCommand: AsyncParsableCommand {
 
                 // Split respecting quoted strings
                 let regex = try! NSRegularExpression(pattern: #"(".+?"|\\S+)"#)
-                let matches = regex.matches(in: args, range: NSRange(location: 0, length: args.count))
+                // An NSString's length (UTF-16), not the character count: an emoji would cut the tail.
+                let matches = regex.matches(in: args, range: NSRange(location: 0, length: (args as NSString).length))
                 let parts = matches.map { (args as NSString).substring(with: $0.range) }
                 app.launchArguments += parts
             }

@@ -334,6 +334,11 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
   public var kidsAgeBand: String?
   /// Apple's `ageRatingOverrideV2` (NINE_PLUS … EIGHTEEN_PLUS); the v1 field is deprecated.
   public var ageRatingOverride: String?
+  /// South Korea's own rating (Apple's `koreaAgeRatingOverride`), the developer's page about the
+  /// app's age rating, and the GRAC rating classification number (South Korea).
+  public var koreaAgeRatingOverride: String?
+  public var developerAgeRatingInfoUrl: String?
+  public var gracRatingClassificationNumber: String?
 
   public init(
     alcoholTobaccoOrDrugUseOrReferences: String? = nil,
@@ -363,7 +368,10 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
     isSharedLocation: Bool? = nil,
     isDatingAndRelationships: Bool? = nil,
     kidsAgeBand: String? = nil,
-    ageRatingOverride: String? = nil
+    ageRatingOverride: String? = nil,
+    koreaAgeRatingOverride: String? = nil,
+    developerAgeRatingInfoUrl: String? = nil,
+    gracRatingClassificationNumber: String? = nil
   ) {
     self.alcoholTobaccoOrDrugUseOrReferences = alcoholTobaccoOrDrugUseOrReferences
     self.contests = contests
@@ -393,6 +401,9 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
     self.isDatingAndRelationships = isDatingAndRelationships
     self.kidsAgeBand = kidsAgeBand
     self.ageRatingOverride = ageRatingOverride
+    self.koreaAgeRatingOverride = koreaAgeRatingOverride
+    self.developerAgeRatingInfoUrl = developerAgeRatingInfoUrl
+    self.gracRatingClassificationNumber = gracRatingClassificationNumber
   }
 
   /// The answers of a declaration as Apple sends them.
@@ -425,7 +436,10 @@ public struct AgeRatingFields: Codable, Equatable, Sendable {
       isSharedLocation: attributes?.sharedLocation,
       isDatingAndRelationships: attributes?.datingAndRelationships,
       kidsAgeBand: attributes?.kidsAgeBand,
-      ageRatingOverride: attributes?.ageRatingOverrideV2
+      ageRatingOverride: attributes?.ageRatingOverrideV2,
+      koreaAgeRatingOverride: attributes?.koreaAgeRatingOverride,
+      developerAgeRatingInfoUrl: attributes?.developerAgeRatingInfoUrl,
+      gracRatingClassificationNumber: attributes?.gracRatingClassificationNumber
     )
   }
 

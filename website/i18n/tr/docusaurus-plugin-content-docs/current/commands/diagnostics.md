@@ -14,7 +14,7 @@ ascelerate diagnostics <bundle-id>
 ascelerate diagnostics <bundle-id> --type hangs --build 2041
 ```
 
-Derlemenin takılma, açılış ve disk yazma imzaları; her türde ağırlığa göre sıralı, önceki sürümlere göre eğilimleriyle. `--type` olarak `hangs`, `launches` veya `disk-writes` verilir (birden fazlası virgülle ayrılır).
+Derlemenin takılma, açılış ve disk yazma imzaları; her türde ağırlığa göre sıralı, önceki sürümlere göre eğilimleriyle. `--type` olarak `hangs`, `launches` veya `disk-writes` verilir (birden fazlası virgülle ayrılır). `--build` veya `--platform` verilmezse birden çok platformda yayında olan bir uygulama için hangisi olduğu sorulur (`--yes` veya `--json` ile reddedilir: `--platform` verin); `--json` girdileri `build` ve `platform` bilgilerini içerir.
 
 ## Günlükler
 
@@ -32,6 +32,6 @@ ascelerate diagnostics metrics <bundle-id>
 ascelerate diagnostics metrics <bundle-id> --type launch,hang --all
 ```
 
-Her metrik (açılış süresi, takılma oranı, en yüksek bellek, disk yazmaları, pil, sonlandırmalar, animasyon, depolama) uygulama sürümü başına, tüm cihazlar için tipik (50.) ve 90. yüzdelikte gösterilir; `--all` her cihaz modelini ekler. Apple'ın gerilemeleri ve yükselen eğilimleri önce gelir. `--build` tek bir derlemenin metriklerini gösterir.
+Her metrik (açılış süresi, takılma oranı, en yüksek bellek, disk yazmaları, pil, sonlandırmalar, animasyon, depolama) uygulama sürümü başına, tüm cihazlar için tipik (50.) ve 90. yüzdelikte gösterilir; `--all` her cihaz modelini ekler. Apple'ın gerilemeleri ve yükselen eğilimleri önce gelir. `--build` tek bir derlemenin metriklerini gösterir. `--platform ios` uygulamanın ölçümlerini daraltır; Apple'ın filtresi yalnızca iOS'u kabul ettiğinden başka bir platform yayındaki build'inin ölçümlerini gösterir.
 
 Üçü de `--json` alır.

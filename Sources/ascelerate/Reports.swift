@@ -71,6 +71,8 @@ enum Reports {
     let formatter = DateFormatter()
     formatter.calendar = cal
     formatter.timeZone = cal.timeZone
+    // Latin digits whatever the Mac's language: Apple refuses a date in other digits.
+    formatter.locale = Locale(identifier: "en_US_POSIX")
     let now = Date()
 
     switch frequency {
@@ -170,7 +172,8 @@ enum Reports {
 
     var qty: [String: Int] = [:]
     var order: [String] = []
-    var proceeds: [String: Double] = [:]
+    // Decimal: summing money as Double drifts.
+    var proceeds: [String: Decimal] = [:]
     var totalQty = 0
     for row in rows {
       // Footer/total lines don't have a numeric Quantity — skip them.
@@ -179,7 +182,7 @@ enum Reports {
       if qty[title] == nil { order.append(title) }
       qty[title, default: 0] += q
       totalQty += q
-      if let share = Double(value(row, header, "Extended Partner Share") ?? ""),
+      if let share = Decimal(string: value(row, header, "Extended Partner Share") ?? "", locale: Locale(identifier: "en_US_POSIX")),
         let currency = value(row, header, "Partner Share Currency")
       {
         proceeds[currency, default: 0] += share
@@ -196,7 +199,7 @@ enum Reports {
     print()
     print("Total quantity: \(bold("\(totalQty)"))")
     for (currency, amount) in proceeds.sorted(by: { $0.key < $1.key }) {
-      print("Proceeds (\(currency)): \(String(format: "%.2f", amount))")
+      print("Proceeds (\(currency)): \(amount.formatted(.number.precision(.fractionLength(2)).grouping(.never).locale(Locale(identifier: "en_US_POSIX"))))")
     }
   }
 }

@@ -46,6 +46,21 @@ struct TestFlightCommand: AsyncParsableCommand {
 
   /// Resolves a build by number, or the latest non-expired build when omitted, prompting when a
   /// build number matches on several platforms.
+  /// Feedback submissions newest first, up to `limit` (1 or more), following the pages past 200.
+  static func feedback(
+    _ kind: BetaFeedback.Kind, appID: String, platform: Platform?, buildIDs: [String]?, limit: Int, client: ASCClient
+  ) async throws -> [BetaFeedback.Submission] {
+    guard limit >= 1 else { throw ValidationError("--limit must be 1 or more.") }
+    var submissions: [BetaFeedback.Submission] = []
+    var link: String?
+    repeat {
+      let page = try await BetaFeedback.page(kind, appID: appID, platform: platform, buildIDs: buildIDs, limit: limit, after: link, client: client)
+      submissions += page.submissions
+      link = page.next
+    } while link != nil && submissions.count < limit
+    return Array(submissions.prefix(limit))
+  }
+
   static func findBuild(
     appID: String, buildVersion: String?, platform: Platform?, client: ASCClient
   ) async throws -> AscelerateCore.Builds.Build {
@@ -192,7 +207,8 @@ struct TestFlightCommand: AsyncParsableCommand {
         // Internal groups with access to all builds have no explicit build list.
         guard a?.hasAccessToAllBuilds != true else { return }
 
-        let builds = try await AscelerateCore.Builds.list(appID: app.id, groupID: betaGroup.id, limit: 50, client: client)
+        // Every build of the group (Builds.list pages): the count used to stop at 50.
+        let builds = try await AscelerateCore.Builds.list(appID: app.id, groupID: betaGroup.id, limit: 10_000, client: client)
         print()
         if builds.isEmpty {
           print("No builds assigned to this group.")
@@ -938,6 +954,8 @@ struct TestFlightCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Maximum number of builds to show (default 20).")
     var limit: Int = 20
 
+    func validate() throws { try checkLimit(limit) }
+
     @OptionGroup var jsonOption: JSONOption
 
     private struct Entry: Encodable {
@@ -959,7 +977,7 @@ struct TestFlightCommand: AsyncParsableCommand {
       let app = try await findApp(bundleID: bundleID, client: client)
 
       let builds = try await AscelerateCore.Builds.list(
-        appID: app.id, platform: try platformOption.parsed(), limit: min(limit, 200), client: client)
+        appID: app.id, platform: try platformOption.parsed(), limit: limit, client: client)
 
       let entries = builds.map { build in
         Entry(
@@ -1022,6 +1040,8 @@ struct TestFlightCommand: AsyncParsableCommand {
 
     @Option(name: .long, help: "Maximum number of versions to show (default 20).")
     var limit: Int = 20
+
+    func validate() throws { try checkLimit(limit) }
 
     func run() async throws {
       let client = try ClientFactory.makeClient()
@@ -2004,15 +2024,16 @@ struct TestFlightCommand: AsyncParsableCommand {
         @Option(name: .long, help: "Maximum number of submissions to show (default 50).")
         var limit: Int = 50
 
+        func validate() throws { try checkLimit(limit) }
+
         func run() async throws {
           let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let buildIDs = try await buildFilter.resolveBuildIDs(appID: app.id, client: client)
 
-          let submissions = try await BetaFeedback.page(
+          let submissions = try await TestFlightCommand.feedback(
             .crash, appID: app.id, platform: try buildFilter.platformOption.parsed(), buildIDs: buildIDs, limit: limit,
-            client: client
-          ).submissions
+            client: client)
 
           if submissions.isEmpty {
             print("No crash feedback found.")
@@ -2130,15 +2151,16 @@ struct TestFlightCommand: AsyncParsableCommand {
         @Option(name: .long, help: "Maximum number of submissions to show (default 50).")
         var limit: Int = 50
 
+        func validate() throws { try checkLimit(limit) }
+
         func run() async throws {
           let client = try ClientFactory.makeClient()
           let app = try await findApp(bundleID: bundleID, client: client)
           let buildIDs = try await buildFilter.resolveBuildIDs(appID: app.id, client: client)
 
-          let submissions = try await BetaFeedback.page(
+          let submissions = try await TestFlightCommand.feedback(
             .screenshot, appID: app.id, platform: try buildFilter.platformOption.parsed(), buildIDs: buildIDs,
-            limit: limit, client: client
-          ).submissions
+            limit: limit, client: client)
 
           if submissions.isEmpty {
             print("No screenshot feedback found.")

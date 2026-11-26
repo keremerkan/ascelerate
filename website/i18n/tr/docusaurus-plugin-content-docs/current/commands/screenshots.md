@@ -250,7 +250,7 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `localizeSimulator` | Her dil için simülatör dilini/locale'ini ayarla |
 | `overrideStatusBar` | Durum çubuğunu değiştir (9:41, tam çubuklar, Wi-Fi) |
 | `statusBarArguments` | Özel `xcrun simctl status_bar` argümanları |
-| `darkMode` | Simülatörlerde karanlık modu etkinleştir |
+| `darkMode` | Simülatörlerde karanlık modu etkinleştir (`true`); `false` veya belirtilmemesi açık modu ayarlar, böylece her çalıştırma bilinen bir görünümü yakalar |
 | `disableAnimations` | Testler sırasında animasyonları devre dışı bırak |
 | `waitAfterBoot` | Simülatör başlatıldıktan sonra beklenecek saniye (varsayılan: 0) |
 | `waitAfterEraseAndReboot` | Simülatör taze durumdayken beklenecek ek saniye; çalıştırmanın ilk dilinde veya simülatör silindiğinde (`eraseSimulator: true` veya yeniden deneme yoluyla) geçerlidir. İlk açılış sistem uyarılarına ekran görüntüleri çekilmeden önce görünme zamanı verir. (iOS 26'daki "Apple Intelligence için hazır" afişi otomatik olarak susturulur; bunun için beklemeye gerek yoktur.) |
@@ -262,10 +262,14 @@ Yalnızca `frameDevice: true` olan cihazlar çerçevelenir. Çerçeveleme, `scre
 | `configuration` | Derleme yapılandırması (örn. Debug, Release) |
 | `testplan` | Xcode test planı adı |
 | `numberOfRetries` | Başarısız diller için tekrar deneme sayısı. Her deneme simülatörü sıfırlar, yeniden yerelleştirir, yeniden başlatır ve testleri tekrar çalıştırır. Yalnızca başarısız cihazları tekrar dener. Tekrar denenen sonuçlar özet tablosunda işaretlenir. |
-| `stopAfterFirstError` | İlk hatadan sonra tüm cihazları durdur |
+| `stopAfterFirstError` | İlk hatadan sonra tüm cihazları durdur (başarısız bir simülatör hazırlığı da sayılır); hiç denenmeyen diller çalıştırılmadı olarak görünür |
 | `reinstallApp` | Testlerden önce uygulamayı silip yeniden yükle |
 | `disableAssetDownloads` | Simülatörün `mobileassetd` servisini devre dışı bırakır; böylece yeni silinmiş simülatörlere gigabaytlarca Siri, klavye ve ML varlığı indirilmez. Bazı uygulamaların ihtiyaç duyduğu cihaz üstü ML varlıklarını da (örn. metin tanıma) engeller; ekran görüntüleriniz bunlara bağlıysa kapalı bırakın. Silme işlemi ayarı sıfırladığından her hazırlıkta yeniden uygulanır. |
-| `xcargs` | `xcodebuild`'e aktarılan ek argümanlar |
+| `xcargs` | `xcodebuild`'e aktarılan ek argümanlar (tırnak içindeki bağımsız değişkenler bir arada kalır) |
 | `frameDevice` | Bu cihaz için çerçevelemeyi etkinleştir (cihaz başına) |
 | `deviceBezel` | Cihaz çerçeve PNG dosyasının yolu ya da yollardan oluşan bir liste; her ekran görüntüsü boyutuna uyan çerçeveyi kullanır (cihaz başına) |
+| `runtime` | Aynı adlı bir cihaz birden çok çalışma zamanında varsa simülatörü sabitler: `26.5` gibi bir sürüm (cihaz başına). Verilmezse en yeni çalışma zamanının cihazı kullanılır ve `doctor` uyarır |
+| `udid` | Bir simülatörü UDID'si ile sabitler (cihaz başına) |
+
+Bilinmeyen anahtarlar hem çalıştırmada hem `doctor` tarafından reddedilir ve en yakın bilinen anahtar önerilir (`numberOfRetrys`: `numberOfRetries` mı demek istediniz?). İki kez listelenen bir cihaz veya `outputDirectory` ile aynı olan bir `framedOutputDirectory` da reddedilir. Yollar `~` ile başlayabilir.
 | `framedOutputDirectory` | Çerçevelenmiş ekran görüntüleri için çıktı dizini (varsayılan: `{outputDirectory}/framed`) |

@@ -254,6 +254,8 @@ struct WebhooksCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Maximum number of deliveries (default 25).")
     var limit = 25
 
+    func validate() throws { try checkLimit(limit) }
+
     @OptionGroup var jsonOption: JSONOption
 
     func run() async throws {
@@ -266,11 +268,16 @@ struct WebhooksCommand: AsyncParsableCommand {
       }
       let client = try ClientFactory.makeClient()
       let hook = try await WebhooksCommand.find(webhook, bundleID: bundleID, client: client)
-      let response = try await client.webhooksDeliveriesGetToManyRelated(
-        path: .init(id: hook.id), query: .init(filterDeliveryState: states, limit: min(limit, 200), include: [.event])
-      ).ok.body.json
-      let events = Dictionary((response.included ?? []).map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-      let entries = response.data.map { d in
+      guard limit >= 1 else { throw ValidationError("--limit must be 1 or more.") }
+      // Every page (50 at a time: each delivery includes its event), then newest first: Apple's
+      // order isn't by date, and the endpoint takes no sort.
+      let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.webhooksDeliveriesGetToManyRelated(
+          path: .init(id: hook.id), query: .init(filterDeliveryState: states, limit: 50, include: [.event])
+        ).ok.body.json
+      }
+      let events = Dictionary(pages.flatMap { $0.included ?? [] }.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+      let entries = pages.flatMap(\.data).map { d in
         let a = d.attributes
         let event = d.relationships?.event?.data.flatMap { events[$0.id] }
         return DeliveryEntry(
@@ -278,7 +285,7 @@ struct WebhooksCommand: AsyncParsableCommand {
           httpStatusCode: a?.response?.httpStatusCode, eventType: event?.attributes?.eventType, ping: event?.attributes?.ping,
           redelivery: a?.redelivery, errorMessage: a?.errorMessage
         )
-      }.sorted { ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast) }
+      }.sorted { ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast) }.prefix(limit).map(\.self)
       if jsonOption.json { try printJSON(entries); return }
       let rows: [[String]] = entries.map { e in
         let state = e.state.map { $0 == "FAILED" ? red(formatState($0)) : formatState($0) } ?? "-"

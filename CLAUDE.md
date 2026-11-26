@@ -119,11 +119,11 @@ ascelerate configure                                              # Interactive 
 ascelerate configure --stdin                                      # Non-interactive: {"keyId","issuerId","privateKey"} JSON on stdin; keeps vendorNumber + ads
 ascelerate configure --show                                       # Print the key ID and issuer ID in use (and whether they come from the environment)
 ascelerate apps list [--json]                                     # List all apps
-ascelerate apps info <bundle-id> [--json]                         # App details
+ascelerate apps info <bundle-id> [--json]                         # App details; latest version per platform (not yet live, else live; JSON latestVersions)
 ascelerate apps versions <bundle-id> [--json]                     # List App Store versions
 ascelerate apps localizations view <bundle-id> [--version X] [--platform X]      # View localizations
-ascelerate apps localizations update <bundle-id> [--locale X] [--platform X]     # Update single locale via flags
-ascelerate apps localizations import <bundle-id> [--file X] [--platform X]       # Bulk update from JSON file
+ascelerate apps localizations update <bundle-id> [--locale X] [--version X] [--platform X]     # Update single locale via flags (URLs that don't parse refused)
+ascelerate apps localizations import <bundle-id> [--file X] [--version X] [--platform X]       # Bulk update from JSON file
 ascelerate apps localizations export <bundle-id> [--version X] [--platform X]    # Export to JSON file
 ascelerate apps review preflight <bundle-id> [--version X] [--platform X] [--json]  # Pre-submission checks (includes IAP/sub state and pricing)
 ascelerate apps review status <bundle-id> [--version X] [--json]    # Review submission status
@@ -140,7 +140,7 @@ ascelerate apps app-info age-rating import <bundle-id> [--file X]          # Upd
 ascelerate apps routing-coverage <bundle-id> [--file X]           # View/upload routing coverage
 ascelerate apps review submit <bundle-id> [--version X] [--platform X] [-y]  # Submit version for App Review: state checked and the draft's other items listed before any write; under -y no build is picked; offers IAPs/subs (ReviewProducts) and Game Center items with pending versions
 ascelerate apps review resolve-issues <bundle-id> [--platform X]  # Mark rejected items as resolved
-ascelerate apps review cancel-submission <bundle-id> [--platform X]  # Cancel an active review submission
+ascelerate apps review cancel-submission <bundle-id> [--platform X]  # Cancel a submission waiting for/in review or with unresolved issues (drafts aren't offered)
 ascelerate apps review info <bundle-id> [--version X] [--platform X] [--contact-first-name X] [--contact-last-name X] [--contact-phone X] [--contact-email X] [--demo-account-name X] [--demo-account-password X] [--demo-account-required true|false] [--notes X] [-y]  # View/update App Review Information
 ascelerate apps review attachment list <bundle-id> [--version X] [--platform X]              # List App Review attachment files
 ascelerate apps review attachment upload <bundle-id> [--version X] [--platform X] <file> [-y]  # Upload an App Review attachment
@@ -720,6 +720,8 @@ Sources/ascelerate/
 ```
 
 ### Config (`ascelerate/screenshot.yml`)
+
+`ScreenshotConfig.load` refuses unknown keys (`checkKeys`, nearest known key suggested), duplicate device names and `framedOutputDirectory` equal to `outputDirectory`, and expands `~` in paths. A device may pin `runtime:` (a version) or `udid:`; otherwise `SimulatorManager.findDevice` takes the newest runtime's device of that name, and doctor warns when several runtimes have it. `darkMode` is always applied (`true` dark, else light). `stopAfterFirstError` also stops on a failed preparation. The DerivedData folder is the one whose `info.plist` `WorkspacePath` is the project's, and the xctestrun the scheme's.
 
 Config is decoded directly as `ScreenshotConfig` (no wrapper key). Created by `ascelerate screenshot init` in the `ascelerate/` directory.
 

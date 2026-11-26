@@ -21,10 +21,17 @@ struct ProductPagesCommand: AsyncParsableCommand {
     }
   }
 
-  /// The page's current version (prefers prepareForSubmission, skips replaced).
-  static func activeVersionID(pageID: String, client: ASCClient) async throws -> String {
+  /// The page's current version (prefers prepareForSubmission, skips replaced). For a change
+  /// (`editing`), only a version being prepared or rejected (Kerem, 2026-11-26).
+  static func activeVersionID(pageID: String, editing: Bool = false, client: ASCClient) async throws -> String {
     do {
-      return try await CustomProductPages.currentVersion(pageID: pageID, client: client).id
+      guard editing else { return try await CustomProductPages.currentVersion(pageID: pageID, client: client).id }
+      let versions = try await CustomProductPages.versions(pageID: pageID, client: client)
+      guard let version = CustomProductPages.editable(versions) else {
+        let state = CustomProductPages.current(versions)?.state.map(formatState) ?? "none"
+        throw ValidationError("The page has no version that can be edited (current: \(state)); create a new version first, as App Store Connect does.")
+      }
+      return version.id
     } catch let error as CustomProductPages.LookupError {
       throw ValidationError(error.localizedDescription)
     }
@@ -34,7 +41,8 @@ struct ProductPagesCommand: AsyncParsableCommand {
   static func localizationID(
     forLocale locale: String, pageID: String, client: ASCClient
   ) async throws -> String {
-    let versionID = try await activeVersionID(pageID: pageID, client: client)
+    // Used to change media: the editable version's.
+    let versionID = try await activeVersionID(pageID: pageID, editing: true, client: client)
     guard let localization = try await CustomProductPages.localization(locale: locale, versionID: versionID, client: client)
     else {
       throw ValidationError(
@@ -371,7 +379,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
         let versionID = try await ProductPagesCommand.activeVersionID(
-          pageID: productPage.id, client: client)
+          pageID: productPage.id, editing: true, client: client)
 
         let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
         let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
@@ -548,7 +556,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let productPage = try await ProductPagesCommand.findProductPage(
           ref: page, appID: app.id, client: client)
         let versionID = try await ProductPagesCommand.activeVersionID(
-          pageID: productPage.id, client: client)
+          pageID: productPage.id, editing: true, client: client)
 
         let localizations = try await CustomProductPages.localizations(versionID: versionID, client: client)
         try await LocalizationMedia.delete(

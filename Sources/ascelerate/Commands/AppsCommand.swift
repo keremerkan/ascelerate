@@ -76,7 +76,24 @@ struct AppsCommand: AsyncParsableCommand {
       let bundleID: String?
       let sku: String?
       let primaryLocale: String?
-      let latestVersion: Version?
+      /// Per platform: the version not yet live (being prepared, in or back from review, or
+      /// pending release), else the live one (Kerem, 2026-11-26).
+      let latestVersions: [Version]
+      /// The first of `latestVersions`, kept for programs reading the earlier single field.
+      var latestVersion: Version? { latestVersions.first }
+
+      private enum CodingKeys: String, CodingKey { case id, name, bundleID, sku, primaryLocale, latestVersion, latestVersions }
+
+      func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encodeIfPresent(name, forKey: .name)
+        try c.encodeIfPresent(bundleID, forKey: .bundleID)
+        try c.encodeIfPresent(sku, forKey: .sku)
+        try c.encodeIfPresent(primaryLocale, forKey: .primaryLocale)
+        try c.encodeIfPresent(latestVersion, forKey: .latestVersion)
+        try c.encode(latestVersions, forKey: .latestVersions)
+      }
     }
 
     func run() async throws {
@@ -84,10 +101,19 @@ struct AppsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let versions = try await client.appsAppStoreVersionsGetToManyRelated(
-        path: .init(id: app.id),
-        query: .init(filterAppVersionState: [.prepareForSubmission, .waitingForReview, .inReview, .pendingDeveloperRelease, .readyForDistribution])
-      ).ok.body.json
+      let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsAppStoreVersionsGetToManyRelated(path: .init(id: app.id), query: .init(limit: 200)).ok.body.json
+      }.flatMap(\.data).sorted { ($0.attributes?.createdDate ?? .distantPast) > ($1.attributes?.createdDate ?? .distantPast) }
+      let notLive: Swift.Set<String> = AscelerateCore.Preflight.submittableStates.union([
+        "WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "PENDING_APPLE_RELEASE", "ACCEPTED",
+        "PROCESSING_FOR_DISTRIBUTION", "WAITING_FOR_EXPORT_COMPLIANCE",
+      ])
+      let platforms = Array(Swift.Set(versions.compactMap { $0.attributes?.platform })).sorted()
+      let latest = platforms.compactMap { platform -> Components.Schemas.AppStoreVersion? in
+        let own = versions.filter { $0.attributes?.platform == platform }
+        return own.first { notLive.contains($0.attributes?.appVersionState ?? "") }
+          ?? own.first { $0.attributes?.appVersionState == "READY_FOR_DISTRIBUTION" }
+      }
       let attrs = app.attributes
       let detail = Detail(
         id: app.id,
@@ -95,7 +121,7 @@ struct AppsCommand: AsyncParsableCommand {
         bundleID: attrs?.bundleId,
         sku: attrs?.sku,
         primaryLocale: attrs?.primaryLocale,
-        latestVersion: versions.data.first.map { latest in
+        latestVersions: latest.map { latest in
           let v = latest.attributes
           return Detail.Version(
             version: v?.versionString,
@@ -117,10 +143,9 @@ struct AppsCommand: AsyncParsableCommand {
       print("SKU:             \(detail.sku ?? "—")")
       print("Primary Locale:  \(detail.primaryLocale.map { localeName($0) } ?? "—")")
 
-      if let v = detail.latestVersion {
+      for v in detail.latestVersions {
         print("")
-        print("Latest Version:  \(v.version ?? "—")")
-        print("Platform:        \(v.platform.map { formatState($0) } ?? "—")")
+        print("Latest Version:  \(v.version ?? "—") (\(v.platform.map { formatState($0) } ?? "—"))")
         print("State:           \(v.state.map { formatState($0) } ?? "—")")
         print("Release Type:    \(v.releaseType.map { formatState($0) } ?? "—")")
         print("Created:         \(v.createdDate.map { formatDate($0) } ?? "—")")
@@ -153,9 +178,12 @@ struct AppsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
 
-      let response = try await client.appsAppStoreVersionsGetToManyRelated(path: .init(id: app.id)).ok.body.json
+      // Every version (it used to be the first page only).
+      let versions = try await ASCPaging.allPages(next: { $0.links.next }) {
+        try await client.appsAppStoreVersionsGetToManyRelated(path: .init(id: app.id), query: .init(limit: 200)).ok.body.json
+      }.flatMap(\.data)
 
-      let entries = response.data.map { version -> Entry in
+      let entries = versions.map { version -> Entry in
         let attrs = version.attributes
         return Entry(
           id: version.id,
@@ -193,6 +221,15 @@ struct AppsCommand: AsyncParsableCommand {
       subcommands: [View.self, Update.self, Import.self, Export.self]
     )
     
+    /// A URL the core would drop (one that doesn't parse, or an empty one) is refused, rather than
+    /// sending nothing and reporting "Updated".
+    static func checkURLs(_ fields: LocaleFields, locale: String?) throws {
+      for (name, value) in [("marketing URL", fields.marketingURL), ("support URL", fields.supportURL)] {
+        guard let value, validURL(value) == nil else { continue }
+        throw ValidationError("The \(name)\(locale.map { " for \($0)" } ?? "") '\(value)' isn't a URL; nothing was sent.")
+      }
+    }
+
     static func checkEditable(_ version: Components.Schemas.AppStoreVersion, promotionalTextOnly: Bool) throws {
       guard let state = version.attributes?.appVersionState, !VersionLocalizations.editableStates.contains(state) else {
         return // editable — all fields allowed
@@ -295,8 +332,12 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Option(name: .long, help: "Support URL.")
       var supportURL: String?
+
+      @Option(name: .long, help: "Version string (default: the version being prepared). Promotional text can change on a live version too.")
+      var version: String?
       
       func run() async throws {
+        try Localizations.checkURLs(LocaleFields(marketingURL: marketingURL, supportURL: supportURL), locale: nil)
         guard description != nil || whatsNew != nil || keywords != nil
                 || promotionalText != nil || marketingURL != nil || supportURL != nil else {
           throw ValidationError("Provide at least one field to update (--description, --whats-new, --keywords, --promotional-text, --marketing-url, --support-url).")
@@ -304,7 +345,7 @@ struct AppsCommand: AsyncParsableCommand {
         
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
+        let version = try await findVersion(appID: app.id, versionString: self.version, platform: try platformOption.parsed(), client: client)
         
         let onlyPromoText = promotionalText != nil && description == nil && whatsNew == nil
         && keywords == nil && marketingURL == nil && supportURL == nil
@@ -362,6 +403,9 @@ struct AppsCommand: AsyncParsableCommand {
       
       @Flag(name: .long, help: "Show full API response for each locale update.")
       var verbose = false
+
+      @Option(name: .long, help: "Version string (default: the version being prepared). Promotional text can change on a live version too.")
+      var version: String?
       
       @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
       var yes = false
@@ -382,11 +426,12 @@ struct AppsCommand: AsyncParsableCommand {
         if localeUpdates.isEmpty {
           throw ValidationError("JSON file contains no locale entries.")
         }
+        for (locale, fields) in localeUpdates { try Localizations.checkURLs(fields, locale: locale) }
         
         // Show summary and confirm
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let version = try await findVersion(appID: app.id, versionString: nil, platform: try platformOption.parsed(), client: client)
+        let version = try await findVersion(appID: app.id, versionString: self.version, platform: try platformOption.parsed(), client: client)
         
         let effectiveUpdates = try resolveEffectiveUpdates(
           version: version, localeUpdates: localeUpdates)
@@ -1986,11 +2031,12 @@ struct AppsCommand: AsyncParsableCommand {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
 
-        // Find active submissions
+        // Only what can be cancelled (Kerem, 2026-11-26): a draft (Ready for Review) can't be
+        // through the API, so it isn't offered.
         let response = try await client.appsReviewSubmissionsGetToManyRelated(
           path: .init(id: app.id),
           query: .init(
-            filterState: [.readyForReview, .waitingForReview, .inReview, .unresolvedIssues],
+            filterState: [.waitingForReview, .inReview, .unresolvedIssues],
             fieldsAppStoreVersions: [.versionString],
             include: [.appStoreVersionForReview])
         ).ok.body.json
@@ -1998,7 +2044,14 @@ struct AppsCommand: AsyncParsableCommand {
         guard let (submission, versionString) = try selectSubmission(
           from: response, platform: platformOption.parsed())
         else {
-          print("No active review submissions found.")
+          let platform = try platformOption.parsed()?.rawValue
+          let drafts = try await client.appsReviewSubmissionsGetToManyRelated(
+            path: .init(id: app.id), query: .init(filterState: [.readyForReview])
+          ).ok.body.json.data.filter { platform == nil || $0.attributes?.platform == platform }
+          print("No review submission that can be cancelled (waiting for review, in review or with unresolved issues).")
+          if !drafts.isEmpty {
+            print("\(drafts.count == 1 ? "A draft submission is" : "\(drafts.count) draft submissions are") open; the API can't cancel a draft (App Store Connect can empty one).")
+          }
           return
         }
 
@@ -2846,6 +2899,19 @@ struct AppsCommand: AsyncParsableCommand {
           } catch let error as DecodingError {
             throw ValidationError("Invalid JSON: \(describeDecodingError(error))")
           }
+          // A key the file format doesn't have is refused (Kerem, 2026-11-26): it used to be
+          // dropped, so a file with Apple's attribute names lost those answers.
+          let known = Swift.Set(Mirror(reflecting: AgeRatingFields()).children.compactMap(\.label))
+          if let given = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            let unknown = given.keys.filter { !known.contains($0) }.sorted()
+            if !unknown.isEmpty {
+              let named = unknown.map { key -> String in
+                let ours = key == "ageRatingOverrideV2" ? "ageRatingOverride" : "is" + key.prefix(1).uppercased() + key.dropFirst()
+                return known.contains(ours) ? "'\(key)' (this file's name for it is '\(ours)')" : "'\(key)'"
+              }
+              throw ValidationError("Unknown key\(unknown.count == 1 ? "" : "s"): \(named.joined(separator: ", ")). Nothing was sent; 'age-rating export' writes the format.")
+            }
+          }
 
           print("App: \(appName)")
           print()
@@ -2879,6 +2945,9 @@ struct AppsCommand: AsyncParsableCommand {
           if let v = fields.isDatingAndRelationships { print("  Dating and Relationships: \(v)"); changeCount += 1 }
           if let v = fields.kidsAgeBand { print("  Kids Age Band: \(v)"); changeCount += 1 }
           if let v = fields.ageRatingOverride { print("  Age Rating Override: \(v)"); changeCount += 1 }
+          if let v = fields.koreaAgeRatingOverride { print("  Korea Age Rating Override: \(v)"); changeCount += 1 }
+          if let v = fields.developerAgeRatingInfoUrl { print("  Developer Age Rating Info URL: \(v)"); changeCount += 1 }
+          if let v = fields.gracRatingClassificationNumber { print("  GRAC Rating Classification Number: \(v)"); changeCount += 1 }
 
           if changeCount == 0 {
             throw ValidationError("JSON file contains no age rating fields.")
@@ -2899,12 +2968,16 @@ struct AppsCommand: AsyncParsableCommand {
               E.AgeRatingDeclarationUpdateRequestAlcoholTobaccoOrDrugUseOrReferences.self),
             contests: try value(fields.contests, "contests", E.AgeRatingDeclarationUpdateRequestContests.self),
             datingAndRelationships: fields.isDatingAndRelationships,
+            developerAgeRatingInfoUrl: fields.developerAgeRatingInfoUrl,
             gambling: fields.isGambling,
             gamblingSimulated: try value(fields.gamblingSimulated, "gamblingSimulated", E.AgeRatingDeclarationUpdateRequestGamblingSimulated.self),
+            gracRatingClassificationNumber: fields.gracRatingClassificationNumber,
             gunsOrOtherWeapons: try value(fields.gunsOrOtherWeapons, "gunsOrOtherWeapons", E.AgeRatingDeclarationUpdateRequestGunsOrOtherWeapons.self),
             healthOrWellnessTopics: fields.isHealthOrWellnessTopics,
             horrorOrFearThemes: try value(fields.horrorOrFearThemes, "horrorOrFearThemes", E.AgeRatingDeclarationUpdateRequestHorrorOrFearThemes.self),
             kidsAgeBand: try value(fields.kidsAgeBand, "kidsAgeBand", E.KidsAgeBand.self),
+            koreaAgeRatingOverride: try value(
+              fields.koreaAgeRatingOverride, "koreaAgeRatingOverride", E.AgeRatingDeclarationUpdateRequestKoreaAgeRatingOverride.self),
             lootBox: fields.isLootBox,
             matureOrSuggestiveThemes: try value(
               fields.matureOrSuggestiveThemes, "matureOrSuggestiveThemes", E.AgeRatingDeclarationUpdateRequestMatureOrSuggestiveThemes.self),

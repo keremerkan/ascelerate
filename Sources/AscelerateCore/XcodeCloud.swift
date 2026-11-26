@@ -29,7 +29,8 @@ public enum XcodeCloud {
   /// take a request per product (`include=primaryRepositories` answers HTTP 500).
   public static func products(includingRepositories: Bool = true, client: ASCClient) async throws -> [Product] {
     let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
-      try await client.ciProductsGetCollection(query: .init(limit: 200, include: [.app])).ok.body.json
+      // 50 a page: the included apps stop at 50 per response (one per product).
+      try await client.ciProductsGetCollection(query: .init(limit: 50, include: [.app])).ok.body.json
     }
     var bundleIDs: [String: String] = [:]
     for case .apps(let app) in pages.flatMap({ $0.included ?? [] }) { bundleIDs[app.id] = app.attributes?.bundleId }
@@ -650,7 +651,9 @@ public enum XcodeCloud {
     var runs: [Run] = []
     var link: String?
     repeat {
-      let page = try await runsPage(productID: productID, workflowID: workflowID, link: link, pageSize: min(limit, 200), client: client)
+      // 50 a page: each run includes its workflow, branch or tag and pull request, and the
+      // included resources stop at 50 per response.
+      let page = try await runsPage(productID: productID, workflowID: workflowID, link: link, pageSize: min(limit, 50), client: client)
       runs += page.runs
       link = page.next
     } while link != nil && runs.count < limit

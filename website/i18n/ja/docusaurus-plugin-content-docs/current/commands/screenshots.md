@@ -250,7 +250,7 @@ screenshots/framed/
 | `localizeSimulator` | 言語ごとにシミュレーターの言語/ロケールを設定 |
 | `overrideStatusBar` | ステータスバーをオーバーライド（9:41、フルバー、Wi-Fi） |
 | `statusBarArguments` | `xcrun simctl status_bar` のカスタム引数 |
-| `darkMode` | シミュレーターでダークモードを有効化 |
+| `darkMode` | シミュレーターでダークモードを有効化 （`true`）。`false` または省略するとライトモードになり、毎回同じ外観で撮影されます |
 | `disableAnimations` | テスト中のアニメーションを無効化 |
 | `waitAfterBoot` | シミュレーター起動後の待機秒数（デフォルト: 0） |
 | `waitAfterEraseAndReboot` | シミュレーターが新鮮な状態のときの追加待機秒数 — 実行の最初の言語のとき、またはシミュレーターが消去されたとき（`eraseSimulator: true` または再試行による）。スクリーンショット撮影前に初回起動システム通知が表示される時間を確保します。（iOS 26 の「Apple Intelligence の準備ができました」バナーは自動的に抑止されるため、待機は不要です。） |
@@ -262,10 +262,14 @@ screenshots/framed/
 | `configuration` | ビルド構成（例: Debug、Release） |
 | `testplan` | Xcodeテストプラン名 |
 | `numberOfRetries` | 失敗した言語の再試行回数 — シミュレーターをリセットし、再ローカライズ、再起動してテストを再実行します。失敗したデバイスのみ再試行されます。再試行された結果はサマリーテーブルに表示されます。 |
-| `stopAfterFirstError` | 最初のエラー後にすべてのデバイスを停止 |
+| `stopAfterFirstError` | 最初のエラー後にすべてのデバイスを停止 （シミュレータの準備の失敗も含みます）。試行されなかった言語は未実行として表示されます |
 | `reinstallApp` | テスト前にアプリを削除して再インストール |
 | `disableAssetDownloads` | シミュレーターの `mobileassetd` を無効化し、消去直後のシミュレーターに数 GB の Siri・キーボード・ML アセットがダウンロードされるのを止めます。一部のアプリが必要とするオンデバイス ML アセット（テキスト認識など）もブロックされるため、スクリーンショットがそれらに依存する場合はオフのままにしてください。消去でリセットされるため、準備のたびに適用されます。 |
-| `xcargs` | `xcodebuild` に渡す追加の引数 |
+| `xcargs` | `xcodebuild` に渡す追加の引数 （引用符で囲んだ引数はまとめて扱われます） |
 | `frameDevice` | このデバイスのベゼルフレーミングを有効化（デバイスごと） |
 | `deviceBezel` | デバイスベゼルPNGファイルへのパス、またはパスのリスト。各スクリーンショットにはサイズに合うベゼルが使われます（デバイスごと） |
+| `runtime` | 同じ名前のデバイスが複数のランタイムにある場合にシミュレータを固定します。`26.5` などのバージョンを指定します（デバイスごと）。指定しない場合は最新のランタイムのデバイスを使い、`doctor` が警告します |
+| `udid` | UDIDでシミュレータを1台に固定します（デバイスごと） |
+
+不明なキーは、実行時にも `doctor` でも拒否され、最も近い既知のキーが提案されます（`numberOfRetrys`：`numberOfRetries` のことですか？）。同じデバイスを2回指定した場合や、`framedOutputDirectory` が `outputDirectory` と同じ場合も拒否されます。パスは `~` で始めることができます。
 | `framedOutputDirectory` | フレーミングされたスクリーンショットの出力ディレクトリ（デフォルト：`{outputDirectory}/framed`） |

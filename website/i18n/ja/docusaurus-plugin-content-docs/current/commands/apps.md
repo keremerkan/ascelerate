@@ -84,6 +84,8 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+キャンセルできるのは、審査待ち、審査中、または未解決の問題がある提出だけです。下書きはAPIでキャンセルできないため、選択肢に表示されません。
+
 ### App審査に関する情報
 
 App審査に提供する連絡先情報、デモアカウント、メモを表示または更新します。フラグを指定しない場合は現在の値が表示されます。フィールドのフラグを指定するとその項目が更新されます（指定しないフィールドは変更されません）。

@@ -15,10 +15,25 @@ struct DiagnosticsCommand: AsyncParsableCommand {
     defaultSubcommand: Signatures.self
   )
 
-  /// The build asked for, else the one on the App Store.
+  /// The build asked for, else the one on the App Store. Without `--platform`, an app live on
+  /// several platforms asks which (refused under --yes/--json: Kerem, 2026-11-26).
   static func build(appID: String, number: String?, platform: Platform?, client: ASCClient) async throws -> Builds.Build {
     if number != nil {
       return try await TestFlightCommand.findBuild(appID: appID, buildVersion: number, platform: platform, client: client)
+    }
+    var platform = platform
+    if platform == nil {
+      let live = try await client.appsAppStoreVersionsGetToManyRelated(
+        path: .init(id: appID), query: .init(filterAppVersionState: [.readyForDistribution], limit: 50)
+      ).ok.body.json.data
+      let platforms = Array(Swift.Set(live.compactMap { $0.attributes?.platform })).sorted()
+      if platforms.count > 1 {
+        let chosen = try promptSelection(
+          "The app is live on \(platforms.count) platforms", items: platforms,
+          display: { raw in "\(formatState(raw)) \(live.first { $0.attributes?.platform == raw }?.attributes?.versionString ?? "")" },
+          prompt: "Select platform", nonInteractiveHint: "Pass --platform to disambiguate.")
+        platform = Platform(rawValue: chosen)
+      }
     }
     guard let live = try await Diagnostics.liveBuild(appID: appID, platform: platform?.rawValue, client: client) else {
       throw ValidationError("No version of the app is on the App Store\(platform.map { " for \(formatState($0.rawValue))" } ?? ""); pass --build.")
@@ -66,7 +81,8 @@ struct DiagnosticsCommand: AsyncParsableCommand {
       let build = try await DiagnosticsCommand.build(appID: app.id, number: build, platform: try platformOption.parsed(), client: client)
       let types = try DiagnosticsCommand.types(type, among: Diagnostics.signatureTypes, name: "type")
       let signatures = try await Diagnostics.signatures(buildID: build.id, types: types, client: client)
-      if jsonOption.json { try printJSON(signatures); return }
+      // Each entry names the build it's from (the list stays a bare array).
+      if jsonOption.json { try printJSON(signatures.map { WithBuild(item: $0, build: build.number, platform: build.platform) }); return }
       print(bold("Build \(build.label)"))
       guard !signatures.isEmpty else {
         print("No diagnostics for this build yet. They come from users' devices that share analytics, a day or more after release.")
@@ -168,8 +184,9 @@ struct DiagnosticsCommand: AsyncParsableCommand {
       abstract: "Performance and power metrics across the app's recent versions (or one build).",
       discussion: """
         Each metric's value per version, for all devices at the typical (50th) and worst-case \
-        (90th) percentiles; --device narrows to a device kind, --all shows every device and \
-        percentile. Apple's regressions and trends come first.
+        (90th) percentiles; --all shows every device and percentile. Apple's regressions and \
+        trends come first. --platform ios narrows the app's metrics; another platform reads its \
+        live build's (Apple's filter takes only iOS).
         """
     )
 
@@ -194,11 +211,15 @@ struct DiagnosticsCommand: AsyncParsableCommand {
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: app, client: client)
       let types = try DiagnosticsCommand.types(type, among: AscelerateCore.Diagnostics.metricTypes, name: "metric type")
+      let platform = try platformOption.parsed()
       var buildID: String?
-      if build != nil {
-        buildID = try await DiagnosticsCommand.build(appID: app.id, number: build, platform: try platformOption.parsed(), client: client).id
+      if build != nil || (platform != nil && platform != .ios) {
+        let found = try await DiagnosticsCommand.build(appID: app.id, number: build, platform: platform, client: client)
+        if build == nil && !jsonOption.json { print("\(formatState(platform?.rawValue ?? "")): the live build's metrics (\(found.label)).") }
+        buildID = found.id
       }
-      let metrics = try await AscelerateCore.Diagnostics.metrics(appID: app.id, buildID: buildID, types: types, client: client)
+      let metrics = try await AscelerateCore.Diagnostics.metrics(
+        appID: app.id, buildID: buildID, types: types, platform: platform?.rawValue, client: client)
       if jsonOption.json { try printJSON(metrics); return }
       let insights = (metrics.insights?.regressions ?? []).map { ("Regression", $0) } + (metrics.insights?.trendingUp ?? []).map { ("Trending up", $0) }
       for (kind, insight) in insights {
@@ -230,5 +251,21 @@ struct DiagnosticsCommand: AsyncParsableCommand {
       }
       if !any { print("No metrics yet. They come from users' devices that share analytics, and need enough of them.") }
     }
+  }
+}
+
+/// An entry with the build it comes from (`build`, `platform`) added to its own fields.
+private struct WithBuild<Item: Encodable>: Encodable {
+  let item: Item
+  let build: String?
+  let platform: String?
+
+  private enum Keys: String, CodingKey { case build, platform }
+
+  func encode(to encoder: any Encoder) throws {
+    try item.encode(to: encoder)
+    var container = encoder.container(keyedBy: Keys.self)
+    try container.encodeIfPresent(build, forKey: .build)
+    try container.encodeIfPresent(platform, forKey: .platform)
   }
 }

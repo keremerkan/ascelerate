@@ -83,6 +83,8 @@ Le fichier JSON utilise les mêmes noms de champs que l'API. Seuls les champs pr
 }
 ```
 
+Une clé que le format ne connaît pas est refusée (pour un nom d'attribut d'Apple, comme `advertising` au lieu de `isAdvertising`, le message donne le bon). L'export inclut aussi `koreaAgeRatingOverride`, `developerAgeRatingInfoUrl` et `gracRatingClassificationNumber`.
+
 Les champs d'intensité acceptent : `NONE`, `INFREQUENT_OR_MILD`, `FREQUENT_OR_INTENSE`. Les champs booléens acceptent `true`/`false`.
 
 ## Couverture de routage

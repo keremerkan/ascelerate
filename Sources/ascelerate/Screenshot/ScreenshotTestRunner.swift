@@ -1,3 +1,4 @@
+import AscelerateCore
 import Foundation
 
 struct ScreenshotTestRunner: Sendable {
@@ -28,7 +29,7 @@ struct ScreenshotTestRunner: Sendable {
             }
 
             if let xcargs = config.xcargs {
-                args += xcargs.split(separator: " ").map(String.init)
+                args += try splitArguments(xcargs)
             }
 
             if config.cleanBuild == true {
@@ -73,8 +74,7 @@ struct ScreenshotTestRunner: Sendable {
     private func prepareXctestrun(_ path: String) throws -> String {
         let url = URL(fileURLWithPath: path)
         let testRoot = url.deletingLastPathComponent().path
-        guard var plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil) as? [String: Any],
-              var configurations = plist["TestConfigurations"] as? [[String: Any]] else {
+        guard var plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil) as? [String: Any] else {
             return path
         }
 
@@ -82,37 +82,53 @@ struct ScreenshotTestRunner: Sendable {
             FileManager.default.fileExists(atPath: product.replacingOccurrences(of: "__TESTROOT__", with: testRoot))
         }
 
-        var changed = false
-        for c in configurations.indices {
-            guard var targets = configurations[c]["TestTargets"] as? [[String: Any]] else { continue }
-            for t in targets.indices {
-                if targets[t]["UITargetAppPath"] != nil {
-                    var environment = targets[t]["UITargetAppEnvironmentVariables"] as? [String: String] ?? [:]
-                    if environment["OS_ACTIVITY_MODE"] == nil {
-                        environment["OS_ACTIVITY_MODE"] = "disable"
-                        targets[t]["UITargetAppEnvironmentVariables"] = environment
-                        changed = true
-                    }
+        /// One test target: the app's logging off, and a target app path that wasn't built repaired.
+        func fix(_ target: inout [String: Any]) throws -> Bool {
+            var changed = false
+            if target["UITargetAppPath"] != nil {
+                var environment = target["UITargetAppEnvironmentVariables"] as? [String: String] ?? [:]
+                if environment["OS_ACTIVITY_MODE"] == nil {
+                    environment["OS_ACTIVITY_MODE"] = "disable"
+                    target["UITargetAppEnvironmentVariables"] = environment
+                    changed = true
                 }
-                guard let appPath = targets[t]["UITargetAppPath"] as? String, !exists(appPath) else { continue }
-                let host = targets[t]["TestHostPath"] as? String
-                let candidates = (targets[t]["DependentProductPaths"] as? [String] ?? [])
-                    .filter { $0.hasSuffix(".app") && $0 != host && exists($0) }
-                guard candidates.count == 1 else {
-                    throw ScreenshotError.uiTargetAppNotFound(appPath.replacingOccurrences(of: "__TESTROOT__", with: testRoot))
-                }
-                let wrong = URL(fileURLWithPath: appPath).lastPathComponent
-                let right = URL(fileURLWithPath: candidates[0]).lastPathComponent
-                EventOutput.log("  " + yellow("Warning:") + " xctestrun points to a target app that was not built ('\(wrong)'); using '\(right)' from the scheme's build products instead.")
-                EventOutput.log("  Xcode 27 resolves TEST_TARGET_NAME across the whole workspace: a same-named target in another project probably has a different PRODUCT_NAME.")
-                targets[t]["UITargetAppPath"] = candidates[0]
-                changed = true
             }
-            configurations[c]["TestTargets"] = targets
+            guard let appPath = target["UITargetAppPath"] as? String, !exists(appPath) else { return changed }
+            let host = target["TestHostPath"] as? String
+            let candidates = (target["DependentProductPaths"] as? [String] ?? [])
+                .filter { $0.hasSuffix(".app") && $0 != host && exists($0) }
+            guard candidates.count == 1 else {
+                throw ScreenshotError.uiTargetAppNotFound(appPath.replacingOccurrences(of: "__TESTROOT__", with: testRoot))
+            }
+            let wrong = URL(fileURLWithPath: appPath).lastPathComponent
+            let right = URL(fileURLWithPath: candidates[0]).lastPathComponent
+            EventOutput.log("  " + yellow("Warning:") + " xctestrun points to a target app that was not built ('\(wrong)'); using '\(right)' from the scheme's build products instead.")
+            EventOutput.log("  Xcode 27 resolves TEST_TARGET_NAME across the whole workspace: a same-named target in another project probably has a different PRODUCT_NAME.")
+            target["UITargetAppPath"] = candidates[0]
+            return true
+        }
+
+        var changed = false
+        if var configurations = plist["TestConfigurations"] as? [[String: Any]] {
+            // Format 2: test plans' configurations, each with its targets.
+            for c in configurations.indices {
+                guard var targets = configurations[c]["TestTargets"] as? [[String: Any]] else { continue }
+                for t in targets.indices where try fix(&targets[t]) { changed = true }
+                configurations[c]["TestTargets"] = targets
+            }
+            plist["TestConfigurations"] = configurations
+        } else {
+            // Format 1: each target is a top-level entry (beside the metadata).
+            for key in plist.keys where key != "__xctestrun_metadata__" {
+                guard var target = plist[key] as? [String: Any], target["TestBundlePath"] != nil else { continue }
+                if try fix(&target) {
+                    plist[key] = target
+                    changed = true
+                }
+            }
         }
         guard changed else { return path }
 
-        plist["TestConfigurations"] = configurations
         let absolute = replacingTestRoot(plist, with: testRoot)
         let data = try PropertyListSerialization.data(fromPropertyList: absolute, format: .xml, options: 0)
         let dir = ScreenshotCollector.cacheRoot.appendingPathComponent("xctestrun")
@@ -146,7 +162,7 @@ struct ScreenshotTestRunner: Sendable {
         }
 
         if let xcargs = config.xcargs {
-            args += xcargs.split(separator: " ").map(String.init)
+            args += try splitArguments(xcargs)
         }
 
         args += ["test-without-building"]
@@ -182,10 +198,9 @@ struct ScreenshotTestRunner: Sendable {
 
     /// Whether the log's final test summary reports every test passed.
     private static func testsPassed(logFile: URL) -> Bool {
-        let tail = ScreenshotShell.tail(logFile, lines: 400)
-        guard let summary = tail.range(of: "Test Suite 'All tests' ", options: .backwards) else { return false }
-        return tail[summary.upperBound...].hasPrefix("passed")
-            && !tail.contains("** TEST EXECUTE FAILED **")
+        // The whole log: with several bundles, the first one's verdict is far from the end.
+        guard let log = try? String(contentsOf: logFile, encoding: .utf8) else { return false }
+        return XcodebuildLog.testsPassed(log)
     }
 
     private func findXctestrunFile(derivedDataPath: String) throws -> String {
@@ -225,9 +240,10 @@ struct ScreenshotTestRunner: Sendable {
             includingPropertiesForKeys: [.contentModificationDateKey]
         ) else { return nil }
 
-        return contents
-            .filter { $0.pathExtension == "xctestrun" }
-            .max { modificationDate($0) < modificationDate($1) }
+        // The scheme's own (Xcode names it `<scheme>_…`) before any other's, newest first.
+        let all = contents.filter { $0.pathExtension == "xctestrun" }
+        let scheme = all.filter { $0.lastPathComponent.hasPrefix("\(config.scheme)_") }
+        return (scheme.isEmpty ? all : scheme).max { modificationDate($0) < modificationDate($1) }
     }
 
     private func modificationDate(_ url: URL) -> Date {
@@ -261,8 +277,21 @@ struct ScreenshotTestRunner: Sendable {
         // Multiple ProjectName-<hash> dirs exist after the project path moves or is
         // renamed — pick the most recently modified one, not directory order.
         let matches = contents.filter { $0.lastPathComponent.hasPrefix("\(projectName)-") }
+        // The folder Xcode keeps for this project's path (its info.plist names it), so a second
+        // checkout or `MyApp-Lite` beside `MyApp` isn't taken; without one, the newest as before.
+        let projectPath = URL(fileURLWithPath: expandPath(config.workspace ?? config.project ?? "")).standardizedFileURL
+            .resolvingSymlinksInPath().path
+        let ours = matches.filter { folder in
+            guard let info = NSDictionary(contentsOf: folder.appendingPathComponent("info.plist")),
+                let path = info["WorkspacePath"] as? String
+            else { return false }
+            return URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath().path == projectPath
+        }
+        if ours.isEmpty && !matches.isEmpty {
+            EventOutput.log("  No derived data names \(projectPath); using the newest \(projectName)-… folder.")
+        }
 
-        guard let match = matches.max(by: { modificationDate($0) < modificationDate($1) }) else {
+        guard let match = (ours.isEmpty ? matches : ours).max(by: { modificationDate($0) < modificationDate($1) }) else {
             throw ScreenshotError.derivedDataNotFound(projectName)
         }
 

@@ -926,6 +926,7 @@ When the user asks to add a new language/locale to an app, translate **all** of 
 ## Tips
 
 - Add `--yes` / `-y` to skip confirmation prompts (for scripting/CI)
+- screenshot.yml: unknown keys are refused (with the nearest key suggested); pin a simulator with `runtime: "26.5"` or `udid:` when a name exists on several runtimes (doctor warns); `darkMode: false` (or left out) sets light mode.
 - Exit codes: commands exit 1 on partial failure too (any profile, certificate, territory, media file, screenshot device or planned price that failed; `media verify` with anything incomplete; `screenshot doctor` with a failed check), so check the exit status, not only the summary line. A workflow parses every step before running any.
 - Hitting App Store Connect's hourly API limit (3,600/key, rolling): ascelerate waits the `Retry-After` time with a notice on stderr and continues; set `ASCELERATE_MAX_RATE_LIMIT_WAIT=<seconds>` (total per run, `0` = fail at once, Apple Ads requests included) for CI. `rate-limit` shows the remaining quota and never waits
 - File uploads (media, `builds upload --api`) send one chunk at a time; on a fast connection with a long round trip, `ASCELERATE_PARALLEL_CHUNKS=<n>` sends n at once

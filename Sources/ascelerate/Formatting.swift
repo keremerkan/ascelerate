@@ -1417,3 +1417,8 @@ enum Table {
     }
   }
 }
+
+/// A `--limit` is 1 or more: 0 and negatives used to go to Apple (or crash a local cut).
+func checkLimit(_ limit: Int, option: String = "--limit") throws {
+  guard limit >= 1 else { throw ValidationError("\(option) must be 1 or more.") }
+}

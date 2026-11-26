@@ -250,7 +250,7 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 | `localizeSimulator` | Simulator-Sprache/-Locale pro Sprache setzen |
 | `overrideStatusBar` | Statusleiste überschreiben (9:41, volle Balken, WLAN) |
 | `statusBarArguments` | Benutzerdefinierte `xcrun simctl status_bar`-Argumente |
-| `darkMode` | Dunkelmodus auf Simulatoren aktivieren |
+| `darkMode` | Dunkelmodus auf Simulatoren aktivieren (`true`); `false` oder ohne Angabe stellt den hellen Modus ein, sodass jeder Lauf ein bekanntes Erscheinungsbild aufnimmt |
 | `disableAnimations` | Animationen während Tests deaktivieren |
 | `waitAfterBoot` | Sekunden nach dem Simulatorstart warten (Standard: 0) |
 | `waitAfterEraseAndReboot` | Zusätzliche Sekunden, wenn der Simulator in einem frischen Zustand ist — bei der ersten Sprache des Laufs oder wann immer der Simulator gelöscht wurde (über `eraseSimulator: true` oder einen Wiederholungsversuch). Gibt Erstausführungs-Systemwarnungen Zeit zu erscheinen, bevor Screenshots erstellt werden. (Das iOS-26-Banner „Bereit für Apple Intelligence“ wird automatisch unterdrückt und braucht keine Wartezeit.) |
@@ -262,10 +262,14 @@ Nur Geräte mit `frameDevice: true` werden gerahmt. Das Rahmen erfolgt automatis
 | `configuration` | Build-Konfiguration (z.B. Debug, Release) |
 | `testplan` | Name des Xcode-Testplans |
 | `numberOfRetries` | Anzahl der Wiederholungsversuche bei fehlgeschlagenen Sprachen — setzt den Simulator zurück, lokalisiert neu, startet neu und führt Tests erneut aus. Nur fehlgeschlagene Geräte werden wiederholt. Wiederholte Ergebnisse werden in der Übersichtstabelle markiert. |
-| `stopAfterFirstError` | Alle Geräte nach dem ersten Fehler stoppen |
+| `stopAfterFirstError` | Alle Geräte nach dem ersten Fehler stoppen (auch eine fehlgeschlagene Simulator-Vorbereitung zählt); nie versuchte Sprachen erscheinen als nicht ausgeführt |
 | `reinstallApp` | App vor den Tests löschen und neu installieren |
 | `disableAssetDownloads` | Deaktiviert `mobileassetd` im Simulator, damit er keine Gigabytes an Siri-, Tastatur- und ML-Assets in frisch gelöschte Simulatoren lädt. Blockiert auch On-Device-ML-Assets, die manche Apps brauchen (z. B. Texterkennung); lassen Sie es daher ausgeschaltet, wenn Ihre Screenshots davon abhängen. Wird bei jeder Vorbereitung erneut angewendet, da ein Löschen die Einstellung zurücksetzt. |
-| `xcargs` | Zusätzliche Argumente für `xcodebuild` |
+| `xcargs` | Zusätzliche Argumente für `xcodebuild` (Argumente in Anführungszeichen bleiben zusammen) |
 | `frameDevice` | Geräterahmen für dieses Gerät aktivieren (pro Gerät) |
 | `deviceBezel` | Pfad zur Geräterahmen-PNG-Datei oder eine Liste von Pfaden; jeder Screenshot verwendet den Rahmen, der zu seiner Größe passt (pro Gerät) |
+| `runtime` | Legt den Simulator fest, wenn ein Gerät dieses Namens auf mehreren Laufzeiten existiert: eine Version wie `26.5` (pro Gerät). Ohne die Angabe wird das Gerät der neuesten Laufzeit verwendet, und `doctor` warnt |
+| `udid` | Legt einen Simulator über seine UDID fest (pro Gerät) |
+
+Unbekannte Schlüssel werden vom Lauf und von `doctor` abgelehnt, mit dem nächstliegenden bekannten Schlüssel als Vorschlag (`numberOfRetrys`: Meinten Sie `numberOfRetries`?). Ein doppelt aufgeführtes Gerät oder ein `framedOutputDirectory`, das `outputDirectory` entspricht, wird ebenfalls abgelehnt. Pfade dürfen mit `~` beginnen.
 | `framedOutputDirectory` | Ausgabeverzeichnis für gerahmte Screenshots (Standard: `{outputDirectory}/framed`) |

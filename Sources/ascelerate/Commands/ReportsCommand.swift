@@ -255,14 +255,19 @@ extension ReportsCommand {
       // 5. Download, decompress, and save each segment.
       let safeName = appName.replacingOccurrences(of: "/", with: "-")
         .replacingOccurrences(of: " ", with: "-")
-      let outDir = expandPath(output ?? "./\(safeName)-analytics")
+      // Each download in a subfolder of its own (Kerem, 2026-11-26): a second report or category
+      // used to overwrite some of the first's segment files and leave others mixed in.
+      let downloadName = MediaDownload.safeFileName(
+        "\(displayName)-\(granularity)-\(instanceDate)".replacingOccurrences(of: " ", with: "-"), fallback: "report")
+      let outDir = (expandPath(output ?? "./\(safeName)-analytics") as NSString).appendingPathComponent(downloadName)
       try FileManager.default.createDirectory(
         atPath: outDir, withIntermediateDirectories: true)
 
       print("Downloading \"\(displayName)\" (\(granularity), processed \(instanceDate)) — \(segments.count) segment(s)…")
       var totalRows = 0
       var savedFiles: [String] = []
-      for (i, segment) in segments.enumerated() where segment.url != nil {
+      // A segment without an address fails (Analytics.NoSegmentURL) rather than being skipped.
+      for (i, segment) in segments.enumerated() {
         let text = String(decoding: try await AscelerateCore.Analytics.download(segment, number: i + 1), as: UTF8.self)
         totalRows += max(0, text.split(whereSeparator: \.isNewline).count - 1)
         let file = (outDir as NSString).appendingPathComponent("segment-\(i + 1).csv")

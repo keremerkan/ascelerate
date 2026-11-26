@@ -70,8 +70,13 @@ public enum CustomProductPages {
       for case .appCustomProductPageVersions(let version) in response.included ?? [] {
         versions[version.id] = self.version(version)
       }
-      pages += response.data.map { page in
-        self.page(page, versions: (page.relationships?.appCustomProductPageVersions?.data ?? []).compactMap { versions[$0.id] })
+      for page in response.data {
+        let ids = page.relationships?.appCustomProductPageVersions?.data ?? []
+        // The included versions stop at 50 per response: a page whose versions didn't all come
+        // reads its own.
+        let own = ids.allSatisfy { versions[$0.id] != nil }
+          ? ids.compactMap { versions[$0.id] } : try await self.versions(pageID: page.id, client: client)
+        pages.append(self.page(page, versions: own))
       }
     }
     return pages
@@ -140,11 +145,14 @@ public enum CustomProductPages {
           _type: "appCustomProductPageLocalizations"))
       }
     )
+    // The pages before the request: after a 5xx (Apple sometimes creates the page anyway), only
+    // a page that wasn't there before is taken as the new one, not an older one of the same name.
+    let before = Set(try await list(appID: appID, client: client).map(\.id))
     let response: Components.Schemas.AppCustomProductPageResponse
     do {
       response = try await client.appCustomProductPagesCreateInstance(body: .json(body)).created.body.json
     } catch where (ASCError.from(error)?.statusCode ?? 0) >= 500 {
-      guard let created = try await list(appID: appID, client: client).first(where: { $0.name == name }) else {
+      guard let created = try await list(appID: appID, client: client).first(where: { $0.name == name && !before.contains($0.id) }) else {
         throw error
       }
       return created
@@ -189,6 +197,12 @@ public enum CustomProductPages {
     versions.first { $0.state == "PREPARE_FOR_SUBMISSION" }
       ?? versions.first { $0.state != "REPLACED_WITH_NEW_VERSION" }
       ?? versions.first
+  }
+
+  /// The version whose text and media can change: being prepared, else rejected; nil when the page
+  /// has neither (one in review or live changes through a new version, as App Store Connect does).
+  public static func editable(_ versions: [Version]) -> Version? {
+    versions.first { $0.state == "PREPARE_FOR_SUBMISSION" } ?? versions.first { $0.state == "REJECTED" }
   }
 
   /// The current version of a page (see `current(_:)`).

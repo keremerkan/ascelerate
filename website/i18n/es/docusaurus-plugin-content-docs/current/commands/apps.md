@@ -84,6 +84,8 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+Solo se puede cancelar un envío que espera revisión, está en revisión o tiene problemas sin resolver; un borrador no se puede cancelar con la API, así que no se ofrece.
+
 ### Información para App Review
 
 Consulte o actualice el contacto, la cuenta de demostración y las notas que se facilitan a App Review. Sin opciones, muestra los valores actuales; indique la opción de cualquier campo para actualizarlo (los campos omitidos no se modifican).

@@ -69,6 +69,14 @@ public enum RetentionMessages {
         versions[version.id] = Version(id: version.id, state: version.attributes?.state ?? "")
       }
     }
+    // The included versions stop at 50 per response: a message whose versions didn't all come
+    // reads its own.
+    for message in pages.flatMap(\.data) where (message.relationships?.versions?.data ?? []).contains(where: { versions[$0.id] == nil }) {
+      let own = try await withTransientRetry {
+        try await client.retentionMessagesVersionsGetToManyRelated(path: .init(id: message.id), query: .init(limit: 50)).ok.body.json.data
+      }
+      for version in own { versions[version.id] = Version(id: version.id, state: version.attributes?.state ?? "") }
+    }
     return pages.flatMap(\.data).map { message in
       Message(
         id: message.id, name: message.attributes?.referenceName ?? "",

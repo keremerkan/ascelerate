@@ -84,6 +84,8 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+Only a submission waiting for review, in review or with unresolved issues can be cancelled; a draft can't be through the API, so it isn't offered.
+
 ### App Review Information
 
 View or update the contact, demo account, and notes provided to App Review. With no flags it prints the current values; pass any field flag to update it (omitted fields are left unchanged).

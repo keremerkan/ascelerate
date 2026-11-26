@@ -251,13 +251,22 @@ public enum Builds {
     return latest
   }
 
-  /// The app's pre-release versions (trains), newest first.
+  /// The app's pre-release versions (trains), newest first, up to `limit` (paged past 200).
   public static func preReleaseVersions(
     appID: String, platform: Platform? = nil, limit: Int = 200, client: ASCClient
   ) async throws -> [Components.Schemas.PrereleaseVersion] {
-    try await client.preReleaseVersionsGetCollection(query: .init(
-      filterPlatform: platformFilter(platform), filterApp: [appID], sort: [.minusVersion], limit: min(limit, 200)
-    )).ok.body.json.data
+    var versions: [Components.Schemas.PrereleaseVersion] = []
+    var link: String?
+    repeat {
+      let page = try await ASCPaging.page(link) {
+        try await client.preReleaseVersionsGetCollection(query: .init(
+          filterPlatform: platformFilter(platform), filterApp: [appID], sort: [.minusVersion], limit: min(limit, 200)
+        )).ok.body.json
+      }
+      versions += page.data
+      link = page.links.next
+    } while link != nil && versions.count < limit
+    return Array(versions.prefix(limit))
   }
 
   // MARK: What to Test

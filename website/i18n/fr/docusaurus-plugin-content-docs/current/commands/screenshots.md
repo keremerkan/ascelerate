@@ -250,7 +250,7 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 | `localizeSimulator` | Définir la langue/locale du simulateur par langue |
 | `overrideStatusBar` | Remplacer la barre d'état (9:41, barres pleines, Wi-Fi) |
 | `statusBarArguments` | Arguments personnalisés pour `xcrun simctl status_bar` |
-| `darkMode` | Activer le mode sombre sur les simulateurs |
+| `darkMode` | Activer le mode sombre sur les simulateurs (`true`) ; `false` ou absent règle le mode clair, pour que chaque exécution capture une apparence connue |
 | `disableAnimations` | Désactiver les animations pendant les tests |
 | `waitAfterBoot` | Secondes d'attente après le démarrage du simulateur (défaut : 0) |
 | `waitAfterEraseAndReboot` | Secondes d'attente supplémentaires lorsque le simulateur est dans un état neuf — première langue de l'exécution, ou chaque fois que le simulateur a été effacé (via `eraseSimulator: true` ou un nouvel essai). Donne aux alertes système de premier lancement le temps d'apparaître avant les captures d'écran. (La bannière iOS 26 « Prêt pour Apple Intelligence » est neutralisée automatiquement et ne nécessite aucune attente.) |
@@ -262,10 +262,14 @@ Seuls les appareils avec `frameDevice: true` sont encadrés. L'encadrement s'ex�
 | `configuration` | Configuration de build (ex. Debug, Release) |
 | `testplan` | Nom du plan de test Xcode |
 | `numberOfRetries` | Nombre de tentatives pour les langues échouées — réinitialise le simulateur, re-localise, redémarre et relance les tests. Seuls les appareils en échec sont relancés. Les résultats relancés sont marqués dans le tableau récapitulatif. |
-| `stopAfterFirstError` | Arrêter tous les appareils après le premier échec |
+| `stopAfterFirstError` | Arrêter tous les appareils après le premier échec (une préparation de simulateur ratée compte aussi) ; les langues jamais essayées apparaissent comme non exécutées |
 | `reinstallApp` | Supprimer et réinstaller l'application avant les tests |
 | `disableAssetDownloads` | Désactive `mobileassetd` dans le simulateur pour qu'il cesse de télécharger des gigaoctets d'assets Siri, clavier et ML dans les simulateurs fraîchement effacés. Bloque aussi les assets ML sur l'appareil dont certaines apps ont besoin (ex. reconnaissance de texte) ; laissez-le désactivé si vos captures en dépendent. Appliqué à chaque préparation, car un effacement le réinitialise. |
-| `xcargs` | Arguments supplémentaires passés à `xcodebuild` |
+| `xcargs` | Arguments supplémentaires passés à `xcodebuild` (les arguments entre guillemets restent groupés) |
 | `frameDevice` | Activer l'encadrement pour cet appareil (par appareil) |
 | `deviceBezel` | Chemin vers le fichier PNG de contour d'appareil, ou liste de chemins ; chaque capture utilise le contour adapté à sa taille (par appareil) |
+| `runtime` | Fixe le simulateur quand un appareil de ce nom existe sur plusieurs runtimes : une version comme `26.5` (par appareil). Sans elle, l'appareil du runtime le plus récent est utilisé et `doctor` avertit |
+| `udid` | Fixe un simulateur par son UDID (par appareil) |
+
+Les clés inconnues sont refusées, par l'exécution et par `doctor`, avec la clé connue la plus proche suggérée (`numberOfRetrys` : vouliez-vous dire `numberOfRetries` ?). Un appareil listé deux fois, ou un `framedOutputDirectory` égal à `outputDirectory`, est aussi refusé. Les chemins peuvent commencer par `~`.
 | `framedOutputDirectory` | Répertoire de sortie pour les captures encadrées (défaut : `{outputDirectory}/framed`) |

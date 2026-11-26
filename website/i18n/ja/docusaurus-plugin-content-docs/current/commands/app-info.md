@@ -83,6 +83,8 @@ JSONファイルはAPIと同じフィールド名を使用します。ファイ�
 }
 ```
 
+ファイル形式にないキーは拒否されます（`isAdvertising` の代わりに `advertising` など、Appleの属性名を使った場合はメッセージで正しい名前を示します）。エクスポートには `koreaAgeRatingOverride`、`developerAgeRatingInfoUrl`、`gracRatingClassificationNumber` も含まれます。
+
 強度フィールドは `NONE`、`INFREQUENT_OR_MILD`、`FREQUENT_OR_INTENSE` を受け付けます。ブールフィールドは `true`/`false` を受け付けます。
 
 ## ルーティングアプリカバレッジ

@@ -694,6 +694,8 @@ struct XcodeCloudCommand: AsyncParsableCommand {
       @Option(name: .long, help: "How many runs (default 25).")
       var limit = 25
 
+      func validate() throws { try checkLimit(limit) }
+
       @OptionGroup var jsonOption: JSONOption
 
       func run() async throws {

@@ -606,7 +606,7 @@ extension AppsCommand {
 
         // Fetch all localizations for this version
         let locsResponse = try await ascClient.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: appVersion.id)
+          path: .init(id: appVersion.id), query: .init(limit: 200)
         ).ok.body.json
         // Keyed lowercased so a local `pt-br/` folder still matches ASC's `pt-BR`.
         let locByLocale = Dictionary(
@@ -1356,7 +1356,7 @@ extension AppsCommand {
 
         let wanted = locale.map { Set($0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }) }
         let localizations = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: appVersion.id)
+          path: .init(id: appVersion.id), query: .init(limit: 200)
         ).ok.body.json.data
           .compactMap { loc in loc.attributes?.locale.map { (locale: $0, id: loc.id) } }
           .sorted { $0.locale < $1.locale }
@@ -1699,7 +1699,7 @@ extension AppsCommand {
         var skippedLocales: [String] = []
 
         let locsResponse = try await ascClient.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-          path: .init(id: appVersion.id)
+          path: .init(id: appVersion.id), query: .init(limit: 200)
         ).ok.body.json
         for loc in locsResponse.data {
           guard let locale = loc.attributes?.locale else { continue }
@@ -1829,7 +1829,7 @@ private struct MediaItemStatus {
 
 private func fetchAllMediaStatus(versionID: String, client: ASCClient) async throws -> [MediaItemStatus] {
   let locsResponse = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-    path: .init(id: versionID)
+    path: .init(id: versionID), query: .init(limit: 200)
   ).ok.body.json
 
   var items: [MediaItemStatus] = []

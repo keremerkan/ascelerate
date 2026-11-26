@@ -83,6 +83,8 @@ El archivo JSON usa los mismos nombres de campo que la API. Solo se actualizan l
 }
 ```
 
+Se rechaza una clave que el formato no tiene (si es un nombre de atributo de Apple, como `advertising` en lugar de `isAdvertising`, el mensaje indica el correcto). La exportación también incluye `koreaAgeRatingOverride`, `developerAgeRatingInfoUrl` y `gracRatingClassificationNumber`.
+
 Los campos de intensidad admiten `NONE`, `INFREQUENT_OR_MILD` y `FREQUENT_OR_INTENSE`. Los campos booleanos admiten `true`/`false`.
 
 ## Cobertura de apps de rutas

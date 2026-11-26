@@ -50,6 +50,13 @@ struct ScreenshotFramer: Sendable {
             }.sorted { $0.lastPathComponent < $1.lastPathComponent }
 
             guard !screenshots.isEmpty else { continue }
+            // This device's earlier framed files go first, so the folder (and "Framed N") hold
+            // only this run's.
+            if let old = try? FileManager.default.contentsOfDirectory(at: framedLangDir, includingPropertiesForKeys: nil) {
+                for file in old where file.lastPathComponent.hasPrefix(prefix) && file.pathExtension.lowercased() == "png" {
+                    try? FileManager.default.removeItem(at: file)
+                }
+            }
 
             var deviceFramed = 0
             for file in screenshots {

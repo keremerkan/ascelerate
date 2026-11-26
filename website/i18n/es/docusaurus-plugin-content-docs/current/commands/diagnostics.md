@@ -14,7 +14,7 @@ ascelerate diagnostics <bundle-id>
 ascelerate diagnostics <bundle-id> --type hangs --build 2041
 ```
 
-Las firmas de bloqueos, inicios y escrituras en disco de la compilación, por peso dentro de cada tipo, con su tendencia frente a versiones anteriores. `--type` acepta `hangs`, `launches` o `disk-writes` (separados por comas para varios).
+Las firmas de bloqueos, inicios y escrituras en disco de la compilación, por peso dentro de cada tipo, con su tendencia frente a versiones anteriores. `--type` acepta `hangs`, `launches` o `disk-writes` (separados por comas para varios). Sin `--build` ni `--platform`, una app publicada en varias plataformas pregunta cuál (con `--yes` o `--json` se niega: indique `--platform`); las entradas de `--json` indican su `build` y su `platform`.
 
 ## Registros
 
@@ -32,6 +32,6 @@ ascelerate diagnostics metrics <bundle-id>
 ascelerate diagnostics metrics <bundle-id> --type launch,hang --all
 ```
 
-Cada métrica (tiempo de inicio, tasa de bloqueos, memoria máxima, escrituras en disco, batería, terminaciones, animación, almacenamiento) por versión de la app, para todos los dispositivos en los percentiles típico (50) y 90; `--all` añade cada modelo de dispositivo. Primero aparecen las regresiones y tendencias al alza de Apple. `--build` muestra las métricas de una compilación.
+Cada métrica (tiempo de inicio, tasa de bloqueos, memoria máxima, escrituras en disco, batería, terminaciones, animación, almacenamiento) por versión de la app, para todos los dispositivos en los percentiles típico (50) y 90; `--all` añade cada modelo de dispositivo. Primero aparecen las regresiones y tendencias al alza de Apple. `--build` muestra las métricas de una compilación. `--platform ios` acota las métricas de la app; otra plataforma muestra las de su compilación publicada, ya que el filtro de Apple solo admite iOS.
 
 Los tres aceptan `--json`.

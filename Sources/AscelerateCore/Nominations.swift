@@ -63,7 +63,12 @@ public enum Nominations {
         )).ok.body.json
       }) {
         let actors = actors(in: page.included)
-        nominations += page.data.map { nomination($0, actors: actors) }
+        for item in page.data {
+          // The included resources stop at 50 per response (the territories alone can pass it):
+          // a nomination whose actors didn't come is read on its own.
+          let wanted = [item.relationships?.lastModifiedByActor?.data?.id, item.relationships?.submittedByActor?.data?.id].compactMap(\.self)
+          nominations.append(wanted.allSatisfy { actors[$0] != nil } ? nomination(item, actors: actors) : try await get(id: item.id, client: client))
+        }
       }
     }
     return nominations

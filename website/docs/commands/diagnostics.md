@@ -14,7 +14,7 @@ ascelerate diagnostics <bundle-id>
 ascelerate diagnostics <bundle-id> --type hangs --build 2041
 ```
 
-The build's hang, launch and disk-write signatures, heaviest first within each type, with their weight and trend against earlier versions. `--type` takes `hangs`, `launches` or `disk-writes` (comma-separated for several).
+The build's hang, launch and disk-write signatures, heaviest first within each type, with their weight and trend against earlier versions. `--type` takes `hangs`, `launches` or `disk-writes` (comma-separated for several). Without `--build` or `--platform`, an app live on several platforms asks which (with `--yes` or `--json`, it refuses: pass `--platform`); `--json` entries name their `build` and `platform`.
 
 ## Logs
 
@@ -32,6 +32,6 @@ ascelerate diagnostics metrics <bundle-id>
 ascelerate diagnostics metrics <bundle-id> --type launch,hang --all
 ```
 
-Each metric (launch time, hang rate, peak memory, disk writes, battery, terminations, animation, storage) per app version, for all devices at the typical (50th) and 90th percentiles; `--all` adds each device model. Apple's regressions and upward trends come first. `--build` shows one build's metrics.
+Each metric (launch time, hang rate, peak memory, disk writes, battery, terminations, animation, storage) per app version, for all devices at the typical (50th) and 90th percentiles; `--all` adds each device model. Apple's regressions and upward trends come first. `--build` shows one build's metrics. `--platform ios` narrows the app's metrics; another platform shows its live build's, since Apple's filter takes only iOS.
 
 All three take `--json`.

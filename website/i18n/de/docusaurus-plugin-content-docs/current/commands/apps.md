@@ -84,6 +84,8 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+Nur eine Einreichung, die auf die Prüfung wartet, geprüft wird oder ungelöste Probleme hat, lässt sich abbrechen; ein Entwurf geht über die API nicht und wird daher nicht angeboten.
+
 ### App-Review-Informationen
 
 Zeigen oder aktualisieren Sie die Kontaktdaten, das Demo-Konto und die Hinweise für die App-Prüfung. Ohne Flags werden die aktuellen Werte ausgegeben; geben Sie ein Feld-Flag an, um es zu aktualisieren (nicht angegebene Felder bleiben unverändert).

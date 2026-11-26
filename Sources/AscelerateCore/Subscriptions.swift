@@ -10,6 +10,12 @@ public enum Subscriptions {
     public let referenceName: String
     /// In the order Apple lists them; `level` orders them (1 is the highest service level).
     public let subscriptions: [Subscription]
+
+    /// The group without one of its subscriptions (one just deleted: App Store Connect still
+    /// lists a deleted item for a moment, so a fresh read can bring it back).
+    public func removing(subscriptionID: String) -> Group {
+      Group(id: id, referenceName: referenceName, subscriptions: subscriptions.filter { $0.id != subscriptionID })
+    }
   }
 
   public struct Subscription: Codable, Hashable, Identifiable, Sendable {

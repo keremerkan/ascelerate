@@ -62,7 +62,7 @@ ascelerate reports analytics <bundle-id> --report-name "App Store Discovery and 
 - `--category` — `APP_STORE_ENGAGEMENT` (Standard), `APP_USAGE`, `COMMERCE`, `FRAMEWORK_USAGE`, `PERFORMANCE`.
 - `--granularity` — `DAILY` (Standard), `WEEKLY`, `MONTHLY`.
 - `--report-name` — wählt einen bestimmten Bericht, wenn eine Kategorie mehrere enthält.
-- `--processing-date` — die herunterzuladende Instanz (`YYYY-MM-DD`); standardmäßig die neueste.
+- `--processing-date` — die herunterzuladende Instanz (`YYYY-MM-DD`); standardmäßig die neueste. Jeder Download landet in einem Unterordner des Ausgabeordners, benannt nach Bericht, Granularität und Verarbeitungsdatum, sodass sich Downloads nicht überschreiben.
 - `--ongoing` — verwendet eine fortlaufende Berichtsanfrage statt einer einmaligen Momentaufnahme.
 - `--output` — Verzeichnis für die heruntergeladenen Segmentdateien (Standard `./<app>-analytics`).
 

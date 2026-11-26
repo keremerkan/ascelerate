@@ -227,7 +227,11 @@ public enum Diagnostics {
 
   /// An app's metrics across its recent versions, or one build's with `buildID`; `types` narrows
   /// the categories.
-  public static func metrics(appID: String, buildID: String? = nil, types: [String]? = nil, client: ASCClient) async throws -> Metrics {
+  /// `platform` (raw, e.g. `IOS`) narrows the app's metrics; Apple's filter takes only iOS, so
+  /// another platform is ignored there (read a build's metrics for it).
+  public static func metrics(
+    appID: String, buildID: String? = nil, types: [String]? = nil, platform: String? = nil, client: ASCClient
+  ) async throws -> Metrics {
     if let buildID {
       typealias Filter = Operations.BuildsPerfPowerMetricsGetToManyRelated.Input.Query.FilterMetricTypePayloadPayload
       let body = try await withTransientRetry {
@@ -241,7 +245,10 @@ public enum Diagnostics {
     typealias Filter = Operations.AppsPerfPowerMetricsGetToManyRelated.Input.Query.FilterMetricTypePayloadPayload
     let body = try await withTransientRetry {
       try await client.appsPerfPowerMetricsGetToManyRelated(
-        path: .init(id: appID), query: .init(filterMetricType: types.map { $0.compactMap(Filter.init(rawValue:)) })
+        path: .init(id: appID),
+        query: .init(
+          filterPlatform: platform.flatMap(Operations.AppsPerfPowerMetricsGetToManyRelated.Input.Query.FilterPlatformPayloadPayload.init(rawValue:)).map { [$0] },
+          filterMetricType: types.map { $0.compactMap(Filter.init(rawValue:)) })
       ).ok.body
     }
     guard case .applicationVnd_apple_xcodeMetricsJson(let document) = body else { return Metrics(version: nil, insights: nil, productData: nil) }

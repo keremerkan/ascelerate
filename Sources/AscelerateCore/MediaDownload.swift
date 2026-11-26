@@ -58,7 +58,7 @@ public enum MediaDownload {
     versionID: String, locales: Set<String>? = nil, folders: Set<String>? = nil, client: ASCClient
   ) async throws -> [(locale: String, sets: [MediaSet])] {
     let localizations = try await client.appStoreVersionsAppStoreVersionLocalizationsGetToManyRelated(
-      path: .init(id: versionID)
+      path: .init(id: versionID), query: .init(limit: 200)
     ).ok.body.json.data
     var result: [(locale: String, sets: [MediaSet])] = []
     for localization in localizations {

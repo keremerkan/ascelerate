@@ -83,6 +83,8 @@ Die JSON-Datei verwendet die gleichen Feldnamen wie die API. Nur die in der Date
 }
 ```
 
+Ein Schlüssel, den das Dateiformat nicht kennt, wird abgelehnt (bei Apples eigenen Attributnamen, etwa `advertising` für `isAdvertising`, nennt die Meldung den richtigen). Der Export enthält auch `koreaAgeRatingOverride`, `developerAgeRatingInfoUrl` und `gracRatingClassificationNumber`.
+
 Intensitätsfelder akzeptieren: `NONE`, `INFREQUENT_OR_MILD`, `FREQUENT_OR_INTENSE`. Boolesche Felder akzeptieren `true`/`false`.
 
 ## Routing App Coverage

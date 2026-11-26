@@ -94,6 +94,8 @@ struct CustomerReviewsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Maximum number of reviews to show (default: 50, max: 200).")
     var limit: Int = 50
 
+    func validate() throws { try checkLimit(limit) }
+
     @OptionGroup var jsonOption: JSONOption
 
     func run() async throws {

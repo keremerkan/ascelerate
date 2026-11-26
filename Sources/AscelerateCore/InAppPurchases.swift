@@ -104,7 +104,7 @@ public enum InAppPurchases {
   /// The purchase with that product ID.
   public static func find(productID: String, appID: String, client: ASCClient) async throws -> Purchase {
     let response = try await client.appsInAppPurchasesV2GetToManyRelated(
-      path: .init(id: appID), query: .init(filterProductId: [productID])
+      path: .init(id: appID), query: .init(filterProductId: [productID], limit: 200)
     ).ok.body.json
     // An exact match only: another product the filter let through would then be edited.
     guard let purchase = response.data.first(where: { $0.attributes?.productId == productID }) else {

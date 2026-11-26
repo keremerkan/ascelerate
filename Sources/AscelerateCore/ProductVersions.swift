@@ -119,16 +119,21 @@ public enum ProductVersions {
   /// Resolves every item of a review submission to its target (app version or product version),
   /// keyed by item ID. Product names cost one extra request per product item.
   public static func reviewItems(submissionID: String, client: ASCClient) async throws -> [String: ReviewItemInfo] {
-    let response = try await client.reviewSubmissionsItemsGetToManyRelated(
+    // 50 a page: each item includes what it is, and the included resources stop at 50.
+    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.reviewSubmissionsItemsGetToManyRelated(
       path: .init(id: submissionID),
       query: .init(
         fieldsAppStoreVersions: [.versionString],
         fieldsInAppPurchaseVersions: [.version, .state],
         fieldsSubscriptionVersions: [.version, .state],
         fieldsSubscriptionGroupVersions: [.version, .state],
+        limit: 50,
         include: [.appStoreVersion, .inAppPurchaseVersion, .subscriptionVersion, .subscriptionGroupVersion]
       )
     ).ok.body.json
+    }
+    let response = (data: pages.flatMap(\.data), included: pages.flatMap { $0.included ?? [] } as [Components.Schemas.ReviewSubmissionItemsResponse.IncludedPayloadPayload]?)
 
     var appVersions: [String: String] = [:]
     var productVersions: [String: (version: Int?, state: String?)] = [:]

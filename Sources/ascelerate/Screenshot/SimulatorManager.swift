@@ -48,18 +48,55 @@ struct SimulatorManager: Sendable {
         try ScreenshotShell.run("/usr/bin/open", arguments: ["-a", path, "devices://device/open?id=\(udid)"])
     }
 
-    func findDevice(name: String) throws -> SimDevice {
+    /// A runtime identifier's version ("com.apple.CoreSimulator.SimRuntime.iOS-26-5" → [26, 5]).
+    static func runtimeVersion(_ key: String) -> [Int] {
+        let tail = key.split(separator: ".").last.map(String.init) ?? key
+        return tail.split(separator: "-").compactMap { Int($0) }
+    }
+
+    /// "iOS 26.5" for "com.apple.CoreSimulator.SimRuntime.iOS-26-5".
+    static func runtimeLabel(_ key: String) -> String {
+        let tail = key.split(separator: ".").last.map(String.init) ?? key
+        let parts = tail.split(separator: "-")
+        guard let platform = parts.first else { return key }
+        return "\(platform) \(parts.dropFirst().joined(separator: "."))"
+    }
+
+    /// Whether a pinned runtime ("26.5", "iOS 26.5" or the identifier) names this runtime.
+    static func runtime(_ key: String, matches pin: String) -> Bool {
+        if key == pin { return true }
+        let wanted = pin.split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) }
+        return !wanted.isEmpty && runtimeVersion(key) == wanted
+    }
+
+    /// Every available device of the name, newest runtime first.
+    func candidates(name: String) throws -> [(runtime: String, device: SimDevice)] {
         let output = try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "list", "devices", "-j", "available"])
-        let data = Data(output.utf8)
-        let list = try JSONDecoder().decode(SimDeviceList.self, from: data)
+        let list = try JSONDecoder().decode(SimDeviceList.self, from: Data(output.utf8))
+        return list.devices.flatMap { runtime, devices in
+            devices.filter { $0.name == name && $0.isAvailable }.map { (runtime, $0) }
+        }.sorted { Self.runtimeVersion($1.runtime).lexicographicallyPrecedes(Self.runtimeVersion($0.runtime)) }
+    }
 
-        for (_, devices) in list.devices {
-            if let device = devices.first(where: { $0.name == name && $0.isAvailable }) {
-                return device
-            }
+    /// The device a config entry means: its `udid`, else the named device on its `runtime`, else
+    /// the named device on the newest runtime that has one (a dictionary's order used to pick at
+    /// random among runtimes).
+    func findDevice(name: String, runtime: String? = nil, udid: String? = nil) throws -> SimDevice {
+        let found = try candidates(name: name)
+        if let udid {
+            let output = try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "list", "devices", "-j", "available"])
+            let list = try JSONDecoder().decode(SimDeviceList.self, from: Data(output.utf8))
+            if let device = list.devices.values.joined().first(where: { $0.udid.caseInsensitiveCompare(udid) == .orderedSame }) { return device }
+            throw ScreenshotError.simulatorNotFound("\(name) (UDID \(udid))")
         }
-
-        throw ScreenshotError.simulatorNotFound(name)
+        if let runtime {
+            guard let match = found.first(where: { Self.runtime($0.runtime, matches: runtime) }) else {
+                throw ScreenshotError.simulatorNotFound("\(name) on runtime \(runtime)")
+            }
+            return match.device
+        }
+        guard let newest = found.first else { throw ScreenshotError.simulatorNotFound(name) }
+        return newest.device
     }
 
     func boot(udid: String, waitUntilReady: Bool = true) throws {

@@ -25,7 +25,7 @@ struct ScreenshotRunner: Sendable {
         let helperFound = checkHelperVersion()
 
         let resolvedDevices = try config.devices.map { device -> (ScreenshotConfig.Device, SimulatorManager.SimDevice) in
-            let sim = try simulatorManager.findDevice(name: device.simulator)
+            let sim = try simulatorManager.findDevice(name: device.simulator, runtime: device.runtime, udid: device.udid)
             EventOutput.log("Found simulator: \(sim.name) (\(sim.udid))")
             return (device, sim)
         }
@@ -74,6 +74,11 @@ struct ScreenshotRunner: Sendable {
                 }
                 for (_, sim) in resolvedDevices {
                     try? simulatorManager.shutdown(udid: sim.udid)
+                }
+                // A failed preparation is an error like a failed test (Kerem, 2026-11-26).
+                if config.stopAfterFirstError == true {
+                    EventOutput.log("\nStopping after first error.")
+                    break
                 }
                 continue
             }
@@ -290,9 +295,9 @@ struct ScreenshotRunner: Sendable {
                         try await Task.sleep(nanoseconds: UInt64(extraWait) * 1_000_000_000)
                     }
 
-                    if config.darkMode == true {
-                        try simulatorManager.setAppearance(udid: sim.udid, dark: true)
-                    }
+                    // Always set (Kerem, 2026-11-26): dark for `darkMode: true`, light otherwise, so a
+                    // run after a dark one doesn't capture dark.
+                    try simulatorManager.setAppearance(udid: sim.udid, dark: config.darkMode == true)
 
                     if config.overrideStatusBar {
                         EventOutput.log("  \(tag) Overriding status bar...")
@@ -420,7 +425,9 @@ struct ScreenshotRunner: Sendable {
             for (i, device) in devices.enumerated() {
                 let result = results.first { $0.language == language && $0.device == device }
                 let mark: String
-                if result?.success == true {
+                if result == nil {
+                    mark = "–"  // never tried (stopped after an error)
+                } else if result?.success == true {
                     mark = result?.retried == true ? "✅ 🔄" : "✅"
                 } else {
                     mark = "❌"
@@ -436,6 +443,8 @@ struct ScreenshotRunner: Sendable {
         let succeededStr = succeeded > 0 ? green("\(succeeded) succeeded") : "\(succeeded) succeeded"
         let failedStr = failed > 0 ? red("\(failed) failed") : "\(failed) failed"
         var summary = "\(succeededStr), \(failedStr)"
+        let notRun = languages.count * devices.count - results.count
+        if notRun > 0 { summary += ", \(notRun) not run" }
         if retried > 0 {
             summary += " " + yellow("(\(retried) succeeded after retry — verify those screenshots)")
         }

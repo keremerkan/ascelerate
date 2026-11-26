@@ -333,9 +333,16 @@ struct ExperimentsCommand: AsyncParsableCommand {
       if let state = open?.attributes?.state, ["WAITING_FOR_REVIEW", "IN_REVIEW"].contains(state) {
         throw ValidationError("A \(formatState(platform)) submission is already \(formatState(state).lowercased()); submit the test once it's done.")
       }
+      // The draft's items other than this test: after a failed submit the test is already in it,
+      // and it isn't added twice or counted as another item.
       var otherItems = 0
+      var alreadyIn = false
       if let open {
-        otherItems = try await client.reviewSubmissionsItemsGetToManyRelated(path: .init(id: open.id), query: .init()).ok.body.json.data.count
+        let items = try await client.reviewSubmissionsItemsGetToManyRelated(
+          path: .init(id: open.id), query: .init(include: [.appStoreVersionExperimentV2])
+        ).ok.body.json.data
+        alreadyIn = items.contains { $0.relationships?.appStoreVersionExperimentV2?.data?.id == experiment.id }
+        otherItems = items.count - (alreadyIn ? 1 : 0)
       }
 
       let plan = open == nil || otherItems == 0
@@ -346,8 +353,13 @@ struct ExperimentsCommand: AsyncParsableCommand {
         return
       }
       // Without an open submission, a new one (a placeholder ID under dry run).
-      let submission = try await ReviewSubmissions.add(
-        .experiment(experiment.id), appID: app.id, platform: platform, draftID: open?.id, client: client)
+      let submission: String
+      if alreadyIn, let open {
+        submission = open.id
+      } else {
+        submission = try await ReviewSubmissions.add(
+          .experiment(experiment.id), appID: app.id, platform: platform, draftID: open?.id, client: client)
+      }
       guard otherItems == 0 else {
         print(green("Added") + " the test to the draft submission. It goes to review with the submission's other items ('ascelerate apps review submit').")
         return

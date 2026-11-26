@@ -62,7 +62,7 @@ ascelerate reports analytics <bundle-id> --report-name "App Store Discovery and 
 - `--category`: `APP_STORE_ENGAGEMENT` (varsayılan), `APP_USAGE`, `COMMERCE`, `FRAMEWORK_USAGE`, `PERFORMANCE`.
 - `--granularity`: `DAILY` (varsayılan), `WEEKLY`, `MONTHLY`.
 - `--report-name`: Bir kategori birden fazla rapor içerdiğinde belirli bir raporu seçer.
-- `--processing-date`: İndirilecek örnek (`YYYY-MM-DD`); varsayılan olarak en günceli.
+- `--processing-date`: İndirilecek örnek (`YYYY-MM-DD`); varsayılan olarak en günceli. Her indirme, çıktı klasöründe rapor, ayrıntı düzeyi ve işlenme tarihine göre adlandırılan bir alt klasöre gider; böylece indirmeler birbirinin üzerine yazmaz.
 - `--ongoing`: Tek seferlik anlık görüntü yerine sürekli bir rapor isteği kullanır.
 - `--output`: İndirilen bölüm dosyaları için dizin (varsayılan `./<app>-analytics`).
 

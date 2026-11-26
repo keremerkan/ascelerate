@@ -83,6 +83,8 @@ JSON dosyası API ile aynı alan adlarını kullanır. Yalnızca dosyada bulunan
 }
 ```
 
+Dosya biçiminde olmayan bir anahtar reddedilir (`isAdvertising` yerine `advertising` gibi Apple'ın öznitelik adları kullanıldığında ileti doğru adı belirtir). Dışa aktarma `koreaAgeRatingOverride`, `developerAgeRatingInfoUrl` ve `gracRatingClassificationNumber` alanlarını da içerir.
+
 Yoğunluk alanları şu değerleri kabul eder: `NONE`, `INFREQUENT_OR_MILD`, `FREQUENT_OR_INTENSE`. Boolean alanlar `true`/`false` kabul eder.
 
 ## Routing app coverage

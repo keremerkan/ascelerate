@@ -29,6 +29,8 @@ ascelerate apps localizations export <bundle-id> --version 2.1.0 --output my-loc
 ascelerate apps localizations update <bundle-id> --whats-new "Bug fixes" --locale en-US
 ```
 
+`update` and `import` take `--version` (promotional text can change on a live version while a newer one is being prepared). A marketing or support URL that isn't a URL is refused instead of being dropped.
+
 ## Bulk update from JSON
 
 ```bash

@@ -74,7 +74,18 @@ extension GameCenter {
         versions[v.id] = (Version(id: v.id, version: v.attributes?.version, state: v.attributes?.state), v.attributes?.fallbackUrl)
       }
     }
-    return pages.flatMap(\.data).map { activity($0, versions: versions) }
+    // The included resources stop at 50 per response (versions beside the achievements and
+    // leaderboards): an activity whose versions didn't all come is read on its own.
+    let activities = pages.flatMap(\.data)
+    for a in activities where (a.relationships?.versions?.data ?? []).contains(where: { versions[$0.id] == nil }) {
+      let own = try await withTransientRetry {
+        try await client.gameCenterActivitiesVersionsGetToManyRelated(path: .init(id: a.id), query: .init(limit: 50)).ok.body.json.data
+      }
+      for v in own {
+        versions[v.id] = (Version(id: v.id, version: v.attributes?.version, state: v.attributes?.state), v.attributes?.fallbackUrl)
+      }
+    }
+    return activities.map { activity($0, versions: versions) }
   }
 
   private static func activity(_ a: Components.Schemas.GameCenterActivity, versions: [String: (Version, String?)]) -> Activity {

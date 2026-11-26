@@ -76,7 +76,9 @@ public enum ReviewSubmissions {
   /// item, an app version's build one per version, a custom product page's name one per page.
   /// `builds: false` leaves app version items' `build` nil, saving a request per version.
   public static func items(submissionID: String, builds: Bool = true, client: ASCClient) async throws -> [Item] {
-    let response = try await client.reviewSubmissionsItemsGetToManyRelated(
+    // 50 a page: each item includes what it is, and the included resources stop at 50.
+    let pages = try await ASCPaging.allPages(next: { $0.links.next }) {
+      try await client.reviewSubmissionsItemsGetToManyRelated(
       path: .init(id: submissionID),
       // An item's relationship is only filled in when its kind is included (naming it in
       // fields[reviewSubmissionItems] isn't enough), so every kind is.
@@ -84,6 +86,7 @@ public enum ReviewSubmissions {
         fieldsAppStoreVersions: [.versionString, .platform], fieldsAppEvents: [.referenceName],
         fieldsInAppPurchaseVersions: [.version], fieldsSubscriptionVersions: [.version],
         fieldsSubscriptionGroupVersions: [.version],
+        limit: 50,
         include: [
           .appStoreVersion, .appEvent, .inAppPurchaseVersion, .subscriptionVersion, .subscriptionGroupVersion,
           // Not the deprecated appStoreVersionExperiment too: the API refuses both at once.
@@ -93,6 +96,8 @@ public enum ReviewSubmissions {
           .gameCenterLeaderboardVersion, .retentionMessageVersion,
         ])
     ).ok.body.json
+    }
+    let response = (data: pages.flatMap(\.data), included: pages.flatMap { $0.included ?? [] } as [Components.Schemas.ReviewSubmissionItemsResponse.IncludedPayloadPayload]?)
     var versions: [String: Components.Schemas.AppStoreVersion] = [:]
     var events: [String: String] = [:]
     var experiments: [String: String] = [:]

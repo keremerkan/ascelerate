@@ -128,6 +128,7 @@ struct BuildsCommand: AsyncParsableCommand {
     @OptionGroup var jsonOption: JSONOption
 
     func validate() throws {
+      try checkLimit(limit)
       // --json is for reading: the cleanup lists and asks in prose.
       if deleteStale && jsonOption.json { throw ValidationError("--delete-stale doesn't take --json; list the uploads with --json, then clean up without it.") }
     }
@@ -576,6 +577,8 @@ struct BuildsCommand: AsyncParsableCommand {
 
     @Option(name: .long, help: "Number of archives to show (default: all).")
     var limit: Int?
+
+    func validate() throws { if let limit { try checkLimit(limit) } }
 
     @OptionGroup var jsonOption: JSONOption
 

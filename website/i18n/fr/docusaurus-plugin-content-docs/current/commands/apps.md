@@ -84,6 +84,8 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+Seule une soumission en attente d'examen, en cours d'examen ou avec des problèmes non résolus peut être annulée ; un brouillon ne peut pas l'être par l'API, il n'est donc pas proposé.
+
 ### Informations pour l'examen de l'app
 
 Affichez ou mettez à jour les coordonnées, le compte de démonstration et les notes fournis à l'examen de l'app. Sans option, les valeurs actuelles sont affichées ; passez une option de champ pour la mettre à jour (les champs omis restent inchangés).

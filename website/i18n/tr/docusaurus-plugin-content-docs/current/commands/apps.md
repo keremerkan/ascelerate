@@ -84,6 +84,8 @@ ascelerate apps review resolve-issues <bundle-id>
 ascelerate apps review cancel-submission <bundle-id>
 ```
 
+Yalnızca incelemeyi bekleyen, incelenen veya çözülmemiş sorunları olan bir gönderim iptal edilebilir; taslak API ile iptal edilemediği için sunulmaz.
+
 ### Uygulama İnceleme Bilgileri
 
 App Review'a sunulan iletişim bilgilerini, demo hesabını ve notları görüntüleyin veya güncelleyin. Bayrak verilmediğinde mevcut değerler yazdırılır; herhangi bir alan bayrağı vererek o alanı güncelleyin (belirtilmeyen alanlar değiştirilmez).

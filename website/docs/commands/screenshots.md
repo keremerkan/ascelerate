@@ -250,7 +250,7 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `localizeSimulator` | Set simulator language/locale per language |
 | `overrideStatusBar` | Override status bar (9:41, full bars, Wi-Fi) |
 | `statusBarArguments` | Custom `xcrun simctl status_bar` arguments |
-| `darkMode` | Enable dark mode on simulators |
+| `darkMode` | Enable dark mode on simulators (`true`); `false` or left out sets light mode, so every run captures a known appearance |
 | `disableAnimations` | Disable animations during tests |
 | `waitAfterBoot` | Seconds to wait after simulator boot (default: 0) |
 | `waitAfterEraseAndReboot` | Extra seconds to wait when the simulator is in a fresh state — first language of the run, or any time the simulator was erased (via `eraseSimulator: true` or a retry). Gives first-run system alerts time to appear before screenshots. (The iOS 26 "Ready for Apple Intelligence" banner is suppressed automatically and needs no wait.) |
@@ -262,10 +262,14 @@ Only devices with `frameDevice: true` are framed. Framing runs automatically aft
 | `configuration` | Build configuration (e.g. Debug, Release) |
 | `testplan` | Xcode test plan name |
 | `numberOfRetries` | Number of times to retry failed languages — erases the simulator, re-localizes, reboots, and reruns tests. Only retries failed devices. Retried results are marked in the summary table. |
-| `stopAfterFirstError` | Stop all devices after the first failure |
+| `stopAfterFirstError` | Stop all devices after the first failure (a failed simulator preparation counts too); languages never tried show as not run |
 | `reinstallApp` | Delete and reinstall the app before running tests |
 | `disableAssetDownloads` | Disable the simulator's `mobileassetd` so it stops downloading gigabytes of Siri, keyboard, and ML assets into freshly erased simulators. Also blocks on-device ML assets some apps need (e.g. text recognition), so leave it off if your screenshots depend on those. Applied on every prep, since an erase resets it. |
-| `xcargs` | Extra arguments passed to `xcodebuild` |
+| `xcargs` | Extra arguments passed to `xcodebuild` (quoted arguments are kept together) |
 | `frameDevice` | Enable device bezel framing for this device (per-device) |
 | `deviceBezel` | Path to the device bezel PNG file, or a list of paths; each screenshot uses the bezel that fits its size (per-device) |
+| `runtime` | Pins the simulator when a device of that name is on several runtimes: a version such as `26.5` (per-device). Without it, the newest runtime's device is used, and `doctor` warns |
+| `udid` | Pins one simulator by its UDID (per-device) |
+
+Unknown keys are refused, by the run and by `doctor`, with the nearest known key suggested (`numberOfRetrys`: did you mean `numberOfRetries`?). A device listed twice, or `framedOutputDirectory` equal to `outputDirectory`, is refused too. Paths may start with `~`.
 | `framedOutputDirectory` | Output directory for framed screenshots (default: `{outputDirectory}/framed`) |

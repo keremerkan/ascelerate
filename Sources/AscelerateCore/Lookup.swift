@@ -22,7 +22,8 @@ public func platformFilter<F: RawRepresentable>(_ platform: Platform?) -> [F]? w
 
 /// The app with exactly this bundle ID.
 public func findApp(exactBundleID bundleID: String, client: ASCClient) async throws -> Components.Schemas.App {
-  let response = try await client.appsGetCollection(query: .init(filterBundleId: [bundleID])).ok.body.json
+  // 200: the filter matches prefixes, so the exact one can be past a default page.
+  let response = try await client.appsGetCollection(query: .init(filterBundleId: [bundleID], limit: 200)).ok.body.json
   // filter[bundleId] can return prefix matches, so find the exact match
   guard let app = response.data.first(where: { $0.attributes?.bundleId == bundleID }) else {
     throw AppLookupError.notFound(bundleID)

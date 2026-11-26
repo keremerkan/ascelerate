@@ -250,7 +250,7 @@ Solo se enmarcan los dispositivos con `frameDevice: true`. El enmarcado se ejecu
 | `localizeSimulator` | Configura el idioma y la región del simulador para cada idioma |
 | `overrideStatusBar` | Sustituye la barra de estado (9:41, cobertura completa, Wi-Fi) |
 | `statusBarArguments` | Argumentos personalizados de `xcrun simctl status_bar` |
-| `darkMode` | Activa el modo oscuro en los simuladores |
+| `darkMode` | Activa el modo oscuro en los simuladores (`true`); `false` o sin indicar establece el modo claro, así que cada ejecución captura un aspecto conocido |
 | `disableAnimations` | Desactiva las animaciones durante las pruebas |
 | `waitAfterBoot` | Segundos de espera tras arrancar el simulador (predeterminado: 0) |
 | `waitAfterEraseAndReboot` | Segundos de espera adicionales cuando el simulador está recién preparado: el primer idioma de la ejecución, o siempre que se haya borrado el simulador (con `eraseSimulator: true` o en un reintento). Da tiempo a que aparezcan las alertas del sistema del primer arranque antes de las capturas. (El aviso «Ready for Apple Intelligence» de iOS 26 se suprime automáticamente y no necesita espera). |
@@ -262,10 +262,14 @@ Solo se enmarcan los dispositivos con `frameDevice: true`. El enmarcado se ejecu
 | `configuration` | Configuración de compilación (por ejemplo, Debug o Release) |
 | `testplan` | Nombre del plan de pruebas de Xcode |
 | `numberOfRetries` | Número de reintentos de los idiomas fallidos: borra el simulador, lo vuelve a localizar, lo reinicia y repite las pruebas. Solo reintenta los dispositivos que fallaron. Los resultados reintentados se marcan en la tabla de resumen. |
-| `stopAfterFirstError` | Detiene todos los dispositivos tras el primer fallo |
+| `stopAfterFirstError` | Detiene todos los dispositivos tras el primer fallo (también cuenta una preparación fallida del simulador); los idiomas que no se llegaron a probar aparecen como no ejecutados |
 | `reinstallApp` | Elimina y reinstala la app antes de ejecutar las pruebas |
 | `disableAssetDownloads` | Desactiva `mobileassetd` en el simulador para que deje de descargar gigabytes de recursos de Siri, del teclado y de ML en los simuladores recién borrados. También bloquea los recursos de ML en el dispositivo que algunas apps necesitan (por ejemplo, el reconocimiento de texto), así que déjelo desactivado si sus capturas dependen de ellos. Se aplica en cada preparación, ya que un borrado lo restablece. |
-| `xcargs` | Argumentos adicionales que se pasan a `xcodebuild` |
+| `xcargs` | Argumentos adicionales que se pasan a `xcodebuild` (los argumentos entre comillas se mantienen juntos) |
 | `frameDevice` | Activa el enmarcado con marco de dispositivo para este dispositivo (por dispositivo) |
 | `deviceBezel` | Ruta del archivo PNG del marco del dispositivo, o una lista de rutas; cada captura usa el marco que se ajusta a su tamaño (por dispositivo) |
+| `runtime` | Fija el simulador cuando hay un dispositivo con ese nombre en varios entornos de ejecución: una versión como `26.5` (por dispositivo). Sin ella, se usa el dispositivo del entorno más reciente y `doctor` avisa |
+| `udid` | Fija un simulador por su UDID (por dispositivo) |
+
+Las claves desconocidas se rechazan, en la ejecución y en `doctor`, con la clave conocida más cercana como sugerencia (`numberOfRetrys`: ¿quería decir `numberOfRetries`?). También se rechaza un dispositivo repetido o un `framedOutputDirectory` igual a `outputDirectory`. Las rutas pueden empezar por `~`.
 | `framedOutputDirectory` | Directorio de salida de las capturas enmarcadas (predeterminado: `{outputDirectory}/framed`) |

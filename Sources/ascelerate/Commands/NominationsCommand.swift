@@ -51,6 +51,19 @@ struct NominationsCommand: AsyncParsableCommand {
     return noon
   }
 
+  /// The App Store's codes, as nominations take them (uppercase: `EN-US`, `TR`): matched without
+  /// case, a region-qualified code the App Store lists bare (`tr-TR`) as the bare one; others refused.
+  static func locales(_ value: String?) throws -> [String]? {
+    try list(value).map { codes in
+      try codes.map { code in
+        let upper = code.uppercased()
+        if Nominations.locales.contains(upper) { return upper }
+        if let bare = upper.split(separator: "-").first.map(String.init), Nominations.locales.contains(bare) { return bare }
+        throw ValidationError("'\(code)' isn't an App Store language code. Codes: \(Nominations.locales.joined(separator: ", ")).")
+      }
+    }
+  }
+
   static func list(_ value: String?) -> [String]? {
     value.map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
   }
@@ -189,7 +202,7 @@ struct NominationsCommand: AsyncParsableCommand {
       }
       let created = try await Nominations.create(
         name: fields.name ?? "", type: type.rawValue, description: fields.description ?? "", publishStartDate: start,
-        publishEndDate: end, appIDs: appIDs, deviceFamilies: devices, locales: NominationsCommand.list(fields.locales),
+        publishEndDate: end, appIDs: appIDs, deviceFamilies: devices, locales: try NominationsCommand.locales(fields.locales),
         territories: territories, launchInSelectMarketsFirst: territories == nil ? nil : true,
         preOrderEnabled: preOrder ? true : nil, notes: fields.notes,
         supplementalMaterials: NominationsCommand.list(fields.materials), submit: submit, client: client)
@@ -220,7 +233,7 @@ struct NominationsCommand: AsyncParsableCommand {
       try await Nominations.update(
         id: id, name: fields.name, type: type, description: fields.description, publishStartDate: start,
         publishEndDate: end.map { .some($0) }, deviceFamilies: try NominationsCommand.devices(fields.devices),
-        locales: NominationsCommand.list(fields.locales), notes: fields.notes,
+        locales: try NominationsCommand.locales(fields.locales), notes: fields.notes,
         supplementalMaterials: NominationsCommand.list(fields.materials), client: ClientFactory.makeClient())
       print(green("Updated") + " nomination \(id).")
     }

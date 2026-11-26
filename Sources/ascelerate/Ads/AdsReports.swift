@@ -137,10 +137,7 @@ extension Ads {
     /// only). A range without --to ends today in the ad account's time zone, the days Apple Ads
     /// reports in (one request reads the zone).
     func resolved(_ ads: AdsConfig, defaultDays: Int = 7, endingYesterday: Bool = false) async throws -> (start: String, end: String) {
-      let formatter = DateFormatter()
-      formatter.dateFormat = "yyyy-MM-dd"
-      formatter.locale = Locale(identifier: "en_US_POSIX")
-      formatter.timeZone = TimeZone(identifier: "UTC")
+      let formatter = Ads.utcDayFormatter()
       if from != nil, days != nil {
         throw ValidationError("Use either --days or --from/--to.")
       }

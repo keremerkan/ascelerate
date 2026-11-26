@@ -30,17 +30,7 @@ struct RateLimitCommand: AsyncParsableCommand {
       return
     }
 
-    // Parse "user-hour-lim:3500;user-hour-rem:500;"
-    var values: [String: Int] = [:]
-    for part in header.components(separatedBy: ";") where !part.isEmpty {
-      let kv = part.components(separatedBy: ":")
-      if kv.count == 2, let val = Int(kv[1]) {
-        values[kv[0]] = val
-      }
-    }
-
-    guard let limit = values["user-hour-lim"],
-          let remaining = values["user-hour-rem"] else {
+    guard let (limit, remaining) = ASCRateLimit.parse(header) else {
       if jsonOption.json { throw ValidationError("Could not parse rate limit header: \(header)") }
       print("Could not parse rate limit header: \(header)")
       return

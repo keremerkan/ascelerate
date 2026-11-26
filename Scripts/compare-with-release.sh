@@ -1,12 +1,12 @@
 #!/bin/zsh
-# Runs read-only commands with the released ascelerate (asc-swift) and the debug build (ASCKit)
-# and diffs their output, to verify a command migrated to ASCKit behaves the same.
+# Runs read-only commands with the released ascelerate (OLD, default the Homebrew one) and the
+# debug build (NEW) and diffs their output, to check a change left a command's output as it was
+# (a refactor, a move into AscelerateCore).
 #
 #   Scripts/compare-with-release.sh "apps list --json" "apps info myapp --json" ...
 #
-# Timestamps are masked and runs of spaces collapsed (a corrected date can change a table's
-# column widths): asc-swift drops the UTC offset Apple sends (2026-09-02T12:36:17-07:00
-# decodes as 12:36Z), so the released binary prints every date 7-8 hours early; ASCKit is right.
+# Timestamps are masked and runs of spaces collapsed (a date can change a table's column widths;
+# releases before 0.22.0, on asc-swift, also printed dates without their UTC offset).
 # Only pass read-only commands: both binaries run each command against App Store Connect.
 set -u
 cd "$(dirname "$0")/.."

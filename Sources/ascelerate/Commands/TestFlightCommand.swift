@@ -19,6 +19,30 @@ struct TestFlightCommand: AsyncParsableCommand {
 
   /// Resolves a beta group by name (case-insensitive), or prompts with a picker when omitted.
   /// Beta groups by a comma list of names, from one read of the app's groups.
+  /// `testflight groups add-build` and `remove-build`: the group and build looked up, the change
+  /// confirmed, then made.
+  static func changeGroupBuild(adding: Bool, bundleID: String, group: String?, buildOptions: BuildOptions) async throws {
+    let client = try ClientFactory.makeClient()
+    let app = try await findApp(bundleID: bundleID, client: client)
+    let betaGroup = try await findBetaGroup(name: group, appID: app.id, client: client)
+    let resolved = try await buildOptions.resolve(appID: app.id, client: client)
+    let groupName = betaGroup.attributes?.name ?? "?"
+
+    print(adding ? "Add build \(resolved.label) to group '\(groupName)'." : "Remove build \(resolved.label) from group '\(groupName)'.")
+    guard confirm("Continue? [y/N] ") else {
+      cancelled()
+      return
+    }
+
+    if adding {
+      try await BetaGroups.addBuild(resolved.id, toGroup: betaGroup.id, client: client)
+    } else {
+      try await BetaGroups.removeBuild(resolved.id, fromGroup: betaGroup.id, client: client)
+    }
+    print()
+    success(adding ? "Added" : "Removed", "build \(resolved.label) \(adding ? "to" : "from") group '\(groupName)'.")
+  }
+
   static func findBetaGroups(_ names: String, appID: String, client: ASCClient) async throws -> [Components.Schemas.BetaGroup] {
     let groups = try await betaGroups(appID: appID, client: client)
     return try names.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.map { name in
@@ -437,22 +461,7 @@ struct TestFlightCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
-        let app = try await findApp(bundleID: bundleID, client: client)
-        let betaGroup = try await TestFlightCommand.findBetaGroup(
-          name: group, appID: app.id, client: client)
-        let resolved = try await buildOptions.resolve(appID: app.id, client: client)
-        let groupName = betaGroup.attributes?.name ?? "?"
-
-        print("Add build \(resolved.label) to group '\(groupName)'.")
-        guard confirm("Continue? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        try await BetaGroups.addBuild(resolved.id, toGroup: betaGroup.id, client: client)
-        print()
-        success("Added", "build \(resolved.label) to group '\(groupName)'.")
+        try await TestFlightCommand.changeGroupBuild(adding: true, bundleID: bundleID, group: group, buildOptions: buildOptions)
       }
     }
 
@@ -476,22 +485,7 @@ struct TestFlightCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        let client = try ClientFactory.makeClient()
-        let app = try await findApp(bundleID: bundleID, client: client)
-        let betaGroup = try await TestFlightCommand.findBetaGroup(
-          name: group, appID: app.id, client: client)
-        let resolved = try await buildOptions.resolve(appID: app.id, client: client)
-        let groupName = betaGroup.attributes?.name ?? "?"
-
-        print("Remove build \(resolved.label) from group '\(groupName)'.")
-        guard confirm("Continue? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        try await BetaGroups.removeBuild(resolved.id, fromGroup: betaGroup.id, client: client)
-        print()
-        success("Removed", "build \(resolved.label) from group '\(groupName)'.")
+        try await TestFlightCommand.changeGroupBuild(adding: false, bundleID: bundleID, group: group, buildOptions: buildOptions)
       }
     }
 

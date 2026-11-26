@@ -69,7 +69,7 @@ extension LocalizationMedia {
   ) async throws {
     let media = try MediaFile(readingFrom: file)
     let ext = (media.fileName as NSString).pathExtension.lowercased()
-    let isImage = ["png", "jpg", "jpeg"].contains(ext)
+    let isImage = imageExtensions.contains(ext)
     let isVideo = videoExtensions.contains(ext)
     let slotName = [displayType, previewType].compactMap { $0?.uppercased() }.first { AssetLibrary.slots[$0] != nil }
     let slot = slotName.flatMap { AssetLibrary.slots[$0] }

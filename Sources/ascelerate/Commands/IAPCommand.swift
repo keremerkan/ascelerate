@@ -76,9 +76,6 @@ struct IAPCommand: AsyncParsableCommand {
     return (point, currency)
   }
 
-  /// Looks up the customer price string for a given price point ID in a given territory.
-  /// Used for display purposes. Returns nil if not found.
-
   // MARK: - List
 
   struct List: AsyncParsableCommand {
@@ -816,13 +813,7 @@ struct IAPCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let iap = try await findIAP(productID: productID, appID: app.id, client: client)
 
-        let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
-        let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try decodeFile([String: ProductLocaleFields].self, from: data, path: filePath)
-
-        guard !localeUpdates.isEmpty else {
-          throw ValidationError("JSON file contains no locale data.")
-        }
+        let localeUpdates = try readLocalizationFile(file, as: ProductLocaleFields.self)
 
         try await importProductLocalizations(
           localeUpdates,
@@ -1653,7 +1644,6 @@ struct IAPCommand: AsyncParsableCommand {
 
         print()
         print("Create offer code:")
-        print("  Subscription:  (n/a — IAP)")
         print("  IAP:           \(productID)")
         print("  Name:          \(name)")
         print("  Eligibilities: \(eligibilities.map { $0.rawValue }.joined(separator: ", "))")
@@ -1700,21 +1690,9 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        guard let activeBool = Bool(active.lowercased()) else {
-          throw ValidationError("--active must be 'true' or 'false'.")
+        try await runOfferCodeToggle(.inAppPurchase, offerCodeID: offerCodeID, active: active) { client in
+          try await IAPCommand.validateOwnedOfferCode(offerCodeID, bundleID: bundleID, productID: productID, client: client)
         }
-        let client = try ClientFactory.makeClient()
-        try await IAPCommand.validateOwnedOfferCode(
-          offerCodeID, bundleID: bundleID, productID: productID, client: client)
-
-        guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        try await OfferCodes.setActive(.inAppPurchase, id: offerCodeID, active: activeBool, client: client)
-        print()
-        success("Updated", "offer code \(offerCodeID) (active=\(activeBool)).")
       }
     }
 
@@ -1750,35 +1728,11 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        guard count > 0 else {
-          throw ValidationError("--count must be greater than 0.")
+        try await runOfferCodeGenCodes(
+          .inAppPurchase, group: "iap", offerCodeID: offerCodeID, count: count, expires: expires, environment: environment
+        ) { client in
+          try await IAPCommand.validateOwnedOfferCode(offerCodeID, bundleID: bundleID, productID: productID, client: client)
         }
-        let env: ASCEnum.OfferCodeEnvironment? = try environment.map {
-          try parseEnum($0, name: "environment")
-        }
-        let client = try ClientFactory.makeClient()
-        try await IAPCommand.validateOwnedOfferCode(
-          offerCodeID, bundleID: bundleID, productID: productID, client: client)
-
-        print("Generate \(count) one-time-use code(s):")
-        print("  Offer Code ID: \(offerCodeID)")
-        print("  Expires:       \(expires)")
-        print("  Environment:   \(env.map { $0.rawValue } ?? "PRODUCTION (default)")")
-        print()
-
-        guard confirm("Generate? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let batchID = try await OfferCodes.generateCodes(
-          .inAppPurchase, offerCodeID: offerCodeID, count: count, expirationDate: expires, environment: env?.rawValue,
-          client: client)
-        print()
-        success("Created", "one-time-use code batch (id: \(batchID)).")
-        print()
-        print("Codes are generated asynchronously. Fetch with:")
-        print("  ascelerate iap offer-code view-codes \(batchID)")
       }
     }
 
@@ -1814,30 +1768,11 @@ struct IAPCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        guard count > 0 else {
-          throw ValidationError("--count must be greater than 0.")
+        try await runOfferCodeAddCustomCode(
+          .inAppPurchase, offerCodeID: offerCodeID, code: code, count: count, expires: expires
+        ) { client in
+          try await IAPCommand.validateOwnedOfferCode(offerCodeID, bundleID: bundleID, productID: productID, client: client)
         }
-        let client = try ClientFactory.makeClient()
-        try await IAPCommand.validateOwnedOfferCode(
-          offerCodeID, bundleID: bundleID, productID: productID, client: client)
-
-        print("Add custom code:")
-        print("  Offer Code ID: \(offerCodeID)")
-        print("  Code:          \(code)")
-        print("  Redemptions:   \(count)")
-        if let expires { print("  Expires:       \(expires)") }
-        print()
-
-        guard confirm("Create? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let customCodeID = try await OfferCodes.addCustomCode(
-          .inAppPurchase, offerCodeID: offerCodeID, code: code, count: count, expirationDate: expires, client: client)
-
-        print()
-        success("Created", "custom code '\(code)' (id: \(customCodeID)).")
       }
     }
 

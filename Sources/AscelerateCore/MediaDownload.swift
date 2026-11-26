@@ -121,10 +121,7 @@ public enum MediaDownload {
       }
     }
 
-    let previewSets = try await client.appStoreVersionLocalizationsAppPreviewSetsGetToManyRelated(
-      path: .init(id: localizationID), query: .init(limit: 50)
-    ).ok.body.json.data
-    for set in previewSets {
+    for set in try await LocalizationMedia.previewSets(on: .versionLocalization(localizationID), client: client) {
       guard let previewType = set.attributes?.previewType, wanted("APP_\(previewType)") else { continue }
       let previews = try await LocalizationMedia.previews(setID: set.id, client: client)
       guard !previews.isEmpty else { continue }

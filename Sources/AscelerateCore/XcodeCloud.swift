@@ -147,19 +147,19 @@ public enum XcodeCloud {
     let a = workflow.attributes
     let repositoryID = workflow.relationships?.repository?.data?.id
     var conditions: [StartCondition] = []
-    if let c = a?.branchStartCondition { conditions.append(.init(kind: "branch", patterns: patterns(c.source), schedule: nil)) }
-    if let c = a?.tagStartCondition { conditions.append(.init(kind: "tag", patterns: tagPatterns(c.source), schedule: nil)) }
-    if let c = a?.pullRequestStartCondition { conditions.append(.init(kind: "pullRequest", patterns: patterns(c.destination), schedule: nil)) }
+    if let c = a?.branchStartCondition { conditions.append(.init(kind: "branch", patterns: patterns(c.source).display, schedule: nil)) }
+    if let c = a?.tagStartCondition { conditions.append(.init(kind: "tag", patterns: patterns(c.source).display, schedule: nil)) }
+    if let c = a?.pullRequestStartCondition { conditions.append(.init(kind: "pullRequest", patterns: patterns(c.destination).display, schedule: nil)) }
     if let c = a?.scheduledStartCondition {
       let s = c.schedule
       let time = s.flatMap { s in s.hour.map { String(format: "%02d:%02d", $0, s.minute ?? 0) } }
       let schedule = [s?.frequency, s?.days?.joined(separator: ","), time, s?.timezone].compactMap { $0 }.joined(separator: " ")
-      conditions.append(.init(kind: "schedule", patterns: patterns(c.source), schedule: schedule.isEmpty ? nil : schedule))
+      conditions.append(.init(kind: "schedule", patterns: patterns(c.source).display, schedule: schedule.isEmpty ? nil : schedule))
     }
-    if let c = a?.manualBranchStartCondition { conditions.append(.init(kind: "manualBranch", patterns: patterns(c.source), schedule: nil)) }
-    if let c = a?.manualTagStartCondition { conditions.append(.init(kind: "manualTag", patterns: tagPatterns(c.source), schedule: nil)) }
+    if let c = a?.manualBranchStartCondition { conditions.append(.init(kind: "manualBranch", patterns: patterns(c.source).display, schedule: nil)) }
+    if let c = a?.manualTagStartCondition { conditions.append(.init(kind: "manualTag", patterns: patterns(c.source).display, schedule: nil)) }
     if let c = a?.manualPullRequestStartCondition {
-      conditions.append(.init(kind: "manualPullRequest", patterns: patterns(c.destination), schedule: nil))
+      conditions.append(.init(kind: "manualPullRequest", patterns: patterns(c.destination).display, schedule: nil))
     }
     return Workflow(
       id: workflow.id, name: a?.name, description: a?.description, isEnabled: a?.isEnabled ?? false,
@@ -176,16 +176,6 @@ public enum XcodeCloud {
       macOSVersion: workflow.relationships?.macOsVersion?.data.flatMap { macOSes[$0.id] })
   }
 
-  private static func patterns(_ patterns: Components.Schemas.CiBranchPatterns?) -> [String] {
-    guard let patterns, patterns.isAllMatch != true else { return [] }
-    return (patterns.patterns ?? []).compactMap { p in p.pattern.map { p.isPrefix == true ? $0 + "*" : $0 } }
-  }
-
-  private static func tagPatterns(_ patterns: Components.Schemas.CiTagPatterns?) -> [String] {
-    guard let patterns, patterns.isAllMatch != true else { return [] }
-    return (patterns.patterns ?? []).compactMap { p in p.pattern.map { p.isPrefix == true ? $0 + "*" : $0 } }
-  }
-
   /// Turns a workflow on or off: an off one starts no builds, by its conditions or by hand.
   public static func setEnabled(workflowID: String, _ isEnabled: Bool, client: ASCClient) async throws {
     _ = try await client.ciWorkflowsUpdateInstance(path: .init(id: workflowID), body: .json(.init(data: .init(
@@ -194,27 +184,6 @@ public enum XcodeCloud {
 
   /// The start conditions that start a workflow on their own (as `StartCondition.kind`).
   public static let automaticStartKinds: Set<String> = ["branch", "tag", "pullRequest", "schedule"]
-
-  /// Takes away a workflow's automatic start conditions (branch and tag changes, pull requests,
-  /// the schedule); the manual ones stay, so it's started only by hand. Xcode Cloud wants a
-  /// workflow to keep at least one start condition.
-  ///
-  /// Apple ignores a start condition sent as null on its own (the update answers 200 and changes
-  /// nothing), but replaces the start conditions as a set when the update also carries one of
-  /// them (seen 2026-11-03). So the workflow's manual conditions are read and sent back as they
-  /// are, with the automatic ones as null.
-  public static func removeAutomaticStarts(workflowID: String, client: ASCClient) async throws {
-    let current = try await client.ciWorkflowsGetInstance(path: .init(id: workflowID)).ok.body.json.data.attributes
-    let automatic = ["branchStartCondition", "tagStartCondition", "pullRequestStartCondition", "scheduledStartCondition"]
-    try await ASCNulls.sending(automatic.map { ["data", "attributes", $0] }) {
-      _ = try await client.ciWorkflowsUpdateInstance(path: .init(id: workflowID), body: .json(.init(data: .init(
-        attributes: .init(
-          manualBranchStartCondition: current?.manualBranchStartCondition,
-          manualPullRequestStartCondition: current?.manualPullRequestStartCondition,
-          manualTagStartCondition: current?.manualTagStartCondition),
-        id: workflowID, _type: "ciWorkflows")))).ok
-    }
-  }
 
   // MARK: Editing a workflow
 
@@ -233,6 +202,11 @@ public enum XcodeCloud {
   public struct NamePatterns: Hashable, Sendable {
     public var isAny: Bool
     public var patterns: [NamePattern]
+
+    /// As shown: a prefix pattern with a trailing `*`; none for any name.
+    var display: [String] {
+      isAny ? [] : patterns.filter { !$0.pattern.isEmpty }.map { $0.isPrefix ? $0.pattern + "*" : $0.pattern }
+    }
 
     public init(isAny: Bool = true, patterns: [NamePattern] = []) {
       self.isAny = isAny

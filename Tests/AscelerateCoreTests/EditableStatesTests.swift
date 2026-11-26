@@ -9,3 +9,10 @@ import Testing
     for state in VersionLocalizations.editableStates { #expect(State(rawValue: state) != nil, "\(state)") }
   }
 }
+
+@Suite struct CertificateTypeTests {
+  /// The `certs create` picker maps these to the enum: one that isn't a type would drop out.
+  @Test func everyCreatableTypeIsACertificateType() {
+    for type in Certificates.creatableTypes { #expect(ASCEnum.CertificateType(rawValue: type) != nil, "\(type)") }
+  }
+}

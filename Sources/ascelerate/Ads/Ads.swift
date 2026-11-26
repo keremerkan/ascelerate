@@ -205,3 +205,14 @@ extension Ads {
     }
   }
 }
+
+extension Ads {
+  /// yyyy-MM-dd in UTC with Latin digits: the days the Ads commands take and send.
+  static func utcDayFormatter() -> DateFormatter {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone(identifier: "UTC")
+    return formatter
+  }
+}

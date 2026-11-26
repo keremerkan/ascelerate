@@ -1290,13 +1290,7 @@ struct SubCommand: AsyncParsableCommand {
           productID: productID, appID: app.id, client: client
         )
 
-        let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
-        let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try decodeFile([String: ProductLocaleFields].self, from: data, path: filePath)
-
-        guard !localeUpdates.isEmpty else {
-          throw ValidationError("JSON file contains no locale data.")
-        }
+        let localeUpdates = try readLocalizationFile(file, as: ProductLocaleFields.self)
 
         try await importProductLocalizations(
           localeUpdates,
@@ -1389,16 +1383,8 @@ struct SubCommand: AsyncParsableCommand {
           )
         }
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(result)
-
         let safeName = group.name.replacingOccurrences(of: " ", with: "-").lowercased()
-        let outputPath = expandPath(
-          try confirmOutputPath(output ?? "\(safeName)-group-localizations.json", isDirectory: false))
-        try data.write(to: URL(fileURLWithPath: outputPath))
-
-        success("Exported", "\(result.count) locale(s) to \(outputPath)")
+        try writeLocalizationFile(result, defaultName: "\(safeName)-group-localizations.json", output: output)
       }
     }
 
@@ -1429,13 +1415,7 @@ struct SubCommand: AsyncParsableCommand {
         let app = try await findApp(bundleID: bundleID, client: client)
         let group = try await SubCommand.pickGroup(appID: app.id, client: client)
 
-        let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
-        let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try decodeFile([String: GroupLocaleFields].self, from: data, path: filePath)
-
-        guard !localeUpdates.isEmpty else {
-          throw ValidationError("JSON file contains no locale data.")
-        }
+        let localeUpdates = try readLocalizationFile(file, as: GroupLocaleFields.self)
 
         print("Importing \(localeUpdates.count) locale(s) for group '\(group.name)':")
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
@@ -2509,21 +2489,9 @@ struct SubCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        guard let activeBool = Bool(active.lowercased()) else {
-          throw ValidationError("--active must be 'true' or 'false'.")
+        try await runOfferCodeToggle(.subscription, offerCodeID: offerCodeID, active: active) { client in
+          try await SubCommand.validateOwnedOffer(offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
         }
-        let client = try ClientFactory.makeClient()
-        try await SubCommand.validateOwnedOffer(
-          offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
-
-        guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        try await OfferCodes.setActive(.subscription, id: offerCodeID, active: activeBool, client: client)
-        print()
-        success("Updated", "offer code \(offerCodeID) (active=\(activeBool)).")
       }
     }
 
@@ -2559,35 +2527,11 @@ struct SubCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        guard count > 0 else {
-          throw ValidationError("--count must be greater than 0.")
+        try await runOfferCodeGenCodes(
+          .subscription, group: "sub", offerCodeID: offerCodeID, count: count, expires: expires, environment: environment
+        ) { client in
+          try await SubCommand.validateOwnedOffer(offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
         }
-        let env: ASCEnum.OfferCodeEnvironment? = try environment.map {
-          try parseEnum($0, name: "environment")
-        }
-        let client = try ClientFactory.makeClient()
-        try await SubCommand.validateOwnedOffer(
-          offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
-
-        print("Generate \(count) one-time-use code(s):")
-        print("  Offer Code ID: \(offerCodeID)")
-        print("  Expires:       \(expires)")
-        print("  Environment:   \(env.map { $0.rawValue } ?? "PRODUCTION (default)")")
-        print()
-
-        guard confirm("Generate? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let batchID = try await OfferCodes.generateCodes(
-          .subscription, offerCodeID: offerCodeID, count: count, expirationDate: expires, environment: env?.rawValue,
-          client: client)
-        print()
-        success("Created", "one-time-use code batch (id: \(batchID)).")
-        print()
-        print("Codes are generated asynchronously. Fetch with:")
-        print("  ascelerate sub offer-code view-codes \(batchID)")
       }
     }
 
@@ -2623,30 +2567,11 @@ struct SubCommand: AsyncParsableCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        guard count > 0 else {
-          throw ValidationError("--count must be greater than 0.")
+        try await runOfferCodeAddCustomCode(
+          .subscription, offerCodeID: offerCodeID, code: code, count: count, expires: expires
+        ) { client in
+          try await SubCommand.validateOwnedOffer(offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
         }
-        let client = try ClientFactory.makeClient()
-        try await SubCommand.validateOwnedOffer(
-          offerCodeID, kind: .offerCode, bundleID: bundleID, productID: productID, client: client)
-
-        print("Add custom code:")
-        print("  Offer Code ID: \(offerCodeID)")
-        print("  Code:          \(code)")
-        print("  Redemptions:   \(count)")
-        if let expires { print("  Expires:       \(expires)") }
-        print()
-
-        guard confirm("Create? [y/N] ") else {
-          cancelled()
-          return
-        }
-
-        let customCodeID = try await OfferCodes.addCustomCode(
-          .subscription, offerCodeID: offerCodeID, code: code, count: count, expirationDate: expires, client: client)
-
-        print()
-        success("Created", "custom code '\(code)' (id: \(customCodeID)).")
       }
     }
 

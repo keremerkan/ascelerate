@@ -590,10 +590,6 @@ extension Ads {
   }
 
   private static func utcDay(_ date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd"
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = TimeZone(identifier: "UTC")
-    return formatter.string(from: date)
+    Ads.utcDayFormatter().string(from: date)
   }
 }

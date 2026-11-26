@@ -337,16 +337,8 @@ struct ProductPagesCommand: AsyncParsableCommand {
           result[localization.locale] = ProductPageLocaleFields(promotionalText: localization.promotionalText)
         }
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(result)
-
         let pageName = productPage.name
-        let outputPath = expandPath(
-          try confirmOutputPath(output ?? "\(pageName)-localizations.json", isDirectory: false))
-        try data.write(to: URL(fileURLWithPath: outputPath))
-
-        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+        try writeLocalizationFile(result, defaultName: "\(pageName)-localizations.json", output: output)
       }
     }
 
@@ -381,13 +373,7 @@ struct ProductPagesCommand: AsyncParsableCommand {
         let versionID = try await ProductPagesCommand.activeVersionID(
           pageID: productPage.id, editing: true, client: client)
 
-        let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
-        let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try decodeFile([String: ProductPageLocaleFields].self, from: data, path: filePath)
-
-        guard !localeUpdates.isEmpty else {
-          throw ValidationError("JSON file contains no locale data.")
-        }
+        let localeUpdates = try readLocalizationFile(file, as: ProductPageLocaleFields.self)
 
         print("Importing \(localeUpdates.count) locale(s) for '\(productPage.name)':")
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {

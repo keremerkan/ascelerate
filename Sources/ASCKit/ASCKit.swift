@@ -274,13 +274,7 @@ struct ErrorMiddleware: ClientMiddleware {
 
   /// `user-hour-lim:3600;user-hour-rem:3599;`
   private func parseRateLimit(_ header: String) -> (limit: Int, remaining: Int)? {
-    var values: [String: Int] = [:]
-    for part in header.split(separator: ";") {
-      let pair = part.split(separator: ":")
-      if pair.count == 2, let value = Int(pair[1]) { values[String(pair[0])] = value }
-    }
-    guard let limit = values["user-hour-lim"], let remaining = values["user-hour-rem"] else { return nil }
-    return (limit, remaining)
+    ASCRateLimit.parse(header)
   }
 }
 
@@ -289,6 +283,18 @@ struct ErrorMiddleware: ClientMiddleware {
 /// The `X-Rate-Limit` header (`user-hour-lim:3600;user-hour-rem:3599;`), which the spec doesn't
 /// document, so generated responses don't expose it.
 public enum ASCRateLimit {
+  /// The hourly limit and the requests left from an `X-Rate-Limit` header
+  /// ("user-hour-lim:3600;user-hour-rem:3412;"); nil when it doesn't name both.
+  public static func parse(_ header: String) -> (limit: Int, remaining: Int)? {
+    var values: [String: Int] = [:]
+    for part in header.split(separator: ";") {
+      let pair = part.split(separator: ":")
+      if pair.count == 2, let value = Int(pair[1]) { values[String(pair[0])] = value }
+    }
+    guard let limit = values["user-hour-lim"], let remaining = values["user-hour-rem"] else { return nil }
+    return (limit, remaining)
+  }
+
   final class Recorder: @unchecked Sendable {
     private let lock = NSLock()
     private var value: String?

@@ -83,15 +83,8 @@ extension AdsCommand {
       let scope = try await self.scope.resolve(ads)
       let data = try await Ads.withClient(ads) { client in
         try await Ads.perCampaign(scope) { campaignID in
-          let rows = try await Ads.reportRows { pagination in
-            let json = try await client.appsSearchTermReports(
-              headers: .init(xApContext: Ads.context(ads)),
-              body: .json(Ads.reportRequest(
-                start: start, end: end, filters: Ads.campaignFilter(campaignID), pagination: pagination
-              ))
-            ).ok.body.json
-            return (json.result?.rows ?? [], json.pagination?.totalCount)
-          }
+          let rows = try await Ads.searchTermReportRows(
+            campaignID: campaignID, start: start, end: end, context: Ads.context(ads), client: client)
           let keywords = try await Ads.keywords(campaignID: campaignID, ads, client: client)
           let groups = try await Ads.adGroups(campaignID: campaignID, ads, client: client)
           // One query at a time: perCampaign runs four campaigns at once.

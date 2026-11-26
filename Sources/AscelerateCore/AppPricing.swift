@@ -173,7 +173,7 @@ public enum AppPricing {
         ).ok.body.json
       }
     }.flatMap(\.data).map { pricePoint($0, territoryID: territoryID) }
-      .sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) }
+      .cheapestFirst
   }
 
   /// What a tier comes to in every other territory: the prices Apple derives from a base price,
@@ -395,5 +395,19 @@ extension AppPricing.Price {
   /// Whether it applies today or later (what `newPrices` keeps).
   public var isCurrentOrLater: Bool {
     endDate.map { $0 > AppPricing.today } ?? true
+  }
+}
+
+extension Array where Element == AppPricing.PricePoint {
+  /// Cheapest first, compared as decimals.
+  public var cheapestFirst: [AppPricing.PricePoint] {
+    sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) }
+  }
+}
+
+extension AppPricing {
+  /// Tiers grouped by territory, each territory's cheapest first (the batched tier reads).
+  static func byTerritory(_ points: [PricePoint]) -> [String: [PricePoint]] {
+    Dictionary(grouping: points, by: \.territoryID).mapValues(\.cheapestFirst)
   }
 }

@@ -80,7 +80,7 @@ public func formatFieldName(_ name: String) -> String {
 
   return words.enumerated().map { i, word in
     if word.allSatisfy(\.isUppercase) && word.count >= 2 { return word } // preserve acronyms
-    return i == 0 ? word.prefix(1).uppercased() + word.dropFirst() : word.prefix(1).uppercased() + word.dropFirst()
+    return word.prefix(1).uppercased() + word.dropFirst()
   }.joined(separator: " ")
 }
 

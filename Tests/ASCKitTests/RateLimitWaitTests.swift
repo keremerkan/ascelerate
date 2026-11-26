@@ -264,3 +264,12 @@ private final class Order: @unchecked Sendable {
 
   var all: [String] { lock.withLock { items } }
 }
+
+@Suite struct RateLimitHeaderTests {
+  @Test func bothValuesOrNothing() {
+    #expect(ASCRateLimit.parse("user-hour-lim:3600;user-hour-rem:3412;")! == (3600, 3412))
+    #expect(ASCRateLimit.parse("user-hour-lim:3600;user-hour-rem:-1;")! == (3600, -1))
+    #expect(ASCRateLimit.parse("user-hour-lim:3600;") == nil)
+    #expect(ASCRateLimit.parse("") == nil)
+  }
+}

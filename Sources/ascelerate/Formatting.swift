@@ -194,6 +194,25 @@ func removeOnInterrupt(_ path: String) {
   interruptCleanup.append(path)
 }
 
+/// Deletes `path` (a temporary folder) when the process ends, normally or on a signal.
+func removeAtExit(_ path: String) {
+  removeOnInterrupt(path)
+  processLock.lock()
+  defer { processLock.unlock() }
+  atExitCleanup.append(path)
+  guard !atExitInstalled else { return }
+  atExitInstalled = true
+  atexit {
+    processLock.lock()
+    let folders = atExitCleanup
+    processLock.unlock()
+    for folder in folders { try? FileManager.default.removeItem(atPath: folder) }
+  }
+}
+
+nonisolated(unsafe) private var atExitCleanup: [String] = []
+nonisolated(unsafe) private var atExitInstalled = false
+
 /// Whether the tool was started with SIGINT ignored, read once at start (`recordInheritedSignals`)
 /// before any handler replaces the inherited disposition.
 nonisolated(unsafe) private(set) var sigintInheritedIgnored = false
@@ -508,6 +527,8 @@ func extractZipToTemp(_ zipPath: String) throws -> String {
 
   let tempDir = NSTemporaryDirectory() + "ascelerate-media-\(UUID().uuidString)"
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
+  // The unpacked copy goes when the run ends (it was left behind in the temporary folder).
+  removeAtExit(tempDir)
 
   let process = Process()
   process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
@@ -534,6 +555,8 @@ func extractTarToTemp(_ tarPath: String) throws -> String {
 
   let tempDir = NSTemporaryDirectory() + "ascelerate-media-\(UUID().uuidString)"
   try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
+  // The unpacked copy goes when the run ends (it was left behind in the temporary folder).
+  removeAtExit(tempDir)
 
   let process = Process()
   process.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
@@ -649,7 +672,6 @@ func resolveFile(_ file: String?, extension ext: String, prompt: String) throws 
   return path
 }
 
-/// Prints a [y/N] prompt and returns true if the user (or --yes flag) confirms.
 /// Prompts for non-empty text input; retries on empty.
 func promptText(_ message: String) throws -> String {
   if autoConfirm || jsonMode {
@@ -771,10 +793,6 @@ func confirmOutputPath(_ path: String, isDirectory: Bool) throws -> String {
   }
 }
 
-/// Checks whether the installed shell completion script matches the current version.
-/// When `interactive` is true (bare invocation), offers to run install-completions automatically.
-/// Otherwise shows a one-time warning. No-op if completions were never installed.
-/// Returns true if the user was prompted (interactive mode only).
 /// Compares dotted numeric versions (e.g. "0.12.0"). Returns true if `a` is strictly older than `b`.
 /// Missing components are treated as 0; non-numeric parts as 0.
 func isVersionOlder(_ a: String, than b: String) -> Bool {
@@ -1145,16 +1163,7 @@ func exportProductLocalizations(
   for loc in existing where !loc.locale.isEmpty {
     result[loc.locale] = ProductLocaleFields(name: loc.name, description: loc.description)
   }
-
-  let encoder = JSONEncoder()
-  encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-  let data = try encoder.encode(result)
-
-  let outputPath = expandPath(
-    try confirmOutputPath(output ?? "\(productID)-localizations.json", isDirectory: false))
-  try data.write(to: URL(fileURLWithPath: outputPath))
-
-  success("Exported", "\(result.count) locale(s) to \(outputPath)")
+  try writeLocalizationFile(result, defaultName: "\(productID)-localizations.json", output: output)
 }
 
 /// Drives the shared create-or-update import flow for product (IAP/subscription) localizations:
@@ -1438,4 +1447,28 @@ func decodeFile<T: Decodable>(_ type: T.Type, from data: Data, path: String) thr
   } catch let error as DecodingError {
     throw ValidationError("Can't read \((path as NSString).lastPathComponent): \(describeDecodingError(error))")
   }
+}
+
+// MARK: - Localization files (the import and export commands of products, events and pages)
+
+/// A localization file for an import, picked (`file`, else a list of the folder's JSON files)
+/// and read by the core (`LocalizationFile.decode`, its wording: Kerem, 2026-11-26); an empty one
+/// is refused.
+func readLocalizationFile<Fields: Decodable>(_ file: String?, as type: Fields.Type) throws -> [String: Fields] {
+  let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
+  let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
+  do {
+    return try LocalizationFile.decode(data, as: type)
+  } catch let error as LocalizationFile.FileError {
+    throw ValidationError(error.localizedDescription)
+  }
+}
+
+/// Writes an export's localization file (`LocalizationFile.encode`: pretty, keys sorted) to
+/// `output`, else `defaultName`, and says how many languages it holds.
+func writeLocalizationFile<Fields: Encodable>(_ file: [String: Fields], defaultName: String, output: String?) throws {
+  let data = try LocalizationFile.encode(file)
+  let outputPath = expandPath(try confirmOutputPath(output ?? defaultName, isDirectory: false))
+  try data.write(to: URL(fileURLWithPath: outputPath))
+  success("Exported", "\(file.count) locale(s) to \(outputPath)")
 }

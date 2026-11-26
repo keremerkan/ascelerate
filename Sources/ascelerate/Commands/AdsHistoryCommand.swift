@@ -179,10 +179,7 @@ extension Ads {
 
   /// The day after a yyyy-MM-dd date, as yyyy-MM-dd.
   static func dayAfter(_ day: String) -> String {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd"
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = TimeZone(identifier: "UTC")
+    let formatter = Ads.utcDayFormatter()
     guard let date = formatter.date(from: day) else { return day }
     return formatter.string(from: date.addingTimeInterval(86_400))
   }

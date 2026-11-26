@@ -134,10 +134,6 @@ struct SimulatorManager: Sendable {
         try ScreenshotShell.run("/usr/bin/xcrun", arguments: args)
     }
 
-    func clearStatusBarOverride(udid: String) throws {
-        try ScreenshotShell.run("/usr/bin/xcrun", arguments: ["simctl", "status_bar", udid, "clear"])
-    }
-
     func setAppearance(udid: String, dark: Bool) throws {
         try ScreenshotShell.run("/usr/bin/xcrun", arguments: [
             "simctl", "ui", udid, "appearance", dark ? "dark" : "light",

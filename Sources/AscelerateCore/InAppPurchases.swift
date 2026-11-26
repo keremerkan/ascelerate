@@ -277,7 +277,7 @@ public enum InAppPurchases {
       }
     }
     let points = pages.flatMap(\.data).map { pricePoint($0, territoryID: territoryID) }
-      .sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) }
+      .cheapestFirst
     return (points, pages.lazy.flatMap { $0.included ?? [] }.compactMap { $0.attributes?.currency }.first)
   }
 
@@ -291,7 +291,7 @@ public enum InAppPurchases {
         ).ok.body.json
       }
     }.flatMap(\.data).map { pricePoint($0, territoryID: territoryID) }
-      .sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) }
+      .cheapestFirst
   }
 
   /// Several territories' price tiers for the purchase, cheapest first: one request for up to
@@ -308,12 +308,10 @@ public enum InAppPurchases {
         ).ok.body.json
       }
     }.flatMap(\.data)
-    var tiers: [String: [AppPricing.PricePoint]] = [:]
-    for point in points {
-      guard let territoryID = point.relationships?.territory?.data?.id else { continue }
-      tiers[territoryID, default: []].append(pricePoint(point, territoryID: territoryID))
-    }
-    return tiers.mapValues { $0.sorted { (Decimal(string: $0.customerPrice) ?? 0) < (Decimal(string: $1.customerPrice) ?? 0) } }
+    return AppPricing.byTerritory(points.compactMap { point -> AppPricing.PricePoint? in
+      guard let territoryID = point.relationships?.territory?.data?.id else { return nil }
+      return pricePoint(point, territoryID: territoryID)
+    })
   }
 
   /// What a tier comes to in every other territory, with each territory's currency.

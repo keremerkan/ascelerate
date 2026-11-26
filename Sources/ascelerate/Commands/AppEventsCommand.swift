@@ -502,16 +502,8 @@ struct AppEventsCommand: AsyncParsableCommand {
             name: loc.name, shortDescription: loc.shortDescription, longDescription: loc.longDescription)
         }
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(result)
-
         let refName = appEvent.referenceName
-        let outputPath = expandPath(
-          try confirmOutputPath(output ?? "\(refName)-localizations.json", isDirectory: false))
-        try data.write(to: URL(fileURLWithPath: outputPath))
-
-        print(green("Exported") + " \(result.count) locale(s) to \(outputPath)")
+        try writeLocalizationFile(result, defaultName: "\(refName)-localizations.json", output: output)
       }
     }
 
@@ -544,13 +536,7 @@ struct AppEventsCommand: AsyncParsableCommand {
         let appEvent = try await AppEventsCommand.findAppEvent(
           ref: event, appID: app.id, client: client)
 
-        let filePath = try resolveFile(file, extension: "json", prompt: "Select a JSON file")
-        let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
-        let localeUpdates = try decodeFile([String: EventLocaleFields].self, from: data, path: filePath)
-
-        guard !localeUpdates.isEmpty else {
-          throw ValidationError("JSON file contains no locale data.")
-        }
+        let localeUpdates = try readLocalizationFile(file, as: EventLocaleFields.self)
 
         print("Importing \(localeUpdates.count) locale(s) for '\(appEvent.referenceName)':")
         for (locale, fields) in localeUpdates.sorted(by: { $0.key < $1.key }) {
@@ -704,7 +690,7 @@ struct AppEventsCommand: AsyncParsableCommand {
 
         let media = try MediaFile(readingFrom: file)
         let ext = (media.fileName as NSString).pathExtension.lowercased()
-        let isImage = ["png", "jpg", "jpeg"].contains(ext)
+        let isImage = imageExtensions.contains(ext)
         let isVideo = ["mp4", "mov"].contains(ext)
         guard isImage || isVideo else {
           throw ValidationError(

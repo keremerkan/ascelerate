@@ -1,3 +1,4 @@
+import ArgumentParser
 import ASCKit
 import AscelerateCore
 import Foundation
@@ -156,4 +157,95 @@ func runReviewScreenshotDelete(
   try await delete(screenshotID)
   print()
   success("Deleted", "review screenshot.")
+}
+
+// MARK: - Offer codes
+
+/// Shared driver for `iap|sub offer-code toggle`: `validate` checks the offer belongs to the
+/// product.
+func runOfferCodeToggle(
+  _ product: OfferCodes.Product, offerCodeID: String, active: String,
+  validate: (ASCClient) async throws -> Void
+) async throws {
+  guard let activeBool = Bool(active.lowercased()) else {
+    throw ValidationError("--active must be 'true' or 'false'.")
+  }
+  // The client after the argument checks, as the commands did.
+  let client = try ClientFactory.makeClient()
+  try await validate(client)
+
+  guard confirm("Set offer code \(offerCodeID) active=\(activeBool)? [y/N] ") else {
+    cancelled()
+    return
+  }
+
+  try await OfferCodes.setActive(product, id: offerCodeID, active: activeBool, client: client)
+  print()
+  success("Updated", "offer code \(offerCodeID) (active=\(activeBool)).")
+}
+
+/// Shared driver for `iap|sub offer-code gen-codes`; `group` names the command group (`iap`,
+/// `sub`) in the follow-up hint.
+func runOfferCodeGenCodes(
+  _ product: OfferCodes.Product, group: String, offerCodeID: String, count: Int, expires: String, environment: String?,
+  validate: (ASCClient) async throws -> Void
+) async throws {
+  guard count > 0 else {
+    throw ValidationError("--count must be greater than 0.")
+  }
+  let env: ASCEnum.OfferCodeEnvironment? = try environment.map {
+    try parseEnum($0, name: "environment")
+  }
+  let client = try ClientFactory.makeClient()
+  try await validate(client)
+
+  print("Generate \(count) one-time-use code(s):")
+  print("  Offer Code ID: \(offerCodeID)")
+  print("  Expires:       \(expires)")
+  print("  Environment:   \(env.map { $0.rawValue } ?? "PRODUCTION (default)")")
+  print()
+
+  guard confirm("Generate? [y/N] ") else {
+    cancelled()
+    return
+  }
+
+  let batchID = try await OfferCodes.generateCodes(
+    product, offerCodeID: offerCodeID, count: count, expirationDate: expires, environment: env?.rawValue,
+    client: client)
+  print()
+  success("Created", "one-time-use code batch (id: \(batchID)).")
+  print()
+  print("Codes are generated asynchronously. Fetch with:")
+  print("  ascelerate \(group) offer-code view-codes \(batchID)")
+}
+
+/// Shared driver for `iap|sub offer-code add-custom-codes`.
+func runOfferCodeAddCustomCode(
+  _ product: OfferCodes.Product, offerCodeID: String, code: String, count: Int, expires: String?,
+  validate: (ASCClient) async throws -> Void
+) async throws {
+  guard count > 0 else {
+    throw ValidationError("--count must be greater than 0.")
+  }
+  let client = try ClientFactory.makeClient()
+  try await validate(client)
+
+  print("Add custom code:")
+  print("  Offer Code ID: \(offerCodeID)")
+  print("  Code:          \(code)")
+  print("  Redemptions:   \(count)")
+  if let expires { print("  Expires:       \(expires)") }
+  print()
+
+  guard confirm("Create? [y/N] ") else {
+    cancelled()
+    return
+  }
+
+  let customCodeID = try await OfferCodes.addCustomCode(
+    product, offerCodeID: offerCodeID, code: code, count: count, expirationDate: expires, client: client)
+
+  print()
+  success("Created", "custom code '\(code)' (id: \(customCodeID)).")
 }

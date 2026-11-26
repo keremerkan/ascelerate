@@ -112,6 +112,10 @@ struct DevicesCommand: AsyncParsableCommand {
 
       let deviceName = try name ?? promptText("Device name: ")
       let deviceUDID = try udid ?? promptText("Device UDID: ")
+      // Checked before anything is sent (Apple refuses a malformed one): the core's rule.
+      guard Devices.isValidUDID(deviceUDID) else {
+        throw ValidationError("'\(deviceUDID)' isn't a UDID: 40 hex digits, 8 and 16 hex digits joined by a hyphen, or a UUID.")
+      }
 
       let platformValue: ASCEnum.BundleIdPlatform
       if let platform {

@@ -16,7 +16,8 @@ let package = Package(
         // swift-configuration, which a CLI doesn't need. A fork of Apple's 1.109.0 whose only change
         // declares iOS (Apple's declares macOS only), so the library products build for iOS too.
         .package(url: "https://github.com/keremerkan/apple-ads-platform-api-swift", exact: "1.109.0-ios.1", traits: []),
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
+        // 1.7 for CommandGroup.
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-certificates", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-crypto", from: "4.2.0"),
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.0"),

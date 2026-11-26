@@ -27,7 +27,13 @@ struct MediaUploadPlan {
 
 // MARK: - Folder Scanning
 
-private let imageExtensions: Set<String> = ["png", "jpg", "jpeg"]
+let imageExtensions: Set<String> = ["png", "jpg", "jpeg"]
+
+/// Whether an asset library placement is done: ACTIVE, INACTIVE on old versions, or a PARENT_*
+/// state (the spec's); PENDING (a video still processing), ASSET_PROCESSING or FAILED aren't.
+func isFinishedPlacement(_ state: String) -> Bool {
+  state == "ACTIVE" || state == "INACTIVE" || state.hasPrefix("PARENT_")
+}
 let videoExtensions: Set<String> = ["mp4", "mov", "m4v"]
 
 func scanMediaFolder(at path: String) throws -> MediaUploadPlan {
@@ -752,19 +758,13 @@ extension AppsCommand {
           var screenshotSetsByType: [String: String] = [:]
           var previewSetsByType: [String: String] = [:]
           do {
-            let screenshotSetsResponse = try await ascClient.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
-              path: .init(id: localization.id), query: .init(limit: 50)
-            ).ok.body.json
-            for set in screenshotSetsResponse.data {
+            for set in try await LocalizationMedia.screenshotSets(on: .versionLocalization(localization.id), client: ascClient) {
               if let rawType = set.attributes?.screenshotDisplayType {
                 screenshotSetsByType[rawType] = set.id
               }
             }
 
-            let previewSetsResponse = try await ascClient.appStoreVersionLocalizationsAppPreviewSetsGetToManyRelated(
-              path: .init(id: localization.id), query: .init(limit: 50)
-            ).ok.body.json
-            for set in previewSetsResponse.data {
+            for set in try await LocalizationMedia.previewSets(on: .versionLocalization(localization.id), client: ascClient) {
               if let rawType = set.attributes?.previewType {
                 previewSetsByType[rawType] = set.id
               }
@@ -1770,10 +1770,7 @@ extension AppsCommand {
             continue
           }
 
-          let screenshotSets = try await ascClient.appStoreVersionLocalizationsAppScreenshotSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-          for set in screenshotSets.data {
+          for set in try await LocalizationMedia.screenshotSets(on: .versionLocalization(loc.id), client: ascClient) {
             // Display types the classic API can't create (APP_IPHONE_DUO, placed through the asset
             // library) are not managed by a media folder — never offer to delete them.
             guard let raw = set.attributes?.screenshotDisplayType,
@@ -1786,10 +1783,7 @@ extension AppsCommand {
             }
           }
 
-          let previewSets = try await ascClient.appStoreVersionLocalizationsAppPreviewSetsGetToManyRelated(
-            path: .init(id: loc.id), query: .init(limit: 50)
-          ).ok.body.json
-          for set in previewSets.data {
+          for set in try await LocalizationMedia.previewSets(on: .versionLocalization(loc.id), client: ascClient) {
             guard let raw = set.attributes?.previewType, ASCEnum.PreviewType(rawValue: raw) != nil else { continue }
             if localPreviewTypes[key]?.contains(raw) != true {
               let assets = try await LocalizationMedia.previews(setID: set.id, client: ascClient)
@@ -1940,7 +1934,7 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
         items.append(MediaItemStatus(
           locale: locale, displayTypeName: displayTypeName, position: i + 1,
           fileName: fileNames[i] ?? "unknown", state: state.map { formatState($0) } ?? "unknown",
-          isComplete: state.map { $0 == "ACTIVE" || $0 == "INACTIVE" || $0.hasPrefix("PARENT_") } ?? false,
+          isComplete: state.map(isFinishedPlacement) ?? false,
           isScreenshot: isScreenshot, isPlacement: true, localizationID: loc.id, placementGroup: group,
           setID: "placements/\(loc.id)/\(type.rawValue)", mediaID: placement.id, allIDsInSet: placements.map(\.id)))
       }
@@ -1970,7 +1964,7 @@ private func fetchAllMediaStatus(versionID: String, client: ASCClient) async thr
           fileName: screenshot.attributes?.fileName, state: screenshot.attributes?.assetDeliveryState?.state,
           isScreenshot: true, setID: set.id, mediaID: screenshot.id, allIDs: allIDs)
         if entry.isComplete, i < placementStates.count, let placementState = placementStates[i],
-          placementState != "ACTIVE", placementState != "INACTIVE", !placementState.hasPrefix("PARENT_") {
+          !isFinishedPlacement(placementState) {
           entry = MediaItemStatus(
             locale: entry.locale, displayTypeName: entry.displayTypeName, position: entry.position, fileName: entry.fileName,
             state: "\(formatState(placementState)) in the asset library", isComplete: false, isScreenshot: true,

@@ -116,13 +116,9 @@ struct CertsCommand: AsyncParsableCommand {
     var yes = false
 
     // Certificate types that can be created via the API
-    private static let creatableTypes: [ASCEnum.CertificateType] = [
-      .development, .distribution,
-      .developerIdApplication, .developerIdApplicationG2,
-      .developerIdKext, .developerIdKextG2,
-      .macInstallerDistribution,
-      .passTypeId, .passTypeIdWithNfc,
-    ]
+    /// The picker's types: the core's list (the ones the API creates without a pass type or
+    /// merchant ID, current Developer ID types only).
+    private static let creatableTypes: [ASCEnum.CertificateType] = Certificates.creatableTypes.compactMap(ASCEnum.CertificateType.init(rawValue:))
 
     private func promptCertType() throws -> ASCEnum.CertificateType {
       return try promptSelection(

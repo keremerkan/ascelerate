@@ -84,25 +84,7 @@ struct ScreenshotRunner: Sendable {
             }
 
             EventOutput.log("\n  Running tests concurrently...")
-            let deviceResults = await withTaskGroup(of: (ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?).self) { group in
-                for (device, sim) in resolvedDevices {
-                    EventOutput.emit(.device("testing", device.simulator, language: language))
-                    group.addTask {
-                        do {
-                            try testRunner.test(device: device, udid: sim.udid, language: language, buildResult: buildResult)
-                            return (device, sim, nil)
-                        } catch {
-                            return (device, sim, error)
-                        }
-                    }
-                }
-
-                var collected: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)] = []
-                for await result in group {
-                    collected.append(result)
-                }
-                return collected
-            }
+            let deviceResults = await Self.runTests(resolvedDevices, language: language, testRunner: testRunner, buildResult: buildResult)
 
             var languageResults = evaluateTestResults(
                 deviceResults, language: language, simulatorManager: simulatorManager
@@ -143,25 +125,7 @@ struct ScreenshotRunner: Sendable {
                     )
 
                     EventOutput.log("\n  Running retry tests...")
-                    let retryResults = await withTaskGroup(of: (ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?).self) { group in
-                        for (device, sim) in failedDevices {
-                            EventOutput.emit(.device("testing", device.simulator, language: language))
-                            group.addTask {
-                                do {
-                                    try testRunner.test(device: device, udid: sim.udid, language: language, buildResult: buildResult)
-                                    return (device, sim, nil)
-                                } catch {
-                                    return (device, sim, error)
-                                }
-                            }
-                        }
-
-                        var collected: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)] = []
-                        for await result in group {
-                            collected.append(result)
-                        }
-                        return collected
-                    }
+                    let retryResults = await Self.runTests(failedDevices, language: language, testRunner: testRunner, buildResult: buildResult)
 
                     var retryLanguageResults = evaluateTestResults(
                         retryResults, language: language, simulatorManager: simulatorManager
@@ -332,6 +296,32 @@ struct ScreenshotRunner: Sendable {
             try simulatorManager.disableAssetDownloads(udid: udid)
         } catch {
             EventOutput.log("  \(tag) " + yellow("Warning:") + " Could not disable asset downloads: \(error)")
+        }
+    }
+
+    /// Runs each device's tests at once (the first run and the retry), with each one's error.
+    private static func runTests(
+        _ devices: [(ScreenshotConfig.Device, SimulatorManager.SimDevice)], language: String,
+        testRunner: ScreenshotTestRunner, buildResult: ScreenshotTestRunner.BuildResult
+    ) async -> [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)] {
+        await withTaskGroup(of: (ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?).self) { group in
+            for (device, sim) in devices {
+                EventOutput.emit(.device("testing", device.simulator, language: language))
+                group.addTask {
+                    do {
+                        try testRunner.test(device: device, udid: sim.udid, language: language, buildResult: buildResult)
+                        return (device, sim, nil)
+                    } catch {
+                        return (device, sim, error)
+                    }
+                }
+            }
+
+            var collected: [(ScreenshotConfig.Device, SimulatorManager.SimDevice, Swift.Error?)] = []
+            for await result in group {
+                collected.append(result)
+            }
+            return collected
         }
     }
 
@@ -525,17 +515,14 @@ struct ScreenshotRunner: Sendable {
     }
 
     private func checkVersionInFile(at url: URL, currentVersion: String) {
-        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return }
+        // The one reader of the marker (doctor and setup-prompt use it too): nil when the file
+        // can't be read, "" when it has no marker.
+        guard let fileVersion = ScreenshotCommand.CreateHelper.installedVersion(at: url.path) else { return }
 
-        guard let range = content.range(of: #"ScreenshotHelperVersion \[(.+?)\]"#, options: .regularExpression) else {
+        guard !fileVersion.isEmpty else {
             EventOutput.log(yellow("Warning:") + " \(url.lastPathComponent) has no version marker. Run 'ascelerate screenshot create-helper' to regenerate.")
             return
         }
-
-        let match = String(content[range])
-        let fileVersion = match
-            .replacingOccurrences(of: "ScreenshotHelperVersion [", with: "")
-            .replacingOccurrences(of: "]", with: "")
 
         if fileVersion != currentVersion {
             EventOutput.log(yellow("Warning:") + " \(url.lastPathComponent) is version \(fileVersion), latest is \(currentVersion). Run 'ascelerate screenshot create-helper' to update.")

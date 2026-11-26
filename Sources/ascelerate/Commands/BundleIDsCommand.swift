@@ -4,6 +4,13 @@ import AscelerateCore
 import Foundation
 
 struct BundleIDsCommand: AsyncParsableCommand {
+  /// A bundle ID's description by the developer portal's rules (the core's).
+  static func checkName(_ name: String) throws {
+    guard BundleIDs.isValidName(name) else {
+      throw ValidationError("'\(name)' can't be a bundle ID's name: ASCII letters, digits, spaces, hyphens, periods and apostrophes, at most \(BundleIDs.maxNameLength) characters.")
+    }
+  }
+
   static let configuration = CommandConfiguration(
     commandName: "bundle-ids",
     abstract: "Manage bundle identifiers.",
@@ -111,6 +118,11 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let bundleIDName = try name ?? promptText("Display name: ")
       let bundleIDIdentifier = try identifier ?? promptText("Bundle identifier (e.g. com.example.MyApp): ")
+      // The developer portal's rules, checked before anything is sent (the core's).
+      try BundleIDsCommand.checkName(bundleIDName)
+      guard BundleIDs.isValidIdentifier(bundleIDIdentifier, wildcard: bundleIDIdentifier.hasSuffix("*")) else {
+        throw ValidationError("'\(bundleIDIdentifier)' isn't a bundle ID: ASCII letters, digits, hyphens and periods, at most \(BundleIDs.maxIdentifierLength) characters (a wildcard one ends with *).")
+      }
 
       let platformValue: ASCEnum.BundleIdPlatform
       if let platform {
@@ -218,6 +230,7 @@ struct BundleIDsCommand: AsyncParsableCommand {
 
       let currentName = bundleID.name.isEmpty ? "—" : bundleID.name
       let newName = try name ?? promptText("New display name [\(currentName)]: ")
+      try BundleIDsCommand.checkName(newName)
 
       let bidIdentifier = bundleID.identifier
       print("Update bundle identifier:")

@@ -67,6 +67,7 @@ extension LocalizationMedia {
     appID: String, context: [(String, String)], client: ASCClient,
     owner existing: Owner?, createOwner: () async throws -> Owner? = { throw ValidationError("No localization to upload to.") }
   ) async throws {
+    try checkPreviewFrame(previewFrame)
     let media = try MediaFile(readingFrom: file)
     let ext = (media.fileName as NSString).pathExtension.lowercased()
     let isImage = imageExtensions.contains(ext)

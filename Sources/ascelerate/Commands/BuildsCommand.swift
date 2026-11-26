@@ -684,6 +684,8 @@ struct BuildsCommand: AsyncParsableCommand {
     private func upload() async throws {
       if yes { autoConfirm = true }
       if !api { try ensureAltool() }
+      // An alias names its bundle ID, as for 'builds archives'.
+      let bundleID = try self.bundleID.map(resolveAlias)
 
       if file != nil && latest {
         throw ValidationError("Cannot specify both a file path and --latest.")
@@ -796,8 +798,11 @@ struct BuildsCommand: AsyncParsableCommand {
     @Flag(name: .long, help: "Use the latest .xcarchive from Xcode's archive location.")
     var latest = false
 
-    @Option(name: .long, help: "Filter archives by exact bundle identifier (use with --latest).")
+    @Option(name: .long, help: "Filter archives by exact bundle identifier or alias (use with --latest).")
     var bundleID: String?
+
+    @Option(name: .long, help: "With --latest, the latest archive of this platform: ios, macos, tvos, visionos (an app sold on several platforms has archives of each).")
+    var platform: String?
 
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
@@ -812,10 +817,15 @@ struct BuildsCommand: AsyncParsableCommand {
       if bundleID != nil && !latest {
         throw ValidationError("--bundle-id requires --latest.")
       }
+      if platform != nil && !latest {
+        throw ValidationError("--platform goes with --latest.")
+      }
+      let bundleID = try self.bundleID.map(resolveAlias)
 
       let expandedPath: String
       if latest {
-        let archive = try findLatestArchive(bundleID: bundleID)
+        let archive = try findLatestArchive(
+          bundleID: bundleID, platform: try platform.map { try ArchivePlatform(parsePlatform($0)) })
         expandedPath = archive.path
         print("Found archive: \((archive.path as NSString).lastPathComponent)")
         print("  Bundle ID:  \(archive.bundleID)")

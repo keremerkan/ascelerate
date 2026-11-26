@@ -1659,14 +1659,21 @@ struct TestFlightCommand: AsyncParsableCommand {
             nonInteractiveHint: "Pass --locale to disambiguate.").locale
         }
 
+        let fields = BetaAppLocaleFields(
+          description: description, feedbackEmail: feedbackEmail, marketingURL: marketingURL,
+          privacyPolicyURL: privacyPolicyURL)
+        let current = locs.first { $0.locale == targetLocale }
+        printChanges("Beta app information for \(localeName(targetLocale))\(current == nil ? " (new)" : ""):", [
+          changeLine("Description", current?.description, description),
+          changeLine("Feedback email", current?.feedbackEmail, feedbackEmail),
+          changeLine("Marketing URL", current?.marketingURL, marketingURL),
+          changeLine("Privacy policy URL", current?.privacyPolicyURL, privacyPolicyURL),
+        ])
         guard confirm("Update beta app information for \(localeName(targetLocale))? [y/N] ") else {
           cancelled()
           return
         }
 
-        let fields = BetaAppLocaleFields(
-          description: description, feedbackEmail: feedbackEmail, marketingURL: marketingURL,
-          privacyPolicyURL: privacyPolicyURL)
         _ = try await TestInformation.save([(targetLocale, fields)], existing: locs, appID: app.id, client: client)
 
         print()
@@ -1830,16 +1837,18 @@ struct TestFlightCommand: AsyncParsableCommand {
         throw ValidationError("No beta review detail record exists for this app yet.")
       }
 
+      let wanted = ReviewInformation(
+        contactFirstName: contactFirstName, contactLastName: contactLastName, contactPhone: contactPhone,
+        contactEmail: contactEmail, demoAccountRequired: demoAccountRequired, demoAccountName: demoAccountName,
+        demoAccountPassword: demoAccountPassword, notes: notes)
+      printChanges("Beta review information:", reviewInformationChanges(from: detail.information, to: wanted))
       guard confirm("Update beta review information? [y/N] ") else {
         cancelled()
         return
       }
 
       try await ReviewInformation.saveBeta(
-        ReviewInformation(
-          contactFirstName: contactFirstName, contactLastName: contactLastName, contactPhone: contactPhone,
-          contactEmail: contactEmail, demoAccountRequired: demoAccountRequired, demoAccountName: demoAccountName,
-          demoAccountPassword: demoAccountPassword, notes: notes),
+        wanted,
         from: detail.information, detailID: detail.id, client: client)
 
       print()

@@ -218,6 +218,16 @@ extension GameCenterCommand {
         let settings = try options.settings(referenceName: name)
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
+        // What's sent besides the ID and name, when given.
+        print("Activity \(id) '\(name)':")
+        if let style = settings.playStyle { print("  Play:           \(Activities.styleText(style))") }
+        if let low = settings.minimumPlayersCount { print("  Fewest players: \(low)") }
+        if let high = settings.maximumPlayersCount { print("  Most players:   \(high)") }
+        if let code = settings.supportsPartyCode { print("  Party code:     \(code ? "Yes" : "No")") }
+        if let properties = settings.properties, !properties.isEmpty {
+          print("  Properties:     \(properties.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ", "))")
+        }
+        if let fallbackUrl { print("  Fallback URL:   \(fallbackUrl)") }
         guard confirm("Create activity \(id) '\(name)'? [y/N] ") else {
           print(yellow("Cancelled."))
           return

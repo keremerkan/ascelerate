@@ -1472,3 +1472,44 @@ func writeLocalizationFile<Fields: Encodable>(_ file: [String: Fields], defaultN
   try data.write(to: URL(fileURLWithPath: outputPath))
   success("Exported", "\(file.count) locale(s) to \(outputPath)")
 }
+
+/// A `--preview-frame` timecode, hh:mm:ss:frame (00:00:03:00): Apple refuses 00:00:03 and other
+/// forms after the upload, so it's checked before.
+func checkPreviewFrame(_ timecode: String?) throws {
+  guard let timecode else { return }
+  guard timecode.wholeMatch(of: /[0-9]{2}:[0-5][0-9]:[0-5][0-9]:[0-9]{2}/) != nil else {
+    throw ValidationError("--preview-frame '\(timecode)' isn't a timecode: hh:mm:ss:frame, such as 00:00:03:00.")
+  }
+}
+
+// MARK: - Change lists (what an update sends, shown before its confirmation)
+
+/// "  Label: old → new" for a value given (`new` nil: not changing; an empty old shows as "—").
+func changeLine(_ label: String, _ old: String?, _ new: String?) -> String? {
+  guard let new else { return nil }
+  return "  \(label): \(old.flatMap { $0.isEmpty ? nil : $0 } ?? "—") → \(new.isEmpty ? "—" : new)"
+}
+
+/// Prints the title and the changes, then a blank line.
+func printChanges(_ title: String, _ lines: [String?]) {
+  print(title)
+  for line in lines.compactMap({ $0 }) { print(line) }
+  print()
+}
+
+/// The App Review or beta review information an update changes, old → new (the password shown as
+/// changed, not its value).
+func reviewInformationChanges(from old: ReviewInformation?, to new: ReviewInformation) -> [String?] {
+  func yesNo(_ value: Bool?) -> String? { value.map { $0 ? "Yes" : "No" } }
+  return [
+    changeLine("Contact first name", old?.contactFirstName, new.contactFirstName),
+    changeLine("Contact last name", old?.contactLastName, new.contactLastName),
+    changeLine("Phone", old?.contactPhone, new.contactPhone),
+    changeLine("Email", old?.contactEmail, new.contactEmail),
+    changeLine("Demo account required", yesNo(old?.demoAccountRequired), yesNo(new.demoAccountRequired)),
+    changeLine("Demo account", old?.demoAccountName, new.demoAccountName),
+    new.demoAccountPassword.map { _ in "  Demo password: changed" },
+    changeLine("Notes", old?.notes, new.notes),
+  ]
+}
+

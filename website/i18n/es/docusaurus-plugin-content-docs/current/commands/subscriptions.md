@@ -236,6 +236,8 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+Una prueba gratuita (`--mode FREE_TRIAL`) no lleva `--price`: se ofrece en `--territory`, o en todos los territorios en los que la suscripción tiene precio con `--equalize-all-territories`. Hasta esta versión `--price` era obligatorio aquí, así que un script que lo pase para una prueba gratuita falla hasta que se quite la opción.
+
 ## Mensajes y ofertas de retención
 
 Cuando un suscriptor va a cancelar desde los ajustes de suscripción del App Store, el App Store puede mostrarle un **mensaje de retención**: un encabezado y un texto en su idioma, una imagen opcional y ofertas para quedarse. Un mensaje pertenece a la app y pasa por App Review. Cada suscripción muestra un mensaje y, en él, las **ofertas de retención** que elija.
@@ -281,7 +283,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --eligibility NEW \
   --offer-eligibility STACK_WITH_INTRO_OFFERS \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
-  --price 0 --territory USA --equalize-all-territories
+  --territory USA --equalize-all-territories
 
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
 
@@ -296,6 +298,8 @@ ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
   --code SUBPROMO --count 1000 --expires 2026-12-31
 ```
+
+Una prueba gratuita (`--mode FREE_TRIAL`) no lleva `--price`: se ofrece en `--territory`, o en todos los territorios en los que la suscripción tiene precio con `--equalize-all-territories`. Hasta esta versión `--price` era obligatorio aquí, así que un script que lo pase para una prueba gratuita falla hasta que se quite la opción.
 
 Requisitos de los clientes para los códigos de oferta de suscripciones: `NEW`, `EXISTING`, `EXPIRED`. Compatibilidad con la oferta introductoria: `STACK_WITH_INTRO_OFFERS` o `REPLACE_INTRO_OFFERS`.
 

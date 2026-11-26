@@ -117,11 +117,16 @@ struct DevicesCommand: AsyncParsableCommand {
         throw ValidationError("'\(deviceUDID)' isn't a UDID: 40 hex digits, 8 and 16 hex digits joined by a hyphen, or a UUID.")
       }
 
+      // A device is an iOS or a Mac one (UNIVERSAL is a bundle ID's platform, not a device's).
+      let devicePlatforms: [ASCEnum.BundleIdPlatform] = [.ios, .macOs]
       let platformValue: ASCEnum.BundleIdPlatform
       if let platform {
         platformValue = try parseEnum(platform, name: "platform")
+        guard devicePlatforms.contains(platformValue) else {
+          throw ValidationError("A device's platform is IOS or MAC_OS.")
+        }
       } else {
-        platformValue = try promptPlatform()
+        platformValue = try promptSelection("Platforms", items: devicePlatforms, display: { $0.rawValue }, prompt: "Select platform")
       }
 
       print("Register device:")

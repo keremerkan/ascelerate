@@ -236,6 +236,8 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+Ücretsiz deneme (`--mode FREE_TRIAL`) `--price` almaz: `--territory` içinde ya da `--equalize-all-territories` ile aboneliğin fiyatı olan her bölgede sunulur. Bu sürüme kadar burada `--price` zorunluydu; bu yüzden ücretsiz deneme için onu geçen bir betik, seçenek kaldırılana kadar başarısız olur.
+
 ## Elde tutma mesajları ve teklifleri
 
 Bir abone App Store'daki abonelik ayarlarından aboneliğini iptal etmek istediğinde App Store ona bir **elde tutma mesajı** gösterebilir: kendi dilinde bir başlık ve metin, isteğe bağlı bir görsel ve kalması için teklifler. Mesaj uygulamaya aittir ve App Review'dan geçer. Her abonelik bir mesaj gösterir ve bu mesajda kendi **elde tutma tekliflerinden** istediklerini sunar.
@@ -281,7 +283,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --eligibility NEW \
   --offer-eligibility STACK_WITH_INTRO_OFFERS \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
-  --price 0 --territory USA --equalize-all-territories
+  --territory USA --equalize-all-territories
 
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
 
@@ -296,6 +298,8 @@ ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
   --code SUBPROMO --count 1000 --expires 2026-12-31
 ```
+
+Ücretsiz deneme (`--mode FREE_TRIAL`) `--price` almaz: `--territory` içinde ya da `--equalize-all-territories` ile aboneliğin fiyatı olan her bölgede sunulur. Bu sürüme kadar burada `--price` zorunluydu; bu yüzden ücretsiz deneme için onu geçen bir betik, seçenek kaldırılana kadar başarısız olur.
 
 Abonelik teklif kodları için müşteri uygunluk değerleri: `NEW`, `EXISTING`, `EXPIRED`. Teklif uygunluğu: `STACK_WITH_INTRO_OFFERS` veya `REPLACE_INTRO_OFFERS`.
 

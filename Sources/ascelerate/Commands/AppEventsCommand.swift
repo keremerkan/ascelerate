@@ -249,6 +249,15 @@ struct AppEventsCommand: AsyncParsableCommand {
       if let badge { print("  Badge:          \(badge.uppercased())") }
       if let priority { print("  Priority:       \(priority.uppercased())") }
       if let purpose { print("  Purpose:        \(purpose.uppercased())") }
+      if let deepLinkValue { print("  Deep Link:      \(deepLinkValue)") }
+      if let primaryLocale { print("  Primary Locale: \(localeName(primaryLocale))") }
+      if let purchaseRequirement { print("  Purchase:       \(purchaseRequirement)") }
+      if let schedule = schedules?.first {
+        print("  Territories:    \(schedule.territories?.count ?? 0)")
+        if let date = schedule.publishStart { print("  Publish Start:  \(formatDate(date))") }
+        if let date = schedule.eventStart { print("  Event Start:    \(formatDate(date))") }
+        if let date = schedule.eventEnd { print("  Event End:      \(formatDate(date))") }
+      }
       print()
 
       guard confirm("Create this event? [y/N] ") else {
@@ -298,6 +307,9 @@ struct AppEventsCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Purchase requirement description.")
     var purchaseRequirement: String?
 
+    @Option(name: .long, help: "Primary locale (e.g. en-US); App Review needs one.")
+    var primaryLocale: String?
+
     @Option(name: .long, help: "Comma-separated territory codes for the schedule, or all (replaces the schedules with one).")
     var territories: String?
 
@@ -316,7 +328,7 @@ struct AppEventsCommand: AsyncParsableCommand {
     func run() async throws {
       if yes { autoConfirm = true }
       guard referenceName != nil || badge != nil || priority != nil || purpose != nil
-        || deepLink != nil || purchaseRequirement != nil || territories != nil
+        || deepLink != nil || purchaseRequirement != nil || primaryLocale != nil || territories != nil
         || publishStart != nil || eventStart != nil || eventEnd != nil
       else {
         throw ValidationError("Provide at least one field to update.")
@@ -373,6 +385,21 @@ struct AppEventsCommand: AsyncParsableCommand {
 
       let deepLinkValue = try AppEventsCommand.parseDeepLink(deepLink)
 
+      // What changes, old → new.
+      let lines = [
+        changeLine("Reference name", appEvent.referenceName, referenceName),
+        changeLine("Badge", appEvent.badge.map { formatState($0) }, clearBadge ? "none" : badgeValue.map { formatState($0.rawValue) }),
+        changeLine("Priority", appEvent.priority.map { formatState($0) }, priorityValue.map { formatState($0.rawValue) }),
+        changeLine("Purpose", appEvent.purpose.map { formatState($0) }, purposeValue.map { formatState($0.rawValue) }),
+        changeLine("Deep link", appEvent.deepLink, deepLinkValue),
+        changeLine("Purchase requirement", appEvent.purchaseRequirement, purchaseRequirement),
+        changeLine("Primary locale", appEvent.primaryLocale.map { localeName($0) }, primaryLocale.map { localeName($0) }),
+        schedules.map { "  Schedule: \($0.count) territory schedule\($0.count == 1 ? "" : "s") (\($0.map { "\($0.territories?.count ?? 0) territories" }.joined(separator: ", ")))" },
+      ].compactMap { $0 }
+      print("Update event '\(appEvent.referenceName)':")
+      for line in lines { print(line) }
+      print()
+
       guard confirm("Update event '\(appEvent.referenceName)'? [y/N] ") else {
         cancelled()
         return
@@ -381,8 +408,8 @@ struct AppEventsCommand: AsyncParsableCommand {
       try await AppEvents.update(
         id: appEvent.id, referenceName: referenceName,
         badge: clearBadge ? .some(nil) : badgeValue.map { .some($0.rawValue) }, deepLink: deepLinkValue.map { .some($0) },
-        priority: priorityValue?.rawValue, purchaseRequirement: purchaseRequirement, purpose: purposeValue?.rawValue,
-        schedules: schedules, client: client)
+        primaryLocale: primaryLocale, priority: priorityValue?.rawValue, purchaseRequirement: purchaseRequirement,
+        purpose: purposeValue?.rawValue, schedules: schedules, client: client)
 
       print()
       success("Updated", "in-app event '\(appEvent.referenceName)'.")
@@ -695,6 +722,13 @@ struct AppEventsCommand: AsyncParsableCommand {
         guard isImage || isVideo else {
           throw ValidationError(
             "Unsupported file type '.\(ext)'. Use png/jpg for screenshots or mp4/mov for video clips.")
+        }
+        try checkPreviewFrame(previewFrame)
+        if isImage {
+          // The size Apple takes for this slot, live (it fails another after the upload).
+          let specs = try await AssetLibrary.placementSpecs(
+            type: "\(assetTypeValue.rawValue)_ASSET", group: "DEFAULT_PROFILE", client: client).images
+          if !specs.isEmpty { try AssetLibrary.validateSize(of: media, specs: specs) }
         }
 
         print("Upload \(isImage ? "screenshot" : "video clip"):")

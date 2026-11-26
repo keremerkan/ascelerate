@@ -65,7 +65,8 @@ struct NominationsCommand: AsyncParsableCommand {
   }
 
   static func list(_ value: String?) -> [String]? {
-    value.map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
+    // Empty entries dropped: " " or "," is an empty list (a clear), never a "" item.
+    value.map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
   }
 
   /// One nomination, as `list` prints it and `--json` emits it.
@@ -203,7 +204,8 @@ struct NominationsCommand: AsyncParsableCommand {
       let created = try await Nominations.create(
         name: fields.name ?? "", type: type.rawValue, description: fields.description ?? "", publishStartDate: start,
         publishEndDate: end, appIDs: appIDs, deviceFamilies: devices, locales: try NominationsCommand.locales(fields.locales),
-        territories: territories, launchInSelectMarketsFirst: territories == nil ? nil : true,
+        // The checkbox follows the list (Kerem, 2026-11-26): on with territories, off without.
+        territories: territories, launchInSelectMarketsFirst: territories.map { !$0.isEmpty },
         preOrderEnabled: preOrder ? true : nil, notes: fields.notes,
         supplementalMaterials: NominationsCommand.list(fields.materials), submit: submit, client: client)
       print(green(submit ? "Submitted" : "Created") + " nomination \(created.id)" + (submit ? "." : " (draft; submit it with 'ascelerate nominations submit \(created.id)')."))
@@ -218,6 +220,9 @@ struct NominationsCommand: AsyncParsableCommand {
 
     @OptionGroup var fields: Fields
 
+    @Option(name: .long, help: "Countries or regions the nomination is for (codes, comma-separated; replaces the list).")
+    var territories: String?
+
     @Flag(name: .shortAndLong, help: "Skip the confirmation prompt.")
     var yes = false
 
@@ -226,15 +231,44 @@ struct NominationsCommand: AsyncParsableCommand {
       let start = try fields.publishStart.map { try NominationsCommand.publishDate($0, field: "--publish-start") }
       let end = try fields.publishEnd.map { try NominationsCommand.publishDate($0, field: "--publish-end") }
       let type = try fields.type.map { try NominationsCommand.type($0).rawValue }
+      let devices = try NominationsCommand.devices(fields.devices)
+      let locales = try NominationsCommand.locales(fields.locales)
+      let materials = NominationsCommand.list(fields.materials)
+      let territoryList = NominationsCommand.list(territories)?.map { $0.uppercased() }
+      guard fields.name != nil || type != nil || fields.description != nil || start != nil || end != nil || devices != nil
+        || locales != nil || fields.notes != nil || materials != nil || territoryList != nil
+      else { throw ValidationError("Give at least one field to change.") }
+
+      // What changes, old → new, read first.
+      let client = try ClientFactory.makeClient()
+      let current = try await Nominations.get(id: id, client: client)
+      func joined(_ list: [String]?) -> String? { list.map { $0.isEmpty ? "none" : $0.joined(separator: ", ") } }
+      let lines = [
+        changeLine("Name", current.name, fields.name),
+        changeLine("Type", current.type.map { formatState($0) }, type.map { formatState($0) }),
+        changeLine("Description", current.description, fields.description),
+        changeLine("Publish start", current.publishStartDate.map { formatDate($0) }, start.map { formatDate($0) }),
+        changeLine("Publish end", current.publishEndDate.map { formatDate($0) }, end.map { formatDate($0) }),
+        changeLine("Devices", joined(current.deviceFamilies), joined(devices)),
+        changeLine("Languages", joined(current.locales), joined(locales)),
+        changeLine("Territories", joined(current.territories), joined(territoryList)),
+        territoryList.map { !$0.isEmpty } == current.launchInSelectMarketsFirst ? nil
+          : changeLine("Launch in select markets first", current.launchInSelectMarketsFirst ? "Yes" : "No", territoryList.map { $0.isEmpty ? "No" : "Yes" }),
+        changeLine("Notes", current.notes, fields.notes),
+        changeLine("Materials", joined(current.supplementalMaterials), joined(materials)),
+      ].compactMap { $0 }
+      print("Update nomination '\(current.name ?? id)' (\(current.state.map { formatState($0) } ?? "—")):")
+      for line in lines { print(line) }
+      print()
       guard confirm("Update nomination \(id)? [y/N] ") else {
         print(yellow("Cancelled."))
         return
       }
       try await Nominations.update(
-        id: id, name: fields.name, type: type, description: fields.description, publishStartDate: start,
-        publishEndDate: end.map { .some($0) }, deviceFamilies: try NominationsCommand.devices(fields.devices),
-        locales: try NominationsCommand.locales(fields.locales), notes: fields.notes,
-        supplementalMaterials: NominationsCommand.list(fields.materials), client: ClientFactory.makeClient())
+        id: id, state: current.state, name: fields.name, type: type, description: fields.description, publishStartDate: start,
+        publishEndDate: end.map { .some($0) }, deviceFamilies: devices, locales: locales,
+        territories: territoryList, launchInSelectMarketsFirst: territoryList.map { !$0.isEmpty }, notes: fields.notes,
+        supplementalMaterials: materials, client: client)
       print(green("Updated") + " nomination \(id).")
     }
   }
@@ -272,14 +306,22 @@ struct NominationsCommand: AsyncParsableCommand {
     }
   }
 
+  /// Submit, archive or delete, after showing which nomination it is (read first).
   private static func confirmed(
     _ id: String, verb: String, done: String, _ action: (ASCClient) async throws -> some Any
   ) async throws {
+    let client = try ClientFactory.makeClient()
+    let nomination = try await Nominations.get(id: id, client: client)
+    print("Nomination:     \(nomination.name ?? "—")")
+    print("Type:           \(nomination.type.map { formatState($0) } ?? "—")")
+    print("State:          \(nomination.state.map { formatState($0) } ?? "—")")
+    print("Publish start:  \(nomination.publishStartDate.map { formatDate($0) } ?? "—")")
+    print()
     guard confirm("\(verb) nomination \(id)? [y/N] ") else {
       print(yellow("Cancelled."))
       return
     }
-    _ = try await action(ClientFactory.makeClient())
+    _ = try await action(client)
     print(green(done) + " nomination \(id).")
   }
 }

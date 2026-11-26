@@ -303,7 +303,7 @@ ascelerate sub win-back-offer update <app> <product-id> <offer-id> [--since-mont
 
 # Offer codes (one-time-use batches + custom codes)
 ascelerate sub offer-code list/info <app> <product-id> [<offer-code-id>]
-ascelerate sub offer-code create <app> <product-id> --name X --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --price 0 --territory USA --equalize-all-territories
+ascelerate sub offer-code create <app> <product-id> --name X --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --territory USA --equalize-all-territories
 ascelerate sub offer-code toggle <app> <product-id> <offer-code-id> --active true
 ascelerate sub offer-code gen-codes <app> <product-id> <offer-code-id> --count 500 --expires 2026-12-31
 ascelerate sub offer-code add-custom-codes <app> <product-id> <offer-code-id> --code SUBPROMO --count 1000 --expires 2026-12-31

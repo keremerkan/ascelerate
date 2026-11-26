@@ -1122,6 +1122,13 @@ extension GameCenterCommand {
         let client = try ClientFactory.makeClient()
         let (_, detail) = try await GameCenterCommand.context(app: app, client: client)
         print("Leaderboard \(id) '\(name)': \(formatState(settings.defaultFormatter!)), \(Leaderboards.sortText(settings.scoreSortType).lowercased()), \(Leaderboards.submissionText(settings.submissionType).lowercased()) score.")
+        // The rest of what's sent, when given.
+        if let low = settings.scoreRangeStart, !low.isEmpty { print("  Lowest score:        \(low)") }
+        if let high = settings.scoreRangeEnd, !high.isEmpty { print("  Highest score:       \(high)") }
+        if let start = settings.recurrenceStartDate { print("  Recurrence start:    \(formatDate(start))") }
+        if let duration = settings.recurrenceDuration, !duration.isEmpty { print("  Recurrence duration: \(duration)") }
+        if let rule = settings.recurrenceRule, !rule.isEmpty { print("  Recurrence rule:     \(rule)") }
+        if settings.visibility == "HIDE_FOR_ALL" { print("  Shown to players:    No") }
         guard confirm("Create it? [y/N] ") else {
           print(yellow("Cancelled."))
           return

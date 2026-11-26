@@ -236,6 +236,8 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+A free trial (`--mode FREE_TRIAL`) takes no `--price`: it's offered in `--territory`, or in every territory the subscription has a price in with `--equalize-all-territories`. Until this release `--price` was required here, so a script that passes it for a free trial now fails until the option is dropped.
+
 ## Retention messages and offers
 
 When a subscriber goes to cancel in their App Store subscription settings, the App Store can show them a **retention message**: a header and body in their language, an optional image, and offers to stay. A message belongs to the app and goes through App Review; each subscription shows one message, with any of its **retention offers**.
@@ -281,7 +283,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --eligibility NEW \
   --offer-eligibility STACK_WITH_INTRO_OFFERS \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
-  --price 0 --territory USA --equalize-all-territories
+  --territory USA --equalize-all-territories
 
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
 
@@ -296,6 +298,8 @@ ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
   --code SUBPROMO --count 1000 --expires 2026-12-31
 ```
+
+A free trial (`--mode FREE_TRIAL`) takes no `--price`: it's offered in `--territory`, or in every territory the subscription has a price in with `--equalize-all-territories`. Until this release `--price` was required here, so a script that passes it for a free trial now fails until the option is dropped.
 
 Customer eligibilities for subscription offer codes: `NEW`, `EXISTING`, `EXPIRED`. Offer eligibility: `STACK_WITH_INTRO_OFFERS` or `REPLACE_INTRO_OFFERS`.
 

@@ -253,14 +253,14 @@ ascelerate sub intro-offer update <bundle-id> <product-id> <offer-id> --end-date
 ascelerate sub intro-offer delete <bundle-id> <product-id> <offer-id> [-y]  # Delete intro offer
 ascelerate sub offer-code list <bundle-id> <product-id>           # List offer codes for a subscription
 ascelerate sub offer-code info <bundle-id> <product-id> <offer-code-id>  # Show details + price/code counts
-ascelerate sub offer-code create <bundle-id> <product-id> --name X --eligibility N,E,X --offer-eligibility STACK_WITH_INTRO_OFFERS|REPLACE_INTRO_OFFERS --mode FREE_TRIAL|PAY_AS_YOU_GO|PAY_UP_FRONT --duration X --periods N [--auto-renew | --no-auto-renew] --price 4.99 [--territory USA] [--equalize-all-territories] [-y]  # Create offer code
+ascelerate sub offer-code create <bundle-id> <product-id> --name X --eligibility N,E,X --offer-eligibility STACK_WITH_INTRO_OFFERS|REPLACE_INTRO_OFFERS --mode FREE_TRIAL|PAY_AS_YOU_GO|PAY_UP_FRONT --duration X --periods N [--auto-renew | --no-auto-renew] [--price 4.99] [--territory USA] [--equalize-all-territories] [-y]  # Create offer code (--price required for paid modes, refused for FREE_TRIAL)
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true|false [-y]  # Activate / deactivate
 ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> --count N --expires YYYY-MM-DD [--environment PRODUCTION|SANDBOX] [-y]  # Generate one-time-use code batch
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> --code X --count N [--expires YYYY-MM-DD] [-y]  # Add a custom redeem code
 ascelerate sub offer-code view-codes <one-time-use-batch-id> [--output X]  # Fetch actual code values (async; may need retry)
 ascelerate sub promo-offer list <bundle-id> <product-id>          # List promotional offers (server-signed)
 ascelerate sub promo-offer info <bundle-id> <product-id> <offer-id>  # Show details
-ascelerate sub promo-offer create <bundle-id> <product-id> --name X --code X --mode X --duration X --periods N --price 4.99 [--territory USA] [--equalize-all-territories] [-y]  # Create
+ascelerate sub promo-offer create <bundle-id> <product-id> --name X --code X --mode X --duration X --periods N [--price 4.99] [--territory USA] [--equalize-all-territories] [-y]  # Create (--price required for paid modes, refused for FREE_TRIAL)
 ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> --price 4.99 [--territory USA] [--equalize-all-territories] [-y]  # Update prices only
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id> [-y]  # Delete
 ascelerate sub retention-message [list|info] <bundle-id> [<message>] [--json]  # Retention messages: versions, languages, image, subscriptions showing them

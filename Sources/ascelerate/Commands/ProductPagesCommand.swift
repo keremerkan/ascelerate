@@ -213,6 +213,10 @@ struct ProductPagesCommand: AsyncParsableCommand {
       let productPage = try await ProductPagesCommand.findProductPage(
         ref: page, appID: app.id, client: client)
 
+      printChanges("Update page '\(productPage.name)':", [
+        changeLine("Name", productPage.name, name),
+        changeLine("Visible", productPage.visible ? "Yes" : "No", visible.map { $0 ? "Yes" : "No" }),
+      ])
       guard confirm("Update page '\(productPage.name)'? [y/N] ") else {
         cancelled()
         return

@@ -236,6 +236,8 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+無料トライアル（`--mode FREE_TRIAL`）には `--price` を指定しません。`--territory` で、または `--equalize-all-territories` を付けるとサブスクリプションに価格があるすべての地域で提供されます。このリリースまではここで `--price` が必須だったため、無料トライアルに `--price` を渡しているスクリプトは、そのオプションを外すまで失敗します。
+
 ## リテンションメッセージとオファー
 
 サブスクライバーが App Store のサブスクリプション設定から解約しようとすると、App Store は**リテンションメッセージ**を表示できます。サブスクライバーの言語の見出しと本文、任意の画像、そして継続を促すオファーです。メッセージは App に属し、App Review の審査を受けます。各サブスクリプションは1つのメッセージを表示し、その中で任意の**リテンションオファー**を提示できます。
@@ -281,7 +283,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --eligibility NEW \
   --offer-eligibility STACK_WITH_INTRO_OFFERS \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
-  --price 0 --territory USA --equalize-all-territories
+  --territory USA --equalize-all-territories
 
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
 
@@ -296,6 +298,8 @@ ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
   --code SUBPROMO --count 1000 --expires 2026-12-31
 ```
+
+無料トライアル（`--mode FREE_TRIAL`）には `--price` を指定しません。`--territory` で、または `--equalize-all-territories` を付けるとサブスクリプションに価格があるすべての地域で提供されます。このリリースまではここで `--price` が必須だったため、無料トライアルに `--price` を渡しているスクリプトは、そのオプションを外すまで失敗します。
 
 サブスクリプションオファーコードの顧客対象：`NEW`、`EXISTING`、`EXPIRED`。オファー対象：`STACK_WITH_INTRO_OFFERS` または `REPLACE_INTRO_OFFERS`。
 

@@ -235,6 +235,10 @@ struct ExperimentsCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let (_, experiment) = try await target.resolve(client)
+      printChanges("Update test '\(experiment.name)':", [
+        changeLine("Name", experiment.name, name),
+        changeLine("Traffic", experiment.trafficProportion.map { "\($0)%" }, traffic.map { "\($0)%" }),
+      ])
       guard confirm("Update test '\(experiment.name)'? [y/N] ") else {
         print(yellow("Cancelled."))
         return

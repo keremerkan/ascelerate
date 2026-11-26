@@ -1166,6 +1166,8 @@ extension AppsCommand {
         let versionString = appVersion.attributes?.versionString ?? "unknown"
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Version: \(versionString)")
+        // The version's state too, as upload shows it: findVersion can fall back to the live version.
+        print("State:   \(appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown")")
         print()
 
         // Fetch all media status
@@ -1428,6 +1430,8 @@ extension AppsCommand {
 
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Version: \(appVersion.attributes?.versionString ?? "unknown")")
+        // The version's state too, as upload shows it: findVersion can fall back to the live version.
+        print("State:   \(appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown")")
         print()
 
         // Listed with their images or videos, so removing one doesn't read it again.
@@ -1754,6 +1758,8 @@ extension AppsCommand {
           let setID: String
           let isScreenshot: Bool
           let assetCount: Int
+          /// The localization, for the set's library assets (cleaned up as `--replace` does).
+          let localizationID: String
         }
         var orphans: [OrphanSet] = []
         var skippedLocales: [String] = []
@@ -1779,7 +1785,7 @@ extension AppsCommand {
               let assets = try await LocalizationMedia.screenshots(setID: set.id, client: ascClient)
               orphans.append(OrphanSet(
                 locale: locale, typeName: raw, kind: "Screenshots",
-                setID: set.id, isScreenshot: true, assetCount: assets.count))
+                setID: set.id, isScreenshot: true, assetCount: assets.count, localizationID: loc.id))
             }
           }
 
@@ -1789,7 +1795,7 @@ extension AppsCommand {
               let assets = try await LocalizationMedia.previews(setID: set.id, client: ascClient)
               orphans.append(OrphanSet(
                 locale: locale, typeName: raw, kind: "Previews",
-                setID: set.id, isScreenshot: false, assetCount: assets.count))
+                setID: set.id, isScreenshot: false, assetCount: assets.count, localizationID: loc.id))
             }
           }
         }
@@ -1807,6 +1813,8 @@ extension AppsCommand {
         let totalAssets = orphans.reduce(0) { $0 + $1.assetCount }
         print("App:     \(app.attributes?.name ?? bundleID)")
         print("Version: \(versionString) (\(versionPlatform.map { formatState($0.rawValue) } ?? "—"))")
+        // The version's state too, as upload shows it: findVersion can fall back to the live version.
+        print("State:   \(appVersion.attributes?.appVersionState.map { formatState($0) } ?? "unknown")")
         print()
         print("Server sets with no matching local folder:")
         print()
@@ -1815,9 +1823,11 @@ extension AppsCommand {
           rows: orphans.map { [localeName($0.locale), $0.typeName, $0.kind, "\($0.assetCount)"] })
         print()
         print(yellow("⚠ Deleting a set permanently removes it and its assets from this version."))
+        // Said before the answer (Kerem, 2026-11-26): the files go from the library too.
+        print("  Their images and videos are also deleted from the app's asset library when nothing else uses them and they never went through App Review.")
         print()
         guard confirm(
-          "Delete \(orphans.count) set\(orphans.count == 1 ? "" : "s") (\(totalAssets) asset\(totalAssets == 1 ? "" : "s"))? [y/N] ")
+          "Delete \(orphans.count) set\(orphans.count == 1 ? "" : "s") (\(totalAssets) asset\(totalAssets == 1 ? "" : "s")) and their unused library files? [y/N] ")
         else {
           cancelled()
           return
@@ -1829,12 +1839,18 @@ extension AppsCommand {
         var notSent = 0
         for orphan in orphans {
           do {
+            // The set's library images or videos, read before it goes and deleted after it when
+            // nothing else uses them, as `--replace` does (not under dry run).
+            let assets = ClientFactory.isDryRun ? [] : try await AssetLibrary.classicSetAssets(
+              localizationID: orphan.localizationID, displayType: orphan.isScreenshot ? orphan.typeName : "APP_\(orphan.typeName)",
+              type: orphan.isScreenshot ? .appScreenshot : .appPreview, client: ascClient)
             if orphan.isScreenshot {
               try await ClassicMedia.deleteScreenshotSet(orphan.setID, client: ascClient)
             } else {
               try await ClassicMedia.deletePreviewSet(orphan.setID, client: ascClient)
             }
             print("  OK   [\(orphan.locale)] \(orphan.typeName) (\(orphan.kind.lowercased()))")
+            await cleanUpLibrary(assets, orphan.isScreenshot ? "screenshot" : "preview", client: ascClient)
             deleted += 1
           } catch where ASCDryRunStop.from(error) != nil {
             print("  DRY  [\(orphan.locale)] \(orphan.typeName) — not sent (dry run)")

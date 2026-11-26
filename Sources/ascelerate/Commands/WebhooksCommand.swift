@@ -169,6 +169,16 @@ struct WebhooksCommand: AsyncParsableCommand {
       let types = try events.map(WebhooksCommand.eventTypes)
       let client = try ClientFactory.makeClient()
       let hook = try await WebhooksCommand.find(webhook, bundleID: bundleID, client: client)
+      let attributes = hook.attributes
+      func yesNo(_ value: Bool?) -> String? { value.map { $0 ? "Yes" : "No" } }
+      printChanges("Update webhook '\(WebhooksCommand.name(hook))':", [
+        changeLine("Name", attributes?.name, name),
+        changeLine("URL", attributes?.url, url),
+        changeLine("Events", attributes?.eventTypes?.joined(separator: ", "), types?.joined(separator: ", ")),
+        // The secret is write-only: Apple never returns it.
+        secret.map { _ in "  Secret: replaced" },
+        changeLine("Enabled", yesNo(attributes?.enabled), yesNo(enabled)),
+      ])
       guard confirm("Update webhook '\(WebhooksCommand.name(hook))'? [y/N] ") else {
         print(yellow("Cancelled."))
         return

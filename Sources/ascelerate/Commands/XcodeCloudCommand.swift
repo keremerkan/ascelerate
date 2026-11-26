@@ -540,7 +540,13 @@ struct XcodeCloudCommand: AsyncParsableCommand {
         let changes = WorkflowOptions.changes(from: original, to: edit, names: versionNames).filter { !$0.hasPrefix("Name:") }
         for line in changes { print("  \(line)") }
         if !changes.contains(where: { $0.hasPrefix("Actions:") }) { print("  Actions: \(WorkflowOptions.actions(edit.actions))") }
-        if disabled { print("  Turned off") }
+        // What the copy takes as it is: its start conditions, unless changed above, and its state.
+        let startLabels = ["Branch changes", "Tag changes", "Pull requests", "Schedule", "By hand"]
+        if !changes.contains(where: { line in startLabels.contains { line.hasPrefix($0) } }) {
+          let starts = source.startConditions.map { XcodeCloudCommand.startConditionText($0) }
+          print("  Start conditions (as '\(source.name ?? source.id)'): \(starts.isEmpty ? "none" : starts.joined(separator: "; "))")
+        }
+        print(disabled ? "  Turned off" : "  Turned on (starts as its conditions say once created)")
         guard confirm("Create? [y/N] ") else {
           print(yellow("Cancelled."))
           return

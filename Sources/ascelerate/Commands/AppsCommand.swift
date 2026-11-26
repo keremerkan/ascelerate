@@ -2144,16 +2144,18 @@ struct AppsCommand: AsyncParsableCommand {
           return
         }
 
+        let wanted = ReviewInformation(
+          contactFirstName: contactFirstName, contactLastName: contactLastName, contactPhone: contactPhone,
+          contactEmail: contactEmail, demoAccountRequired: demoAccountRequired, demoAccountName: demoAccountName,
+          demoAccountPassword: demoAccountPassword, notes: notes)
+        printChanges("App Review Information for version \(versionString):", reviewInformationChanges(from: existing?.information, to: wanted))
         guard confirm("Update App Review Information for version \(versionString)? [y/N] ") else {
           cancelled()
           return
         }
 
         try await ReviewInformation.saveAppStore(
-          ReviewInformation(
-            contactFirstName: contactFirstName, contactLastName: contactLastName, contactPhone: contactPhone,
-            contactEmail: contactEmail, demoAccountRequired: demoAccountRequired, demoAccountName: demoAccountName,
-            demoAccountPassword: demoAccountPassword, notes: notes),
+          wanted,
           from: existing?.information ?? .init(), detailID: existing?.id, versionID: appVersion.id, client: client)
 
         print()

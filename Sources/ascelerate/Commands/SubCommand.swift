@@ -501,7 +501,8 @@ struct SubCommand: AsyncParsableCommand {
   /// — they all need the same shape: a (territory, pricePointID) list, optionally
   /// equalized across all territories from a single source price.
   struct ResolvedOfferPrices: Sendable {
-    let entries: [(territoryID: String, pricePointID: String)]
+    /// A free trial's entries name no price point.
+    let entries: [(territoryID: String, pricePointID: String?)]
     let sourceCustomerPrice: String
     let sourceCurrency: String?
     let isEqualized: Bool
@@ -510,6 +511,27 @@ struct SubCommand: AsyncParsableCommand {
     var offerPrices: [Subscriptions.OfferPrice] {
       entries.map { .init(territoryID: $0.territoryID, pricePointID: $0.pricePointID) }
     }
+  }
+
+  /// An offer's prices by its mode: a free trial takes no `--price` and names its territories
+  /// without a tier (`sourceTerritory`, or every territory the subscription has a price in with
+  /// `equalize`); the other modes need a price (`resolveSubOfferPrices`).
+  static func offerPrices(
+    subID: String, sourceTerritory: String, customerPrice: String?, mode: ASCEnum.SubscriptionOfferMode,
+    equalize: Bool, client: ASCClient
+  ) async throws -> ResolvedOfferPrices {
+    guard mode == .freeTrial else {
+      guard let customerPrice else { throw ValidationError("--price is required for \(mode.rawValue).") }
+      return try await resolveSubOfferPrices(
+        subID: subID, sourceTerritory: sourceTerritory, customerPrice: customerPrice, equalize: equalize, client: client)
+    }
+    guard customerPrice == nil else { throw ValidationError("--price is not allowed for FREE_TRIAL mode.") }
+    let territories = equalize
+      ? try await Subscriptions.prices(subscriptionID: subID, client: client).current.keys.sorted()
+      : [sourceTerritory]
+    guard !territories.isEmpty else { throw ValidationError("The subscription has no prices yet.") }
+    return ResolvedOfferPrices(
+      entries: territories.map { ($0, nil) }, sourceCustomerPrice: "Free", sourceCurrency: nil, isEqualized: equalize)
   }
 
   /// Resolves `customerPrice` to a SubscriptionPricePoint in `sourceTerritory`. If
@@ -582,17 +604,35 @@ struct SubCommand: AsyncParsableCommand {
     return (listed, pricePoints, isAll)
   }
 
-  static func pickGroup(appID: String, client: ASCClient) async throws -> GroupInfo {
+  /// The subscription group a command works on: `--group` (reference name or ID), else the app's
+  /// only one, else a choice (refused under --yes, naming --group).
+  static func pickGroup(appID: String, group reference: String? = nil, client: ASCClient) async throws -> GroupInfo {
     let groups = try await fetchGroups(appID: appID, client: client)
     guard !groups.isEmpty else {
       throw ValidationError("No subscription groups found. Create one first with 'sub create-group'.")
+    }
+    if let reference {
+      guard let found = try Reference.find(
+        reference, in: groups, kind: "subscription group", id: \.id, name: \.name, label: { "\($0.name) (\($0.id))" })
+      else {
+        throw ValidationError("No subscription group '\(reference)'. Groups: \(groups.map(\.name).joined(separator: ", ")).")
+      }
+      return found
     }
     if groups.count == 1 { return groups[0] }
     return try promptSelection(
       "Subscription Groups",
       items: groups,
-      display: { "\($0.name) (\($0.subscriptions.count) subscription\($0.subscriptions.count == 1 ? "" : "s"))" }
+      display: { "\($0.name) (\($0.subscriptions.count) subscription\($0.subscriptions.count == 1 ? "" : "s"))" },
+      nonInteractiveHint: "Pass --group to choose one."
     )
+  }
+
+  /// `--group`: the subscription group by its reference name or ID (needed under --yes when the
+  /// app has several).
+  struct GroupOption: ParsableArguments {
+    @Option(name: .long, help: "The subscription group: its reference name or ID (default: the app's only group; asked when there are several).")
+    var group: String?
   }
 
   // MARK: - Groups
@@ -867,6 +907,8 @@ struct SubCommand: AsyncParsableCommand {
               completion: appAliasCompletion)
     var bundleID: String
 
+    @OptionGroup var groupOption: SubCommand.GroupOption
+
     @Option(name: .long, help: "New reference name.")
     var name: String?
 
@@ -877,7 +919,7 @@ struct SubCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+      let group = try await SubCommand.pickGroup(appID: app.id, group: groupOption.group, client: client)
 
       let newName = try name ?? promptText("New Reference Name: ")
 
@@ -904,6 +946,8 @@ struct SubCommand: AsyncParsableCommand {
               completion: appAliasCompletion)
     var bundleID: String
 
+    @OptionGroup var groupOption: SubCommand.GroupOption
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes: Bool = false
 
@@ -911,7 +955,7 @@ struct SubCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+      let group = try await SubCommand.pickGroup(appID: app.id, group: groupOption.group, client: client)
 
       guard confirm("Delete subscription group '\(group.name)' and all its subscriptions? [y/N] ") else {
         cancelled()
@@ -934,6 +978,8 @@ struct SubCommand: AsyncParsableCommand {
     @Argument(help: "The bundle identifier of the app.",
               completion: appAliasCompletion)
     var bundleID: String
+
+    @OptionGroup var groupOption: SubCommand.GroupOption
 
     @Option(name: .long, help: "Product identifier (e.g. com.example.monthly).")
     var productID: String?
@@ -960,7 +1006,7 @@ struct SubCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+      let group = try await SubCommand.pickGroup(appID: app.id, group: groupOption.group, client: client)
 
       let pid = try productID ?? promptText("Product ID: ")
       let refName = try name ?? promptText("Reference Name: ")
@@ -1331,10 +1377,12 @@ struct SubCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
 
+      @OptionGroup var groupOption: SubCommand.GroupOption
+
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+        let group = try await SubCommand.pickGroup(appID: app.id, group: groupOption.group, client: client)
 
         let localizations = try await Subscriptions.groupLocalizations(groupID: group.id, client: client)
 
@@ -1366,6 +1414,8 @@ struct SubCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
 
+      @OptionGroup var groupOption: SubCommand.GroupOption
+
       @Option(name: .long, help: "Output file path.",
               completion: .file(extensions: ["json"]))
       var output: String?
@@ -1373,7 +1423,7 @@ struct SubCommand: AsyncParsableCommand {
       func run() async throws {
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+        let group = try await SubCommand.pickGroup(appID: app.id, group: groupOption.group, client: client)
 
         var result: [String: GroupLocaleFields] = [:]
         for loc in try await Subscriptions.groupLocalizations(groupID: group.id, client: client) where !loc.locale.isEmpty {
@@ -1399,6 +1449,8 @@ struct SubCommand: AsyncParsableCommand {
                 completion: appAliasCompletion)
       var bundleID: String
 
+      @OptionGroup var groupOption: SubCommand.GroupOption
+
       @Option(name: .long, help: "Path to JSON file.",
               completion: .file(extensions: ["json"]))
       var file: String?
@@ -1413,7 +1465,7 @@ struct SubCommand: AsyncParsableCommand {
         if yes { autoConfirm = true }
         let client = try ClientFactory.makeClient()
         let app = try await findApp(bundleID: bundleID, client: client)
-        let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+        let group = try await SubCommand.pickGroup(appID: app.id, group: groupOption.group, client: client)
 
         let localeUpdates = try readLocalizationFile(file, as: GroupLocaleFields.self)
 
@@ -2398,10 +2450,10 @@ struct SubCommand: AsyncParsableCommand {
       @Flag(name: .customLong("auto-renew"), inversion: .prefixedNo, help: "Whether the subscription auto-renews after the offer ends. Defaults to API default.")
       var autoRenew: Bool?
 
-      @Option(name: .long, help: "Customer price (in territory's currency, e.g. 0.99).")
-      var price: String
+      @Option(name: .long, help: "Customer price (in territory's currency, e.g. 0.99); required for PAY_AS_YOU_GO and PAY_UP_FRONT, not allowed for FREE_TRIAL.")
+      var price: String?
 
-      @Option(name: .long, help: "Territory code (default: USA). Used for price lookup and as the source for equalization.")
+      @Option(name: .long, help: "Territory code (default: USA). Used for price lookup and as the source for equalization (a free trial: the territory it's offered in, or every priced one with --equalize-all-territories).")
       var territory: String = "USA"
 
       @Flag(name: .customLong("equalize-all-territories"), help: "Fan the price out across every territory using local-currency tier equivalents.")
@@ -2432,8 +2484,8 @@ struct SubCommand: AsyncParsableCommand {
         }
 
         let territoryID = territory.uppercased()
-        let resolved = try await SubCommand.resolveSubOfferPrices(
-          subID: sub.id, sourceTerritory: territoryID, customerPrice: price,
+        let resolved = try await SubCommand.offerPrices(
+          subID: sub.id, sourceTerritory: territoryID, customerPrice: price, mode: offerMode,
           equalize: equalizeAllTerritories, client: client)
 
         print()
@@ -2445,7 +2497,7 @@ struct SubCommand: AsyncParsableCommand {
         print("  Mode:              \(formatState(offerMode.rawValue))")
         print("  Duration:          \(periods) × \(formatState(offerDuration.rawValue))")
         if let autoRenew { print("  Auto-Renew:        \(autoRenew ? "Yes" : "No")") }
-        print("  Source Tier:       \(resolved.sourceCustomerPrice) \(resolved.sourceCurrency ?? "") (\(territoryID))")
+        print("  Source Tier:       \(resolved.sourceCustomerPrice)\(resolved.sourceCurrency.map { " \($0)" } ?? "") (\(territoryID))")
         print("  Territories:       \(resolved.entries.count)\(resolved.isEqualized ? " (equalized)" : " (single)")")
         print()
 
@@ -2726,10 +2778,10 @@ struct SubCommand: AsyncParsableCommand {
       @Option(name: .long, help: "Number of periods.")
       var periods: Int
 
-      @Option(name: .long, help: "Customer price (in territory's currency, e.g. 0.99).")
-      var price: String
+      @Option(name: .long, help: "Customer price (in territory's currency, e.g. 0.99); required for PAY_AS_YOU_GO and PAY_UP_FRONT, not allowed for FREE_TRIAL.")
+      var price: String?
 
-      @Option(name: .long, help: "Territory code (default: USA). Used for price lookup and as the source for equalization.")
+      @Option(name: .long, help: "Territory code (default: USA). Used for price lookup and as the source for equalization (a free trial: the territory it's offered in, or every priced one with --equalize-all-territories).")
       var territory: String = "USA"
 
       @Flag(name: .customLong("equalize-all-territories"), help: "Fan the price out across every territory using local-currency tier equivalents.")
@@ -2752,8 +2804,8 @@ struct SubCommand: AsyncParsableCommand {
         }
 
         let territoryID = territory.uppercased()
-        let resolved = try await SubCommand.resolveSubOfferPrices(
-          subID: sub.id, sourceTerritory: territoryID, customerPrice: price,
+        let resolved = try await SubCommand.offerPrices(
+          subID: sub.id, sourceTerritory: territoryID, customerPrice: price, mode: offerMode,
           equalize: equalizeAllTerritories, client: client)
 
         print()
@@ -2763,7 +2815,7 @@ struct SubCommand: AsyncParsableCommand {
         print("  Offer Code:    \(code)")
         print("  Mode:          \(formatState(offerMode.rawValue))")
         print("  Duration:      \(periods) × \(formatState(offerDuration.rawValue))")
-        print("  Source Tier:   \(resolved.sourceCustomerPrice) \(resolved.sourceCurrency ?? "") (\(territoryID))")
+        print("  Source Tier:   \(resolved.sourceCustomerPrice)\(resolved.sourceCurrency.map { " \($0)" } ?? "") (\(territoryID))")
         print("  Territories:   \(resolved.entries.count)\(resolved.isEqualized ? " (equalized)" : " (single)")")
         print()
 
@@ -2828,7 +2880,7 @@ struct SubCommand: AsyncParsableCommand {
         print()
         print("Update promotional offer prices:")
         print("  Offer ID:      \(offerID)")
-        print("  New Source:    \(resolved.sourceCustomerPrice) \(resolved.sourceCurrency ?? "") (\(territoryID))")
+        print("  New Source:    \(resolved.sourceCustomerPrice)\(resolved.sourceCurrency.map { " \($0)" } ?? "") (\(territoryID))")
         print("  Territories:   \(resolved.entries.count)\(resolved.isEqualized ? " (equalized)" : " (single)")")
         print()
 
@@ -2894,6 +2946,8 @@ struct SubCommand: AsyncParsableCommand {
               completion: appAliasCompletion)
     var bundleID: String
 
+    @OptionGroup var groupOption: SubCommand.GroupOption
+
     @Flag(name: .shortAndLong, help: "Skip confirmation prompts.")
     var yes = false
 
@@ -2901,7 +2955,7 @@ struct SubCommand: AsyncParsableCommand {
       if yes { autoConfirm = true }
       let client = try ClientFactory.makeClient()
       let app = try await findApp(bundleID: bundleID, client: client)
-      let group = try await SubCommand.pickGroup(appID: app.id, client: client)
+      let group = try await SubCommand.pickGroup(appID: app.id, group: groupOption.group, client: client)
       guard let pending = try await ProductVersions.pendingGroup(group.id, client: client) else {
         throw ValidationError("Subscription group '\(group.name)' has no pending version to submit. Edit its localizations first.")
       }

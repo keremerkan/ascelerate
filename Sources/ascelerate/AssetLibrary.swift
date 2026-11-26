@@ -10,6 +10,11 @@ import ImageIO
 extension AssetLibrary {
   /// Throws if the image's pixel size or file type is not one the slot accepts.
   static func validateSize(of file: MediaFile, slot: Slot) throws {
+    try validateSize(of: file, specs: slot.imageSpecs)
+  }
+
+  /// Throws if the image's pixel size or file type is none of `specs`.
+  static func validateSize(of file: MediaFile, specs: [ImageSpec]) throws {
     guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: file.path) as CFURL, nil),
       let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
       let width = properties[kCGImagePropertyPixelWidth] as? Int,
@@ -18,9 +23,9 @@ extension AssetLibrary {
       throw MediaUploadError.cannotReadFile(file.path)
     }
     let fileExtension = (file.fileName as NSString).pathExtension.lowercased()
-    guard slot.imageSpecs.contains(where: { $0.accepts(width: width, height: height, fileExtension: fileExtension) }) else {
+    guard specs.contains(where: { $0.accepts(width: width, height: height, fileExtension: fileExtension) }) else {
       throw MediaUploadError.unsupportedImage(
-        "\(width)×\(height) \(fileExtension.uppercased())", accepted: slot.imageSpecs.map(\.description))
+        "\(width)×\(height) \(fileExtension.uppercased())", accepted: specs.map(\.description))
     }
   }
 

@@ -236,6 +236,8 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+Ein kostenloser Probezeitraum (`--mode FREE_TRIAL`) nimmt kein `--price`: Er gilt in `--territory` oder mit `--equalize-all-territories` in jedem Gebiet, in dem das Abonnement einen Preis hat. Bis zu dieser Version war `--price` hier Pflicht; ein Skript, das es für einen Probezeitraum übergibt, schlägt daher fehl, bis die Option entfernt ist.
+
 ## Bindungsnachrichten und -angebote
 
 Wenn Abonnenten in ihren App Store-Abonnementeinstellungen kündigen möchten, kann der App Store ihnen eine **Bindungsnachricht** zeigen: eine Überschrift und einen Text in ihrer Sprache, optional ein Bild und Angebote zum Bleiben. Eine Nachricht gehört zur App und durchläuft App Review. Jedes Abonnement zeigt eine Nachricht und darin beliebige seiner **Bindungsangebote**.
@@ -281,7 +283,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --eligibility NEW \
   --offer-eligibility STACK_WITH_INTRO_OFFERS \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
-  --price 0 --territory USA --equalize-all-territories
+  --territory USA --equalize-all-territories
 
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
 
@@ -296,6 +298,8 @@ ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
   --code SUBPROMO --count 1000 --expires 2026-12-31
 ```
+
+Ein kostenloser Probezeitraum (`--mode FREE_TRIAL`) nimmt kein `--price`: Er gilt in `--territory` oder mit `--equalize-all-territories` in jedem Gebiet, in dem das Abonnement einen Preis hat. Bis zu dieser Version war `--price` hier Pflicht; ein Skript, das es für einen Probezeitraum übergibt, schlägt daher fehl, bis die Option entfernt ist.
 
 Kundenberechtigungen für Abonnement-Angebotscodes: `NEW`, `EXISTING`, `EXPIRED`. Angebotsberechtigung: `STACK_WITH_INTRO_OFFERS` oder `REPLACE_INTRO_OFFERS`.
 

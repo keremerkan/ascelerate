@@ -1219,7 +1219,7 @@ ascelerate sub win-back-offer delete <bundle-id> <product-id> comeback.half
 
 # Offer codes (redeemable codes — one-time-use batches and custom codes)
 ascelerate sub offer-code list <bundle-id> <product-id>
-ascelerate sub offer-code create <bundle-id> <product-id> --name "Launch Free Month" --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --price 0 --territory USA --equalize-all-territories
+ascelerate sub offer-code create <bundle-id> <product-id> --name "Launch Free Month" --eligibility NEW --offer-eligibility STACK_WITH_INTRO_OFFERS --mode FREE_TRIAL --duration ONE_MONTH --periods 1 --territory USA --equalize-all-territories
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
 ascelerate sub offer-code gen-codes <bundle-id> <product-id> <offer-code-id> --count 500 --expires 2026-12-31
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> --code SUBPROMO --count 1000 --expires 2026-12-31

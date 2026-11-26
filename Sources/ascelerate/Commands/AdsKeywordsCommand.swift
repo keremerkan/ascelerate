@@ -209,7 +209,7 @@ extension AdsCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        try await target.update(verb: "Pause", done: "Paused") { id, _ in .init(id: id, status: .init(value1: .paused)) }
+        try await target.update(verb: "Pause", done: "Paused", already: "PAUSED") { id, _ in .init(id: id, status: .init(value1: .paused)) }
       }
     }
 
@@ -220,7 +220,7 @@ extension AdsCommand {
 
       func run() async throws {
         if yes { autoConfirm = true }
-        try await target.update(verb: "Resume", done: "Resumed") { id, _ in .init(id: id, status: .init(value1: .enabled)) }
+        try await target.update(verb: "Resume", done: "Resumed", already: "ENABLED") { id, _ in .init(id: id, status: .init(value1: .enabled)) }
       }
     }
 
@@ -256,8 +256,10 @@ extension AdsCommand {
       @Argument(help: "Keyword texts.")
       var keywords: [String]
 
+      /// `already`: a status the change leaves as it is; keywords in it are listed and skipped, as
+      /// campaigns, ad groups and ads are.
       func update(
-        verb: String, done: String, bid: String? = nil,
+        verb: String, done: String, bid: String? = nil, already: String? = nil,
         _ data: (Int64, Components.Schemas.Money?) -> Components.Schemas.BulkKeywordUpdate
       ) async throws {
         let ads = try Ads.config()
@@ -283,6 +285,13 @@ extension AdsCommand {
             let matches = all.filter { $0.text?.caseInsensitiveCompare(text) == .orderedSame }
             if matches.isEmpty { throw ValidationError("No keyword '\(text)' in \(campaign.name ?? "-").") }
             targets += matches
+          }
+          if let already {
+            for k in targets where k.status?.value1.rawValue == already {
+              print("\(k.text ?? "-") (\(formatState(k.matchType?.value1.rawValue ?? "").lowercased()), \(groupNames[k.adGroupId] ?? "-")) is already \(formatState(already).lowercased()).")
+            }
+            targets = targets.filter { $0.status?.value1.rawValue != already }
+            guard !targets.isEmpty else { return }
           }
 
           let labels = targets.map { k in

@@ -236,6 +236,8 @@ ascelerate sub promo-offer update <bundle-id> <product-id> <offer-id> \
 ascelerate sub promo-offer delete <bundle-id> <product-id> <offer-id>
 ```
 
+Un essai gratuit (`--mode FREE_TRIAL`) ne prend pas de `--price` : il est proposé dans `--territory`, ou dans chaque territoire où l'abonnement a un prix avec `--equalize-all-territories`. Jusqu'à cette version, `--price` était obligatoire ici ; un script qui le passe pour un essai gratuit échoue donc tant que l'option n'est pas retirée.
+
 ## Messages et offres de fidélisation
 
 Lorsqu'un abonné va résilier depuis les réglages d'abonnement de l'App Store, l'App Store peut lui montrer un **message de fidélisation** : un titre et un texte dans sa langue, une image facultative et des offres pour rester. Un message appartient à l'app et passe par App Review. Chaque abonnement affiche un message et, dans celui-ci, les **offres de fidélisation** de votre choix.
@@ -281,7 +283,7 @@ ascelerate sub offer-code create <bundle-id> <product-id> \
   --eligibility NEW \
   --offer-eligibility STACK_WITH_INTRO_OFFERS \
   --mode FREE_TRIAL --duration ONE_MONTH --periods 1 \
-  --price 0 --territory USA --equalize-all-territories
+  --territory USA --equalize-all-territories
 
 ascelerate sub offer-code toggle <bundle-id> <product-id> <offer-code-id> --active true
 
@@ -296,6 +298,8 @@ ascelerate sub offer-code view-codes <one-time-use-batch-id> --output codes.txt
 ascelerate sub offer-code add-custom-codes <bundle-id> <product-id> <offer-code-id> \
   --code SUBPROMO --count 1000 --expires 2026-12-31
 ```
+
+Un essai gratuit (`--mode FREE_TRIAL`) ne prend pas de `--price` : il est proposé dans `--territory`, ou dans chaque territoire où l'abonnement a un prix avec `--equalize-all-territories`. Jusqu'à cette version, `--price` était obligatoire ici ; un script qui le passe pour un essai gratuit échoue donc tant que l'option n'est pas retirée.
 
 Éligibilités client pour les codes promotionnels d'abonnement : `NEW`, `EXISTING`, `EXPIRED`. Éligibilité de l'offre : `STACK_WITH_INTRO_OFFERS` ou `REPLACE_INTRO_OFFERS`.
 
